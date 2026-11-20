@@ -1277,6 +1277,8 @@ AGENTS.md @home-assistant/core
 /tests/components/motioneye/ @dermotduffy
 /homeassistant/components/motionmount/ @Wernes-vogels
 /tests/components/motionmount/ @Wernes-vogels
+/homeassistant/components/moulinex/ @piitaya
+/tests/components/moulinex/ @piitaya
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/mta/ @OnFreund

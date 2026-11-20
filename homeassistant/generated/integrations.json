@@ -9639,6 +9639,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "moulinex": {
+      "name": "Moulinex",
+      "integration_type": "hub",
+      "categories": [
+        "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "mpd": {
       "name": "Music Player Daemon (MPD)",
       "integration_type": "device",

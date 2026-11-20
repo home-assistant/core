@@ -538,6 +538,7 @@ FLOWS = {
         "motionblinds_ble",
         "motioneye",
         "motionmount",
+        "moulinex",
         "mpd",
         "mqtt",
         "mta",

@@ -433,6 +433,7 @@ homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
+homeassistant.components.moulinex.*
 homeassistant.components.mqtt.*
 homeassistant.components.music_assistant.*
 homeassistant.components.my.*
