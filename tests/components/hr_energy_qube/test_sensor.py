@@ -20,6 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
