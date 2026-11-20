@@ -625,6 +625,7 @@ async def test_unknown_lamp_at_reconfigured_address_stays_unclaimed(
     mock_govee_api: AsyncMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an unknown lamp answering at a reconfigured address is not claimed.
 
@@ -673,6 +674,10 @@ async def test_unknown_lamp_at_reconfigured_address_stays_unclaimed(
     assert manual_entry is not None
     assert manual_entry.config_subentry_id == subentry_id
     assert entity_registry.async_get("light.h615a") is not None
+    # The next poll restores the probe the library consumed for the wrong lamp.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.discovery_queue == {"192.168.1.50"}
 
     # Deleting the subentry only cascades to its own lamp.
@@ -815,8 +820,9 @@ async def test_probe_not_drained_by_other_subentrys_lamp(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # The answer did not come from this subentry's lamp, so its probe stays.
-    assert coordinator.discovery_queue == {"192.168.1.102"}
+    # The answer did not come from this subentry's lamp, so its probe stays;
+    # the other lamp's configured address, no longer answered, is probed too.
+    assert coordinator.discovery_queue == {"192.168.1.101", "192.168.1.102"}
     assert device_b.is_manual is True
     entry_b = device_registry.async_get_device_by_identifier(
         (DOMAIN, device_b.fingerprint), config_entry.entry_id
@@ -839,6 +845,7 @@ async def test_probe_restored_when_new_reply_is_other_subentrys_lamp(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a probe consumed by another subentry's lamp is restored.
 
@@ -899,6 +906,10 @@ async def test_probe_restored_when_new_reply_is_other_subentrys_lamp(
     assert entry_b is not None
     assert entry_b.config_subentry_id == subentry_b
     assert other_device.is_manual is True
+    # The next poll restores the probe the library consumed for this lamp.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert coordinator.discovery_queue == {"192.168.1.100", "192.168.1.101"}
 
 
@@ -976,6 +987,11 @@ async def test_known_lamp_adopted_when_answering_at_added_address(
     discovery_callback(device, False)
     await hass.async_block_till_done()
 
+    # The next poll adopts the known lamp and completes the probe.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert device.is_manual is True
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, device.fingerprint), config_entry.entry_id
@@ -987,11 +1003,6 @@ async def test_known_lamp_adopted_when_answering_at_added_address(
     assert entity_entry is not None
     assert entity_entry.config_subentry_id == subentry_id
     assert entity_registry.async_get("light.h615b_2") is None
-
-    # The lamp owning the subentry completes the probe.
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert coordinator.discovery_queue == set()
 
 

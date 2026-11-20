@@ -15,13 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_DEVICE_IP,
-    DISCOVERY_TIMEOUT,
-    DOMAIN,
-    REBIND_INTERVAL,
-    SUBENTRY_TYPE_DEVICE,
-)
+from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
 from .coordinator import (
     GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
@@ -49,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="no_listening_addresses"
         )
-
-    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(entry)
 
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
@@ -100,8 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         )
     )
 
-    for device in config.manual_devices:
-        coordinator.add_device_to_discovery_queue(device)
+    coordinator.async_reconcile_subentries()
 
     try:
         await coordinator.start()
@@ -161,19 +152,7 @@ async def update_listener(
     coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
     config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
 
-    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
-        ip = subentry.data[CONF_DEVICE_IP]
-        # Re-queueing a known IP would strand it there: the queue is only
-        # drained when the probe completes.
-        if ip in coordinator.discovery_queue:
-            continue
-        device = coordinator.get_device_by_ip(ip)
-        if device is None or coordinator.async_adopt_device(device) != (
-            subentry.subentry_id
-        ):
-            # No lamp here, or the cached lamp belongs to another subentry:
-            # probe the address for this subentry's own lamp.
-            coordinator.add_device_to_discovery_queue(ip)
+    coordinator.async_reconcile_subentries()
 
     device_registry = dr.async_get(hass)
     # The difference is a new set, so removing entries below cannot mutate what
@@ -192,9 +171,7 @@ async def update_listener(
             # The lamp's subentry survived, so its address was reconfigured and
             # the lamp was not deleted. Keep it, with its registry entries and
             # entity: the library updates its IP in place when it answers the
-            # probe queued above for the new address. Only a probe left at its
-            # address by a deleted subentry is dropped.
-            coordinator.remove_device_from_discovery_queue(ip)
+            # probe at the new address.
             continue
         coordinator.async_remove_manual_device(ip)
 

@@ -204,18 +204,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         even when its cached address differs: the address is only the hint
         for finding the lamp. An unowned lamp claims the subentry configured
         with its address, unless that subentry's registry device is another
-        lamp; then it stays on the main entry, is unmarked as manual (the
-        library marks whatever answers a queued probe) and the probe is
-        restored so the owner can still be found.
+        lamp; then it stays an ordinary device on the main entry.
         """
         if (owned_subentry_id := self._async_owned_subentry_id(device)) is not None:
             device.is_manual = True
-            # The lamp may have answered, and the library consumed, the probe
-            # of another subentry's address; restore it for that owner.
-            if (
-                ip_subentry_id := self._async_subentry_id_for_ip(device.ip)
-            ) is not None and ip_subentry_id != owned_subentry_id:
-                self.add_device_to_discovery_queue(device.ip)
             return owned_subentry_id
 
         subentry_id = self._async_subentry_id_for_ip(device.ip)
@@ -234,8 +226,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 and (DOMAIN, device.fingerprint) not in entry.identifiers
             ):
                 if device.is_manual:
+                    # The library marks whatever answers a queued probe.
                     device.is_manual = False
-                    self.add_device_to_discovery_queue(device.ip)
                 return None
 
         device.is_manual = True
@@ -274,6 +266,31 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             device_entry.id, new_config_subentry_id=subentry_id
         )
         return subentry_id
+
+    @callback
+    def async_reconcile_subentries(self) -> None:
+        """Align the probe queue and lamp ownership with the device subentries.
+
+        The queue is derived state: exactly the configured addresses whose
+        subentry's own lamp has not answered there. A lamp found at a
+        configured address is claimed on the way. Runs on configuration
+        changes and on every poll, so event-order races, such as a probe the
+        library consumed for another subentry's lamp, heal within one scan
+        interval.
+        """
+        desired: set[str] = set()
+        for subentry in self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+            ip = subentry.data[CONF_DEVICE_IP]
+            device = self.get_device_by_ip(ip)
+            if (
+                device is None
+                or self.async_adopt_device(device) != subentry.subentry_id
+            ):
+                desired.add(ip)
+        for ip in self.discovery_queue - desired:
+            self.remove_device_from_discovery_queue(ip)
+        for ip in desired - self.discovery_queue:
+            self.add_device_to_discovery_queue(ip)
 
     @callback
     def async_remove_manual_device(self, ip: str) -> None:
@@ -359,18 +376,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 translation_domain=DOMAIN, translation_key="no_live_endpoints"
             )
         self._controller.send_update_message()
-        # The library drains the discovery queue only when an unknown
-        # fingerprint answers, so a lamp probed at its reconfigured address
-        # strands its queue entry. A probe is complete only when the lamp at
-        # the address is the registry owner of the subentry configured there;
-        # any other tenant must not cancel it.
-        for ip in list(self.discovery_queue):
-            if (subentry_id := self._async_subentry_id_for_ip(ip)) is None:
-                # Eviction re-queues a kept lamp's old cached address; with no
-                # subentry configured there, nothing can complete the probe.
-                self.remove_device_from_discovery_queue(ip)
-            elif (
-                device := self.get_device_by_ip(ip)
-            ) is not None and subentry_id == self._async_owned_subentry_id(device):
-                self.remove_device_from_discovery_queue(ip)
+        # The library only maintains the queue for unknown fingerprints, so
+        # known lamps answering probes, address churn and eviction re-queues
+        # all leave it stale; rederive it every poll.
+        self.async_reconcile_subentries()
         return self.devices
