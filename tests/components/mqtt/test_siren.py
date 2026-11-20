@@ -40,7 +40,11 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import siren
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.siren import SirenService, SirenServiceArgument
+from homeassistant.components.siren import (
+    SirenEntityCapabilityAttribute,
+    SirenService,
+    SirenServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -229,9 +233,9 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(siren.SirenServiceArgument.TONE) is None
-    assert state.attributes.get(siren.SirenServiceArgument.DURATION) is None
-    assert state.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) is None
+    assert state.attributes.get(SirenServiceArgument.TONE) is None
+    assert state.attributes.get(SirenServiceArgument.DURATION) is None
+    assert state.attributes.get(SirenServiceArgument.VOLUME_LEVEL) is None
 
     async_fire_mqtt_message(
         hass,
@@ -241,9 +245,9 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(siren.SirenServiceArgument.TONE) == "bell"
-    assert state.attributes.get(siren.SirenServiceArgument.DURATION) == 10
-    assert state.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.5
+    assert state.attributes.get(SirenServiceArgument.TONE) == "bell"
+    assert state.attributes.get(SirenServiceArgument.DURATION) == 10
+    assert state.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.5
 
     async_fire_mqtt_message(
         hass,
@@ -253,9 +257,9 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
 
     state = hass.states.get("siren.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(siren.SirenServiceArgument.TONE) == "bell"
-    assert state.attributes.get(siren.SirenServiceArgument.DURATION) == 5
-    assert state.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.6
+    assert state.attributes.get(SirenServiceArgument.TONE) == "bell"
+    assert state.attributes.get(SirenServiceArgument.DURATION) == 5
+    assert state.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.6
 
     # Test validation of received attributes, invalid
     async_fire_mqtt_message(
@@ -272,9 +276,9 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     )
     # Only the on/of state was updated, not the attributes
     assert state.state == STATE_ON
-    assert state.attributes.get(siren.SirenServiceArgument.TONE) == "bell"
-    assert state.attributes.get(siren.SirenServiceArgument.DURATION) == 5
-    assert state.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.6
+    assert state.attributes.get(SirenServiceArgument.TONE) == "bell"
+    assert state.attributes.get(SirenServiceArgument.DURATION) == 5
+    assert state.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.6
 
     async_fire_mqtt_message(
         hass,
@@ -282,9 +286,9 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
         "{}",
     )
     assert state.state == STATE_ON
-    assert state.attributes.get(siren.SirenServiceArgument.TONE) == "bell"
-    assert state.attributes.get(siren.SirenServiceArgument.DURATION) == 5
-    assert state.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.6
+    assert state.attributes.get(SirenServiceArgument.TONE) == "bell"
+    assert state.attributes.get(SirenServiceArgument.DURATION) == 5
+    assert state.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.6
 
 
 @pytest.mark.parametrize(
@@ -325,61 +329,61 @@ async def test_filtering_not_supported_attributes_optimistic(
 
     state1 = hass.states.get("siren.test1")
     assert state1.state == STATE_OFF
-    assert siren.SirenServiceArgument.DURATION not in state1.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES in state1.attributes
-    assert siren.SirenServiceArgument.TONE in state1.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL in state1.attributes
+    assert SirenServiceArgument.DURATION not in state1.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES in state1.attributes
+    assert SirenServiceArgument.TONE in state1.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL in state1.attributes
     await async_turn_on(
         hass,
         entity_id="siren.test1",
         parameters={
-            siren.SirenServiceArgument.DURATION: 22,
-            siren.SirenServiceArgument.TONE: "ping",
+            SirenServiceArgument.DURATION: 22,
+            SirenServiceArgument.TONE: "ping",
             SirenServiceArgument.VOLUME_LEVEL: 0.88,
         },
     )
     state1 = hass.states.get("siren.test1")
-    assert state1.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state1.attributes.get(siren.SirenServiceArgument.DURATION) is None
-    assert state1.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state1.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state1.attributes.get(SirenServiceArgument.DURATION) is None
+    assert state1.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
 
     state2 = hass.states.get("siren.test2")
-    assert siren.SirenServiceArgument.DURATION in state2.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES in state2.attributes
-    assert siren.SirenServiceArgument.TONE in state2.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL not in state2.attributes
+    assert SirenServiceArgument.DURATION in state2.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES in state2.attributes
+    assert SirenServiceArgument.TONE in state2.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL not in state2.attributes
     await async_turn_on(
         hass,
         entity_id="siren.test2",
         parameters={
-            siren.SirenServiceArgument.DURATION: 22,
-            siren.SirenServiceArgument.TONE: "ping",
+            SirenServiceArgument.DURATION: 22,
+            SirenServiceArgument.TONE: "ping",
             SirenServiceArgument.VOLUME_LEVEL: 0.88,
         },
     )
     state2 = hass.states.get("siren.test2")
-    assert state2.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state2.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state2.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) is None
+    assert state2.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state2.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state2.attributes.get(SirenServiceArgument.VOLUME_LEVEL) is None
 
     state3 = hass.states.get("siren.test3")
-    assert siren.SirenServiceArgument.DURATION in state3.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES not in state3.attributes
-    assert siren.SirenServiceArgument.TONE not in state3.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL in state3.attributes
+    assert SirenServiceArgument.DURATION in state3.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES not in state3.attributes
+    assert SirenServiceArgument.TONE not in state3.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL in state3.attributes
     await async_turn_on(
         hass,
         entity_id="siren.test3",
         parameters={
-            siren.SirenServiceArgument.DURATION: 22,
-            siren.SirenServiceArgument.TONE: "ping",
+            SirenServiceArgument.DURATION: 22,
+            SirenServiceArgument.TONE: "ping",
             SirenServiceArgument.VOLUME_LEVEL: 0.88,
         },
     )
     state3 = hass.states.get("siren.test3")
-    assert state3.attributes.get(siren.SirenServiceArgument.TONE) is None
-    assert state3.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state3.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state3.attributes.get(SirenServiceArgument.TONE) is None
+    assert state3.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state3.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
 
 
 @pytest.mark.parametrize(
@@ -423,10 +427,10 @@ async def test_filtering_not_supported_attributes_via_state(
 
     state1 = hass.states.get("siren.test1")
     assert state1.state == STATE_UNKNOWN
-    assert siren.SirenServiceArgument.DURATION not in state1.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES in state1.attributes
-    assert siren.SirenServiceArgument.TONE in state1.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL in state1.attributes
+    assert SirenServiceArgument.DURATION not in state1.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES in state1.attributes
+    assert SirenServiceArgument.TONE in state1.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL in state1.attributes
     async_fire_mqtt_message(
         hass,
         "state-topic1",
@@ -434,15 +438,15 @@ async def test_filtering_not_supported_attributes_via_state(
     )
     await hass.async_block_till_done()
     state1 = hass.states.get("siren.test1")
-    assert state1.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state1.attributes.get(siren.SirenServiceArgument.DURATION) is None
-    assert state1.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state1.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state1.attributes.get(SirenServiceArgument.DURATION) is None
+    assert state1.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
 
     state2 = hass.states.get("siren.test2")
-    assert siren.SirenServiceArgument.DURATION in state2.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES in state2.attributes
-    assert siren.SirenServiceArgument.TONE in state2.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL not in state2.attributes
+    assert SirenServiceArgument.DURATION in state2.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES in state2.attributes
+    assert SirenServiceArgument.TONE in state2.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL not in state2.attributes
     async_fire_mqtt_message(
         hass,
         "state-topic2",
@@ -450,15 +454,15 @@ async def test_filtering_not_supported_attributes_via_state(
     )
     await hass.async_block_till_done()
     state2 = hass.states.get("siren.test2")
-    assert state2.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state2.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state2.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) is None
+    assert state2.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state2.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state2.attributes.get(SirenServiceArgument.VOLUME_LEVEL) is None
 
     state3 = hass.states.get("siren.test3")
-    assert siren.SirenServiceArgument.DURATION in state3.attributes
-    assert siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES not in state3.attributes
-    assert siren.SirenServiceArgument.TONE not in state3.attributes
-    assert siren.SirenServiceArgument.VOLUME_LEVEL in state3.attributes
+    assert SirenServiceArgument.DURATION in state3.attributes
+    assert SirenEntityCapabilityAttribute.AVAILABLE_TONES not in state3.attributes
+    assert SirenServiceArgument.TONE not in state3.attributes
+    assert SirenServiceArgument.VOLUME_LEVEL in state3.attributes
     async_fire_mqtt_message(
         hass,
         "state-topic3",
@@ -466,9 +470,9 @@ async def test_filtering_not_supported_attributes_via_state(
     )
     await hass.async_block_till_done()
     state3 = hass.states.get("siren.test3")
-    assert state3.attributes.get(siren.SirenServiceArgument.TONE) is None
-    assert state3.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state3.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state3.attributes.get(SirenServiceArgument.TONE) is None
+    assert state3.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state3.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -795,15 +799,15 @@ async def test_command_templates(
         hass,
         entity_id="siren.beer",
         parameters={
-            siren.SirenServiceArgument.DURATION: 22,
-            siren.SirenServiceArgument.TONE: "ping",
+            SirenServiceArgument.DURATION: 22,
+            SirenServiceArgument.TONE: "ping",
             SirenServiceArgument.VOLUME_LEVEL: 0.88,
         },
     )
     state1 = hass.states.get("siren.beer")
-    assert state1.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state1.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state1.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state1.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state1.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state1.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
 
     mqtt_mock.async_publish.assert_any_call(
         "test-topic",
@@ -832,15 +836,15 @@ async def test_command_templates(
         hass,
         entity_id="siren.milk",
         parameters={
-            siren.SirenServiceArgument.DURATION: 22,
-            siren.SirenServiceArgument.TONE: "ping",
+            SirenServiceArgument.DURATION: 22,
+            SirenServiceArgument.TONE: "ping",
             SirenServiceArgument.VOLUME_LEVEL: 0.88,
         },
     )
     state2 = hass.states.get("siren.milk")
-    assert state2.attributes.get(siren.SirenServiceArgument.TONE) == "ping"
-    assert state2.attributes.get(siren.SirenServiceArgument.DURATION) == 22
-    assert state2.attributes.get(siren.SirenServiceArgument.VOLUME_LEVEL) == 0.88
+    assert state2.attributes.get(SirenServiceArgument.TONE) == "ping"
+    assert state2.attributes.get(SirenServiceArgument.DURATION) == 22
+    assert state2.attributes.get(SirenServiceArgument.VOLUME_LEVEL) == 0.88
     await async_turn_off(
         hass,
         entity_id="siren.milk",
@@ -951,7 +955,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         siren.DOMAIN,
         DEFAULT_CONFIG,
-        siren.SirenService.TURN_ON,
+        SirenService.TURN_ON,
         command_payload='{"state":"ON"}',
     )
 
@@ -960,14 +964,14 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            siren.SirenService.TURN_ON,
+            SirenService.TURN_ON,
             "command_topic",
             None,
             '{"state":"ON"}',
             None,
         ),
         (
-            siren.SirenService.TURN_OFF,
+            SirenService.TURN_OFF,
             "command_topic",
             None,
             '{"state":"OFF"}',
@@ -988,7 +992,7 @@ async def test_publishing_with_custom_encoding(
     """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
-    config[DOMAIN][domain][siren.SirenEntityCapabilityAttribute.AVAILABLE_TONES] = [
+    config[DOMAIN][domain][SirenEntityCapabilityAttribute.AVAILABLE_TONES] = [
         "siren",
         "xylophone",
     ]

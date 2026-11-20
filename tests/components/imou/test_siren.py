@@ -14,14 +14,7 @@ from homeassistant.components.siren import (
     SirenService,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    EntityStateAttribute,
-    Platform,
-    TargetKey,
-)
+from homeassistant.const import STATE_ON, EntityStateAttribute, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -55,8 +48,8 @@ async def test_siren_entities_snapshot(
 @pytest.mark.parametrize(
     ("service", "button_type"),
     [
-        (SERVICE_TURN_ON, PARAM_SIREN_START),
-        (SERVICE_TURN_OFF, PARAM_SIREN_STOP),
+        (SirenService.TURN_ON, PARAM_SIREN_START),
+        (SirenService.TURN_OFF, PARAM_SIREN_STOP),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -137,13 +130,13 @@ async def test_siren_invalid_auth_starts_reauth(
         (
             [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_START,))],
             SirenEntityFeature.TURN_ON,
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             PARAM_SIREN_START,
         ),
         (
             [create_online_device("d1", "Device 1", button_keys=(PARAM_SIREN_STOP,))],
             SirenEntityFeature.TURN_OFF,
-            SERVICE_TURN_OFF,
+            SirenService.TURN_OFF,
             PARAM_SIREN_STOP,
         ),
     ],
