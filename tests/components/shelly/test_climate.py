@@ -37,7 +37,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.humidifier import ATTR_HUMIDITY
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.components.shelly.climate import (
     PRESET_FROST_PROTECTION,
@@ -1418,7 +1418,7 @@ async def test_rpc_linkedgo_st802_thermostat(
 
     mock_rpc_device.number_set.assert_called_once_with(202, 66.0)
     assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_HUMIDITY) == 66
+    assert state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY) == 66
 
     # Anti-Freeze preset mode
     mock_rpc_device.boolean_set.reset_mock()

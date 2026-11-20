@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -142,7 +142,7 @@ async def test_humidifier_controller(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
-            {**service_data, ATTR_ENTITY_ID: humidifier_id},
+            {**service_data, TargetKey.ENTITY_ID: humidifier_id},
             blocking=True,
         )
 
@@ -213,7 +213,7 @@ async def test_humidifier2_controller(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
-            {**service_data, ATTR_ENTITY_ID: humidifier_id},
+            {**service_data, TargetKey.ENTITY_ID: humidifier_id},
             blocking=True,
         )
 

@@ -495,7 +495,10 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header) -> N
     assert humidifier_state.state == "off"
 
     dehumidifier = hass_fixture.states.get("humidifier.dehumidifier")
-    assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
+    assert (
+        dehumidifier.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY)
+        == 45
+    )
 
     hygrostat = hass_fixture.states.get("humidifier.hygrostat")
     assert hygrostat.attributes.get(const.ATTR_MODE) == "eco"

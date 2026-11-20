@@ -21,15 +21,14 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_humidifiers import HumidifierDehumidifier
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
-    SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -37,8 +36,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -85,7 +82,10 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_HUMIDITY: 47, ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER},
+        {
+            HumidifierEntityStateAttribute.HUMIDITY: 47,
+            ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 47.0
@@ -96,7 +96,10 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_HUMIDITY: 42, ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER},
+        {
+            HumidifierEntityStateAttribute.HUMIDITY: 42,
+            ATTR_DEVICE_CLASS: HumidifierDeviceClass.HUMIDIFIER,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
@@ -106,7 +109,7 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -
 
     # Set from HomeKit
     call_set_humidity = async_mock_service(
-        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+        hass, HUMIDIFIER_DOMAIN, HumidifierService.SET_HUMIDITY
     )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
@@ -127,7 +130,7 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -
     await hass.async_block_till_done()
     assert len(call_set_humidity) == 1
     assert call_set_humidity[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_humidity[0].data[ATTR_HUMIDITY] == 39.0
+    assert call_set_humidity[0].data[HumidifierServiceArgument.HUMIDITY] == 39.0
     assert acc.char_target_humidity.value == 39.0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0%"
@@ -175,7 +178,10 @@ async def test_dehumidifier(
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_HUMIDITY: 30, ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER},
+        {
+            HumidifierEntityStateAttribute.HUMIDITY: 30,
+            ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 30.0
@@ -186,7 +192,10 @@ async def test_dehumidifier(
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_HUMIDITY: 42, ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER},
+        {
+            HumidifierEntityStateAttribute.HUMIDITY: 42,
+            ATTR_DEVICE_CLASS: HumidifierDeviceClass.DEHUMIDIFIER,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_target_humidity.value == 42.0
@@ -196,7 +205,7 @@ async def test_dehumidifier(
 
     # Set from HomeKit
     call_set_humidity = async_mock_service(
-        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+        hass, HUMIDIFIER_DOMAIN, HumidifierService.SET_HUMIDITY
     )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
@@ -217,7 +226,7 @@ async def test_dehumidifier(
     await hass.async_block_till_done()
     assert len(call_set_humidity) == 1
     assert call_set_humidity[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_humidity[0].data[ATTR_HUMIDITY] == 39.0
+    assert call_set_humidity[0].data[HumidifierServiceArgument.HUMIDITY] == 39.0
     assert acc.char_target_humidity.value == 39.0
     assert len(events) == 1
     assert (
@@ -234,7 +243,7 @@ async def test_hygrostat_power_state(
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_HUMIDITY: 43},
+        {HumidifierEntityStateAttribute.HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
@@ -252,7 +261,7 @@ async def test_hygrostat_power_state(
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_HUMIDITY: 43},
+        {HumidifierEntityStateAttribute.HUMIDITY: 43},
     )
     await hass.async_block_till_done()
     assert acc.char_current_humidifier_dehumidifier.value == 0
@@ -260,7 +269,9 @@ async def test_hygrostat_power_state(
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_ON)
+    call_turn_on = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, HumidifierService.TURN_ON
+    )
 
     char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
@@ -284,7 +295,9 @@ async def test_hygrostat_power_state(
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "Active to 1"
 
-    call_turn_off = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_OFF)
+    call_turn_off = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, HumidifierService.TURN_OFF
+    )
 
     hk_driver.set_characteristics(
         {
@@ -314,7 +327,12 @@ async def test_hygrostat_get_humidity_range(
     entity_id = "humidifier.test"
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_MIN_HUMIDITY: 40, ATTR_MAX_HUMIDITY: 45}
+        entity_id,
+        STATE_OFF,
+        {
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 40,
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 45,
+        },
     )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
@@ -327,7 +345,7 @@ async def test_hygrostat_get_humidity_range(
 
     # Set from HomeKit
     call_set_humidity = async_mock_service(
-        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+        hass, HUMIDIFIER_DOMAIN, HumidifierService.SET_HUMIDITY
     )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
@@ -347,7 +365,7 @@ async def test_hygrostat_get_humidity_range(
 
     await hass.async_block_till_done()
     assert call_set_humidity[-1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_humidity[-1].data[ATTR_HUMIDITY] == 40.0
+    assert call_set_humidity[-1].data[HumidifierServiceArgument.HUMIDITY] == 40.0
     assert acc.char_target_humidity.value == 40.0
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 12.0%"
 
@@ -366,7 +384,7 @@ async def test_hygrostat_get_humidity_range(
 
     await hass.async_block_till_done()
     assert call_set_humidity[-1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_humidity[-1].data[ATTR_HUMIDITY] == 45.0
+    assert call_set_humidity[-1].data[HumidifierServiceArgument.HUMIDITY] == 45.0
     assert acc.char_target_humidity.value == 45.0
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 80.0%"
 
@@ -557,7 +575,9 @@ async def test_humidifier_that_reports_current_humidity(
 ) -> None:
     """Test a humidifier that provides current humidity can update."""
     entity_id = "humidifier.test"
-    hass.states.async_set(entity_id, STATE_OFF, {ATTR_CURRENT_HUMIDITY: 42})
+    hass.states.async_set(
+        entity_id, STATE_OFF, {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 42}
+    )
     await hass.async_block_till_done()
     acc = HumidifierDehumidifier(
         hass,
@@ -573,7 +593,9 @@ async def test_humidifier_that_reports_current_humidity(
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 42.0
-    hass.states.async_set(entity_id, STATE_OFF, {ATTR_CURRENT_HUMIDITY: 43})
+    hass.states.async_set(
+        entity_id, STATE_OFF, {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 43}
+    )
 
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 43.0

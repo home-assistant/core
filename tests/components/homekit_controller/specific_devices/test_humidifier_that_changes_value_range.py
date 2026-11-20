@@ -1,6 +1,6 @@
 """Test for a Home Assistant bridge that changes humidifier min/max at runtime."""
 
-from homeassistant.components.humidifier import ATTR_MAX_HUMIDITY, ATTR_MIN_HUMIDITY
+from homeassistant.components.humidifier import HumidifierEntityCapabilityAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,8 +26,14 @@ async def test_humidifier_change_range_at_runtime(
     assert humidifier.unique_id == "00:00:00:00:00:00_293334836_8"
 
     humidifier_state = hass.states.get("humidifier.humidifier_182a")
-    assert humidifier_state.attributes[ATTR_MIN_HUMIDITY] == 0
-    assert humidifier_state.attributes[ATTR_MAX_HUMIDITY] == 100
+    assert (
+        humidifier_state.attributes[HumidifierEntityCapabilityAttribute.MIN_HUMIDITY]
+        == 0
+    )
+    assert (
+        humidifier_state.attributes[HumidifierEntityCapabilityAttribute.MAX_HUMIDITY]
+        == 100
+    )
 
     cover = entity_registry.async_get("humidifier.humidifier_182a")
     assert cover.unique_id == "00:00:00:00:00:00_293334836_8"
@@ -39,5 +45,11 @@ async def test_humidifier_change_range_at_runtime(
     await device_config_changed(hass, accessories)
 
     humidifier_state = hass.states.get("humidifier.humidifier_182a")
-    assert humidifier_state.attributes[ATTR_MIN_HUMIDITY] == 20
-    assert humidifier_state.attributes[ATTR_MAX_HUMIDITY] == 80
+    assert (
+        humidifier_state.attributes[HumidifierEntityCapabilityAttribute.MIN_HUMIDITY]
+        == 20
+    )
+    assert (
+        humidifier_state.attributes[HumidifierEntityCapabilityAttribute.MAX_HUMIDITY]
+        == 80
+    )

@@ -158,7 +158,12 @@ async def test_action(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -317,7 +322,12 @@ async def test_action_legacy(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -391,7 +401,12 @@ async def test_action_legacy(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -433,7 +448,12 @@ async def test_action_legacy(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {
@@ -535,7 +555,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -577,7 +602,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {

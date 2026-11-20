@@ -55,7 +55,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
 )
-from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
+from homeassistant.components.humidifier import HumidifierEntityCapabilityAttribute
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 
@@ -2288,7 +2288,7 @@ async def humidifier_fixture(
     humidifier_3_attributes = {
         ATTR_HUMIDITY: 50,
         ATTR_MODE: "home",
-        ATTR_AVAILABLE_MODES: ["home", "eco"],
+        HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: ["home", "eco"],
     }
     set_state_with_entry(hass, humidifier_3, STATE_ON, humidifier_3_attributes)
     data["humidifier_3"] = humidifier_3

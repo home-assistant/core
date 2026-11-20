@@ -344,7 +344,12 @@ async def test_if_state_legacy(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "is_mode",
             [
@@ -401,7 +406,12 @@ async def test_if_state_legacy(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "is_mode",
             [
                 {
@@ -518,7 +528,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "is_mode",
             [
@@ -575,7 +590,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "is_mode",
             [
                 {

@@ -6,12 +6,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import humidifier
-from homeassistant.components.humidifier import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
-    ATTR_TARGET_HUMIDITY_STEP,
-)
+from homeassistant.components.humidifier import HumidifierEntityCapabilityAttribute
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -41,8 +36,13 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         for state in entity_states
         if split_entity_id(state.entity_id)[0] == humidifier.DOMAIN
     ):
-        assert ATTR_MIN_HUMIDITY not in state.attributes
-        assert ATTR_MAX_HUMIDITY not in state.attributes
-        assert ATTR_AVAILABLE_MODES not in state.attributes
+        assert HumidifierEntityCapabilityAttribute.MIN_HUMIDITY not in state.attributes
+        assert HumidifierEntityCapabilityAttribute.MAX_HUMIDITY not in state.attributes
+        assert (
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES not in state.attributes
+        )
         assert ATTR_FRIENDLY_NAME in state.attributes
-        assert ATTR_TARGET_HUMIDITY_STEP not in state.attributes
+        assert (
+            HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP
+            not in state.attributes
+        )

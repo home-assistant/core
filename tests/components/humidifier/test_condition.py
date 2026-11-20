@@ -20,10 +20,9 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.humidifier.condition import CONDITIONS
 from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    ATTR_HUMIDITY,
     HumidifierAction,
     HumidifierEntityFeature,
 )
@@ -186,13 +185,35 @@ async def test_humidifier_state_condition_behavior_all(
     [
         *parametrize_condition_states_any(
             condition="humidifier.is_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="humidifier.is_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="humidifier.is_mode",
@@ -242,13 +263,35 @@ async def test_humidifier_attribute_condition_behavior_any(
     [
         *parametrize_condition_states_all(
             condition="humidifier.is_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="humidifier.is_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="humidifier.is_mode",
@@ -298,7 +341,7 @@ async def test_humidifier_attribute_condition_behavior_all(
     parametrize_numerical_attribute_condition_above_below_any(
         "humidifier.is_target_humidity",
         STATE_ON,
-        ATTR_HUMIDITY,
+        HumidifierEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )
@@ -334,7 +377,7 @@ async def test_humidifier_numerical_condition_behavior_any(
     parametrize_numerical_attribute_condition_above_below_all(
         "humidifier.is_target_humidity",
         STATE_ON,
-        ATTR_HUMIDITY,
+        HumidifierEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )

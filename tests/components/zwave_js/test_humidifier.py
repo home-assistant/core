@@ -6,24 +6,22 @@ from zwave_js_server.const.command_class.humidity_control import HumidityControl
 from zwave_js_server.event import Event
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
-    SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -47,19 +45,19 @@ async def test_humidifier(
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_DEVICE_CLASS] == HumidifierDeviceClass.HUMIDIFIER
-    assert state.attributes[ATTR_HUMIDITY] == 35
-    assert state.attributes[ATTR_MIN_HUMIDITY] == 10
-    assert state.attributes[ATTR_MAX_HUMIDITY] == 70
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 35
+    assert state.attributes[HumidifierEntityCapabilityAttribute.MIN_HUMIDITY] == 10
+    assert state.attributes[HumidifierEntityCapabilityAttribute.MAX_HUMIDITY] == 70
 
     client.async_send_command.reset_mock()
 
     # Test setting humidity
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
+        HumidifierService.SET_HUMIDITY,
         {
-            ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY,
-            ATTR_HUMIDITY: 41,
+            TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY,
+            HumidifierServiceArgument.HUMIDITY: 41,
         },
         blocking=True,
     )
@@ -175,8 +173,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -215,8 +213,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -255,8 +253,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -286,8 +284,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -317,8 +315,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -348,8 +346,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -379,8 +377,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -419,8 +417,8 @@ async def test_humidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -445,19 +443,25 @@ async def test_dehumidifier_missing_setpoint(
     state = hass.states.get(entity_id)
 
     assert state
-    assert ATTR_HUMIDITY not in state.attributes
-    assert state.attributes[ATTR_MIN_HUMIDITY] == DEFAULT_MIN_HUMIDITY
-    assert state.attributes[ATTR_MAX_HUMIDITY] == DEFAULT_MAX_HUMIDITY
+    assert HumidifierEntityStateAttribute.HUMIDITY not in state.attributes
+    assert (
+        state.attributes[HumidifierEntityCapabilityAttribute.MIN_HUMIDITY]
+        == DEFAULT_MIN_HUMIDITY
+    )
+    assert (
+        state.attributes[HumidifierEntityCapabilityAttribute.MAX_HUMIDITY]
+        == DEFAULT_MAX_HUMIDITY
+    )
 
     client.async_send_command.reset_mock()
 
     # Test setting humidity
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
+        HumidifierService.SET_HUMIDITY,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_HUMIDITY: 41,
+            TargetKey.ENTITY_ID: entity_id,
+            HumidifierServiceArgument.HUMIDITY: 41,
         },
         blocking=True,
     )
@@ -508,8 +512,8 @@ async def test_humidifier_missing_mode(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -538,19 +542,19 @@ async def test_dehumidifier(
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_DEVICE_CLASS] == HumidifierDeviceClass.DEHUMIDIFIER
-    assert state.attributes[ATTR_HUMIDITY] == 60
-    assert state.attributes[ATTR_MIN_HUMIDITY] == 30
-    assert state.attributes[ATTR_MAX_HUMIDITY] == 90
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 60
+    assert state.attributes[HumidifierEntityCapabilityAttribute.MIN_HUMIDITY] == 30
+    assert state.attributes[HumidifierEntityCapabilityAttribute.MAX_HUMIDITY] == 90
 
     client.async_send_command.reset_mock()
 
     # Test setting humidity
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
+        HumidifierService.SET_HUMIDITY,
         {
-            ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY,
-            ATTR_HUMIDITY: 41,
+            TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY,
+            HumidifierServiceArgument.HUMIDITY: 41,
         },
         blocking=True,
     )
@@ -666,8 +670,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -706,8 +710,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -746,8 +750,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -777,8 +781,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -808,8 +812,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -839,8 +843,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -870,8 +874,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -910,8 +914,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: DEHUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 
@@ -955,8 +959,8 @@ async def test_dehumidifier(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
         blocking=True,
     )
 

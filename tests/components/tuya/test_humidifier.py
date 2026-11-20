@@ -9,13 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -52,11 +50,11 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_command"),
     [
-        (SERVICE_TURN_ON, {}, {"code": "switch", "value": True}),
-        (SERVICE_TURN_OFF, {}, {"code": "switch", "value": False}),
+        (HumidifierService.TURN_ON, {}, {"code": "switch", "value": True}),
+        (HumidifierService.TURN_OFF, {}, {"code": "switch", "value": False}),
         (
-            SERVICE_SET_HUMIDITY,
-            {ATTR_HUMIDITY: 50},
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 50},
             {"code": "dehumidify_set_value", "value": 50},
         ),
     ],
@@ -80,7 +78,7 @@ async def test_action(
         HUMIDIFIER_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             **service_data,
         },
         blocking=True,
@@ -98,7 +96,7 @@ async def test_action(
     ("service", "service_data", "translation_placeholders"),
     [
         (
-            SERVICE_TURN_ON,
+            HumidifierService.TURN_ON,
             {},
             {
                 "expected": "['switch', 'switch_spray']",
@@ -106,7 +104,7 @@ async def test_action(
             },
         ),
         (
-            SERVICE_TURN_OFF,
+            HumidifierService.TURN_OFF,
             {},
             {
                 "expected": "['switch', 'switch_spray']",
@@ -114,8 +112,8 @@ async def test_action(
             },
         ),
         (
-            SERVICE_SET_HUMIDITY,
-            {ATTR_HUMIDITY: 50},
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 50},
             {
                 "expected": "['dehumidify_set_value']",
                 "available": ("['child_lock', 'countdown_set']"),
@@ -151,7 +149,7 @@ async def test_action_unsupported(
             HUMIDIFIER_DOMAIN,
             service,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 **service_data,
             },
             blocking=True,

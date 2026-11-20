@@ -927,7 +927,9 @@ async def test_put_light_state_humidifier_set_humidity(
 
     hvac = hass_hue.states.get("humidifier.humidifier")
     assert hvac.state == "on"
-    assert hvac.attributes[humidifier.ATTR_HUMIDITY] == humidity
+    assert (
+        hvac.attributes[humidifier.HumidifierEntityStateAttribute.HUMIDITY] == humidity
+    )
 
     # Make sure we can't change the hygrostat humidity since it's not exposed
     hygrostat_result = await perform_put_light_state(

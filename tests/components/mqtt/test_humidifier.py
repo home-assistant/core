@@ -41,12 +41,10 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import humidifier
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_HUMIDITY,
-    ATTR_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
     HumidifierAction,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.mqtt.const import CONF_CURRENT_HUMIDITY_TOPIC, DOMAIN
 from homeassistant.components.mqtt.humidifier import (
@@ -60,11 +58,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -85,7 +82,7 @@ async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) 
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     await hass.services.async_call(
-        humidifier.DOMAIN, SERVICE_TURN_ON, data, blocking=True
+        humidifier.DOMAIN, HumidifierService.TURN_ON, data, blocking=True
     )
 
 
@@ -96,7 +93,7 @@ async def async_turn_off(
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     await hass.services.async_call(
-        humidifier.DOMAIN, SERVICE_TURN_OFF, data, blocking=True
+        humidifier.DOMAIN, HumidifierService.TURN_OFF, data, blocking=True
     )
 
 
@@ -106,12 +103,15 @@ async def async_set_mode(
     """Set mode for all or specified humidifier."""
     data = {
         key: value
-        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode))
+        for key, value in (
+            (TargetKey.ENTITY_ID, entity_id),
+            (HumidifierServiceArgument.MODE, mode),
+        )
         if value is not None
     }
 
     await hass.services.async_call(
-        humidifier.DOMAIN, SERVICE_SET_MODE, data, blocking=True
+        humidifier.DOMAIN, HumidifierService.SET_MODE, data, blocking=True
     )
 
 
@@ -121,12 +121,15 @@ async def async_set_humidity(
     """Set target humidity for all or specified humidifier."""
     data = {
         key: value
-        for key, value in ((ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity))
+        for key, value in (
+            (TargetKey.ENTITY_ID, entity_id),
+            (HumidifierServiceArgument.HUMIDITY, humidity),
+        )
         if value is not None
     }
 
     await hass.services.async_call(
-        humidifier.DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True
+        humidifier.DOMAIN, HumidifierService.SET_HUMIDITY, data, blocking=True
     )
 
 
@@ -185,33 +188,39 @@ async def test_controlling_state_via_topic(
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert not state.attributes.get(humidifier.ATTR_ACTION)
+    assert not state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
-    assert not state.attributes.get(humidifier.ATTR_ACTION)
+    assert not state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_OfF")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
-    assert not state.attributes.get(humidifier.ATTR_ACTION)
+    assert not state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "0")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 0
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "25")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 25
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 25
+    )
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "50")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 50
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 50
+    )
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "100")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 100
+    )
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "101")
     assert "not a valid target humidity" in caplog.text
@@ -227,35 +236,54 @@ async def test_controlling_state_via_topic(
 
     async_fire_mqtt_message(hass, "current-humidity-topic", "48")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 48
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", "101")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 48
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", "-1.6")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 48
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 48
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", "43.6")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 44
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 44
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", "invalid")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 44
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 44
+    )
 
     async_fire_mqtt_message(hass, "mode-state-topic", "auto")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
 
     async_fire_mqtt_message(hass, "mode-state-topic", "eco")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "eco"
 
     async_fire_mqtt_message(hass, "mode-state-topic", "baby")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "baby"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "baby"
+    )
 
     async_fire_mqtt_message(hass, "mode-state-topic", "ModeUnknown")
     assert "not a valid mode" in caplog.text
@@ -263,43 +291,60 @@ async def test_controlling_state_via_topic(
 
     async_fire_mqtt_message(hass, "mode-state-topic", "rEset_mode")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) is None
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) is None
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "rEset_humidity")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) is None
+    )
 
     async_fire_mqtt_message(hass, "state-topic", "None")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(humidifier.ATTR_ACTION)
+    assert not state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
 
     # Turn un the humidifier
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
-    assert not state.attributes.get(humidifier.ATTR_ACTION)
+    assert not state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
 
     async_fire_mqtt_message(hass, "action-topic", HumidifierAction.DRYING.value)
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.DRYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.DRYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", HumidifierAction.HUMIDIFYING.value)
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", HumidifierAction.HUMIDIFYING.value)
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", "invalid_action")
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_OfF")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.OFF
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.OFF
+    )
 
 
 @pytest.mark.parametrize(
@@ -355,34 +400,52 @@ async def test_controlling_state_via_topic_and_json_message(
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"val": 1}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 1
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 1
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"val": 100}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 100
+    )
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"val": "None"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) is None
+    )
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"otherval": 100}')
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) is None
+    )
     caplog.clear()
 
     async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": 1}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 1
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 1
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": 100}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) == 100
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        == 100
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", '{"val": "None"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        is None
+    )
 
     async_fire_mqtt_message(hass, "current-humidity-topic", '{"otherval": 100}')
-    assert state.attributes.get(humidifier.ATTR_CURRENT_HUMIDITY) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY)
+        is None
+    )
     caplog.clear()
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "low"}')
@@ -391,22 +454,26 @@ async def test_controlling_state_via_topic_and_json_message(
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "auto"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "eco"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "eco"
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "baby"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "baby"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "baby"
+    )
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "None"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) is None
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) is None
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"otherval": 100}')
-    assert state.attributes.get(humidifier.ATTR_MODE) is None
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) is None
     caplog.clear()
 
     async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
@@ -420,27 +487,45 @@ async def test_controlling_state_via_topic_and_json_message(
 
     async_fire_mqtt_message(hass, "action-topic", '{"val": "drying"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.DRYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.DRYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", '{"val": "humidifying"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", '{"val": null}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", '{"otherval": "idle"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.HUMIDIFYING
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.HUMIDIFYING
+    )
 
     async_fire_mqtt_message(hass, "action-topic", '{"val": "idle"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.IDLE
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.IDLE
+    )
 
     async_fire_mqtt_message(hass, "action-topic", '{"val": "off"}')
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_ACTION) == HumidifierAction.OFF
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.ACTION)
+        == HumidifierAction.OFF
+    )
 
 
 @pytest.mark.parametrize(
@@ -488,8 +573,10 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     )
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 50
-    assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 50
+    )
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "eco"
 
     async_fire_mqtt_message(
         hass,
@@ -498,8 +585,12 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     )
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 10
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 10
+    )
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
 
     async_fire_mqtt_message(
         hass,
@@ -508,8 +599,10 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     )
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 0
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
 
     async_fire_mqtt_message(
         hass,
@@ -517,8 +610,12 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
         '{"humidity": 100}',
     )
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 100
+    )
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
     caplog.clear()
 
 
@@ -586,7 +683,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 100
+    )
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_humidity(hass, "humidifier.test", 0)
@@ -595,7 +694,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_mode(hass, "humidifier.test", "low")
@@ -608,7 +707,9 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_mode(hass, "humidifier.test", "eco")
@@ -617,7 +718,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "eco"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -690,7 +791,9 @@ async def test_sending_mqtt_command_templates_(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 100
+    )
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_humidity(hass, "humidifier.test", 0)
@@ -699,7 +802,7 @@ async def test_sending_mqtt_command_templates_(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_mode(hass, "humidifier.test", "low")
@@ -712,7 +815,7 @@ async def test_sending_mqtt_command_templates_(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "eco"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await async_set_mode(hass, "humidifier.test", "auto")
@@ -721,7 +824,9 @@ async def test_sending_mqtt_command_templates_(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) == "auto"
+    )
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -854,9 +959,19 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "ON", None, "on"),
-        (CONF_MODE_STATE_TOPIC, "auto", ATTR_MODE, "auto"),
-        (CONF_TARGET_HUMIDITY_STATE_TOPIC, "45", ATTR_HUMIDITY, 45),
-        (CONF_CURRENT_HUMIDITY_TOPIC, "39", ATTR_CURRENT_HUMIDITY, 39),
+        (CONF_MODE_STATE_TOPIC, "auto", HumidifierEntityStateAttribute.MODE, "auto"),
+        (
+            CONF_TARGET_HUMIDITY_STATE_TOPIC,
+            "45",
+            HumidifierEntityStateAttribute.HUMIDITY,
+            45,
+        ),
+        (
+            CONF_CURRENT_HUMIDITY_TOPIC,
+            "39",
+            HumidifierEntityStateAttribute.CURRENT_HUMIDITY,
+            39,
+        ),
     ],
 )
 async def test_encoding_subscribable_topics(
@@ -910,26 +1025,42 @@ async def test_attributes(
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(humidifier.ATTR_AVAILABLE_MODES) == [
+    assert state.attributes.get(
+        humidifier.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES
+    ) == [
         "eco",
         "baby",
     ]
-    assert state.attributes.get(humidifier.ATTR_MIN_HUMIDITY) == 0
-    assert state.attributes.get(humidifier.ATTR_MAX_HUMIDITY) == 100
+    assert (
+        state.attributes.get(
+            humidifier.HumidifierEntityCapabilityAttribute.MIN_HUMIDITY
+        )
+        == 0
+    )
+    assert (
+        state.attributes.get(
+            humidifier.HumidifierEntityCapabilityAttribute.MAX_HUMIDITY
+        )
+        == 100
+    )
 
     await async_turn_on(hass, "humidifier.test")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
-    assert state.attributes.get(humidifier.ATTR_MODE) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) is None
+    )
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) is None
 
     await async_turn_off(hass, "humidifier.test")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
-    assert state.attributes.get(humidifier.ATTR_MODE) is None
+    assert (
+        state.attributes.get(humidifier.HumidifierEntityStateAttribute.HUMIDITY) is None
+    )
+    assert state.attributes.get(humidifier.HumidifierEntityStateAttribute.MODE) is None
 
 
 @pytest.mark.parametrize(
@@ -1439,7 +1570,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
-        humidifier.SERVICE_TURN_ON,
+        humidifier.HumidifierService.TURN_ON,
     )
 
 
@@ -1447,30 +1578,30 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            humidifier.SERVICE_TURN_ON,
+            humidifier.HumidifierService.TURN_ON,
             "command_topic",
             None,
             "ON",
             None,
         ),
         (
-            humidifier.SERVICE_TURN_OFF,
+            humidifier.HumidifierService.TURN_OFF,
             "command_topic",
             None,
             "OFF",
             None,
         ),
         (
-            humidifier.SERVICE_SET_MODE,
+            humidifier.HumidifierService.SET_MODE,
             "mode_command_topic",
-            {humidifier.ATTR_MODE: "eco"},
+            {humidifier.HumidifierServiceArgument.MODE: "eco"},
             "eco",
             "mode_command_template",
         ),
         (
-            humidifier.SERVICE_SET_HUMIDITY,
+            humidifier.HumidifierService.SET_HUMIDITY,
             "target_humidity_command_topic",
-            {humidifier.ATTR_HUMIDITY: "45"},
+            {humidifier.HumidifierServiceArgument.HUMIDITY: "45"},
             45,
             "target_humidity_command_template",
         ),

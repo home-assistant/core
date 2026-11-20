@@ -51,10 +51,10 @@ async def test_get_triggers(
         entity_entry.entity_id,
         STATE_ON,
         {
-            const.ATTR_HUMIDITY: 23,
-            const.ATTR_CURRENT_HUMIDITY: 48,
+            const.HumidifierEntityStateAttribute.HUMIDITY: 23,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 48,
             ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -170,10 +170,10 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         STATE_ON,
         {
-            const.ATTR_HUMIDITY: 23,
-            const.ATTR_CURRENT_HUMIDITY: 35,
+            const.HumidifierEntityStateAttribute.HUMIDITY: 23,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 35,
             ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -340,7 +340,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 35},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 7,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 35,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
@@ -350,7 +353,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 18},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 7,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 18,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 2
@@ -360,7 +366,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 18},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 37,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 18,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 3
@@ -370,7 +379,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 37,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 41,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 4
@@ -389,7 +401,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_OFF,
-        {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 37,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 41,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 8
@@ -402,7 +417,10 @@ async def test_if_fires_on_state_change(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
+        {
+            const.HumidifierEntityStateAttribute.HUMIDITY: 37,
+            const.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 41,
+        },
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 10
@@ -433,9 +451,9 @@ async def test_if_fires_on_state_change_legacy(
         entry.entity_id,
         STATE_ON,
         {
-            const.ATTR_HUMIDITY: 23,
+            const.HumidifierEntityStateAttribute.HUMIDITY: 23,
             ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -464,7 +482,9 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     # Fake that the humidity is changing
-    hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
+    hass.states.async_set(
+        entry.entity_id, STATE_ON, {const.HumidifierEntityStateAttribute.HUMIDITY: 7}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "target_humidity_changed_below"
@@ -482,9 +502,9 @@ async def test_invalid_config(
         entry.entity_id,
         STATE_ON,
         {
-            const.ATTR_HUMIDITY: 23,
+            const.HumidifierEntityStateAttribute.HUMIDITY: 23,
             ATTR_MODE: "home",
-            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
@@ -514,7 +534,9 @@ async def test_invalid_config(
     )
 
     # Fake that the humidity is changing
-    hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
+    hass.states.async_set(
+        entry.entity_id, STATE_ON, {const.HumidifierEntityStateAttribute.HUMIDITY: 7}
+    )
     await hass.async_block_till_done()
     # Should not trigger for invalid config
     assert len(service_calls) == 0

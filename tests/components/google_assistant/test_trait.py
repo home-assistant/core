@@ -45,7 +45,10 @@ from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.humidifier import (
+    HumidifierEntityFeature,
+    HumidifierService,
+)
 from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import LockEntityFeature
@@ -392,12 +395,12 @@ async def test_onoff_humidifier(hass: HomeAssistant) -> None:
 
     assert trt_off.query_attributes() == {"on": False}
 
-    on_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_ON)
+    on_calls = async_mock_service(hass, humidifier.DOMAIN, HumidifierService.TURN_ON)
     await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
-    off_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_OFF)
+    off_calls = async_mock_service(hass, humidifier.DOMAIN, HumidifierService.TURN_OFF)
 
     await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
@@ -1937,10 +1940,10 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
             "humidifier.bla",
             STATE_ON,
             {
-                humidifier.ATTR_MIN_HUMIDITY: 20,
-                humidifier.ATTR_MAX_HUMIDITY: 90,
-                humidifier.ATTR_HUMIDITY: 38,
-                humidifier.ATTR_CURRENT_HUMIDITY: 30,
+                humidifier.HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 20,
+                humidifier.HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 90,
+                humidifier.HumidifierEntityStateAttribute.HUMIDITY: 38,
+                humidifier.HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 30,
             },
         ),
         BASIC_CONFIG,
@@ -1954,13 +1957,15 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
     }
     assert trt.can_execute(trait.COMMAND_SET_HUMIDITY, {})
 
-    calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_HUMIDITY)
+    calls = async_mock_service(
+        hass, humidifier.DOMAIN, humidifier.HumidifierService.SET_HUMIDITY
+    )
 
     await trt.execute(trait.COMMAND_SET_HUMIDITY, BASIC_DATA, {"humidity": 32}, {})
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "humidifier.bla",
-        humidifier.ATTR_HUMIDITY: 32,
+        humidifier.HumidifierServiceArgument.HUMIDITY: 32,
     }
 
 
@@ -3040,15 +3045,15 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
             "humidifier.humidifier",
             STATE_OFF,
             attributes={
-                humidifier.ATTR_AVAILABLE_MODES: [
+                humidifier.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
                     humidifier.MODE_NORMAL,
                     humidifier.MODE_AUTO,
                     humidifier.MODE_AWAY,
                 ],
                 ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES,
-                humidifier.ATTR_MIN_HUMIDITY: 30,
-                humidifier.ATTR_MAX_HUMIDITY: 99,
-                humidifier.ATTR_HUMIDITY: 50,
+                humidifier.HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 30,
+                humidifier.HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 99,
+                humidifier.HumidifierEntityStateAttribute.HUMIDITY: 50,
                 ATTR_MODE: humidifier.MODE_AUTO,
             },
         ),
@@ -3091,7 +3096,9 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
         trait.COMMAND_SET_MODES, params={"updateModeSettings": {"mode": "away"}}
     )
 
-    calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
+    calls = async_mock_service(
+        hass, humidifier.DOMAIN, humidifier.HumidifierService.SET_MODE
+    )
     await trt.execute(
         trait.COMMAND_SET_MODES,
         BASIC_DATA,

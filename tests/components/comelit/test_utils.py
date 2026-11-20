@@ -15,7 +15,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.components.humidifier import ATTR_HUMIDITY
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TargetKey
@@ -45,11 +45,11 @@ async def test_device_remove_stale(
 
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_HUMIDITY] == 50.0
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 50.0
 
     assert (state := hass.states.get(ENTITY_ID_3))
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_HUMIDITY] == 50.0
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
         0: ComelitDeviceObject(

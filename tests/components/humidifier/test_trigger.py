@@ -18,8 +18,8 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
     HumidifierAction,
     HumidifierEntityFeature,
 )
@@ -136,13 +136,35 @@ async def test_humidifier_state_trigger_behavior_each(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",
@@ -235,13 +257,35 @@ async def test_humidifier_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",
@@ -334,13 +378,35 @@ async def test_humidifier_state_trigger_behavior_all(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",

@@ -13,17 +13,14 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.midea.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform
+from homeassistant.const import ATTR_MODE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -46,7 +43,7 @@ async def _assert_service_call(
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id, **service_data},
+        {TargetKey.ENTITY_ID: entity_id, **service_data},
         blocking=True,
     )
     assert device.calls == expected_calls
@@ -144,23 +141,26 @@ async def test_a1_humidifier_services(
 
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "on"
-    assert state.attributes[ATTR_HUMIDITY] == 55
-    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 60
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 55
+    assert state.attributes[HumidifierEntityStateAttribute.CURRENT_HUMIDITY] == 60
     assert state.attributes[ATTR_MODE] == "auto"
-    assert state.attributes[ATTR_AVAILABLE_MODES] == device.modes
+    assert (
+        state.attributes[HumidifierEntityCapabilityAttribute.AVAILABLE_MODES]
+        == device.modes
+    )
 
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_HUMIDITY: 65},
+        HumidifierService.SET_HUMIDITY,
+        {HumidifierServiceArgument.HUMIDITY: 65},
         [("set_attribute", "target_humidity", 65)],
         device,
     )
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
-        SERVICE_SET_MODE,
+        HumidifierService.SET_MODE,
         {ATTR_MODE: "continuous"},
         [("set_attribute", "mode", "continuous")],
         device,
@@ -168,7 +168,7 @@ async def test_a1_humidifier_services(
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
-        SERVICE_TURN_OFF,
+        HumidifierService.TURN_OFF,
         {},
         [("set_attribute", "power", False)],
         device,
@@ -176,7 +176,7 @@ async def test_a1_humidifier_services(
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
-        SERVICE_TURN_ON,
+        HumidifierService.TURN_ON,
         {},
         [("set_attribute", "power", True)],
         device,
@@ -226,8 +226,8 @@ async def test_humidifier_unknown_mode_and_power_return_none(
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_humidifier"]
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "unknown"
-    assert state.attributes.get(ATTR_HUMIDITY) is None
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+    assert state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY) is None
+    assert state.attributes.get(HumidifierEntityStateAttribute.CURRENT_HUMIDITY) is None
     assert state.attributes.get(ATTR_MODE) is None
 
 
@@ -249,7 +249,7 @@ async def test_humidifier_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            HumidifierService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )

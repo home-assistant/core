@@ -21,12 +21,12 @@ from homeassistant.components.generic_hygrostat.const import (
     GenericHygrostatEntityStateAttribute,
 )
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AWAY,
     MODE_NORMAL,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -126,8 +127,8 @@ async def test_humidifier_input_boolean(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 32},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -171,8 +172,8 @@ async def test_humidifier_switch(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 32},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -346,8 +347,8 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
     """Test the setting of the target humidity."""
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 40},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -356,8 +357,8 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: None},
+            HumidifierService.SET_HUMIDITY,
+            {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: None},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -370,15 +371,15 @@ async def test_set_away_mode(hass: HomeAssistant) -> None:
     """Test the setting away mode."""
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 44},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 44},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_AWAY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -394,15 +395,15 @@ async def test_set_away_mode_and_restore_prev_humidity(hass: HomeAssistant) -> N
     """
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 44},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 44},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_AWAY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -410,8 +411,8 @@ async def test_set_away_mode_and_restore_prev_humidity(hass: HomeAssistant) -> N
     assert state.attributes.get("humidity") == 35
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_NORMAL},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_NORMAL},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -429,22 +430,22 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(
     """
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 44},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 44},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_AWAY},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_AWAY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -452,8 +453,8 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(
     assert state.attributes.get("humidity") == 35
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_NORMAL},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_NORMAL},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -524,8 +525,8 @@ async def test_set_target_humidity_humidifier_on(hass: HomeAssistant) -> None:
     calls.clear()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 45},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -545,8 +546,8 @@ async def test_set_target_humidity_humidifier_off(hass: HomeAssistant) -> None:
     calls.clear()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 36},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 36},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -565,8 +566,8 @@ async def test_humidity_change_humidifier_on_within_tolerance(
     calls = await _setup_switch(hass, False)
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 44},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 44},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -583,8 +584,8 @@ async def test_humidity_change_humidifier_on_outside_tolerance(
     calls = await _setup_switch(hass, False)
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 44},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 44},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -605,8 +606,8 @@ async def test_humidity_change_humidifier_off_within_tolerance(
     calls = await _setup_switch(hass, True)
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 46},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 46},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -623,8 +624,8 @@ async def test_humidity_change_humidifier_off_outside_tolerance(
     calls = await _setup_switch(hass, True)
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 46},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 46},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -645,15 +646,15 @@ async def test_operation_mode_humidify(hass: HomeAssistant) -> None:
     """
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 45},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -662,8 +663,8 @@ async def test_operation_mode_humidify(hass: HomeAssistant) -> None:
     calls = await _setup_switch(hass, False)
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -723,8 +724,8 @@ async def test_set_target_humidity_dry_off(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 55},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 55},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -744,15 +745,15 @@ async def test_turn_away_mode_on_drying(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 34},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 34},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.MODE: MODE_AWAY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -772,8 +773,8 @@ async def test_operation_mode_dry(hass: HomeAssistant) -> None:
     assert len(calls) == 0
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -782,8 +783,8 @@ async def test_operation_mode_dry(hass: HomeAssistant) -> None:
     assert len(calls) == 0
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -876,8 +877,8 @@ async def test_running_when_operating_mode_is_off_2(hass: HomeAssistant) -> None
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -897,8 +898,8 @@ async def test_no_state_change_when_operation_mode_off_2(hass: HomeAssistant) ->
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1009,8 +1010,8 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass: HomeAssistant) 
     assert len(calls) == 0
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1029,8 +1030,8 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass: HomeAssistant) -
     await hass.async_block_till_done()
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1039,8 +1040,8 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass: HomeAssistant) -
     assert len(calls) == 0
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1158,8 +1159,8 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1182,8 +1183,8 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1195,8 +1196,8 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1474,7 +1475,11 @@ async def test_restore_state(hass: HomeAssistant) -> None:
             State(
                 "humidifier.test_hygrostat",
                 STATE_OFF,
-                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40", ATTR_MODE: MODE_AWAY},
+                {
+                    ATTR_ENTITY_ID: ENTITY,
+                    HumidifierEntityStateAttribute.HUMIDITY: "40",
+                    HumidifierEntityStateAttribute.MODE: MODE_AWAY,
+                },
             ),
         ),
     )
@@ -1497,7 +1502,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.state == STATE_OFF
 
@@ -1512,7 +1517,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
             State(
                 "humidifier.test_hygrostat",
                 STATE_OFF,
-                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40"},
+                {ATTR_ENTITY_ID: ENTITY, HumidifierEntityStateAttribute.HUMIDITY: "40"},
             ),
         ),
     )
@@ -1536,7 +1541,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.state == STATE_OFF
 
 
@@ -1552,7 +1557,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
                 STATE_OFF,
                 {
                     ATTR_ENTITY_ID: ENTITY,
-                    ATTR_HUMIDITY: "40",
+                    HumidifierEntityStateAttribute.HUMIDITY: "40",
                     ATTR_MODE: MODE_AWAY,
                     GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY: "50",
                 },
@@ -1578,21 +1583,24 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 50
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_NORMAL},
+        HumidifierService.SET_MODE,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.MODE: MODE_NORMAL,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 50
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 50
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
     assert state.state == STATE_OFF
 
@@ -1610,7 +1618,11 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
             State(
                 "humidifier.test_hygrostat",
                 STATE_OFF,
-                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40", ATTR_MODE: MODE_AWAY},
+                {
+                    ATTR_ENTITY_ID: ENTITY,
+                    HumidifierEntityStateAttribute.HUMIDITY: "40",
+                    HumidifierEntityStateAttribute.MODE: MODE_AWAY,
+                },
             ),
         ),
     )
@@ -1634,7 +1646,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.state == STATE_OFF
 
 
@@ -1652,7 +1664,7 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY)
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.state == STATE_OFF
     assert len(calls) == 0
 
@@ -1693,7 +1705,7 @@ def _mock_restore_cache(
                 state,
                 {
                     ATTR_ENTITY_ID: ENTITY,
-                    ATTR_HUMIDITY: str(humidity),
+                    HumidifierEntityStateAttribute.HUMIDITY: str(humidity),
                     ATTR_MODE: MODE_AWAY,
                 },
             ),
@@ -1723,15 +1735,18 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 40
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
     assert state.state == STATE_OFF
 
     # Switch to Away mode
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_AWAY},
+        HumidifierService.SET_MODE,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.MODE: MODE_AWAY,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1739,22 +1754,25 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     # Target humidity changed to away_humidity
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_MODE] == MODE_AWAY
-    assert state.attributes[ATTR_HUMIDITY] == 32
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 32
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 40
     assert state.state == STATE_OFF
 
     # Change target humidity
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_HUMIDITY: 42},
+        HumidifierService.SET_HUMIDITY,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.HUMIDITY: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # Current target humidity not changed
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 32
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 32
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 42
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.state == STATE_OFF
@@ -1762,15 +1780,18 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     # Return to Normal mode
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_NORMAL},
+        HumidifierService.SET_MODE,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.MODE: MODE_NORMAL,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # Target humidity changed to away_humidity
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 42
+    assert state.attributes[HumidifierEntityStateAttribute.HUMIDITY] == 42
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 32
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
     assert state.state == STATE_OFF
@@ -1813,8 +1834,8 @@ async def test_sensor_stale_duration(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY, HumidifierServiceArgument.HUMIDITY: 32},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1856,8 +1877,8 @@ async def test_sensor_stale_duration(
     # Manual turn off
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()

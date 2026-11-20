@@ -22,9 +22,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     HVACMode,
 )
-from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
-)
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.humidity.condition import CONDITIONS
 from homeassistant.components.weather import WeatherEntityStateAttribute
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
@@ -244,7 +242,7 @@ async def test_humidity_climate_condition_behavior_all(
     parametrize_numerical_attribute_condition_above_below_any(
         "humidity.is_value",
         STATE_ON,
-        HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        HumidifierEntityStateAttribute.CURRENT_HUMIDITY,
         attribute_required=True,
     ),
 )
@@ -280,7 +278,7 @@ async def test_humidity_humidifier_condition_behavior_any(
     parametrize_numerical_attribute_condition_above_below_all(
         "humidity.is_value",
         STATE_ON,
-        HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        HumidifierEntityStateAttribute.CURRENT_HUMIDITY,
         attribute_required=True,
     ),
 )

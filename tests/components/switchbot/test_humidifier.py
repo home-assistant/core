@@ -9,17 +9,13 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     MODE_NORMAL,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -35,32 +31,32 @@ from . import EVAPORATIVE_HUMIDIFIER_SERVICE_INFO, HUMIDIFIER_SERVICE_INFO
     ),
     [
         (
-            SERVICE_TURN_OFF,
+            HumidifierService.TURN_OFF,
             {},
             "turn_off",
             (),
         ),
         (
-            SERVICE_TURN_ON,
+            HumidifierService.TURN_ON,
             {},
             "turn_on",
             (),
         ),
         (
-            SERVICE_SET_HUMIDITY,
-            {ATTR_HUMIDITY: 50},
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 50},
             "set_humidity_level",
             (50,),
         ),
         (
-            SERVICE_SET_MODE,
-            {ATTR_MODE: MODE_AUTO},
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: MODE_AUTO},
             "set_auto_mode",
             (),
         ),
         (
-            SERVICE_SET_MODE,
-            {ATTR_MODE: MODE_NORMAL},
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: MODE_NORMAL},
             "set_manual_mode",
             (),
         ),
@@ -109,7 +105,7 @@ async def test_humidifier_services(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
-            {**service_data, ATTR_ENTITY_ID: entity_id},
+            {**service_data, TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -136,11 +132,23 @@ async def test_humidifier_services(
 @pytest.mark.parametrize(
     ("service", "service_data", "mock_method"),
     [
-        (SERVICE_TURN_ON, {}, "turn_on"),
-        (SERVICE_TURN_OFF, {}, "turn_off"),
-        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_level"),
-        (SERVICE_SET_MODE, {ATTR_MODE: MODE_AUTO}, "async_set_auto"),
-        (SERVICE_SET_MODE, {ATTR_MODE: MODE_NORMAL}, "async_set_manual"),
+        (HumidifierService.TURN_ON, {}, "turn_on"),
+        (HumidifierService.TURN_OFF, {}, "turn_off"),
+        (
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 60},
+            "set_level",
+        ),
+        (
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: MODE_AUTO},
+            "async_set_auto",
+        ),
+        (
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: MODE_NORMAL},
+            "async_set_manual",
+        ),
     ],
 )
 async def test_exception_handling_humidifier_service(
@@ -172,7 +180,7 @@ async def test_exception_handling_humidifier_service(
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 service,
-                {**service_data, ATTR_ENTITY_ID: entity_id},
+                {**service_data, TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
@@ -180,10 +188,18 @@ async def test_exception_handling_humidifier_service(
 @pytest.mark.parametrize(
     ("service", "service_data", "mock_method"),
     [
-        (SERVICE_TURN_ON, {}, "turn_on"),
-        (SERVICE_TURN_OFF, {}, "turn_off"),
-        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_target_humidity"),
-        (SERVICE_SET_MODE, {ATTR_MODE: "sleep"}, "set_mode"),
+        (HumidifierService.TURN_ON, {}, "turn_on"),
+        (HumidifierService.TURN_OFF, {}, "turn_off"),
+        (
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 60},
+            "set_target_humidity",
+        ),
+        (
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: "sleep"},
+            "set_mode",
+        ),
     ],
 )
 async def test_evaporative_humidifier_services(
@@ -212,7 +228,7 @@ async def test_evaporative_humidifier_services(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
-            {**service_data, ATTR_ENTITY_ID: entity_id},
+            {**service_data, TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -222,10 +238,18 @@ async def test_evaporative_humidifier_services(
 @pytest.mark.parametrize(
     ("service", "service_data", "mock_method"),
     [
-        (SERVICE_TURN_ON, {}, "turn_on"),
-        (SERVICE_TURN_OFF, {}, "turn_off"),
-        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 60}, "set_target_humidity"),
-        (SERVICE_SET_MODE, {ATTR_MODE: "sleep"}, "set_mode"),
+        (HumidifierService.TURN_ON, {}, "turn_on"),
+        (HumidifierService.TURN_OFF, {}, "turn_off"),
+        (
+            HumidifierService.SET_HUMIDITY,
+            {HumidifierServiceArgument.HUMIDITY: 60},
+            "set_target_humidity",
+        ),
+        (
+            HumidifierService.SET_MODE,
+            {HumidifierServiceArgument.MODE: "sleep"},
+            "set_mode",
+        ),
     ],
 )
 async def test_evaporative_humidifier_services_with_exception(
@@ -261,6 +285,6 @@ async def test_evaporative_humidifier_services_with_exception(
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 service,
-                {**service_data, ATTR_ENTITY_ID: entity_id},
+                {**service_data, TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
