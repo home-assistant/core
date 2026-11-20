@@ -161,7 +161,7 @@ def get_holidays_object(
         return country_holidays(  # Return default if no language
             country,
             subdiv=province,
-            years=year,
+            years=[year, year + 1],
             language=default_language,
             categories=set_categories,
             **country_options,
@@ -179,7 +179,7 @@ def get_holidays_object(
             return country_holidays(  # Return default English if default language
                 country,
                 subdiv=province,
-                years=year,
+                years=[year, year + 1],
                 language=default_language,
                 categories=set_categories,
                 **country_options,
@@ -190,7 +190,7 @@ def get_holidays_object(
                 return country_holidays(
                     country,
                     subdiv=province,
-                    years=year,
+                    years=[year, year + 1],
                     language=lang,
                     categories=set_categories,
                     **country_options,
@@ -202,7 +202,7 @@ def get_holidays_object(
         return country_holidays(  # Return default English if default language
             country,
             subdiv=province,
-            years=year,
+            years=[year, year + 1],
             language=default_language,
             categories=set_categories,
             **country_options,
