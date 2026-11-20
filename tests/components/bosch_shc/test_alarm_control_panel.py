@@ -12,12 +12,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -126,7 +126,7 @@ async def test_services(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        ALARM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        ALARM_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     getattr(device, method).assert_called_once_with()

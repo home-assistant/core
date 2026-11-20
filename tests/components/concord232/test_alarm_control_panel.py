@@ -9,19 +9,17 @@ import requests
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
     CONF_CODE,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     CONF_PORT,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -91,8 +89,8 @@ async def test_alarm_disarm(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_alarm"},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: "alarm_control_panel.test_alarm"},
         blocking=True,
     )
     mock_concord232_client.disarm.assert_called_once_with(None)
@@ -107,10 +105,10 @@ async def test_alarm_disarm_with_code(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_alarm",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
         blocking=True,
     )
@@ -128,10 +126,10 @@ async def test_alarm_disarm_invalid_code(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "9999",
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_alarm",
+            AlarmControlPanelServiceArgument.CODE: "9999",
         },
         blocking=True,
     )
@@ -142,8 +140,8 @@ async def test_alarm_disarm_invalid_code(
 @pytest.mark.parametrize(
     ("service", "expected_arm_call"),
     [
-        (SERVICE_ALARM_ARM_HOME, "stay"),
-        (SERVICE_ALARM_ARM_AWAY, "away"),
+        (AlarmControlPanelService.ARM_HOME, "stay"),
+        (AlarmControlPanelService.ARM_AWAY, "away"),
     ],
 )
 async def test_alarm_arm(
@@ -160,8 +158,8 @@ async def test_alarm_arm(
         ALARM_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_alarm",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
         blocking=True,
     )
@@ -179,10 +177,10 @@ async def test_alarm_arm_home_silent_mode(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_alarm",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_alarm",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
         blocking=True,
     )

@@ -16,7 +16,7 @@ from homeassistant.components.homematicip_cloud.services import (
     HomematicIPService,
     HomematicIPServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TargetKey
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -191,7 +191,7 @@ async def _async_refuse_arming(hass: HomeAssistant, home: Mock, blocked: Mock) -
         await hass.services.async_call(
             "alarm_control_panel",
             "alarm_arm_away",
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -284,7 +284,7 @@ async def test_hmip_alarm_control_panel_arm_anyway_waits_for_disarm(
         hass.services.async_call(
             "alarm_control_panel",
             "alarm_disarm",
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     )
@@ -377,7 +377,7 @@ async def test_hmip_alarm_control_panel_arm_anyway_after_success(
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_disarm",
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

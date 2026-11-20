@@ -7,14 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,8 +50,8 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
         ) as mock_set_away:
             await hass.services.async_call(
                 ALARM_DOMAIN,
-                SERVICE_ALARM_ARM_AWAY,
-                {ATTR_ENTITY_ID: DEVICE_ID},
+                AlarmControlPanelService.ARM_AWAY,
+                {TargetKey.ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
             await hass.async_block_till_done()
@@ -84,8 +80,8 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
         ) as mock_set_home:
             await hass.services.async_call(
                 ALARM_DOMAIN,
-                SERVICE_ALARM_ARM_HOME,
-                {ATTR_ENTITY_ID: DEVICE_ID},
+                AlarmControlPanelService.ARM_HOME,
+                {TargetKey.ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
             await hass.async_block_till_done()
@@ -114,8 +110,8 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
         ) as mock_set_standby:
             await hass.services.async_call(
                 ALARM_DOMAIN,
-                SERVICE_ALARM_DISARM,
-                {ATTR_ENTITY_ID: DEVICE_ID},
+                AlarmControlPanelService.DISARM,
+                {TargetKey.ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
             await hass.async_block_till_done()

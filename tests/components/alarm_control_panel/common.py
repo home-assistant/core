@@ -10,20 +10,10 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-)
+from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 from homeassistant.core import HomeAssistant
 
 
@@ -37,7 +27,9 @@ async def async_alarm_disarm(
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_DISARM, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.DISARM, data, blocking=True
+    )
 
 
 async def async_alarm_arm_home(
@@ -50,7 +42,9 @@ async def async_alarm_arm_home(
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_HOME, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_HOME, data, blocking=True
+    )
 
 
 async def async_alarm_arm_away(
@@ -63,7 +57,9 @@ async def async_alarm_arm_away(
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_AWAY, data, blocking=True
+    )
 
 
 async def async_alarm_arm_night(
@@ -76,7 +72,9 @@ async def async_alarm_arm_night(
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_NIGHT, data, blocking=True
+    )
 
 
 async def async_alarm_arm_vacation(
@@ -90,7 +88,7 @@ async def async_alarm_arm_vacation(
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_ALARM_ARM_VACATION, data, blocking=True
+        DOMAIN, AlarmControlPanelService.ARM_VACATION, data, blocking=True
     )
 
 
@@ -104,7 +102,9 @@ async def async_alarm_trigger(
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_TRIGGER, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.TRIGGER, data, blocking=True
+    )
 
 
 async def async_alarm_arm_custom_bypass(
@@ -118,7 +118,7 @@ async def async_alarm_arm_custom_bypass(
         data[ATTR_ENTITY_ID] = entity_id
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_ALARM_ARM_CUSTOM_BYPASS, data, blocking=True
+        DOMAIN, AlarmControlPanelService.ARM_CUSTOM_BYPASS, data, blocking=True
     )
 
 

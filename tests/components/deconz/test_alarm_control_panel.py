@@ -11,16 +11,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -146,7 +146,10 @@ async def test_alarm_control_panel(
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.keypad", ATTR_CODE: code},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.keypad",
+                AlarmControlPanelServiceArgument.CODE: code,
+            },
             blocking=True,
         )
         assert aioclient_mock.mock_calls[0][2] == {"code0": code}

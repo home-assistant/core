@@ -9,11 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_DISARM,
-)
+from homeassistant.const import SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_DISARM, TargetKey
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "alarm_control_panel.blink_sync_module"
@@ -69,7 +65,7 @@ async def test_arm_state_updates_when_refresh_is_skipped(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        ALARM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        ALARM_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     assert hass.states.get(ENTITY_ID).state == expected_state

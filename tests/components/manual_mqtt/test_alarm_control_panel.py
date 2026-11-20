@@ -13,16 +13,18 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelServiceArgument,
+    AlarmControlPanelState,
+)
 from homeassistant.components.manual_mqtt.alarm_control_panel import ManualMQTTAlarm
 from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_VACATION,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -114,7 +116,10 @@ async def test_no_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -166,7 +171,10 @@ async def test_no_pending_when_code_not_req(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -217,7 +225,10 @@ async def test_with_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -241,7 +252,10 @@ async def test_with_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -293,7 +307,10 @@ async def test_with_invalid_code(
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.test",
+                AlarmControlPanelServiceArgument.CODE: f"{CODE}2",
+            },
             blocking=True,
         )
 
@@ -344,7 +361,10 @@ async def test_with_template_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abc"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "abc",
+        },
         blocking=True,
     )
 
@@ -393,7 +413,10 @@ async def test_with_specific_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "1234",
+        },
         blocking=True,
     )
 
@@ -889,7 +912,9 @@ async def test_disarm_during_trigger_with_invalid_code(
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert (
-        hass.states.get(entity_id).attributes[alarm_control_panel.ATTR_CODE_FORMAT]
+        hass.states.get(entity_id).attributes[
+            alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_FORMAT
+        ]
         == alarm_control_panel.CodeFormat.NUMBER
     )
 

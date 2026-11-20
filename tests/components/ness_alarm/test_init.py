@@ -8,6 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -23,16 +25,11 @@ from homeassistant.components.ness_alarm.services import (
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     CONF_TYPE,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -272,11 +269,11 @@ async def test_alarm_panel_disarm(hass: HomeAssistant, mock_nessclient) -> None:
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         blocking=True,
         service_data={
-            ATTR_ENTITY_ID: "alarm_control_panel.alarm_panel",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.alarm_panel",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
     )
     mock_nessclient.disarm.assert_called_once_with("1234")
@@ -297,11 +294,11 @@ async def test_alarm_panel_arm_away(hass: HomeAssistant, mock_nessclient) -> Non
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         blocking=True,
         service_data={
-            ATTR_ENTITY_ID: "alarm_control_panel.alarm_panel",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.alarm_panel",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
     )
     mock_nessclient.arm_away.assert_called_once_with("1234")
@@ -322,11 +319,11 @@ async def test_alarm_panel_arm_home(hass: HomeAssistant, mock_nessclient) -> Non
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         blocking=True,
         service_data={
-            ATTR_ENTITY_ID: "alarm_control_panel.alarm_panel",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.alarm_panel",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
     )
     mock_nessclient.arm_home.assert_called_once_with("1234")
@@ -347,11 +344,11 @@ async def test_alarm_panel_trigger(hass: HomeAssistant, mock_nessclient) -> None
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
-        SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelService.TRIGGER,
         blocking=True,
         service_data={
-            ATTR_ENTITY_ID: "alarm_control_panel.alarm_panel",
-            ATTR_CODE: "1234",
+            TargetKey.ENTITY_ID: "alarm_control_panel.alarm_panel",
+            AlarmControlPanelServiceArgument.CODE: "1234",
         },
     )
     mock_nessclient.panic.assert_called_once_with("1234")

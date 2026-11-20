@@ -11,17 +11,11 @@ from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_DISARM,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -142,8 +136,8 @@ async def test_alarm_panel_disarm(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: ALARM_ENTITY_ID},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: ALARM_ENTITY_ID},
         blocking=True,
     )
 
@@ -165,8 +159,8 @@ async def test_alarm_panel_arm_away(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: ALARM_ENTITY_ID},
+        AlarmControlPanelService.ARM_AWAY,
+        {TargetKey.ENTITY_ID: ALARM_ENTITY_ID},
         blocking=True,
     )
 
@@ -189,8 +183,8 @@ async def test_alarm_panel_disarm_global_manager_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: ALARM_ENTITY_ID},
+            AlarmControlPanelService.DISARM,
+            {TargetKey.ENTITY_ID: ALARM_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == "global_alarm_manager"
@@ -212,8 +206,8 @@ async def test_alarm_panel_arm_away_global_manager_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_ARM_AWAY,
-            {ATTR_ENTITY_ID: ALARM_ENTITY_ID},
+            AlarmControlPanelService.ARM_AWAY,
+            {TargetKey.ENTITY_ID: ALARM_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == "global_alarm_manager"

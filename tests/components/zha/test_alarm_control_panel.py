@@ -20,7 +20,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import find_entity_id
@@ -85,7 +85,7 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_away",
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -108,7 +108,7 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_away",
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -117,13 +117,13 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_disarm",
-        {ATTR_ENTITY_ID: entity_id, "code": "1111"},
+        {TargetKey.ENTITY_ID: entity_id, "code": "1111"},
         blocking=True,
     )
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_disarm",
-        {ATTR_ENTITY_ID: entity_id, "code": "1111"},
+        {TargetKey.ENTITY_ID: entity_id, "code": "1111"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -146,7 +146,7 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_home",
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -166,7 +166,7 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_night",
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -259,7 +259,7 @@ async def test_alarm_control_panel(
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_trigger",
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -285,7 +285,7 @@ async def reset_alarm_panel(hass: HomeAssistant, cluster: Cluster, entity_id: st
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_disarm",
-        {ATTR_ENTITY_ID: entity_id, "code": "4321"},
+        {TargetKey.ENTITY_ID: entity_id, "code": "4321"},
         blocking=True,
     )
     await hass.async_block_till_done()

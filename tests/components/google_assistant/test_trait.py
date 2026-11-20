@@ -2107,7 +2107,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
             "alarm_control_panel.alarm",
             AlarmControlPanelState.ARMED_AWAY,
             {
-                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
                 | AlarmControlPanelEntityFeature.ARM_AWAY,
             },
@@ -2145,7 +2145,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     )
 
     calls = async_mock_service(
-        hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_ARM_AWAY
+        hass,
+        alarm_control_panel.DOMAIN,
+        alarm_control_panel.AlarmControlPanelService.ARM_AWAY,
     )
 
     # Test with no secure_pin configured
@@ -2155,7 +2157,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         BASIC_CONFIG,
     )
@@ -2174,7 +2178,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         PIN_CONFIG,
     )
@@ -2218,7 +2224,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         PIN_CONFIG,
     )
@@ -2238,7 +2246,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: False
+            },
         ),
         PIN_CONFIG,
     )
@@ -2271,7 +2281,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
             "alarm_control_panel.alarm",
             AlarmControlPanelState.DISARMED,
             {
-                alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
                 | AlarmControlPanelEntityFeature.ARM_HOME
                 | AlarmControlPanelEntityFeature.ARM_AWAY,
@@ -2317,7 +2327,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     assert trt.can_execute(trait.COMMAND_ARM_DISARM, {"arm": False})
 
     calls = async_mock_service(
-        hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_DISARM
+        hass,
+        alarm_control_panel.DOMAIN,
+        alarm_control_panel.AlarmControlPanelService.DISARM,
     )
 
     # Test without secure_pin configured
@@ -2326,7 +2338,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         BASIC_CONFIG,
     )
@@ -2341,7 +2355,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         PIN_CONFIG,
     )
@@ -2375,7 +2391,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.DISARMED,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: True
+            },
         ),
         PIN_CONFIG,
     )
@@ -2389,7 +2407,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.ARMED_AWAY,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: False
+            },
         ),
         PIN_CONFIG,
     )
@@ -2409,7 +2429,9 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         State(
             "alarm_control_panel.alarm",
             AlarmControlPanelState.PENDING,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+            {
+                alarm_control_panel.AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: False
+            },
         ),
         PIN_CONFIG,
     )

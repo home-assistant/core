@@ -16,18 +16,19 @@ from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.components.totalconnect.services import TotalConnectService
 from homeassistant.const import (
-    ATTR_CODE,
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -89,7 +90,7 @@ async def test_arming(
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id, ATTR_CODE: CODE},
+        {TargetKey.ENTITY_ID: entity_id, AlarmControlPanelServiceArgument.CODE: CODE},
         blocking=True,
     )
     assert mock_partition.arm.call_args[1] == {"arm_type": arm_type, "usercode": ""}
@@ -128,7 +129,10 @@ async def test_arming_invalid_usercode(
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id, ATTR_CODE: "invalid_code"},
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AlarmControlPanelServiceArgument.CODE: "invalid_code",
+            },
             blocking=True,
         )
     assert mock_partition.arm.call_count == 0
@@ -152,8 +156,8 @@ async def test_disarming(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: entity_id, ATTR_CODE: CODE},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: entity_id, AlarmControlPanelServiceArgument.CODE: CODE},
         blocking=True,
     )
     assert mock_partition.disarm.call_args[1] == {"usercode": ""}
@@ -181,8 +185,11 @@ async def test_disarming_invalid_usercode(
     with pytest.raises(ServiceValidationError, match="Incorrect code entered"):
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: entity_id, ATTR_CODE: "invalid_code"},
+            AlarmControlPanelService.DISARM,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AlarmControlPanelServiceArgument.CODE: "invalid_code",
+            },
             blocking=True,
         )
     assert mock_partition.disarm.call_count == 0
@@ -262,7 +269,10 @@ async def test_arming_exceptions(
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id, ATTR_CODE: CODE},
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AlarmControlPanelServiceArgument.CODE: CODE,
+            },
             blocking=True,
         )
     assert mock_partition.arm.call_count == 1

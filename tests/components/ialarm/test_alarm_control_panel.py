@@ -13,12 +13,12 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.ialarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -100,7 +100,7 @@ async def test_actions(
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

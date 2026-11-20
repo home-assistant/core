@@ -11,13 +11,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component, entity_registry as er
@@ -117,7 +117,7 @@ async def test_arm(
         await hass.services.async_call(
             ALARM_DOMAIN,
             alarm_service,
-            {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
+            {TargetKey.ENTITY_ID: PROSEGUR_ALARM_ENTITY},
             blocking=True,
         )
         await hass.async_block_till_done()
