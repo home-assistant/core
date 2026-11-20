@@ -2138,10 +2138,11 @@ async def test_persist_extra_restore_data_when_unavailable(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    restore_data = RestoreStateData.async_get_instance(hass)
-    await restore_data.async_dump_states()
+    await RestoreStateData.async_save_persistent_states(hass)
+    restore_data = RestoreStateData(hass)
+    await restore_data.async_load()
 
-    stored = restore_data.last_states.get("humidifier.test_hygrostat")
+    stored = restore_data.async_get_stored_state("humidifier.test_hygrostat")
     assert stored is not None
     assert stored.state.state == STATE_UNAVAILABLE
     assert stored.extra_data is not None
