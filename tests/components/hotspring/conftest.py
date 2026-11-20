@@ -19,6 +19,7 @@ from hotspring import (
     LightWheelMode,
     LightZone,
     LogoLight,
+    PowerMetrics,
     Spa,
     SpaBrand,
     SpaFailureState,
@@ -149,6 +150,7 @@ def device_fixture() -> Spa:
         temp_offset=0.0,
         vsense_cal=0.0,
     )
+    spa.power = PowerMetrics()
     return spa
 
 
