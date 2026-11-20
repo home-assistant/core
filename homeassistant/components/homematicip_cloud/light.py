@@ -173,19 +173,25 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             feature_id="color_light",
         )
 
+    def _optional_features(self) -> dict[str, bool]:
+        """Return the optional features of the channel."""
+        # the library does not parse the optional features of the channel
+        channel = self.get_channel_or_raise()
+        return getattr(channel, "_rawJSONData", {}).get("supportedOptionalFeatures", {})
+
     def _supports_color(self) -> bool:
         """Return true if device supports hue/saturation color control."""
+        if self._supports_color_temp():
+            # hue is unset while the light is in color temperature mode
+            return bool(
+                self._optional_features().get("IOptionalFeatureHueSaturationValue")
+            )
         channel = self.get_channel_or_raise()
         return channel.hue is not None and channel.saturationLevel is not None
 
     def _supports_color_temp(self) -> bool:
         """Return true if device supports color temperature control."""
-        # the library does not parse the optional features of the channel
-        channel = self.get_channel_or_raise()
-        features = getattr(channel, "_rawJSONData", {}).get(
-            "supportedOptionalFeatures", {}
-        )
-        return bool(features.get("IOptionalFeatureColorTemperature"))
+        return bool(self._optional_features().get("IOptionalFeatureColorTemperature"))
 
     @property
     @override
@@ -270,6 +276,11 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
 
         # Use dim-only method for monochrome mode (hue/saturation not supported)
         if not self._supports_color():
+            await channel.set_dim_level_async(dim_level=dim_level)
+            return
+
+        # Keep the color temperature when only the brightness changes
+        if ATTR_HS_COLOR not in kwargs and channel.hue is None:
             await channel.set_dim_level_async(dim_level=dim_level)
             return
 

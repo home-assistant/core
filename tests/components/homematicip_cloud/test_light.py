@@ -785,7 +785,10 @@ async def test_hmip_light_color_temp(
 
     assert ha_state.state == STATE_ON
     assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
     assert ha_state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4250
     assert ha_state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2000
     assert ha_state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
@@ -806,6 +809,31 @@ async def test_hmip_light_color_temp(
     assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {
         "color_temperature": 3000,
         "dim_level": 0.5,
+    }
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][0] == "set_dim_level_async"
+    assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {"dim_level": 1.0}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_HS_COLOR: [120, 80]},
+        blocking=True,
+    )
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0]
+        == "set_hue_saturation_dim_level_async"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {
+        "hue": 120,
+        "saturation_level": 0.8,
+        "dim_level": 0.25,
     }
 
     # a color set in the app switches the light to HS, color temperature stays
