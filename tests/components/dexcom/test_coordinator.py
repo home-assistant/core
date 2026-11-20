@@ -6,14 +6,13 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pydexcom import GlucoseReading
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import CONFIG, TEST_ACCOUNT_ID, TEST_SESSION_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 READING_TIME = datetime.fromisoformat("2025-04-19T16:58:33+00:00")
 
