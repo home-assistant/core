@@ -14,11 +14,10 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_remotes import ActivityRemote
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
-    ATTR_ACTIVITY_LIST,
-    ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
+    RemoteEntityStateAttribute,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,8 +36,8 @@ async def test_activity_remote(
     entity_id = "remote.harmony"
     base_attrs = {
         ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
-        ATTR_CURRENT_ACTIVITY: "Apple TV",
-        ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
+        RemoteEntityStateAttribute.CURRENT_ACTIVITY: "Apple TV",
+        RemoteEntityStateAttribute.ACTIVITY_LIST: ["TV", "Apple TV"],
     }
     hass.states.async_set(
         entity_id,
@@ -78,13 +77,17 @@ async def test_activity_remote(
     assert acc.char_active.value == 0
 
     hass.states.async_set(
-        entity_id, STATE_ON, {**base_attrs, ATTR_CURRENT_ACTIVITY: "TV"}
+        entity_id,
+        STATE_ON,
+        {**base_attrs, RemoteEntityStateAttribute.CURRENT_ACTIVITY: "TV"},
     )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
 
     hass.states.async_set(
-        entity_id, STATE_ON, {**base_attrs, ATTR_CURRENT_ACTIVITY: "Apple TV"}
+        entity_id,
+        STATE_ON,
+        {**base_attrs, RemoteEntityStateAttribute.CURRENT_ACTIVITY: "Apple TV"},
     )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 1
@@ -111,7 +114,7 @@ async def test_activity_remote(
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_turn_on[1].data[ATTR_ACTIVITY] == "Apple TV"
+    assert call_turn_on[1].data[RemoteServiceArgument.ACTIVITY] == "Apple TV"
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -119,7 +122,7 @@ async def test_activity_remote(
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[2].data[ATTR_ENTITY_ID] == entity_id
-    assert call_turn_on[2].data[ATTR_ACTIVITY] == "TV"
+    assert call_turn_on[2].data[RemoteServiceArgument.ACTIVITY] == "TV"
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -146,8 +149,12 @@ async def test_activity_remote(
             STATE_ON,
             {
                 **base_attrs,
-                ATTR_CURRENT_ACTIVITY: "Amazon TV",
-                ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "Amazon TV"],
+                RemoteEntityStateAttribute.CURRENT_ACTIVITY: "Amazon TV",
+                RemoteEntityStateAttribute.ACTIVITY_LIST: [
+                    "TV",
+                    "Apple TV",
+                    "Amazon TV",
+                ],
             },
         )
         await hass.async_block_till_done()
@@ -167,8 +174,13 @@ async def test_activity_remote_bad_names(
         None,
         {
             ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
-            ATTR_CURRENT_ACTIVITY: "Apple TV",
-            ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY: "Apple TV",
+            RemoteEntityStateAttribute.ACTIVITY_LIST: [
+                "TV",
+                "Apple TV",
+                "[[[--Special--]]]",
+                "Super",
+            ],
         },
     )
     await hass.async_block_till_done()
@@ -188,8 +200,13 @@ async def test_activity_remote_bad_names(
         STATE_ON,
         {
             ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
-            ATTR_CURRENT_ACTIVITY: "[[[--Special--]]]",
-            ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "[[[--Special--]]]", "Super"],
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY: "[[[--Special--]]]",
+            RemoteEntityStateAttribute.ACTIVITY_LIST: [
+                "TV",
+                "Apple TV",
+                "[[[--Special--]]]",
+                "Super",
+            ],
         },
     )
     await hass.async_block_till_done()

@@ -12,15 +12,15 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
 )
 from homeassistant.components.remote import (
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -94,9 +94,12 @@ async def test_services_remote(hass: HomeAssistant, config) -> None:
             await _test_service(
                 hass,
                 entity_id,
-                SERVICE_SEND_COMMAND,
+                RemoteService.SEND_COMMAND,
                 "adb_shell",
-                {ATTR_COMMAND: ["BACK", "test"], ATTR_NUM_REPEATS: 2},
+                {
+                    RemoteServiceArgument.COMMAND: ["BACK", "test"],
+                    RemoteServiceArgument.NUM_REPEATS: 2,
+                },
                 [
                     f"input keyevent {KEYS['BACK']}",
                     "test",
@@ -154,8 +157,11 @@ async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
             try:
                 await hass.services.async_call(
                     REMOTE_DOMAIN,
-                    SERVICE_SEND_COMMAND,
-                    service_data={ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "BACK"},
+                    RemoteService.SEND_COMMAND,
+                    service_data={
+                        TargetKey.ENTITY_ID: entity_id,
+                        RemoteServiceArgument.COMMAND: "BACK",
+                    },
                     blocking=True,
                 )
                 pytest.fail("Exception not raised")

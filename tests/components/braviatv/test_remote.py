@@ -9,17 +9,16 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -74,7 +73,7 @@ async def test_turn_on_off(
     await init_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        REMOTE_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        REMOTE_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     getattr(mock_braviatv_client, method).assert_called_once()
@@ -85,7 +84,7 @@ async def test_turn_on_off(
     [
         ({}, [call("Power"), call("Num1")]),
         (
-            {ATTR_NUM_REPEATS: 2},
+            {RemoteServiceArgument.NUM_REPEATS: 2},
             [call("Power"), call("Num1"), call("Power"), call("Num1")],
         ),
     ],
@@ -102,8 +101,12 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["Power", "Num1"], **extra_data},
+        RemoteService.SEND_COMMAND,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            RemoteServiceArgument.COMMAND: ["Power", "Num1"],
+            **extra_data,
+        },
         blocking=True,
     )
 
@@ -123,11 +126,11 @@ async def test_send_command_unsupported(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_COMMAND: ["Foo", "Bar"],
-                ATTR_NUM_REPEATS: 2,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["Foo", "Bar"],
+                RemoteServiceArgument.NUM_REPEATS: 2,
             },
             blocking=True,
         )
@@ -155,7 +158,7 @@ async def test_send_command_error(
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["Power"]},
+            RemoteService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["Power"]},
             blocking=True,
         )

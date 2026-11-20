@@ -3,23 +3,14 @@
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import remote
-from homeassistant.components.remote import (
-    ATTR_ALTERNATIVE,
-    ATTR_COMMAND,
-    ATTR_COMMAND_TYPE,
-    ATTR_DELAY_SECS,
-    ATTR_DEVICE,
-    ATTR_NUM_REPEATS,
-    ATTR_TIMEOUT,
-    DOMAIN,
-)
+from homeassistant.components.remote import DOMAIN, RemoteService, RemoteServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -41,8 +32,10 @@ async def test_is_on(hass: HomeAssistant) -> None:
 
 async def test_turn_on(hass: HomeAssistant) -> None:
     """Test turn_on."""
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID})
+    turn_on_calls = async_mock_service(hass, DOMAIN, RemoteService.TURN_ON)
+    await hass.services.async_call(
+        DOMAIN, RemoteService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}
+    )
 
     await hass.async_block_till_done()
 
@@ -54,10 +47,10 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 
 async def test_turn_off(hass: HomeAssistant) -> None:
     """Test turn_off."""
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    turn_off_calls = async_mock_service(hass, DOMAIN, RemoteService.TURN_OFF)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}
+        DOMAIN, RemoteService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}
     )
 
     await hass.async_block_till_done()
@@ -76,10 +69,10 @@ async def test_send_command(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_DEVICE: "test_device",
-        ATTR_COMMAND: ["test_command"],
-        ATTR_NUM_REPEATS: "4",
-        ATTR_DELAY_SECS: "0.6",
+        RemoteServiceArgument.DEVICE: "test_device",
+        RemoteServiceArgument.COMMAND: ["test_command"],
+        RemoteServiceArgument.NUM_REPEATS: "4",
+        RemoteServiceArgument.DELAY_SECS: "0.6",
     }
 
     await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data)
@@ -100,11 +93,11 @@ async def test_learn_command(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_DEVICE: "test_device",
-        ATTR_COMMAND: ["test_command"],
-        ATTR_COMMAND_TYPE: "rf",
-        ATTR_ALTERNATIVE: True,
-        ATTR_TIMEOUT: 20,
+        RemoteServiceArgument.DEVICE: "test_device",
+        RemoteServiceArgument.COMMAND: ["test_command"],
+        RemoteServiceArgument.COMMAND_TYPE: "rf",
+        RemoteServiceArgument.ALTERNATIVE: True,
+        RemoteServiceArgument.TIMEOUT: 20,
     }
     await hass.services.async_call(DOMAIN, SERVICE_LEARN_COMMAND, data)
 
@@ -126,8 +119,8 @@ async def test_delete_command(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_DEVICE: "test_device",
-        ATTR_COMMAND: ["test_command"],
+        RemoteServiceArgument.DEVICE: "test_device",
+        RemoteServiceArgument.COMMAND: ["test_command"],
     }
 
     await hass.services.async_call(DOMAIN, SERVICE_DELETE_COMMAND, data)

@@ -13,16 +13,11 @@ from homeassistant.components.harmony.services import (
     HarmonyServiceArgument,
 )
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
-    ATTR_COMMAND,
-    ATTR_DEVICE,
-    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DEFAULT_HOLD_SECS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -101,8 +96,8 @@ async def test_remote_toggles(
     # turn off remote
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -114,8 +109,8 @@ async def test_remote_toggles(
     # turn on remote, restoring the last activity
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -127,8 +122,11 @@ async def test_remote_toggles(
     # send new activity command, with activity name
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: "Play Music"},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: "Play Music",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -140,8 +138,11 @@ async def test_remote_toggles(
     # send new activity command, with activity id
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"]},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -168,7 +169,11 @@ async def test_async_send_command(
 
     # No device provided
     await _send_commands_and_wait(
-        hass, {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_COMMAND: PLAY_COMMAND}
+        hass,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+        },
     )
     send_commands_mock.assert_not_awaited()
 
@@ -177,8 +182,8 @@ async def test_async_send_command(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: PLAY_COMMAND,
-            ATTR_DEVICE: TV_DEVICE_ID,
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+            RemoteServiceArgument.DEVICE: TV_DEVICE_ID,
         },
     )
 
@@ -199,8 +204,8 @@ async def test_async_send_command(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: PLAY_COMMAND,
-            ATTR_DEVICE: TV_DEVICE_NAME,
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+            RemoteServiceArgument.DEVICE: TV_DEVICE_NAME,
         },
     )
 
@@ -221,8 +226,8 @@ async def test_async_send_command(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: [PLAY_COMMAND, STOP_COMMAND],
-            ATTR_DEVICE: TV_DEVICE_NAME,
+            RemoteServiceArgument.COMMAND: [PLAY_COMMAND, STOP_COMMAND],
+            RemoteServiceArgument.DEVICE: TV_DEVICE_NAME,
         },
     )
 
@@ -249,9 +254,9 @@ async def test_async_send_command(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: PLAY_COMMAND,
-            ATTR_DEVICE: TV_DEVICE_NAME,
-            ATTR_NUM_REPEATS: 2,
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+            RemoteServiceArgument.DEVICE: TV_DEVICE_NAME,
+            RemoteServiceArgument.NUM_REPEATS: 2,
         },
     )
 
@@ -278,8 +283,8 @@ async def test_async_send_command(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: PLAY_COMMAND,
-            ATTR_DEVICE: "no-such-device",
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+            RemoteServiceArgument.DEVICE: "no-such-device",
         },
     )
     send_commands_mock.assert_not_awaited()
@@ -315,8 +320,8 @@ async def test_async_send_command_custom_delay(
         hass,
         {
             ATTR_ENTITY_ID: ENTITY_REMOTE,
-            ATTR_COMMAND: PLAY_COMMAND,
-            ATTR_DEVICE: TV_DEVICE_ID,
+            RemoteServiceArgument.COMMAND: PLAY_COMMAND,
+            RemoteServiceArgument.DEVICE: TV_DEVICE_ID,
         },
     )
 
@@ -396,7 +401,7 @@ async def _send_commands_and_wait(
 ) -> None:
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         service_data,
         blocking=True,
     )

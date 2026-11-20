@@ -19,14 +19,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.remote import CODE_SAVE_DELAY, FLAG_SAVE_DELAY
 from homeassistant.components.broadlink.updater import BroadlinkRMUpdateManager
-from homeassistant.components.remote import (
-    DOMAIN as REMOTE_DOMAIN,
-    SERVICE_DELETE_COMMAND,
-    SERVICE_LEARN_COMMAND,
-    SERVICE_SEND_COMMAND,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteService
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
@@ -139,7 +132,7 @@ async def test_remote_send_command(
         remote = remotes[0]
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -222,7 +215,7 @@ async def test_remote_turn_off_turn_on(
         remote = remotes[0]
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_OFF,
+            RemoteService.TURN_OFF,
             {"entity_id": remote.entity_id},
             blocking=True,
         )
@@ -230,7 +223,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -238,7 +231,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_ON,
+            RemoteService.TURN_ON,
             {"entity_id": remote.entity_id},
             blocking=True,
         )
@@ -246,7 +239,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -275,7 +268,7 @@ async def test_remote_send_command_error_stops_sending(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
                 "entity_id": entity_id,
                 "command": ["b64:" + IR_PACKET] * 3,
@@ -303,14 +296,18 @@ async def test_remote_send_command_error_stores_toggle_flags(
         b64decode(IR_PACKET_ALT),
     ]
     await _async_call_remote(
-        hass, SERVICE_LEARN_COMMAND, entity_id, command=["toggle"], alternative=True
+        hass,
+        RemoteService.LEARN_COMMAND,
+        entity_id,
+        command=["toggle"],
+        alternative=True,
     )
     mock_setup.api.send_data.side_effect = [None, BroadlinkException("boom")]
 
     with pytest.raises(HomeAssistantError):
         await _async_call_remote(
             hass,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             entity_id,
             command=["toggle", "toggle"],
             delay_secs=0,
@@ -322,7 +319,9 @@ async def test_remote_send_command_error_stores_toggle_flags(
     await _async_reload_remote(hass, mock_setup)
     mock_setup.api.send_data.reset_mock(side_effect=True)
 
-    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["toggle"])
+    await _async_call_remote(
+        hass, RemoteService.SEND_COMMAND, entity_id, command=["toggle"]
+    )
 
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET_ALT))]
 
@@ -341,7 +340,7 @@ async def test_remote_learn_command_error_stops_learning(
     with pytest.raises(HomeAssistantError) as exc_info:
         await _async_call_remote(
             hass,
-            SERVICE_LEARN_COMMAND,
+            RemoteService.LEARN_COMMAND,
             entity_id,
             command=["first", "second", "third"],
         )
@@ -351,7 +350,9 @@ async def test_remote_learn_command_error_stops_learning(
     assert exc_info.value.translation_domain == DOMAIN
 
     await _async_reload_remote(hass, mock_setup)
-    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["first"])
+    await _async_call_remote(
+        hass, RemoteService.SEND_COMMAND, entity_id, command=["first"]
+    )
 
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))]
 
@@ -390,7 +391,7 @@ async def test_remote_learn_command_skips_failed_commands(
     with pytest.raises(HomeAssistantError) as exc_info:
         await _async_call_remote(
             hass,
-            SERVICE_LEARN_COMMAND,
+            RemoteService.LEARN_COMMAND,
             entity_id,
             command=["first", "second", "third"],
         )
@@ -400,7 +401,7 @@ async def test_remote_learn_command_skips_failed_commands(
     assert exc_info.value.translation_domain == DOMAIN
 
     await _async_call_remote(
-        hass, SERVICE_SEND_COMMAND, entity_id, command=learned, delay_secs=0
+        hass, RemoteService.SEND_COMMAND, entity_id, command=learned, delay_secs=0
     )
 
     assert mock_setup.api.send_data.call_args_list == [
@@ -419,12 +420,12 @@ async def test_remote_delete_command_reports_unknown_commands(
     mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
     mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
     await _async_call_remote(
-        hass, SERVICE_LEARN_COMMAND, entity_id, command=["known", "other"]
+        hass, RemoteService.LEARN_COMMAND, entity_id, command=["known", "other"]
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await _async_call_remote(
-            hass, SERVICE_DELETE_COMMAND, entity_id, command=["known", "unknown"]
+            hass, RemoteService.DELETE_COMMAND, entity_id, command=["known", "unknown"]
         )
 
     assert exc_info.value.translation_key == "command_not_found"
@@ -435,12 +436,14 @@ async def test_remote_delete_command_reports_unknown_commands(
     await hass.async_block_till_done()
     await _async_reload_remote(hass, mock_setup)
 
-    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["other"])
+    await _async_call_remote(
+        hass, RemoteService.SEND_COMMAND, entity_id, command=["other"]
+    )
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))]
 
     with pytest.raises(ServiceValidationError, match="Command not found: 'known'"):
         await _async_call_remote(
-            hass, SERVICE_SEND_COMMAND, entity_id, command=["known"]
+            hass, RemoteService.SEND_COMMAND, entity_id, command=["known"]
         )
 
 
@@ -474,13 +477,13 @@ async def test_remote_delete_command_reports_invalid_input(
     mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
     mock_setup.api.check_data.return_value = b64decode(IR_PACKET)
     await _async_call_remote(
-        hass, SERVICE_LEARN_COMMAND, entity_id, command=["known", "other"]
+        hass, RemoteService.LEARN_COMMAND, entity_id, command=["known", "other"]
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_DELETE_COMMAND,
+            RemoteService.DELETE_COMMAND,
             {"entity_id": entity_id, "device": subdevice, "command": commands},
             blocking=True,
         )
@@ -489,7 +492,11 @@ async def test_remote_delete_command_reports_invalid_input(
     assert exc_info.value.translation_domain == DOMAIN
 
     await _async_call_remote(
-        hass, SERVICE_SEND_COMMAND, entity_id, command=["known", "other"], delay_secs=0
+        hass,
+        RemoteService.SEND_COMMAND,
+        entity_id,
+        command=["known", "other"],
+        delay_secs=0,
     )
 
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))] * 2
@@ -515,7 +522,7 @@ async def test_remote_learn_rf_command(
     mock_setup.api.check_data.return_value = RF_PACKET
 
     await _async_call_remote(
-        hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+        hass, RemoteService.LEARN_COMMAND, entity_id, command="light", command_type="rf"
     )
 
     assert mock_setup.api.sweep_frequency.call_count == 1
@@ -523,7 +530,9 @@ async def test_remote_learn_rf_command(
     codes = hass_storage[f"broadlink_remote_{device.mac}_codes"]["data"]
     assert codes == {SUBDEVICE: {"light": b64encode(RF_PACKET).decode()}}
 
-    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command="light")
+    await _async_call_remote(
+        hass, RemoteService.SEND_COMMAND, entity_id, command="light"
+    )
 
     assert mock_setup.api.send_data.call_args == call(RF_PACKET)
 
@@ -597,7 +606,11 @@ async def test_remote_learn_rf_command_failure(
         pytest.raises(HomeAssistantError, match="Failed to learn command 'light'"),
     ):
         await _async_call_remote(
-            hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+            hass,
+            RemoteService.LEARN_COMMAND,
+            entity_id,
+            command="light",
+            command_type="rf",
         )
 
     assert getattr(mock_setup.api, api_method).called
@@ -617,7 +630,11 @@ async def test_remote_learn_rf_command_cancelled(
 
     with pytest.raises(asyncio.CancelledError):
         await _async_call_remote(
-            hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+            hass,
+            RemoteService.LEARN_COMMAND,
+            entity_id,
+            command="light",
+            command_type="rf",
         )
 
     assert mock_setup.api.cancel_sweep_frequency.call_count == 1
@@ -627,22 +644,22 @@ async def test_remote_learn_rf_command_cancelled(
     ("service", "service_data"),
     [
         pytest.param(
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"command": "b64:" + b64encode(RF_PACKET).decode()},
             id="send",
         ),
         pytest.param(
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"command": "b64:" + b64encode(b"\xb1" + RF_PACKET[1:]).decode()},
             id="send_rm4_packet",
         ),
         pytest.param(
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"command": "b64:" + b64encode(b"\xb4" + RF_PACKET[1:]).decode()},
             id="send_315mhz_packet",
         ),
         pytest.param(
-            SERVICE_LEARN_COMMAND,
+            RemoteService.LEARN_COMMAND,
             {"device": "fan", "command": "light", "command_type": "rf"},
             id="learn",
         ),

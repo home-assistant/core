@@ -5,15 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import remote
-from homeassistant.components.remote import ATTR_COMMAND
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.components.remote import RemoteService, RemoteServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -43,21 +36,21 @@ async def setup_component(hass: HomeAssistant, remote_only: None):
 async def test_methods(hass: HomeAssistant) -> None:
     """Test if services call the entity methods as expected."""
     await hass.services.async_call(
-        remote.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}
+        remote.DOMAIN, RemoteService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        remote.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}
+        remote.DOMAIN, RemoteService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        remote.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}
+        remote.DOMAIN, RemoteService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
@@ -65,7 +58,7 @@ async def test_methods(hass: HomeAssistant) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: ["test"],
+        RemoteServiceArgument.COMMAND: ["test"],
     }
 
     await hass.services.async_call(remote.DOMAIN, SERVICE_SEND_COMMAND, data)

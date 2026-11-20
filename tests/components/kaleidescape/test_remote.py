@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -39,7 +39,7 @@ async def test_turn_on_off(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     getattr(mock_device, method).assert_awaited_once_with()
@@ -78,8 +78,8 @@ async def test_send_command(
     """Test each command calls the device method of the same name."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: [command]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: [command]},
         blocking=True,
     )
     getattr(mock_device, command).assert_awaited_once_with()
@@ -91,8 +91,8 @@ async def test_unknown_command(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["bad"]},
+            RemoteService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["bad"]},
             blocking=True,
         )
     assert str(err.value) == "bad is not a known command"
