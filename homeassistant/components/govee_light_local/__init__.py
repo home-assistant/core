@@ -15,7 +15,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
+from .const import (
+    CONF_DEVICE_IP,
+    DISCOVERY_TIMEOUT,
+    DOMAIN,
+    REBIND_INTERVAL,
+    SUBENTRY_TYPE_DEVICE,
+)
 from .coordinator import (
     GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
@@ -155,16 +161,18 @@ async def update_listener(
     coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
     config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
 
-    for ip in config.manual_devices:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+        ip = subentry.data[CONF_DEVICE_IP]
         # Re-queueing a known IP would strand it there: the queue is only
-        # drained when a device with a new fingerprint answers.
+        # drained when the probe completes.
         if ip in coordinator.discovery_queue:
             continue
-        if (device := coordinator.get_device_by_ip(ip)) is None:
-            coordinator.add_device_to_discovery_queue(ip)
-        elif not device.is_manual and not coordinator.async_adopt_device(device):
-            # The lamp cached at this address belongs elsewhere (possibly a
-            # stale entry), so probe the address for the subentry's own lamp.
+        device = coordinator.get_device_by_ip(ip)
+        if device is None or coordinator.async_adopt_device(device) != (
+            subentry.subentry_id
+        ):
+            # No lamp here, or the cached lamp belongs to another subentry:
+            # probe the address for this subentry's own lamp.
             coordinator.add_device_to_discovery_queue(ip)
 
     device_registry = dr.async_get(hass)
@@ -184,7 +192,9 @@ async def update_listener(
             # The lamp's subentry survived, so its address was reconfigured and
             # the lamp was not deleted. Keep it, with its registry entries and
             # entity: the library updates its IP in place when it answers the
-            # probe queued above for the new address.
+            # probe queued above for the new address. Only a probe left at its
+            # address by a deleted subentry is dropped.
+            coordinator.remove_device_from_discovery_queue(ip)
             continue
         coordinator.async_remove_manual_device(ip)
 

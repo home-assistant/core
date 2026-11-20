@@ -46,10 +46,14 @@ def _device_subentries(*ips: str) -> list[ConfigSubentryData]:
 
 
 async def _async_reconfigure_subentry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, new_ip: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    new_ip: str,
+    subentry_id: str | None = None,
 ) -> SubentryFlowResult:
-    """Run the reconfigure flow of the entry's only device subentry."""
-    subentry_id = next(iter(config_entry.subentries))
+    """Run the reconfigure flow of a device subentry, the entry's only one by default."""
+    if subentry_id is None:
+        subentry_id = next(iter(config_entry.subentries))
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
         context={
@@ -88,6 +92,56 @@ async def _async_setup_manual_device(
     await hass.async_block_till_done()
 
     return config_entry, manual_device
+
+
+async def _async_setup_two_manual_devices(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
+) -> tuple[MockConfigEntry, GoveeDevice, GoveeDevice]:
+    """Set up an entry with two answered manual lamps at 192.168.1.100 and .101."""
+    device_a = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual_device-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    device_a.is_manual = True
+    device_b = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="other-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    device_b.is_manual = True
+    set_mocked_devices(mock_govee_api, [device_a, device_b])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries(device_a.ip, device_b.ip),
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The lamps answered the probes queued at startup; a poll lets the sweep
+    # acknowledge that, since the mocked library cannot drain the queue.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.runtime_data.discovery_queue == set()
+
+    return config_entry, device_a, device_b
+
+
+def _subentry_id_of(config_entry: MockConfigEntry, unique_id: str) -> str:
+    """Return the id of the device subentry with this unique id."""
+    return next(
+        subentry.subentry_id
+        for subentry in config_entry.subentries.values()
+        if subentry.unique_id == unique_id
+    )
 
 
 async def test_setup_entry_with_manual_devices(
@@ -635,6 +689,150 @@ async def test_unknown_lamp_at_reconfigured_address_stays_unclaimed(
     )
     mock_govee_api.remove_device.assert_called_once_with(manual_device)
     assert coordinator.discovery_queue == set()
+
+
+async def test_probe_queued_when_other_manual_lamp_caches_address(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a probe is queued although another manual lamp is cached at the address."""
+
+    config_entry, device_a, device_b = await _async_setup_two_manual_devices(
+        hass, mock_govee_api, freezer
+    )
+    subentry_a = _subentry_id_of(config_entry, device_a.ip)
+    subentry_b = _subentry_id_of(config_entry, device_b.ip)
+
+    # B is expected at a new address but still answers at the old one; A is
+    # then expected at B's cached address.
+    await _async_reconfigure_subentry(hass, config_entry, "192.168.1.103", subentry_b)
+    await _async_reconfigure_subentry(hass, config_entry, "192.168.1.101", subentry_a)
+
+    coordinator = config_entry.runtime_data
+    assert coordinator.discovery_queue == {"192.168.1.101", "192.168.1.103"}
+    # The cached lamp is untouched: still manual, still owning its subentry.
+    assert device_b.is_manual is True
+    entry_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_b.fingerprint), config_entry.entry_id
+    )
+    assert entry_b is not None
+    assert entry_b.config_subentry_id == subentry_b
+    entry_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_a.fingerprint), config_entry.entry_id
+    )
+    assert entry_a is not None
+    assert entry_a.config_subentry_id == subentry_a
+
+
+async def test_lamp_keeps_subentry_association_across_restart(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a lamp answering at its old address keeps its subentry after a restart."""
+
+    device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual_device-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [device])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries("192.168.1.102"),
+    )
+    config_entry.add_to_hass(hass)
+    subentry_id = next(iter(config_entry.subentries))
+    # The previous session stored the lamp under its subentry.
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id=subentry_id,
+        identifiers={(DOMAIN, device.fingerprint)},
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The lamp answered at its old address: the stored association wins over
+    # the address mismatch.
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.fingerprint), config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.config_subentry_id == subentry_id
+    assert device.is_manual is True
+    assert entity_registry.async_get("light.h615a") is not None
+
+    # The probe at the reconfigured address keeps waiting for the lamp.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.runtime_data.discovery_queue == {"192.168.1.102"}
+
+    # Deleting the subentry removes the lamp wherever it answered.
+    hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("light.h615a") is None
+    mock_govee_api.remove_device.assert_called_once_with(device)
+    assert config_entry.runtime_data.discovery_queue == set()
+
+
+async def test_probe_not_drained_by_other_subentrys_lamp(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test another subentry's lamp answering at a probed address keeps the probe."""
+
+    config_entry, device_a, device_b = await _async_setup_two_manual_devices(
+        hass, mock_govee_api, freezer
+    )
+    subentry_a = _subentry_id_of(config_entry, device_a.ip)
+    subentry_b = _subentry_id_of(config_entry, device_b.ip)
+
+    await _async_reconfigure_subentry(hass, config_entry, "192.168.1.102", subentry_a)
+
+    coordinator = config_entry.runtime_data
+    assert coordinator.discovery_queue == {"192.168.1.102"}
+
+    # The other subentry's lamp moves to the probed address and answers there.
+    device_b.update_ip("192.168.1.102")
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    discovery_callback(device_b, False)
+    await hass.async_block_till_done()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The answer did not come from this subentry's lamp, so its probe stays.
+    assert coordinator.discovery_queue == {"192.168.1.102"}
+    assert device_b.is_manual is True
+    entry_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_b.fingerprint), config_entry.entry_id
+    )
+    assert entry_b is not None
+    assert entry_b.config_subentry_id == subentry_b
+
+    # Deleting the waiting subentry drops its probe and only its own lamp; the
+    # other lamp is then probed at its own configured address again.
+    hass.config_entries.async_remove_subentry(config_entry, subentry_a)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("light.h615a") is None
+    assert entity_registry.async_get("light.h615b") is not None
+    mock_govee_api.remove_device.assert_called_once_with(device_a)
+    assert coordinator.discovery_queue == {"192.168.1.101"}
 
 
 async def test_reconfigure_queued_device(

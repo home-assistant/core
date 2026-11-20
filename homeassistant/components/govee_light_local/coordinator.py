@@ -166,25 +166,53 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         )
 
     @callback
-    def async_claim_subentry(self, device: GoveeDevice) -> str | None:
-        """Claim the subentry configured for the device's address, if any.
-
-        A subentry describes one lamp; its address is only the hint for
-        finding it. If the subentry's registry device is another lamp, this
-        device stays on the main entry: it is unmarked as manual (the library
-        marks whatever answers a queued probe) and the probe is restored so
-        the owner can still be found.
-        """
-        subentry_id = next(
+    def _async_subentry_id_for_ip(self, ip: str) -> str | None:
+        """Return the id of the device subentry configured with this address."""
+        return next(
             (
                 subentry.subentry_id
                 for subentry in self.config_entry.get_subentries_of_type(
                     SUBENTRY_TYPE_DEVICE
                 )
-                if subentry.data[CONF_DEVICE_IP] == device.ip
+                if subentry.data[CONF_DEVICE_IP] == ip
             ),
             None,
         )
+
+    @callback
+    def _async_owned_subentry_id(self, device: GoveeDevice) -> str | None:
+        """Return the id of the surviving subentry whose registry device is this lamp."""
+        device_registry = dr.async_get(self.hass)
+        if (
+            (
+                device_entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device.fingerprint), self.config_entry.entry_id
+                )
+            )
+            is not None
+            and (subentry_id := device_entry.config_subentry_id) is not None
+            and subentry_id in self.config_entry.subentries
+        ):
+            return subentry_id
+        return None
+
+    @callback
+    def async_claim_subentry(self, device: GoveeDevice) -> str | None:
+        """Claim the subentry the device belongs to, if any.
+
+        The lamp keeps the subentry its registry entry already belongs to,
+        even when its cached address differs: the address is only the hint
+        for finding the lamp. An unowned lamp claims the subentry configured
+        with its address, unless that subentry's registry device is another
+        lamp; then it stays on the main entry, is unmarked as manual (the
+        library marks whatever answers a queued probe) and the probe is
+        restored so the owner can still be found.
+        """
+        if (owned_subentry_id := self._async_owned_subentry_id(device)) is not None:
+            device.is_manual = True
+            return owned_subentry_id
+
+        subentry_id = self._async_subentry_id_for_ip(device.ip)
         if subentry_id is None:
             return None
 
@@ -208,7 +236,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         return subentry_id
 
     @callback
-    def async_adopt_device(self, device: GoveeDevice) -> bool:
+    def async_adopt_device(self, device: GoveeDevice) -> str | None:
         """Claim an already-discovered device for its manual subentry.
 
         Marks it manual so eviction re-queues it instead of dropping it, and
@@ -216,10 +244,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         cascades to them. Entities move first: changing the device's subentry
         purges entities still pointing at the old one.
 
-        Returns whether the device is the subentry's lamp afterwards.
+        Returns the id of the subentry the device belongs to afterwards.
         """
         if (subentry_id := self.async_claim_subentry(device)) is None:
-            return False
+            return None
 
         device_registry = dr.async_get(self.hass)
         if (
@@ -227,7 +255,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 (DOMAIN, device.fingerprint), self.config_entry.entry_id
             )
         ) is None or device_entry.config_subentry_id == subentry_id:
-            return True
+            return subentry_id
 
         entity_registry = er.async_get(self.hass)
         for entity in er.async_entries_for_device(
@@ -239,7 +267,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         device_registry.async_update_device(
             device_entry.id, new_config_subentry_id=subentry_id
         )
-        return True
+        return subentry_id
 
     @callback
     def async_remove_manual_device(self, ip: str) -> None:
@@ -326,11 +354,15 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             )
         self._controller.send_update_message()
         # The library drains the discovery queue only when an unknown
-        # fingerprint answers, so a known lamp probed at its reconfigured
-        # address strands its queue entry. Drop entries only once a manual
-        # lamp covers them: a stale, never-answering device at the address
-        # must not cancel the probe.
+        # fingerprint answers, so a lamp probed at its reconfigured address
+        # strands its queue entry. A probe is complete only when the lamp at
+        # the address is the registry owner of the subentry configured there;
+        # any other tenant must not cancel it.
         for ip in list(self.discovery_queue):
-            if (device := self.get_device_by_ip(ip)) is not None and device.is_manual:
+            if (
+                (device := self.get_device_by_ip(ip)) is not None
+                and (subentry_id := self._async_subentry_id_for_ip(ip)) is not None
+                and subentry_id == self._async_owned_subentry_id(device)
+            ):
                 self.remove_device_from_discovery_queue(ip)
         return self.devices
