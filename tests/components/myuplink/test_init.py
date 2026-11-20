@@ -7,10 +7,12 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
+from myuplink import System
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     load_fixture,
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -21,7 +23,7 @@ from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -159,6 +161,56 @@ async def test_devices_multiple_created_count(
     await setup_integration(hass, mock_config_entry)
 
     assert len(device_registry.devices) == 2
+
+
+@pytest.mark.parametrize(
+    "load_systems_file",
+    [load_fixture("systems.json", DOMAIN)],
+)
+async def test_new_device_added(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a device added to the account after setup gets its own entities."""
+    batman = "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
+    robin = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
+
+    await setup_integration(hass, mock_config_entry)
+
+    def device_entities(device_id: str) -> set[str]:
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
+        assert device is not None
+        return {
+            entry.unique_id.removeprefix(f"{device_id}-")
+            for entry in er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            )
+        }
+
+    assert len(device_registry.devices) == 1
+    batman_entities = device_entities(batman)
+
+    # Robin is added to the same system
+    systems = await async_load_json_object_fixture(hass, "systems-2dev.json", DOMAIN)
+    mock_myuplink_client.async_get_systems.return_value = [
+        System(system) for system in systems["systems"]
+    ]
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 2
+    # The system alarm sensor stays with the first device, the rest are per device
+    assert device_entities(robin) == batman_entities - {"123456-7890-1234-has_alarm"}
+    assert device_entities(batman) == batman_entities
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_migrate_config_entry(

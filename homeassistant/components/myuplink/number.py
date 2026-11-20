@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .entity import MyUplinkEntity
+from .entity import MyUplinkEntity, async_add_device_entities
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
@@ -68,27 +68,31 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink number."""
-    entities: list[NumberEntity] = []
     coordinator = config_entry.runtime_data
 
-    # Setup device point number entities
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            if skip_entity(device_point.category, device_point):
+    def _entities_for_devices(device_ids: set[str]) -> list[NumberEntity]:
+        entities: list[NumberEntity] = []
+        # Setup device point number entities
+        for device_id, point_data in coordinator.data.points.items():
+            if device_id not in device_ids:
                 continue
-            description = get_description(device_point)
-            if find_matching_platform(device_point, description) == Platform.NUMBER:
-                entities.append(
-                    MyUplinkNumber(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
+            for point_id, device_point in point_data.items():
+                if skip_entity(device_point.category, device_point):
+                    continue
+                description = get_description(device_point)
+                if find_matching_platform(device_point, description) == Platform.NUMBER:
+                    entities.append(
+                        MyUplinkNumber(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            entity_description=description,
+                            unique_id_suffix=point_id,
+                        )
                     )
-                )
+        return entities
 
-    async_add_entities(entities)
+    async_add_device_entities(config_entry, async_add_entities, _entities_for_devices)
 
 
 class MyUplinkNumber(MyUplinkEntity, NumberEntity):

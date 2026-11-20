@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .entity import MyUplinkEntity
+from .entity import MyUplinkEntity, async_add_device_entities
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
@@ -58,28 +58,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink switch."""
-    entities: list[SwitchEntity] = []
     coordinator = config_entry.runtime_data
 
-    # Setup device point switches
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            if skip_entity(device_point.category, device_point):
+    def _entities_for_devices(device_ids: set[str]) -> list[SwitchEntity]:
+        entities: list[SwitchEntity] = []
+        # Setup device point switches
+        for device_id, point_data in coordinator.data.points.items():
+            if device_id not in device_ids:
                 continue
-            if find_matching_platform(device_point) == Platform.SWITCH:
-                description = get_description(device_point)
+            for point_id, device_point in point_data.items():
+                if skip_entity(device_point.category, device_point):
+                    continue
+                if find_matching_platform(device_point) == Platform.SWITCH:
+                    description = get_description(device_point)
 
-                entities.append(
-                    MyUplinkDevicePointSwitch(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
+                    entities.append(
+                        MyUplinkDevicePointSwitch(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            entity_description=description,
+                            unique_id_suffix=point_id,
+                        )
                     )
-                )
+        return entities
 
-    async_add_entities(entities)
+    async_add_device_entities(config_entry, async_add_entities, _entities_for_devices)
 
 
 class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):

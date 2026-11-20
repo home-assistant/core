@@ -85,8 +85,18 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = coordinator
 
-    # Update device registry
-    create_devices(hass, config_entry, coordinator)
+    # Add devices to the device registry, now and when new ones show up
+    known_devices: set[str] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        if not (new_devices := set(coordinator.data.devices) - known_devices):
+            return
+        known_devices.update(new_devices)
+        create_devices(hass, config_entry, coordinator, new_devices)
+
+    _async_add_new_devices()
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -101,14 +111,15 @@ def create_devices(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
     coordinator: MyUplinkDataCoordinator,
+    device_ids: set[str],
 ) -> None:
-    """Update all devices."""
+    """Add the given devices to the device registry."""
     device_registry = dr.async_get(hass)
 
     for system in coordinator.data.systems:
         devices_in_system = [x.id for x in system.devices]
         for device_id, device in coordinator.data.devices.items():
-            if device_id in devices_in_system:
+            if device_id in devices_in_system and device_id in device_ids:
                 device_registry.async_get_or_create(
                     config_entry_id=config_entry.entry_id,
                     identifiers={(DOMAIN, device_id)},
