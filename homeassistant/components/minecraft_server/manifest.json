@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.gaming"],
   "codeowners": ["@elmurato", "@zachdeibert"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
   "integration_type": "service",
   "iot_class": "local_polling",

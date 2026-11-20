@@ -22,13 +22,8 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
-    ADD_CREATED_COLUMN,
-    DATA,
-    DATA_CONFIG_ENTRY,
-    ROWS,
-    SERVICE_APPEND_SHEET,
-    SERVICE_GET_SHEET,
-    WORKSHEET,
+    GoogleSheetsService,
+    GoogleSheetsServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -265,8 +260,11 @@ async def test_setup_oauth_transient_error(
 @pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
-        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
-        ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
+        (
+            {GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: True},
+            ["bar", "2024-01-15 04:30:45.123456-08:00"],
+        ),
+        ({GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: False}, ["bar", ""]),
         ({}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
     ],
     ids=["created_column_true", "created_column_false", "created_column_default"],
@@ -294,11 +292,11 @@ async def test_append_sheet(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
                 **add_created_column_param,
             },
             blocking=True,
@@ -341,12 +339,12 @@ async def test_append_sheet_grows_grid_for_new_columns(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                DATA: {"new_column": "baz"},
-                ADD_CREATED_COLUMN: False,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"new_column": "baz"},
+                GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: False,
             },
             blocking=True,
         )
@@ -381,12 +379,12 @@ async def test_append_sheet_created_column_uses_configured_time_zone(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                DATA: {"foo": "bar"},
-                ADD_CREATED_COLUMN: True,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: True,
             },
             blocking=True,
         )
@@ -418,11 +416,11 @@ async def test_get_sheet(
         ]
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SHEET,
+            GoogleSheetsService.GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                ROWS: 2,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.ROWS: 2,
             },
             blocking=True,
             return_response=True,
@@ -473,10 +471,10 @@ async def test_append_sheet_defaults_to_first_worksheet(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
             },
             blocking=True,
         )
@@ -488,8 +486,16 @@ async def test_append_sheet_defaults_to_first_worksheet(
 @pytest.mark.parametrize(
     ("service", "service_data"),
     [
-        pytest.param(SERVICE_APPEND_SHEET, {DATA: {"foo": "bar"}}, id="append_sheet"),
-        pytest.param(SERVICE_GET_SHEET, {ROWS: 2}, id="get_sheet"),
+        pytest.param(
+            GoogleSheetsService.APPEND_SHEET,
+            {GoogleSheetsServiceArgument.DATA: {"foo": "bar"}},
+            id="append_sheet",
+        ),
+        pytest.param(
+            GoogleSheetsService.GET_SHEET,
+            {GoogleSheetsServiceArgument.ROWS: 2},
+            id="get_sheet",
+        ),
     ],
 )
 async def test_refresh_error_starts_reauth(
@@ -512,9 +518,12 @@ async def test_refresh_error_starts_reauth(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {DATA_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            {
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                **service_data,
+            },
             blocking=True,
-            return_response=service == SERVICE_GET_SHEET,
+            return_response=service == GoogleSheetsService.GET_SHEET,
         )
 
     await hass.async_block_till_done()
@@ -555,11 +564,14 @@ async def test_append_sheet_api_error_while_writing(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_APPEND_SHEET,
+                GoogleSheetsService.APPEND_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "Sheet1",
-                    DATA: {"foo": "bar", "new_column": "baz"},
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                    GoogleSheetsServiceArgument.DATA: {
+                        "foo": "bar",
+                        "new_column": "baz",
+                    },
                 },
                 blocking=True,
             )
@@ -585,11 +597,11 @@ async def test_get_sheet_api_error_while_reading(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_SHEET,
+                GoogleSheetsService.GET_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "Sheet1",
-                    ROWS: 2,
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                    GoogleSheetsServiceArgument.ROWS: 2,
                 },
                 blocking=True,
                 return_response=True,
@@ -720,11 +732,11 @@ async def test_get_sheet_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SHEET,
+            GoogleSheetsService.GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id + "XXX",
-                WORKSHEET: "Sheet1",
-                ROWS: 2,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id + "XXX",
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.ROWS: 2,
             },
             blocking=True,
             return_response=True,
@@ -773,11 +785,11 @@ async def test_get_sheet_invalid_worksheet(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_SHEET,
+                GoogleSheetsService.GET_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "DoesNotExist",
-                    ROWS: 2,
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "DoesNotExist",
+                    GoogleSheetsServiceArgument.ROWS: 2,
                 },
                 blocking=True,
                 return_response=True,

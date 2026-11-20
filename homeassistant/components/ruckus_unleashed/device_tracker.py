@@ -103,7 +103,7 @@ def restore_entities(
     async_add_entities(missing)
 
 
-class RuckusDevice(CoordinatorEntity, ScannerEntity):
+class RuckusDevice(CoordinatorEntity[RuckusDataUpdateCoordinator], ScannerEntity):
     """Representation of a Ruckus client."""
 
     def __init__(self, coordinator, mac, name: str | None) -> None:

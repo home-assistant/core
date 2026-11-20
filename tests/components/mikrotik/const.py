@@ -10,7 +10,6 @@ from homeassistant.components.mikrotik.const import (
     DEFAULT_DETECTION_TIME,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -218,7 +217,7 @@ INTERFACE_DATA = [ETHER1_INTERFACE, WLAN1_INTERFACE, BRIDGE1_INTERFACE]
 
 ROUTERBOARD_DATA = [
     {
-        ATTR_MODEL: TEST_MODEL,
+        "model": TEST_MODEL,
         ATTR_ROUTERBOARD_FIRMWARE: TEST_FIRMWARE,
         "upgrade-firmware": TEST_LATEST_VERSION,
         ATTR_SERIAL_NUMBER: TEST_SERIAL_NUMBER,

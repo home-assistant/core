@@ -12,26 +12,17 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_BASE,
-    CONF_HOST,
-    CONF_ID,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
-from . import create_hyperion_client
+from . import HyperionConfigEntry, create_hyperion_client
 from .const import (
-    CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
     CONF_EFFECT_SHOW_LIST,
@@ -336,7 +327,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="create_token",
                 description_placeholders={
-                    CONF_AUTH_ID: self._auth_id,
+                    "auth_id": self._auth_id,
                 },
             )
 
@@ -399,9 +390,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
-                    CONF_HOST: self._data[CONF_HOST],
-                    CONF_PORT: self._data[CONF_PORT],
-                    CONF_ID: self.unique_id,
+                    "host": self._data[CONF_HOST],
+                    "port": self._data[CONF_PORT],
+                    "id": self.unique_id,
                 },
             )
 
@@ -428,7 +419,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HyperionConfigEntry,
     ) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow()

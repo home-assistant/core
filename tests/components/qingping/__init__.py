@@ -44,6 +44,21 @@ LIGHT_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 
+VOC_NOISE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Qingping Motion & Light",
+    manufacturer_data={},
+    service_uuids=[],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    service_data={
+        "0000fdcd-0000-1000-8000-00805f9b34fb": (
+            b"\x08\x12\xcd\xd5`4-X\x15\x029\x00\x19\x012"
+        )
+    },
+    source="local",
+)
+
+
 NO_DATA_SERVICE_INFO = BluetoothServiceInfo(
     name="Qingping Motion & Light",
     manufacturer_data={},

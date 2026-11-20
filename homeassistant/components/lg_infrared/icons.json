@@ -4,14 +4,29 @@
       "ai_convertible": {
         "default": "mdi:brain"
       },
+      "asterisk": {
+        "default": "mdi:asterisk"
+      },
       "audio": {
         "default": "mdi:volume-high"
+      },
+      "audio_track": {
+        "default": "mdi:volume-source"
       },
       "back": {
         "default": "mdi:keyboard-backspace"
       },
+      "blue": {
+        "default": "mdi:circle"
+      },
+      "clear": {
+        "default": "mdi:close-circle-outline"
+      },
       "diagnose": {
         "default": "mdi:stethoscope"
+      },
+      "disc_menu": {
+        "default": "mdi:disc"
       },
       "down": {
         "default": "mdi:arrow-down"
@@ -21,6 +36,12 @@
       },
       "exit": {
         "default": "mdi:exit-to-app"
+      },
+      "fast_forward": {
+        "default": "mdi:fast-forward"
+      },
+      "green": {
+        "default": "mdi:circle"
       },
       "guide": {
         "default": "mdi:television-guide"
@@ -91,6 +112,12 @@
       "ok": {
         "default": "mdi:check"
       },
+      "open_close": {
+        "default": "mdi:eject"
+      },
+      "optical_tv_sound": {
+        "default": "mdi:television-speaker"
+      },
       "power": {
         "default": "mdi:power"
       },
@@ -100,11 +127,38 @@
       "power_on": {
         "default": "mdi:power-on"
       },
+      "record": {
+        "default": "mdi:record-rec"
+      },
+      "red": {
+        "default": "mdi:circle"
+      },
+      "repeat": {
+        "default": "mdi:repeat"
+      },
+      "rewind": {
+        "default": "mdi:rewind"
+      },
       "right": {
         "default": "mdi:arrow-right"
       },
+      "sleep": {
+        "default": "mdi:sleep"
+      },
+      "sound_effect": {
+        "default": "mdi:equalizer"
+      },
+      "speaker_level": {
+        "default": "mdi:surround-sound"
+      },
+      "subtitle": {
+        "default": "mdi:subtitles"
+      },
       "swing_v_toggle": {
         "default": "mdi:arrow-up-down"
+      },
+      "title_popup": {
+        "default": "mdi:menu-open"
       },
       "up": {
         "default": "mdi:arrow-up"
@@ -114,6 +168,9 @@
       },
       "wifi": {
         "default": "mdi:wifi"
+      },
+      "yellow": {
+        "default": "mdi:circle"
       }
     },
     "climate": {

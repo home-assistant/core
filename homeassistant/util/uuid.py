@@ -1,6 +1,7 @@
 """Helpers to generate uuids."""
 
 from random import getrandbits
+import secrets
 
 
 def random_uuid_hex() -> str:
@@ -10,3 +11,11 @@ def random_uuid_hex() -> str:
     operations.
     """
     return f"{getrandbits(32 * 4):032x}"
+
+
+def secure_uuid_hex() -> str:
+    """Generate an unpredictable random UUID hex.
+
+    Use this for an ID that grants access to whoever knows it.
+    """
+    return secrets.token_hex(16)

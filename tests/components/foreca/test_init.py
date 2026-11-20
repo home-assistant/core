@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyforeca import ForecaAuthError, ForecaConnectionError
+from pyforeca import (
+    ForecaAuthError,
+    ForecaConnectionError,
+    ForecaProductUnavailableError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -39,13 +43,15 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize("exception", [ForecaAuthError, ForecaProductUnavailableError])
 async def test_setup_fails_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
+    exception: type[Exception],
 ) -> None:
-    """Test a rejected API key fails setup instead of retrying."""
-    mock_foreca_client.current.side_effect = ForecaAuthError
+    """Test a key that is rejected or lacks the forecasts fails setup."""
+    mock_foreca_client.current.side_effect = exception
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -71,6 +77,29 @@ async def test_documented_request_budget(
     }
     assert awaited == {"current": 1, "forecast_daily": 1, "forecast_hourly": 1}
     assert sum(awaited.values()) == 3
+
+
+async def test_documented_forecast_length(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the forecasts cover the seven hourly and 14 daily days the docs promise."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.forecast_hourly.await_args.kwargs["periods"] == 168
+    assert mock_foreca_client.forecast_daily.await_args.kwargs["periods"] == 14
+
+
+async def test_daily_forecast_asks_for_the_ensemble(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the daily forecast request asks for the ensemble percentiles."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.forecast_daily.await_args.kwargs["ensemble"] is True
 
 
 @pytest.mark.usefixtures("mock_foreca_client")

@@ -1,10 +1,12 @@
 """Support for services."""
 
+from enum import StrEnum
+
 from aioamazondevices.const.metadata import ALEXA_INFO_SKILLS
 from aioamazondevices.const.sounds import SOUNDS_LIST
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -16,26 +18,39 @@ from homeassistant.helpers import (
 from .const import DOMAIN, INFO_SKILLS_MAPPING
 from .coordinator import AmazonConfigEntry, alexa_api_call
 
-ATTR_TEXT_COMMAND = "text_command"
-ATTR_SOUND = "sound"
-ATTR_INFO_SKILL = "info_skill"
+
+class AlexaDevicesService(StrEnum):
+    """Store keys for Alexa Devices services."""
+
+    SEND_TEXT_COMMAND = "send_text_command"
+    SEND_SOUND = "send_sound"
+    SEND_INFO_SKILL = "send_info_skill"
+
+
+class AlexaDevicesServiceArgument(StrEnum):
+    """Store keys for Alexa Devices service arguments."""
+
+    TEXT_COMMAND = "text_command"
+    SOUND = "sound"
+    INFO_SKILL = "info_skill"
+
 
 SCHEMA_SOUND_SERVICE = probatio.Schema(
     {
-        probatio.Required(ATTR_SOUND): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(AlexaDevicesServiceArgument.SOUND): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     },
 )
 SCHEMA_CUSTOM_COMMAND = probatio.Schema(
     {
-        probatio.Required(ATTR_TEXT_COMMAND): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(AlexaDevicesServiceArgument.TEXT_COMMAND): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 SCHEMA_INFO_SKILL = probatio.Schema(
     {
-        probatio.Required(ATTR_INFO_SKILL): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(AlexaDevicesServiceArgument.INFO_SKILL): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 
@@ -48,12 +63,17 @@ def async_get_entry_id_for_service_call(
     config_entry: AmazonConfigEntry
     # Callers read the device's serial number, which only a main device has
     device, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID], include_child_devices=False
+        call.hass,
+        DOMAIN,
+        call.data[CommonServiceArgument.DEVICE_ID],
+        include_child_devices=False,
     )
     return (device, config_entry)
 
 
-async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
+async def _async_execute_action(
+    call: ServiceCall, attribute: AlexaDevicesServiceArgument
+) -> None:
     """Execute action on the device."""
     device, config_entry = async_get_entry_id_for_service_call(call)
     assert device.serial_number
@@ -61,7 +81,7 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
 
     coordinator = config_entry.runtime_data
 
-    if attribute == ATTR_SOUND:
+    if attribute == AlexaDevicesServiceArgument.SOUND:
         if value not in SOUNDS_LIST:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -72,12 +92,12 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
             await coordinator.api.call_alexa_sound(
                 coordinator.data[device.serial_number], value
             )
-    elif attribute == ATTR_TEXT_COMMAND:
+    elif attribute == AlexaDevicesServiceArgument.TEXT_COMMAND:
         async with alexa_api_call():
             await coordinator.api.call_alexa_text_command(
                 coordinator.data[device.serial_number], value
             )
-    elif attribute == ATTR_INFO_SKILL:
+    elif attribute == AlexaDevicesServiceArgument.INFO_SKILL:
         info_skill = INFO_SKILLS_MAPPING.get(value)
         if info_skill not in ALEXA_INFO_SKILLS:
             raise ServiceValidationError(
@@ -93,17 +113,17 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
 
 async def async_send_sound_notification(call: ServiceCall) -> None:
     """Send a sound notification to a AmazonDevice."""
-    await _async_execute_action(call, ATTR_SOUND)
+    await _async_execute_action(call, AlexaDevicesServiceArgument.SOUND)
 
 
 async def async_send_text_command(call: ServiceCall) -> None:
     """Send a custom command to a AmazonDevice."""
-    await _async_execute_action(call, ATTR_TEXT_COMMAND)
+    await _async_execute_action(call, AlexaDevicesServiceArgument.TEXT_COMMAND)
 
 
 async def async_send_info_skill(call: ServiceCall) -> None:
     """Send an info skill command to a AmazonDevice."""
-    await _async_execute_action(call, ATTR_INFO_SKILL)
+    await _async_execute_action(call, AlexaDevicesServiceArgument.INFO_SKILL)
 
 
 @callback
@@ -111,17 +131,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amazon Devices integration."""
     for service_name, method, schema in (
         (
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             async_send_sound_notification,
             SCHEMA_SOUND_SERVICE,
         ),
         (
-            "send_text_command",
+            AlexaDevicesService.SEND_TEXT_COMMAND,
             async_send_text_command,
             SCHEMA_CUSTOM_COMMAND,
         ),
         (
-            "send_info_skill",
+            AlexaDevicesService.SEND_INFO_SKILL,
             async_send_info_skill,
             SCHEMA_INFO_SKILL,
         ),

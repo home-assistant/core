@@ -12,9 +12,10 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -122,8 +123,8 @@ async def test_set_hvac_mode(
     await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": hvac_mode},
         blocking=True,
     )
     zone.set_operation_mode.assert_awaited_once_with(expected_mode)
@@ -141,8 +142,8 @@ async def test_set_hvac_mode_powers_on_when_off(
     await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
     mock_atw_device.zones[0].set_operation_mode.assert_awaited_once_with("heat-flow")

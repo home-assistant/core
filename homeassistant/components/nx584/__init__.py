@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, REQUEST_TIMEOUT
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
@@ -41,7 +41,9 @@ type NX584ConfigEntry = ConfigEntry[NX584Data]
 
 def create_client(host: str, port: int) -> nx584_client.Client:
     """Create a client for the NX584 server."""
-    return nx584_client.Client(str(URL.build(scheme="http", host=host, port=port)))
+    return nx584_client.Client(
+        str(URL.build(scheme="http", host=host, port=port)), timeout=REQUEST_TIMEOUT
+    )
 
 
 def _fetch_zones(client: nx584_client.Client) -> tuple[list[dict[str, Any]], str]:

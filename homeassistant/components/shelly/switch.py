@@ -1,6 +1,6 @@
 """Switch for Shelly."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -46,6 +46,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_rpc_channel_name,
+    get_rpc_key,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -82,6 +83,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
     is_on: Callable[[dict[str, Any]], bool]
+    # "{component}" in a method name is replaced by the component of the entity
     method_on: str
     method_off: str
     method_params_fn: Callable[[int | None, bool], tuple]
@@ -102,8 +104,23 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize switch."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.key in ("cb", "switch", "script"):
+        if description.translation_key is None and description.key in (
+            "cb",
+            "switch",
+            "script",
+        ):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
+
+    def _get_method(self, name: str) -> Callable[..., Awaitable[Any]]:
+        """Return the device method, resolved for the component of the entity."""
+        method = getattr(
+            self.coordinator.device, name.format(component=get_rpc_key(self.key)[1])
+        )
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        return cast(Callable[..., Awaitable[Any]], method)
 
     @property
     @override
@@ -115,11 +132,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_on)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
+        method = self._get_method(self.entity_description.method_on)
         params = self.entity_description.method_params_fn(self._id, True)
         await method(*params)
 
@@ -127,13 +140,30 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_off)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
+        method = self._get_method(self.entity_description.method_off)
         params = self.entity_description.method_params_fn(self._id, False)
         await method(*params)
+
+
+class RpcConfigSwitch(RpcSwitch):
+    """Represent a RPC switch entity for a device config value."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSwitchDescription,
+    ) -> None:
+        """Initialize switch."""
+        super().__init__(coordinator, key, attribute, description)
+        self.configure_translation_attributes()
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return self.entity_description.is_on(self.coordinator.device.config[self.key])
 
 
 class RpcCircuitBreakerSwitch(RpcSwitch):
@@ -183,6 +213,17 @@ class RpcRelaySwitch(RpcSwitch):
         """Initialize the switch."""
         super().__init__(coordinator, key, attribute, description)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
+
+
+class RpcFanBoostSwitch(RpcSwitch):
+    """Entity that controls the fan boost on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # The device rejects boost in manual mode
+        return super().available and self.status["mode"] == "auto"
 
 
 class RpcLedStripSwitch(RpcSwitch):
@@ -441,6 +482,16 @@ RPC_SWITCHES = {
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
     ),
+    "fan_boost": RpcSwitchDescription(
+        key="fan",
+        sub_key="boost",
+        translation_key="boost",
+        is_on=lambda status: status["boost"]["active"],
+        method_on="fan_boost",
+        method_off="fan_stop_boost",
+        method_params_fn=lambda id, _: (id,),
+        entity_class=RpcFanBoostSwitch,
+    ),
     "ledstrip_reverse": RpcSwitchDescription(
         key="ledstrip",
         sub_key="reverse",
@@ -451,6 +502,19 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, {"reverse": value}),
         supported=lambda _: True,
         entity_class=RpcLedStripSwitch,
+    ),
+    "in_locked": RpcSwitchDescription(
+        key="switch",
+        components=("switch", "cover"),
+        translation_key="input_lock",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: "in_locked" not in config[key],
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="{component}_setconfig",
+        method_off="{component}_setconfig",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_class=RpcConfigSwitch,
     ),
     "camera_privacy": RpcSwitchDescription(
         key="camera",

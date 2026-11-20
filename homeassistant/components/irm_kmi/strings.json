@@ -22,6 +22,21 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_gust_speed": {
+        "name": "Wind gust speed"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the API: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

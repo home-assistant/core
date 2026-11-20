@@ -30,27 +30,10 @@ from homeassistant.components.profiler.loop_timing import (
 from homeassistant.components.profiler.services import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
-    CONF_SECONDS,
-    CONF_THRESHOLD,
-    SERVICE_DUMP_LOG_OBJECTS,
-    SERVICE_DUMP_LOOP_TIMING,
-    SERVICE_DUMP_SOCKETS,
-    SERVICE_LOG_CURRENT_TASKS,
-    SERVICE_LOG_EVENT_LOOP_SCHEDULED,
-    SERVICE_LOG_THREAD_FRAMES,
-    SERVICE_LRU_STATS,
-    SERVICE_MEMORY,
-    SERVICE_SET_ASYNCIO_DEBUG,
-    SERVICE_START,
-    SERVICE_START_LOG_OBJECT_SOURCES,
-    SERVICE_START_LOG_OBJECTS,
-    SERVICE_START_LOOP_TIMING,
-    SERVICE_STOP_LOG_OBJECT_SOURCES,
-    SERVICE_STOP_LOG_OBJECTS,
-    SERVICE_STOP_LOOP_TIMING,
+    ProfilerService,
+    ProfilerServiceArgument,
 )
 from homeassistant.config_entries import current_entry
-from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
@@ -69,7 +52,7 @@ async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_START)
+    assert hass.services.has_service(DOMAIN, ProfilerService.START)
 
     last_filename = None
 
@@ -80,7 +63,10 @@ async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
     with patch("cProfile.Profile"), patch.object(hass.config, "path", _mock_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START, {CONF_SECONDS: 0.000001}, blocking=True
+            DOMAIN,
+            ProfilerService.START,
+            {ProfilerServiceArgument.SECONDS: 0.000001},
+            blocking=True,
         )
 
     assert os.path.exists(last_filename)
@@ -100,7 +86,7 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
+    assert hass.services.has_service(DOMAIN, ProfilerService.MEMORY)
 
     last_filename = None
 
@@ -111,7 +97,10 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
     with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
         await hass.services.async_call(
-            DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
+            DOMAIN,
+            ProfilerService.MEMORY,
+            {ProfilerServiceArgument.SECONDS: 0.000001},
+            blocking=True,
         )
 
         mock_hpy.assert_called_once()
@@ -133,18 +122,21 @@ async def test_object_growth_logging(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
-    assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
+    assert hass.services.has_service(DOMAIN, ProfilerService.START_LOG_OBJECTS)
+    assert hass.services.has_service(DOMAIN, ProfilerService.STOP_LOG_OBJECTS)
 
     with patch.object(objgraph, "growth"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 1}, blocking=True
+            DOMAIN,
+            ProfilerService.START_LOG_OBJECTS,
+            {ProfilerServiceArgument.SCAN_INTERVAL: 1},
+            blocking=True,
         )
         with pytest.raises(HomeAssistantError, match="Object logging already started"):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_START_LOG_OBJECTS,
-                {CONF_SCAN_INTERVAL: 1},
+                ProfilerService.START_LOG_OBJECTS,
+                {ProfilerServiceArgument.SCAN_INTERVAL: 1},
                 blocking=True,
             )
 
@@ -156,7 +148,9 @@ async def test_object_growth_logging(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert "Growth" in caplog.text
 
-    await hass.services.async_call(DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.STOP_LOG_OBJECTS, {}, blocking=True
+    )
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
@@ -165,12 +159,15 @@ async def test_object_growth_logging(
 
     with pytest.raises(HomeAssistantError, match="Object logging not running"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True
+            DOMAIN, ProfilerService.STOP_LOG_OBJECTS, {}, blocking=True
         )
 
     with patch.object(objgraph, "growth"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
+            DOMAIN,
+            ProfilerService.START_LOG_OBJECTS,
+            {ProfilerServiceArgument.SCAN_INTERVAL: 10},
+            blocking=True,
         )
         await hass.async_block_till_done(wait_background_tasks=True)
         caplog.clear()
@@ -206,11 +203,14 @@ async def test_dump_log_object(
     obj1 = DumpLogDummy(False)
     obj2 = DumpLogDummy(True)
 
-    assert hass.services.has_service(DOMAIN, SERVICE_DUMP_LOG_OBJECTS)
+    assert hass.services.has_service(DOMAIN, ProfilerService.DUMP_LOG_OBJECTS)
 
     with patch("objgraph.by_type", return_value=[obj1, obj2]):
         await hass.services.async_call(
-            DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "DumpLogDummy"}, blocking=True
+            DOMAIN,
+            ProfilerService.DUMP_LOG_OBJECTS,
+            {ProfilerServiceArgument.TYPE: "DumpLogDummy"},
+            blocking=True,
         )
 
     assert "<DumpLogDummy success>" in caplog.text
@@ -231,9 +231,11 @@ async def test_log_thread_frames(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_LOG_THREAD_FRAMES)
+    assert hass.services.has_service(DOMAIN, ProfilerService.LOG_THREAD_FRAMES)
 
-    await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.LOG_THREAD_FRAMES, {}, blocking=True
+    )
 
     assert "SyncWorker_0" in caplog.text
     caplog.clear()
@@ -253,9 +255,11 @@ async def test_log_current_tasks(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_LOG_CURRENT_TASKS)
+    assert hass.services.has_service(DOMAIN, ProfilerService.LOG_CURRENT_TASKS)
 
-    await hass.services.async_call(DOMAIN, SERVICE_LOG_CURRENT_TASKS, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.LOG_CURRENT_TASKS, {}, blocking=True
+    )
 
     assert "test_log_current_tasks" in caplog.text
     caplog.clear()
@@ -275,12 +279,12 @@ async def test_log_scheduled(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED)
+    assert hass.services.has_service(DOMAIN, ProfilerService.LOG_EVENT_LOOP_SCHEDULED)
 
     hass.loop.call_later(0.1, lambda: None)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED, {}, blocking=True
+        DOMAIN, ProfilerService.LOG_EVENT_LOOP_SCHEDULED, {}, blocking=True
     )
 
     assert "Scheduled" in caplog.text
@@ -310,8 +314,10 @@ async def test_dump_sockets(
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
 
-        assert hass.services.has_service(DOMAIN, SERVICE_DUMP_SOCKETS)
-        await hass.services.async_call(DOMAIN, SERVICE_DUMP_SOCKETS, blocking=True)
+        assert hass.services.has_service(DOMAIN, ProfilerService.DUMP_SOCKETS)
+        await hass.services.async_call(
+            DOMAIN, ProfilerService.DUMP_SOCKETS, blocking=True
+        )
     finally:
         if sock:
             sock.close()
@@ -338,7 +344,7 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
             self._data = LRU(1)
 
     domain_data = DomainData()
-    assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
+    assert hass.services.has_service(DOMAIN, ProfilerService.LRU_STATS)
 
     class LRUCache:
         def __init__(self) -> None:
@@ -354,7 +360,7 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         return [domain_data]
 
     with patch("objgraph.by_type", side_effect=_mock_by_type):
-        await hass.services.async_call(DOMAIN, SERVICE_LRU_STATS, blocking=True)
+        await hass.services.async_call(DOMAIN, ProfilerService.LRU_STATS, blocking=True)
 
     assert "DomainData" in caplog.text
     assert "(0, 0)" in caplog.text
@@ -374,8 +380,8 @@ async def test_log_object_sources(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECT_SOURCES)
-    assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES)
+    assert hass.services.has_service(DOMAIN, ProfilerService.START_LOG_OBJECT_SOURCES)
+    assert hass.services.has_service(DOMAIN, ProfilerService.STOP_LOG_OBJECT_SOURCES)
 
     class FakeObject:
         """Fake object."""
@@ -389,15 +395,15 @@ async def test_log_object_sources(
     with patch("gc.collect"), patch("gc.get_objects", return_value=[fake_object]):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_LOG_OBJECT_SOURCES,
-            {CONF_SCAN_INTERVAL: 10},
+            ProfilerService.START_LOG_OBJECT_SOURCES,
+            {ProfilerServiceArgument.SCAN_INTERVAL: 10},
             blocking=True,
         )
         with pytest.raises(HomeAssistantError, match="Object logging already started"):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_START_LOG_OBJECT_SOURCES,
-                {CONF_SCAN_INTERVAL: 10},
+                ProfilerService.START_LOG_OBJECT_SOURCES,
+                {ProfilerServiceArgument.SCAN_INTERVAL: 10},
                 blocking=True,
             )
 
@@ -430,7 +436,7 @@ async def test_log_object_sources(
         assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
+        DOMAIN, ProfilerService.STOP_LOG_OBJECT_SOURCES, {}, blocking=True
     )
     caplog.clear()
 
@@ -449,7 +455,7 @@ async def test_log_object_sources(
 
     with pytest.raises(HomeAssistantError, match="Object logging not running"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
+            DOMAIN, ProfilerService.STOP_LOG_OBJECT_SOURCES, {}, blocking=True
         )
 
 
@@ -464,31 +470,42 @@ async def test_set_asyncio_debug(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_ASYNCIO_DEBUG)
+    assert hass.services.has_service(DOMAIN, ProfilerService.SET_ASYNCIO_DEBUG)
 
     hass.loop.set_debug(False)
     original_level = logging.getLogger().getEffectiveLevel()
     logging.getLogger().setLevel(logging.WARNING)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: False}, blocking=True
+        DOMAIN,
+        ProfilerService.SET_ASYNCIO_DEBUG,
+        {ProfilerServiceArgument.ENABLED: False},
+        blocking=True,
     )
     # Ensure logging level is only increased if we enable
     assert logging.getLogger().getEffectiveLevel() == logging.WARNING
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.SET_ASYNCIO_DEBUG, {}, blocking=True
+    )
     assert hass.loop.get_debug() is True
 
     # Ensure logging is at least at INFO level
     assert logging.getLogger().getEffectiveLevel() == logging.INFO
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: False}, blocking=True
+        DOMAIN,
+        ProfilerService.SET_ASYNCIO_DEBUG,
+        {ProfilerServiceArgument.ENABLED: False},
+        blocking=True,
     )
     assert hass.loop.get_debug() is False
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_ASYNCIO_DEBUG, {CONF_ENABLED: True}, blocking=True
+        DOMAIN,
+        ProfilerService.SET_ASYNCIO_DEBUG,
+        {ProfilerServiceArgument.ENABLED: True},
+        blocking=True,
     )
     assert hass.loop.get_debug() is True
 
@@ -513,7 +530,7 @@ async def _setup_profiler(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.mark.parametrize(
-    "service", [SERVICE_DUMP_LOOP_TIMING, SERVICE_STOP_LOOP_TIMING]
+    "service", [ProfilerService.DUMP_LOOP_TIMING, ProfilerService.STOP_LOOP_TIMING]
 )
 async def test_loop_timing_needs_a_running_timing(
     hass: HomeAssistant, service: str
@@ -533,8 +550,8 @@ async def test_loop_timing_rejects_a_threshold_out_of_range(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_LOOP_TIMING,
-            {CONF_THRESHOLD: threshold},
+            ProfilerService.START_LOOP_TIMING,
+            {ProfilerServiceArgument.THRESHOLD: threshold},
             blocking=True,
         )
     assert Handle._run.__qualname__ == "Handle._run"
@@ -548,25 +565,34 @@ async def test_loop_timing_starts_once_and_stops_on_unload(
     original_run = Handle._run
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START_LOOP_TIMING, {CONF_THRESHOLD: 50}, blocking=True
+        DOMAIN,
+        ProfilerService.START_LOOP_TIMING,
+        {ProfilerServiceArgument.THRESHOLD: 50},
+        blocking=True,
     )
     assert Handle._run is not original_run
     assert "callbacks over 50.0 ms are kept" in caplog.text
     with pytest.raises(HomeAssistantError, match="already started"):
         await hass.services.async_call(
-            DOMAIN, SERVICE_START_LOOP_TIMING, {}, blocking=True
+            DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
         )
 
     caplog.clear()
     report = await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_LOOP_TIMING, {}, blocking=True, return_response=True
+        DOMAIN,
+        ProfilerService.STOP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
     )
     assert Handle._run is original_run
     assert report is not None
     assert report["threshold_ms"] == 50.0
     assert "Event loop timing stopped" in caplog.text
 
-    await hass.services.async_call(DOMAIN, SERVICE_START_LOOP_TIMING, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+    )
     assert Handle._run is not original_run
     caplog.clear()
     await hass.config_entries.async_unload(entry.entry_id)
@@ -582,7 +608,10 @@ async def test_loop_timing_attribution(
     """Callbacks count for what ran and the config entry; slow ones are listed."""
     entry = await _setup_profiler(hass)
     await hass.services.async_call(
-        DOMAIN, SERVICE_START_LOOP_TIMING, {CONF_THRESHOLD: 50}, blocking=True
+        DOMAIN,
+        ProfilerService.START_LOOP_TIMING,
+        {ProfilerServiceArgument.THRESHOLD: 50},
+        blocking=True,
     )
 
     class SlowCoordinator(DataUpdateCoordinator[int]):
@@ -630,7 +659,11 @@ async def test_loop_timing_attribution(
     unsub()
 
     report = await hass.services.async_call(
-        DOMAIN, SERVICE_DUMP_LOOP_TIMING, {}, blocking=True, return_response=True
+        DOMAIN,
+        ProfilerService.DUMP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
     )
     assert report is not None
     assert report["errors"] == 0
@@ -671,7 +704,9 @@ async def test_loop_timing_attribution(
     )
 
     caplog.clear()
-    await hass.services.async_call(DOMAIN, SERVICE_DUMP_LOOP_TIMING, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.DUMP_LOOP_TIMING, {}, blocking=True
+    )
     assert f"{here}.later [profiler: Profiler]: 1 calls" in caplog.text
     assert "Callbacks over 50.0 ms:" in caplog.text
     assert "  #1 " in caplog.text
@@ -683,7 +718,9 @@ async def test_loop_timing_keeps_other_loops_and_exceptions_alone(
 ) -> None:
     """Another loop is not timed, and a failing callback still reaches the handler."""
     entry = await _setup_profiler(hass)
-    await hass.services.async_call(DOMAIN, SERVICE_START_LOOP_TIMING, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+    )
 
     def fail() -> None:
         raise ValueError("boom")
@@ -710,7 +747,11 @@ async def test_loop_timing_keeps_other_loops_and_exceptions_alone(
     await hass.async_add_executor_job(run_other_loop)
 
     report = await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_LOOP_TIMING, {}, blocking=True, return_response=True
+        DOMAIN,
+        ProfilerService.STOP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
     )
     assert report is not None
     labels = [row["callback"] for row in report["callbacks"]]

@@ -6,7 +6,6 @@ import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
@@ -16,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RoomID
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import DOMAIN, MatrixService, MatrixServiceArgument
 
 CONF_DEFAULT_ROOM = "default_room"
 
@@ -45,7 +44,12 @@ class MatrixNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
         target_rooms: list[RoomID] = kwargs.get(ATTR_TARGET) or [self._default_room]
-        service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
+        service_data: dict[str, Any] = {
+            MatrixServiceArgument.TARGET: target_rooms,
+            MatrixServiceArgument.MESSAGE: message,
+        }
         if (data := kwargs.get(ATTR_DATA)) is not None:
-            service_data[ATTR_DATA] = data
-        self.hass.services.call(DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)
+            service_data[MatrixServiceArgument.DATA] = data
+        self.hass.services.call(
+            DOMAIN, MatrixService.SEND_MESSAGE, service_data=service_data
+        )

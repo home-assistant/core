@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs", "lighting.bulbs_lamps"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
   "homekit": {
     "models": ["TRADFRI"]
@@ -11,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pytradfri"],
-  "requirements": ["pytradfri[async]==14.0.0"]
+  "requirements": ["pytradfri[async]==15.0.0"]
 }

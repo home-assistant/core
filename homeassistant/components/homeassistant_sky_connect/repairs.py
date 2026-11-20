@@ -11,9 +11,9 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from . import HomeAssistantSkyConnectConfigEntry
 from .config_flow import HomeAssistantSkyConnectMultiPanOptionsFlowHandler
 
 
@@ -22,7 +22,7 @@ class SkyConnectMultiPanMigrationRepairFlow(
 ):
     """Multi-PAN migration repair flow for Home Assistant SkyConnect."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: HomeAssistantSkyConnectConfigEntry) -> None:
         """Initialize the repair flow."""
         HomeAssistantSkyConnectMultiPanOptionsFlowHandler.__init__(self, config_entry)
         self._repair_config_entry = config_entry
