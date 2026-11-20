@@ -12,10 +12,10 @@ from typing import Any, Literal, TypedDict, cast
 
 import probatio
 
+from homeassistant.components.llm import code_mode as llm_code_mode
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
-from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -776,15 +776,6 @@ class ChatLog:
             user_extra_system_prompt=user_input.extra_system_prompt,
         )
 
-    async def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
-        """Expose the tools of the API as code."""
-        # The sandbox library loads only when it is used.
-        code_mode = await async_import_module(
-            self.hass, "homeassistant.components.llm.code_mode"
-        )
-        code_mode_api: llm.APIInstance = code_mode.async_create_api_instance(llm_api)
-        return code_mode_api
-
     async def async_provide_llm_data(
         self,
         llm_context: llm.LLMContext,
@@ -870,7 +861,7 @@ class ChatLog:
         # Assist alone has few tools, so the model calls them directly. With
         # other APIs, the model writes code that calls the tools.
         if code_mode and llm_api is not None and api_ids != (llm.LLM_API_ASSIST,):
-            llm_api = await self._async_apply_code_mode(llm_api)
+            llm_api = llm_code_mode.async_create_api_instance(llm_api)
 
         user_name: str | None = None
 
