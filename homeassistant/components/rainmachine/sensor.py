@@ -5,14 +5,12 @@ from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,13 +19,7 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from . import RainMachineConfigEntry, RainMachineData
 from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES
 from .entity import RainMachineEntity, RainMachineEntityDescription
-from .util import (
-    RUN_STATE_MAP,
-    EntityDomainReplacementStrategy,
-    RunStates,
-    async_finish_entity_domain_replacements,
-    key_exists,
-)
+from .util import RUN_STATE_MAP, RunStates, key_exists
 
 DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
@@ -156,20 +148,6 @@ async def async_setup_entry(
     """Set up RainMachine sensors based on a config entry."""
     data = entry.runtime_data
 
-    async_finish_entity_domain_replacements(
-        hass,
-        entry,
-        (
-            EntityDomainReplacementStrategy(
-                SENSOR_DOMAIN,
-                f"{data.controller.mac}_freeze_protect_temp",
-                f"select.{data.controller.name.lower()}_freeze_protect_temperature",
-                breaks_in_ha_version="2022.12.0",
-                remove_old_entity=True,
-            ),
-        ),
-    )
-
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
     }
@@ -229,7 +207,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSensorCompletionTimerDescription,
     ) -> None:

@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_entry_diagnostics[api_key]
+  dict({
+    'api_key_configured': True,
+    'entry_version': '3.3',
+    'state': 'loaded',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'llm_hass_api': 'assist',
+          'max_history': 2,
+          'model': 'test_model:latest',
+        }),
+        'subentry_type': 'conversation',
+        'title': 'Ollama Conversation',
+      }),
+      dict({
+        'data': dict({
+          'max_history': 2,
+          'model': 'test_model:latest',
+        }),
+        'subentry_type': 'ai_task_data',
+        'title': 'Ollama AI Task',
+      }),
+    ]),
+  })
+# ---
+# name: test_entry_diagnostics[no_api_key]
+  dict({
+    'api_key_configured': False,
+    'entry_version': '3.3',
+    'state': 'loaded',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'llm_hass_api': 'assist',
+          'max_history': 2,
+          'model': 'test_model:latest',
+        }),
+        'subentry_type': 'conversation',
+        'title': 'Ollama Conversation',
+      }),
+      dict({
+        'data': dict({
+          'max_history': 2,
+          'model': 'test_model:latest',
+        }),
+        'subentry_type': 'ai_task_data',
+        'title': 'Ollama AI Task',
+      }),
+    ]),
+  })
+# ---

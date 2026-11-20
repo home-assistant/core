@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
 
-from . import config_flow as config_flow
 from .const import CONF_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

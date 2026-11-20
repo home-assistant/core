@@ -3,6 +3,10 @@
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import persistent_notification as pn
+from homeassistant.components.persistent_notification.services import (
+    PersistentNotificationService,
+    PersistentNotificationServiceArgument,
+)
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -173,8 +177,11 @@ async def test_manual_notification_id_round_trip(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         pn.DOMAIN,
-        "create",
-        {"notification_id": "synology_diskstation_hub_notification", "message": "test"},
+        PersistentNotificationService.CREATE,
+        {
+            PersistentNotificationServiceArgument.NOTIFICATION_ID: "synology_diskstation_hub_notification",
+            PersistentNotificationServiceArgument.MESSAGE: "test",
+        },
         blocking=True,
     )
 
@@ -182,8 +189,10 @@ async def test_manual_notification_id_round_trip(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         pn.DOMAIN,
-        "dismiss",
-        {"notification_id": "synology_diskstation_hub_notification"},
+        PersistentNotificationService.DISMISS,
+        {
+            PersistentNotificationServiceArgument.NOTIFICATION_ID: "synology_diskstation_hub_notification"
+        },
         blocking=True,
     )
 
@@ -197,15 +206,21 @@ async def test_manual_dismiss_all(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         pn.DOMAIN,
-        "create",
-        {"notification_id": "Beer 1", "message": "test"},
+        PersistentNotificationService.CREATE,
+        {
+            PersistentNotificationServiceArgument.NOTIFICATION_ID: "Beer 1",
+            PersistentNotificationServiceArgument.MESSAGE: "test",
+        },
         blocking=True,
     )
 
     await hass.services.async_call(
         pn.DOMAIN,
-        "create",
-        {"notification_id": "Beer 2", "message": "test 2"},
+        PersistentNotificationService.CREATE,
+        {
+            PersistentNotificationServiceArgument.NOTIFICATION_ID: "Beer 2",
+            PersistentNotificationServiceArgument.MESSAGE: "test 2",
+        },
         blocking=True,
     )
 
@@ -213,7 +228,7 @@ async def test_manual_dismiss_all(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         pn.DOMAIN,
-        "dismiss_all",
+        PersistentNotificationService.DISMISS_ALL,
         None,
         blocking=True,
     )

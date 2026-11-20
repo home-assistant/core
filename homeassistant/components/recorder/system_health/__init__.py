@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from sqlalchemy.engine.url import make_url
-
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.recorder import session_scope
@@ -11,6 +9,7 @@ from homeassistant.helpers.recorder import session_scope
 from .. import get_instance
 from ..const import SupportedDialect
 from ..core import Recorder
+from ..util import get_engine_db_url
 from .mysql import db_size_bytes as mysql_db_size_bytes
 from .postgresql import db_size_bytes as postgresql_db_size_bytes
 from .sqlite import db_size_bytes as sqlite_db_size_bytes
@@ -59,7 +58,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     instance = get_instance(hass)
 
     recorder_runs_manager = instance.recorder_runs_manager
-    database_name = make_url(instance.db_url).database or ""
+    database_name = get_engine_db_url(instance.db_url).database or ""
     db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
 

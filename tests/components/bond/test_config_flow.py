@@ -1013,3 +1013,176 @@ async def test_reauth_wrong_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
     assert entry.data[CONF_ACCESS_TOKEN] == "old-token"
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("ZXXX12345", id="with_unique_id"),
+        pytest.param(None, id="no_unique_id"),
+    ],
+)
+async def test_reconfigure(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Test reconfigure updates the host and access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"}
+    assert entry.unique_id == "ZXXX12345"
+
+
+@pytest.mark.parametrize(
+    ("version", "device_ids_side_effect", "error"),
+    [
+        pytest.param(
+            {"return_value": {"bondid": "ZXXX12345"}},
+            ClientResponseError(Mock(), Mock(), status=401),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            {"side_effect": ClientConnectionError()},
+            None,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            {"return_value": {"bondid": "ZXXX12345"}},
+            ClientResponseError(Mock(), Mock(), status=500),
+            "unknown",
+            id="unknown",
+        ),
+        pytest.param(
+            {"return_value": {"no_bond_id": "present"}},
+            None,
+            "old_firmware",
+            id="old_firmware",
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    version: dict[str, Any],
+    device_ids_side_effect: Exception | None,
+    error: str,
+) -> None:
+    """Test reconfigure handles errors and can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id="ZXXX12345",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch_bond_version(**version),
+        patch_bond_bridge(),
+        patch_bond_device_ids(side_effect=device_ids_side_effect),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"}
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when pointed at another Bond device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id="ZXXX12345",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZOTHER999"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"}
+
+
+async def test_reconfigure_no_unique_id_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure of an entry without unique ID aborts on another entry's hub."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "other host", CONF_ACCESS_TOKEN: "other-token"},
+        unique_id="ZXXX12345",
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new host", CONF_ACCESS_TOKEN: "new-token"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id is None
+    assert entry.data == {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"}

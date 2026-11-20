@@ -23,9 +23,6 @@ class EasyEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         if user_input is not None:
             easyenergy = EasyEnergy(session=async_get_clientsession(self.hass))
             today = dt_util.now().date()

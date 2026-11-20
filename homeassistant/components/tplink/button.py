@@ -12,7 +12,7 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TPLinkConfigEntry
@@ -131,6 +131,7 @@ class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
         """Execute action."""
         await self._feature.set_value(True)
 
+    @callback
     @override
     def _async_update_attrs(self) -> bool:
         """No need to update anything."""

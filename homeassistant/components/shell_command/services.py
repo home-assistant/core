@@ -200,7 +200,7 @@ async def _async_reload_service_handler(service_call: ServiceCall) -> None:
         if svc != SERVICE_RELOAD:
             hass.services.async_remove(DOMAIN, svc)
     hass.data.setdefault(_DATA_CACHE, {}).clear()
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass, DOMAIN, issue_ids=[f"reserved_{SERVICE_RELOAD}"]
     ):
         async_register_shell_commands(hass, new_conf)

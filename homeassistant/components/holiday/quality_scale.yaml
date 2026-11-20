@@ -36,15 +36,23 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable:
+    status: exempt
+    comment: This integration does not connect to a device or service.
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  log-when-unavailable:
+    status: exempt
+    comment: This integration does not connect to a device or service.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require authentication.
   test-coverage: done
 
   # Gold

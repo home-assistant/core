@@ -3,6 +3,7 @@
   "name": "Tank Utility",
   "categories": ["energy"],
   "codeowners": ["@krismolendyke"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/tank_utility",
   "iot_class": "cloud_polling",
   "loggers": ["tank_utility"],

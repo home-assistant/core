@@ -58,7 +58,8 @@ async def _get_valid_tracker(
         async_create_issue(
             hass,
             DOMAIN,
-            f"invalid_fressnapf_tracker_{device.serialnumber}",
+            # A tracker can be shared between accounts
+            f"invalid_fressnapf_tracker_{entry.entry_id}_{device.serialnumber}",
             config_entry_id=entry.entry_id,
             issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",

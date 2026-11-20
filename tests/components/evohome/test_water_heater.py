@@ -3,20 +3,20 @@
 Not all evohome systems will have a DHW zone.
 """
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_evohome
@@ -47,6 +47,36 @@ async def test_setup_platform(
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 
+@pytest.mark.parametrize("install", ["default"])
+async def test_entities_update_over_time(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test extended attributes update as time passes.
+
+    Verifies that time-dependent state attrs (e.g. schedules) vary as time advances.
+    """
+
+    # Cannot use the evohome fixture here, as need to set dtm first
+    #  - some extended state attrs are relative the current time
+    freezer.move_to("2024-07-10T05:30:00Z")
+
+    # stay inside this context to have the mocked RESTful API
+    async for _ in setup_evohome(hass, config, install=install):
+        for x in hass.states.async_all(WATER_HEATER_DOMAIN):
+            assert x == snapshot(name=f"{x.entity_id}-state-initial")
+
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        for x in hass.states.async_all(WATER_HEATER_DOMAIN):
+            assert x == snapshot(name=f"{x.entity_id}-state-updated")
+
+
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
@@ -63,10 +93,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "auto",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "auto",
             },
             blocking=True,
         )
@@ -77,10 +107,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "off",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "off",
             },
             blocking=True,
         )
@@ -97,10 +127,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "on",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "on",
             },
             blocking=True,
         )
@@ -124,10 +154,10 @@ async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            WaterHeaterService.SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_AWAY_MODE: "off",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.AWAY_MODE: "off",
             },
             blocking=True,
         )
@@ -138,10 +168,10 @@ async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            WaterHeaterService.SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_AWAY_MODE: "on",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.AWAY_MODE: "on",
             },
             blocking=True,
         )
@@ -157,9 +187,9 @@ async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_OFF,
+            WaterHeaterService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: dhw_id,
+                TargetKey.ENTITY_ID: dhw_id,
             },
             blocking=True,
         )
@@ -175,9 +205,9 @@ async def test_turn_on(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             {
-                ATTR_ENTITY_ID: dhw_id,
+                TargetKey.ENTITY_ID: dhw_id,
             },
             blocking=True,
         )

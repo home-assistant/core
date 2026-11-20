@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@danielhiversen", "@liudger"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/homevolt",
   "integration_type": "device",
   "iot_class": "local_polling",

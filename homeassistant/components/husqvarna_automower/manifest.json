@@ -4,6 +4,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower",
   "integration_type": "hub",

@@ -87,6 +87,10 @@ def request_handler_factory(
                 authenticated,
             )
 
+        # Set before the handler, decorators like RequestDataValidator read the body
+        if view.max_body_size is not None:
+            request._client_max_size = view.max_body_size  # noqa: SLF001
+
         try:
             if is_coroutinefunction:
                 result = await handler(request, **request.match_info)
@@ -131,6 +135,8 @@ class HomeAssistantView:
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
+    # Maximum request body size in bytes, None keeps the server default
+    max_body_size: int | None = None
 
     @staticmethod
     def context(request: web.Request) -> Context:

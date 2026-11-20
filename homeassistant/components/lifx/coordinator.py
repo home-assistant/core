@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from typing import cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from lifx import (
     STATE_REFRESH_DEBOUNCE_MS,
@@ -24,7 +24,6 @@ from lifx import (
     MirrorLightState,
     MultiZoneLight,
     MultiZoneLightState,
-    ThemeLibrary,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,8 +33,14 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, INFRARED_LEVELS, LIFX_IDENTIFY_DELAY, LOGGER
-from .util import device_error
+from .const import (
+    DOMAIN,
+    INFRARED_LEVELS,
+    LIFX_IDENTIFY_DELAY,
+    LOGGER,
+    MAX_MISSED_POLLS,
+)
+from .util import device_error, resolve_renamed_theme
 
 type LIFXState = (
     LightState
@@ -58,7 +63,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
-        self.last_used_theme: str | None = None
+        self._missed_polls = 0
         super().__init__(
             hass,
             LOGGER,
@@ -82,14 +87,36 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         try:
             await self.device.refresh_state()
         except LifxError as err:
+            self._missed_polls += 1
+            # Before the first read there is no last state to keep showing, and
+            # returning it would bring back a light that is already unavailable
+            if (
+                self.data is not None
+                and self.last_update_success
+                and self._missed_polls < MAX_MISSED_POLLS
+            ):
+                LOGGER.debug(
+                    "%s missed %s of %s polls: %s",
+                    self.name,
+                    self._missed_polls,
+                    MAX_MISSED_POLLS,
+                    err,
+                )
+                return self.data
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+        self._missed_polls = 0
         state = self.device.state
         assert state is not None
         return cast(LIFXState, state)
+
+    @property
+    def last_read_succeeded(self) -> bool:
+        """Return whether the device answered the latest read of its state."""
+        return self._missed_polls == 0
 
     @property
     def serial_number(self) -> str:
@@ -110,6 +137,20 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             ),
             None,
         )
+
+    @property
+    def current_theme(self) -> str | None:
+        """Return the theme the library painted, while the light still shows it."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        return self.device.current_theme
+
+    @property
+    def current_mood(self) -> str | None:
+        """Return the Mood the library applied, while the light still shows it."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        return self.device.current_mood
 
     @property
     def rssi(self) -> int | None:
@@ -198,10 +239,25 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             raise device_error(err) from err
 
     async def async_apply_theme(self, theme_name: str) -> None:
-        """Apply a built-in theme to a zone-based device."""
+        """Paint a built-in theme on a zone-based device."""
         assert isinstance(self.device, (MultiZoneLight, MatrixLight))
         try:
-            await self.device.apply_theme(ThemeLibrary.get(theme_name))
+            await self.device.apply_theme(resolve_renamed_theme(theme_name))
         except LifxError as err:
             raise device_error(err) from err
-        self.last_used_theme = theme_name.lower()
+        # The library records the paint without a read, so show it straight away
+        self.async_update_listeners()
+        # The paint can also turn the light on, which only a refresh reads
+        await self.async_request_refresh()
+
+    async def async_apply_mood(self, mood: str) -> None:
+        """Apply a Mood to a zone-based device, as the LIFX app does."""
+        assert isinstance(self.device, (MultiZoneLight, MatrixLight))
+        try:
+            await self.device.apply_mood(resolve_renamed_theme(mood))
+        except LifxError as err:
+            raise device_error(err) from err
+        # The library swaps a theme record for this Mood, so both selects change
+        self.async_update_listeners()
+        # The Mood can also turn the light on, which only a refresh reads
+        await self.async_request_refresh()

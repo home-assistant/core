@@ -104,7 +104,37 @@
   "21.7.0": {
     "value": 500.1,
     "unit": "W",
-    "name": "Import Power L1"
+    "name": "Power L1"
+  },
+  "41.7.0": {
+    "value": 480.3,
+    "unit": "W",
+    "name": "Power L2"
+  },
+  "61.7.0": {
+    "value": 499.8,
+    "unit": "W",
+    "name": "Power L3"
+  },
+  "22.7.0": {
+    "value": 0.0,
+    "unit": "W",
+    "name": "Export Power L1"
+  },
+  "42.7.0": {
+    "value": 12.5,
+    "unit": "W",
+    "name": "Export Power L2"
+  },
+  "62.7.0": {
+    "value": 0.0,
+    "unit": "W",
+    "name": "Export Power L3"
+  },
+  "35.7.0": {
+    "value": 500.1,
+    "unit": "W",
+    "name": "Absolute Power L1"
   },
   "23.7.0": {
     "value": 120.4,

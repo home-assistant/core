@@ -57,6 +57,7 @@ base_platforms: &base_platforms
   - homeassistant/components/switch/**
   - homeassistant/components/text/**
   - homeassistant/components/time/**
+  - homeassistant/components/timer_list/**
   - homeassistant/components/todo/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
@@ -136,8 +137,9 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
+  - packages/hassfest/**
   - packages/pylint-home-assistant/**
-  - packages/pytest-home-assistant/**
+  - packages/pytest-homeassistant/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/*.py
@@ -151,10 +153,10 @@ tests: &tests
   - tests/components/recorder/**
   - tests/components/repairs/**
   - tests/components/sensor/**
-  - tests/hassfest/**
   - tests/helpers/**
   - tests/mock/**
   - tests/pylint/**
+  - tests/script/hassfest/**
   - tests/scripts/**
   - tests/test_util/**
   - tests/testing_config/**

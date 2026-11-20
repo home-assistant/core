@@ -91,9 +91,14 @@
           'value': 1234.567,
         }),
         '21.7.0': dict({
-          'name': 'Import Power L1',
+          'name': 'Power L1',
           'unit': 'W',
           'value': 500.1,
+        }),
+        '22.7.0': dict({
+          'name': 'Export Power L1',
+          'unit': 'W',
+          'value': 0.0,
         }),
         '23.7.0': dict({
           'name': 'Reactive Power L1',
@@ -120,6 +125,11 @@
           'unit': 'V',
           'value': 230.1,
         }),
+        '35.7.0': dict({
+          'name': 'Absolute Power L1',
+          'unit': 'W',
+          'value': 500.1,
+        }),
         '4.7.0': dict({
           'name': 'Reactive Power Export',
           'unit': 'var',
@@ -129,6 +139,16 @@
           'name': 'Reactive Export',
           'unit': 'kvarh',
           'value': 87.316,
+        }),
+        '41.7.0': dict({
+          'name': 'Power L2',
+          'unit': 'W',
+          'value': 480.3,
+        }),
+        '42.7.0': dict({
+          'name': 'Export Power L2',
+          'unit': 'W',
+          'value': 12.5,
         }),
         '5.8.0': dict({
           'name': 'Reactive QI',
@@ -144,6 +164,16 @@
           'name': 'Reactive QII',
           'unit': 'kvarh',
           'value': 23.114,
+        }),
+        '61.7.0': dict({
+          'name': 'Power L3',
+          'unit': 'W',
+          'value': 499.8,
+        }),
+        '62.7.0': dict({
+          'name': 'Export Power L3',
+          'unit': 'W',
+          'value': 0.0,
         }),
         '7.8.0': dict({
           'name': 'Reactive QIII',
