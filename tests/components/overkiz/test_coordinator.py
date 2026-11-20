@@ -8,6 +8,7 @@ from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizState, Server
 from pyoverkiz.exceptions import (
+    BadCredentialsError,
     InvalidEventListenerIdError,
     MaintenanceError,
     ServiceUnavailableError,
@@ -25,6 +26,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.overkiz.const import (
+    AUTH_RETRY_WINDOW,
     DOMAIN,
     RATE_LIMIT_RETRY_AFTER,
     UPDATE_INTERVAL,
@@ -32,7 +34,7 @@ from homeassistant.components.overkiz.const import (
     UPDATE_INTERVAL_EXECUTION,
     UPDATE_INTERVAL_SAUTER_SMART_CONTROL,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -158,6 +160,72 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_rejected_credentials_are_retried_before_reauth(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Rejected credentials are retried every minute, then the entities recover."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
+    mock_client.login.reset_mock()
+
+    mock_client.fetch_events.side_effect = BadCredentialsError("Bad credentials")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+    assert mock_client.login.await_count == 1
+    assert not hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(RATE_LIMIT_RETRY_AFTER)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+    assert not hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+
+
+async def test_persistently_rejected_credentials_start_reauth(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Reauth only starts once the credentials were rejected for the whole window."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    mock_client.fetch_events.side_effect = BadCredentialsError("Bad credentials")
+    mock_client.login.side_effect = BadCredentialsError("Bad credentials")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for _ in range(int(AUTH_RETRY_WINDOW / RATE_LIMIT_RETRY_AFTER) - 1):
+        freezer.tick(RATE_LIMIT_RETRY_AFTER)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+
+    freezer.tick(RATE_LIMIT_RETRY_AFTER)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
 
 
 async def test_rate_limit_delays_next_refresh(

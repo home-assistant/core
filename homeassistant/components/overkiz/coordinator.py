@@ -2,9 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, NoReturn, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -44,9 +44,11 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
     UpdateFailedUnreachable,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from .const import (
+    AUTH_RETRY_WINDOW,
     DOMAIN,
     IGNORED_OVERKIZ_DEVICES,
     LOGGER,
@@ -109,6 +111,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self._auth_failed_since: datetime | None = None
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -122,11 +125,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except (
-            BadCredentialsError,
-            NotAuthenticatedError,
-            OAuth2TokenRequestReauthError,
-        ) as exception:
+        except (BadCredentialsError, NotAuthenticatedError) as exception:
+            await self._async_retry_or_reauth(exception)
+        except OAuth2TokenRequestReauthError as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
         except OAuth2TokenRequestError as exception:
             raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
@@ -176,11 +177,34 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
+        self._auth_failed_since = None
+
         # Restore the default update interval if no executions are pending
         if not self.executions:
             self.update_interval = self._default_update_interval
 
         return self.devices
+
+    async def _async_retry_or_reauth(self, exception: Exception) -> NoReturn:
+        """Retry a rejected login for a while before asking for new credentials.
+
+        The cloud sometimes answers "bad credentials" for valid ones, so log in
+        again and only start the reauth flow when it keeps failing.
+        """
+        now = dt_util.utcnow()
+        if self._auth_failed_since is None:
+            self._auth_failed_since = now
+        if now - self._auth_failed_since >= AUTH_RETRY_WINDOW:
+            raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+
+        try:
+            await self.client.login()
+        except BadCredentialsError, NotAuthenticatedError:
+            LOGGER.debug("Login still rejected, retrying", exc_info=True)
+        raise UpdateFailed(
+            "Invalid authentication, retrying.",
+            retry_after=RATE_LIMIT_RETRY_AFTER.total_seconds(),
+        ) from exception
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
