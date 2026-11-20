@@ -97,7 +97,13 @@ class UnifiHub:
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self.adoption = UnifiDeviceAdoption(self)
-        self._entity_helper = UnifiEntityHelper(hass, api)
+        self._entity_helper = UnifiEntityHelper(
+            hass,
+            api,
+            self.entity_loader.get_data_update_coordinator(
+                api.firewall_policies
+            ).update_lock,
+        )
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False

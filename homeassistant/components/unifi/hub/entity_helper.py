@@ -1,7 +1,6 @@
 """UniFi Network entity helper."""
 
 import asyncio
-from collections import defaultdict
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -20,13 +19,20 @@ from homeassistant.util import dt as dt_util
 class UnifiEntityHelper:
     """UniFi Network integration handling platforms for entity registration."""
 
-    def __init__(self, hass: HomeAssistant, api: aiounifi.Controller) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: aiounifi.Controller,
+        firewall_policy_lock: asyncio.Lock,
+    ) -> None:
         """Initialize the UniFi entity loader."""
         self.hass = hass
         self.api = api
 
         self._device_command = UnifiDeviceCommand(hass, api)
-        self._firewall_policy_command = UnifiFirewallPolicyCommand(api)
+        self._firewall_policy_command = UnifiFirewallPolicyCommand(
+            api, firewall_policy_lock
+        )
         self._heartbeat = UnifiEntityHeartbeat(hass)
 
     @callback
@@ -179,18 +185,20 @@ class UnifiFirewallPolicyCommand:
 
     Saving a firewall policy sends the whole policy, built from the cached
     copy. Entities on different platforms can change the same policy, so
-    writes to a policy run one at a time, each starting from the policy as
-    the one before it left it.
+    writes run one at a time, each starting from the policy as the one
+    before it left it. They share the lock the policies' coordinator holds
+    while fetching, so a fetch can't answer between writes with a policy
+    from before them.
 
     Unlike PoE commands these aren't delayed and batched: the caller needs
     to know whether its own change was accepted.
     """
 
-    def __init__(self, api: aiounifi.Controller) -> None:
+    def __init__(self, api: aiounifi.Controller, lock: asyncio.Lock) -> None:
         """Initialize firewall policy command helper."""
         self.api = api
 
-        self._locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self._lock = lock
 
     async def save(
         self,
@@ -204,7 +212,7 @@ class UnifiFirewallPolicyCommand:
 
         schedule_fn builds the new schedule from the current one.
         """
-        async with self._locks[obj_id]:
+        async with self._lock:
             policies = self.api.firewall_policies
             policy = policies[obj_id]
             schedule = None
