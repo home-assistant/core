@@ -66,6 +66,7 @@ from homeassistant.const import (
     CONF_WHILE,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -1174,7 +1175,7 @@ class _ScriptRun:
         await self._hass.services.async_call(
             scene.DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._action[CONF_SCENE]},
+            {TargetKey.ENTITY_ID: self._action[CONF_SCENE]},
             blocking=True,
             context=self._context,
         )
@@ -1801,7 +1802,7 @@ class Script:
                     step.get(CONF_SERVICE_DATA),
                     step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
-                    _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
+                    _referenced_extract_ids(data, TargetKey.DEVICE_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_devices(step)
@@ -1871,7 +1872,7 @@ class Script:
                     step.get(CONF_SERVICE_DATA),
                     step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
-                    _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
+                    _referenced_extract_ids(data, TargetKey.ENTITY_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_entities(step)

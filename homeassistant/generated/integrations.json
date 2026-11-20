@@ -1029,6 +1029,17 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "aquarite_neopool": {
+      "name": "AquaRite",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "aquostv": {
       "name": "Sharp Aquos TV",
       "integration_type": "hub",
@@ -1495,6 +1506,17 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "bayrol_neopool": {
+      "name": "Bayrol",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
@@ -1822,6 +1844,17 @@
       ],
       "supported_by": "motion_blinds"
     },
+    "brilix_neopool": {
+      "name": "Brilix",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",
@@ -2098,6 +2131,17 @@
       ],
       "supported_by": "midea"
     },
+    "casatelli": {
+      "name": "Casatelli",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "casper_glow": {
       "name": "Casper Glow",
       "integration_type": "device",
@@ -2134,6 +2178,17 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "certikin_neopool": {
+      "name": "Certikin",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
     },
     "chacon_dio": {
       "name": "Chacon DiO",
@@ -2686,6 +2741,17 @@
         "cloud"
       ],
       "supported_by": "renault"
+    },
+    "dagen_neopool": {
+      "name": "Dagen",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
     },
     "daikin": {
       "name": "Daikin AC",
@@ -5982,6 +6048,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "hayward_neopool": {
+      "name": "Hayward",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "hddtemp": {
       "name": "hddtemp",
       "integration_type": "hub",
@@ -7767,6 +7844,17 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "kripsol_neopool": {
+      "name": "Kripsol",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
     },
     "krispol": {
       "name": "Krispol",
@@ -11658,6 +11746,28 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "poolstar_neopool": {
+      "name": "Poolstar",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
+    "poolwatch_neopool": {
+      "name": "Poolwatch",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "portainer": {
       "name": "Portainer",
       "integration_type": "service",
@@ -12849,6 +12959,17 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "royal1915": {
+      "name": "Royal 1915",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "rss_feed_template": {
       "name": "RSS feed template",
@@ -14558,6 +14679,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sugar_valley": {
+      "name": "Sugar Valley",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "sun": {
       "integration_type": "service",
       "categories": [
@@ -15349,15 +15481,29 @@
     },
     "tile": {
       "name": "Tile",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.trackers"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "tile": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "connectivity": [
+            "cloud"
+          ],
+          "name": "Tile"
+        },
+        "tile_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "name": "Tile BLE"
+        }
+      }
     },
     "tilt": {
       "name": "Tilt",
@@ -15760,6 +15906,17 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "turbofonte": {
+      "name": "TurboFonte",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "tuya": {
       "name": "Tuya",
@@ -16961,6 +17118,17 @@
       ],
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "wpalacontrol": {
+      "name": "WPalaControl",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "ws66i": {
       "name": "Soundavo WS66i 6-Zone Amplifier",
