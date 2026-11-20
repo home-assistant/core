@@ -1,6 +1,6 @@
 {
   "common": {
-    "language_override_description": "Override the Home Assistant language for the textual weather forecast."
+    "language_override_description": "Override the Home Assistant language for forecast texts and warnings."
   },
   "config": {
     "abort": {
@@ -23,7 +23,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning",
+        "state_attributes": {
+          "warnings": {
+            "name": "Warnings"
+          }
+        }
+      }
+    },
     "sensor": {
+      "next_warning": {
+        "name": "Next warning"
+      },
       "pollen_alder": {
         "name": "Alder pollen",
         "state": {

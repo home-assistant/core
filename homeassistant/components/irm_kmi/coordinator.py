@@ -106,6 +106,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             daily_forecast=self._api.get_daily_forecast(tz, lang),
             hourly_forecast=self._api.get_hourly_forecast(tz),
             country=self._api.get_country(),
+            warnings=self._api.get_warnings(lang),
         )
 
 
