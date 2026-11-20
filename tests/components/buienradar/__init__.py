@@ -82,6 +82,19 @@ TEST_DATA: dict[str, Any] = {
             WINDAZIMUTH: 90,
             WINDSPEED: 3,
         },
+        *(
+            {
+                DATETIME: dt.datetime(2026, 11, 23 + day, tzinfo=dt.UTC),
+                CONDITION: {CONDCODE: "b"},
+                MIN_TEMP: 3.0 + day,
+                MAX_TEMP: 8.0 + day,
+                RAIN: 1.0,
+                RAIN_CHANCE: 30,
+                WINDAZIMUTH: 180,
+                WINDSPEED: 4,
+            }
+            for day in range(3)
+        ),
     ],
 }
 

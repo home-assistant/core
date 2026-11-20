@@ -2,11 +2,14 @@
 
 from collections.abc import Generator
 import copy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from buienradar.constants import DATA, MESSAGE, SUCCESS
+from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from . import TEST_DATA
+from . import TEST_DATA, TEST_LATITUDE, TEST_LONGITUDE
 
 
 @pytest.fixture
@@ -19,10 +22,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_buienradar_data() -> Generator[AsyncMock]:
-    """Return parsed Buienradar data instead of fetching it."""
+def mock_buienradar_data(aioclient_mock: AiohttpClientMocker) -> Generator[MagicMock]:
+    """Serve the Buienradar feeds and return parsed data for them."""
+    aioclient_mock.get(JSON_FEED_URL, text="{}")
+    aioclient_mock.get(
+        json_precipitation_forecast_url(TEST_LATITUDE, TEST_LONGITUDE), text=""
+    )
     with patch(
-        "homeassistant.components.buienradar.util.BrData.async_fetch",
-        side_effect=lambda: copy.deepcopy(TEST_DATA),
-    ) as mock_fetch:
-        yield mock_fetch
+        "homeassistant.components.buienradar.util.parse_data",
+        side_effect=lambda *args: {
+            SUCCESS: True,
+            MESSAGE: None,
+            DATA: copy.deepcopy(TEST_DATA),
+        },
+    ) as mock_parse_data:
+        yield mock_parse_data
