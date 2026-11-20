@@ -144,9 +144,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{TEST_AGENT_ID}": (
-            "Remote server error while attempting to list backups: Error message"
-        )
+        f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to list backups"
     }
 
 
@@ -395,11 +393,18 @@ async def test_agents_delete(
         (
             SFTPError(0, "manual"),
             {
-                "agent_error_translations": {},
+                "agent_error_translations": {
+                    f"{DOMAIN}.{TEST_AGENT_ID}": {
+                        "translation_domain": DOMAIN,
+                        "translation_key": "delete_failed",
+                        "translation_placeholders": {
+                            "backup_id": TEST_AGENT_BACKUP.backup_id,
+                        },
+                    }
+                },
                 "agent_errors": {
                     f"{DOMAIN}.{TEST_AGENT_ID}": (
-                        f"Failed to delete backup id:"
-                        f" {TEST_AGENT_BACKUP.backup_id}: manual"
+                        f"Failed to delete backup {TEST_AGENT_BACKUP.backup_id}"
                     )
                 },
             },

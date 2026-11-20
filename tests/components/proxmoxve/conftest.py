@@ -148,11 +148,16 @@ def mock_proxmox_client() -> Generator[MagicMock]:
     client = create_autospec(ProxmoxVE, instance=True)
 
     all_cluster_resources = ClusterResourcesCollection.from_dict(
-        {"resources": load_json_array_fixture("nodes/nodes.json", DOMAIN)}
+        {
+            "resources": load_json_array_fixture("nodes/nodes.json", DOMAIN)
+            + load_json_array_fixture("cluster/resources.json", DOMAIN)
+        }
     )
     # Only pve1 to match MOCK_TEST_CONFIG; tests swap its `resources`
     client.cluster_resources = ClusterResourcesCollection(
-        resources=[node for node in all_cluster_resources if node.node == "pve1"]
+        resources=[
+            resource for resource in all_cluster_resources if resource.node == "pve1"
+        ]
     )
     client.cluster = _mock_endpoint(ClusterEndpoint)
     # Like the library, both refresh paths hand back the same collection

@@ -108,6 +108,14 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return "needs_claim"
 
+    def _async_cancel_polling(self) -> None:
+        """Cancel the claim polling task if it is still running."""
+        # Not inlined: the flow step can run concurrently with the one started
+        # by the polling task, which may reset the task while the step awaits.
+        if (polling_task := self._polling_task) is not None and not polling_task.done():
+            polling_task.cancel()
+            self._polling_task = None
+
     async def _async_poll_for_claim(self) -> None:
         """Poll EnergyID to check if device has been claimed."""
         for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
@@ -215,15 +223,11 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if auth_status is None:
             # Device has been claimed
-            if self._polling_task and not self._polling_task.done():
-                self._polling_task.cancel()
-                self._polling_task = None
+            self._async_cancel_polling()
             return self.async_external_step_done(next_step_id="directives")
 
         # Device not claimed yet, show the external step again
-        if self._polling_task and not self._polling_task.done():
-            self._polling_task.cancel()
-            self._polling_task = None
+        self._async_cancel_polling()
         return self.async_external_step(
             step_id="auth_and_claim",
             url=claim_info.get("claim_url", ""),

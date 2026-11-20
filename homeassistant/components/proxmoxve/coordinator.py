@@ -1,7 +1,7 @@
 """Data Update Coordinator for Proxmox VE integration."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -242,13 +242,18 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     async def _fetch_all_nodes(self) -> list[tuple[ClusterNodeResource, NodeResources]]:
         """Fetch all nodes with their VMs, containers, storages, etc."""
         cluster_resources = await self.proxmox.cluster.resources()
+        # The node VM list reports host memory; cluster resources carry the
+        # guest memory that pvestatd reads from the balloon driver.
+        guest_memory = {vm.vmid: vm.mem for vm in cluster_resources.qemu}
         return [
-            (node, await self._get_node_data(node)) for node in cluster_resources.nodes
+            (node, await self._get_node_data(node, guest_memory))
+            for node in cluster_resources.nodes
         ]
 
     async def _get_node_data(
         self,
         node: ClusterNodeResource,
+        guest_memory: dict[int, int],
     ) -> NodeResources:
         """Get vms, containers, storages, etc. for a node."""
         if node.status != OperationalStatus.ONLINE:
@@ -265,7 +270,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             )
 
         node_endpoint = self.proxmox.nodes(node.node)
-        vms = await node_endpoint.qemu_all()
+        vms = [
+            replace(vm, mem=guest_memory.get(vm.vmid, vm.mem))
+            for vm in await node_endpoint.qemu_all()
+        ]
         containers = await node_endpoint.lxc_all()
         storage_resources = await node_endpoint.storage()
         storages = storage_resources.storages

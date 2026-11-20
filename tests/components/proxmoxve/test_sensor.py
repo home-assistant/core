@@ -81,6 +81,37 @@ async def test_storage_missing_used_fraction(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("excluded_resource_ids", "expected_percentage"),
+    [
+        pytest.param(set(), "25.0", id="guest_memory"),
+        pytest.param({"qemu/100"}, "50.0", id="not_in_cluster_resources"),
+    ],
+)
+async def test_vm_memory_source(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    excluded_resource_ids: set[str],
+    expected_percentage: str,
+) -> None:
+    """Test VM memory comes from cluster resources, falling back to the node list."""
+    mock_proxmox_client.cluster_resources.resources = [
+        resource
+        for resource in mock_proxmox_client.cluster_resources
+        if resource.id not in excluded_resource_ids
+    ]
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.vm_web_memory_usage_percentage")
+    assert state.state == expected_percentage
+
+
 async def test_sensors_according_to_permissions(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,

@@ -40,6 +40,32 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "fake_yid"
 
 
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_yardian_client: AsyncMock,
+) -> None:
+    """Reject a second setup for the same controller at a different host."""
+    mock_config_entry.add_to_hass(hass)
+    mock_yardian_client.fetch_device_info.return_value = {
+        "yid": mock_config_entry.unique_id
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "yardian.example", CONF_ACCESS_TOKEN: "fake_token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
