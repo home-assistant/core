@@ -475,6 +475,52 @@ async def test_reconfigure_flow_missing_credentials(
     assert entry.data[CONF_PASSWORD] == "valid-password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_clears_omitted_credentials(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test reconfiguring without credentials clears previously stored credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "old-user",
+            CONF_PASSWORD: "old-password",
+        },
+        title="INDI Allsky (127.0.0.1)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: True,
+    }
+    assert CONF_USERNAME not in entry.data
+    assert CONF_PASSWORD not in entry.data
+
+
 @pytest.mark.parametrize(
     ("input_host", "expected_host"),
     [

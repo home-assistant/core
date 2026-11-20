@@ -459,10 +459,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     if port != default_port
                     else user_input[CONF_HOST]
                 )
+                entry_data = {
+                    k: v
+                    for k, v in user_input.items()
+                    if k not in (CONF_USERNAME, CONF_PASSWORD) or v
+                }
                 return self.async_update_reload_and_abort(
                     entry,
                     title=f"INDI Allsky ({host_str})",
-                    data_updates=user_input,
+                    data=entry_data,
                 )
 
         return self.async_show_form(
