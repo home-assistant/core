@@ -391,3 +391,34 @@ async def test_options_flow_log_set_unavailable(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("connection_type", "data", "existing_data"),
+    [
+        (
+            "nibegw",
+            MOCK_FLOW_NIBEGW_USERDATA,
+            {**MOCK_FLOW_NIBEGW_USERDATA, "connection_type": "nibegw"},
+        ),
+        (
+            "modbus",
+            MOCK_FLOW_MODBUS_USERDATA,
+            {**MOCK_FLOW_MODBUS_USERDATA, "connection_type": "modbus"},
+        ),
+    ],
+)
+async def test_already_configured(
+    hass: HomeAssistant,
+    connection_type: str,
+    data: dict[str, Any],
+    existing_data: dict[str, Any],
+) -> None:
+    """Test that the same heat pump can't be set up twice."""
+    MockConfigEntry(domain=DOMAIN, data=existing_data).add_to_hass(hass)
+
+    result = await _get_connection_form(hass, connection_type)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
