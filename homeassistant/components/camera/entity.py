@@ -177,6 +177,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._provider_refresh_attempt = 0
         self._provider_refresh_retry: CALLBACK_TYPE | None = None
         self._provider_lookup_stopped = False
+        self._provider_lookup_generation = 0
+        self._provider_lock = asyncio.Lock()
         self._supports_native_async_webrtc = (
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
@@ -435,13 +437,15 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # schedule another lookup
         self._provider_lookup_stopped = True
         self._async_cancel_provider_refresh_retry()
-        if self._webrtc_provider:
-            await async_call_webrtc_provider(
-                self._webrtc_provider.async_unregister_camera(self),
-                "unregistering WebRTC provider for",
-                self.entity_id,
-            )
-            self._webrtc_provider = None
+        # Wait for a refresh that is registering or unregistering right now
+        async with self._provider_lock:
+            if self._webrtc_provider:
+                await async_call_webrtc_provider(
+                    self._webrtc_provider.async_unregister_camera(self),
+                    "unregistering WebRTC provider for",
+                    self.entity_id,
+                )
+                self._webrtc_provider = None
         await super().async_internal_will_remove_from_hass()
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -450,7 +454,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This affects state attributes, so it should be invoked any time the registered
         providers or inputs to the state attributes change.
         """
-        old_provider = self._webrtc_provider
+        # Refreshes can overlap (added, provider registered, retry); only the
+        # most recent lookup is applied
+        self._provider_lookup_generation += 1
+        generation = self._provider_lookup_generation
         new_provider = None
 
         # Skip all providers if the camera has a native WebRTC implementation
@@ -463,34 +470,45 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             except Exception as err:  # noqa: BLE001
                 # The stream source can fail for a moment, e.g. while the camera
                 # is still starting; the camera must be added anyway
-                if not self._provider_lookup_stopped:
+                if self._is_current_provider_lookup(generation):
                     self._async_schedule_provider_refresh_retry(err)
                 return
-            if self._provider_lookup_stopped:
+
+        async with self._provider_lock:
+            if not self._is_current_provider_lookup(generation):
                 return
             self._provider_refresh_attempt = 0
             self._async_cancel_provider_refresh_retry()
 
-        if old_provider == new_provider:
-            return
+            old_provider = self._webrtc_provider
+            if old_provider == new_provider:
+                return
 
-        if old_provider:
-            await async_call_webrtc_provider(
-                old_provider.async_unregister_camera(self),
-                "unregistering WebRTC provider for",
-                self.entity_id,
-            )
+            if old_provider:
+                await async_call_webrtc_provider(
+                    old_provider.async_unregister_camera(self),
+                    "unregistering WebRTC provider for",
+                    self.entity_id,
+                )
 
-        if new_provider:
-            await async_call_webrtc_provider(
-                new_provider.async_register_camera(self),
-                "registering WebRTC provider for",
-                self.entity_id,
-            )
+            if new_provider:
+                await async_call_webrtc_provider(
+                    new_provider.async_register_camera(self),
+                    "registering WebRTC provider for",
+                    self.entity_id,
+                )
 
-        self._webrtc_provider = new_provider
-        if write_state:
-            self.async_write_ha_state()
+            self._webrtc_provider = new_provider
+            if write_state:
+                self.async_write_ha_state()
+
+    @callback
+    def _is_current_provider_lookup(self, generation: int) -> bool:
+        """Return if a lookup is still the latest one of a camera that is not removed."""
+        return (
+            not self._provider_lookup_stopped
+            and generation == self._provider_lookup_generation
+        )
 
     @callback
     def _async_schedule_provider_refresh_retry(self, err: Exception) -> None:

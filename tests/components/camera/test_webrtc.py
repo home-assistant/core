@@ -922,3 +922,91 @@ async def test_lookup_ignored_when_camera_removed_meanwhile(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert attempts == calls
+
+
+@pytest.mark.usefixtures("mock_stream_source")
+async def test_stale_lookup_failure_does_not_schedule_retry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test a lookup that fails after a newer one succeeded changes nothing."""
+    slow_lookup_waiting = asyncio.Event()
+    release_slow_lookup = asyncio.Event()
+    calls = 0
+
+    async def stream_source() -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            slow_lookup_waiting.set()
+            await release_slow_lookup.wait()
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    assert await async_setup_component(hass, "demo", {})
+    await hass.async_block_till_done()
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera.webrtc_provider is register_test_provider
+
+    with patch.object(camera, "stream_source", side_effect=stream_source):
+        slow = hass.async_create_task(camera.async_refresh_providers())
+        await slow_lookup_waiting.wait()
+        await camera.async_refresh_providers()
+        release_slow_lookup.set()
+        await slow
+
+        freezer.tick(600)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert calls == 2
+    assert camera.webrtc_provider is register_test_provider
+
+
+async def test_camera_removed_while_registering_with_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test removal waits for a registration that is in progress and undoes it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    registering = asyncio.Event()
+    release_registration = asyncio.Event()
+    order: list[str] = []
+
+    async def register_camera(camera: Camera) -> None:
+        order.append("register")
+        registering.set()
+        await release_registration.wait()
+
+    async def unregister_camera(camera: Camera) -> None:
+        order.append("unregister")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            return_value=STREAM_SOURCE,
+        ),
+        patch.object(provider, "async_register_camera", side_effect=register_camera),
+        patch.object(
+            provider, "async_unregister_camera", side_effect=unregister_camera
+        ),
+    ):
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        async_register_webrtc_provider(hass, provider)
+        await registering.wait()
+        removal = hass.async_create_task(camera.async_remove())
+        await asyncio.sleep(0)
+        assert not removal.done()  # Waits for the registration
+
+        release_registration.set()
+        await removal
+        await hass.async_block_till_done()
+
+    assert order == ["register", "unregister"]
+    assert camera.webrtc_provider is None
+    assert hass.states.get("camera.demo_camera") is None
