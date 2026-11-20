@@ -88,6 +88,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         devices: list[Device],
         gateways: list[Gateway],
         places: Place | None,
+        excluded_device_urls: frozenset[str] = frozenset(),
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
@@ -100,6 +101,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         self.data = {}
         self.client = client
+        # Devices of the client that are left to the coordinator of another API
+        self._excluded_device_urls = excluded_device_urls
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, set[OverkizDeviceCommand]] = {}
         # A gateway reports its devices' states from cache while it is
@@ -185,7 +188,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
         LOGGER.debug("Fetching all devices and state via /setup/devices")
-        return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
+        return {
+            d.device_url: d
+            for d in await self.client.get_devices(refresh=True)
+            if d.device_url not in self._excluded_device_urls
+        }
 
     def _places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary [placeoid, label])."""

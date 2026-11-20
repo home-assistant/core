@@ -128,7 +128,7 @@ async def async_setup_entry(
     async_add_entities(
         OverkizSwitch(
             device.device_url,
-            data.coordinator,
+            data.coordinator_for(device),
             description,
         )
         for device in data.platforms[Platform.SWITCH]

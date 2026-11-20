@@ -37,9 +37,10 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.overkiz.const import CONF_GATEWAY_ID, DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -1173,6 +1174,259 @@ async def test_reconfigure_switch_cloud_to_local(hass: HomeAssistant) -> None:
     # Full data replace drops the previous cloud credentials.
     assert "username" not in mock_entry.data
     assert "password" not in mock_entry.data
+
+
+async def _async_submit_local_api_of_cloud_entry(
+    hass: HomeAssistant, entry: MockConfigEntry, gateways: list[Mock]
+) -> ConfigFlowResult:
+    """Reconfigure a cloud entry to also use the local API of the gateways."""
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud_with_local"}
+    )
+    assert result["step_id"] == "local"
+
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=gateways),
+    ):
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST2, "token": TEST_TOKEN, "verify_ssl": False},
+        )
+
+
+async def test_reconfigure_cloud_entry_with_local_api(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a cloud entry can use the local API next to its cloud API."""
+    mock_config_entry.add_to_hass(hass)
+    cloud_data = dict(mock_config_entry.data)
+
+    result = await _async_submit_local_api_of_cloud_entry(
+        hass, mock_config_entry, MOCK_GATEWAY_RESPONSE
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The cloud API of the entry is untouched, the local API comes on top of it
+    assert mock_config_entry.unique_id == TEST_GATEWAY_ID
+    assert mock_config_entry.data == {
+        **cloud_data,
+        "local_api": {"host": TEST_HOST2, "token": TEST_TOKEN, "verify_ssl": False},
+    }
+
+
+async def test_reconfigure_cloud_entry_with_local_api_of_other_gateway(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a cloud entry cannot use the local API of another gateway."""
+    mock_config_entry.add_to_hass(hass)
+    cloud_data = dict(mock_config_entry.data)
+
+    result = await _async_submit_local_api_of_cloud_entry(
+        hass, mock_config_entry, [Mock(id=TEST_GATEWAY_ID2)]
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_wrong_account"
+    assert mock_config_entry.data == cloud_data
+
+
+async def test_reconfigure_cloud_entry_with_invalid_local_token(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a rejected local token can be corrected without leaving the flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud_with_local"}
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=NotAuthenticatedError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST, "token": "rejected", "verify_ssl": True},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local"
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert "local_api" not in mock_config_entry.data
+
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST, "token": TEST_TOKEN, "verify_ssl": True},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data["local_api"]["token"] == TEST_TOKEN
+
+
+@pytest.mark.parametrize(
+    ("local_api", "expected_host"),
+    [
+        pytest.param(None, f"gateway-{TEST_GATEWAY_ID}.local:8443", id="first_time"),
+        pytest.param(
+            {"host": TEST_HOST2, "token": "old-token", "verify_ssl": False},
+            TEST_HOST2,
+            id="already_used",
+        ),
+    ],
+)
+async def test_reconfigure_cloud_entry_suggests_local_api_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_api: dict[str, str | bool] | None,
+    expected_host: str,
+) -> None:
+    """Test the host of the local API is suggested from what is known."""
+    mock_config_entry.add_to_hass(hass)
+    if local_api:
+        hass.config_entries.async_update_entry(
+            mock_config_entry, data={**mock_config_entry.data, "local_api": local_api}
+        )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud_with_local"}
+    )
+
+    suggested = {
+        str(key): key.default() for key in result["data_schema"].schema if key == "host"
+    }
+    assert suggested == {"host": expected_host}
+
+
+async def test_reconfigure_to_cloud_only_removes_local_api(
+    hass: HomeAssistant, mock_cloud_with_local_config_entry: MockConfigEntry
+) -> None:
+    """Test choosing the cloud API alone stops the entry from using the local API."""
+    mock_cloud_with_local_config_entry.add_to_hass(hass)
+
+    result = await mock_cloud_with_local_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": TEST_EMAIL, "password": TEST_PASSWORD2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_cloud_with_local_config_entry.data["password"] == TEST_PASSWORD2
+    assert "local_api" not in mock_cloud_with_local_config_entry.data
+
+
+@pytest.mark.parametrize(
+    "entry_fixture",
+    [
+        pytest.param(None, id="new_entry"),
+        pytest.param("mock_rexel_local_config_entry", id="local_entry"),
+    ],
+)
+async def test_local_api_next_to_cloud_is_only_offered_to_cloud_entries(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entry_fixture: str | None,
+) -> None:
+    """Test only an existing cloud entry is offered to also use the local API."""
+    if entry_fixture is None:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"hub": TEST_SERVER}
+        )
+    else:
+        entry: MockConfigEntry = request.getfixturevalue(entry_fixture)
+        entry.add_to_hass(hass)
+        result = await entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "local_or_cloud"
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"api_type": "cloud_with_local"}
+        )
+
+
+async def test_cloud_reauth_keeps_local_api(
+    hass: HomeAssistant, mock_cloud_with_local_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthenticating the cloud API leaves the local API of the entry alone."""
+    mock_cloud_with_local_config_entry.add_to_hass(hass)
+    local_api = mock_cloud_with_local_config_entry.data["local_api"]
+
+    result = await mock_cloud_with_local_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": TEST_EMAIL, "password": TEST_PASSWORD2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_cloud_with_local_config_entry.data["password"] == TEST_PASSWORD2
+    assert mock_cloud_with_local_config_entry.data["local_api"] == local_api
+
+
+async def test_reauth_to_local_only_replaces_cloud_with_local_api(
+    hass: HomeAssistant, mock_cloud_with_local_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry reauthenticated as a local entry no longer uses the cloud API."""
+    mock_cloud_with_local_config_entry.add_to_hass(hass)
+
+    result = await mock_cloud_with_local_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "local"}
+    )
+
+    with patch.multiple(
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": TEST_HOST, "token": TEST_TOKEN, "verify_ssl": True},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_cloud_with_local_config_entry.data == {
+        "host": TEST_HOST,
+        "token": TEST_TOKEN,
+        "verify_ssl": True,
+        "hub": TEST_SERVER,
+        "api_type": "local",
+    }
 
 
 async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

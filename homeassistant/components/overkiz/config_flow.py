@@ -67,6 +67,7 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_LOCAL_API,
     CONF_REFRESH_TOKEN,
     CONF_SITE_OID,
     DEFAULT_SERVER,
@@ -80,6 +81,9 @@ LOCAL_API_DOCS_URL = (
 TOKEN_DOCS_URL = (
     "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api"
 )
+
+# Choice of a cloud entry to also use the local API, not an API type of its own
+CLOUD_WITH_LOCAL_API = "cloud_with_local"
 
 
 class OverkizConfigFlow(
@@ -96,6 +100,7 @@ class OverkizConfigFlow(
     _user: str | None = None
     _server: str = DEFAULT_SERVER
     _host: str = "gateway-xxxx-xxxx-xxxx.local:8443"
+    _add_local_api: bool = False
 
     _rexel_gateways: list[GatewayCandidate]
     _rexel_oauth_data: dict[str, Any]
@@ -152,17 +157,44 @@ class OverkizConfigFlow(
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=user_input
+                self._get_reauth_entry(), data=self._keep_local_api(user_input)
             )
 
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+
+            if self._add_local_api:
+                # The entry keeps its cloud API, the local API comes on top of it
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={
+                        CONF_LOCAL_API: {
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_TOKEN: user_input[CONF_TOKEN],
+                            CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        }
+                    },
+                )
+
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(), data=user_input
             )
 
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=title, data=user_input)
+
+    def _keep_local_api(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return the new data of the reauthenticated entry with its local API.
+
+        Reauthenticating the cloud API of an entry does not concern the local API
+        that the entry uses next to it.
+        """
+        local_api = self._get_reauth_entry().data.get(CONF_LOCAL_API)
+
+        if local_api is None or data.get(CONF_API_TYPE) == APIType.LOCAL:
+            return data
+
+        return {**data, CONF_LOCAL_API: local_api}
 
     @override
     async def async_step_user(
@@ -194,6 +226,13 @@ class OverkizConfigFlow(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Users can choose between local API or cloud API via config flow."""
+        if user_input and user_input[CONF_API_TYPE] == CLOUD_WITH_LOCAL_API:
+            # Only the local API is asked for, the cloud API of the entry is kept
+            self._add_local_api = True
+            self._api_type = APIType.LOCAL
+            self._host = self._local_api_host()
+            return await self.async_step_local()
+
         if user_input:
             self._api_type = user_input[CONF_API_TYPE]
 
@@ -210,20 +249,40 @@ class OverkizConfigFlow(
 
             return await self.async_step_cloud()
 
+        api_types: dict[str, str] = {
+            APIType.LOCAL: "Local API",
+            APIType.CLOUD: "Cloud API",
+        }
+
+        if self._is_reconfiguring_cloud_entry():
+            api_types[CLOUD_WITH_LOCAL_API] = (
+                "Cloud API, with the local API for the devices it supports"
+            )
+
         return self.async_show_form(
             step_id="local_or_cloud",
             data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_API_TYPE): probatio.In(
-                        {
-                            APIType.LOCAL: "Local API",
-                            APIType.CLOUD: "Cloud API",
-                        }
-                    ),
-                }
+                {probatio.Required(CONF_API_TYPE): probatio.In(api_types)}
             ),
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
+
+    def _is_reconfiguring_cloud_entry(self) -> bool:
+        """Return if the flow reconfigures an entry that uses the cloud API."""
+        return (
+            self.source == SOURCE_RECONFIGURE
+            and self._get_reconfigure_entry().data.get(CONF_API_TYPE, APIType.CLOUD)
+            == APIType.CLOUD
+        )
+
+    def _local_api_host(self) -> str:
+        """Return the host of the local API of the reconfigured cloud entry."""
+        entry = self._get_reconfigure_entry()
+
+        if local_api := entry.data.get(CONF_LOCAL_API):
+            return cast(str, local_api[CONF_HOST])
+
+        return f"gateway-{entry.unique_id}.local:8443"
 
     @override
     async def async_step_pick_implementation(
@@ -465,7 +524,7 @@ class OverkizConfigFlow(
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                self._get_reauth_entry(), data=self._keep_local_api(data)
             )
 
         if self.source == SOURCE_RECONFIGURE:
@@ -566,7 +625,7 @@ class OverkizConfigFlow(
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                self._get_reauth_entry(), data=self._keep_local_api(data)
             )
 
         if self.source == SOURCE_RECONFIGURE:

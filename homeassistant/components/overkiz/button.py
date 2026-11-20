@@ -127,7 +127,7 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[ButtonEntity] = []
 
-    for device in data.coordinator.data.values():
+    for device in data.devices:
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
             or device.ui_class in IGNORED_OVERKIZ_DEVICES
@@ -138,12 +138,16 @@ async def async_setup_entry(
             # Target the most-featured id per alias type (same behavior as vendor app).
             if command == OverkizCommand.GO_TO_ALIAS:
                 entities.extend(
-                    OverkizAliasButton(device.device_url, data.coordinator, alias)
+                    OverkizAliasButton(
+                        device.device_url, data.coordinator_for(device), alias
+                    )
                     for alias in device.get_most_featured_aliases().values()
                 )
             elif description := SUPPORTED_COMMANDS.get(command):
                 entities.append(
-                    OverkizButton(device.device_url, data.coordinator, description)
+                    OverkizButton(
+                        device.device_url, data.coordinator_for(device), description
+                    )
                 )
 
     async_add_entities(entities)

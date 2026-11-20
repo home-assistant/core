@@ -578,7 +578,9 @@ async def async_setup_entry(
             or SUPPORTED_DEVICES.get(device.ui_class)
         ):
             entities.append(
-                OverkizCover(device.device_url, data.coordinator, description)
+                OverkizCover(
+                    device.device_url, data.coordinator_for(device), description
+                )
             )
 
             if device.supports_command(
@@ -588,7 +590,7 @@ async def async_setup_entry(
             ):
                 entities.append(
                     OverkizLowSpeedCover(
-                        device.device_url, data.coordinator, description
+                        device.device_url, data.coordinator_for(device), description
                     )
                 )
 

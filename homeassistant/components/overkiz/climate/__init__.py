@@ -101,7 +101,9 @@ async def async_setup_entry(
 
     # Match devices based on the widget.
     entities_based_on_widget: list[Entity] = [
-        WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
+        WIDGET_TO_CLIMATE_ENTITY[device.widget](
+            device.device_url, data.coordinator_for(device)
+        )
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
     ]
@@ -111,7 +113,7 @@ async def async_setup_entry(
     entities_based_on_widget_and_controllable: list[Entity] = [
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
             device.controllable_name  # type: ignore[index]
-        ](device.device_url, data.coordinator)
+        ](device.device_url, data.coordinator_for(device))
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY
         and device.controllable_name
@@ -123,7 +125,7 @@ async def async_setup_entry(
     entities_based_on_widget_and_protocol: list[Entity] = [
         WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][
             device.identifier.protocol
-        ](device.device_url, data.coordinator)
+        ](device.device_url, data.coordinator_for(device))
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY
         and device.identifier.protocol
