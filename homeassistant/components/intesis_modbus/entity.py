@@ -57,4 +57,4 @@ class IntesisEntity(CoordinatorEntity[IntesisUnitCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
             ) from err
-        await self.coordinator.gateway.async_request_refresh()
+        await self.coordinator.async_request_refresh()

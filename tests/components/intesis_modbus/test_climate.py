@@ -28,6 +28,10 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.intesis_modbus.const import CONF_HAS_VANE, DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -42,6 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import INIT_VALUE, INITIALISING_REGISTERS
 
@@ -311,6 +316,24 @@ async def test_write_failure_raises_home_assistant_error(
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "write_failed"
     assert err.value.translation_placeholders is None
+
+
+async def test_manual_update_polls_the_gateway(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Updating the entity by hand reads the gateway, without the next poll."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mock_connection.for_unit(1).holding[1] = 4
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
 
 
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])

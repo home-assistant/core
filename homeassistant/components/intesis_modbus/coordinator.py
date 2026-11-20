@@ -127,6 +127,11 @@ class IntesisUnitCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
 
     @override
+    async def async_request_refresh(self) -> None:
+        """Ask the gateway for a poll, which this coordinator then follows."""
+        await self.gateway.async_request_refresh()
+
+    @override
     async def _async_update_data(self) -> UpdateReport:
         if not self.gateway.last_update_success:
             raise UpdateFailedUnreachable(
