@@ -60,6 +60,9 @@ class FakeController:
         self.puts: list[dict[str, Any]] = []
         self._json_response = json_response
         self._put_delay = put_delay
+        self.held_gets: asyncio.Queue[asyncio.Event] = asyncio.Queue()
+        """Each GET held open, in order; set its event to answer it."""
+        self.hold_gets = False
         url = (
             f"https://{config_entry.data[CONF_HOST]}:1234"
             f"/v2/api/site/{config_entry.data[CONF_SITE_ID]}/firewall-policies"
@@ -71,10 +74,16 @@ class FakeController:
         mock_requests()
 
     async def _get(self, method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        # Answer with the policy as it was when the request was sent.
+        policy = deepcopy(self.policy)
+        if self.hold_gets:
+            release = asyncio.Event()
+            self.held_gets.put_nowait(release)
+            await release.wait()
         return AiohttpClientMockResponse(
             method,
             url,
-            json=[deepcopy(self.policy)],
+            json=[policy],
             headers={"content-type": CONTENT_TYPE_JSON},
         )
 
@@ -225,6 +234,64 @@ async def test_simultaneous_writes_are_not_lost(
         ),
         _call(hass, SWITCH_DOMAIN, SwitchService.TURN_OFF, SWITCH),
     )
+
+    assert controller.policy["enabled"] is False
+    assert controller.policy["schedule"] == {"mode": "ALWAYS"}
+    assert hass.states.get(SELECT).state == "always"
+    assert hass.states.get(SWITCH).state == "off"
+
+
+async def _run_ready_tasks() -> None:
+    """Let tasks run until they block (frozen time stops asyncio.sleep)."""
+    for _ in range(50):
+        await asyncio.sleep(0)
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_poll_sent_before_a_write_does_not_undo_it(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    aioclient_mock: AiohttpClientMocker,
+    mock_requests: Callable[[], None],
+) -> None:
+    """A poll answered after a write can't put back the policy it replaced.
+
+    Otherwise the next write, built from the cached policy, would send the
+    old schedule back to the controller.
+    """
+    config_entry = await config_entry_factory()
+    controller = FakeController(
+        aioclient_mock, mock_requests, config_entry, FIREWALL_POLICY
+    )
+    controller.hold_gets = True
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    poll = await controller.held_gets.get()
+
+    select = hass.async_create_task(
+        _call(
+            hass,
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            SELECT,
+            {SelectServiceArgument.OPTION: "always"},
+        )
+    )
+    await _run_ready_tasks()
+    poll.set()
+    # The refresh after the schedule write waits behind the poll.
+    refresh = await controller.held_gets.get()
+
+    switch = hass.async_create_task(
+        _call(hass, SWITCH_DOMAIN, SwitchService.TURN_OFF, SWITCH)
+    )
+    await _run_ready_tasks()
+    controller.hold_gets = False
+    refresh.set()
+    await asyncio.gather(select, switch)
 
     assert controller.policy["enabled"] is False
     assert controller.policy["schedule"] == {"mode": "ALWAYS"}

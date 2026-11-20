@@ -69,6 +69,13 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         )
         self._endpoint_not_found_logged = False
         self._resync_task: asyncio.Task[None] | None = None
+        self.update_lock = asyncio.Lock()
+        """Held while refetching the handler's objects.
+
+        A write that sends a whole object built from the cached copy holds it
+        too, so a fetch sent before the write can't answer after it and put
+        back the object the write replaced.
+        """
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
         hub.config.entry.async_on_unload(
@@ -86,7 +93,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         try:
-            async with asyncio.timeout(UPDATE_TIMEOUT):
+            async with self.update_lock, asyncio.timeout(UPDATE_TIMEOUT):
                 await self._handler.update()
         except EndpointNotFound as err:
             if (
@@ -145,7 +152,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         # Pushed data stays valid if the refetch fails, the websocket resumes after it
         name = type(self._handler).__name__
         try:
-            async with asyncio.timeout(UPDATE_TIMEOUT):
+            async with self.update_lock, asyncio.timeout(UPDATE_TIMEOUT):
                 await self._handler.update()
         except SESSION_CHECK_ERRORS as err:
             self._connection.verify_session(err)
