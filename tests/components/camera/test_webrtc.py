@@ -1010,3 +1010,68 @@ async def test_camera_removed_while_registering_with_provider(
     assert order == ["register", "unregister"]
     assert camera.webrtc_provider is None
     assert hass.states.get("camera.demo_camera") is None
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_stream_source_retry_backoff(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the lookup is retried after 30, 60, 120 and then every 300 seconds."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=TimeoutError,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        cameras = mock_stream_source.call_count  # One lookup per demo camera
+
+        for attempt, delay in enumerate((30, 60, 120, 300, 300), start=2):
+            freezer.tick(delay - 1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_stream_source.call_count == (attempt - 1) * cameras
+
+            freezer.tick(1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_stream_source.call_count == attempt * cameras
+
+
+async def test_pending_retry_cancelled_when_refresh_succeeds(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a scheduled retry is dropped once another refresh found the provider."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        assert camera.webrtc_provider is None
+
+        # Before the retry is due, a refresh succeeds
+        camera_ready = True
+        await camera.async_refresh_providers()
+        assert camera.webrtc_provider is provider
+        calls = mock_stream_source.call_count
+
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Only the other demo camera still had a retry pending
+        assert mock_stream_source.call_count == calls + 1
+        assert camera.webrtc_provider is provider
