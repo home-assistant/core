@@ -22,6 +22,7 @@ from webrtc_models import RTCIceCandidateInit
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
+    Image,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
@@ -136,6 +137,8 @@ class StreamRefresh:
 class NestCameraBaseEntity(Camera, ABC):
     """Devices that support cameras."""
 
+    _attr_supports_event_image = True
+
     _attr_has_entity_name = True
     _attr_name = None
     _attr_is_streaming = True
@@ -160,6 +163,19 @@ class NestCameraBaseEntity(Camera, ABC):
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
+
+    @override
+    async def async_get_event_image(self, event_id: str) -> Image | None:
+        """Return a JPEG still associated with a Nest camera event."""
+        try:
+            media = await self._device.event_media_manager.get_media_from_token(
+                event_id
+            )
+        except ApiException:
+            return None
+        if media is None or media.content_type != "image/jpeg":
+            return None
+        return Image(media.content_type, media.contents)
 
 
 class NestRTSPEntity(NestCameraBaseEntity):
@@ -252,6 +268,8 @@ class NestRTSPEntity(NestCameraBaseEntity):
 class NestWebRTCEntity(NestCameraBaseEntity):
     """Nest cameras that use WebRTC."""
 
+    _attr_supports_server_side_webrtc = True
+
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
         super().__init__(device)
@@ -332,6 +350,20 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
+        if stream := self._async_remove_webrtc_session(session_id):
+            self.hass.async_create_task(self._async_stop_webrtc_stream(stream))
+        super().close_webrtc_session(session_id)
+
+    @override
+    async def async_close_webrtc_session(self, session_id: str) -> None:
+        """Wait for Nest to stop a server-side stream."""
+        if stream := self._async_remove_webrtc_session(session_id):
+            await self._async_stop_webrtc_stream(stream)
+        super().close_webrtc_session(session_id)
+
+    @callback
+    def _async_remove_webrtc_session(self, session_id: str) -> WebRtcStream | None:
+        """Remove session ownership and its refresh timer atomically."""
         if (stream := self._webrtc_sessions.pop(session_id, None)) is not None:
             _LOGGER.debug(
                 "Closing WebRTC session %s, %s", session_id, stream.media_session_id
@@ -339,14 +371,14 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             unsub = self._refresh_unsub.pop(session_id)
             unsub()
 
-            async def stop_stream() -> None:
-                try:
-                    await stream.stop_stream()
-                except ApiException as err:
-                    _LOGGER.debug("Error stopping stream: %s", err)
+        return stream
 
-            self.hass.async_create_task(stop_stream())
-        super().close_webrtc_session(session_id)
+    async def _async_stop_webrtc_stream(self, stream: WebRtcStream) -> None:
+        """Stop an owned cloud stream."""
+        try:
+            await stream.stop_stream()
+        except ApiException as err:
+            _LOGGER.debug("Error stopping stream: %s", err)
 
     @callback
     @override

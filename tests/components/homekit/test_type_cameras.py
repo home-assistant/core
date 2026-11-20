@@ -1051,6 +1051,74 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     )
     await hass.async_block_till_done()
     assert broker.mock_calls
+
+
+async def test_event_media_snapshot_is_returned_before_live_snapshot(
+    hass: HomeAssistant, run_driver: HomeDriver
+) -> None:
+    """Use the current Nest event still for HomeKit activity snapshots."""
+    acc = Camera(hass, run_driver, "Camera", "camera.demo_camera", 2, {})
+    hass.states.async_set(
+        "event.motion",
+        "2026-11-20T12:00:00+00:00",
+        {"nest_event_id": "event-token"},
+    )
+    event_state = hass.states.get("event.motion")
+    assert event_state is not None
+    camera_entity = MagicMock(
+        supports_event_image=True,
+        async_get_event_image=AsyncMock(
+            return_value=camera.Image("image/jpeg", b"event-jpeg")
+        ),
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.camera.get_camera_from_entity_id",
+            return_value=camera_entity,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.camera.async_get_image",
+            new_callable=AsyncMock,
+        ) as get_image,
+    ):
+        await acc._async_set_event_snapshot(event_state)
+        assert await acc.async_get_snapshot(
+            {"image-width": 640, "image-height": 360}
+        ) == b"event-jpeg"
+    camera_entity.async_get_event_image.assert_awaited_once_with("event-token")
+    get_image.assert_not_awaited()
+
+
+async def test_missing_event_media_omits_homekit_snapshot(
+    hass: HomeAssistant, run_driver: HomeDriver
+) -> None:
+    """Do not expose a placeholder as the image for a Nest event."""
+    acc = Camera(hass, run_driver, "Camera", "camera.demo_camera", 2, {})
+    hass.states.async_set(
+        "event.motion",
+        "2026-11-20T12:00:00+00:00",
+        {"nest_event_id": "event-token"},
+    )
+    event_state = hass.states.get("event.motion")
+    assert event_state is not None
+    camera_entity = MagicMock(
+        supports_event_image=True,
+        async_get_event_image=AsyncMock(return_value=None),
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.camera.get_camera_from_entity_id",
+            return_value=camera_entity,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.camera.async_get_image",
+            new_callable=AsyncMock,
+        ) as get_image,
+        pytest.raises(HomeAssistantError, match="No event image is available"),
+    ):
+        await acc._async_set_event_snapshot(event_state)
+        await acc.async_get_snapshot({"image-width": 640, "image-height": 360})
+    get_image.assert_not_awaited()
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=MOTION_EVENT_RESET_SECONDS)
     )

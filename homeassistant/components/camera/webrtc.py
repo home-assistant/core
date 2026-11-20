@@ -113,6 +113,60 @@ class WebRTCClientConfiguration:
         return data
 
 
+@dataclass(kw_only=True)
+class CameraWebRTCSession:
+    """A negotiated server-side camera session with awaitable cleanup."""
+
+    session_id: str
+    answer: str = field(repr=False)
+    _close: Callable[[], Coroutine[Any, Any, None]] = field(repr=False)
+    _close_task: asyncio.Task[None] | None = field(default=None, init=False, repr=False)
+
+    async def async_close(self) -> None:
+        """Close once, including when multiple owners request cleanup."""
+        if self._close_task is None:
+            self._close_task = asyncio.create_task(self._close())
+        await asyncio.shield(self._close_task)
+
+
+async def async_create_webrtc_session(
+    camera: Camera, offer: str
+) -> CameraWebRTCSession:
+    """Negotiate a complete answer for an opted-in server-side consumer."""
+    session_id = secure_ulid_now()
+    answer: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+
+    @callback
+    def send_message(message: WebRTCMessage) -> None:
+        if answer.done():
+            return
+        if isinstance(message, WebRTCAnswer):
+            answer.set_result(message.answer)
+        elif isinstance(message, WebRTCError):
+            answer.set_exception(HomeAssistantError(message.code))
+
+    try:
+        async with asyncio.timeout(30):
+            await camera.async_handle_async_webrtc_offer(
+                offer, session_id, send_message
+            )
+            answer_sdp = await answer
+    except BaseException:
+        if answer.done() and not answer.cancelled():
+            answer.exception()
+        await camera.async_close_webrtc_session(session_id)
+        raise
+    finally:
+        if not answer.done():
+            answer.cancel()
+
+    return CameraWebRTCSession(
+        session_id=session_id,
+        answer=answer_sdp,
+        _close=partial(camera.async_close_webrtc_session, session_id),
+    )
+
+
 class CameraWebRTCProvider(ABC):
     """WebRTC provider."""
 

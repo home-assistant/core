@@ -82,6 +82,7 @@ from .prefs import (
 from .services import async_setup_services
 from .webrtc import (
     CameraWebRTCProvider,
+    CameraWebRTCSession,
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCClientConfiguration,
@@ -89,6 +90,7 @@ from .webrtc import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_call_webrtc_provider,
+    async_create_webrtc_session,
     async_register_webrtc_provider,
     async_register_ws,
 )
@@ -138,6 +140,7 @@ __all__ = [
     "CameraState",
     "CameraView",
     "CameraWebRTCProvider",
+    "CameraWebRTCSession",
     "DynamicStreamSettings",
     "Image",
     "StreamType",
@@ -148,6 +151,7 @@ __all__ = [
     "WebRTCError",
     "WebRTCMessage",
     "WebRTCSendMessage",
+    "async_create_webrtc_session",
     "async_get_image",
     "async_get_mjpeg_stream",
     "async_get_still_stream",

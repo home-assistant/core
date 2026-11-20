@@ -94,7 +94,19 @@ class HomeDoorbellAccessory(HomeAccessory):
         if not state_changed_event_is_same_state(event) and (
             new_state := event.data["new_state"]
         ):
-            self.async_update_doorbell_state(event.data["old_state"], new_state)
+            old_state = event.data["old_state"]
+            if self.doorbell_is_event:
+                self.hass.async_create_task(
+                    self.async_handle_event_doorbell_state(old_state, new_state)
+                )
+            else:
+                self.async_update_doorbell_state(old_state, new_state)
+
+    async def async_handle_event_doorbell_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
+        """Handle a linked event doorbell state change."""
+        self.async_update_doorbell_state(old_state, new_state)
 
     @ha_callback
     def async_update_doorbell_state(

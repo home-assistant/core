@@ -52,6 +52,74 @@ EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
+
+@pytest.mark.usefixtures("webrtc_camera_device")
+async def test_server_side_webrtc_session(
+    hass: HomeAssistant, setup_platform: PlatformSetup, auth: FakeAuth
+) -> None:
+    """Server consumers reuse Nest negotiation and await cloud stop exactly once."""
+    auth.responses = [
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "private-answer",
+                    "mediaSessionId": "test-session",
+                    "expiresAt": (utcnow() + datetime.timedelta(minutes=5)).isoformat(),
+                }
+            }
+        ),
+        aiohttp.web.json_response({}),
+    ]
+    await setup_platform()
+    entity = camera.get_camera_from_entity_id(hass, "camera.my_camera")
+    session = await entity.async_create_webrtc_session("private-offer")
+    assert session.answer == "private-answer"
+    await session.async_close()
+    await session.async_close()
+    assert [request[2]["command"] for request in auth.captured_requests] == [
+        "sdm.devices.commands.CameraLiveStream.GenerateWebRtcStream",
+        "sdm.devices.commands.CameraLiveStream.StopWebRtcStream",
+    ]
+
+
+@pytest.mark.usefixtures("webrtc_camera_device")
+async def test_server_side_webrtc_refresh(
+    hass: HomeAssistant, setup_platform: PlatformSetup, auth: FakeAuth
+) -> None:
+    """A server-side stream uses the same expiry refresh as dashboard streams."""
+    now = utcnow()
+    auth.responses = [
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "answerSdp": "private-answer",
+                    "mediaSessionId": "test-session",
+                    "expiresAt": (now + datetime.timedelta(seconds=90)).isoformat(),
+                }
+            }
+        ),
+        aiohttp.web.json_response(
+            {
+                "results": {
+                    "mediaSessionId": "test-session",
+                    "expiresAt": (now + datetime.timedelta(seconds=180)).isoformat(),
+                }
+            }
+        ),
+        aiohttp.web.json_response({}),
+    ]
+    await setup_platform()
+    entity = camera.get_camera_from_entity_id(hass, "camera.my_camera")
+    session = await entity.async_create_webrtc_session("private-offer")
+    await fire_alarm(hass, now + datetime.timedelta(seconds=60))
+    await session.async_close()
+    assert [request[2]["command"] for request in auth.captured_requests] == [
+        "sdm.devices.commands.CameraLiveStream.GenerateWebRtcStream",
+        "sdm.devices.commands.CameraLiveStream.ExtendWebRtcStream",
+        "sdm.devices.commands.CameraLiveStream.StopWebRtcStream",
+    ]
+
+
 TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
 GENERATE_IMAGE_URL_RESPONSE = {
     "results": {
