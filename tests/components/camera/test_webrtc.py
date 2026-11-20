@@ -861,56 +861,64 @@ async def test_stream_source_retry_cancelled_on_removal(
         assert mock_stream_source.call_count == calls + calls // 2
 
 
-async def test_provider_lookup_cancelled_when_removed_during_retry(
+@pytest.mark.parametrize("lookup_fails", [True, False])
+@pytest.mark.parametrize("trigger", ["retry", "provider_registered"])
+async def test_lookup_ignored_when_camera_removed_meanwhile(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    register_test_provider: SomeTestProvider,
+    trigger: str,
+    lookup_fails: bool,
 ) -> None:
-    """Test removing a camera stops a retried lookup that waits for the stream source."""
+    """Test a lookup that ends after the camera was removed changes nothing."""
     attempts = 0
     lookup_waiting = asyncio.Event()
-    lookup_cancelled = asyncio.Event()
+    release_lookup = asyncio.Event()
 
     async def stream_source() -> str:
         nonlocal attempts
         attempts += 1
-        if attempts <= 2:  # First lookup of each demo camera
+        if trigger == "retry" and attempts <= 2:  # First lookup of each demo camera
             raise TimeoutError("camera not ready")
         lookup_waiting.set()
-        try:
-            await asyncio.Event().wait()
-        except asyncio.CancelledError:
-            lookup_cancelled.set()
-            raise
+        await release_lookup.wait()
+        if lookup_fails:
+            raise TimeoutError("camera not ready")
         return STREAM_SOURCE
 
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
     with (
         patch(
             "homeassistant.components.camera.Camera.stream_source",
             side_effect=stream_source,
         ),
-        patch.object(
-            register_test_provider, "async_register_camera", autospec=True
-        ) as mock_register,
+        patch.object(provider, "async_register_camera", autospec=True) as mock_register,
     ):
+        if trigger == "retry":
+            async_register_webrtc_provider(hass, provider)
         assert await async_setup_component(hass, "demo", {})
         await hass.async_block_till_done()
         camera = get_camera_from_entity_id(hass, "camera.demo_camera")
-        other = get_camera_from_entity_id(hass, "camera.demo_camera_png")
-        await other.async_remove()
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
 
-        freezer.tick(30)
-        async_fire_time_changed(hass)
+        if trigger == "retry":
+            freezer.tick(30)
+            async_fire_time_changed(hass)
+        else:
+            # Registering a provider looks it up for every camera
+            async_register_webrtc_provider(hass, provider)
         await lookup_waiting.wait()
+        calls = attempts
 
         await camera.async_remove()
+        release_lookup.set()
+        await hass.async_block_till_done()
 
-        assert lookup_cancelled.is_set()
         assert camera.webrtc_provider is None
         mock_register.assert_not_called()
 
-        # Nothing is looked up for the removed cameras afterwards
-        freezer.tick(300)
+        # Nothing is looked up for the removed camera afterwards
+        freezer.tick(600)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert attempts == 3
+        assert attempts == calls
