@@ -10,10 +10,27 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "connection_initialization_failed": "Successfully connected, but failed to read data from the panel. Please check the integration encryption key is correct if your panel requires encryption.",
+      "no_partitions": "No partitions were found.",
       "panel_busy": "Successfully connected, but alarm panel reports it's busy. Please check no other connections are active.",
+      "scan_failed": "Could not scan for partitions.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "progress": {
+      "scanning_partitions": "Scanning for partitions…"
+    },
     "step": {
+      "discover": {
+        "description": "Home Assistant can scan the panel and add all partitions it finds. You can also skip the scan and add partitions manually later.",
+        "menu_options": {
+          "scan_partitions": "Scan and add all partitions",
+          "skip_scan": "Skip scan"
+        },
+        "title": "Discover partitions"
+      },
+      "finish_scan": {
+        "description": "Continue to set up the panel without adding partitions. You can add them manually later.",
+        "title": "Continue without partitions"
+      },
       "reconfigure": {
         "data": {
           "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
