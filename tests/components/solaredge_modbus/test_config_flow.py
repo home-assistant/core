@@ -604,6 +604,39 @@ async def test_zeroconf_known_inverter_is_dropped(
     assert not mock_temporary_unit.called
 
 
+@pytest.mark.parametrize(
+    ("state", "reloads"),
+    [
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="retrying"),
+        pytest.param(ConfigEntryState.LOADED, 0, id="loaded"),
+    ],
+)
+async def test_zeroconf_known_inverter_on_its_address_reloads_when_retrying(
+    hass: HomeAssistant, state: ConfigEntryState, reloads: int
+) -> None:
+    """A known inverter announcing its configured address reloads a retrying entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TITLE, unique_id=SERIAL_NUMBER, data=tcp_data()
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, state)
+
+    with (
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch(
+            "homeassistant.components.solaredge_modbus.config_flow.async_get_temporary_unit"
+        ) as mock_temporary_unit,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(host=HOST)
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_reload.call_count == reloads
+    assert not mock_temporary_unit.called
+
+
 async def test_zeroconf_ignored_inverter_is_not_probed(hass: HomeAssistant) -> None:
     """An ignored inverter is dropped without a connection being opened."""
     MockConfigEntry(

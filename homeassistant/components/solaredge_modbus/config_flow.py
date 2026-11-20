@@ -194,7 +194,7 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                     and entry.data.get(CONF_PORT) == data[CONF_PORT]
                 )
             ):
-                return self.async_abort(reason="already_configured")
+                self._abort_if_unique_id_configured()
 
         errors, solaredge = await self._async_validate(data)
         if solaredge is None:
