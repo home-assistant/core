@@ -1521,9 +1521,43 @@ async def test_unmapped_enum_value_kept_after_mapped_update(
     assert _unmapped_issue_ids(issue_registry) == [issue_id]
 
 
+def _motion_status_metadata_event(node: Node, extra_metadata: dict) -> Event:
+    """Return a metadata updated event for the Multisensor 6 motion status."""
+    return Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Motion sensor status",
+                "propertyName": "Home Security",
+                "propertyKeyName": "Motion sensor status",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "min": 0,
+                    "max": 255,
+                    "label": "Motion sensor status",
+                    "ccSpecific": {"notificationType": 7},
+                    **extra_metadata,
+                },
+            },
+        },
+    )
+
+
 @pytest.mark.parametrize(
-    "states",
-    [{"0": "idle", "8": "Motion detection"}, None],
+    "extra_metadata",
+    [
+        {"states": {"0": "idle", "8": "Motion detection"}},
+        {},
+    ],
     ids=["value_mapped", "states_removed"],
 )
 async def test_unmapped_enum_value_cleared_after_metadata_rediscovery(
@@ -1531,46 +1565,58 @@ async def test_unmapped_enum_value_cleared_after_metadata_rediscovery(
     issue_registry: ir.IssueRegistry,
     unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
-    states: dict[str, str] | None,
+    extra_metadata: dict,
 ) -> None:
     """Test that a metadata update that rediscovers the value clears the repair."""
     node = unmapped_motion_sensor
     assert _unmapped_issue_ids(issue_registry)
 
-    metadata = {
-        "type": "number",
-        "readable": True,
-        "writeable": False,
-        "min": 0,
-        "max": 255,
-        "label": "Motion sensor status",
-        "ccSpecific": {"notificationType": 7},
-    }
-    if states is not None:
-        metadata["states"] = states
-    node.receive_event(
-        Event(
-            "metadata updated",
-            {
-                "source": "node",
-                "event": "metadata updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Notification",
-                    "commandClass": 113,
-                    "endpoint": 0,
-                    "property": "Home Security",
-                    "propertyKey": "Motion sensor status",
-                    "propertyName": "Home Security",
-                    "propertyKeyName": "Motion sensor status",
-                    "metadata": metadata,
-                },
-            },
-        )
-    )
+    node.receive_event(_motion_status_metadata_event(node, extra_metadata))
     await hass.async_block_till_done()
 
     assert not _unmapped_issue_ids(issue_registry)
+
+
+async def test_unmapped_enum_value_cleared_when_states_map_it(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that new states with the same labels clear the repair in place."""
+    node = unmapped_motion_sensor
+    assert _unmapped_issue_ids(issue_registry)
+    entity_entry = entity_registry.async_get(MOTION_STATUS_ENTITY)
+    assert entity_entry
+
+    # Only the key changes, so the labels match and nothing is rediscovered.
+    node.receive_event(_motion_status_metadata_event(node, {"states": {"8": "idle"}}))
+    await hass.async_block_till_done()
+
+    assert not _unmapped_issue_ids(issue_registry)
+    assert entity_registry.async_get(MOTION_STATUS_ENTITY) == entity_entry
+
+
+async def test_unmapped_enum_value_kept_until_every_value_mapped(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the repair stays while any value that raised it is unmapped."""
+    node = unmapped_motion_sensor
+    node.receive_event(_motion_status_value_event(node, 9, 8))
+    node.receive_event(_motion_status_value_event(node, 8, 9))
+    await hass.async_block_till_done()
+    [issue_id] = _unmapped_issue_ids(issue_registry)
+
+    # The current value 8 becomes mapped, but 9 also raised the repair.
+
+    node.receive_event(_motion_status_metadata_event(node, {"states": {"8": "idle"}}))
+    await hass.async_block_till_done()
+
+    assert _unmapped_issue_ids(issue_registry) == [issue_id]
 
 
 async def test_unmapped_enum_value_ignore_survives_mapped_value(

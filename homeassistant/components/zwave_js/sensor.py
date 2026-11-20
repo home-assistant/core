@@ -106,6 +106,7 @@ from .const import (
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
+    EVENT_METADATA_UPDATED,
     LOGGER,
 )
 from .discovery_data_template import (
@@ -980,6 +981,7 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_options = list(info.primary_value.metadata.states.values())
         self._logged_unmapped_values: set[str] = set()
         self._unmapped_issue_id: str | None = None
+        self._unmapped_repair_values: set[str] = set()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -995,7 +997,19 @@ class ZWaveListSensor(ZwaveSensor):
         # platform, so nothing would clear the repair later. If the value is
         # still unmapped, the next entity raises it again.
         self.async_on_remove(self._async_clear_unmapped_value)
+        self.async_on_remove(
+            self.info.node.on(EVENT_METADATA_UPDATED, self._async_states_updated)
+        )
         self._async_update_unmapped_issue()
+
+    @callback
+    def _async_states_updated(self, event_data: dict) -> None:
+        """Recheck the repair when new states arrive without a rediscovery."""
+        if (
+            event_data["value"].value_id == self.info.primary_value.value_id
+            and not self.should_rediscover_on_metadata_update()
+        ):
+            self._async_update_unmapped_issue()
 
     @callback
     @override
@@ -1026,18 +1040,22 @@ class ZWaveListSensor(ZwaveSensor):
 
     @callback
     def _async_update_unmapped_issue(self) -> None:
-        """Raise the repair for an unmapped value.
+        """Raise the repair for an unmapped value, or clear it once mapped.
 
         A mapped reading leaves the repair in place: notification values often
         drop back to idle right after an event, which would clear the repair
-        before anyone sees it. The states only change through rediscovery, and
-        removing the entity clears the repair.
+        before anyone sees it. It is cleared once the states cover every value
+        that raised it.
         """
+        states = self.info.primary_value.metadata.states
+        if self._unmapped_repair_values and all(
+            raw_value in states for raw_value in self._unmapped_repair_values
+        ):
+            self._unmapped_repair_values.clear()
+            self._async_clear_unmapped_value()
         if (value := self.info.primary_value.value) is None:
             return
-        if self.device_class is SensorDeviceClass.ENUM and str(value) not in (
-            self.info.primary_value.metadata.states
-        ):
+        if self.device_class is SensorDeviceClass.ENUM and str(value) not in states:
             self._async_report_unmapped_value(str(value))
 
     @callback
@@ -1062,6 +1080,7 @@ class ZWaveListSensor(ZwaveSensor):
             issue_id := self._unmapped_issue_id
         ) is None:
             return
+        self._unmapped_repair_values.add(raw_value)
         device_name = device.name_by_user or device.name or "Unknown device"
         placeholders = {
             "device_name": device_name,
