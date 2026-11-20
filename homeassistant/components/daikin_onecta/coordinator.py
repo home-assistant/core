@@ -108,7 +108,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._polling_backoff_until: datetime | None = None
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
-        self._manual_refresh_previous_sequence: int | None = None
+        self._manual_refresh_previous_sequences: list[int] = []
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
         self._sites_cache: tuple[datetime, list[Site]] | None = None
 
@@ -160,11 +160,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         # The same backoff check used by scheduled and entity refreshes runs
         # again after acquiring the cloud lock.
         previous_sequence = self._cloud_update_sequence
-        self._manual_refresh_previous_sequence = previous_sequence
+        self._manual_refresh_previous_sequences.append(previous_sequence)
         try:
             await self.async_refresh()
         finally:
-            self._manual_refresh_previous_sequence = None
+            self._manual_refresh_previous_sequences.remove(previous_sequence)
         if self._cloud_update_sequence == previous_sequence and (
             remaining := (
                 self._polling_backoff_remaining()
@@ -197,9 +197,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return None
             if self._post_write_cooldown_remaining() is not None:
                 return None
-            if (
-                self._manual_refresh_previous_sequence is not None
-                and self._cloud_update_sequence > self._manual_refresh_previous_sequence
+            if any(
+                self._cloud_update_sequence > previous_sequence
+                for previous_sequence in self._manual_refresh_previous_sequences
             ):
                 return None
             try:
@@ -491,10 +491,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
-                if (
-                    self._manual_refresh_previous_sequence is not None
-                    and self._cloud_update_sequence
-                    > self._manual_refresh_previous_sequence
+                if any(
+                    self._cloud_update_sequence > previous_sequence
+                    for previous_sequence in self._manual_refresh_previous_sequences
                 ):
                     # A scheduled fetch completed while the manual refresh
                     # waited for the cloud lock; keep its current data and

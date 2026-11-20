@@ -16,7 +16,7 @@ from daikin_onecta import (
     OnectaRateLimitError,
     OnectaResponseError,
 )
-from daikin_onecta.models import Characteristic
+from daikin_onecta.models import Characteristic, GatewayDevice
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -871,6 +871,34 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
+
+    async def test_overlapping_manual_refreshes_make_one_cloud_call(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        mock_onecta_client: MockOnectaClient,
+    ) -> None:
+        """Coalesce manual refreshes that overlap while waiting for the cloud lock."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        request_started = asyncio.Event()
+        release_response = asyncio.Event()
+
+        async def delayed_get_gateway_devices() -> list[GatewayDevice]:
+            request_started.set()
+            await release_response.wait()
+            return _load_gateway_devices("minimal_data")
+
+        mock_onecta_client.get_gateway_devices.side_effect = delayed_get_gateway_devices
+        first_refresh = hass.async_create_task(coordinator.async_manual_refresh())
+        await request_started.wait()
+        second_refresh = hass.async_create_task(coordinator.async_manual_refresh())
+        await asyncio.sleep(0)
+        release_response.set()
+
+        await asyncio.gather(first_refresh, second_refresh)
+
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_scheduled_update_respects_write_polling_backoff(
         self,

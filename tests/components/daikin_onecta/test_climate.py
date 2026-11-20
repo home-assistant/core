@@ -99,7 +99,7 @@ async def test_target_temperature_step_clears_without_current_setpoint(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Clear a cached step when the current operation mode has no setpoint."""
+    """Restore Home Assistant temperature defaults without a current setpoint."""
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
     coordinator = config_entry.runtime_data
     entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
@@ -107,12 +107,16 @@ async def test_target_temperature_step_clears_without_current_setpoint(
     assert isinstance(entity, DaikinClimate)
     point = coordinator.data[entity._device_id].management_point(entity._embedded_id)
     assert point is not None and point.operation_mode is not None
-    assert entity.target_temperature_step is not None
+    assert entity.target_temperature_step == 0.5
+    assert entity.min_temp == 10
+    assert entity.max_temp == 30
 
     point.operation_mode.value = "fanOnly"
     coordinator.async_update_listeners()
 
     assert entity.target_temperature_step is None
+    assert entity.min_temp == 7
+    assert entity.max_temp == 35
 
 
 def _make_vertical_swing_read_only(point: SimpleNamespace) -> None:

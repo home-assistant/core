@@ -26,7 +26,7 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import enum_value_to_state
+from .utils import _fixed_positions, enum_value_to_state
 
 PARALLEL_UPDATES = 1
 
@@ -118,23 +118,9 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     def _fixed_speeds(self, mode: str | None = None) -> list[int]:
         """Return the current mode's ordered writable fixed speeds."""
         fixed = self._fixed_speed_characteristic(mode)
-        if (
-            fixed is None
-            or not fixed.settable
-            or fixed.min_value is None
-            or fixed.max_value is None
-        ):
+        if fixed is None or not fixed.settable:
             return []
-        step = fixed.step_value
-        if (
-            step is None
-            or step <= 0
-            or not float(fixed.min_value).is_integer()
-            or not float(fixed.max_value).is_integer()
-            or not float(step).is_integer()
-        ):
-            return []
-        return list(range(int(fixed.min_value), int(fixed.max_value) + 1, int(step)))
+        return list(_fixed_positions(fixed) or ())
 
     def _fixed_speed_characteristic(
         self, mode: str | None = None
@@ -218,11 +204,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         ):
             fixed = self._fixed_speed_characteristic()
             fixed_speed = fixed.value if fixed is not None else None
-            if fixed_speed is not None:
-                try:
-                    speed = int(fixed_speed)
-                except TypeError, ValueError:
-                    speed = None
+            if fixed_speed is not None and float(fixed_speed).is_integer():
+                speed = int(fixed_speed)
                 if speed in speeds:
                     self._attr_percentage = ordered_list_item_to_percentage(
                         speeds, speed

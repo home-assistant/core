@@ -96,8 +96,12 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     assert purification.fan_operation("manualFan").fan_speed.modes["fixed"].value == 4
 
 
+@pytest.mark.parametrize(
+    "fixed_speed",
+    [pytest.param(0, id="below-range"), pytest.param(2.5, id="fractional")],
+)
 async def test_air_purifier_ignores_unknown_fixed_speed(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, fixed_speed: float
 ) -> None:
     """Keep the fan platform available when Daikin reports an invalid speed."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
@@ -108,7 +112,7 @@ async def test_air_purifier_ignores_unknown_fixed_speed(
     assert operation is not None
     assert operation.fan_speed is not None
     assert operation.fan_speed.modes is not None
-    operation.fan_speed.modes[FANMODE_FIXED].value = 0
+    operation.fan_speed.modes[FANMODE_FIXED].value = fixed_speed
 
     coordinator.async_update_listeners()
     await hass.async_block_till_done()

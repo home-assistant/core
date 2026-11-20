@@ -8,13 +8,13 @@ from daikin_onecta import ClimateControl, ClimateControlClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
-    FanDirectionMode,
     FanOperationMode,
-    FanSpeedMode,
     Setpoint,
 )
 
 from homeassistant.components.climate import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -32,6 +32,7 @@ from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate_entity_descriptions import CLIMATE_ENTITY_DESCRIPTIONS
 from .const import FANMODE_FIXED
@@ -44,29 +45,13 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import round_temperature_to_step
+from .utils import _fixed_positions, round_temperature_to_step
 
 PARALLEL_UPDATES = 1
 
 _DAIKIN_SWING_TO_HA = {"stop": SWING_OFF, "swing": SWING_ON}
 
 PRESET_MODES = (PRESET_BOOST, PRESET_AWAY, PRESET_COMFORT, PRESET_ECO)
-
-
-def _fixed_positions(mode: FanSpeedMode | FanDirectionMode) -> range | None:
-    """Return valid integral fixed positions from the Daikin range metadata."""
-    minimum = mode.min_value
-    maximum = mode.max_value
-    step = mode.step_value
-    if (
-        minimum is None
-        or maximum is None
-        or step is None
-        or step <= 0
-        or not all(float(value).is_integer() for value in (minimum, maximum, step))
-    ):
-        return None
-    return range(int(minimum), int(maximum) + 1, int(step))
 
 
 DAIKIN_HVAC_TO_HA = {
@@ -178,7 +163,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Refresh all state attributes from the device."""
         # Successful writes update the typed model optimistically so Home
         # Assistant reflects the new state without waiting for the next poll.
-        self._attr_supported_features = self._get_supported_features()
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self._get_current_temperature()
         self._attr_max_temp = self._get_max_temp()
@@ -190,6 +174,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self._attr_swing_horizontal_modes = self._get_swing_horizontal_modes()
         self._attr_preset_modes = self._get_preset_modes()
         self._attr_fan_modes = self._get_fan_modes()
+        self._attr_supported_features = self._get_supported_features()
         self._attr_hvac_mode = self._get_hvac_mode()
         self._attr_swing_mode = self._get_swing_mode()
         self._attr_swing_horizontal_mode = self._get_swing_horizontal_mode()
@@ -251,7 +236,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         setpointdict = self._get_setpoint()
         if setpointdict is not None and setpointdict.settable:
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if len(self._get_preset_modes()) > 1:
+        if self._attr_preset_modes and len(self._attr_preset_modes) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
         cc = self._climate_control()
         if cc is not None:
@@ -259,15 +244,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 supported_features |= (
                     ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
                 )
-            fan_operation = self._fan_operation()
-            if fan_operation is not None:
-                if self._get_fan_modes():
-                    supported_features |= ClimateEntityFeature.FAN_MODE
-                if fan_operation.fan_direction is not None:
-                    if self._get_swing_modes():
-                        supported_features |= ClimateEntityFeature.SWING_MODE
-                    if self._get_swing_horizontal_modes():
-                        supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            if self._attr_fan_modes:
+                supported_features |= ClimateEntityFeature.FAN_MODE
+            if self._attr_swing_modes:
+                supported_features |= ClimateEntityFeature.SWING_MODE
+            if self._attr_swing_horizontal_modes:
+                supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         return supported_features
 
@@ -304,7 +286,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return (
             setpointdict.max_value
             if setpointdict is not None and setpointdict.max_value is not None
-            else super().max_temp
+            else TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
+            )
         )
 
     def _get_min_temp(self) -> float:
@@ -313,7 +299,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return (
             setpointdict.min_value
             if setpointdict is not None and setpointdict.min_value is not None
-            else super().min_temp
+            else TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
+            )
         )
 
     def _get_target_temperature(self) -> float | None:
@@ -327,11 +317,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
         setpoint = self._get_setpoint()
-        if setpoint is None:
-            return None
-        if setpoint.step_value is None:
-            return super().target_temperature_step
-        return setpoint.step_value
+        return setpoint.step_value if setpoint is not None else None
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -622,7 +608,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             return None
         mode = value.lower()
         if mode == FANMODE_FIXED:
-            swing_modes = self._get_swing_modes_for_direction(direction)
+            swing_modes = (
+                self._attr_swing_modes
+                if direction == "vertical"
+                else self._attr_swing_horizontal_modes
+            ) or []
             fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
             if fixed is not None and float(fixed.value).is_integer():
                 position = str(int(fixed.value))
