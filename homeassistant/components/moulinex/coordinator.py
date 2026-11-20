@@ -8,7 +8,7 @@ from aiomoulinex import (
     ApplianceUpdated,
     ConnectionLost,
     ConnectionRestored,
-    Event,
+    Event as MoulinexEvent,
     MoulinexAuthenticationError,
     MoulinexClient,
     MoulinexError,
@@ -18,8 +18,8 @@ from aiomoulinex import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_REGION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_REGION, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,6 +54,9 @@ class MoulinexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ApplianceSta
         self.config_entry.async_on_unload(
             self.client.add_listener(self._async_handle_event)
         )
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
+        )
         try:
             await self.client.connect()
         except MoulinexAuthenticationError as err:
@@ -78,8 +81,12 @@ class MoulinexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ApplianceSta
         await super().async_shutdown()
         await self.client.disconnect()
 
+    async def _async_stop(self, event: Event) -> None:
+        """Disconnect when Home Assistant stops, entries are not unloaded then."""
+        await self.client.disconnect()
+
     @callback
-    def _async_handle_event(self, event: Event) -> None:
+    def _async_handle_event(self, event: MoulinexEvent) -> None:
         """Handle an event of the client."""
         match event:
             case TokensUpdated(tokens):

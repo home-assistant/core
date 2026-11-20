@@ -17,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.moulinex.const import CONF_TOKENS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -41,6 +42,20 @@ async def test_setup_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_moulinex_client.add_listener.return_value.assert_called_once()
+    mock_moulinex_client.disconnect.assert_awaited_once()
+
+
+async def test_disconnect_when_home_assistant_stops(
+    hass: HomeAssistant,
+    mock_moulinex_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The client is disconnected when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     mock_moulinex_client.disconnect.assert_awaited_once()
 
 
