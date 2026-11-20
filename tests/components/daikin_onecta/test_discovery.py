@@ -19,6 +19,8 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
+    has_air_purifier_power_control,
+    scalar_characteristics_for_platform,
     scalar_platform,
 )
 from homeassistant.components.daikin_onecta.entity_metadata import (
@@ -43,19 +45,35 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
 
 
 @pytest.mark.parametrize(
-    ("name", "characteristic", "management_point_type", "expected"),
+    (
+        "name",
+        "characteristic",
+        "management_point_type",
+        "air_purifier_power_settable",
+        "expected",
+    ),
     [
         pytest.param(
             "econoMode",
             Characteristic(value="on", settable=True, values=["on", "off"]),
             "climateControl",
+            False,
+            None,
+            id="econo-mode-is-controlled-by-climate-preset",
+        ),
+        pytest.param(
+            "econoMode",
+            Characteristic(value="on", settable=True, values=["on", "off"]),
+            "domesticHotWaterTank",
+            False,
             Platform.SWITCH,
-            id="writable-on-off-switch",
+            id="econo-mode-switch-on-water-heater",
         ),
         pytest.param(
             "ledEnabled",
             Characteristic(value="on", settable=True, values=["on", "off"]),
             "climateControl",
+            False,
             None,
             id="writable-on-off-without-switch-description",
         ),
@@ -63,6 +81,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "ledEnabled",
             Characteristic(value="on", values=["on", "off"]),
             "climateControl",
+            False,
             Platform.BINARY_SENSOR,
             id="read-only-on-off-binary-sensor",
         ),
@@ -70,6 +89,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "ledEnabled",
             Characteristic(value="on"),
             "climateControl",
+            False,
             Platform.BINARY_SENSOR,
             id="binary-sensor-without-values",
         ),
@@ -77,6 +97,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "ledEnabled",
             Characteristic(value="on", values=["on", "off", "auto"]),
             "climateControl",
+            False,
             None,
             id="read-only-on-off-with-additional-value",
         ),
@@ -84,6 +105,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "operationMode",
             Characteristic(value="heating"),
             "climateControl",
+            False,
             Platform.SENSOR,
             id="control-operation-mode-sensor",
         ),
@@ -91,13 +113,23 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "airPurificationMode",
             Characteristic(value="autoFan"),
             "climateControl",
+            True,
             None,
             id="air-purification-mode-is-a-fan-preset",
+        ),
+        pytest.param(
+            "airPurificationMode",
+            Characteristic(value="autoFan"),
+            "climateControl",
+            False,
+            Platform.SENSOR,
+            id="read-only-air-purification-mode-sensor",
         ),
         pytest.param(
             "operationMode",
             Characteristic(value="heating"),
             "outdoorUnit",
+            False,
             Platform.SENSOR,
             id="non-control-operation-mode",
         ),
@@ -105,6 +137,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "futureCharacteristic",
             Characteristic(value="unknown"),
             "climateControl",
+            False,
             None,
             id="unknown-characteristic",
         ),
@@ -114,10 +147,19 @@ def test_scalar_platform(
     name: str,
     characteristic: Characteristic,
     management_point_type: str,
+    air_purifier_power_settable: bool,
     expected: Platform | None,
 ) -> None:
     """Classify supported scalar characteristics consistently."""
-    assert scalar_platform(name, characteristic, management_point_type) is expected
+    assert (
+        scalar_platform(
+            name,
+            characteristic,
+            management_point_type,
+            air_purifier_power_settable=air_purifier_power_settable,
+        )
+        is expected
+    )
 
 
 def test_energy_description_key() -> None:
@@ -132,6 +174,20 @@ def test_energy_description_key() -> None:
     assert energy_description_key(aggregate) == "HeatingDailyElectricalConsumption"
     assert energy_description_key(replace(aggregate, period="quarter")) is None
     assert energy_description_key(replace(aggregate, source="future-source")) is None
+
+
+def test_read_only_air_purifier_mode_is_exposed_as_sensor() -> None:
+    """Expose purifier mode as a sensor when no controllable fan can exist."""
+    device = _load_gateway_devices("mc80z")[0]
+    point = device.management_points_by_type("climateControl")[0]
+    assert point.air_purification is not None
+    assert point.air_purification.power is not None
+    point.air_purification.power.settable = False
+
+    assert not has_air_purifier_power_control(point)
+    assert "airPurificationMode" in dict(
+        scalar_characteristics_for_platform(point, Platform.SENSOR)
+    )
 
 
 async def _async_fire_coordinator_update(
@@ -152,8 +208,8 @@ async def _async_fire_coordinator_update(
             Platform.SWITCH,
             1,
             "climateControl",
-            "econoMode",
-            id="switch-econoMode",
+            "streamerMode",
+            id="switch-streamerMode",
         ),
         pytest.param(
             Platform.BINARY_SENSOR,
@@ -530,12 +586,12 @@ def _remove_schedule(point: ManagementPoint) -> None:
 
 def _remove_switch(point: ManagementPoint) -> None:
     """Remove an independently switchable characteristic."""
-    point.characteristics.pop("econoMode")
+    point.characteristics.pop("streamerMode")
 
 
 def _make_switch_read_only(point: ManagementPoint) -> None:
     """Remove a switch's writable capability."""
-    point.characteristics["econoMode"].settable = False
+    point.characteristics["streamerMode"].settable = False
 
 
 @pytest.mark.parametrize(
@@ -557,11 +613,11 @@ def _make_switch_read_only(point: ManagementPoint) -> None:
             id="purifier_read_only",
         ),
         pytest.param("schedule", "select", "schedule", _remove_schedule, id="schedule"),
-        pytest.param("altherma", "switch", "econoMode", _remove_switch, id="switch"),
+        pytest.param("altherma", "switch", "streamerMode", _remove_switch, id="switch"),
         pytest.param(
             "altherma",
             "switch",
-            "econoMode",
+            "streamerMode",
             _make_switch_read_only,
             id="switch_read_only",
         ),

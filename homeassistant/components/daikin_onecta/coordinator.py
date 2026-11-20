@@ -208,7 +208,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     return sites
             if remaining := self._polling_backoff_remaining():
                 # Keep the shared polling backoff in force for explicit Sites
-                # lookups too; manual device refresh remains a separate path.
+                # lookups too; manual refreshes respect the same backoff.
                 raise OnectaRateLimitError(
                     RateLimit(retry_after=ceil(remaining.total_seconds())),
                     method="GET",

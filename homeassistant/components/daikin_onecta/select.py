@@ -119,7 +119,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return None
         if not selection.enabled:
             return SCHEDULE_DISABLED if selection.enabled_settable else None
-        selected_option = next(
+        return next(
             (
                 label
                 for label, schedule_id in self._schedule_options(selection)
@@ -127,7 +127,6 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             ),
             None,
         )
-        return selected_option or selection.current_option
 
     @override
     async def async_select_option(self, option: str) -> None:

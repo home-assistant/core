@@ -489,10 +489,10 @@ async def test_climate_service_toggles_presets(
 
 
 @pytest.mark.parametrize(
-    ("target_preset", "initial_value", "expected_state"),
+    ("target_preset", "initial_value", "expected_state", "expected_value"),
     [
-        (PRESET_BOOST, "off", PRESET_NONE),
-        (PRESET_NONE, "on", PRESET_BOOST),
+        (PRESET_BOOST, "off", PRESET_NONE, "on"),
+        (PRESET_NONE, "on", PRESET_BOOST, "off"),
     ],
 )
 async def test_climate_service_preset_failure_keeps_cached_state(
@@ -503,6 +503,7 @@ async def test_climate_service_preset_failure_keeps_cached_state(
     target_preset: str,
     initial_value: str,
     expected_state: str,
+    expected_value: str,
 ) -> None:
     """Leave the cached preset unchanged when Daikin rejects its command."""
     (
@@ -542,7 +543,7 @@ async def test_climate_service_preset_failure_keeps_cached_state(
         gateway_id,
         management_point.embedded_id,
         "powerfulMode",
-        "on" if target_preset == PRESET_BOOST else "off",
+        expected_value,
         path=None,
     )
 
@@ -1759,6 +1760,7 @@ async def test_climate_platform_services_and_management_points(
         control = SimpleNamespace(
             embedded_id=embedded_id,
             management_point_type="climateControl",
+            air_purification=None,
             model=None,
             serial=None,
             version=None,

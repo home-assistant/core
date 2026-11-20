@@ -18,14 +18,38 @@ CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
         "domesticHotWaterTank",
     }
 )
+CLIMATE_CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
+    {"climateControl", "climateControlMainZone"}
+)
+
+
+def has_air_purifier_power_control(point: ManagementPoint) -> bool:
+    """Return whether the point supports the Home Assistant air-purifier fan."""
+    if point.management_point_type != "climateControl":
+        return False
+    air_purification = point.air_purification
+    return (
+        air_purification is not None
+        and air_purification.power is not None
+        and air_purification.power.settable
+    )
 
 
 def scalar_platform(
-    name: str, characteristic: Characteristic, management_point_type: str
+    name: str,
+    characteristic: Characteristic,
+    management_point_type: str,
+    *,
+    air_purifier_power_settable: bool = False,
 ) -> Platform | None:
     """Return the platform that exposes a scalar characteristic, if any."""
     values = characteristic.values or []
     if characteristic.settable and "on" in values and "off" in values:
+        if (
+            name == "econoMode"
+            and management_point_type in CLIMATE_CONTROL_MANAGEMENT_POINT_TYPES
+        ):
+            return None
         return Platform.SWITCH if name in SWITCH_KEYS else None
     if name in BINARY_SENSOR_KEYS and (
         characteristic.values is None
@@ -35,6 +59,7 @@ def scalar_platform(
     if name in SENSOR_KEYS and not (
         name == "airPurificationMode"
         and management_point_type in CONTROL_MANAGEMENT_POINT_TYPES
+        and air_purifier_power_settable
     ):
         return Platform.SENSOR
     return None
@@ -47,7 +72,12 @@ def scalar_characteristics_for_platform(
     return (
         (name, characteristic)
         for name, characteristic in point.scalar_characteristics().items()
-        if scalar_platform(name, characteristic, point.management_point_type)
+        if scalar_platform(
+            name,
+            characteristic,
+            point.management_point_type,
+            air_purifier_power_settable=has_air_purifier_power_control(point),
+        )
         is platform
     )
 

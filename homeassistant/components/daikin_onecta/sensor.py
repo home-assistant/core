@@ -21,6 +21,7 @@ from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import (
     energy_description_key,
+    has_air_purifier_power_control,
     scalar_characteristics_for_platform,
     scalar_platform,
 )
@@ -435,15 +436,21 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
+        point = self._management_point
         characteristic = self._current_characteristic
-        return characteristic is not None and (
-            self._sub_type is not None
-            or scalar_platform(
-                self._value,
-                characteristic,
-                self._management_point_type or "",
+        return (
+            point is not None
+            and characteristic is not None
+            and (
+                self._sub_type is not None
+                or scalar_platform(
+                    self._value,
+                    characteristic,
+                    point.management_point_type,
+                    air_purifier_power_settable=has_air_purifier_power_control(point),
+                )
+                is Platform.SENSOR
             )
-            is Platform.SENSOR
         )
 
 

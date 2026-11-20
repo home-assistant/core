@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import scalar_platform
+from .discovery import has_air_purifier_power_control, scalar_platform
 
 EntityIdChecker = Callable[[Platform, str], bool]
 
@@ -264,7 +264,12 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         return (
             point is not None
             and characteristic is not None
-            and scalar_platform(name, characteristic, point.management_point_type)
+            and scalar_platform(
+                name,
+                characteristic,
+                point.management_point_type,
+                air_purifier_power_settable=has_air_purifier_power_control(point),
+            )
             is platform
         )
 

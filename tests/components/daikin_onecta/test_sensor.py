@@ -375,11 +375,9 @@ def test_energy_sensor_uses_daikin_unit(
         point for point in device.device.management_points if point.energy_aggregates
     )
     aggregate = point.energy_aggregates[0]
-    energy_data = (
-        point.consumption
-        if aggregate.data_type == "consumption"
-        else point.energy_output
-    )
+    assert aggregate.data_type == "consumption"
+    energy_data = point.consumption
+    assert energy_data is not None
     source = energy_data.source(aggregate.source)
     assert source is not None
     source.unit = reported_unit

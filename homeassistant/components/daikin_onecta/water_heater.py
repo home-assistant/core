@@ -182,8 +182,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             sf |= WaterHeaterEntityFeature.ON_OFF
         if self.get_operation_list():
             sf |= WaterHeaterEntityFeature.OPERATION_MODE
-        # Only when we have a fixed setpointMode we can control the target
-        # temperature of the tank
+        # Advertise target temperature only when Daikin reports a settable
+        # domestic hot-water temperature characteristic.
         dht = self.domestic_hotwater_temperature
         if dht and dht.settable:
             sf |= WaterHeaterEntityFeature.TARGET_TEMPERATURE

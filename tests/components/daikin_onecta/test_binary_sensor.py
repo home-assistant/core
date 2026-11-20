@@ -24,6 +24,7 @@ async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
     management_point = SimpleNamespace(
         embedded_id="point",
         management_point_type="climateControl",
+        air_purification=None,
         scalar_characteristics=lambda: {
             "futureCharacteristic": Characteristic(value=True)
         },
@@ -48,8 +49,11 @@ async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("fixture", "value"),
-    [("altherma", "dryKeepSetting"), ("altherma_firmwareupdate", "onOffMode")],
+    ("fixture", "value", "initial_value", "updated_value"),
+    [
+        ("altherma", "dryKeepSetting", "on", "off"),
+        ("altherma_firmwareupdate", "onOffMode", "off", "on"),
+    ],
 )
 async def test_read_only_on_off_characteristics_are_binary_sensors(
     hass: HomeAssistant,
@@ -57,6 +61,8 @@ async def test_read_only_on_off_characteristics_are_binary_sensors(
     entity_registry: er.EntityRegistry,
     fixture: str,
     value: str,
+    initial_value: str,
+    updated_value: str,
 ) -> None:
     """Expose read-only string-valued binary characteristics as binary sensors."""
     await _async_setup_fixture(hass, config_entry, fixture)
@@ -76,17 +82,18 @@ async def test_read_only_on_off_characteristics_are_binary_sensors(
 
     assert entity_id is not None
     assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+    assert characteristic.value == initial_value
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == characteristic.value
 
-    characteristic.value = "off" if characteristic.value == "on" else "on"
+    characteristic.value = updated_value
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == characteristic.value
+    assert state.state == updated_value
 
 
 async def test_read_only_on_off_led_is_not_duplicated_as_sensor(

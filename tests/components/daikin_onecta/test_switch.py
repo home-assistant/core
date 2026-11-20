@@ -7,7 +7,6 @@ from daikin_onecta.models import Characteristic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.climate import ClimateEntityStateAttribute
 from homeassistant.components.daikin_onecta.switch import (
     async_setup_entry as async_setup_switches,
 )
@@ -36,11 +35,11 @@ async def test_switch_service_updates_cached_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SWITCH_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
+        {ATTR_ENTITY_ID: "switch.test_living_room_streamer_mode"},
         blocking=True,
     )
 
-    state = hass.states.get("switch.test_living_room_econo_mode")
+    state = hass.states.get("switch.test_living_room_streamer_mode")
     assert state is not None
     assert state.state == "off"
 
@@ -53,36 +52,13 @@ async def test_switch_service_updates_cached_state(
     assert hass.states.get(state.entity_id).state == "on"
 
 
-async def test_switch_updates_sibling_climate_preset(
+async def test_econo_mode_is_only_exposed_as_climate_preset(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """A shared preset change immediately reaches the sibling climate entity."""
+    """Avoid exposing econo mode as both a switch and a climate preset."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
-    )
-    entity_id = "climate.test_living_room_room_temperature"
-    assert (
-        hass.states.get(entity_id).attributes[ClimateEntityStateAttribute.PRESET_MODE]
-        == "eco"
-    )
-
-    for service, expected in (
-        (SWITCH_SERVICE_TURN_OFF, "none"),
-        (SWITCH_SERVICE_TURN_ON, "eco"),
-    ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
-            blocking=True,
-        )
-        assert (
-            hass.states.get(entity_id).attributes[
-                ClimateEntityStateAttribute.PRESET_MODE
-            ]
-            == expected
-        )
+    assert hass.states.get("climate.test_living_room_room_temperature") is not None
+    assert hass.states.get("switch.test_living_room_econo_mode") is None
 
 
 @pytest.mark.parametrize("service", [SWITCH_SERVICE_TURN_ON, SWITCH_SERVICE_TURN_OFF])
@@ -99,16 +75,16 @@ async def test_switch_rejects_unknown_state(
         device
         for device in config_entry.runtime_data.data.values()
         if any(
-            point.scalar_characteristic("econoMode") is not None
+            point.scalar_characteristic("streamerMode") is not None
             for point in device.device.management_points
         )
     )
     point = next(
         point
         for point in device.device.management_points
-        if point.scalar_characteristic("econoMode") is not None
+        if point.scalar_characteristic("streamerMode") is not None
     )
-    characteristic = point.scalar_characteristic("econoMode")
+    characteristic = point.scalar_characteristic("streamerMode")
     assert characteristic is not None
     characteristic.value = None
     config_entry.runtime_data.async_update_listeners()
@@ -118,7 +94,7 @@ async def test_switch_rejects_unknown_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
+            {ATTR_ENTITY_ID: "switch.test_living_room_streamer_mode"},
             blocking=True,
         )
 
