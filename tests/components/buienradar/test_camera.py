@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -24,6 +25,9 @@ TEST_LATITUDE = 51.5288504
 TEST_LONGITUDE = 5.4002156
 
 TEST_CFG_DATA = {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
+
+
+pytestmark = pytest.mark.usefixtures("mock_buienradar_data")
 
 
 def radar_map_url(country_code: str = "NL") -> str:

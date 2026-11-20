@@ -33,7 +33,6 @@ from homeassistant.const import (
     CONF_NAME,
     DEGREE,
     PERCENTAGE,
-    Platform,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
@@ -46,7 +45,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import BuienRadarConfigEntry
 from .const import (
     CONF_TIMEFRAME,
     DEFAULT_TIMEFRAME,
@@ -54,6 +52,7 @@ from .const import (
     STATE_CONDITIONS,
     STATE_DETAILED_CONDITIONS,
 )
+from .coordinator import BuienRadarConfigEntry
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -728,7 +727,13 @@ async def async_setup_entry(
 
     # create weather data:
     data = BrData(hass, coordinates, timeframe, entities)
-    entry.runtime_data[Platform.SENSOR] = data
+
+    @callback
+    def _async_cancel_update() -> None:
+        if data.unsub_schedule_update:
+            data.unsub_schedule_update()
+
+    entry.async_on_unload(_async_cancel_update)
     await data.async_update()
 
     async_add_entities(entities)

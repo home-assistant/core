@@ -36,7 +36,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK, SERVICE_TIME_ZONE
 
-__all__ = ["BrData"]
+__all__ = ["BrData", "BuienradarData", "async_in_service_quiet_hour"]
 _LOGGER = logging.getLogger(__name__)
 
 """
@@ -52,6 +52,17 @@ def threshold_log(count: int, *args, **kwargs) -> None:
         _LOGGER.warning(*args, **kwargs)
     else:
         _LOGGER.debug(*args, **kwargs)
+
+
+async def async_in_service_quiet_hour() -> bool:
+    """Return whether buienradar.nl is in its nightly forecast update hour.
+
+    buienradar.nl updates its forecast for the next day between 00:00 and 01:00
+    CE(S)T and often serves nothing during that hour. The hour that decides this
+    is the one at the service, not in the user's configured time zone.
+    """
+    service_tz = await dt_util.async_get_time_zone(SERVICE_TIME_ZONE)
+    return service_tz is not None and dt_util.utcnow().astimezone(service_tz).hour == 0
 
 
 class BrData:
@@ -113,8 +124,8 @@ class BrData:
             if resp is not None:
                 resp.release()
 
-    async def _async_update(self):
-        """Update the data from buienradar."""
+    async def async_fetch(self) -> dict[str, Any] | None:
+        """Fetch and parse the data from buienradar."""
         content = await self.get_data(JSON_FEED_URL)
 
         if content.get(SUCCESS) is not True:
@@ -158,12 +169,7 @@ class BrData:
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            # buienradar.nl updates its forecast for the next day between 00:00
-            # and 01:00 CE(S)T and often serves nothing during that hour, so the
-            # warning is only meaningful outside it. The hour that decides this
-            # is the one at the service, not in the user's configured time zone.
-            service_tz = await dt_util.async_get_time_zone(SERVICE_TIME_ZONE)
-            if service_tz is None or dt_util.utcnow().astimezone(service_tz).hour > 0:
+            if not await async_in_service_quiet_hour():
                 _LOGGER.warning(
                     "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
@@ -174,7 +180,7 @@ class BrData:
 
     async def async_update(self, *_):
         """Update the data from buienradar and schedule the next update."""
-        data = await self._async_update()
+        data = await self.async_fetch()
 
         if data is None:
             self.async_schedule_update(SCHEDULE_NOK)
@@ -183,6 +189,14 @@ class BrData:
         self.data = data
         await self.update_devices()
         self.async_schedule_update(SCHEDULE_OK)
+
+
+class BuienradarData:
+    """Typed access to the parsed Buienradar data."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        """Initialize with the parsed data."""
+        self.data = data
 
     @property
     def attribution(self):
