@@ -145,7 +145,7 @@ adguardhome==1.0.0
 advantage-air==0.4.4
 
 # homeassistant.components.aerosmart
-aerosmart-modbus==0.3.5
+aerosmart-modbus==0.3.7
 
 # homeassistant.components.frontier_silicon
 afsapi==1.0.2
@@ -497,7 +497,7 @@ aiotractive==2.1.0
 aiotrimlight==0.4.0
 
 # homeassistant.components.unifi
-aiounifi==100
+aiounifi==101
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -1345,7 +1345,7 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.108
+holidays==0.109
 
 # homeassistant.components.frontend
 home-assistant-frontend==20261028.6
@@ -3425,7 +3425,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==25.0.3
+uiprotect==25.8.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3457,7 +3457,7 @@ uvcclient==0.12.1
 vacuum-map-parser-roborock==0.1.5
 
 # homeassistant.components.vallox
-vallox-websocket-api==6.1.0
+vallox-websocket-api==7.0.0
 
 # homeassistant.components.vegehub
 vegehub==0.1.26
