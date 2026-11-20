@@ -474,7 +474,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     title=f"INDI Allsky ({host_str})",
                     data=entry_data,
-                    options={**entry.options, CONF_MANUAL_ENDPOINT: True},
+                    options={
+                        **entry.options,
+                        CONF_MANUAL_ENDPOINT: (
+                            entry.options.get(CONF_MANUAL_ENDPOINT, False)
+                            or user_input[CONF_HOST]
+                            != normalize_host(entry.data[CONF_HOST])
+                            or user_input[CONF_PORT] != entry.data[CONF_PORT]
+                        ),
+                    },
                 )
 
         return self.async_show_form(
