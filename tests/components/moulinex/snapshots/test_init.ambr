@@ -21,7 +21,7 @@
       'labels': set({
       }),
       'manufacturer': 'Moulinex',
-      'model': 'Cookeo Touch Wifi',
+      'model': None,
       'model_id': '1510002402',
       'name': 'Cookeo Touch Wifi',
       'name_by_user': None,
@@ -49,7 +49,7 @@
       'labels': set({
       }),
       'manufacturer': 'Moulinex',
-      'model': 'i-Companion Touch XL',
+      'model': None,
       'model_id': '8000036990',
       'name': 'i-Companion Touch XL',
       'name_by_user': None,
