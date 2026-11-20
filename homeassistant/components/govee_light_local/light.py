@@ -44,6 +44,10 @@ async def async_setup_entry(
                 [GoveeLight(coordinator, device)],
                 config_subentry_id=coordinator.async_claim_subentry(device),
             )
+        else:
+            # A known lamp answering at a freshly configured address gets no
+            # new entity, but must still be claimed by that subentry.
+            coordinator.async_adopt_device(device)
         return True
 
     for govee_device in coordinator.devices:

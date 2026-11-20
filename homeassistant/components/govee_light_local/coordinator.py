@@ -365,10 +365,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         # the address is the registry owner of the subentry configured there;
         # any other tenant must not cancel it.
         for ip in list(self.discovery_queue):
-            if (
-                (device := self.get_device_by_ip(ip)) is not None
-                and (subentry_id := self._async_subentry_id_for_ip(ip)) is not None
-                and subentry_id == self._async_owned_subentry_id(device)
-            ):
+            if (subentry_id := self._async_subentry_id_for_ip(ip)) is None:
+                # Eviction re-queues a kept lamp's old cached address; with no
+                # subentry configured there, nothing can complete the probe.
+                self.remove_device_from_discovery_queue(ip)
+            elif (
+                device := self.get_device_by_ip(ip)
+            ) is not None and subentry_id == self._async_owned_subentry_id(device):
                 self.remove_device_from_discovery_queue(ip)
         return self.devices
