@@ -45,7 +45,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import INIT_VALUE, INITIALISING_REGISTERS
 
-ENTITY_ID = "climate.inmbsmhi001r000"
+ENTITY_ID = "climate.inmbsmhi001r000_air_conditioner"
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -490,12 +490,39 @@ async def test_unreachable_indoor_unit_is_logged_once(
     unit.holding[11] = 65535
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    assert "Error fetching" not in caplog.text
     assert "data recovered" not in caplog.text
     unit.holding[11] = 0
     await _poll(hass, freezer)
     await _poll(hass, freezer)
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
+
+
+async def test_silent_gateway_is_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway that stops answering takes the air conditioner with it."""
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    mock_connection.for_unit(1).fail_requests(None)
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
     assert caplog.text.count("Fetching INMBSMHI001R000 data recovered") == 1
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
 
 
 async def test_temperature_format_follows_the_dip_switches(
