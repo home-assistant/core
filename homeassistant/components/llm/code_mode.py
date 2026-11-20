@@ -114,8 +114,12 @@ def async_create_api_instance(
     sandboxes = hass.data.setdefault(DATA_SANDBOXES, Sandboxes())
     if conversation_id not in sandboxes.conversation_ids:
         sandboxes.conversation_ids.add(conversation_id)
-        session = hass.data[chat_session.DATA_CHAT_SESSION][conversation_id]
-        session.async_on_cleanup(partial(_async_release_pool, hass, conversation_id))
+        with chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session:
+            session.async_on_cleanup(
+                partial(_async_release_pool, hass, conversation_id)
+            )
 
     functions: list[ToolFunction] = []
     names: set[str] = set()
