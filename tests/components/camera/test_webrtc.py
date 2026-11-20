@@ -1183,3 +1183,57 @@ async def test_camera_removed_while_retry_registers_with_provider(
 
     assert order == ["register", "unregister"]
     assert camera.webrtc_provider is None
+
+
+async def test_overlapping_retries_cancelled_on_removal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test removal stops every retry that still waits, not only the latest one."""
+    cancelled = 0
+    waiting = asyncio.Event()
+
+    async def hanging() -> str:
+        nonlocal cancelled
+        waiting.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled += 1
+            raise
+        return STREAM_SOURCE
+
+    async def failing() -> str:
+        raise TimeoutError("camera not ready")
+
+    behaviour = iter([failing, failing, hanging, failing, hanging])
+
+    async def stream_source() -> str:
+        return await next(behaviour)()
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ):
+        # Both demo cameras fail when added
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        # The first retry hangs
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await waiting.wait()
+        waiting.clear()
+
+        # Another refresh fails and schedules the next retry, which hangs too
+        await camera.async_refresh_providers()
+        freezer.tick(60)
+        async_fire_time_changed(hass)
+        await waiting.wait()
+
+        await camera.async_remove()
+
+    assert cancelled == 2

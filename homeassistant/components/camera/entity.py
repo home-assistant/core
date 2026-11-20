@@ -180,7 +180,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._provider_lookup_stopped = False
         self._provider_lookup_generation = 0
         self._provider_lock = asyncio.Lock()
-        self._provider_retry_task: asyncio.Task[None] | None = None
+        self._provider_retry_tasks: set[asyncio.Task[None]] = set()
         self._supports_native_async_webrtc = (
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
@@ -444,7 +444,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # A retry still waiting for the stream source is stopped before the
             # integration cleans up, as asking for it can have side effects.
             # Holding the lock, it cannot be in the middle of a registration.
-            if task := self._provider_retry_task:
+            # A slow retry can still run when the next one starts, so all of
+            # them are tracked.
+            for task in list(self._provider_retry_tasks):
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await task
@@ -538,19 +540,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         @callback
         def _async_retry(_now: Any) -> None:
             self._provider_refresh_retry = None
-            self._provider_retry_task = task = self.hass.async_create_background_task(
+            task = self.hass.async_create_background_task(
                 self.async_refresh_providers(),
                 f"{self.entity_id} WebRTC provider lookup",
             )
-            task.add_done_callback(self._async_provider_retry_done)
+            self._provider_retry_tasks.add(task)
+            task.add_done_callback(self._provider_retry_tasks.discard)
 
         self._provider_refresh_retry = async_call_later(self.hass, delay, _async_retry)
-
-    @callback
-    def _async_provider_retry_done(self, task: asyncio.Task[None]) -> None:
-        """Forget a finished retry of the provider lookup."""
-        if self._provider_retry_task is task:
-            self._provider_retry_task = None
 
     @callback
     def _async_cancel_provider_refresh_retry(self) -> None:
