@@ -198,9 +198,11 @@ def async_setup_rpc_attribute_entities(
     entities = []
     for sensor_id in sensors:
         description = sensors[sensor_id]
-        key_instances = get_rpc_key_instances(
-            coordinator.device.status, description.key
-        )
+        key_instances = [
+            key
+            for component in description.components or (description.key,)
+            for key in get_rpc_key_instances(coordinator.device.status, component)
+        ]
 
         for key in key_instances:
             # Filter non-existing sensors
@@ -332,6 +334,8 @@ class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
     sub_key: str | None = None
+    # Components the description applies to, defaults to the key
+    components: tuple[str, ...] | None = None
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
