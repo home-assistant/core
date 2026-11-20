@@ -325,15 +325,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
-        step_value: float | None = None
-        setpointdict = self._get_setpoint()
-        if setpointdict is not None:
-            step_value = (
-                setpointdict.step_value
-                if setpointdict.step_value is not None
-                else super().target_temperature_step
-            )
-        return step_value
+        setpoint = self._get_setpoint()
+        if setpoint is None or setpoint.step_value is None:
+            return super().target_temperature_step
+        return setpoint.step_value
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -356,10 +351,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             if setpoint is None or not setpoint.settable:
                 self._raise_service_validation_error("climate_temperature_unavailable")
 
-            step = setpoint.step_value
             value = round_temperature_to_step(
                 target_temperature,
-                step,
+                setpoint.step_value,
                 setpoint.min_value,
                 setpoint.max_value,
                 fallback_minimum=self.min_temp,

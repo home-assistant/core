@@ -90,6 +90,108 @@ async def _async_setup_climate_service_fixture(
     return entity_id, gateway_id, management_point, coordinator
 
 
+def _make_vertical_swing_read_only(point: SimpleNamespace) -> None:
+    """Make vertical swing unavailable for the climate service test."""
+    fan_operation = point.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.vertical is not None
+    fan_operation.fan_direction.vertical.current_mode.settable = False
+
+
+def _make_horizontal_swing_read_only(point: SimpleNamespace) -> None:
+    """Make horizontal swing unavailable for the climate service test."""
+    fan_operation = point.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.horizontal is not None
+    fan_operation.fan_direction.horizontal.current_mode.settable = False
+
+
+def _make_powerful_mode_read_only(point: SimpleNamespace) -> None:
+    """Make boost unavailable for the climate service test."""
+    characteristic = point.mode_characteristic("powerfulMode")
+    assert characteristic is not None
+    characteristic.settable = False
+
+
+def _set_vertical_swing_on(point: ManagementPoint) -> None:
+    """Set the vertical swing state to a writable on value."""
+    assert point.climate_control is not None
+    fan_operation = point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.vertical is not None
+    mode = fan_operation.fan_direction.vertical.current_mode
+    mode.value = "swing"
+    mode.settable = True
+
+
+def _set_horizontal_swing_on(point: ManagementPoint) -> None:
+    """Set the horizontal swing state to a writable on value."""
+    assert point.climate_control is not None
+    fan_operation = point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.horizontal is not None
+    mode = fan_operation.fan_direction.horizontal.current_mode
+    mode.value = "swing"
+    mode.settable = True
+
+
+@pytest.mark.parametrize(
+    ("configure_swing", "service", "argument", "state_attribute"),
+    [
+        pytest.param(
+            _set_vertical_swing_on,
+            SERVICE_SET_SWING_MODE,
+            "swing_mode",
+            ClimateEntityStateAttribute.SWING_MODE,
+            id="vertical-swing-write-failure",
+        ),
+        pytest.param(
+            _set_horizontal_swing_on,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            "swing_horizontal_mode",
+            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+            id="horizontal-swing-write-failure",
+        ),
+    ],
+)
+async def test_climate_swing_write_failure_preserves_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+    configure_swing: Callable[[ManagementPoint], None],
+    service: str,
+    argument: str,
+    state_attribute: ClimateEntityStateAttribute,
+) -> None:
+    """A failed swing write leaves the published state unchanged."""
+    entity_id, _, point, coordinator = await _async_setup_climate_service_fixture(
+        hass, config_entry, entity_registry
+    )
+    configure_swing(point)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    original_swing_state = state.attributes[state_attribute]
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, argument: SWING_OFF},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "set_swing_mode_failed"
+    state_after_failure = hass.states.get(entity_id)
+    assert state_after_failure is not None
+    assert state_after_failure.attributes[state_attribute] == original_swing_state
+
+
 def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
     """Create one entity per temperature target, not per operation mode."""
     management_point = SimpleNamespace(
@@ -1714,12 +1816,42 @@ async def test_native_temperature_unit(
     assert entity.native_temperature_unit == expected_unit
 
 
+@pytest.mark.parametrize(
+    ("configure_control", "service", "service_data", "translation_key"),
+    [
+        pytest.param(
+            _make_vertical_swing_read_only,
+            SERVICE_SET_SWING_MODE,
+            {"swing_mode": SWING_OFF},
+            "swing_control_unavailable",
+            id="vertical-swing-read-only",
+        ),
+        pytest.param(
+            _make_horizontal_swing_read_only,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {"swing_horizontal_mode": SWING_OFF},
+            "swing_control_unavailable",
+            id="horizontal-swing-read-only",
+        ),
+        pytest.param(
+            _make_powerful_mode_read_only,
+            SERVICE_SET_PRESET_MODE,
+            {"preset_mode": PRESET_BOOST},
+            "preset_mode_unavailable",
+            id="boost-read-only",
+        ),
+    ],
+)
 async def test_climate_platform_services_and_management_points(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_onecta_client: MockOnectaClient,
+    configure_control: Callable[[SimpleNamespace], None],
+    service: str,
+    service_data: dict[str, str],
+    translation_key: str,
 ) -> None:
     """Test platform services with real entities for two management points."""
 
@@ -1956,80 +2088,12 @@ async def test_climate_platform_services_and_management_points(
         bedroom_state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 18
     )
 
-    for service, argument, state_attribute in (
-        (SERVICE_SET_SWING_MODE, "swing_mode", ClimateEntityStateAttribute.SWING_MODE),
-        (
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
-            "swing_horizontal_mode",
-            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
-        ),
-    ):
-        mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
-            "test connection failure", method="PATCH", path="/test"
-        )
-        with pytest.raises(HomeAssistantError) as err:
-            await call_service(service, **{argument: SWING_OFF})
-        assert err.value.translation_key == "set_swing_mode_failed"
-        state_after_failure = hass.states.get(living_room_entity_id)
-        assert state_after_failure is not None
-        assert state_after_failure.attributes[state_attribute] == SWING_ON
-        mock_onecta_client.patch_characteristic.side_effect = None
-
     mock_onecta_client.patch_characteristic.reset_mock()
 
-    def make_vertical_swing_read_only() -> None:
-        fan_operation = climate_controls["living_room"].fan_operation()
-        assert fan_operation is not None and fan_operation.fan_direction is not None
-        assert fan_operation.fan_direction.vertical is not None
-        fan_operation.fan_direction.vertical.current_mode.settable = False
-
-    def make_horizontal_swing_read_only() -> None:
-        fan_operation = climate_controls["living_room"].fan_operation()
-        assert fan_operation is not None and fan_operation.fan_direction is not None
-        assert fan_operation.fan_direction.horizontal is not None
-        fan_operation.fan_direction.horizontal.current_mode.settable = False
-
-    def make_powerful_mode_read_only() -> None:
-        characteristic = climate_controls["living_room"].mode_characteristic(
-            "powerfulMode"
-        )
-        assert characteristic is not None
-        characteristic.settable = False
-
-    unavailable_controls = (
-        (
-            make_vertical_swing_read_only,
-            SERVICE_SET_SWING_MODE,
-            "swing_mode",
-            SWING_OFF,
-            "swing_control_unavailable",
-        ),
-        (
-            make_horizontal_swing_read_only,
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
-            "swing_horizontal_mode",
-            SWING_OFF,
-            "swing_control_unavailable",
-        ),
-        (
-            make_powerful_mode_read_only,
-            SERVICE_SET_PRESET_MODE,
-            "preset_mode",
-            PRESET_BOOST,
-            "preset_mode_unavailable",
-        ),
-    )
-    for (
-        configure_control,
-        service,
-        argument,
-        value,
-        translation_key,
-    ) in unavailable_controls:
-        configure_control()
-        with pytest.raises(ServiceValidationError) as err:
-            await call_service(service, **{argument: value})
-        assert err.value.translation_key == translation_key
+    configure_control(climate_controls["living_room"])
+    with pytest.raises(ServiceValidationError) as err:
+        await call_service(service, **service_data)
+    assert err.value.translation_key == translation_key
 
     setpoint = climate_controls["living_room"].setpoint("roomTemperature")
     assert setpoint is not None

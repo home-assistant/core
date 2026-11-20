@@ -491,6 +491,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
+                if (
+                    self._manual_refresh_previous_sequence is not None
+                    and self._cloud_update_sequence
+                    > self._manual_refresh_previous_sequence
+                ):
+                    # A scheduled fetch completed while the manual refresh
+                    # waited for the cloud lock; keep its current data and
+                    # regular polling cadence.
+                    self.update_interval = self._determine_update_interval()
+                    return self.data_or_none or devices
                 retry_after = self._polling_backoff_remaining() or _POST_WRITE_COOLDOWN
                 self.update_interval = retry_after
                 if not self.last_update_success:

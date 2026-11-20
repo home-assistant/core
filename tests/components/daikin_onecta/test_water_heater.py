@@ -37,6 +37,8 @@ from homeassistant.util.unit_system import (
 from .platform_helpers import _execute_typed_command, _mock_coordinator
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
+ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.altherma_domestic_hot_water_tank"
+
 
 @pytest.mark.parametrize(
     ("power_settable", "expected_features", "expected_operation_list"),
@@ -257,7 +259,7 @@ async def test_water_heater_rejects_unavailable_temperature_control(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 WaterHeaterServiceArgument.TEMPERATURE: 50,
             },
             blocking=True,
@@ -322,12 +324,49 @@ async def test_water_heater_rejects_unadvertised_operation_mode(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 "operation_mode": "unsupported_mode",
             },
             blocking=True,
         )
 
+    execute.assert_not_awaited()
+
+
+async def test_water_heater_rejects_heat_pump_with_read_only_performance_mode(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not report success if read-only boost prevents heat-pump mode."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    point = next(
+        point
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    assert point.domestic_hot_water is not None
+    powerful_mode = point.domestic_hot_water.powerful_mode
+    assert powerful_mode is not None
+    powerful_mode.value = "on"
+    powerful_mode.settable = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
+                "operation_mode": STATE_HEAT_PUMP,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "water_heater_operation_mode_unavailable"
     execute.assert_not_awaited()
 
 
@@ -345,11 +384,11 @@ async def test_water_heater_turn_off_updates_cached_state(
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank"},
+        {ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID},
         blocking=True,
     )
 
-    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
+    state = hass.states.get(ALTHERMA_WATER_HEATER_ENTITY_ID)
     assert state is not None
     assert state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == "off"
 
@@ -383,7 +422,7 @@ async def test_water_heater_temperature_updates_typed_cache(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: 50,
         },
         blocking=True,
@@ -424,7 +463,7 @@ async def test_water_heater_set_temperature_applies_operation_mode_first(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.OPERATION_MODE: STATE_HEAT_PUMP,
             WaterHeaterServiceArgument.TEMPERATURE: 50,
         },
@@ -463,7 +502,7 @@ async def test_water_heater_set_temperature_applies_temperature_before_off(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
             WaterHeaterServiceArgument.TEMPERATURE: 50,
         },
@@ -505,7 +544,7 @@ async def test_water_heater_rejects_temperature_when_off_target_is_off(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
                 WaterHeaterServiceArgument.TEMPERATURE: 50,
             },
@@ -530,7 +569,7 @@ async def test_water_heater_rejects_invalid_combined_mode_before_temperature_wri
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 WaterHeaterServiceArgument.OPERATION_MODE: "unsupported_mode",
                 WaterHeaterServiceArgument.TEMPERATURE: 50,
             },
@@ -558,7 +597,7 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: 50,
         },
         blocking=True,
@@ -612,7 +651,7 @@ async def test_water_heater_temperature_rounds_to_native_step(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: service_temperature,
         },
         blocking=True,
@@ -652,7 +691,7 @@ async def test_water_heater_rounded_current_temperature_does_not_write(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: 48.4,
         },
         blocking=True,
@@ -681,7 +720,7 @@ async def test_water_heater_temperature_rounding_is_anchored_to_minimum(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: 44,
         },
         blocking=True,
@@ -717,7 +756,7 @@ async def test_water_heater_temperature_is_clamped_to_setpoint_range(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: expected + 10,
         },
         blocking=True,
@@ -754,7 +793,7 @@ async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             WaterHeaterServiceArgument.TEMPERATURE: 40,
         },
         blocking=True,
@@ -794,13 +833,13 @@ async def test_water_heater_publishes_successful_partial_operation_write(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 "operation_mode": STATE_PERFORMANCE,
             },
             blocking=True,
         )
 
-    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
+    state = hass.states.get(ALTHERMA_WATER_HEATER_ENTITY_ID)
     assert state is not None
     assert state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_HEAT_PUMP
     assert coordinator.async_execute_command.await_count == 2
@@ -855,7 +894,7 @@ async def test_water_heater_rejects_unknown_power_state(
             WATER_HEATER_DOMAIN,
             service,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
                 **service_data,
             },
             blocking=True,
@@ -888,13 +927,13 @@ async def test_water_heater_set_performance_updates_state(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             "operation_mode": STATE_PERFORMANCE,
         },
         blocking=True,
     )
 
-    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
+    state = hass.states.get(ALTHERMA_WATER_HEATER_ENTITY_ID)
     assert state is not None
     assert (
         state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_PERFORMANCE
@@ -906,7 +945,7 @@ async def test_water_heater_set_performance_updates_state(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             "operation_mode": STATE_PERFORMANCE,
         },
         blocking=True,
@@ -940,7 +979,7 @@ async def test_water_heater_selecting_heat_pump_disables_powerful_mode_when_off(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
             "operation_mode": STATE_HEAT_PUMP,
         },
         blocking=True,

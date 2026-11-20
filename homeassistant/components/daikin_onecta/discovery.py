@@ -44,7 +44,7 @@ def scalar_platform(
 ) -> Platform | None:
     """Return the platform that exposes a scalar characteristic, if any."""
     values = characteristic.values or []
-    if characteristic.settable and "on" in values and "off" in values:
+    if characteristic.settable and set(values) == {"on", "off"}:
         if (
             name == "econoMode"
             and management_point_type in CLIMATE_CONTROL_MANAGEMENT_POINT_TYPES
@@ -74,6 +74,20 @@ def scalar_platform_for_point(
     if characteristic is None:
         characteristic = point.scalar_characteristic(name)
     if characteristic is None:
+        return None
+    # These controls belong to their typed entity even when Daikin reports them
+    # as read-only while the gateway is offline.
+    if name in {"onOffMode", "powerfulMode"} and (
+        (
+            point.management_point_type == "climateControl"
+            and point.climate_control is not None
+        )
+        or (
+            point.management_point_type
+            in {"domesticHotWaterFlowThrough", "domesticHotWaterTank"}
+            and point.domestic_hot_water is not None
+        )
+    ):
         return None
     return scalar_platform(
         name,

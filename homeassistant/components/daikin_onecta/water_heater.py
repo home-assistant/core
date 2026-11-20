@@ -223,15 +223,12 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 "water_heater_temperature_not_settable"
             )
 
-        step_value = dht.step_value
         return round_temperature_to_step(
             value,
-            step_value,
+            dht.step_value,
             dht.min_value,
             dht.max_value,
             default_step=1,
-            fallback_minimum=None,
-            fallback_maximum=None,
         )
 
     async def _async_write_tank_temperature(self, target_temperature: float) -> None:
@@ -340,6 +337,19 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             )
         if self.current_operation is None:
             self._raise_service_validation_error("water_heater_on_off_unavailable")
+        if operation_mode == STATE_HEAT_PUMP:
+            hot_water = self._hot_water
+            powerful_characteristic = (
+                hot_water.powerful_mode if hot_water is not None else None
+            )
+            if (
+                powerful_characteristic is not None
+                and powerful_characteristic.value == "on"
+                and not powerful_characteristic.settable
+            ):
+                self._raise_service_validation_error(
+                    "water_heater_operation_mode_unavailable"
+                )
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
 
         if on_off_mode != "":

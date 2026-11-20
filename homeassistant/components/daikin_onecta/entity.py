@@ -137,7 +137,6 @@ def management_point_device_info(
             management_point.name.value if management_point.name is not None else None
         )
         translation_key = None if name else "climate_zone"
-        name = name or None
     else:
         translation_key = MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS.get(
             management_point_type, "management_point"

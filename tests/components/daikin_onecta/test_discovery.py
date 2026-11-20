@@ -22,6 +22,7 @@ from homeassistant.components.daikin_onecta.discovery import (
     has_air_purifier_power_control,
     scalar_characteristics_for_platform,
     scalar_platform,
+    scalar_platform_for_point,
 )
 from homeassistant.components.daikin_onecta.entity_metadata import (
     BINARY_SENSOR_KEYS,
@@ -102,6 +103,14 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             id="read-only-on-off-with-additional-value",
         ),
         pytest.param(
+            "streamerMode",
+            Characteristic(value="on", settable=True, values=["on", "off", "auto"]),
+            "gateway",
+            False,
+            None,
+            id="writable-switch-with-additional-value",
+        ),
+        pytest.param(
             "operationMode",
             Characteristic(value="heating"),
             "climateControl",
@@ -162,6 +171,24 @@ def test_scalar_platform(
     )
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param("onOffMode", id="climate-power"),
+        pytest.param("powerfulMode", id="climate-boost"),
+    ],
+)
+def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
+    """Keep offline climate-owned controls off scalar platforms."""
+    point = _load_gateway_devices("offlinedevice")[0].management_points_by_type(
+        "climateControl"
+    )[0]
+    characteristic = point.scalar_characteristic(name)
+    assert characteristic is not None
+
+    assert scalar_platform_for_point(point, name, characteristic) is None
+
+
 def test_energy_description_key() -> None:
     """Return a key only when both the period and description are supported."""
     aggregate = next(
@@ -199,6 +226,59 @@ async def _async_fire_coordinator_update(
     freezer.tick(coordinator.update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+
+async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep climate-owned controls off scalar platforms across reconnects."""
+    await _async_setup_fixture(hass, config_entry, "offlinedevice")
+    coordinator = config_entry.runtime_data
+    offline_devices = _load_gateway_devices("offlinedevice")
+    device = offline_devices[0]
+    point = device.management_points_by_type("climateControl")[0]
+    owned_scalar_ids = (
+        (Platform.BINARY_SENSOR, f"{device.id}_{point.embedded_id}_onOffMode"),
+        (Platform.SENSOR, f"{device.id}_{point.embedded_id}_powerfulMode"),
+    )
+
+    for platform, unique_id in owned_scalar_ids:
+        assert (
+            entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
+            is None
+        )
+    climate_entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{device.id}_{point.embedded_id}_roomTemperature",
+    )
+    assert climate_entity_id is not None
+
+    online_devices = deepcopy(offline_devices)
+    online_device = online_devices[0]
+    online_device.cloud_connection.value = True
+    online_point = online_device.management_points_by_type("climateControl")[0]
+    assert online_point.on_off_mode is not None
+    online_point.on_off_mode.settable = True
+    powerful_mode = online_point.characteristic("powerfulMode")
+    assert powerful_mode is not None
+    powerful_mode.settable = True
+
+    mock_onecta_client.get_gateway_devices.return_value = online_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    for platform, unique_id in owned_scalar_ids:
+        assert (
+            entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
+            is None
+        )
+    climate_state = hass.states.get(climate_entity_id)
+    assert climate_state is not None
+    assert climate_state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

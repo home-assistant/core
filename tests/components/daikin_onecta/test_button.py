@@ -20,6 +20,8 @@ from .conftest import MockOnectaClient
 from .platform_helpers import _async_fire_coordinator_update
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
+ACCOUNT_REFRESH_BUTTON_ENTITY_ID = "button.daikin_onecta_account_refresh"
+
 
 async def test_refresh_button_requests_coordinator_refresh(
     hass: HomeAssistant, config_entry: MockConfigEntry
@@ -33,7 +35,7 @@ async def test_refresh_button_requests_coordinator_refresh(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+        {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
         blocking=True,
     )
 
@@ -68,7 +70,7 @@ async def test_refresh_button_reuses_in_flight_poll(
         hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
             blocking=True,
         )
     )
@@ -78,6 +80,7 @@ async def test_refresh_button_reuses_in_flight_poll(
     await hass.async_block_till_done()
 
     mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
+    assert coordinator.update_interval == coordinator._determine_update_interval()
 
 
 async def test_refresh_button_reports_failed_refresh(
@@ -93,7 +96,7 @@ async def test_refresh_button_reports_failed_refresh(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
             blocking=True,
         )
 
@@ -127,7 +130,7 @@ async def test_refresh_button_respects_polling_backoff(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
             blocking=True,
         )
 
@@ -153,7 +156,7 @@ async def test_refresh_button_reports_rate_limited_refresh(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
             blocking=True,
         )
 
@@ -192,7 +195,7 @@ async def test_refresh_button_reports_post_write_cooldown(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
             blocking=True,
         )
 
@@ -218,7 +221,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     )
     await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert not coordinator.last_update_success
-    state = hass.states.get("button.daikin_onecta_account_refresh")
+    state = hass.states.get(ACCOUNT_REFRESH_BUTTON_ENTITY_ID)
     assert state is not None
     assert state.state != "unavailable"
 
@@ -227,7 +230,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+        {ATTR_ENTITY_ID: ACCOUNT_REFRESH_BUTTON_ENTITY_ID},
         blocking=True,
     )
 

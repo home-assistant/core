@@ -52,7 +52,6 @@ async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
     ("fixture", "value", "initial_value", "updated_value"),
     [
         ("altherma", "dryKeepSetting", "on", "off"),
-        ("altherma_firmwareupdate", "onOffMode", "off", "on"),
     ],
 )
 async def test_read_only_on_off_characteristics_are_binary_sensors(
