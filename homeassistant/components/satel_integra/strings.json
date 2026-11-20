@@ -28,7 +28,7 @@
         "data_description": {
           "scan_outputs": "Find configured outputs and add them as switches or read-only binary sensors, depending on the output type.",
           "scan_partitions": "Find partitions configured on the alarm panel.",
-          "scan_zones": "Find zones assigned to a partition. This can take longer on larger panels."
+          "scan_zones": "Find zones assigned to a partition."
         },
         "description": "Home Assistant adds everything it finds for the selected types. Turn off all options to skip discovery.",
         "submit": "Continue",

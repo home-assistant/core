@@ -125,6 +125,16 @@ ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
 
 SWITCHABLE_OUTPUT_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
+DISCOVER_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("scan_partitions", default=True): (
+            selector.BooleanSelector()
+        ),
+        probatio.Required("scan_zones", default=True): (selector.BooleanSelector()),
+        probatio.Required("scan_outputs", default=True): (selector.BooleanSelector()),
+    }
+)
+
 
 def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
     """Convert eligible discovery results into initial configuration."""
@@ -297,22 +307,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_scan()
 
-        return self.async_show_form(
-            step_id="discover",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required("scan_partitions", default=True): (
-                        selector.BooleanSelector()
-                    ),
-                    probatio.Required("scan_zones", default=True): (
-                        selector.BooleanSelector()
-                    ),
-                    probatio.Required("scan_outputs", default=True): (
-                        selector.BooleanSelector()
-                    ),
-                }
-            ),
-        )
+        return self.async_show_form(step_id="discover", data_schema=DISCOVER_SCHEMA)
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
