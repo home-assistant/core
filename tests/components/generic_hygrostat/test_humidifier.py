@@ -11,6 +11,7 @@ from pytest_homeassistant.common import (
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
 
@@ -19,6 +20,9 @@ from homeassistant.components import input_boolean, switch
 from homeassistant.components.generic_hygrostat.const import (
     DOMAIN,
     GenericHygrostatEntityStateAttribute,
+)
+from homeassistant.components.generic_hygrostat.humidifier import (
+    GenericHygrostatExtraStoredData,
 )
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -1980,3 +1984,49 @@ async def test_device_id_yaml(
     assert helper_entity is not None
     assert helper_entity.device_id is None
     assert "attempts to attach a device to an entity" not in caplog.text
+
+
+async def test_restore_state_after_unavailable(hass: HomeAssistant) -> None:
+    """Ensure state and target humidity restore even if last state was unavailable."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("humidifier.test_hygrostat", STATE_UNAVAILABLE),
+                GenericHygrostatExtraStoredData(
+                    target_humidity=62.0,
+                    saved_target_humidity=50.0,
+                    is_away=False,
+                    is_on=True,
+                ).as_dict(),
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 62.0
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 50.0
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
