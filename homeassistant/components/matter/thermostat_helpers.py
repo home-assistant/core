@@ -69,11 +69,17 @@ class PresetNotFoundError(ServiceValidationError):
 
 
 class InvalidPresetDataError(ServiceValidationError):
-    """A required argument for this preset operation is missing."""
+    """The preset data is missing or outside what the thermostat accepts."""
 
-    def __init__(self, translation_key: str) -> None:
+    def __init__(
+        self, translation_key: str, placeholders: dict[str, str] | None = None
+    ) -> None:
         """Initialize the error with a translated message."""
-        super().__init__(translation_domain=DOMAIN, translation_key=translation_key)
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
 
 
 class PresetWriteRejectedError(HomeAssistantError):
@@ -129,14 +135,61 @@ def _resolve_name(
     return name.strip() if name and name.strip() else None
 
 
+def _validate_setpoint(
+    endpoint: MatterEndpoint,
+    setpoint: int | None,
+    min_attribute: type[clusters.ClusterAttributeDescriptor],
+    max_attribute: type[clusters.ClusterAttributeDescriptor],
+    translation_key: str,
+) -> None:
+    """Raise if `setpoint` is outside the thermostat's absolute limits."""
+    if setpoint is None:
+        return
+    minimum = _normalize(endpoint.get_attribute_value(None, min_attribute))
+    maximum = _normalize(endpoint.get_attribute_value(None, max_attribute))
+    if (minimum is not None and setpoint < minimum) or (
+        maximum is not None and setpoint > maximum
+    ):
+        raise InvalidPresetDataError(
+            translation_key,
+            {
+                "min": "-" if minimum is None else str(minimum / 100),
+                "max": "-" if maximum is None else str(maximum / 100),
+            },
+        )
+
+
+def _validate_setpoints(
+    endpoint: MatterEndpoint,
+    heating_setpoint: int | None,
+    cooling_setpoint: int | None,
+) -> None:
+    """Raise if a setpoint is outside the thermostat's absolute limits."""
+    _validate_setpoint(
+        endpoint,
+        heating_setpoint,
+        clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+        clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+        "preset_heating_setpoint_out_of_range",
+    )
+    _validate_setpoint(
+        endpoint,
+        cooling_setpoint,
+        clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
+        clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+        "preset_cooling_setpoint_out_of_range",
+    )
+
+
 def _validate_new_preset(
     endpoint: MatterEndpoint,
+    preset_types: list[Any],
     preset_scenario: int,
     name: str | None,
     heating_setpoint: int | None,
     cooling_setpoint: int | None,
 ) -> None:
-    """Raise if a new preset lacks data the spec requires for its scenario."""
+    """Raise if the device's write rules (§4.3.11.50) would refuse a new preset."""
     if preset_scenario == _PresetScenario.kUserDefined and not (name and name.strip()):
         raise InvalidPresetDataError("preset_name_required")
     feature_map = (
@@ -147,6 +200,32 @@ def _validate_new_preset(
         raise InvalidPresetDataError("preset_heating_setpoint_required")
     if feature_map & _ThermostatFeature.kCooling and cooling_setpoint is None:
         raise InvalidPresetDataError("preset_cooling_setpoint_required")
+    preset_type = next(
+        (pt for pt in preset_types if pt.presetScenario == preset_scenario), None
+    )
+    if preset_type is None:
+        raise InvalidPresetDataError("preset_scenario_not_supported")
+    current_presets = (
+        endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.Presets) or []
+    )
+    max_presets = _normalize(
+        endpoint.get_attribute_value(
+            None, clusters.Thermostat.Attributes.NumberOfPresets
+        )
+    )
+    if max_presets is not None and len(current_presets) >= max_presets:
+        raise InvalidPresetDataError(
+            "preset_limit_reached", {"limit": str(max_presets)}
+        )
+    scenario_count = sum(
+        1 for preset in current_presets if preset.presetScenario == preset_scenario
+    )
+    if scenario_count >= preset_type.numberOfPresets:
+        raise InvalidPresetDataError(
+            "preset_scenario_limit_reached",
+            {"limit": str(preset_type.numberOfPresets)},
+        )
+    _validate_setpoints(endpoint, heating_setpoint, cooling_setpoint)
 
 
 def _write_error_status(result: Any) -> int | None:
@@ -173,12 +252,10 @@ async def _write_presets(
 
     The result is the full intended list, not a diff: per §4.3.11.50 a handle
     missing from it is a removal, and a preset with `presetHandle` null is an
-    addition. `write_atomic_attribute` runs the AtomicRequest handshake and
-    the device's own write-rule validation (built-in/active/schedule
-    protection on removal, name uniqueness, per-scenario limits); this helper
-    no longer duplicates those rules. The write carries the cluster's data
-    version from this read, so the device refuses it instead of silently
-    overwriting a change made elsewhere since.
+    addition. `write_atomic_attribute` runs the AtomicRequest handshake, and
+    the device still applies its own write rules. The write carries the
+    cluster's data version from this read, so the device refuses it instead
+    of silently overwriting a change made elsewhere since.
     """
     node = endpoint.node
     presets_path = create_attribute_path_from_attribute(
@@ -190,15 +267,15 @@ async def _write_presets(
     for attempt in range(PRESET_WRITE_ATTEMPTS):
         report = await matter_client.read(node.node_id, [presets_path])
         data_version = (report.data_versions or {}).get(cluster_path)
-        if presets_path not in report.attributes or data_version is None:
+        # The raw read is the wire format; decode it into PresetStruct entries.
+        current_presets = cast(
+            list[Any] | None,
+            parse_value("presets", report.attributes.get(presets_path), _PresetsType),
+        )
+        if current_presets is None or data_version is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="presets_not_reported"
             )
-        # The raw read is the wire format; decode it into PresetStruct entries.
-        current_presets = cast(
-            list[Any],
-            parse_value("presets", report.attributes[presets_path], _PresetsType),
-        )
         result = await matter_client.write_atomic_attribute(
             node_id=node.node_id,
             attribute_path=presets_path,
@@ -242,7 +319,12 @@ async def set_thermostat_preset(
         if preset_scenario is None:
             raise InvalidPresetDataError("preset_scenario_required")
         _validate_new_preset(
-            endpoint, preset_scenario, name, heating_setpoint, cooling_setpoint
+            endpoint,
+            preset_types,
+            preset_scenario,
+            name,
+            heating_setpoint,
+            cooling_setpoint,
         )
         new_preset = _PresetStruct(
             presetHandle=NullValue,
@@ -258,6 +340,8 @@ async def set_thermostat_preset(
 
         await _write_presets(matter_client, endpoint, build_add)
         return
+
+    _validate_setpoints(endpoint, heating_setpoint, cooling_setpoint)
 
     def build_next(current_presets: list[Any]) -> list[Any]:
         for preset in current_presets:
@@ -300,8 +384,8 @@ async def remove_thermostat_preset(
 ) -> None:
     """Remove a preset from the thermostat.
 
-    Built-in, active, or schedule-referenced presets are rejected by the
-    device's own write rules (§4.3.11.50) rather than checked here.
+    A preset that a schedule references is refused by the device's own write
+    rules (§4.3.11.50).
     """
     _ensure_presets_supported(endpoint)
 

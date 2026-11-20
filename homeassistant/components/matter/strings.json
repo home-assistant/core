@@ -829,11 +829,20 @@
     "preset_builtin_not_removable": {
       "message": "Built-in presets cannot be removed."
     },
+    "preset_cooling_setpoint_out_of_range": {
+      "message": "The cooling setpoint must be between {min} and {max} °C on this thermostat."
+    },
     "preset_cooling_setpoint_required": {
       "message": "A cooling setpoint is required for a new preset on this thermostat."
     },
+    "preset_heating_setpoint_out_of_range": {
+      "message": "The heating setpoint must be between {min} and {max} °C on this thermostat."
+    },
     "preset_heating_setpoint_required": {
       "message": "A heating setpoint is required for a new preset on this thermostat."
+    },
+    "preset_limit_reached": {
+      "message": "The thermostat already has its maximum of {limit} presets."
     },
     "preset_name_required": {
       "message": "A name is required for a user-defined preset."
@@ -847,11 +856,20 @@
     "preset_not_removable": {
       "message": "`{preset_mode}` is not a removable preset."
     },
+    "preset_scenario_limit_reached": {
+      "message": "The thermostat already has its maximum of {limit} presets for this scenario."
+    },
     "preset_scenario_not_editable": {
       "message": "The preset scenario cannot be changed on an existing preset."
     },
+    "preset_scenario_not_supported": {
+      "message": "The thermostat does not support presets of this scenario."
+    },
     "preset_scenario_required": {
       "message": "A preset scenario is required to add a preset."
+    },
+    "preset_server_too_old": {
+      "message": "The Matter server is too old to update thermostat presets. Update the Matter server."
     },
     "preset_unknown": {
       "message": "Unknown preset mode `{preset_mode}`."
@@ -869,7 +887,7 @@
       "message": "Failed to update presets: thermostat returned status `{status}`."
     },
     "preset_write_invalid_in_state": {
-      "message": "Failed to update presets: the thermostat's atomic write expired or was refused. Try again."
+      "message": "Failed to update presets: the thermostat refused the change, for example because a schedule uses the preset, or the atomic write expired."
     },
     "presets_not_reported": {
       "message": "The thermostat did not report its presets."
