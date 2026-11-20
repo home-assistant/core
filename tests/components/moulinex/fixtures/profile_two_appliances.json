@@ -4,6 +4,7 @@
     "products": [
       {
         "name": "Cookeo Touch Wifi",
+        "appliance": "APPLIANCE_1090",
         "domains": ["PRO_COO"],
         "cmmf": "1510002402",
         "iot": {
@@ -14,6 +15,7 @@
       },
       {
         "name": "i-Companion Touch XL",
+        "appliance": "APPLIANCE_1091",
         "domains": ["PRO_COM"],
         "cmmf": "8000036990",
         "iot": {

@@ -29,6 +29,7 @@ class MoulinexEntity(CoordinatorEntity[MoulinexDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance.thing_uuid)},
             manufacturer=coordinator.manufacturer,
+            model=appliance.model,
             model_id=appliance.cmmf,
             name=appliance.name,
             serial_number=appliance.thing_uuid,

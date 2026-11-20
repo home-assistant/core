@@ -374,7 +374,7 @@ aiomelcloudhome==0.3.1
 aiomodernforms==0.3.1
 
 # homeassistant.components.moulinex
-aiomoulinex==0.1.1
+aiomoulinex==0.1.2
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.15.0
