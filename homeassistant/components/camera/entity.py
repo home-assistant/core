@@ -439,14 +439,15 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # schedule another lookup
         self._provider_lookup_stopped = True
         self._async_cancel_provider_refresh_retry()
-        # A retry still waiting for the stream source is stopped before the
-        # integration cleans up, as asking for it can have side effects
-        if task := self._provider_retry_task:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
         # Wait for a refresh that is registering or unregistering right now
         async with self._provider_lock:
+            # A retry still waiting for the stream source is stopped before the
+            # integration cleans up, as asking for it can have side effects.
+            # Holding the lock, it cannot be in the middle of a registration.
+            if task := self._provider_retry_task:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
             if self._webrtc_provider:
                 await async_call_webrtc_provider(
                     self._webrtc_provider.async_unregister_camera(self),

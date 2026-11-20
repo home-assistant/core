@@ -1125,3 +1125,61 @@ async def test_retry_lookup_cancelled_before_integration_cleanup(
         await camera.async_remove()
 
     assert order == ["lookup cancelled", "integration cleanup"]
+
+
+async def test_camera_removed_while_retry_registers_with_provider(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removal lets a retry finish registering and then unregisters."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    registering = asyncio.Event()
+    release_registration = asyncio.Event()
+    order: list[str] = []
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    async def register_camera(camera: Camera) -> None:
+        order.append("register")
+        registering.set()
+        await release_registration.wait()
+
+    async def unregister_camera(camera: Camera) -> None:
+        order.append("unregister")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch.object(provider, "async_register_camera", side_effect=register_camera),
+        patch.object(
+            provider, "async_unregister_camera", side_effect=unregister_camera
+        ),
+    ):
+        async_register_webrtc_provider(hass, provider)
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        camera_ready = True
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await registering.wait()
+
+        removal = hass.async_create_task(camera.async_remove())
+        await asyncio.sleep(0)
+        assert not removal.done()  # Waits for the registration of the retry
+
+        release_registration.set()
+        await removal
+        await hass.async_block_till_done()
+
+    assert order == ["register", "unregister"]
+    assert camera.webrtc_provider is None
