@@ -111,13 +111,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
-    # libiperf and the iperf3 wrapper can only run one test per process
+    # libiperf and the iperf3 wrapper can run only one test per process
     test_lock = asyncio.Lock()
     for host in conf[CONF_HOSTS]:
         data = hass.data[DOMAIN][host[CONF_HOST]] = Iperf3Data(hass, host, test_lock)
 
         if not conf[CONF_MANUAL]:
-            async_track_time_interval(hass, data.async_update, conf[CONF_SCAN_INTERVAL])
+            async_track_time_interval(
+                hass, data.async_scheduled_update, conf[CONF_SCAN_INTERVAL]
+            )
 
     async_setup_services(hass)
 
@@ -143,7 +145,7 @@ class Iperf3Data:
         self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
         self._test_lock = test_lock
-        self._updating = False
+        self._update_task = None
 
     def create_client(self):
         """Create a new iperf3 client to use for measurement."""
@@ -171,24 +173,35 @@ class Iperf3Data:
         """Return the port on the host connected to."""
         return self._host[CONF_PORT]
 
-    async def async_update(self, now=None):
-        """Get the latest data from iperf3 once no other test is running.
-
-        Hosts wait for the lock in the event loop, so only the running test
-        occupies an executor thread, even if it hangs inside libiperf.
-        """
-        if self._updating:
+    async def async_scheduled_update(self, now):
+        """Update on the scan interval, unless the last update hasn't finished."""
+        if self._update_task is not None:
             _LOGGER.warning(
-                "Skipping update, the previous iperf3 test of %s is still running",
+                "Skipping scheduled update of %s, its previous update hasn't finished",
                 self.host,
             )
             return
-        self._updating = True
+        await self.async_update()
+
+    async def async_update(self):
+        """Get the latest data from iperf3, joining an update already underway."""
+        if self._update_task is None:
+            self._update_task = self._hass.async_create_background_task(
+                self._async_run_update(),
+                f"iperf3 update of {self.host}",
+                eager_start=False,
+            )
+        # A cancelled caller must not cancel a test that is running in libiperf
+        await asyncio.shield(self._update_task)
+
+    async def _async_run_update(self):
+        """Run the tests once no other host's test is running."""
         try:
+            # Waiting here instead of in the executor keeps threads free
             async with self._test_lock:
                 await self._hass.async_add_executor_job(self.update)
         finally:
-            self._updating = False
+            self._update_task = None
 
     def update(self):
         """Run the download and upload tests and store the results."""
@@ -211,14 +224,16 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
+        # The traceback keeps the client alive; free it while the lock is held
         try:
             result = self._run_client(test_type)
-        except Exception as error:  # noqa: BLE001
-            # Deleting the client calls into libiperf, so it must happen before
-            # the next test can start. Clear the frames of the traceback, which
-            # still reference the client, so it is deleted right here.
+        except (AttributeError, OSError, ValueError) as error:
             traceback.clear_frames(error.__traceback__)
             _LOGGER.error("Iperf3 error: %s", error)
+            return None
+        except Exception as error:
+            traceback.clear_frames(error.__traceback__)
+            _LOGGER.exception("Unexpected error in the iperf3 test of %s", self.host)
             return None
 
         if result is not None and hasattr(result, "error") and result.error is not None:
