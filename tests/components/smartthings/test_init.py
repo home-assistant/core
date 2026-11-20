@@ -461,6 +461,45 @@ async def test_unloading_after_stream_failed(
     )
 
 
+async def test_stream_error_logged_when_it_ends(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an event stream error is logged when the stream ends, not on unload."""
+    devices.subscribe.side_effect = SmartThingsConnectionError("stream lost")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "SmartThings event stream ended: stream lost" in caplog.text
+
+
+async def test_stream_cancel_not_logged(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stopping the event stream on unload is not logged as an error."""
+    stream_cancelled = asyncio.Event()
+
+    async def subscribe(*args: Any) -> None:
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            stream_cancelled.set()
+            raise
+
+    devices.subscribe.side_effect = subscribe
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert stream_cancelled.is_set()
+    assert "SmartThings event stream ended" not in caplog.text
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_shutdown(
     hass: HomeAssistant,

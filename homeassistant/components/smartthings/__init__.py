@@ -226,6 +226,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         ),
         "smartthings_socket",
     )
+    # The task is kept for unload, so asyncio would only report its error then
+    subscription_task.add_done_callback(_log_subscription_error)
 
     device_status: dict[str, FullDevice] = {}
     try:
@@ -352,6 +354,12 @@ async def async_unload_entry(
         entry, entry.runtime_data.client, entry.runtime_data.subscription_task
     )
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+def _log_subscription_error(task: asyncio.Task[None]) -> None:
+    """Log why the event stream ended."""
+    if not task.cancelled() and (err := task.exception()) is not None:
+        _LOGGER.error("SmartThings event stream ended: %s", err, exc_info=err)
 
 
 async def _async_release_subscription(
