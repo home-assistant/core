@@ -1,7 +1,8 @@
 """Support for Iperf3 network measurement tool."""
 
+import asyncio
 import logging
-import threading
+import traceback
 
 import iperf3
 import probatio
@@ -47,9 +48,6 @@ from .const import (
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-# libiperf and the iperf3 wrapper are not thread safe
-_TEST_LOCK = threading.Lock()
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -113,11 +111,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
+    # libiperf and the iperf3 wrapper can only run one test per process
+    test_lock = asyncio.Lock()
     for host in conf[CONF_HOSTS]:
-        data = hass.data[DOMAIN][host[CONF_HOST]] = Iperf3Data(hass, host)
+        data = hass.data[DOMAIN][host[CONF_HOST]] = Iperf3Data(hass, host, test_lock)
 
         if not conf[CONF_MANUAL]:
-            async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
+            async_track_time_interval(hass, data.async_update, conf[CONF_SCAN_INTERVAL])
 
     async_setup_services(hass)
 
@@ -137,12 +137,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Iperf3Data:
     """Get the latest data from iperf3."""
 
-    def __init__(self, hass, host):
+    def __init__(self, hass, host, test_lock):
         """Initialize the data object."""
         self._hass = hass
         self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
-        self._update_lock = threading.Lock()
+        self._test_lock = test_lock
+        self._updating = False
 
     def create_client(self):
         """Create a new iperf3 client to use for measurement."""
@@ -170,22 +171,26 @@ class Iperf3Data:
         """Return the port on the host connected to."""
         return self._host[CONF_PORT]
 
-    def update(self, now=None):
-        """Get the latest data from iperf3."""
-        # pylint: disable-next=consider-using-with
-        if not self._update_lock.acquire(blocking=False):
+    async def async_update(self, now=None):
+        """Get the latest data from iperf3 once no other test is running.
+
+        Hosts wait for the lock in the event loop, so only the running test
+        occupies an executor thread, even if it hangs inside libiperf.
+        """
+        if self._updating:
             _LOGGER.warning(
                 "Skipping update, the previous iperf3 test of %s is still running",
                 self.host,
             )
             return
+        self._updating = True
         try:
-            with _TEST_LOCK:
-                self._update()
+            async with self._test_lock:
+                await self._hass.async_add_executor_job(self.update)
         finally:
-            self._update_lock.release()
+            self._updating = False
 
-    def _update(self):
+    def update(self):
         """Run the download and upload tests and store the results."""
         if self.protocol == "udp":
             # UDP only have 1 way attribute
@@ -206,11 +211,13 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
-        client = self.create_client()
-        client.reverse = test_type == ATTR_DOWNLOAD
         try:
-            result = client.run()
-        except (AttributeError, OSError, ValueError) as error:
+            result = self._run_client(test_type)
+        except Exception as error:  # noqa: BLE001
+            # Deleting the client calls into libiperf, so it must happen before
+            # the next test can start. Clear the frames of the traceback, which
+            # still reference the client, so it is deleted right here.
+            traceback.clear_frames(error.__traceback__)
             _LOGGER.error("Iperf3 error: %s", error)
             return None
 
@@ -219,3 +226,9 @@ class Iperf3Data:
             return None
 
         return result
+
+    def _run_client(self, test_type):
+        """Run a test with a new client, which is deleted when this returns."""
+        client = self.create_client()
+        client.reverse = test_type == ATTR_DOWNLOAD
+        return client.run()

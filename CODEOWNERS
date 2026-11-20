@@ -981,6 +981,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/iotty/ @shapournemati-iotty
 /tests/components/iotty/ @shapournemati-iotty
 /homeassistant/components/iperf3/ @rohankapoorcom
+/tests/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
 /homeassistant/components/ipp/ @ctalkington @brianegge
