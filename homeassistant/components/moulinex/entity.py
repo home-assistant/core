@@ -30,7 +30,7 @@ class MoulinexEntity(CoordinatorEntity[MoulinexDataUpdateCoordinator]):
             identifiers={(DOMAIN, appliance.thing_uuid)},
             manufacturer=coordinator.manufacturer,
             model=appliance.model,
-            model_id=appliance.cmmf,
+            model_id=appliance.catalog_id,
             name=appliance.name,
             serial_number=appliance.thing_uuid,
             sw_version=self.appliance_state.shadow.firmware.ui_version,
