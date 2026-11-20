@@ -14,7 +14,6 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
-    CREATE_EVENT_SERVICE,
     DOMAIN,
     CalendarEntity,
     CalendarEntityDescription,
@@ -232,7 +231,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -408,7 +407,7 @@ async def test_create_event_service_invalid_params(
     with pytest.raises(expected_error, match=re.escape(error_match)):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
