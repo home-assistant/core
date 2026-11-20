@@ -54,6 +54,9 @@ type ScanResult = tuple[
     list[SatelPartitionInfo], list[SatelZoneInfo], list[SatelOutputInfo]
 ]
 
+# Only these output types are switchable, as documented by the spec
+_SWITCHABLE_OUTPUT_TYPES = frozenset({24, 25, 105, 106})
+
 CONNECTION_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
@@ -163,14 +166,27 @@ def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
     for output in outputs:
         number = output.device_number
         label = f"Output {number}"
+        title = f"{label}: {output.name}" if output.name else label
+        name = output.name or label
+        if output.type_code in _SWITCHABLE_OUTPUT_TYPES:
+            subentries.append(
+                ConfigSubentryData(
+                    subentry_type=SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+                    unique_id=f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{number}",
+                    title=title,
+                    data={CONF_SWITCHABLE_OUTPUT_NUMBER: number, CONF_NAME: name},
+                )
+            )
+            continue
+
         subentries.append(
             ConfigSubentryData(
                 subentry_type=SUBENTRY_TYPE_OUTPUT,
                 unique_id=f"{SUBENTRY_TYPE_OUTPUT}_{number}",
-                title=f"{label}: {output.name}" if output.name else label,
+                title=title,
                 data={
                     CONF_OUTPUT_NUMBER: number,
-                    CONF_NAME: output.name or label,
+                    CONF_NAME: name,
                     CONF_ZONE_TYPE: None,
                 },
             )

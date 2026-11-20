@@ -315,13 +315,17 @@ async def test_setup_adds_discovered_zones(
     mock_satel.read_temperature.assert_not_called()
 
 
-async def test_setup_adds_discovered_outputs_as_read_only(
+async def test_setup_classifies_discovered_outputs(
     hass: HomeAssistant, mock_satel: AsyncMock
 ) -> None:
-    """Add configured outputs as binary sensors, even for switch functions."""
+    """Expose only verified output functions as switches without sending commands."""
     mock_satel.scan_outputs.return_value = [
-        SatelOutputInfo(device_number=2, name="Alarm status", type_code=1),
+        SatelOutputInfo(device_number=2, name="Alarm status", type_code=3),
+        SatelOutputInfo(device_number=3, name="Remote relay", type_code=64),
+        SatelOutputInfo(device_number=4, name="Timed relay", type_code=24),
         SatelOutputInfo(device_number=5, name="Light relay", type_code=25),
+        SatelOutputInfo(device_number=6, name="Shutter up", type_code=105),
+        SatelOutputInfo(device_number=7, name="Shutter down", type_code=106),
     ]
     result = await _start_scan(hass, scan_partitions=False, scan_outputs=True)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -338,16 +342,31 @@ async def test_setup_adds_discovered_outputs_as_read_only(
             f"Output {number}: {name}",
             {CONF_OUTPUT_NUMBER: number, CONF_NAME: name, CONF_ZONE_TYPE: None},
         )
-        for number, name in ((2, "Alarm status"), (5, "Light relay"))
+        for number, name in ((2, "Alarm status"), (3, "Remote relay"))
     }
-    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_SWITCHABLE_OUTPUT)
+    assert {
+        output.unique_id: (output.title, dict(output.data))
+        for output in entry.get_subentries_of_type(SUBENTRY_TYPE_SWITCHABLE_OUTPUT)
+    } == {
+        f"switchable_output_{number}": (
+            f"Output {number}: {name}",
+            {CONF_SWITCHABLE_OUTPUT_NUMBER: number, CONF_NAME: name},
+        )
+        for number, name in (
+            (4, "Timed relay"),
+            (5, "Light relay"),
+            (6, "Shutter up"),
+            (7, "Shutter down"),
+        )
+    }
     mock_satel.scan_partitions.assert_not_called()
     mock_satel.scan_zones.assert_not_called()
     mock_satel.scan_outputs.assert_awaited_once()
-    mock_satel.set_output.assert_not_called()
     await hass.async_block_till_done()
+    mock_satel.set_output.assert_not_called()
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("binary_sensor.light_relay") is not None
+    assert hass.states.get("binary_sensor.alarm_status") is not None
+    assert hass.states.get("switch.light_relay") is not None
 
 
 @pytest.mark.parametrize(
