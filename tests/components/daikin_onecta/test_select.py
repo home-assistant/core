@@ -99,6 +99,33 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     assert state.attributes["options"] == []
 
 
+async def test_read_only_schedule_only_advertises_current_option(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not offer schedule choices that Daikin marks as read-only."""
+    await _async_setup_fixture(hass, config_entry, "holidaymode")
+    execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute_command
+    state = hass.states.get("select.ndj_schedule")
+    assert state is not None
+    assert state.state == "Automatic 1"
+    assert state.attributes["options"] == ["Automatic 1"]
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "Automatic 2",
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "not_valid_option"
+    execute_command.assert_not_awaited()
+
+
 async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

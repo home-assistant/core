@@ -281,6 +281,54 @@ async def test_remove_management_point_device_is_rejected(
     coordinator.async_get_sites.assert_not_awaited()
 
 
+async def test_remove_child_is_rejected_without_gateway_inventory(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Do not treat an omitted management-point inventory as child removal."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    gateway_id, device = next(iter(coordinator.data.items()))
+    management_point = next(
+        point
+        for point in device.device.management_points
+        if point.management_point_type not in {"gateway", "climateControl"}
+    )
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{management_point.embedded_id}"),
+        config_entry.entry_id,
+    )
+    assert child is not None
+    device.device.management_points = []
+
+    assert not await async_remove_config_entry_device(hass, config_entry, child)
+
+
+async def test_remove_child_is_rejected_when_gateway_is_offline(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Do not interpret an offline gateway as confirmation a child is gone."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    gateway_id, device = next(iter(coordinator.data.items()))
+    management_point = next(
+        point
+        for point in device.device.management_points
+        if point.management_point_type not in {"gateway", "climateControl"}
+    )
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{management_point.embedded_id}"),
+        config_entry.entry_id,
+    )
+    assert child is not None
+    device.device.cloud_connection.value = False
+
+    assert not await async_remove_config_entry_device(hass, config_entry, child)
+
+
 async def test_remove_empty_child_with_live_management_point(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

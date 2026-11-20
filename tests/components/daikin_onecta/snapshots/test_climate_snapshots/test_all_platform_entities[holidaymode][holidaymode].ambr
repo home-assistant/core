@@ -521,7 +521,6 @@
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'Automatic 1',
-            'Automatic 2',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -558,7 +557,6 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'Automatic 1',
-            'Automatic 2',
           ]),
         }),
         'context': <ANY>,

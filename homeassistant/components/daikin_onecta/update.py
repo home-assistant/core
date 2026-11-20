@@ -147,7 +147,13 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool | None:
         """Keep a requested install pending until the cloud reports its outcome."""
-        return self._pending_install is not None or super().in_progress
+        if self._pending_install is not None:
+            return True
+        management_point = self._management_point
+        firmware = management_point.firmware if management_point is not None else None
+        if firmware is not None and firmware.has_update_status:
+            return firmware.in_progress
+        return super().in_progress
 
     def _update_from_management_point(self, management_point: ManagementPoint) -> None:
         """Pull the latest values out of a typed management point."""

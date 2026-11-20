@@ -106,6 +106,19 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return None
         return schedule.active_selection
 
+    def _selection_is_settable(self, selection: ScheduleSelection) -> bool:
+        """Return whether Daikin allows changing the selected schedule."""
+        point = self._management_point
+        schedule = point.schedule if point is not None else None
+        if schedule is None or not schedule.settable:
+            return False
+        schedule_mode = schedule.value.modes.get(selection.mode)
+        return (
+            schedule_mode is not None
+            and schedule_mode.current_schedule is not None
+            and schedule_mode.current_schedule.settable
+        )
+
     @property
     @override
     def available(self) -> bool:
@@ -133,6 +146,9 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         """Select or disable a configured schedule."""
         selection = self.selection()
         if selection is None:
+            self._raise_service_validation_error("schedule_selection_unavailable")
+        options = self.get_options()
+        if option not in options:
             self._raise_service_validation_error("schedule_selection_unavailable")
         if option == self.get_current_option():
             return
@@ -183,7 +199,14 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             not selection.enabled and not selection.enabled_settable
         ):
             return []
-        options = [label for label, _ in self._schedule_options(selection)]
+        schedule_options = self._schedule_options(selection)
+        if not self._selection_is_settable(selection):
+            schedule_options = [
+                (label, schedule_id)
+                for label, schedule_id in schedule_options
+                if schedule_id == selection.selected
+            ]
+        options = [label for label, _ in schedule_options]
         if selection.enabled_settable:
             options.append(SCHEDULE_DISABLED)
         return options
