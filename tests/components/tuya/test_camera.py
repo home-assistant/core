@@ -8,12 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.camera import (
-    DOMAIN as CAMERA_DOMAIN,
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -63,11 +59,11 @@ async def test_platform_setup_and_discovery(
     ("service", "expected_command"),
     [
         (
-            SERVICE_DISABLE_MOTION,
+            CameraService.DISABLE_MOTION_DETECTION,
             {"code": "motion_switch", "value": False},
         ),
         (
-            SERVICE_ENABLE_MOTION,
+            CameraService.ENABLE_MOTION_DETECTION,
             {"code": "motion_switch", "value": True},
         ),
     ],
@@ -90,7 +86,7 @@ async def test_action(
         CAMERA_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
