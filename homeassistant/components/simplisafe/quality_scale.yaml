@@ -43,7 +43,7 @@ rules:
     comment: Same reason as discovery.
   discovery:
     status: todo
-    comment: The docs state that it can be auto-discovered, but the manifest.json and the config flow do not have the "zeroconf" items needed.
+    comment: DHCP discovery is declared in manifest.json, but config_flow.py does not implement the required async_step_dhcp handler.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: todo
@@ -51,9 +51,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: The integration only registers one fixed device per config entry.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -68,7 +66,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
