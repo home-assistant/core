@@ -13,7 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.html5.const import ATTR_ACTION, ATTR_TAG, DOMAIN
 from homeassistant.components.html5.http import ATTR_TYPE
-from homeassistant.components.notify import ATTR_DATA, ATTR_TARGET
+from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -58,23 +58,23 @@ async def test_setup(
     ("event_payload"),
     [
         {
-            ATTR_TARGET: "my-desktop",
+            NotifyServiceArgument.TARGET: "my-desktop",
             ATTR_TYPE: "clicked",
             ATTR_ACTION: "open_app",
             ATTR_TAG: "1234",
-            ATTR_DATA: {"customKey": "Value"},
+            NotifyServiceArgument.DATA: {"customKey": "Value"},
         },
         {
-            ATTR_TARGET: "my-desktop",
+            NotifyServiceArgument.TARGET: "my-desktop",
             ATTR_TYPE: "received",
             ATTR_TAG: "1234",
-            ATTR_DATA: {"customKey": "Value"},
+            NotifyServiceArgument.DATA: {"customKey": "Value"},
         },
         {
-            ATTR_TARGET: "my-desktop",
+            NotifyServiceArgument.TARGET: "my-desktop",
             ATTR_TYPE: "closed",
             ATTR_TAG: "1234",
-            ATTR_DATA: {"customKey": "Value"},
+            NotifyServiceArgument.DATA: {"customKey": "Value"},
         },
     ],
 )
@@ -103,7 +103,9 @@ async def test_events(
 
     client = await hass_client()
 
-    mock_jwt.decode.return_value = {ATTR_TARGET: event_payload[ATTR_TARGET]}
+    mock_jwt.decode.return_value = {
+        NotifyServiceArgument.TARGET: event_payload[NotifyServiceArgument.TARGET]
+    }
 
     resp = await client.post(
         "/api/notify.html5/callback",
@@ -117,7 +119,10 @@ async def test_events(
     assert state.state == "1970-01-01T00:00:00.000+00:00"
     assert state.attributes.get("action") == event_payload.get(ATTR_ACTION)
     assert state.attributes.get("tag") == event_payload[ATTR_TAG]
-    assert state.attributes.get("customKey") == event_payload[ATTR_DATA]["customKey"]
+    assert (
+        state.attributes.get("customKey")
+        == event_payload[NotifyServiceArgument.DATA]["customKey"]
+    )
 
 
 @pytest.mark.parametrize("event_type", ["clicked", "received", "closed"])

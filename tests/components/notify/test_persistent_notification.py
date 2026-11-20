@@ -16,7 +16,7 @@ async def test_async_send_message(hass: HomeAssistant) -> None:
 
     message = {"message": "Hello", "title": "Test notification"}
     await hass.services.async_call(
-        notify.DOMAIN, notify.SERVICE_PERSISTENT_NOTIFICATION, message
+        notify.DOMAIN, notify.NotifyService.PERSISTENT_NOTIFICATION, message
     )
     await hass.async_block_till_done()
 
@@ -40,7 +40,7 @@ async def test_async_supports_notification_id(hass: HomeAssistant) -> None:
         "data": {"notification_id": "my_id"},
     }
     await hass.services.async_call(
-        notify.DOMAIN, notify.SERVICE_PERSISTENT_NOTIFICATION, message
+        notify.DOMAIN, notify.NotifyService.PERSISTENT_NOTIFICATION, message
     )
     await hass.async_block_till_done()
 
@@ -55,7 +55,7 @@ async def test_async_supports_notification_id(hass: HomeAssistant) -> None:
         "data": {"notification_id": "my_id"},
     }
     await hass.services.async_call(
-        notify.DOMAIN, notify.SERVICE_PERSISTENT_NOTIFICATION, message
+        notify.DOMAIN, notify.NotifyService.PERSISTENT_NOTIFICATION, message
     )
     await hass.async_block_till_done()
 

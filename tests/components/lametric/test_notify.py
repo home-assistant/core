@@ -22,17 +22,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -56,7 +50,7 @@ async def test_notification_defaults(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
         {
-            ATTR_MESSAGE: (
+            NotifyServiceArgument.MESSAGE: (
                 "Try not to become a man of success. Rather become a man of value"
             ),
         },
@@ -92,8 +86,8 @@ async def test_notification_options(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
         {
-            ATTR_MESSAGE: "The secret of getting ahead is getting started",
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: "The secret of getting ahead is getting started",
+            NotifyServiceArgument.DATA: {
                 "icon": "1234",
                 "sound": "positive1",
                 "cycles": 3,
@@ -136,8 +130,8 @@ async def test_notification_sound_repeat(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
         {
-            ATTR_MESSAGE: "Meow!",
-            ATTR_DATA: {"sound": "positive1", "repeat": repeat},
+            NotifyServiceArgument.MESSAGE: "Meow!",
+            NotifyServiceArgument.DATA: {"sound": "positive1", "repeat": repeat},
         },
         blocking=True,
     )
@@ -179,8 +173,8 @@ async def test_notification_invalid_repeat(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
             {
-                ATTR_MESSAGE: "Meow!",
-                ATTR_DATA: {**sound_data, "repeat": repeat},
+                NotifyServiceArgument.MESSAGE: "Meow!",
+                NotifyServiceArgument.DATA: {**sound_data, "repeat": repeat},
             },
             blocking=True,
         )
@@ -198,8 +192,8 @@ async def test_notification_unknown_sound(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
             {
-                ATTR_MESSAGE: "Silence is golden",
-                ATTR_DATA: {"sound": "nope"},
+                NotifyServiceArgument.MESSAGE: "Silence is golden",
+                NotifyServiceArgument.DATA: {"sound": "nope"},
             },
             blocking=True,
         )
@@ -222,7 +216,7 @@ async def test_notification_error(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
             {
-                ATTR_MESSAGE: "It's failure that gives you the proper perspective",
+                NotifyServiceArgument.MESSAGE: "It's failure that gives you the proper perspective",
             },
             blocking=True,
         )
@@ -246,10 +240,10 @@ async def test_send_message(
     """Test sending a message through the LaMetric notify entity."""
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "The way to get started is to quit talking and begin doing",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NotifyServiceArgument.MESSAGE: "The way to get started is to quit talking and begin doing",
         },
         blocking=True,
     )
@@ -303,10 +297,10 @@ async def test_send_message_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "It's failure that gives you the proper perspective",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NotifyServiceArgument.MESSAGE: "It's failure that gives you the proper perspective",
             },
             blocking=True,
         )
@@ -328,7 +322,10 @@ async def test_notification_without_audio(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         "sky",
-        {ATTR_MESSAGE: "Meow!", ATTR_DATA: {"sound": "cat"}},
+        {
+            NotifyServiceArgument.MESSAGE: "Meow!",
+            NotifyServiceArgument.DATA: {"sound": "cat"},
+        },
         blocking=True,
     )
 
@@ -346,7 +343,10 @@ async def test_notification_unknown_sound_without_audio(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "sky",
-            {ATTR_MESSAGE: "Silence is golden", ATTR_DATA: {"sound": "nope"}},
+            {
+                NotifyServiceArgument.MESSAGE: "Silence is golden",
+                NotifyServiceArgument.DATA: {"sound": "nope"},
+            },
             blocking=True,
         )
 
@@ -368,8 +368,8 @@ async def test_notification_sound_url(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
         {
-            ATTR_MESSAGE: "Ding dong!",
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: "Ding dong!",
+            NotifyServiceArgument.DATA: {
                 "sound_url": "https://example.com/doorbell.mp3",
                 "sound": "cat",
                 "repeat": repeat,
@@ -394,7 +394,10 @@ async def test_notification_invalid_sound_url(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
-            {ATTR_MESSAGE: "Ding dong!", ATTR_DATA: {"sound_url": "doorbell"}},
+            {
+                NotifyServiceArgument.MESSAGE: "Ding dong!",
+                NotifyServiceArgument.DATA: {"sound_url": "doorbell"},
+            },
             blocking=True,
         )
 
@@ -411,8 +414,10 @@ async def test_notification_sound_url_without_audio(
         NOTIFY_DOMAIN,
         "sky",
         {
-            ATTR_MESSAGE: "Ding dong!",
-            ATTR_DATA: {"sound_url": "https://example.com/doorbell.mp3"},
+            NotifyServiceArgument.MESSAGE: "Ding dong!",
+            NotifyServiceArgument.DATA: {
+                "sound_url": "https://example.com/doorbell.mp3"
+            },
         },
         blocking=True,
     )
@@ -436,8 +441,8 @@ async def test_notification_sound_from_media(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
             {
-                ATTR_MESSAGE: "Ding dong!",
-                ATTR_DATA: {
+                NotifyServiceArgument.MESSAGE: "Ding dong!",
+                NotifyServiceArgument.DATA: {
                     "sound_url": {
                         "media_content_id": "media-source://media_source/local/doorbell.mp3",
                         "media_content_type": "audio/mpeg",

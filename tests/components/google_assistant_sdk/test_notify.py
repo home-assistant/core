@@ -46,7 +46,7 @@ async def test_broadcast_no_targets(
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
-            {notify.ATTR_MESSAGE: message},
+            {notify.NotifyServiceArgument.MESSAGE: message},
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(
@@ -73,7 +73,7 @@ async def test_broadcast_grpc_error(
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
-            {notify.ATTR_MESSAGE: "Dinner is served"},
+            {notify.NotifyServiceArgument.MESSAGE: "Dinner is served"},
             blocking=True,
         )
 
@@ -128,7 +128,10 @@ async def test_broadcast_one_target(
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
-            {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target]},
+            {
+                notify.NotifyServiceArgument.MESSAGE: message,
+                notify.NotifyServiceArgument.TARGET: [target],
+            },
             blocking=True,
         )
     mock_assist_call.assert_called_once_with(expected_command)
@@ -152,7 +155,10 @@ async def test_broadcast_two_targets(
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
-            {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target1, target2]},
+            {
+                notify.NotifyServiceArgument.MESSAGE: message,
+                notify.NotifyServiceArgument.TARGET: [target1, target2],
+            },
             blocking=True,
         )
     mock_assist_call.assert_has_calls(
@@ -173,7 +179,7 @@ async def test_broadcast_empty_message(
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
-            {notify.ATTR_MESSAGE: ""},
+            {notify.NotifyServiceArgument.MESSAGE: ""},
             blocking=True,
         )
     mock_assist_call.assert_not_called()

@@ -40,21 +40,24 @@ async def _async_setup_notify_service(
     [
         pytest.param(
             ":robot_face:",
-            {notify.ATTR_MESSAGE: "test"},
+            {notify.NotifyServiceArgument.MESSAGE: "test"},
             "icon_emoji",
             ":robot_face:",
             id="default_emoji",
         ),
         pytest.param(
             "default_icon",
-            {notify.ATTR_MESSAGE: "test", notify.ATTR_DATA: {ATTR_ICON: ":new:"}},
+            {
+                notify.NotifyServiceArgument.MESSAGE: "test",
+                notify.NotifyServiceArgument.DATA: {ATTR_ICON: ":new:"},
+            },
             "icon_emoji",
             ":new:",
             id="emoji_overrides_default",
         ),
         pytest.param(
             "https://example.com/hass.png",
-            {notify.ATTR_MESSAGE: "test"},
+            {notify.NotifyServiceArgument.MESSAGE: "test"},
             "icon_url",
             "https://example.com/hass.png",
             id="default_icon_url",
@@ -62,8 +65,10 @@ async def _async_setup_notify_service(
         pytest.param(
             "default_icon",
             {
-                notify.ATTR_MESSAGE: "test",
-                notify.ATTR_DATA: {ATTR_ICON: "https://example.com/hass.png"},
+                notify.NotifyServiceArgument.MESSAGE: "test",
+                notify.NotifyServiceArgument.DATA: {
+                    ATTR_ICON: "https://example.com/hass.png"
+                },
             },
             "icon_url",
             "https://example.com/hass.png",
@@ -104,8 +109,8 @@ async def test_message_as_reply(
         notify.DOMAIN,
         SERVICE_NAME,
         {
-            notify.ATTR_MESSAGE: "test",
-            notify.ATTR_DATA: {ATTR_THREAD_TS: expected_ts},
+            notify.NotifyServiceArgument.MESSAGE: "test",
+            notify.NotifyServiceArgument.DATA: {ATTR_THREAD_TS: expected_ts},
         },
         blocking=True,
     )
@@ -126,8 +131,8 @@ async def test_invalid_message_data(
             notify.DOMAIN,
             SERVICE_NAME,
             {
-                notify.ATTR_MESSAGE: "test",
-                notify.ATTR_DATA: {"not_a_valid_key": "value"},
+                notify.NotifyServiceArgument.MESSAGE: "test",
+                notify.NotifyServiceArgument.DATA: {"not_a_valid_key": "value"},
             },
             blocking=True,
         )

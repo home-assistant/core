@@ -22,10 +22,9 @@ from homeassistant.components.html5.http import ATTR_ACTION
 from homeassistant.components.html5.notify import ATTR_DISMISS, DEFAULT_TTL
 from homeassistant.components.html5.services import HTML5Service, HTML5ServiceArgument
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -522,11 +521,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.my_desktop",
-            ATTR_MESSAGE: "World",
-            ATTR_TITLE: "Hello",
+            TargetKey.ENTITY_ID: "notify.my_desktop",
+            NotifyServiceArgument.MESSAGE: "World",
+            NotifyServiceArgument.TITLE: "Hello",
         },
         blocking=True,
     )
@@ -592,11 +591,11 @@ async def test_send_message_exceptions(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             domain,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
                 ATTR_ENTITY_ID: "notify.my_desktop",
-                ATTR_MESSAGE: "World",
-                ATTR_TITLE: "Hello",
+                NotifyServiceArgument.MESSAGE: "World",
+                NotifyServiceArgument.TITLE: "Hello",
             },
             blocking=True,
         )
@@ -629,11 +628,11 @@ async def test_send_message_save_fails(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.my_desktop",
-                ATTR_MESSAGE: "World",
-                ATTR_TITLE: "Hello",
+                TargetKey.ENTITY_ID: "notify.my_desktop",
+                NotifyServiceArgument.MESSAGE: "World",
+                NotifyServiceArgument.TITLE: "Hello",
             },
             blocking=True,
         )
@@ -665,11 +664,11 @@ async def test_send_message_unavailable(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.my_desktop",
-                ATTR_MESSAGE: "World",
-                ATTR_TITLE: "Hello",
+                TargetKey.ENTITY_ID: "notify.my_desktop",
+                NotifyServiceArgument.MESSAGE: "World",
+                NotifyServiceArgument.TITLE: "Hello",
             },
             blocking=True,
         )

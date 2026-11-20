@@ -35,8 +35,8 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import notify
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.notify import ATTR_MESSAGE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.components.notify import NotifyServiceArgument
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
@@ -72,8 +72,11 @@ async def test_sending_mqtt_commands(
 
     await hass.services.async_call(
         notify.DOMAIN,
-        notify.SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Beer message", ATTR_ENTITY_ID: "notify.test_notify"},
+        notify.NotifyService.SEND_MESSAGE,
+        {
+            NotifyServiceArgument.MESSAGE: "Beer message",
+            TargetKey.ENTITY_ID: "notify.test_notify",
+        },
         blocking=True,
     )
 
@@ -111,8 +114,11 @@ async def test_command_template(
 
     await hass.services.async_call(
         notify.DOMAIN,
-        notify.SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "Beer message", ATTR_ENTITY_ID: "notify.test"},
+        notify.NotifyService.SEND_MESSAGE,
+        {
+            NotifyServiceArgument.MESSAGE: "Beer message",
+            TargetKey.ENTITY_ID: "notify.test",
+        },
         blocking=True,
     )
 
@@ -357,7 +363,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         notify.DOMAIN,
         DEFAULT_CONFIG,
-        notify.SERVICE_SEND_MESSAGE,
+        notify.NotifyService.SEND_MESSAGE,
         command_topic="test-topic",
         command_payload="Milk",
         state_topic=None,
@@ -369,7 +375,7 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            notify.SERVICE_SEND_MESSAGE,
+            notify.NotifyService.SEND_MESSAGE,
             "command_topic",
             {"message": "Beer test"},
             "Beer test",

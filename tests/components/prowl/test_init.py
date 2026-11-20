@@ -107,7 +107,10 @@ async def test_yaml_import(
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     await hass.services.async_call(
-        notify.DOMAIN, DOMAIN, {notify.ATTR_MESSAGE: "Test"}, blocking=True
+        notify.DOMAIN,
+        DOMAIN,
+        {notify.NotifyServiceArgument.MESSAGE: "Test"},
+        blocking=True,
     )
     mock_prowlpy.post.assert_called_once()
 
@@ -127,9 +130,9 @@ async def test_yaml_import_without_name(hass: HomeAssistant) -> None:
     assert entries[0].title == "Prowl"
     assert entries[0].data == {
         CONF_API_KEY: TEST_API_KEY,
-        CONF_LEGACY_SERVICE_NAME: notify.SERVICE_NOTIFY,
+        CONF_LEGACY_SERVICE_NAME: notify.NotifyService.NOTIFY,
     }
-    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+    assert hass.services.has_service(notify.DOMAIN, notify.NotifyService.NOTIFY)
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
@@ -183,7 +186,10 @@ async def test_yaml_import_entry_setup_failure(
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
     await hass.services.async_call(
-        notify.DOMAIN, DOMAIN, {notify.ATTR_MESSAGE: "Test"}, blocking=True
+        notify.DOMAIN,
+        DOMAIN,
+        {notify.NotifyServiceArgument.MESSAGE: "Test"},
+        blocking=True,
     )
     mock_prowlpy.post.assert_called_once()
 
@@ -200,7 +206,7 @@ async def test_config_entry_without_legacy_service(
 
     assert hass.states.get(ENTITY_ID) is not None
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert not hass.services.has_service(notify.DOMAIN, notify.SERVICE_NOTIFY)
+    assert not hass.services.has_service(notify.DOMAIN, notify.NotifyService.NOTIFY)
 
 
 @pytest.mark.parametrize(
@@ -287,7 +293,10 @@ async def test_legacy_service_from_config_entry(
     assert entry.state is ConfigEntryState.LOADED
     assert hass.services.has_service(notify.DOMAIN, service)
     await hass.services.async_call(
-        notify.DOMAIN, service, {notify.ATTR_MESSAGE: "Test"}, blocking=True
+        notify.DOMAIN,
+        service,
+        {notify.NotifyServiceArgument.MESSAGE: "Test"},
+        blocking=True,
     )
     mock_prowlpy.post.assert_called_once()
 

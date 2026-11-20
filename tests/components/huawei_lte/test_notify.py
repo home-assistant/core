@@ -11,9 +11,8 @@ from homeassistant.components.huawei_lte.const import (
     DOMAIN,
 )
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -28,7 +27,7 @@ pytestmark = pytest.mark.parametrize(
     [
         pytest.param(
             {},
-            {ATTR_TARGET: ["+1234567890"]},
+            {NotifyServiceArgument.TARGET: ["+1234567890"]},
             ["+1234567890"],
             id="explicit_target",
         ),
@@ -73,7 +72,7 @@ async def test_send_message(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         DEFAULT_NOTIFY_SERVICE_NAME,
-        {ATTR_MESSAGE: "Hello", **service_data},
+        {NotifyServiceArgument.MESSAGE: "Hello", **service_data},
         blocking=True,
     )
 
@@ -96,7 +95,7 @@ async def test_send_message_error(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             DEFAULT_NOTIFY_SERVICE_NAME,
-            {ATTR_MESSAGE: "Hello", **service_data},
+            {NotifyServiceArgument.MESSAGE: "Hello", **service_data},
             blocking=True,
         )
 

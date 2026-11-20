@@ -6,9 +6,8 @@ from aiowebostv import WebOsTvCommandError
 import pytest
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.components.webostv.const import ATTR_ICON
@@ -34,8 +33,8 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         NOTIFY_DOMAIN,
         SERVICE_NAME,
         {
-            ATTR_MESSAGE: MESSAGE,
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: MESSAGE,
+            NotifyServiceArgument.DATA: {
                 ATTR_ICON: ICON_PATH,
             },
         },
@@ -47,8 +46,8 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         NOTIFY_DOMAIN,
         SERVICE_NAME,
         {
-            ATTR_MESSAGE: MESSAGE,
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: MESSAGE,
+            NotifyServiceArgument.DATA: {
                 "OTHER_DATA": "not_used",
             },
         },
@@ -60,7 +59,7 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         NOTIFY_DOMAIN,
         SERVICE_NAME,
         {
-            ATTR_MESSAGE: "only message, no data",
+            NotifyServiceArgument.MESSAGE: "only message, no data",
         },
         blocking=True,
     )
@@ -112,8 +111,8 @@ async def test_errors(
             NOTIFY_DOMAIN,
             SERVICE_NAME,
             {
-                ATTR_MESSAGE: MESSAGE,
-                ATTR_DATA: {
+                NotifyServiceArgument.MESSAGE: MESSAGE,
+                NotifyServiceArgument.DATA: {
                     ATTR_ICON: ICON_PATH,
                 },
             },

@@ -58,14 +58,14 @@ async def test_send_notification_entity_service(
     await hass.config_entries.async_setup(mock_prowlpy_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE)
+    assert hass.services.has_service(notify.DOMAIN, notify.NotifyService.SEND_MESSAGE)
     await hass.services.async_call(
         notify.DOMAIN,
-        notify.SERVICE_SEND_MESSAGE,
+        notify.NotifyService.SEND_MESSAGE,
         {
             "entity_id": ENTITY_ID,
-            notify.ATTR_MESSAGE: SERVICE_DATA["message"],
-            notify.ATTR_TITLE: SERVICE_DATA["title"],
+            notify.NotifyServiceArgument.MESSAGE: SERVICE_DATA["message"],
+            notify.NotifyServiceArgument.TITLE: SERVICE_DATA["title"],
         },
         blocking=True,
     )
@@ -120,15 +120,15 @@ async def test_fail_send_notification_entity_service(
 
     mock_prowlpy.post.side_effect = prowlpy_side_effect
 
-    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE)
+    assert hass.services.has_service(notify.DOMAIN, notify.NotifyService.SEND_MESSAGE)
     with pytest.raises(raised_exception, match=exception_message):
         await hass.services.async_call(
             notify.DOMAIN,
-            notify.SERVICE_SEND_MESSAGE,
+            notify.NotifyService.SEND_MESSAGE,
             {
                 "entity_id": ENTITY_ID,
-                notify.ATTR_MESSAGE: SERVICE_DATA["message"],
-                notify.ATTR_TITLE: SERVICE_DATA["title"],
+                notify.NotifyServiceArgument.MESSAGE: SERVICE_DATA["message"],
+                notify.NotifyServiceArgument.TITLE: SERVICE_DATA["title"],
             },
             blocking=True,
         )
@@ -232,7 +232,7 @@ async def test_other_exception_send_notification(
     ("service_data", "expected_send_parameters"),
     [
         pytest.param(
-            {notify.ATTR_MESSAGE: "Test Notification"},
+            {notify.NotifyServiceArgument.MESSAGE: "Test Notification"},
             {
                 "application": "Home-Assistant",
                 "event": notify.ATTR_TITLE_DEFAULT,
@@ -244,8 +244,8 @@ async def test_other_exception_send_notification(
         ),
         pytest.param(
             {
-                notify.ATTR_MESSAGE: "Test Notification",
-                notify.ATTR_TITLE: "Test Title",
+                notify.NotifyServiceArgument.MESSAGE: "Test Notification",
+                notify.NotifyServiceArgument.TITLE: "Test Title",
                 "priority": "emergency",
                 "url": "https://www.home-assistant.io",
             },
@@ -259,7 +259,10 @@ async def test_other_exception_send_notification(
             id="all_options",
         ),
         pytest.param(
-            {notify.ATTR_MESSAGE: "Test Notification", "priority": "very_low"},
+            {
+                notify.NotifyServiceArgument.MESSAGE: "Test Notification",
+                "priority": "very_low",
+            },
             {
                 "application": "Home-Assistant",
                 "event": notify.ATTR_TITLE_DEFAULT,
@@ -271,7 +274,7 @@ async def test_other_exception_send_notification(
         ),
         pytest.param(
             {
-                notify.ATTR_MESSAGE: "Test Notification",
+                notify.NotifyServiceArgument.MESSAGE: "Test Notification",
                 "url": "shortcuts://run-shortcut?name=Lights",
             },
             {

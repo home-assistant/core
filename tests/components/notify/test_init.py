@@ -18,18 +18,21 @@ from pytest_homeassistant.common import (
 from homeassistant.components import notify
 from homeassistant.components.notify import (
     DOMAIN,
-    SERVICE_SEND_MESSAGE,
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
+    NotifyService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
-TEST_KWARGS = {notify.ATTR_MESSAGE: "Test message"}
-TEST_KWARGS_TITLE = {notify.ATTR_MESSAGE: "Test message", notify.ATTR_TITLE: "My title"}
+TEST_KWARGS = {notify.NotifyServiceArgument.MESSAGE: "Test message"}
+TEST_KWARGS_TITLE = {
+    notify.NotifyServiceArgument.MESSAGE: "Test message",
+    notify.NotifyServiceArgument.TITLE: "My title",
+}
 
 
 class MockNotifyEntity(MockEntity, NotifyEntity):
@@ -113,7 +116,7 @@ async def test_send_message_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         copy.deepcopy(TEST_KWARGS) | {"entity_id": "notify.test"},
         blocking=True,
     )
@@ -126,8 +129,8 @@ async def test_send_message_service(
     with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             notify.DOMAIN,
-            notify.SERVICE_SEND_MESSAGE,
-            {"entity_id": "notify.test", notify.ATTR_MESSAGE: None},
+            notify.NotifyService.SEND_MESSAGE,
+            {"entity_id": "notify.test", notify.NotifyServiceArgument.MESSAGE: None},
         )
     assert str(exc.value) == "string value is None at 'message'"
     entity.send_message_mock_calls.assert_not_called()
@@ -135,7 +138,9 @@ async def test_send_message_service(
     # Test schema: No message fails
     with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
-            notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, {"entity_id": "notify.test"}
+            notify.DOMAIN,
+            notify.NotifyService.SEND_MESSAGE,
+            {"entity_id": "notify.test"},
         )
     assert str(exc.value) == "required key not provided at 'message'"
     entity.send_message_mock_calls.assert_not_called()
@@ -184,15 +189,15 @@ async def test_send_message_service_with_title(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         copy.deepcopy(TEST_KWARGS_TITLE) | {"entity_id": "notify.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once_with(
-        TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
-        title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+        TEST_KWARGS_TITLE[notify.NotifyServiceArgument.MESSAGE],
+        title=TEST_KWARGS_TITLE[notify.NotifyServiceArgument.TITLE],
     )
 
 
@@ -227,15 +232,15 @@ async def test_send_message_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             copy.deepcopy(TEST_KWARGS_TITLE) | {"entity_id": "notify.test"},
             blocking=True,
         )
     await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once_with(
-        TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
-        title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+        TEST_KWARGS_TITLE[notify.NotifyServiceArgument.MESSAGE],
+        title=TEST_KWARGS_TITLE[notify.NotifyServiceArgument.TITLE],
     )
 
     # assert last notification timestamp has not been updated

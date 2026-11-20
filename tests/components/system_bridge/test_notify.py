@@ -14,12 +14,10 @@ from systembridgeconnector.models.notification import Notification, Notification
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.components.system_bridge.notify import async_get_service
@@ -30,6 +28,7 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -104,11 +103,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.hostname",
-            ATTR_MESSAGE: "World",
-            ATTR_TITLE: "Hello",
+            TargetKey.ENTITY_ID: "notify.hostname",
+            NotifyServiceArgument.MESSAGE: "World",
+            NotifyServiceArgument.TITLE: "Hello",
         },
         blocking=True,
     )
@@ -138,13 +137,13 @@ async def test_legacy_notify_service(
         NOTIFY_DOMAIN,
         "system_bridge_hostname",
         {
-            ATTR_MESSAGE: "World",
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: "World",
+            NotifyServiceArgument.DATA: {
                 "actions": [{"command": "test", "label": "Test"}],
                 "icon": "mdi:test",
                 "image": "https://example.com/image.png",
                 "timeout": 10,
-                ATTR_TITLE: "Hello",
+                NotifyServiceArgument.TITLE: "Hello",
             },
         },
         blocking=True,
@@ -175,7 +174,7 @@ async def test_legacy_notify_service(
     ("data", "notification", "response_data", "response"),
     [
         pytest.param(
-            {ATTR_MESSAGE: "World"},
+            {NotifyServiceArgument.MESSAGE: "World"},
             Notification(title=ATTR_TITLE_DEFAULT, message="World"),
             {"id": 1},
             {"id": 1},
@@ -183,8 +182,8 @@ async def test_legacy_notify_service(
         ),
         pytest.param(
             {
-                ATTR_MESSAGE: "World",
-                ATTR_TITLE: "Hello",
+                NotifyServiceArgument.MESSAGE: "World",
+                NotifyServiceArgument.TITLE: "Hello",
                 "icon": "dialog-information",
                 "urgency": "critical",
                 "duration": {"seconds": 10},
@@ -213,7 +212,7 @@ async def test_legacy_notify_service(
             id="all_fields",
         ),
         pytest.param(
-            {ATTR_MESSAGE: "World", "path": "/home/user/Documents"},
+            {NotifyServiceArgument.MESSAGE: "World", "path": "/home/user/Documents"},
             Notification(
                 title=ATTR_TITLE_DEFAULT,
                 message="World",
@@ -224,7 +223,7 @@ async def test_legacy_notify_service(
             id="path",
         ),
         pytest.param(
-            {ATTR_MESSAGE: "World"},
+            {NotifyServiceArgument.MESSAGE: "World"},
             Notification(title=ATTR_TITLE_DEFAULT, message="World"),
             {"title": ATTR_TITLE_DEFAULT, "message": "World"},
             {"id": None},
@@ -273,28 +272,30 @@ async def test_system_bridge_send_message(
     "data",
     [
         pytest.param({}, id="no_message"),
-        pytest.param({ATTR_MESSAGE: "World", "urgency": "urgent"}, id="urgency"),
+        pytest.param(
+            {NotifyServiceArgument.MESSAGE: "World", "urgency": "urgent"}, id="urgency"
+        ),
         pytest.param(
             {
-                ATTR_MESSAGE: "World",
+                NotifyServiceArgument.MESSAGE: "World",
                 "buttons": [{"id": str(i), "label": str(i)} for i in range(4)],
             },
             id="too_many_buttons",
         ),
         pytest.param(
             {
-                ATTR_MESSAGE: "World",
+                NotifyServiceArgument.MESSAGE: "World",
                 "buttons": [{"id": "default", "label": "Default"}],
             },
             id="default_button_id",
         ),
         pytest.param(
-            {ATTR_MESSAGE: "World", "buttons": [{"id": "yes"}]},
+            {NotifyServiceArgument.MESSAGE: "World", "buttons": [{"id": "yes"}]},
             id="button_without_label",
         ),
         pytest.param(
             {
-                ATTR_MESSAGE: "World",
+                NotifyServiceArgument.MESSAGE: "World",
                 "url": "https://www.home-assistant.io",
                 "path": "/home/user/Documents",
             },
@@ -343,7 +344,10 @@ async def test_system_bridge_send_message_requires_admin(
         await hass.services.async_call(
             DOMAIN,
             "send_message",
-            {ATTR_ENTITY_ID: "notify.hostname", ATTR_MESSAGE: "World"},
+            {
+                TargetKey.ENTITY_ID: "notify.hostname",
+                NotifyServiceArgument.MESSAGE: "World",
+            },
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
@@ -390,11 +394,11 @@ async def test_send_message_exception(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.hostname",
-                ATTR_MESSAGE: "World",
-                ATTR_TITLE: "Hello",
+                TargetKey.ENTITY_ID: "notify.hostname",
+                NotifyServiceArgument.MESSAGE: "World",
+                NotifyServiceArgument.TITLE: "Hello",
             },
             blocking=True,
         )
@@ -426,7 +430,7 @@ async def test_legacy_notify_service_error(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "system_bridge_hostname",
-            {ATTR_MESSAGE: "World"},
+            {NotifyServiceArgument.MESSAGE: "World"},
             blocking=True,
         )
 
@@ -474,7 +478,7 @@ async def test_legacy_notify_service_reload(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         "system_bridge_hostname",
-        {ATTR_MESSAGE: "World"},
+        {NotifyServiceArgument.MESSAGE: "World"},
         blocking=True,
     )
 
@@ -519,7 +523,7 @@ async def test_legacy_notify_service_shared_hostname(
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         "system_bridge_hostname",
-        {ATTR_MESSAGE: "World"},
+        {NotifyServiceArgument.MESSAGE: "World"},
         blocking=True,
     )
     second.runtime_data.websocket_client.send_notification.assert_awaited_once()

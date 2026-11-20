@@ -7,9 +7,8 @@ import pytest
 
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -28,8 +27,8 @@ async def test_notify(hass: HomeAssistant, setup_integration: None) -> None:
             NOTIFY_DOMAIN,
             "netgear_lm1200",
             {
-                ATTR_MESSAGE: MESSAGE,
-                ATTR_TARGET: TARGET,
+                NotifyServiceArgument.MESSAGE: MESSAGE,
+                NotifyServiceArgument.TARGET: TARGET,
             },
             blocking=True,
         )
@@ -50,8 +49,8 @@ async def test_notify_error(hass: HomeAssistant) -> None:
             NOTIFY_DOMAIN,
             "netgear_lm1200",
             {
-                ATTR_MESSAGE: MESSAGE,
-                ATTR_TARGET: TARGET,
+                NotifyServiceArgument.MESSAGE: MESSAGE,
+                NotifyServiceArgument.TARGET: TARGET,
             },
             blocking=True,
         )

@@ -14,12 +14,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -56,7 +55,7 @@ async def test_all_entities(
         ),
         pytest.param(
             "announce",
-            {ATTR_TITLE: "Test Title"},
+            {NotifyServiceArgument.TITLE: "Test Title"},
             "call_alexa_announcement",
             {"display_text": "Test Title"},
             id="announce_with_title",
@@ -84,10 +83,10 @@ async def test_notify_send_message(
     freezer.move_to(now)
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "Test Message",
+            TargetKey.ENTITY_ID: entity_id,
+            NotifyServiceArgument.MESSAGE: "Test Message",
             **service_data,
         },
         blocking=True,

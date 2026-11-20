@@ -44,21 +44,25 @@ async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None
     """Test sending a message."""
     data = {
         "entity_id": "notify.notifier",
-        notify.ATTR_MESSAGE: "Test message",
+        notify.NotifyServiceArgument.MESSAGE: "Test message",
     }
-    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
+    await hass.services.async_call(
+        notify.DOMAIN, notify.NotifyService.SEND_MESSAGE, data
+    )
     await hass.async_block_till_done()
     last_event = events[-1]
-    assert last_event.data == {notify.ATTR_MESSAGE: "Test message"}
+    assert last_event.data == {notify.NotifyServiceArgument.MESSAGE: "Test message"}
 
-    data[notify.ATTR_TITLE] = "My title"
+    data[notify.NotifyServiceArgument.TITLE] = "My title"
     # Test with Title
-    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
+    await hass.services.async_call(
+        notify.DOMAIN, notify.NotifyService.SEND_MESSAGE, data
+    )
     await hass.async_block_till_done()
     last_event = events[-1]
     assert last_event.data == {
-        notify.ATTR_MESSAGE: "Test message",
-        notify.ATTR_TITLE: "My title",
+        notify.NotifyServiceArgument.MESSAGE: "Test message",
+        notify.NotifyServiceArgument.TITLE: "My title",
     }
 
 

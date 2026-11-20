@@ -320,7 +320,7 @@ async def test_sending_non_templated_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_MESSAGE] == NAME
+    assert last_event.data[notify.NotifyServiceArgument.MESSAGE] == NAME
 
 
 async def test_sending_templated_notification(
@@ -335,7 +335,7 @@ async def test_sending_templated_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
+    assert last_event.data[notify.NotifyServiceArgument.MESSAGE] == TEST_ENTITY
 
 
 async def test_sending_templated_done_notification(
@@ -352,7 +352,7 @@ async def test_sending_templated_done_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 2
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
+    assert last_event.data[notify.NotifyServiceArgument.MESSAGE] == TEST_ENTITY
 
 
 async def test_sending_titled_notification(
@@ -367,7 +367,7 @@ async def test_sending_titled_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_TITLE] == TEST_TITLE
+    assert last_event.data[notify.NotifyServiceArgument.TITLE] == TEST_TITLE
 
 
 async def test_sending_data_notification(
@@ -382,7 +382,7 @@ async def test_sending_data_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
-    assert last_event.data[notify.ATTR_DATA] == TEST_DATA
+    assert last_event.data[notify.NotifyServiceArgument.DATA] == TEST_DATA
 
 
 async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:

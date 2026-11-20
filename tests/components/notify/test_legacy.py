@@ -640,7 +640,9 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
     send_message_mock = await help_setup_notify(hass, tmp_path)
     with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
-            notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
+            notify.DOMAIN,
+            notify.NotifyService.NOTIFY,
+            {notify.NotifyServiceArgument.MESSAGE: None},
         )
     assert str(exc.value) == "string value is None at 'message'"
     send_message_mock.assert_not_called()
@@ -652,11 +654,11 @@ async def test_method_forwards_correct_data(
     """Test that all data from the service gets forwarded to service."""
     send_message_mock = await help_setup_notify(hass, tmp_path)
     data = {
-        notify.ATTR_MESSAGE: "my message",
-        notify.ATTR_TITLE: "my title",
-        notify.ATTR_DATA: {"hello": "world"},
+        notify.NotifyServiceArgument.MESSAGE: "my message",
+        notify.NotifyServiceArgument.TITLE: "my title",
+        notify.NotifyServiceArgument.DATA: {"hello": "world"},
     }
-    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_NOTIFY, data)
+    await hass.services.async_call(notify.DOMAIN, notify.NotifyService.NOTIFY, data)
     await hass.async_block_till_done()
     send_message_mock.assert_called_once_with(
         "my message", {"title": "my title", "data": {"hello": "world"}}

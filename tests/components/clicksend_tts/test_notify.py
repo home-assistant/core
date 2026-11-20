@@ -87,7 +87,7 @@ async def test_send_simple_message(hass: HomeAssistant) -> None:
 
         # Sending message
         data = {
-            notify.ATTR_MESSAGE: TEST_MESSAGE,
+            notify.NotifyServiceArgument.MESSAGE: TEST_MESSAGE,
         }
         await hass.services.async_call(
             notify.DOMAIN, cs_tts.DEFAULT_NAME, data, blocking=True

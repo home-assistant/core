@@ -3,9 +3,8 @@
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.components.notify_events.notify import (
     ATTR_LEVEL,
@@ -23,8 +22,8 @@ async def test_send_msg(hass: HomeAssistant) -> None:
         NOTIFY_DOMAIN,
         "events",
         {
-            ATTR_MESSAGE: "message content",
-            ATTR_DATA: {
+            NotifyServiceArgument.MESSAGE: "message content",
+            NotifyServiceArgument.DATA: {
                 ATTR_TOKEN: "XYZ",
                 ATTR_LEVEL: "warning",
                 ATTR_PRIORITY: "high",
@@ -38,7 +37,7 @@ async def test_send_msg(hass: HomeAssistant) -> None:
 
     assert call.domain == NOTIFY_DOMAIN
     assert call.service == "events"
-    assert call.data.get(ATTR_MESSAGE) == "message content"
-    assert call.data.get(ATTR_DATA).get(ATTR_TOKEN) == "XYZ"
-    assert call.data.get(ATTR_DATA).get(ATTR_LEVEL) == "warning"
-    assert call.data.get(ATTR_DATA).get(ATTR_PRIORITY) == "high"
+    assert call.data.get(NotifyServiceArgument.MESSAGE) == "message content"
+    assert call.data.get(NotifyServiceArgument.DATA).get(ATTR_TOKEN) == "XYZ"
+    assert call.data.get(NotifyServiceArgument.DATA).get(ATTR_LEVEL) == "warning"
+    assert call.data.get(NotifyServiceArgument.DATA).get(ATTR_PRIORITY) == "high"

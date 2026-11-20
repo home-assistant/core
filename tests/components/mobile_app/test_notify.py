@@ -23,13 +23,12 @@ from homeassistant.components import mobile_app
 from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
 from homeassistant.components.mobile_app.push_notification import PUSH_CONFIRM_TIMEOUT
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -516,11 +515,16 @@ async def test_notify_ws_not_confirming(
     ("service", "service_data"),
     [
         pytest.param(
-            "mobile_app_test", {ATTR_MESSAGE: "Hello world"}, id="notify_service"
+            "mobile_app_test",
+            {NotifyServiceArgument.MESSAGE: "Hello world"},
+            id="notify_service",
         ),
         pytest.param(
-            SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world"},
+            NotifyService.SEND_MESSAGE,
+            {
+                TargetKey.ENTITY_ID: "notify.test",
+                NotifyServiceArgument.MESSAGE: "Hello world",
+            },
             id="notify_entity",
         ),
     ],
@@ -596,7 +600,7 @@ async def test_notify_target_while_registering_again(
             await hass.services.async_call(
                 NOTIFY_DOMAIN,
                 "mobile_app_test",
-                {ATTR_MESSAGE: "Hello world"},
+                {NotifyServiceArgument.MESSAGE: "Hello world"},
                 blocking=True,
             )
 
@@ -883,11 +887,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.test",
-            ATTR_MESSAGE: "Hello world",
-            ATTR_TITLE: "test",
+            TargetKey.ENTITY_ID: "notify.test",
+            NotifyServiceArgument.MESSAGE: "Hello world",
+            NotifyServiceArgument.TITLE: "test",
         },
         blocking=True,
     )
@@ -931,11 +935,11 @@ async def test_send_message_local_push(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.websocket_push_name",
-            ATTR_MESSAGE: "Hello world",
-            ATTR_TITLE: "test",
+            TargetKey.ENTITY_ID: "notify.websocket_push_name",
+            NotifyServiceArgument.MESSAGE: "Hello world",
+            NotifyServiceArgument.TITLE: "test",
         },
         blocking=True,
     )
@@ -1007,11 +1011,11 @@ async def test_send_message_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.test",
-                ATTR_MESSAGE: "Hello world",
-                ATTR_TITLE: "test",
+                TargetKey.ENTITY_ID: "notify.test",
+                NotifyServiceArgument.MESSAGE: "Hello world",
+                NotifyServiceArgument.TITLE: "test",
             },
             blocking=True,
         )
@@ -1027,11 +1031,11 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.websocket_push_name",
-                ATTR_MESSAGE: "Hello world",
-                ATTR_TITLE: "test",
+                TargetKey.ENTITY_ID: "notify.websocket_push_name",
+                NotifyServiceArgument.MESSAGE: "Hello world",
+                NotifyServiceArgument.TITLE: "test",
             },
             blocking=True,
         )
