@@ -18,6 +18,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_PORT, TargetK
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import init_integration
 from .const import PORT_TCP
@@ -56,6 +57,32 @@ async def test_setup_authentication_failed(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("controller")
+async def test_setup_manager_forwards_session_and_token(
+    hass: HomeAssistant,
+    controller: MagicMock,
+) -> None:
+    """Test manager entries pass the HA session and token into velbus-aio."""
+    manager_dsn = "manager://127.0.0.1:4201"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PORT: manager_dsn,
+            CONF_ACCESS_TOKEN: "secret",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    controller.assert_called_once()
+    kwargs = controller.call_args.kwargs
+    assert kwargs["dsn"] == manager_dsn
+    assert kwargs["access_token"] == "secret"
+    assert kwargs["session"] is async_get_clientsession(hass)
 
 
 async def test_setup_start_failed(

@@ -264,6 +264,41 @@ async def test_reauth_manager(hass: HomeAssistant) -> None:
     assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
 
 
+@pytest.mark.usefixtures("controller")
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param({CONF_ACCESS_TOKEN: ""}, id="empty_token"),
+        pytest.param({}, id="omitted_token"),
+    ],
+)
+async def test_reauth_manager_clears_access_token(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+) -> None:
+    """Reauth can remove a stored Manager token while keeping connection data."""
+    manager_dsn = "manager://127.0.0.1:4201"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: manager_dsn,
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.data[CONF_PORT] == manager_dsn
+
+
 @pytest.mark.usefixtures("controller_connection_failed")
 async def test_reauth_manager_cannot_connect(hass: HomeAssistant) -> None:
     """Test reauth reports connection errors on the base field."""
