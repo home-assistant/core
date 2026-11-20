@@ -18,12 +18,9 @@ ENTITY_IDS = (
     "sensor.connectedspa_ddeeff_sensor_life",
 )
 
-POWER_PRIMARY_ENTITY_IDS = (
+POWER_ENTITY_IDS = (
     "sensor.connectedspa_ddeeff_total_apparent_power",
     "sensor.connectedspa_ddeeff_heater_power",
-)
-
-POWER_DIAGNOSTIC_ENTITY_IDS = (
     "sensor.connectedspa_ddeeff_small_loads_apparent_power",
     "sensor.connectedspa_ddeeff_jets_1_2_and_blower_apparent_power",
     "sensor.connectedspa_ddeeff_heater_current",
@@ -37,8 +34,7 @@ JET3_POWER_ENTITY_IDS = (
 )
 
 ALL_POWER_ENTITY_IDS = (
-    *POWER_PRIMARY_ENTITY_IDS,
-    *POWER_DIAGNOSTIC_ENTITY_IDS,
+    *POWER_ENTITY_IDS,
     *JET3_POWER_ENTITY_IDS,
 )
 
@@ -108,33 +104,6 @@ async def test_freshwater_iq_sensors_absent_without_iq(
 
 
 @pytest.mark.usefixtures("mock_hotspring")
-async def test_power_sensors_default_enabled_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    device_fixture: Spa,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test primary power sensors are enabled and per-circuit sensors are disabled."""
-    device_fixture.jets[3] = Jet(
-        jet_id=3, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0
-    )
-    _enable_power_metrics(device_fixture)
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
-
-    for entity_id in POWER_PRIMARY_ENTITY_IDS:
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by is None
-        assert hass.states.get(entity_id) is not None
-
-    for entity_id in (*POWER_DIAGNOSTIC_ENTITY_IDS, *JET3_POWER_ENTITY_IDS):
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        assert hass.states.get(entity_id) is None
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hotspring")
 async def test_power_sensors_absent_when_unsupported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -144,10 +113,10 @@ async def test_power_sensors_absent_when_unsupported(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
     for entity_id in ALL_POWER_ENTITY_IDS:
-        assert entity_registry.async_get(entity_id) is None
+        assert not entity_registry.async_is_registered(entity_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hotspring")
+@pytest.mark.usefixtures("mock_hotspring")
 @pytest.mark.parametrize(
     "extra_jets",
     [
@@ -171,6 +140,6 @@ async def test_jet3_power_sensors_absent_without_jet3(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
     for entity_id in JET3_POWER_ENTITY_IDS:
-        assert entity_registry.async_get(entity_id) is None
-    for entity_id in (*POWER_PRIMARY_ENTITY_IDS, *POWER_DIAGNOSTIC_ENTITY_IDS):
-        assert entity_registry.async_get(entity_id) is not None
+        assert not entity_registry.async_is_registered(entity_id)
+    for entity_id in POWER_ENTITY_IDS:
+        assert entity_registry.async_is_registered(entity_id)
