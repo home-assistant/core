@@ -312,7 +312,9 @@ class SearchTool(Tool):
         llm_context: LLMContext,
     ) -> ToolResult:
         """Return the functions that match the query best."""
-        words = set(_words(self.parameters(tool_input.tool_args)["query"]))
+        query = self.parameters(tool_input.tool_args)["query"]
+        words = set(_words(query))
+        names = set(re.findall(r"\w+", query))
         scored = []
         for function in self._functions:
             name_words = set(_words(function.name))
@@ -321,9 +323,9 @@ class SearchTool(Tool):
             )
             # A word in the name says more than a word in the description.
             if score := 3 * len(words & name_words) + len(words & other_words):
-                # A query that has the complete name must find the function,
-                # also when many functions share words of the name.
-                if name_words <= words:
+                # A query that has the name must find the function, also when
+                # many functions share the words of the name.
+                if function.name in names:
                     score += EXACT_NAME_SCORE
                 scored.append((score, function))
         scored.sort(key=lambda item: item[0], reverse=True)

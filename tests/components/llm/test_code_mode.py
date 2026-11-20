@@ -248,6 +248,8 @@ async def test_search_finds_exact_name(
 
     tools: list[llm.Tool] = [
         *(NamedTool(f"test__get_state_{index}") for index in range(20)),
+        # Names with the same words as the name in the query.
+        *(NamedTool(f"test{'_' * count}state_get") for count in range(3, 15)),
         NamedTool("test__get_state"),
     ]
     api_instance = code_mode_api.async_create_api_instance(
@@ -260,7 +262,7 @@ async def test_search_finds_exact_name(
         conversation_id,
     )
 
-    functions = await _search(api_instance, "test__get_state")
+    functions = await _search(api_instance, "call test__get_state now")
 
     assert len(functions) == code_mode_api.SEARCH_LIMIT
     assert functions[0].startswith("async def test__get_state() -> dict:")
