@@ -6,7 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import validate_projector
@@ -23,9 +23,6 @@ DATA_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Required(CONF_HOST): str,
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        probatio.Required(CONF_NAME, default=DOMAIN): str,
     }
 )
 
@@ -69,7 +66,7 @@ class EpsonConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 user_input.pop(CONF_PORT, None)
                 return self.async_create_entry(
-                    title=user_input.pop(CONF_NAME), data=user_input
+                    title=f"Epson {serial_no}", data=user_input
                 )
             finally:
                 if projector:

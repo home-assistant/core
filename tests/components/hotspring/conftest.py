@@ -19,6 +19,7 @@ from hotspring import (
     LightWheelMode,
     LightZone,
     LogoLight,
+    PowerMetrics,
     Spa,
     SpaBrand,
     SpaFailureState,
@@ -90,8 +91,6 @@ def device_fixture() -> Spa:
         heater_lock=False,
         heatpump_installed=False,
         heating_mode=HeatingMode.HEAT_SAVER,
-        heater_current=5.0,
-        heater_on_seconds=3600,
         set_temperature=104.0,
         current_temperature=102.0,
         temperature_unit=TemperatureUnit.FAHRENHEIT,
@@ -144,24 +143,14 @@ def device_fixture() -> Spa:
         heater_error="0",
         power_frequency="60",
         pressure_switch_status="0",
-        l1_n_volts=120.0,
-        l2_n_volts=120.0,
-        heater_volts=240.0,
-        jet3_volts=0.0,
-        jet1_jet2_blower_power="0",
-        small_loads_power="0",
-        heater_power="0",
-        jet3_power="0",
+        jet3_volts=0,
     )
     spa.test_metrics = SpaTestData(
         heater_test_status="off",
         temp_offset=0.0,
         vsense_cal=0.0,
-        jet1_jet2_blower_current=0.0,
-        small_loads_current=0.0,
-        heater_current=0.0,
-        jet3_current=0.0,
     )
+    spa.power = PowerMetrics()
     return spa
 
 

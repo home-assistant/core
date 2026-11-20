@@ -129,7 +129,8 @@ class IrmKmiWeather(
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.coordinator.data.daily_forecast
+        forecast: list[Forecast] = list(self.coordinator.data.daily_forecast)
+        return forecast
 
     @callback
     @override
@@ -145,7 +146,7 @@ class IrmKmiWeather(
 
     def daily_forecast(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        data: list[Forecast] = self.coordinator.data.daily_forecast
+        data: list[Forecast] = list(self.coordinator.data.daily_forecast)
 
         # The data in daily_forecast might contain nighttime forecast.
         # The following handles the lowest temperature

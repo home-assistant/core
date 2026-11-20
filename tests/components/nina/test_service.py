@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.components.nina.services import NinaService
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform, setup_single_platform
@@ -41,7 +41,7 @@ async def test_service_get_details(
     result = await hass.services.async_call(
         DOMAIN,
         NinaService.GET_DETAILS,
-        {ATTR_ENTITY_ID: target_entity_id},
+        {TargetKey.ENTITY_ID: target_entity_id},
         blocking=True,
         return_response=True,
     )
@@ -59,7 +59,7 @@ async def test_service_get_details_no_warning(
     result = await hass.services.async_call(
         DOMAIN,
         NinaService.GET_DETAILS,
-        {ATTR_ENTITY_ID: target_entity_id},
+        {TargetKey.ENTITY_ID: target_entity_id},
         blocking=True,
         return_response=True,
     )

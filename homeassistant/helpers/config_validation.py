@@ -24,11 +24,6 @@ from uuid import UUID
 import probatio
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_ACTION,
     CONF_ALIAS,
@@ -90,6 +85,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     WEEKDAYS,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -962,6 +958,7 @@ def _deprecated_or_removed(
     default: Any | None,
     raise_if_present: bool,
     option_removed: bool,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists) or fail.
 
@@ -985,6 +982,10 @@ def _deprecated_or_removed(
             else:
                 level = logging.WARNING
                 option_status = "is deprecated"
+                if breaks_in_ha_version:
+                    option_status += (
+                        f" and will be removed in Home Assistant {breaks_in_ha_version}"
+                    )
 
             try:
                 near = (
@@ -1031,12 +1032,15 @@ def deprecated(
     replacement_key: str | None = None,
     default: Any | None = None,
     raise_if_present: bool | None = False,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
           or raises an exception
+        - Mentions the version in which the key will be removed, if
+          breaks_in_ha_version is provided
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -1049,6 +1053,7 @@ def deprecated(
         default=default,
         raise_if_present=raise_if_present or False,
         option_removed=False,
+        breaks_in_ha_version=breaks_in_ha_version,
     )
 
 
@@ -1228,11 +1233,24 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                     "configuration."
                 ),
                 domain,
-                config_domain,
+                _describe_config_keys(config_domain),
             )
         return config
 
     return validator
+
+
+def _describe_config_keys(config: Any) -> str:
+    """Describe a configuration section by its key names only.
+
+    The values are never included, since they may be credentials.
+    """
+    items = config if isinstance(config, list) else [config]
+    if keys := sorted(
+        {str(key) for item in items if isinstance(item, dict) for key in item}
+    ):
+        return ", ".join(keys)
+    return f"a value of type {type(config).__name__}"
 
 
 def _no_yaml_config_schema(
@@ -1319,19 +1337,21 @@ PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 # The keys which select what a target refers to. A target may additionally
 # contain an exclude block, which uses the same keys.
 TARGET_ID_KEYS = (
-    ATTR_ENTITY_ID,
-    ATTR_DEVICE_ID,
-    ATTR_AREA_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
+    TargetKey.ENTITY_ID,
+    TargetKey.DEVICE_ID,
+    TargetKey.AREA_ID,
+    TargetKey.FLOOR_ID,
+    TargetKey.LABEL_ID,
 )
 
 TARGET_ID_FIELDS: VolDictType = {
-    probatio.Optional(ATTR_ENTITY_ID): probatio.All(ensure_list, [strict_entity_id]),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.All(
+        ensure_list, [strict_entity_id]
+    ),
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.AREA_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.LABEL_ID): probatio.All(ensure_list, [str]),
 }
 
 TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
@@ -1353,20 +1373,20 @@ def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
 
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
-    probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-    probatio.Optional(ATTR_DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids,
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
@@ -1377,7 +1397,7 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # Same as ENTITY_SERVICE_FIELDS but supports specifying entity
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
-    probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids_or_uuids,
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1388,35 +1408,35 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     #
     # The schema supports templates as it is meant to be used in the initial validation
     # before templates are automatically rendered by the core logic.
-    probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
         comp_entity_ids_or_uuids,
         dynamic_template,
         probatio.All(list, template_complex),
     ),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(
         {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
-                TARGET_ID_FIELDS[ATTR_ENTITY_ID],
+            probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
+                TARGET_ID_FIELDS[TargetKey.ENTITY_ID],
                 dynamic_template,
                 probatio.All(list, template_complex),
             ),
@@ -1425,7 +1445,12 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
                     dynamic_template,
                     probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
                 )
-                for key in (ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+                for key in (
+                    TargetKey.DEVICE_ID,
+                    TargetKey.AREA_ID,
+                    TargetKey.FLOOR_ID,
+                    TargetKey.LABEL_ID,
+                )
             },
         }
     ),

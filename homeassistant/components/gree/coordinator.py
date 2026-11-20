@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-from greeclimate.device import Device, DeviceInfo
+from greeclimate.air_conditioner import AirConditionerDevice
+from greeclimate.device import DeviceInfo
 from greeclimate.discovery import Discovery, Listener
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
@@ -46,7 +47,10 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: GreeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: GreeConfigEntry, device: Device
+        self,
+        hass: HomeAssistant,
+        config_entry: GreeConfigEntry,
+        device: AirConditionerDevice,
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
@@ -159,7 +163,7 @@ class DiscoveryService(Listener):
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
 
-        device = Device(device_info)
+        device = AirConditionerDevice(device_info)
         try:
             await device.bind()
         except DeviceNotBoundError:

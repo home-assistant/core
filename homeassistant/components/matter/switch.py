@@ -610,4 +610,16 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="HeimanIndicatorEnable",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(custom_clusters.HeimanCluster.Attributes.IndicatorEnable,),
+    ),
 ]
