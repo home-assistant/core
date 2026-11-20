@@ -4,7 +4,7 @@ import datetime as dt
 from http import HTTPStatus
 from unittest.mock import patch
 
-from buienradar.constants import MESSAGE, SUCCESS
+from buienradar.constants import DATA, MESSAGE, SUCCESS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -14,6 +14,8 @@ from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+
+from . import TEST_DATA
 
 TEST_LATITUDE = 51.5
 TEST_LONGITUDE = 5.5
@@ -72,23 +74,24 @@ async def test_unparsable_data_is_quiet_during_the_midnight_hour(
 
     update = dt_util.parse_datetime(update_at)
     assert update is not None
-    # A failed update reschedules itself two minutes later, which is the update
-    # the assertion below is about.
-    freezer.move_to(update - dt.timedelta(minutes=2))
+    # A successful update schedules the next one ten minutes later, which is the
+    # update the assertion below is about.
+    freezer.move_to(update - dt.timedelta(minutes=10))
 
     entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
     entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.buienradar.util.parse_data",
-        return_value={SUCCESS: False, MESSAGE: "no data"},
-    ):
+        return_value={SUCCESS: True, MESSAGE: None, DATA: TEST_DATA},
+    ) as mock_parse_data:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+        mock_parse_data.return_value = {SUCCESS: False, MESSAGE: "no data"}
         caplog.clear()
         freezer.move_to(update)
         async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (WARNING in caplog.text) is expect_warning
