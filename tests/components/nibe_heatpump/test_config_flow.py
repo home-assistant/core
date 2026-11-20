@@ -327,3 +327,43 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("connection_type", "data", "existing_data", "coil"),
+    [
+        (
+            "nibegw",
+            MOCK_FLOW_NIBEGW_USERDATA,
+            {**MOCK_FLOW_NIBEGW_USERDATA, "connection_type": "nibegw"},
+            48852,
+        ),
+        (
+            "modbus",
+            MOCK_FLOW_MODBUS_USERDATA,
+            {**MOCK_FLOW_MODBUS_USERDATA, "connection_type": "modbus"},
+            40022,
+        ),
+    ],
+)
+async def test_already_configured_while_connecting(
+    hass: HomeAssistant,
+    mock_connection: Mock,
+    coils: dict[int, Any],
+    connection_type: str,
+    data: dict[str, Any],
+    existing_data: dict[str, Any],
+    coil: int,
+) -> None:
+    """Test that a pump added by another flow during validation isn't added twice."""
+    coils[coil] = 1
+    result = await _get_connection_form(hass, connection_type)
+
+    async def _added_by_another_flow() -> None:
+        MockConfigEntry(domain=DOMAIN, data=existing_data).add_to_hass(hass)
+
+    mock_connection.verify_connectivity = AsyncMock(side_effect=_added_by_another_flow)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
