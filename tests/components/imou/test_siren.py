@@ -8,16 +8,19 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntityFeature
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenEntityFeature,
+    SirenService,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     EntityStateAttribute,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -67,7 +70,7 @@ async def test_siren_service_calls_vendor_button(
     await hass.services.async_call(
         SIREN_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "siren.device_1_siren"},
+        {TargetKey.ENTITY_ID: "siren.device_1_siren"},
         blocking=True,
     )
 
@@ -93,8 +96,8 @@ async def test_siren_service_propagates_api_error(
     with pytest.raises(HomeAssistantError, match="Imou rejected the siren change"):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "siren.device_1_siren"},
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: "siren.device_1_siren"},
             blocking=True,
         )
 
@@ -117,8 +120,8 @@ async def test_siren_invalid_auth_starts_reauth(
     ):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "siren.device_1_siren"},
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: "siren.device_1_siren"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -164,7 +167,7 @@ async def test_siren_partial_controls(
     await hass.services.async_call(
         SIREN_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {TargetKey.ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
@@ -186,8 +189,8 @@ async def test_siren_toggle_alternates_start_and_stop(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -201,8 +204,8 @@ async def test_siren_toggle_alternates_start_and_stop(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
