@@ -45,11 +45,6 @@ def scalar_platform(
     """Return the platform that exposes a scalar characteristic, if any."""
     values = characteristic.values or []
     if characteristic.settable and set(values) == {"on", "off"}:
-        if (
-            name == "econoMode"
-            and management_point_type in CLIMATE_CONTROL_MANAGEMENT_POINT_TYPES
-        ):
-            return None
         return Platform.SWITCH if name in SWITCH_KEYS else None
     if name in BINARY_SENSOR_KEYS and (
         characteristic.values is None
@@ -75,6 +70,12 @@ def scalar_platform_for_point(
         characteristic = point.scalar_characteristic(name)
     if characteristic is None:
         return None
+    # Econo mode is already exposed as a preset only on climate points that
+    # also produce a climate entity; otherwise retain the scalar switch.
+    if name == "econoMode" and point.management_point_type == "climateControl":
+        climate_control = point.climate_control
+        if climate_control is not None and climate_control.setpoint_types:
+            return None
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.
     if name in {"onOffMode", "powerfulMode"} and (

@@ -326,7 +326,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
         setpoint = self._get_setpoint()
-        if setpoint is None or setpoint.step_value is None:
+        if setpoint is None:
+            return None
+        if setpoint.step_value is None:
             return super().target_temperature_step
         return setpoint.step_value
 

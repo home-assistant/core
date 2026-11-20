@@ -90,6 +90,26 @@ async def _async_setup_climate_service_fixture(
     return entity_id, gateway_id, management_point, coordinator
 
 
+async def test_target_temperature_step_clears_without_current_setpoint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Clear a cached step when the current operation mode has no setpoint."""
+    await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
+    coordinator = config_entry.runtime_data
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinClimate)
+    point = coordinator.data[entity._device_id].management_point(entity._embedded_id)
+    assert point is not None and point.operation_mode is not None
+    assert entity.target_temperature_step is not None
+
+    point.operation_mode.value = "fanOnly"
+    coordinator.async_update_listeners()
+
+    assert entity.target_temperature_step is None
+
+
 def _make_vertical_swing_read_only(point: SimpleNamespace) -> None:
     """Make vertical swing unavailable for the climate service test."""
     fan_operation = point.fan_operation()
@@ -1913,9 +1933,8 @@ async def test_climate_platform_services_and_management_points(
         control.current_temperature = lambda _target: None
         control.sensory_data = lambda _target: None
         error_state = SimpleNamespace(value=False, settable=False, values=None)
-        control.characteristic = lambda name: (
-            error_state if name == "isInErrorState" else None
-        )
+        characteristics = {"isInErrorState": error_state}
+        control.characteristic = characteristics.get
         control.scalar_characteristics = lambda: {"isInErrorState": error_state}
         control.scalar_characteristic = lambda _name: error_state
         return control

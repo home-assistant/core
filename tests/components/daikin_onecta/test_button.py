@@ -15,6 +15,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockOnectaClient
 from .platform_helpers import _async_fire_coordinator_update
@@ -48,7 +49,7 @@ async def test_refresh_button_reuses_in_flight_poll(
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not spend another request when a scheduled poll is already running."""
+    """Reuse a scheduled poll even if a write starts cooldown meanwhile."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
     mock_onecta_client.get_gateway_devices.reset_mock()
@@ -75,12 +76,13 @@ async def test_refresh_button_reuses_in_flight_poll(
         )
     )
     await asyncio.sleep(0)
+    coordinator._last_patch_call = dt_util.utcnow()
     finish_request.set()
     await button_task
     await hass.async_block_till_done()
 
     mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
-    assert coordinator.update_interval == coordinator._determine_update_interval()
+    assert coordinator.last_update_success
 
 
 async def test_refresh_button_reports_failed_refresh(

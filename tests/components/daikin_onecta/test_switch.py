@@ -22,6 +22,8 @@ from homeassistant.exceptions import ServiceValidationError
 from .platform_helpers import _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture
 
+TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID = "switch.test_living_room_streamer_mode"
+
 
 async def test_switch_service_updates_cached_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
@@ -35,11 +37,11 @@ async def test_switch_service_updates_cached_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SWITCH_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_living_room_streamer_mode"},
+        {ATTR_ENTITY_ID: TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID},
         blocking=True,
     )
 
-    state = hass.states.get("switch.test_living_room_streamer_mode")
+    state = hass.states.get(TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID)
     assert state is not None
     assert state.state == "off"
 
@@ -94,7 +96,7 @@ async def test_switch_rejects_unknown_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.test_living_room_streamer_mode"},
+            {ATTR_ENTITY_ID: TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID},
             blocking=True,
         )
 

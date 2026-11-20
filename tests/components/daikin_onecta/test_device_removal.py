@@ -22,7 +22,16 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 
 from .conftest import MockOnectaClient
+from .platform_helpers import (
+    ALTHERMA_CLIMATE_ENTITY_ID,
+    ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID,
+)
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+
+
+def _gateway_id(device_entry: dr.DeviceEntry) -> str:
+    """Return the Daikin gateway identifier from a registry device."""
+    return dict(device_entry.identifiers)[DOMAIN]
 
 
 async def _async_fire_coordinator_update(
@@ -131,11 +140,7 @@ async def test_remove_gateway_absent_from_cached_devices(
 ) -> None:
     """Sites can confirm removal when the gateway is absent from cached data."""
     coordinator = config_entry.runtime_data
-    gateway_id = next(
-        identifier
-        for domain, identifier in missing_gateway.identifiers
-        if domain == DOMAIN
-    )
+    gateway_id = _gateway_id(missing_gateway)
     coordinator.data.pop(gateway_id)
     coordinator.async_get_sites = AsyncMock(
         return_value=[Site(id="site", gateway_device_ids=[])]
@@ -350,11 +355,7 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
 ) -> None:
     """Do not remove a child until Sites confirms its missing parent is gone."""
     coordinator = config_entry.runtime_data
-    gateway_id = next(
-        identifier
-        for domain, identifier in missing_gateway.identifiers
-        if domain == DOMAIN
-    )
+    gateway_id = _gateway_id(missing_gateway)
     management_point = next(
         point
         for point in coordinator.data[gateway_id].device.management_points
@@ -381,11 +382,7 @@ async def test_remove_child_of_missing_gateway_keeps_gateway_in_coordinator(
 ) -> None:
     """Keep the unavailable gateway wrapper so its entities can recover."""
     coordinator = config_entry.runtime_data
-    gateway_id = next(
-        identifier
-        for domain, identifier in missing_gateway.identifiers
-        if domain == DOMAIN
-    )
+    gateway_id = _gateway_id(missing_gateway)
     management_point = next(
         point
         for point in coordinator.data[gateway_id].device.management_points
@@ -415,11 +412,7 @@ async def test_entities_recover_when_removed_gateway_returns_after_child_removal
 ) -> None:
     """Existing entities follow the retained gateway wrapper after it returns."""
     coordinator = config_entry.runtime_data
-    gateway_id = next(
-        identifier
-        for domain, identifier in missing_gateway.identifiers
-        if domain == DOMAIN
-    )
+    gateway_id = _gateway_id(missing_gateway)
     gateway_device = coordinator.data[gateway_id]
     point = next(
         point
@@ -436,8 +429,8 @@ async def test_entities_recover_when_removed_gateway_returns_after_child_removal
 
     assert await async_remove_config_entry_device(hass, config_entry, child)
     assert coordinator.data[gateway_id] is gateway_device
-    climate_state = hass.states.get("climate.altherma_room_temperature")
-    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    climate_state = hass.states.get(ALTHERMA_CLIMATE_ENTITY_ID)
+    sensor_state = hass.states.get(ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID)
     assert climate_state is not None and climate_state.state == "unavailable"
     assert sensor_state is not None and sensor_state.state == "unavailable"
 
@@ -447,8 +440,8 @@ async def test_entities_recover_when_removed_gateway_returns_after_child_removal
     await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert coordinator.data[gateway_id] is gateway_device
-    climate_state = hass.states.get("climate.altherma_room_temperature")
-    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    climate_state = hass.states.get(ALTHERMA_CLIMATE_ENTITY_ID)
+    sensor_state = hass.states.get(ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID)
     assert climate_state is not None and climate_state.state != "unavailable"
     assert sensor_state is not None and sensor_state.state != "unavailable"
 
@@ -462,11 +455,7 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
 ) -> None:
     """Existing dynamic entities recover when a removed gateway returns."""
     coordinator = config_entry.runtime_data
-    gateway_id = next(
-        identifier
-        for domain, identifier in missing_gateway.identifiers
-        if domain == DOMAIN
-    )
+    gateway_id = _gateway_id(missing_gateway)
     original_device = coordinator.data[gateway_id]
     coordinator.async_get_sites = AsyncMock(
         return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
@@ -484,8 +473,8 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
     assert coordinator.data[gateway_id].present_in_cloud
     assert coordinator.data[gateway_id] is original_device
     assert config_entry.runtime_data is coordinator
-    climate_state = hass.states.get("climate.altherma_room_temperature")
-    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    climate_state = hass.states.get(ALTHERMA_CLIMATE_ENTITY_ID)
+    sensor_state = hass.states.get(ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID)
     assert climate_state is not None and climate_state.state != "unavailable"
     assert sensor_state is not None and sensor_state.state != "unavailable"
     schedule_reload.assert_not_called()

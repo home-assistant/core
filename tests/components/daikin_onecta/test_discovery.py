@@ -59,8 +59,8 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             Characteristic(value="on", settable=True, values=["on", "off"]),
             "climateControl",
             False,
-            None,
-            id="econo-mode-is-controlled-by-climate-preset",
+            Platform.SWITCH,
+            id="econo-mode-is-a-switch-before-point-classification",
         ),
         pytest.param(
             "econoMode",
@@ -187,6 +187,53 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
     assert characteristic is not None
 
     assert scalar_platform_for_point(point, name, characteristic) is None
+
+
+def test_econo_mode_is_a_switch_without_a_climate_entity() -> None:
+    """Keep econo mode exposed when a point has no climate preset entity."""
+    point_without_temperature_control = ManagementPoint(
+        embedded_id="point_without_temperature_control",
+        management_point_type="climateControl",
+        characteristics={
+            "econoMode": Characteristic(
+                value="off", settable=True, values=["on", "off"]
+            )
+        },
+    )
+    econo_mode = point_without_temperature_control.scalar_characteristic("econoMode")
+    assert econo_mode is not None
+
+    assert (
+        scalar_platform_for_point(
+            point_without_temperature_control, "econoMode", econo_mode
+        )
+        is Platform.SWITCH
+    )
+
+    main_zone = ManagementPoint(
+        embedded_id="main_zone",
+        management_point_type="climateControlMainZone",
+        characteristics={
+            "econoMode": Characteristic(
+                value="off", settable=True, values=["on", "off"]
+            )
+        },
+    )
+    main_zone_econo_mode = main_zone.scalar_characteristic("econoMode")
+    assert main_zone_econo_mode is not None
+    assert (
+        scalar_platform_for_point(main_zone, "econoMode", main_zone_econo_mode)
+        is Platform.SWITCH
+    )
+
+    device = _load_gateway_devices("climate_floorheatingairflow")[0]
+    climate_point = device.management_points_by_type("climateControl")[0]
+    climate_econo_mode = climate_point.scalar_characteristic("econoMode")
+    assert climate_econo_mode is not None
+    assert (
+        scalar_platform_for_point(climate_point, "econoMode", climate_econo_mode)
+        is None
+    )
 
 
 def test_energy_description_key() -> None:

@@ -165,8 +165,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             await self.async_refresh()
         finally:
             self._manual_refresh_previous_sequence = None
-        if remaining := (
-            self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
+        if self._cloud_update_sequence == previous_sequence and (
+            remaining := (
+                self._polling_backoff_remaining()
+                or self._post_write_cooldown_remaining()
+            )
         ):
             self._raise_manual_refresh_deferred(remaining)
         return self._cloud_update_sequence > previous_sequence

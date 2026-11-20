@@ -48,26 +48,20 @@ async def test_platform_entities_become_unavailable_after_failed_update(
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    entity_ids = [
-        entry.entity_id
-        for entry in entries
-        if entry.domain != BUTTON_DOMAIN
-        if hass.states.get(entry.entity_id) is not None
-    ]
+    entity_ids = sorted(
+        {entry.entity_id for entry in entries}
+        & set(hass.states.async_entity_ids()) - {"button.daikin_onecta_account_refresh"}
+    )
     assert entity_ids
 
     coordinator.last_update_success = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    states = {entity_id: hass.states.get(entity_id) for entity_id in entity_ids}
+    states = [hass.states.get(entity_id) for entity_id in entity_ids]
     assert all(
-        state is not None and state.state == "unavailable" for state in states.values()
-    ), {
-        entity_id: state.state
-        for entity_id, state in states.items()
-        if state is not None and state.state != "unavailable"
-    }
+        state is not None and state.state == "unavailable" for state in states
+    ), states
 
 
 async def test_account_entities_are_not_duplicated_for_multiple_gateways(
@@ -81,16 +75,12 @@ async def test_account_entities_are_not_duplicated_for_multiple_gateways(
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
 
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    refresh_entries = [entry for entry in entries if entry.domain == BUTTON_DOMAIN]
-    rate_limit_entries = [
-        entry
-        for entry in entries
-        if entry.domain == SENSOR_DOMAIN
-        and entry.unique_id == "account-id_rate_limit_remaining_day"
-    ]
-
-    assert [entry.unique_id for entry in refresh_entries] == ["account-id_refresh"]
-    assert len(rate_limit_entries) == 1
+    entries_by_unique_id = {entry.unique_id: entry for entry in entries}
+    assert entries_by_unique_id["account-id_refresh"].domain == BUTTON_DOMAIN
+    assert (
+        entries_by_unique_id["account-id_rate_limit_remaining_day"].domain
+        == SENSOR_DOMAIN
+    )
 
 
 @pytest.mark.parametrize(

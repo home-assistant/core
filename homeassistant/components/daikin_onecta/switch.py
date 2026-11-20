@@ -55,7 +55,7 @@ def _create_switches(
     is_known: EntityIdChecker,
 ) -> list[DaikinSwitch]:
     """Create supported switches from the current cloud model."""
-    sensors: list[DaikinSwitch] = []
+    switches: list[DaikinSwitch] = []
 
     for device in present_devices(coordinator):
         for management_point in device.device.management_points:
@@ -67,7 +67,7 @@ def _create_switches(
                 )
                 if is_known(Platform.SWITCH, unique_id):
                     continue
-                sensors.append(
+                switches.append(
                     DaikinSwitch(
                         device,
                         coordinator,
@@ -77,7 +77,7 @@ def _create_switches(
                     )
                 )
 
-    return sensors
+    return switches
 
 
 class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
@@ -124,12 +124,12 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the zone on."""
+        """Turn the switch on."""
         await self._async_set_state("on", "switch_turn_on_failed")
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the zone off."""
+        """Turn the switch off."""
         await self._async_set_state("off", "switch_turn_off_failed")
 
     async def _async_set_state(

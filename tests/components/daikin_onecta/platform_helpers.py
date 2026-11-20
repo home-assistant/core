@@ -11,6 +11,9 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
 
+ALTHERMA_CLIMATE_ENTITY_ID = "climate.altherma_room_temperature"
+ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID = "sensor.altherma_control_mode"
+
 
 async def _async_fire_coordinator_update(
     hass: HomeAssistant,
