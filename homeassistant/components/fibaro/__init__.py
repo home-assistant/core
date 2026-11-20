@@ -288,7 +288,14 @@ class FibaroController:
 
                 self._device_map[device.fibaro_id] = device
                 if (
-                    device.has_endpoint_id
+                    platform
+                    in (
+                        Platform.CLIMATE,
+                        Platform.COVER,
+                        Platform.LIGHT,
+                        Platform.SWITCH,
+                    )
+                    and device.has_endpoint_id
                     and device.parent_fibaro_id in self._device_infos
                 ):
                     self._endpoint_names_by_parent[device.parent_fibaro_id].setdefault(
