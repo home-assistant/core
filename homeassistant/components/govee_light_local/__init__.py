@@ -162,8 +162,10 @@ async def update_listener(
             continue
         if (device := coordinator.get_device_by_ip(ip)) is None:
             coordinator.add_device_to_discovery_queue(ip)
-        elif not device.is_manual:
-            coordinator.async_adopt_device(device)
+        elif not device.is_manual and not coordinator.async_adopt_device(device):
+            # The lamp cached at this address belongs elsewhere (possibly a
+            # stale entry), so probe the address for the subentry's own lamp.
+            coordinator.add_device_to_discovery_queue(ip)
 
     device_registry = dr.async_get(hass)
     # The difference is a new set, so removing entries below cannot mutate what

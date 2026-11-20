@@ -406,19 +406,10 @@ async def test_reconfigured_device_answers_at_new_ip(
     assert coordinator.discovery_queue == set()
 
 
-async def test_reconfigure_to_discovered_lamp_ip_does_not_adopt(
-    hass: HomeAssistant,
-    mock_govee_api: AsyncMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test reconfiguring to a discovered lamp's IP leaves that lamp alone.
-
-    The controller's IP map may be stale after a DHCP reshuffle, so the new
-    address cannot be rejected up front. Adopting the other lamp instead would
-    put two lamps under one subentry, making either deletion cascade to both.
-    """
-
+async def _async_setup_manual_and_discovered(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> tuple[MockConfigEntry, GoveeDevice, GoveeDevice]:
+    """Set up a manual lamp at 192.168.1.100 and a discovered one at .50."""
     manual_device = GoveeDevice(
         controller=mock_govee_api,
         ip="192.168.1.100",
@@ -445,10 +436,35 @@ async def test_reconfigure_to_discovered_lamp_ip_does_not_adopt(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    return config_entry, manual_device, other_device
+
+
+async def test_reconfigure_to_discovered_lamp_ip_does_not_adopt(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfiguring to a discovered lamp's IP leaves that lamp alone.
+
+    The controller's IP map may be stale after a DHCP reshuffle, so the new
+    address cannot be rejected up front. Adopting the other lamp instead would
+    put two lamps under one subentry, making either deletion cascade to both.
+    """
+
+    (
+        config_entry,
+        manual_device,
+        other_device,
+    ) = await _async_setup_manual_and_discovered(hass, mock_govee_api)
     subentry_id = next(iter(config_entry.subentries))
 
     result = await _async_reconfigure_subentry(hass, config_entry, other_device.ip)
     assert result["reason"] == "reconfigure_successful"
+
+    # The configured address is still probed for the subentry's own lamp: the
+    # cached device at that address may be stale.
+    assert config_entry.runtime_data.discovery_queue == {other_device.ip}
 
     # The discovered lamp stays on the main entry, unclaimed.
     other_entry = device_registry.async_get_device_by_identifier(
@@ -464,13 +480,90 @@ async def test_reconfigure_to_discovered_lamp_ip_does_not_adopt(
     assert manual_entry is not None
     assert manual_entry.config_subentry_id == subentry_id
 
-    # Deleting the subentry only cascades to its own lamp.
+    # Deleting the subentry only cascades to its own lamp: the unclaimed lamp
+    # at the still-probed address must survive, and the probe is dropped.
     hass.config_entries.async_remove_subentry(config_entry, subentry_id)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get("light.h615a") is None
     assert entity_registry.async_get("light.h615b") is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, other_device.fingerprint), config_entry.entry_id
+        )
+        is not None
+    )
     mock_govee_api.remove_device.assert_called_once_with(manual_device)
+    assert config_entry.runtime_data.discovery_queue == set()
+
+
+async def test_poll_keeps_probe_for_unanswered_reconfigured_address(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a stale device at a reconfigured address does not cancel its probe."""
+
+    config_entry, _, other_device = await _async_setup_manual_and_discovered(
+        hass, mock_govee_api
+    )
+
+    await _async_reconfigure_subentry(hass, config_entry, other_device.ip)
+
+    coordinator = config_entry.runtime_data
+    assert coordinator.discovery_queue == {other_device.ip}
+
+    # The cached device at the address has not answered the probe, so the
+    # probe must keep running.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.discovery_queue == {other_device.ip}
+
+
+async def test_reconfigured_lamp_recovers_at_other_lamps_stale_address(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the subentry's lamp is recovered at an address with a stale tenant."""
+
+    (
+        config_entry,
+        manual_device,
+        other_device,
+    ) = await _async_setup_manual_and_discovered(hass, mock_govee_api)
+    subentry_id = next(iter(config_entry.subentries))
+
+    await _async_reconfigure_subentry(hass, config_entry, other_device.ip)
+
+    # Without this probe the lamp could never answer at the new address.
+    assert config_entry.runtime_data.discovery_queue == {other_device.ip}
+
+    # The stale tenant never answers and gets evicted; the subentry's own lamp
+    # answers the probe, so the library updates its address in place.
+    manual_device.update_ip(other_device.ip)
+    set_mocked_devices(mock_govee_api, [manual_device])
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    discovery_callback(manual_device, False)
+    await hass.async_block_till_done()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("light.h615a")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == manual_device.fingerprint
+    manual_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, manual_device.fingerprint), config_entry.entry_id
+    )
+    assert manual_entry is not None
+    assert manual_entry.config_subentry_id == subentry_id
+    assert config_entry.runtime_data.discovery_queue == set()
 
 
 async def test_reconfigure_queued_device(

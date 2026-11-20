@@ -166,13 +166,15 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         )
 
     @callback
-    def async_adopt_device(self, device: GoveeDevice) -> None:
+    def async_adopt_device(self, device: GoveeDevice) -> bool:
         """Claim an already-discovered device for its manual subentry.
 
         Marks it manual so eviction re-queues it instead of dropping it, and
         moves its registrations under the subentry so deleting the subentry
         cascades to them. Entities move first: changing the device's subentry
         purges entities still pointing at the old one.
+
+        Returns whether the device is the subentry's lamp afterwards.
         """
         subentry_id = next(
             (
@@ -185,7 +187,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             None,
         )
         if subentry_id is None:
-            return
+            return False
 
         device_registry = dr.async_get(self.hass)
         # A subentry describes one lamp. If it already owns another lamp's
@@ -199,7 +201,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 entry.config_subentry_id == subentry_id
                 and (DOMAIN, device.fingerprint) not in entry.identifiers
             ):
-                return
+                return False
 
         device.is_manual = True
 
@@ -208,7 +210,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 (DOMAIN, device.fingerprint), self.config_entry.entry_id
             )
         ) is None or device_entry.config_subentry_id == subentry_id:
-            return
+            return True
 
         entity_registry = er.async_get(self.hass)
         for entity in er.async_entries_for_device(
@@ -220,11 +222,14 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         device_registry.async_update_device(
             device_entry.id, new_config_subentry_id=subentry_id
         )
+        return True
 
     @callback
     def async_remove_manual_device(self, ip: str) -> None:
         """Remove a manually added device and its registry entry."""
-        if device := self.get_device_by_ip(ip):
+        # A non-manual device at this address was never claimed by the
+        # subentry (its probe was still pending), so only the probe is dropped.
+        if (device := self.get_device_by_ip(ip)) is not None and device.is_manual:
             device_registry = dr.async_get(self.hass)
             if entry := device_registry.async_get_device_by_identifier(
                 (DOMAIN, device.fingerprint), self.config_entry.entry_id
@@ -305,8 +310,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         self._controller.send_update_message()
         # The library drains the discovery queue only when an unknown
         # fingerprint answers, so a known lamp probed at its reconfigured
-        # address strands its queue entry. Drop entries a tracked device
-        # already covers.
-        for ip in self.discovery_queue & {device.ip for device in self.devices}:
-            self.remove_device_from_discovery_queue(ip)
+        # address strands its queue entry. Drop entries only once a manual
+        # lamp covers them: a stale, never-answering device at the address
+        # must not cancel the probe.
+        for ip in list(self.discovery_queue):
+            if (device := self.get_device_by_ip(ip)) is not None and device.is_manual:
+                self.remove_device_from_discovery_queue(ip)
         return self.devices
