@@ -23,18 +23,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -191,8 +185,11 @@ async def test_alarm_control_panel_arming(
     # Test Arm home
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        AlarmControlPanelService.ARM_HOME,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.home",
+            AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+        },
         blocking=True,
     )
 
@@ -203,8 +200,11 @@ async def test_alarm_control_panel_arming(
     # Test Arm away
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        AlarmControlPanelService.ARM_AWAY,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.home",
+            AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+        },
         blocking=True,
     )
 
@@ -223,8 +223,11 @@ async def test_alarm_control_panel_disarming(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        AlarmControlPanelService.DISARM,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.home",
+            AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+        },
         blocking=True,
     )
 
@@ -238,9 +241,9 @@ async def test_alarm_control_panel_disarming(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_ALARM_ARM_HOME, "arm"),
-        (SERVICE_ALARM_ARM_AWAY, "arm"),
-        (SERVICE_ALARM_DISARM, "disarm"),
+        (AlarmControlPanelService.ARM_HOME, "arm"),
+        (AlarmControlPanelService.ARM_AWAY, "arm"),
+        (AlarmControlPanelService.DISARM, "disarm"),
     ],
 )
 @pytest.mark.parametrize(
@@ -274,7 +277,10 @@ async def test_alarm_command_validation_error(
         await hass.services.async_call(
             ALARM_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.home",
+                AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+            },
             blocking=True,
         )
 
@@ -285,9 +291,9 @@ async def test_alarm_command_validation_error(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_ALARM_ARM_HOME, "arm"),
-        (SERVICE_ALARM_ARM_AWAY, "arm"),
-        (SERVICE_ALARM_DISARM, "disarm"),
+        (AlarmControlPanelService.ARM_HOME, "arm"),
+        (AlarmControlPanelService.ARM_AWAY, "arm"),
+        (AlarmControlPanelService.DISARM, "disarm"),
     ],
 )
 @pytest.mark.parametrize(
@@ -341,7 +347,10 @@ async def test_alarm_command_error(
         await hass.services.async_call(
             ALARM_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.home",
+                AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+            },
             blocking=True,
         )
 
@@ -368,8 +377,11 @@ async def test_clear_alarm_command_rejected(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            AlarmControlPanelService.DISARM,
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.home",
+                AlarmControlPanelServiceArgument.CODE: MOCK_CODE,
+            },
             blocking=True,
         )
 
@@ -388,8 +400,8 @@ async def test_alarm_control_panel_disarming_requires_code(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: "alarm_control_panel.home"},
+            AlarmControlPanelService.DISARM,
+            {TargetKey.ENTITY_ID: "alarm_control_panel.home"},
             blocking=True,
         )
 

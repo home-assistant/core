@@ -9,18 +9,12 @@ import pytest
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
-from homeassistant.const import (
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -307,28 +301,42 @@ async def test_cloud_sets_custom_mapping(
     assert entity.supported_features == EXPECTED_FEATURES
 
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        "C",
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        "C",
     )
 
 
@@ -347,32 +355,46 @@ async def test_cloud_sets_full_custom_mapping(
     )
 
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
+        hass, AlarmControlPanelService.ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
         hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        "C",
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        "C",
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         "group_arm",
         FIRST_CLOUD_ENTITY_ID,
         0,
@@ -380,7 +402,7 @@ async def test_cloud_sets_full_custom_mapping(
     )
     await _test_cloud_service_call(
         hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         "group_arm",
         SECOND_CLOUD_ENTITY_ID,
         1,
@@ -398,26 +420,51 @@ async def test_cloud_sets_with_correct_code(
     """Test settings the various modes when code is required."""
     code = {"code": 1234}
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0, **code
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1, **code
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1, **code
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
-    )
-    await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
+        hass,
+        AlarmControlPanelService.DISARM,
+        "disarm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        **code,
     )
     await _test_cloud_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.DISARM,
+        "disarm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
+    )
+    await _test_cloud_service_call(
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_AWAY,
+        "arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        **code,
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
+    )
+    await _test_cloud_service_call(
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_CLOUD_ENTITY_ID,
         0,
@@ -426,7 +473,7 @@ async def test_cloud_sets_with_correct_code(
     )
     await _test_cloud_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_CLOUD_ENTITY_ID,
         1,
@@ -436,7 +483,7 @@ async def test_cloud_sets_with_correct_code(
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_CLOUD_ENTITY_ID,
             0,
@@ -445,7 +492,7 @@ async def test_cloud_sets_with_correct_code(
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_CLOUD_ENTITY_ID,
             1,
@@ -462,33 +509,47 @@ async def test_cloud_sets_without_code(
 ) -> None:
     """Test settings the various modes when code is not required."""
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
+        hass, AlarmControlPanelService.ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        "C",
     )
     await _test_cloud_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        "C",
     )
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_CLOUD_ENTITY_ID,
             0,
@@ -496,7 +557,7 @@ async def test_cloud_sets_without_code(
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_CLOUD_ENTITY_ID,
             1,
@@ -513,33 +574,68 @@ async def test_cloud_sets_with_incorrect_code(
     """Test settings the various modes when code is required and incorrect."""
     code = {"code": 4321}
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0, **code
+        hass,
+        AlarmControlPanelService.DISARM,
+        "disarm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1, **code
+        hass,
+        AlarmControlPanelService.DISARM,
+        "disarm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
+        hass, AlarmControlPanelService.ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1, **code
+        hass,
+        AlarmControlPanelService.ARM_AWAY,
+        "arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
+        hass,
+        AlarmControlPanelService.ARM_HOME,
+        "partial_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        **code,
     )
     await _test_cloud_no_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
+        hass,
+        AlarmControlPanelService.ARM_NIGHT,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        **code,
     )
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_CLOUD_ENTITY_ID,
             0,
@@ -548,7 +644,7 @@ async def test_cloud_sets_with_incorrect_code(
     with pytest.raises(HomeAssistantError):
         await _test_cloud_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_CLOUD_ENTITY_ID,
             1,
@@ -741,49 +837,49 @@ async def test_local_sets_custom_mapping(
 
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -791,7 +887,7 @@ async def test_local_sets_custom_mapping(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -815,49 +911,49 @@ async def test_local_sets_full_custom_mapping(
 
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -865,7 +961,7 @@ async def test_local_sets_full_custom_mapping(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -873,7 +969,7 @@ async def test_local_sets_full_custom_mapping(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -881,7 +977,7 @@ async def test_local_sets_full_custom_mapping(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -900,7 +996,7 @@ async def test_local_sets_with_correct_code(
     code = {"code": 1234}
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -908,7 +1004,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -916,7 +1012,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -924,7 +1020,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -932,7 +1028,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -940,7 +1036,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -948,7 +1044,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -957,7 +1053,7 @@ async def test_local_sets_with_correct_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -967,7 +1063,7 @@ async def test_local_sets_with_correct_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_LOCAL_ENTITY_ID,
             two_part_local_alarm[0],
@@ -976,7 +1072,7 @@ async def test_local_sets_with_correct_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_LOCAL_ENTITY_ID,
             two_part_local_alarm[1],
@@ -995,7 +1091,7 @@ async def test_local_sets_with_incorrect_code(
     code = {"code": 4321}
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -1003,7 +1099,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -1011,7 +1107,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -1019,7 +1115,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -1027,7 +1123,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -1035,7 +1131,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -1043,7 +1139,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -1051,7 +1147,7 @@ async def test_local_sets_with_incorrect_code(
     )
     await _test_local_no_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -1060,7 +1156,7 @@ async def test_local_sets_with_incorrect_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_LOCAL_ENTITY_ID,
             two_part_local_alarm[0],
@@ -1069,7 +1165,7 @@ async def test_local_sets_with_incorrect_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_LOCAL_ENTITY_ID,
             two_part_local_alarm[1],
@@ -1087,49 +1183,49 @@ async def test_local_sets_without_code(
     """Test settings the various modes when code is not required."""
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         "disarm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         "arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         "partial_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         FIRST_LOCAL_ENTITY_ID,
         two_part_local_alarm[0],
@@ -1137,7 +1233,7 @@ async def test_local_sets_without_code(
     )
     await _test_local_service_call(
         hass,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         "group_arm",
         SECOND_LOCAL_ENTITY_ID,
         two_part_local_alarm[1],
@@ -1146,7 +1242,7 @@ async def test_local_sets_without_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             FIRST_LOCAL_ENTITY_ID,
             two_part_local_alarm[0],
@@ -1154,7 +1250,7 @@ async def test_local_sets_without_code(
     with pytest.raises(HomeAssistantError):
         await _test_local_no_service_call(
             hass,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "partial_arm",
             SECOND_LOCAL_ENTITY_ID,
             two_part_local_alarm[1],

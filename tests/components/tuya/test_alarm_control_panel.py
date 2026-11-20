@@ -10,13 +10,10 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -57,10 +54,10 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("service", "command"),
     [
-        (SERVICE_ALARM_ARM_AWAY, {"code": "master_mode", "value": "arm"}),
-        (SERVICE_ALARM_ARM_HOME, {"code": "master_mode", "value": "home"}),
-        (SERVICE_ALARM_DISARM, {"code": "master_mode", "value": "disarmed"}),
-        (SERVICE_ALARM_TRIGGER, {"code": "master_mode", "value": "sos"}),
+        (AlarmControlPanelService.ARM_AWAY, {"code": "master_mode", "value": "arm"}),
+        (AlarmControlPanelService.ARM_HOME, {"code": "master_mode", "value": "home"}),
+        (AlarmControlPanelService.DISARM, {"code": "master_mode", "value": "disarmed"}),
+        (AlarmControlPanelService.TRIGGER, {"code": "master_mode", "value": "sos"}),
     ],
 )
 async def test_service(
@@ -81,7 +78,7 @@ async def test_service(
         ALARM_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )

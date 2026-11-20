@@ -45,6 +45,9 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.mqtt.alarm_control_panel import (
@@ -52,19 +55,7 @@ from homeassistant.components.mqtt.alarm_control_panel import (
 )
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-    SERVICE_RELOAD,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -330,17 +321,33 @@ async def test_supported_features(
 @pytest.mark.parametrize(
     ("hass_config", "service", "payload"),
     [
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_ARM_NIGHT, "ARM_NIGHT"),
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_ARM_VACATION, "ARM_VACATION"),
         (
             DEFAULT_CONFIG_CODE_NOT_REQUIRED,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_HOME,
+            "ARM_HOME",
+        ),
+        (
+            DEFAULT_CONFIG_CODE_NOT_REQUIRED,
+            AlarmControlPanelService.ARM_AWAY,
+            "ARM_AWAY",
+        ),
+        (
+            DEFAULT_CONFIG_CODE_NOT_REQUIRED,
+            AlarmControlPanelService.ARM_NIGHT,
+            "ARM_NIGHT",
+        ),
+        (
+            DEFAULT_CONFIG_CODE_NOT_REQUIRED,
+            AlarmControlPanelService.ARM_VACATION,
+            "ARM_VACATION",
+        ),
+        (
+            DEFAULT_CONFIG_CODE_NOT_REQUIRED,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
         ),
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_DISARM, "DISARM"),
-        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, SERVICE_ALARM_TRIGGER, "TRIGGER"),
+        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, AlarmControlPanelService.DISARM, "DISARM"),
+        (DEFAULT_CONFIG_CODE_NOT_REQUIRED, AlarmControlPanelService.TRIGGER, "TRIGGER"),
     ],
 )
 async def test_publish_mqtt_no_code(
@@ -355,7 +362,7 @@ async def test_publish_mqtt_no_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        {TargetKey.ENTITY_ID: "alarm_control_panel.test"},
         blocking=True,
     )
 
@@ -369,36 +376,46 @@ async def test_publish_mqtt_no_code(
     [
         (
             DEFAULT_CONFIG_CODE,
-            SERVICE_ALARM_ARM_HOME,
+            AlarmControlPanelService.ARM_HOME,
             "ARM_HOME",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_CODE,
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             "ARM_AWAY",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_CODE,
-            SERVICE_ALARM_ARM_NIGHT,
+            AlarmControlPanelService.ARM_NIGHT,
             "ARM_NIGHT",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_CODE,
-            SERVICE_ALARM_ARM_VACATION,
+            AlarmControlPanelService.ARM_VACATION,
             "ARM_VACATION",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_CODE,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
             pytest.raises(ServiceValidationError),
         ),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_DISARM, "DISARM", does_not_raise()),
-        (DEFAULT_CONFIG_CODE, SERVICE_ALARM_TRIGGER, "TRIGGER", does_not_raise()),
+        (
+            DEFAULT_CONFIG_CODE,
+            AlarmControlPanelService.DISARM,
+            "DISARM",
+            does_not_raise(),
+        ),
+        (
+            DEFAULT_CONFIG_CODE,
+            AlarmControlPanelService.TRIGGER,
+            "TRIGGER",
+            does_not_raise(),
+        ),
     ],
 )
 async def test_publish_mqtt_with_code(
@@ -417,7 +434,7 @@ async def test_publish_mqtt_with_code(
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+            {TargetKey.ENTITY_ID: "alarm_control_panel.test"},
             blocking=True,
         )
     assert mqtt_mock.async_publish.call_count == call_count
@@ -426,7 +443,10 @@ async def test_publish_mqtt_with_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abcd"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "abcd",
+        },
         blocking=True,
     )
     assert mqtt_mock.async_publish.call_count == call_count
@@ -435,7 +455,10 @@ async def test_publish_mqtt_with_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "0123"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "0123",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -448,38 +471,43 @@ async def test_publish_mqtt_with_code(
     [
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_ARM_HOME,
+            AlarmControlPanelService.ARM_HOME,
             "ARM_HOME",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             "ARM_AWAY",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_ARM_NIGHT,
+            AlarmControlPanelService.ARM_NIGHT,
             "ARM_NIGHT",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_ARM_VACATION,
+            AlarmControlPanelService.ARM_VACATION,
             "ARM_VACATION",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
             pytest.raises(ServiceValidationError),
         ),
-        (DEFAULT_CONFIG_REMOTE_CODE, SERVICE_ALARM_DISARM, "DISARM", does_not_raise()),
         (
             DEFAULT_CONFIG_REMOTE_CODE,
-            SERVICE_ALARM_TRIGGER,
+            AlarmControlPanelService.DISARM,
+            "DISARM",
+            does_not_raise(),
+        ),
+        (
+            DEFAULT_CONFIG_REMOTE_CODE,
+            AlarmControlPanelService.TRIGGER,
             "TRIGGER",
             does_not_raise(),
         ),
@@ -501,7 +529,7 @@ async def test_publish_mqtt_with_remote_code(
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+            {TargetKey.ENTITY_ID: "alarm_control_panel.test"},
             blocking=True,
         )
     assert mqtt_mock.async_publish.call_count == call_count
@@ -510,7 +538,10 @@ async def test_publish_mqtt_with_remote_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "1234",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -523,43 +554,43 @@ async def test_publish_mqtt_with_remote_code(
     [
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_ARM_HOME,
+            AlarmControlPanelService.ARM_HOME,
             "ARM_HOME",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             "ARM_AWAY",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_ARM_NIGHT,
+            AlarmControlPanelService.ARM_NIGHT,
             "ARM_NIGHT",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_ARM_VACATION,
+            AlarmControlPanelService.ARM_VACATION,
             "ARM_VACATION",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
             pytest.raises(ServiceValidationError),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_DISARM,
+            AlarmControlPanelService.DISARM,
             "DISARM",
             does_not_raise(),
         ),
         (
             DEFAULT_CONFIG_REMOTE_CODE_TEXT,
-            SERVICE_ALARM_TRIGGER,
+            AlarmControlPanelService.TRIGGER,
             "TRIGGER",
             does_not_raise(),
         ),
@@ -581,7 +612,7 @@ async def test_publish_mqtt_with_remote_code_text(
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+            {TargetKey.ENTITY_ID: "alarm_control_panel.test"},
             blocking=True,
         )
     assert mqtt_mock.async_publish.call_count == call_count
@@ -590,7 +621,10 @@ async def test_publish_mqtt_with_remote_code_text(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "any_code"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "any_code",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -607,7 +641,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_arm_required": False},),
             ),
-            SERVICE_ALARM_ARM_HOME,
+            AlarmControlPanelService.ARM_HOME,
             "ARM_HOME",
         ),
         (
@@ -616,7 +650,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_arm_required": False},),
             ),
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             "ARM_AWAY",
         ),
         (
@@ -625,7 +659,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_arm_required": False},),
             ),
-            SERVICE_ALARM_ARM_NIGHT,
+            AlarmControlPanelService.ARM_NIGHT,
             "ARM_NIGHT",
         ),
         (
@@ -634,7 +668,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_arm_required": False},),
             ),
-            SERVICE_ALARM_ARM_VACATION,
+            AlarmControlPanelService.ARM_VACATION,
             "ARM_VACATION",
         ),
         (
@@ -643,7 +677,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_arm_required": False},),
             ),
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             "ARM_CUSTOM_BYPASS",
         ),
         (
@@ -652,7 +686,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_disarm_required": False},),
             ),
-            SERVICE_ALARM_DISARM,
+            AlarmControlPanelService.DISARM,
             "DISARM",
         ),
         (
@@ -661,7 +695,7 @@ async def test_publish_mqtt_with_remote_code_text(
                 DEFAULT_CONFIG_CODE,
                 ({"code_trigger_required": False},),
             ),
-            SERVICE_ALARM_TRIGGER,
+            AlarmControlPanelService.TRIGGER,
             "TRIGGER",
         ),
     ],
@@ -683,7 +717,7 @@ async def test_publish_mqtt_with_code_required_false(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        {TargetKey.ENTITY_ID: "alarm_control_panel.test"},
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -695,7 +729,10 @@ async def test_publish_mqtt_with_code_required_false(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abcd"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "abcd",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -707,7 +744,10 @@ async def test_publish_mqtt_with_code_required_false(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "0123"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "0123",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -801,7 +841,7 @@ async def test_attributes_code_number(
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
-        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_FORMAT)
         == alarm_control_panel.CodeFormat.NUMBER
     )
 
@@ -824,7 +864,7 @@ async def test_attributes_remote_code_number(
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
-        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_FORMAT)
         == alarm_control_panel.CodeFormat.NUMBER
     )
 
@@ -845,7 +885,7 @@ async def test_attributes_code_text(
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
-        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_FORMAT)
         == alarm_control_panel.CodeFormat.TEXT
     )
 
@@ -1188,7 +1228,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG,
-        alarm_control_panel.SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         command_payload="DISARM",
     )
 
@@ -1197,7 +1237,7 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template", "tpl_par", "tpl_output"),
     [
         (
-            alarm_control_panel.SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             "command_topic",
             {"code": "secret"},
             "ARM_AWAY",
@@ -1206,7 +1246,7 @@ async def test_entity_debug_info_message(
             b"s",
         ),
         (
-            alarm_control_panel.SERVICE_ALARM_DISARM,
+            AlarmControlPanelService.DISARM,
             "command_topic",
             {"code": "secret"},
             "DISARM",
