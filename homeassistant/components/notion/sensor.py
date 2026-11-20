@@ -85,8 +85,6 @@ class NotionSensor(NotionEntity, SensorEntity):
     @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
-        if not self.listener.status_localized:
-            return None
         if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
             # The Notion API only returns a localized string for temperature (e.g.
             # "70°"); we simply remove the degree symbol:
