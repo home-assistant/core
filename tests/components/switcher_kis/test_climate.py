@@ -1,6 +1,7 @@
 """Test the Switcher climate platform."""
 
-from unittest.mock import ANY, patch
+import dataclasses
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import (
@@ -13,8 +14,11 @@ import pytest
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -351,3 +355,62 @@ async def test_climate_control_errors(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "off"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    "mock_bridge",
+    [[dataclasses.replace(DEVICE, remote_id="ZM179056")]],
+    indirect=True,
+)
+async def test_climate_empty_remote_modes_features(
+    hass: HomeAssistant,
+    mock_bridge: MagicMock,
+    mock_api: AsyncMock,
+) -> None:
+    """Test climate setup and operation when remote has empty modes features."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    # Entity is created without crashing
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF]
+    assert ATTR_FAN_MODES not in state.attributes
+    assert ATTR_FAN_MODE not in state.attributes
+    assert ATTR_SWING_MODES not in state.attributes
+    assert ATTR_SWING_MODE not in state.attributes
+
+    # Setting temperature raises ServiceValidationError when unsupported
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "service_not_supported"
+
+    # Coordinator update with another mode does not raise KeyError
+    device_mock = dataclasses.replace(
+        DEVICE, remote_id="ZM179056", mode=ThermostatMode.HEAT
+    )
+    mock_bridge.mock_callbacks([device_mock])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+    # Setting off works cleanly
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
+    ) as mock_control_device:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+        assert mock_control_device.call_count == 1
+        mock_control_device.assert_called_once_with(ANY, state=DeviceState.OFF)

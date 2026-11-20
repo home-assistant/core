@@ -92,8 +92,9 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
 
-        self._attr_min_temp = remote.min_temperature
-        self._attr_max_temp = remote.max_temperature
+        if remote.min_temperature < remote.max_temperature:
+            self._attr_min_temp = remote.min_temperature
+            self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -121,7 +122,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherThermostat, self.coordinator.data)
-        features = self._remote.modes_features[data.mode]
+        features = self._remote.modes_features.get(data.mode)
 
         # Ignore empty update from device that was power cycled
         if data.target_temperature == 0 and self.native_target_temperature is not None:
@@ -132,17 +133,17 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
         self._attr_hvac_mode = HVACMode.OFF
         if data.device_state is DeviceState.ON:
-            self._attr_hvac_mode = DEVICE_MODE_TO_HA[data.mode]
+            self._attr_hvac_mode = DEVICE_MODE_TO_HA.get(data.mode, HVACMode.OFF)
 
         self._attr_fan_mode = None
         self._attr_fan_modes = []
-        if features["fan_levels"]:
+        if features and features["fan_levels"]:
             self._attr_fan_modes = [DEVICE_FAN_TO_HA[x] for x in features["fan_levels"]]
-            self._attr_fan_mode = DEVICE_FAN_TO_HA[data.fan_level]
+            self._attr_fan_mode = DEVICE_FAN_TO_HA.get(data.fan_level)
 
         self._attr_swing_mode = None
         self._attr_swing_modes = []
-        if features["swing"]:
+        if features and features["swing"]:
             self._attr_swing_mode = SWING_OFF
             self._attr_swing_modes = [SWING_VERTICAL, SWING_OFF]
             if data.swing is ThermostatSwing.ON:
@@ -156,7 +157,10 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         data = cast(SwitcherThermostat, self.coordinator.data)
-        if not self._remote.modes_features[data.mode]["temperature_control"]:
+        if (
+            not (features := self._remote.modes_features.get(data.mode))
+            or not features["temperature_control"]
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="target_temperature_not_supported",
@@ -174,7 +178,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == hvac_mode.OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._async_control_breeze_device(state=DeviceState.OFF)
         else:
             await self._async_control_breeze_device(
