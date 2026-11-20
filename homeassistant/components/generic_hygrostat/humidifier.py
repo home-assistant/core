@@ -175,6 +175,7 @@ class GenericHygrostatExtraStoredData(ExtraStoredData):
     is_away: bool
     is_on: bool | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {

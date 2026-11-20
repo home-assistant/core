@@ -2030,3 +2030,4 @@ async def test_restore_state_after_unavailable(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_HUMIDITY] == 62.0
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 50.0
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
+    
