@@ -212,22 +212,21 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             prices = await self.client.async_get_prices(self.ban)
 
         now = dt_util.utcnow()
-        fetch_eans = list(
-            dict.fromkeys(
-                ean_prices.ean
-                for ean_prices in prices.items
-                if self._service_point_due(bare_ean(ean_prices.ean), now)
-            )
-        )
-        if fetch_eans:
+        raw_ean_by_bare: dict[str, str] = {}
+        for ean_prices in prices.items:
+            if self._service_point_due(bare := bare_ean(ean_prices.ean), now):
+                raw_ean_by_bare.setdefault(bare, ean_prices.ean)
+        if raw_ean_by_bare:
             service_points = await asyncio.gather(
-                *(self.client.async_get_service_point(ean) for ean in fetch_eans),
+                *(
+                    self.client.async_get_service_point(ean)
+                    for ean in raw_ean_by_bare.values()
+                ),
                 return_exceptions=True,
             )
-            for ean, service_point_result in zip(
-                fetch_eans, service_points, strict=True
+            for bare, service_point_result in zip(
+                raw_ean_by_bare, service_points, strict=True
             ):
-                bare = bare_ean(ean)
                 if isinstance(service_point_result, EngieBeAuthenticationError):
                     raise invalid_auth_error() from service_point_result
                 if isinstance(service_point_result, EngieBeError):

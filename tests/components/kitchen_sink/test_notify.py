@@ -8,11 +8,11 @@ import pytest
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -56,8 +56,11 @@ async def test_send_message(
     freezer.move_to(now)
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_ENTITY_ID: ENTITY_DIRECT_MESSAGE, ATTR_MESSAGE: "You have an update!"},
+        NotifyService.SEND_MESSAGE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_DIRECT_MESSAGE,
+            NotifyServiceArgument.MESSAGE: "You have an update!",
+        },
         blocking=True,
     )
 
