@@ -943,6 +943,9 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "matter_not_set_up": {
+      "message": "The Matter integration is not set up."
+    },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
     },
@@ -960,6 +963,9 @@
     },
     "wifi_credentials_import_failed": {
       "message": "Could not import the Wi-Fi credentials of the network manager: {error}."
+    },
+    "wifi_credentials_set_failed": {
+      "message": "Could not set the Wi-Fi credentials: {error}."
     },
     "wifi_credentials_unusable": {
       "message": "The network manager returned no usable Wi-Fi credentials."
@@ -1093,6 +1099,20 @@
         }
       },
       "name": "Set lock user"
+    },
+    "set_wifi_credentials": {
+      "description": "Sets the Wi-Fi network that the Matter server commissions new Wi-Fi devices onto. The password is stored in the database with each call of this action, and in the traces of automations and scripts that use it.",
+      "fields": {
+        "password": {
+          "description": "The passphrase of the Wi-Fi network.",
+          "name": "Password"
+        },
+        "ssid": {
+          "description": "The name of the Wi-Fi network.",
+          "name": "Network name"
+        }
+      },
+      "name": "Set Wi-Fi credentials"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

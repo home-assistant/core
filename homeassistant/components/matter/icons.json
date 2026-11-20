@@ -236,6 +236,9 @@
     "set_lock_user": {
       "service": "mdi:account-lock"
     },
+    "set_wifi_credentials": {
+      "service": "mdi:wifi-lock"
+    },
     "water_heater_boost": {
       "service": "mdi:water-boiler"
     }

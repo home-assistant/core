@@ -47,6 +47,7 @@ class MatterService(StrEnum):
     GET_LOCK_USERS = "get_lock_users"
     SET_LOCK_CREDENTIAL = "set_lock_credential"
     SET_LOCK_USER = "set_lock_user"
+    SET_WIFI_CREDENTIALS = "set_wifi_credentials"
     WATER_HEATER_BOOST = "water_heater_boost"
 
 
@@ -64,6 +65,8 @@ class MatterServiceArgument(StrEnum):
     DURATION = "duration"
     EMERGENCY_BOOST = "emergency_boost"
     TEMPORARY_SETPOINT = "temporary_setpoint"
+    SSID = "ssid"
+    PASSWORD = "password"
 
 
 # --- Lock domain constants ---

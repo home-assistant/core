@@ -199,3 +199,15 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
+
+set_wifi_credentials:
+  fields:
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password

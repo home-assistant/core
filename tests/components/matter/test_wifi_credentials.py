@@ -15,7 +15,11 @@ from pytest_homeassistant.common import MockUser
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_integration_with_node_fixture
@@ -345,3 +349,78 @@ async def test_a_failed_store_fails_the_press(
 
     assert exc_info.value.translation_key == "wifi_credentials_import_failed"
     assert exc_info.value.translation_placeholders == {"error": "store failed"}
+
+
+async def test_set_wifi_credentials_action(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """The action hands the credentials to the Matter server."""
+    await setup_integration_with_node_fixture(hass, "eve_contact_sensor", matter_client)
+
+    await hass.services.async_call(
+        "matter",
+        "set_wifi_credentials",
+        {"ssid": "IoT", "password": "hunter2hunter2"},
+        blocking=True,
+    )
+
+    matter_client.set_wifi_credentials.assert_awaited_once_with(
+        ssid="IoT", credentials="hunter2hunter2"
+    )
+
+
+async def test_set_wifi_credentials_action_failure(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """Credentials the server does not store fail the action."""
+    matter_client.set_wifi_credentials.side_effect = NotConnected()
+    await setup_integration_with_node_fixture(hass, "eve_contact_sensor", matter_client)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "matter",
+            "set_wifi_credentials",
+            {"ssid": "IoT", "password": "hunter2hunter2"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "wifi_credentials_set_failed"
+    assert exc_info.value.translation_placeholders == {"error": "NotConnected"}
+
+
+async def test_set_wifi_credentials_action_without_matter(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> None:
+    """The action explains that Matter is not loaded."""
+    await setup_integration_with_node_fixture(hass, "eve_contact_sensor", matter_client)
+    entry = hass.config_entries.async_entries("matter")[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "matter",
+            "set_wifi_credentials",
+            {"ssid": "IoT", "password": "hunter2hunter2"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "matter_not_set_up"
+    matter_client.set_wifi_credentials.assert_not_awaited()
+
+
+async def test_set_wifi_credentials_action_is_admin_only(
+    hass: HomeAssistant, matter_client: MagicMock, hass_read_only_user: MockUser
+) -> None:
+    """Only an administrator can change the commissioning credentials."""
+    await setup_integration_with_node_fixture(hass, "eve_contact_sensor", matter_client)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            "matter",
+            "set_wifi_credentials",
+            {"ssid": "IoT", "password": "hunter2hunter2"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    matter_client.set_wifi_credentials.assert_not_awaited()
