@@ -222,6 +222,50 @@ async def test_search_other_languages(
     assert await _search(api_instance, "vacuum") == []
 
 
+async def test_search_finds_exact_name(
+    hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
+) -> None:
+    """Test a query with the name of a function finds it among similar names."""
+
+    class NamedTool(llm.Tool):
+        """Tool with a name."""
+
+        integration = "test"
+
+        def __init__(self, name: str) -> None:
+            """Init the class."""
+            self.name = name
+
+        @override
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> llm.ToolResult:
+            """Return nothing."""
+            return llm.ToolResult(data={})
+
+    tools: list[llm.Tool] = [
+        *(NamedTool(f"test__get_state_{index}") for index in range(20)),
+        NamedTool("test__get_state"),
+    ]
+    api_instance = code_mode_api.async_create_api_instance(
+        llm.APIInstance(
+            api=TestAPI(hass, tools[0]),
+            api_prompt="",
+            llm_context=llm_context,
+            tools=tools,
+        ),
+        conversation_id,
+    )
+
+    functions = await _search(api_instance, "test__get_state")
+
+    assert len(functions) == code_mode_api.SEARCH_LIMIT
+    assert functions[0].startswith("async def test__get_state() -> dict:")
+
+
 async def test_nested_parameters(
     hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> None:

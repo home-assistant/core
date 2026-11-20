@@ -8,7 +8,7 @@ from functools import partial
 import json
 import keyword
 import re
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 from pydantic_monty import AsyncMonty, CollectString, MontyError, ResourceLimits
@@ -42,6 +42,7 @@ MAX_OUTPUT_BYTES = 64 * 1024
 # Code can raise an error with a message of any size.
 MAX_ERROR_SIZE = 4096
 SEARCH_LIMIT = 10
+EXACT_NAME_SCORE = 1000
 # Modules that the code can use without an import.
 IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
 # Sandbox processes for all chat sessions. A run waits when all are in use.
@@ -199,7 +200,8 @@ class ToolFunction:
 
         async def call_tool(**kwargs: Any) -> JsonObjectType:
             task = asyncio.current_task()
-            assert task is not None
+            if TYPE_CHECKING:
+                assert task is not None
             tasks.add(task)
             try:
                 result = await self._api_instance.async_call_tool(
@@ -319,6 +321,10 @@ class SearchTool(Tool):
             )
             # A word in the name says more than a word in the description.
             if score := 3 * len(words & name_words) + len(words & other_words):
+                # A query that has the complete name must find the function,
+                # also when many functions share words of the name.
+                if name_words <= words:
+                    score += EXACT_NAME_SCORE
                 scored.append((score, function))
         scored.sort(key=lambda item: item[0], reverse=True)
         return ToolResult(
