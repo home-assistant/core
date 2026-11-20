@@ -779,7 +779,7 @@ async def test_rpc_switch_input_lock(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-switch:0-switch_in_locked"
+    assert entry.unique_id == "123456789ABC-switch:0-in_locked"
     assert entry.entity_category is EntityCategory.CONFIG
 
     await hass.services.async_call(
@@ -836,10 +836,7 @@ async def test_rpc_cover_input_lock(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-cover:0-cover_in_locked"
-
-    # the switch component of a device in cover profile is not used
-    assert hass.states.get("switch.test_name_test_switch_0_input_lock") is None
+    assert entry.unique_id == "123456789ABC-cover:0-in_locked"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,

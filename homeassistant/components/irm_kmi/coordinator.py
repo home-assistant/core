@@ -1,15 +1,17 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Final, override
 
-from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
+from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError, PollenLevel, PollenName
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
@@ -24,7 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(minutes=7)
 GRACE_PERIOD: Final = 2.5 * UPDATE_INTERVAL
 
-type IrmKmiConfigEntry = ConfigEntry[IrmKmiCoordinator]
+type IrmKmiConfigEntry = ConfigEntry[IrmKmiRuntimeData]
+
+
+@dataclass
+class IrmKmiRuntimeData:
+    """Coordinators of an IRM KMI config entry."""
+
+    weather: IrmKmiCoordinator
+    pollen: IrmKmiPollenCoordinator
 
 
 class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]):
@@ -98,3 +108,43 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             country=self._api.get_country(),
             warnings=self._api.get_warnings(lang),
         )
+
+
+class IrmKmiPollenCoordinator(
+    DataUpdateCoordinator[dict[PollenName, PollenLevel | None]]
+):
+    """Coordinator to update the pollen levels from IRM KMI.
+
+    The pollen image is linked from the forecast, so this relies on the forecast
+    the weather coordinator refreshed on the shared API client.
+    """
+
+    config_entry: IrmKmiConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: IrmKmiConfigEntry,
+        api_client: IrmKmiApiClientHa,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name="IRM KMI pollen",
+            update_interval=UPDATE_INTERVAL,
+        )
+        self._api = api_client
+
+    @override
+    async def _async_update_data(self) -> dict[PollenName, PollenLevel | None]:
+        """Fetch the pollen levels."""
+        try:
+            return await self._api.get_pollen()
+        except IrmKmiApiError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

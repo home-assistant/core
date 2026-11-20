@@ -10,18 +10,15 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
@@ -68,8 +65,8 @@ async def test_cover_commands_from_hass(
     # 1. Close cover -> sends Freebox position 100 to slot 0 (position_set)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ["cover.shutter_1"]},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ["cover.shutter_1"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(150, 0, {"value": 100})
@@ -79,8 +76,8 @@ async def test_cover_commands_from_hass(
     # 2. Open cover -> sends Freebox position 0 to slot 0 (position_set)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ["cover.shutter_1"]},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ["cover.shutter_1"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(150, 0, {"value": 0})
@@ -89,8 +86,8 @@ async def test_cover_commands_from_hass(
     # 3. Stop cover -> calls slot 1 (stop)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ["cover.shutter_1"]},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ["cover.shutter_1"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(150, 1, {"value": None})
@@ -99,8 +96,8 @@ async def test_cover_commands_from_hass(
     # 4. Set cover position -> HA 70% open means Freebox 30
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ["cover.shutter_1"], ATTR_POSITION: 70},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ["cover.shutter_1"], CoverServiceArgument.POSITION: 70},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(150, 0, {"value": 30})
@@ -133,8 +130,8 @@ async def test_basic_shutter_commands_from_hass(
     # 1. Close basic cover -> calls down slot (id 2)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ["cover.rts_shutter"]},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ["cover.rts_shutter"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(152, 2, {"value": None})
@@ -143,8 +140,8 @@ async def test_basic_shutter_commands_from_hass(
     # 2. Open basic cover -> calls up slot (id 0)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ["cover.rts_shutter"]},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ["cover.rts_shutter"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(152, 0, {"value": None})
@@ -153,8 +150,8 @@ async def test_basic_shutter_commands_from_hass(
     # 3. Stop basic cover -> calls stop slot (id 1)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ["cover.rts_shutter"]},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ["cover.rts_shutter"]},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(152, 1, {"value": None})

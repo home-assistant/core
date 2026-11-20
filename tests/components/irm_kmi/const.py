@@ -2,12 +2,19 @@
 
 from datetime import datetime
 
-from irm_kmi_api import CurrentWeatherData, WarningData, WarningType
+from irm_kmi_api import (
+    CurrentWeatherData,
+    PollenLevel,
+    PollenName,
+    WarningData,
+    WarningType,
+)
 
 WEATHER_ENTITY_ID = "weather.brussels"
 
 WARNING_ENTITY_ID = "binary_sensor.brussels_warning"
 
+ALDER_POLLEN_ENTITY_ID = "sensor.brussels_alder_pollen"
 NEXT_WARNING_ENTITY_ID = "sensor.brussels_next_warning"
 TEMPERATURE_ENTITY_ID = "sensor.brussels_temperature"
 WIND_DIRECTION_ENTITY_ID = "sensor.brussels_wind_direction"
@@ -43,3 +50,13 @@ CURRENT_WEATHER = CurrentWeatherData(
     uv_index=0.7,
     pressure=1015.0,
 )
+
+POLLEN = {
+    PollenName.ALDER: PollenLevel.GREEN,
+    PollenName.ASH: PollenLevel.YELLOW,
+    PollenName.BIRCH: PollenLevel.ORANGE,
+    PollenName.GRASSES: PollenLevel.RED,
+    PollenName.HAZEL: PollenLevel.PURPLE,
+    PollenName.MUGWORT: PollenLevel.ACTIVE,
+    PollenName.OAK: PollenLevel.NONE,
+}

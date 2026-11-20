@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
 
 # Coordinator is used to centralize the data updates
@@ -35,7 +35,7 @@ def _is_active(warning: WarningData, now: datetime) -> bool:
     return warning["starts_at"] <= now < warning["ends_at"]
 
 
-class IrmKmiWarning(IrmKmiBaseEntity, BinarySensorEntity):
+class IrmKmiWarning(IrmKmiBaseEntity[IrmKmiCoordinator], BinarySensorEntity):
     """Weather warning binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
@@ -44,7 +44,7 @@ class IrmKmiWarning(IrmKmiBaseEntity, BinarySensorEntity):
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the warning sensor from a configuration entry."""
-        super().__init__(entry)
+        super().__init__(entry, entry.runtime_data.weather)
         self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-warning"
 
     @property

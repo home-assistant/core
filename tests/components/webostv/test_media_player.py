@@ -26,9 +26,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
     MediaPlayerState,
     MediaType,
 )
@@ -54,7 +53,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
@@ -135,13 +133,17 @@ async def test_media_play_pause(hass: HomeAssistant, client) -> None:
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
     # After init state is playing - check pause call
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PLAY_PAUSE, data, True
+    )
 
     client.pause.assert_called_once()
     client.play.assert_not_called()
 
     # After pause state is paused - check play call
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PLAY_PAUSE, data, True
+    )
 
     client.play.assert_called_once()
     client.pause.assert_called_once()
@@ -191,7 +193,9 @@ async def test_select_source_with_empty_source_list(
         HomeAssistantError,
         match=f"Source nonexistent not found in the sources list for {ENTITY_ID}",
     ):
-        await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+        await hass.services.async_call(
+            MP_DOMAIN, MediaPlayerService.SELECT_SOURCE, data, True
+        )
 
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
@@ -206,7 +210,9 @@ async def test_select_app_source(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "Live TV",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.SELECT_SOURCE, data, True
+    )
 
     client.launch_app.assert_called_once_with(LIVE_TV_APP_ID)
     client.set_input.assert_not_called()
@@ -221,7 +227,9 @@ async def test_select_input_source(hass: HomeAssistant, client) -> None:
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "Input01",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.SELECT_SOURCE, data, True
+    )
 
     client.launch_app.assert_not_called()
     client.set_input.assert_called_once_with("in1")
@@ -431,7 +439,7 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
         ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: media_id,
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with(ch_id)
 
@@ -451,7 +459,7 @@ async def test_play_media_channel_name_over_number(hass: HomeAssistant, client) 
         ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: "20",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with("ch_name_match")
 
@@ -473,7 +481,7 @@ async def test_play_media_duplicate_channel_number_selects_first(
         ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: "5",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.PLAY_MEDIA, data, True)
 
     client.set_channel.assert_called_once_with("ch_first")
 
@@ -719,7 +727,9 @@ async def test_control_error_handling(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     with pytest.raises(HomeAssistantError, match=error_message):
-        await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+        await hass.services.async_call(
+            MP_DOMAIN, MediaPlayerService.MEDIA_PLAY, data, True
+        )
 
     assert client.play.call_count == int(is_on)
 
@@ -731,7 +741,7 @@ async def test_turn_off_when_device_is_off(hass: HomeAssistant, client) -> None:
     await client.mock_state_update()
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.TURN_OFF, data, True)
     assert client.power_off.call_count == 1
 
 
