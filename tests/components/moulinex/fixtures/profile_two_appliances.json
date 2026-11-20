@@ -1,136 +1,27 @@
 {
-  "identifier": {
-    "functionalId": "10000001",
-    "sourceSystem": "PRO"
-  },
-  "firstName": "Jane",
-  "lastName": "Doe",
-  "nickname": "Jane",
-  "accounts": [
-    {
-      "login": "jane.doe@example.com",
-      "password": "*****",
-      "type": "STANDARD"
-    },
-    {
-      "login": "jane.doe@example.com",
-      "password": "*****",
-      "type": "GSEB_IDP"
-    }
-  ],
-  "preferences": [
-    {
-      "identifier": {
-        "functionalId": "200000001",
-        "sourceSystem": "PRO"
-      },
-      "key": "ALL_GUESTS_NUMBER",
-      "parameters": [
-        {
-          "key": "ALL_GN_PARAMETER",
-          "numericValue": 4.0
-        }
-      ],
-      "order": 0
-    }
-  ],
   "profilePerimeter": "MOULINEX_FR",
-  "gender": "F",
-  "lang": "fr",
-  "email": "jane.doe@example.com",
-  "rcu": {
-    "rcuUserId": "005000000000001AAA",
-    "rcuAccountId": "001000000000001AAA"
-  },
-  "pnnsCategory": "ADULT_F",
-  "householdRole": "HOUSEHOLDER",
   "household": {
-    "identifier": {
-      "functionalId": "30000001",
-      "sourceSystem": "PRO"
-    },
     "products": [
       {
-        "identifier": {
-          "functionalId": "40000001",
-          "sourceSystem": "PRO"
-        },
         "name": "Cookeo Touch Wifi",
-        "appliance": "APPLIANCE_1090",
         "domains": ["PRO_COO"],
-        "rcuAssetId": "02i000000000001AAA",
         "cmmf": "1510002402",
         "iot": {
           "functionalId": "11111111-2222-3333-4444-555555555555",
           "thingType": "COO001",
           "source": "IOTHUB"
-        },
-        "creationDate": "2026-01-15T10:30:00",
-        "modificationDate": "2026-01-15T10:30:00"
+        }
       },
       {
-        "identifier": {
-          "functionalId": "40000002",
-          "sourceSystem": "PRO"
-        },
         "name": "i-Companion Touch XL",
-        "appliance": "APPLIANCE_2000",
         "domains": ["PRO_COM"],
-        "rcuAssetId": "02i000000000002AAA",
         "cmmf": "8000036990",
         "iot": {
           "functionalId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
           "thingType": "COM001",
           "source": "IOTHUB"
-        },
-        "creationDate": "2026-01-15T10:30:00",
-        "modificationDate": "2026-01-15T10:30:00"
-      },
-      {
-        "identifier": {
-          "functionalId": "40000003",
-          "sourceSystem": "PRO"
-        },
-        "name": "Cookeo",
-        "appliance": "APPLIANCE_1000",
-        "domains": ["PRO_COO"],
-        "rcuAssetId": "02i000000000003AAA",
-        "cmmf": "7211001234",
-        "creationDate": "2026-01-15T10:30:00",
-        "modificationDate": "2026-01-15T10:30:00"
-      },
-      {
-        "identifier": {
-          "functionalId": "40000004",
-          "sourceSystem": "PRO"
-        },
-        "name": "OptiGrill",
-        "appliance": "APPLIANCE_3000",
-        "domains": ["PRO_OPT"],
-        "rcuAssetId": "02i000000000004AAA",
-        "cmmf": "7211004321",
-        "iot": {
-          "functionalId": "99999999-8888-7777-6666-555555555555",
-          "thingType": "OPT001",
-          "source": "IOTHUB"
-        },
-        "creationDate": "2026-01-15T10:30:00",
-        "modificationDate": "2026-01-15T10:30:00"
-      }
-    ],
-    "places": [
-      {
-        "identifier": {
-          "functionalId": "50000001",
-          "sourceSystem": "PRO"
-        },
-        "isDefault": true
+        }
       }
     ]
-  },
-  "isDisabled": false,
-  "creationDate": "2026-01-15T10:30:00",
-  "modificationDate": "2026-01-15T10:30:00",
-  "lastActivityDate": "2026-01-15T10:30:00",
-  "isDcpOnly": false
+  }
 }

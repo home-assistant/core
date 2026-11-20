@@ -10,16 +10,6 @@
         "otaUpdated": false,
         "lastDisconnection": 1795026275854
       },
-      "attributes": [
-        {
-          "value": "0",
-          "key": "brand"
-        },
-        {
-          "value": "0",
-          "key": "area"
-        }
-      ],
       "firmware": {
         "updateDate": 0,
         "files": [
@@ -40,91 +30,5 @@
         "version": ""
       }
     }
-  },
-  "metadata": {
-    "reported": {
-      "status": {
-        "connected": {
-          "timestamp": 1795026275
-        },
-        "lastConnection": {
-          "timestamp": 1795023772
-        },
-        "synchronizing": {
-          "timestamp": 1795023775
-        },
-        "unpairing": [],
-        "updating": {
-          "timestamp": 1795023775
-        },
-        "otaUpdated": {
-          "timestamp": 1795023775
-        },
-        "lastDisconnection": {
-          "timestamp": 1795026275
-        }
-      },
-      "attributes": [
-        {
-          "value": {
-            "timestamp": 1795023775
-          },
-          "key": {
-            "timestamp": 1795023775
-          }
-        },
-        {
-          "value": {
-            "timestamp": 1795023775
-          },
-          "key": {
-            "timestamp": 1795023775
-          }
-        }
-      ],
-      "firmware": {
-        "updateDate": {
-          "timestamp": 1795023775
-        },
-        "files": [
-          {
-            "type": {
-              "timestamp": 1795023775
-            },
-            "name": {
-              "timestamp": 1795023775
-            },
-            "version": {
-              "timestamp": 1795023775
-            },
-            "product": {
-              "timestamp": 1795023775
-            }
-          },
-          {
-            "type": {
-              "timestamp": 1795023775
-            },
-            "name": {
-              "timestamp": 1795023775
-            },
-            "version": {
-              "timestamp": 1795023775
-            },
-            "product": {
-              "timestamp": 1795023775
-            }
-          }
-        ],
-        "priority": {
-          "timestamp": 1795023775
-        },
-        "version": {
-          "timestamp": 1795023775
-        }
-      }
-    }
-  },
-  "version": 341,
-  "timestamp": 1795193009
+  }
 }
