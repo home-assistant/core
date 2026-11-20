@@ -186,6 +186,36 @@ async def test_add_time_to_paused_timer(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity")
 @pytest.mark.parametrize(
+    ("setup_services", "seconds", "added", "remaining", "total"),
+    [
+        pytest.param([], 120, 60, 179.4, 180, id="active"),
+        pytest.param(["pause_timer"], 60, 1, 60.4, 61, id="paused"),
+    ],
+)
+async def test_add_time_rounds_total_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_services: list[str],
+    seconds: int,
+    added: int,
+    remaining: float,
+    total: int,
+) -> None:
+    """Test adding time rounds the total up to whole seconds."""
+    timer_id = await _create_timer(hass, seconds)
+    freezer.tick(timedelta(seconds=0.6))
+    for service in setup_services:
+        await _call(hass, service, timer_id=timer_id)
+
+    await _call(hass, "add_time", timer_id=timer_id, duration={"seconds": added})
+
+    timer = (await _get_timers(hass))[0]
+    assert timer["remaining"] == pytest.approx(remaining)
+    assert timer["total_duration"] == total
+
+
+@pytest.mark.usefixtures("entity")
+@pytest.mark.parametrize(
     "setup_services",
     [
         pytest.param([], id="active"),
