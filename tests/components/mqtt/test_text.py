@@ -39,7 +39,7 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import text
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -55,8 +55,8 @@ async def async_set_value(
     """Set input_text to value."""
     await hass.services.async_call(
         text.DOMAIN,
-        text.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, text.ATTR_VALUE: value},
+        text.TextService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, text.TextServiceArgument.VALUE: value},
         blocking=True,
     )
 
@@ -84,7 +84,7 @@ async def test_controlling_state_via_topic(
 
     state = hass.states.get("text.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[text.ATTR_MODE] == "password"
+    assert state.attributes[text.TextEntityCapabilityAttribute.MODE] == "password"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "some state")
@@ -188,7 +188,7 @@ async def test_controlling_validation_state_via_topic(
 
     state = hass.states.get("text.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[text.ATTR_MODE] == "text"
+    assert state.attributes[text.TextEntityCapabilityAttribute.MODE] == "text"
 
     async_fire_mqtt_message(hass, "state-topic", "yes")
     state = hass.states.get("text.test")
@@ -732,9 +732,9 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            text.SERVICE_SET_VALUE,
+            text.TextService.SET_VALUE,
             "command_topic",
-            {text.ATTR_VALUE: "some text"},
+            {text.TextServiceArgument.VALUE: "some text"},
             "some text",
             "command_template",
         ),
