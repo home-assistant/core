@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_forecast
+  dict({
+    'weather.buienradar': dict({
+      'forecast': list([
+        dict({
+          'condition': 'rainy',
+          'datetime': '2026-11-21T00:00:00+00:00',
+          'precipitation': 2.5,
+          'precipitation_probability': 60,
+          'temperature': 9.0,
+          'templow': 4.0,
+          'wind_bearing': 200,
+          'wind_speed': 18.0,
+        }),
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-11-22T00:00:00+00:00',
+          'precipitation': 0.0,
+          'precipitation_probability': 10,
+          'temperature': 7.0,
+          'templow': 2.0,
+          'wind_bearing': 90,
+          'wind_speed': 10.8,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2026-11-23T00:00:00+00:00',
+          'precipitation': 1.0,
+          'precipitation_probability': 30,
+          'temperature': 8.0,
+          'templow': 3.0,
+          'wind_bearing': 180,
+          'wind_speed': 14.4,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2026-11-24T00:00:00+00:00',
+          'precipitation': 1.0,
+          'precipitation_probability': 30,
+          'temperature': 9.0,
+          'templow': 4.0,
+          'wind_bearing': 180,
+          'wind_speed': 14.4,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2026-11-25T00:00:00+00:00',
+          'precipitation': 1.0,
+          'precipitation_probability': 30,
+          'temperature': 10.0,
+          'templow': 5.0,
+          'wind_bearing': 180,
+          'wind_speed': 14.4,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_weather
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 6.1,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Buienradar',
+      <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 87,
+      <WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1012.4,
+      <WeatherEntityCapabilityAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 1>,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 8.2,
+      <WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.VISIBILITY: 'visibility'>: 23.4,
+      <WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 225,
+      <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 25.92,
+      <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 14.76,
+      <WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.buienradar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
