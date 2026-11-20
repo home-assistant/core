@@ -3,12 +3,11 @@
 import asyncio
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import Script
-
-from tests.common import async_capture_events
 
 TEMPLATE = "{{ (target_percentage | float - current_percentage | float) | abs >= 2 }}"
 
@@ -64,7 +63,7 @@ async def test_condition_cache_stable_across_renders(
         await hass.async_block_till_done()
         assert len(events) - before == int(abs(target - current) >= 2)
     assert len(script._condition_cache) == 1
-    script._async_unload()
+    await script.async_unload()
     assert not script._condition_cache
 
 
