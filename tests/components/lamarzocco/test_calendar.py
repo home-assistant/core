@@ -12,9 +12,9 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     EVENT_END_DATETIME,
     EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -57,9 +57,9 @@ async def test_calendar_events(
 
         events = await hass.services.async_call(
             CALENDAR_DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
-                ATTR_ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"calendar.{serial_number}_auto_on_off_schedule_{identifier}"
                 ),
                 EVENT_START_DATETIME: test_time,
@@ -104,9 +104,9 @@ async def test_calendar_edge_cases(
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"calendar.{mock_lamarzocco.serial_number}"
                 f"_auto_on_off_schedule_{WAKE_UP_SLEEP_ENTRY_IDS[1].lower()}"
             ),
@@ -151,9 +151,9 @@ async def test_no_calendar_events_global_disable(
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"calendar.{serial_number}"
                 f"_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}"
             ),

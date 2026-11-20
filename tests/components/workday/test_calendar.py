@@ -12,9 +12,9 @@ from homeassistant.components.calendar import (
     EVENT_END_DATETIME,
     EVENT_START_DATETIME,
     EVENT_SUMMARY,
-    SERVICE_GET_EVENTS,
+    CalendarService,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -41,9 +41,9 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
+            TargetKey.ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
             EVENT_START_DATETIME: dt_util.now(),
             EVENT_END_DATETIME: dt_util.now() + timedelta(days=10, hours=1),
         },

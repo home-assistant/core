@@ -71,7 +71,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     calls = async_mock_service(
         hass,
         domain=calendar.DOMAIN,
-        service=calendar.SERVICE_GET_EVENTS,
+        service=calendar.CalendarService.GET_EVENTS,
         schema=SERVICE_GET_EVENTS_SCHEMA,
         response={
             ENTITY_ID: {
@@ -105,7 +105,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == calendar.DOMAIN
-    assert call.service == calendar.SERVICE_GET_EVENTS
+    assert call.service == calendar.CalendarService.GET_EVENTS
     assert call.data == {
         "entity_id": [ENTITY_ID],
         "start_date_time": now,
