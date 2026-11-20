@@ -133,3 +133,21 @@ async def test_room_temperature_missing_value(
     state = hass.states.get("sensor.qube_heat_pump_room_temperature")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("number", [1, 2, 3])
+async def test_heater_working_hours_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    number: int,
+) -> None:
+    """Test the heater working hours sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = f"sensor.qube_heat_pump_working_hours_heater_{number}"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
