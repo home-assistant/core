@@ -26,10 +26,11 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .platform_helpers import _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture
-
-AIR_PURIFIER_ENTITY_ID = "fan.air_purifier"
+from .platform_helpers import (
+    AIR_PURIFIER_ENTITY_ID,
+    _async_setup_fixture,
+    _execute_typed_command,
+)
 
 
 def _air_purification(config_entry: MockConfigEntry):

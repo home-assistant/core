@@ -1,11 +1,9 @@
 """Snapshot tests for Daikin Onecta climate entities."""
 
 from datetime import UTC, datetime
-import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
-from daikin_onecta.models import GatewayDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -24,9 +22,8 @@ from homeassistant.components.climate import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import FAKE_ACCESS_TOKEN
+from .platform_helpers import _async_setup_fixture
 
-FIXTURE_PATH = Path(__file__).parent / "fixtures"
 CLIMATE_ENTITY_ID = "climate.test_office_room_temperature"
 
 FIXTURES = (
@@ -65,38 +62,6 @@ class SingleFileHomeAssistantSnapshotExtension(
         return str(
             Path(test_location.filepath).parent / "snapshots" / test_location.basename
         )
-
-
-def _load_gateway_devices(fixture: str) -> list[GatewayDevice]:
-    """Load gateway devices from an archived cloud response."""
-    fixture_data = json.loads((FIXTURE_PATH / f"{fixture}.json").read_text())
-    return [GatewayDevice.from_dict(device) for device in fixture_data]
-
-
-async def _async_setup_fixture(
-    hass: HomeAssistant, config_entry: MockConfigEntry, fixture: str
-) -> None:
-    """Set up the integration using an archived cloud response."""
-    gateway_devices = _load_gateway_devices(fixture)
-
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow."
-            "async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.coordinator."
-            "OnectaClient.get_gateway_devices",
-            new=AsyncMock(return_value=gateway_devices),
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("fixture", FIXTURES)

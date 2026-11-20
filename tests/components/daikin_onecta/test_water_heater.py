@@ -34,10 +34,13 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .platform_helpers import _execute_typed_command, _mock_coordinator
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
-
-ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.altherma_domestic_hot_water_tank"
+from .platform_helpers import (
+    ALTHERMA_WATER_HEATER_ENTITY_ID,
+    _async_setup_fixture,
+    _execute_typed_command,
+    _load_gateway_devices,
+    _mock_coordinator,
+)
 
 
 @pytest.mark.parametrize(

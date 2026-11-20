@@ -18,10 +18,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockOnectaClient
-from .platform_helpers import _async_fire_coordinator_update
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
-
-ACCOUNT_REFRESH_BUTTON_ENTITY_ID = "button.daikin_onecta_account_refresh"
+from .platform_helpers import (
+    ACCOUNT_REFRESH_BUTTON_ENTITY_ID,
+    _async_fire_coordinator_update,
+    _async_setup_fixture,
+    _load_gateway_devices,
+)
 
 
 async def test_refresh_button_requests_coordinator_refresh(

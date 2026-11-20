@@ -4,7 +4,6 @@ from hashlib import sha256
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock
 
-from aiohttp import ClientError
 from daikin_onecta import OnectaConnectionError, Site
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -15,12 +14,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 
-from .test_climate_snapshots import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture
 
 
 async def test_diagnostics(
@@ -150,8 +150,7 @@ async def test_diagnostics_redacts_serialized_product_identifiers(
             status=401,
             message="private token details",
         ),
-        ClientError("private transport details"),
-        TimeoutError("private timeout details"),
+        OAuth2TokenRequestConnectionError(domain="daikin_onecta"),
     ],
 )
 async def test_diagnostics_reports_site_lookup_failures(

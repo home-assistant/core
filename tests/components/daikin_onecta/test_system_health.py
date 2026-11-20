@@ -2,11 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from daikin_onecta.client import ONECTA_API_URL
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.system_health import (
-    DAIKIN_API_URL,
     _entry_info,
     async_register,
     system_health_info,
@@ -96,7 +96,7 @@ async def test_system_health_info(hass: HomeAssistant) -> None:
     assert info["oauth2_token_valid"] is True
     assert await info["api_status"] == "ok"
     assert await info["oauth2_status"] == "ok"
-    assert check_url.await_args_list[0].args[1] == DAIKIN_API_URL
+    assert check_url.await_args_list[0].args[1] == ONECTA_API_URL
 
 
 async def test_system_health_reports_every_loaded_account(

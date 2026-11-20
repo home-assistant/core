@@ -19,8 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .platform_helpers import _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture, _execute_typed_command
 
 TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID = "switch.test_living_room_streamer_mode"
 

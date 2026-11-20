@@ -136,11 +136,6 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             else None
         )
 
-    def _fixed_speed_count(self, mode: str | None = None) -> int | None:
-        """Return the number of discrete writable fixed speeds."""
-        speeds = self._fixed_speeds(mode)
-        return len(speeds) or None
-
     def _power_control_is_available(self) -> bool:
         """Return whether the air purifier power control is writable."""
         return has_air_purifier_power_control(self._management_point)
@@ -185,30 +180,22 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             if mode and mode.settable
             else []
         )
+        fixed_speeds = self._fixed_speeds("manualFan")
         features = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
         if self._attr_preset_modes:
             features |= FanEntityFeature.PRESET_MODE
-        if (
-            self._fixed_speeds("manualFan")
-            and mode
-            and (mode.settable or mode.value == "manualFan")
-        ):
+        if fixed_speeds and mode and (mode.settable or mode.value == "manualFan"):
             features |= FanEntityFeature.SET_SPEED
-        self._attr_speed_count = self._fixed_speed_count("manualFan") or 100
+        self._attr_speed_count = len(fixed_speeds) or 100
         self._attr_percentage = 0 if is_on is False else None
-        if (
-            is_on
-            and mode is not None
-            and mode.value == "manualFan"
-            and (speeds := self._fixed_speeds())
-        ):
+        if is_on and mode is not None and mode.value == "manualFan" and fixed_speeds:
             fixed = self._fixed_speed_characteristic()
             fixed_speed = fixed.value if fixed is not None else None
             if fixed_speed is not None and float(fixed_speed).is_integer():
                 speed = int(fixed_speed)
-                if speed in speeds:
+                if speed in fixed_speeds:
                     self._attr_percentage = ordered_list_item_to_percentage(
-                        speeds, speed
+                        fixed_speeds, speed
                     )
         self._attr_supported_features = features
 

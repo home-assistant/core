@@ -17,8 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .platform_helpers import _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture, _execute_typed_command
 
 MASTER_SCHEDULE_ENTITY_ID = "select.master_schedule"
 

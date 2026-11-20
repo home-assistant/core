@@ -3,7 +3,6 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
 from daikin_onecta import OnectaAuthenticationError, OnectaConnectionError, Site
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -17,7 +16,10 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.components.daikin_onecta.entity import management_point_device_info
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 
@@ -25,8 +27,9 @@ from .conftest import MockOnectaClient
 from .platform_helpers import (
     ALTHERMA_CLIMATE_ENTITY_ID,
     ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID,
+    _async_setup_fixture,
+    _load_gateway_devices,
 )
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
 def _gateway_id(device_entry: dr.DeviceEntry) -> str:
@@ -170,8 +173,7 @@ async def test_remove_missing_gateway_rejects_site_membership(
     "error",
     [
         OnectaConnectionError("failed", method="GET", path="/v1/sites"),
-        ClientError("failed"),
-        TimeoutError(),
+        OAuth2TokenRequestConnectionError(domain=DOMAIN),
         OAuth2TokenRequestError(
             domain=DOMAIN,
             request_info=AsyncMock(),

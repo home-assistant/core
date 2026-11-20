@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 GATEWAY_DEVICES_URL = "https://api.onecta.daikineurope.com/v1/gateway-devices"
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "issue_841_gateway_devices.json"

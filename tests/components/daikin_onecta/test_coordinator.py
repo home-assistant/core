@@ -48,8 +48,12 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .conftest import MockOnectaClient
-from .platform_helpers import ALTHERMA_CLIMATE_ENTITY_ID, _async_fire_coordinator_update
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import (
+    ALTHERMA_CLIMATE_ENTITY_ID,
+    _async_fire_coordinator_update,
+    _async_setup_fixture,
+    _load_gateway_devices,
+)
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"

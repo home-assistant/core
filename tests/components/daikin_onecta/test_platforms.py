@@ -35,10 +35,13 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .platform_helpers import _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture
-
-AIR_PURIFIER_ENTITY_ID = "fan.air_purifier"
+from .platform_helpers import (
+    ACCOUNT_REFRESH_BUTTON_ENTITY_ID,
+    AIR_PURIFIER_ENTITY_ID,
+    ALTHERMA_WATER_HEATER_ENTITY_ID,
+    _async_setup_fixture,
+    _execute_typed_command,
+)
 
 
 async def test_platform_entities_become_unavailable_after_failed_update(
@@ -52,7 +55,7 @@ async def test_platform_entities_become_unavailable_after_failed_update(
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     entity_ids = sorted(
         {entry.entity_id for entry in entries}
-        & set(hass.states.async_entity_ids()) - {"button.daikin_onecta_account_refresh"}
+        & set(hass.states.async_entity_ids()) - {ACCOUNT_REFRESH_BUTTON_ENTITY_ID}
     )
     assert entity_ids
 
@@ -110,7 +113,7 @@ def test_entity_descriptions_have_translation_keys(descriptions: dict) -> None:
             "altherma_boost",
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
-            "water_heater.altherma_domestic_hot_water_tank",
+            ALTHERMA_WATER_HEATER_ENTITY_ID,
             {WaterHeaterServiceArgument.TEMPERATURE: 50},
             WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             50,
@@ -153,7 +156,6 @@ async def test_command_cache_survives_model_replacement(
     await _async_setup_fixture(hass, config_entry, fixture)
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry)
-    coordinator.async_execute_command = execute
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         for device in coordinator.data.values():

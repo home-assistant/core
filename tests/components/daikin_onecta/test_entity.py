@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
 async def test_gateway_device_registry_uses_cloud_metadata(

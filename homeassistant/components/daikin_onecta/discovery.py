@@ -24,6 +24,18 @@ def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
     )
 
 
+def has_climate_entity(point: ManagementPoint) -> bool:
+    """Return whether a climate-control point exposes a supported setpoint."""
+    climate_control = point.climate_control
+    return bool(
+        climate_control is not None
+        and any(
+            setpoint_type in CLIMATE_SETPOINT_TYPES
+            for setpoint_type in climate_control.setpoint_types
+        )
+    )
+
+
 def scalar_platform(
     name: str,
     characteristic: Characteristic,
@@ -62,25 +74,18 @@ def scalar_platform_for_point(
         return None
     # Econo mode is already exposed as a preset only on climate points that
     # also produce a climate entity; otherwise retain the scalar switch.
-    if name == "econoMode" and point.management_point_type == "climateControl":
-        climate_control = point.climate_control
-        if climate_control is not None and any(
-            setpoint_type in CLIMATE_SETPOINT_TYPES
-            for setpoint_type in climate_control.setpoint_types
-        ):
-            return None
+    if (
+        name in {"econoMode", "onOffMode", "powerfulMode"}
+        and point.management_point_type == "climateControl"
+        and has_climate_entity(point)
+    ):
+        return None
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.
     if name in {"onOffMode", "powerfulMode"} and (
-        (
-            point.management_point_type == "climateControl"
-            and point.climate_control is not None
-        )
-        or (
-            point.management_point_type
-            in {"domesticHotWaterFlowThrough", "domesticHotWaterTank"}
-            and point.domestic_hot_water is not None
-        )
+        point.management_point_type
+        in {"domesticHotWaterFlowThrough", "domesticHotWaterTank"}
+        and point.domestic_hot_water is not None
     ):
         return None
     return scalar_platform(name, characteristic)

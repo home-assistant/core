@@ -11,13 +11,6 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN, OAUTH2_AUTHORIZE
 from .coordinator import DaikinOnectaConfigEntry
 
-DAIKIN_API_URL = ONECTA_API_URL
-
-
-def _entry_label(config_entry: DaikinOnectaConfigEntry) -> str:
-    """Return a non-sensitive label for an account entry."""
-    return config_entry.entry_id
-
 
 def _entry_info(config_entry: DaikinOnectaConfigEntry) -> dict[str, Any]:
     """Return locally cached health data for an account entry."""
@@ -39,7 +32,7 @@ def _summarize_entries(
 ) -> str:
     """Return one system-health value containing every configured account."""
     return "; ".join(
-        f"{_entry_label(config_entry)}: {info[key]}" for config_entry, info in entries
+        f"{config_entry.entry_id}: {info[key]}" for config_entry, info in entries
     )
 
 
@@ -63,7 +56,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         return {}
 
     info: dict[str, Any] = {
-        "api_status": system_health.async_check_can_reach_url(hass, DAIKIN_API_URL),
+        "api_status": system_health.async_check_can_reach_url(hass, ONECTA_API_URL),
         "oauth2_status": system_health.async_check_can_reach_url(
             hass, OAUTH2_AUTHORIZE
         ),

@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
 def test_sensor_keys_exclude_other_platform_keys() -> None:
@@ -143,6 +143,30 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
     assert characteristic is not None
 
     assert scalar_platform_for_point(point, name, characteristic) is None
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_platform"),
+    [
+        pytest.param("onOffMode", Platform.BINARY_SENSOR, id="power"),
+        pytest.param("powerfulMode", Platform.SENSOR, id="boost"),
+    ],
+)
+def test_read_only_climate_control_is_exposed_without_supported_setpoint(
+    name: str, expected_platform: Platform
+) -> None:
+    """Expose read-only controls when no climate entity can own them."""
+    point = ManagementPoint(
+        embedded_id="read_only_climate_control",
+        management_point_type="climateControl",
+        characteristics={
+            name: Characteristic(value="on", values=["on", "off"]),
+        },
+    )
+    characteristic = point.scalar_characteristic(name)
+    assert characteristic is not None
+
+    assert scalar_platform_for_point(point, name, characteristic) is expected_platform
 
 
 def test_econo_mode_is_a_switch_without_a_climate_entity() -> None:

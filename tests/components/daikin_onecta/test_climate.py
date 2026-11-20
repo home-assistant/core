@@ -7,7 +7,12 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from daikin_onecta.exceptions import OnectaConnectionError
-from daikin_onecta.models import Characteristic, ManagementPoint
+from daikin_onecta.models import (
+    Characteristic,
+    FanDirection,
+    FanDirectionAxis,
+    ManagementPoint,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -68,7 +73,7 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
-from .test_climate_snapshots import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture
 
 DRY_FIXED_DIRECTION_GATEWAY_ID = "00000000-0000-4000-8000-000000000108"
 
@@ -2512,13 +2517,91 @@ async def test_climate_swing_state_is_in_advertised_modes(
     assert expected_swing_mode is None or expected_swing_mode in entity.swing_modes
 
 
+def _vertical_fixed_swing_axis(direction: FanDirection) -> FanDirectionAxis:
+    """Return the fixture's vertical fixed-position axis."""
+    axis = direction.vertical
+    assert axis is not None
+    assert axis.modes is not None
+    assert axis.current_mode.values is not None
+    axis.current_mode.values.insert(1, "stop")
+    assert (
+        axis.modes[FANMODE_FIXED].min_value,
+        axis.modes[FANMODE_FIXED].max_value,
+    ) == (
+        1,
+        5,
+    )
+    return axis
+
+
+def _horizontal_fixed_swing_axis(direction: FanDirection) -> FanDirectionAxis:
+    """Return a horizontal axis with the fixture's fixed-position metadata."""
+    vertical = direction.vertical
+    assert vertical is not None
+    axis = deepcopy(vertical)
+    assert axis.modes is not None
+    assert axis.current_mode.values is not None
+    axis.modes[FANMODE_FIXED].value = 7
+    axis.modes[FANMODE_FIXED].max_value = 7
+    direction.horizontal = axis
+    return axis
+
+
+@pytest.mark.parametrize(
+    (
+        "configure_axis",
+        "direction",
+        "service",
+        "argument",
+        "state_attribute",
+        "capability_attribute",
+        "initial_position",
+        "target_position",
+        "swing_modes",
+    ),
+    [
+        pytest.param(
+            _vertical_fixed_swing_axis,
+            "vertical",
+            SERVICE_SET_SWING_MODE,
+            "swing_mode",
+            ClimateEntityStateAttribute.SWING_MODE,
+            ClimateEntityCapabilityAttribute.SWING_MODES,
+            2,
+            3,
+            [SWING_ON, SWING_OFF, "1", "2", "3", "4", "5"],
+            id="vertical",
+        ),
+        pytest.param(
+            _horizontal_fixed_swing_axis,
+            "horizontal",
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            "swing_horizontal_mode",
+            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+            ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES,
+            7,
+            2,
+            [SWING_ON, "1", "2", "3", "4", "5", "6", "7"],
+            id="horizontal",
+        ),
+    ],
+)
 async def test_climate_service_sets_fixed_swing_position(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_onecta_client: MockOnectaClient,
+    configure_axis: Callable[[FanDirection], FanDirectionAxis],
+    direction: str,
+    service: str,
+    argument: str,
+    state_attribute: ClimateEntityStateAttribute,
+    capability_attribute: ClimateEntityCapabilityAttribute,
+    initial_position: int,
+    target_position: int,
+    swing_modes: list[str],
 ) -> None:
-    """Expose and set Daikin fixed louvre positions through the swing service."""
+    """Expose and set fixed louvre positions through both swing services."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
     device = coordinator.data[DRY_FIXED_DIRECTION_GATEWAY_ID]
@@ -2528,13 +2611,10 @@ async def test_climate_service_sets_fixed_swing_position(
     assert climate_control is not None
     fan_operation = climate_control.fan_operation()
     assert fan_operation is not None and fan_operation.fan_direction is not None
-    vertical = fan_operation.fan_direction.vertical
-    assert vertical is not None
-    assert vertical.modes is not None
-    fixed = vertical.modes[FANMODE_FIXED]
-    assert (fixed.min_value, fixed.max_value, fixed.step_value) == (1, 5, 1)
-    assert vertical.current_mode.values is not None
-    vertical.current_mode.values.insert(1, "stop")
+    axis = configure_axis(fan_operation.fan_direction)
+    assert axis.modes is not None
+    fixed = axis.modes[FANMODE_FIXED]
+    assert fixed.value == initial_position
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE,
@@ -2542,28 +2622,21 @@ async def test_climate_service_sets_fixed_swing_position(
         f"{DRY_FIXED_DIRECTION_GATEWAY_ID}_climateControl_roomTemperature",
     )
     assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] == "2"
-    vertical.current_mode.value = "swing"
     coordinator.async_update_listeners()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] == SWING_ON
-    assert state.attributes[ClimateEntityCapabilityAttribute.SWING_MODES] == [
-        SWING_ON,
-        SWING_OFF,
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-    ]
+    assert state.attributes[state_attribute] == str(initial_position)
+    axis.current_mode.value = "swing"
+    coordinator.async_update_listeners()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[state_attribute] == SWING_ON
+    assert state.attributes[capability_attribute] == swing_modes
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: entity_id, "swing_mode": "3"},
+        service,
+        {ATTR_ENTITY_ID: entity_id, argument: str(target_position)},
         blocking=True,
     )
 
@@ -2573,112 +2646,29 @@ async def test_climate_service_sets_fixed_swing_position(
             "climateControl",
             "fanControl",
             FANMODE_FIXED,
-            path="/operationModes/dry/fanDirection/vertical/currentMode",
+            path=f"/operationModes/dry/fanDirection/{direction}/currentMode",
         ),
         call(
             DRY_FIXED_DIRECTION_GATEWAY_ID,
             "climateControl",
             "fanControl",
-            3,
-            path="/operationModes/dry/fanDirection/vertical/modes/fixed",
+            target_position,
+            path=f"/operationModes/dry/fanDirection/{direction}/modes/fixed",
         ),
     ]
-    assert vertical.current_mode.value == FANMODE_FIXED
-    assert fixed.value == 3
+    assert axis.current_mode.value == FANMODE_FIXED
+    assert fixed.value == target_position
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] == "3"
+    assert state.attributes[state_attribute] == str(target_position)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: entity_id, "swing_mode": "3"},
+        service,
+        {ATTR_ENTITY_ID: entity_id, argument: str(target_position)},
         blocking=True,
     )
     assert mock_onecta_client.patch_characteristic.await_count == 2
-
-
-async def test_climate_service_sets_horizontal_fixed_swing_position(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_onecta_client: MockOnectaClient,
-) -> None:
-    """Use the horizontal axis metadata and endpoint for fixed positions."""
-    await _async_setup_fixture(hass, config_entry, "dry")
-    coordinator = config_entry.runtime_data
-    device = coordinator.data[DRY_FIXED_DIRECTION_GATEWAY_ID]
-    management_point = device.management_point("climateControl")
-    assert management_point is not None
-    climate_control = management_point.climate_control
-    assert climate_control is not None
-    fan_operation = climate_control.fan_operation()
-    assert fan_operation is not None and fan_operation.fan_direction is not None
-    vertical = fan_operation.fan_direction.vertical
-    assert vertical is not None
-    horizontal = deepcopy(vertical)
-    assert horizontal.modes is not None
-    assert horizontal.current_mode.values is not None
-    horizontal_fixed = horizontal.modes[FANMODE_FIXED]
-    horizontal_fixed.value = 7
-    horizontal_fixed.max_value = 7
-    fan_operation.fan_direction.horizontal = horizontal
-
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.CLIMATE,
-        DOMAIN,
-        f"{DRY_FIXED_DIRECTION_GATEWAY_ID}_climateControl_roomTemperature",
-    )
-    assert entity_id is not None
-    coordinator.async_update_listeners()
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE] == "7"
-    horizontal.current_mode.value = "swing"
-    coordinator.async_update_listeners()
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert (
-        state.attributes[ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE] == SWING_ON
-    )
-    assert state.attributes[
-        ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES
-    ] == [
-        SWING_ON,
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-    ]
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_HORIZONTAL_MODE,
-        {ATTR_ENTITY_ID: entity_id, "swing_horizontal_mode": "2"},
-        blocking=True,
-    )
-
-    assert mock_onecta_client.patch_characteristic.await_args_list == [
-        call(
-            DRY_FIXED_DIRECTION_GATEWAY_ID,
-            "climateControl",
-            "fanControl",
-            FANMODE_FIXED,
-            path="/operationModes/dry/fanDirection/horizontal/currentMode",
-        ),
-        call(
-            DRY_FIXED_DIRECTION_GATEWAY_ID,
-            "climateControl",
-            "fanControl",
-            2,
-            path="/operationModes/dry/fanDirection/horizontal/modes/fixed",
-        ),
-    ]
-    assert horizontal.current_mode.value == FANMODE_FIXED
-    assert horizontal_fixed.value == 2
 
 
 async def test_climate_service_publishes_fixed_mode_when_position_write_fails(

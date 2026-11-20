@@ -9,7 +9,6 @@ from math import ceil
 import random
 from typing import Never, cast, override
 
-from aiohttp import ClientError
 from daikin_onecta import Site
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import (
@@ -29,7 +28,6 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
     OAuth2TokenRequestBaseError,
-    OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
@@ -249,10 +247,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 self.config_entry.async_start_reauth(self.hass)
             return SiteLookupResult([], err)
         except (
-            OAuth2TokenRequestError,
+            OAuth2TokenRequestBaseError,
             OnectaError,
-            ClientError,
-            TimeoutError,
         ) as err:
             return SiteLookupResult([], err)
         return SiteLookupResult(sites)
@@ -322,9 +318,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.path,
                     err.status,
                 )
-                return False
-            except TimeoutError:
-                _LOGGER.debug("Daikin request timed out")
                 return False
             had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None

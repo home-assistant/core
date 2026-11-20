@@ -27,8 +27,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import MockOnectaClient
-from .platform_helpers import _async_fire_coordinator_update, _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import (
+    _async_fire_coordinator_update,
+    _async_setup_fixture,
+    _execute_typed_command,
+    _load_gateway_devices,
+)
 
 LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID = "update.living_room_firmware_update"
 

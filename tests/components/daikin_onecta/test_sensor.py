@@ -34,8 +34,12 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .platform_helpers import _async_fire_coordinator_update, _mock_coordinator
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import (
+    _async_fire_coordinator_update,
+    _async_setup_fixture,
+    _load_gateway_devices,
+    _mock_coordinator,
+)
 
 
 @pytest.mark.parametrize(

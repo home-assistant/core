@@ -17,11 +17,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.util import dt as dt_util
 
 
@@ -297,18 +301,18 @@ async def test_write_rate_limit(
     )
 
 
-async def test_write_timeout(
+async def test_write_token_connection_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Return false when refreshing the OAuth token times out during a write."""
+    """Return false when refreshing the OAuth token fails during a write."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    command = AsyncMock(side_effect=TimeoutError)
+    command = AsyncMock(side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN))
 
     assert not await api.async_execute_command(command)
     assert api.last_patch_call is None
-    assert "Daikin request timed out" in caplog.text
+    assert "OAuth2TokenRequestConnectionError" in caplog.text
 
 
 async def test_unknown_rate_limit_uses_default_polling_budget(

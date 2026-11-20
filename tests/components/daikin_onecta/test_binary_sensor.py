@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
 async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
@@ -109,7 +109,7 @@ async def test_read_only_on_off_led_is_not_duplicated_as_sensor(
     )
 
     with patch(
-        "tests.components.daikin_onecta.test_climate_snapshots._load_gateway_devices",
+        "tests.components.daikin_onecta.platform_helpers._load_gateway_devices",
         return_value=devices,
     ):
         await _async_setup_fixture(hass, config_entry, "minimal_data")

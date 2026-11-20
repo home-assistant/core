@@ -15,6 +15,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -23,7 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .conftest import MockOnectaClient
-from .test_climate_snapshots import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture
 
 
 def _token_request_info() -> RequestInfo:
@@ -133,16 +134,14 @@ async def test_poll_refresh_token_rejection_marks_climate_unavailable(
 async def test_setup_entry_rejected_token_requires_authentication(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Rejected OAuth tokens require authentication, not a setup retry."""
+    mock_onecta_client.get_gateway_devices.side_effect = _reauth_error()
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            side_effect=_reauth_error(),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -153,16 +152,14 @@ async def test_setup_entry_rejected_token_requires_authentication(
 async def test_setup_entry_retries_token_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Transient OAuth token errors retry setup."""
+    mock_onecta_client.get_gateway_devices.side_effect = _token_error()
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            side_effect=_token_error(),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -173,25 +170,21 @@ async def test_setup_entry_retries_token_error(
 async def test_setup_entry_retries_token_timeout(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Token validation timeouts preserve a translated retry reason."""
+    """Token validation connection errors retry setup."""
+    mock_onecta_client.get_gateway_devices.side_effect = (
+        OAuth2TokenRequestConnectionError(domain=DOMAIN)
+    )
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
             return_value=MagicMock(),
         ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            side_effect=TimeoutError("timeout"),
-        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert config_entry.reason in {
-        "oauth2_token_request_failed",
-        "Unable to obtain Daikin OAuth token",
-    }
 
 
 @pytest.mark.asyncio

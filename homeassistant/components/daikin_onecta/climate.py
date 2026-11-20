@@ -684,20 +684,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Set a fan-direction mode."""
         cc = self._climate_control()
         if cc is None or cc.operation_mode is None:
-            return False
+            self._raise_service_validation_error("swing_control_unavailable")
         axis = self._fan_direction_axis(direction)
         if axis is None:
-            return False
+            self._raise_service_validation_error("swing_control_unavailable")
         operation_mode = cc.operation_mode.value
 
         if swing_mode.isnumeric():
             fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
             if fixed is None or not fixed.settable:
-                return False
+                self._raise_service_validation_error("swing_control_unavailable")
 
             if axis.current_mode.value != FANMODE_FIXED:
                 if not axis.current_mode.settable:
-                    return False
+                    self._raise_service_validation_error("swing_control_unavailable")
                 if not await self._async_execute_climate_command(
                     lambda climate: climate.set_fan_direction(
                         operation_mode, direction, FANMODE_FIXED
@@ -706,13 +706,13 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     return False
                 axis = self._fan_direction_axis(direction, operation_mode)
                 if axis is None:
-                    return False
+                    return True
                 axis.current_mode.value = FANMODE_FIXED
                 # The mode change is committed even if the position write fails.
                 self._publish_write_update()
                 fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
                 if fixed is None:
-                    return False
+                    return True
 
             position = int(swing_mode)
             if fixed.value != position:
@@ -725,12 +725,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 axis = self._fan_direction_axis(direction, operation_mode)
                 fixed = axis.modes.get(FANMODE_FIXED) if axis and axis.modes else None
                 if fixed is None:
-                    return False
+                    return True
                 fixed.value = position
             return True
 
         if not axis.current_mode.settable:
-            return False
+            self._raise_service_validation_error("swing_control_unavailable")
 
         new_mode = next(
             (
@@ -741,7 +741,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             None,
         )
         if new_mode is None:
-            return False
+            self._raise_service_validation_error("swing_control_unavailable")
         result = await self._async_execute_climate_command(
             lambda climate: climate.set_fan_direction(
                 operation_mode, direction, new_mode
