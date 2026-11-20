@@ -1,6 +1,6 @@
 {
   "common": {
-    "language_override_description": "Override the Home Assistant language for the textual weather forecast."
+    "language_override_description": "Override the Home Assistant language for forecast texts and the radar hint."
   },
   "config": {
     "abort": {
@@ -23,6 +23,16 @@
     }
   },
   "entity": {
+    "image": {
+      "radar": {
+        "name": "Radar",
+        "state_attributes": {
+          "hint": {
+            "name": "Hint"
+          }
+        }
+      }
+    },
     "sensor": {
       "uv_index": {
         "name": "UV index"
@@ -35,16 +45,23 @@
   "exceptions": {
     "api_error": {
       "message": "An error occurred while communicating with the API: {error}"
+    },
+    "radar_unavailable": {
+      "message": "The rain radar image could not be downloaded."
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "language_override": "[%key:common::config_flow::data::language%]"
+          "dark_mode": "Dark mode radar",
+          "language_override": "[%key:common::config_flow::data::language%]",
+          "radar_style": "Radar style"
         },
         "data_description": {
-          "language_override": "[%key:component::irm_kmi::common::language_override_description%]"
+          "dark_mode": "Draw the radar on a dark background. The Dutch radar is only available on a light background.",
+          "language_override": "[%key:component::irm_kmi::common::language_override_description%]",
+          "radar_style": "Colors of the rain radar."
         },
         "title": "Options"
       }
@@ -58,6 +75,14 @@
         "fr": "French",
         "nl": "Dutch",
         "none": "Follow Home Assistant server language"
+      }
+    },
+    "radar_style": {
+      "options": {
+        "contrast_style": "High contrast",
+        "satellite_style": "Satellite",
+        "standard_style": "Standard",
+        "yellow_red_style": "Yellow and red"
       }
     }
   },
