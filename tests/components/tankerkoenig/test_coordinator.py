@@ -28,7 +28,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .const import CONFIG_DATA
+from .const import CONFIG_DATA, STATION
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -245,6 +245,15 @@ async def test_station_details_cached(
     assert config_entry.state is ConfigEntryState.LOADED
     assert tankerkoenig.station_details.call_count == 1
     assert hass.states.get("binary_sensor.station_somewhere_street_1_status")
+    # The cached fuel fields still create the price sensors
+    for entity_id in (
+        "sensor.station_somewhere_street_1_super_e10",
+        "sensor.station_somewhere_street_1_super",
+        "sensor.station_somewhere_street_1_diesel",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
     freezer.tick(timedelta(days=8))
     assert await hass.config_entries.async_reload(config_entry.entry_id)
@@ -296,3 +305,32 @@ async def test_station_cache_removed_with_entry(
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert key not in hass_storage
+
+
+async def test_fetched_stations_saved_when_setup_fails(
+    hass: HomeAssistant,
+    tankerkoenig: AsyncMock,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test stations fetched before a failing one are kept in the cache."""
+    first, second = (
+        "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
+        "36b4b812-xxxx-xxxx-xxxx-c51735325858",
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_SHOW_ON_MAP: True},
+        data={**CONFIG_DATA, CONF_STATIONS: [first, second]},
+    )
+    tankerkoenig.station_details.side_effect = [
+        STATION,
+        TankerkoenigConnectionError,
+    ]
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    stations = hass_storage[f"{DOMAIN}.{config_entry.entry_id}.stations"]["data"][
+        "stations"
+    ]
+    assert list(stations) == [first]

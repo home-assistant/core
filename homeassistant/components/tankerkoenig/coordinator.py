@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 STATION_CACHE_VERSION = 1
 # Master data hardly ever changes and the details endpoint is rate limited
 STATION_CACHE_MAX_AGE = timedelta(days=7)
+# The fuel fields tell the sensor platform which fuels a station offers
 _CACHED_FIELDS = (
     "id",
     "name",
@@ -43,6 +44,9 @@ _CACHED_FIELDS = (
     "lat",
     "lng",
     "brand",
+    "diesel",
+    "e5",
+    "e10",
 )
 
 type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
@@ -91,61 +95,65 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         cached: dict[str, dict] = cache.get("stations", {})
         now = dt_util.utcnow()
         fetched = False
-        for station_id in self._selected_stations:
-            entry = cached.get(station_id)
-            saved = dt_util.parse_datetime(entry["saved"]) if entry else None
-            if entry and saved and now - saved < STATION_CACHE_MAX_AGE:
-                self.stations[station_id] = Station(**entry["station"])
-                continue
-            try:
-                station = await self._tankerkoenig.station_details(station_id)
-            except TankerkoenigInvalidKeyError as err:
-                _LOGGER.debug(
-                    "invalid key error occur during setup of station %s %s",
-                    station_id,
-                    err,
-                )
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_api_key",
-                ) from err
-            except TankerkoenigConnectionError as err:
-                _LOGGER.debug(
-                    "connection error occur during setup of station %s %s",
-                    station_id,
-                    err,
-                )
-                if entry:  # outdated master data is better than no prices at all
+        try:
+            for station_id in self._selected_stations:
+                entry = cached.get(station_id)
+                saved = dt_util.parse_datetime(entry["saved"]) if entry else None
+                if entry and saved and now - saved < STATION_CACHE_MAX_AGE:
                     self.stations[station_id] = Station(**entry["station"])
                     continue
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="connection_error",
-                ) from err
-            except TankerkoenigError as err:
-                if entry:
-                    self.stations[station_id] = Station(**entry["station"])
+                try:
+                    station = await self._tankerkoenig.station_details(station_id)
+                except TankerkoenigInvalidKeyError as err:
+                    _LOGGER.debug(
+                        "invalid key error occur during setup of station %s %s",
+                        station_id,
+                        err,
+                    )
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_api_key",
+                    ) from err
+                except TankerkoenigConnectionError as err:
+                    _LOGGER.debug(
+                        "connection error occur during setup of station %s %s",
+                        station_id,
+                        err,
+                    )
+                    if entry:  # outdated master data is better than no prices at all
+                        self.stations[station_id] = Station(**entry["station"])
+                        continue
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="connection_error",
+                    ) from err
+                except TankerkoenigError as err:
+                    if entry:
+                        self.stations[station_id] = Station(**entry["station"])
+                        continue
+                    _LOGGER.error("Error when adding station %s %s", station_id, err)
                     continue
-                _LOGGER.error("Error when adding station %s %s", station_id, err)
-                continue
 
-            self.stations[station_id] = station
-            cached[station_id] = {
-                "saved": now.isoformat(),
-                "station": {
-                    k: v for k, v in asdict(station).items() if k in _CACHED_FIELDS
-                },
-            }
-            fetched = True
-
-        if fetched:
-            await self._station_cache.async_save(
-                {
-                    "stations": {
-                        k: v for k, v in cached.items() if k in self._selected_stations
-                    }
+                self.stations[station_id] = station
+                cached[station_id] = {
+                    "saved": now.isoformat(),
+                    "station": {
+                        k: v for k, v in asdict(station).items() if k in _CACHED_FIELDS
+                    },
                 }
-            )
+                fetched = True
+        finally:
+            # Keep what was fetched, also when a later station aborts the setup
+            if fetched:
+                await self._station_cache.async_save(
+                    {
+                        "stations": {
+                            k: v
+                            for k, v in cached.items()
+                            if k in self._selected_stations
+                        }
+                    }
+                )
 
         entity_reg = er.async_get(self.hass)
         for entity in er.async_entries_for_config_entry(
