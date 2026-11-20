@@ -271,15 +271,17 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 for partition in partitions:
                     number = partition.device_number
-                    name = partition.name or f"Partition {number}"
+                    label = f"Partition {number}"
                     subentries.append(
                         ConfigSubentryData(
                             subentry_type=SUBENTRY_TYPE_PARTITION,
                             unique_id=f"{SUBENTRY_TYPE_PARTITION}_{number}",
-                            title=f"{name} ({number})",
+                            title=f"{label}: {partition.name}"
+                            if partition.name
+                            else label,
                             data={
                                 CONF_PARTITION_NUMBER: number,
-                                CONF_NAME: name,
+                                CONF_NAME: partition.name or label,
                                 CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
                             },
                         )
@@ -294,15 +296,15 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                     if zone.partition_assignment is None:
                         continue
                     number = zone.device_number
-                    name = zone.name or f"Zone {number}"
+                    label = f"Zone {number}"
                     subentries.append(
                         ConfigSubentryData(
                             subentry_type=SUBENTRY_TYPE_ZONE,
                             unique_id=f"{SUBENTRY_TYPE_ZONE}_{number}",
-                            title=f"{name} ({number})",
+                            title=f"{label}: {zone.name}" if zone.name else label,
                             data={
                                 CONF_ZONE_NUMBER: number,
-                                CONF_NAME: name,
+                                CONF_NAME: zone.name or label,
                                 CONF_ZONE_TYPE: None,
                                 CONF_ENABLE_TEMPERATURE_SENSOR: False,
                             },

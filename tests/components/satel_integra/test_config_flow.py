@@ -210,9 +210,7 @@ async def test_setup_adds_all_discovered_partitions(
         SatelPartitionInfo(
             device_number=2, name="House", type_code=0, object_assignment=1
         ),
-        SatelPartitionInfo(
-            device_number=5, name="Garage", type_code=0, object_assignment=1
-        ),
+        SatelPartitionInfo(device_number=5, name="", type_code=0, object_assignment=1),
     ]
 
     result = await _start_scan(hass)
@@ -234,14 +232,17 @@ async def test_setup_adds_all_discovered_partitions(
     } == {
         f"partition_{number}": (
             SUBENTRY_TYPE_PARTITION,
-            f"{name} ({number})",
+            title,
             {
                 CONF_PARTITION_NUMBER: number,
                 CONF_NAME: name,
                 CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
             },
         )
-        for number, name in ((2, "House"), (5, "Garage"))
+        for number, name, title in (
+            (2, "House", "Partition 2: House"),
+            (5, "Partition 5", "Partition 5"),
+        )
     }
     mock_satel.start.assert_awaited_once_with(enable_monitoring=False)
     mock_satel.scan_partitions.assert_awaited_once()
@@ -279,7 +280,7 @@ async def test_setup_adds_discovered_zones(
     entry = result["result"]
     (zone,) = entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE)
     assert zone.unique_id == "zone_6"
-    assert zone.title == "Zone 6 (6)"
+    assert zone.title == "Zone 6: Zone 6"
     assert zone.data == {
         CONF_ZONE_NUMBER: 6,
         CONF_NAME: "Zone 6",
