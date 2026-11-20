@@ -60,6 +60,11 @@
       }
     }
   },
+  "device": {
+    "outlet": {
+      "name": "Outlet {index}"
+    }
+  },
   "entity": {
     "button": {
       "port_power_cycle": {

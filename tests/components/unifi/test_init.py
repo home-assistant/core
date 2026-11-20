@@ -21,7 +21,13 @@ from homeassistant.components.unifi.const import (
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNKNOWN, Platform, TargetKey
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_HOST,
+    STATE_UNKNOWN,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -451,6 +457,81 @@ async def test_outlet_entities_move_to_child_device(
     assert aioclient_mock.mock_calls[0][2] == {
         "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": False}]
     }
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "expected_name"),
+    [
+        pytest.param(
+            [
+                {
+                    **ADOPTED_DEVICE,
+                    "outlet_table": [
+                        {
+                            "index": 7,
+                            "name": "",
+                            "has_relay": True,
+                            "has_metering": True,
+                            "relay_state": True,
+                            "outlet_power": 42,
+                        }
+                    ],
+                }
+            ],
+            "Outlet 7",
+            id="empty-name",
+        ),
+        pytest.param(
+            [
+                {
+                    **ADOPTED_DEVICE,
+                    "outlet_table": [
+                        {
+                            "index": 7,
+                            "name": "Desk",
+                            "has_relay": True,
+                            "has_metering": True,
+                            "relay_state": True,
+                            "outlet_power": 42,
+                        }
+                    ],
+                }
+            ],
+            "Desk",
+            id="named-outlet",
+        ),
+    ],
+)
+async def test_outlet_child_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    expected_name: str,
+) -> None:
+    """Name an unnamed outlet by its index while preserving reported names."""
+    config_entry = await config_entry_factory()
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"outlet-{ADOPTED_MAC}_7"), config_entry.entry_id
+    )
+    assert child is not None
+    assert child.name == expected_name
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"outlet-{ADOPTED_MAC}_7"
+    )
+    sensor_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"outlet_power-{ADOPTED_MAC}_7"
+    )
+    assert switch_id is not None
+    assert sensor_id is not None
+    assert entity_registry.async_get(switch_id).device_id == child.id
+    assert entity_registry.async_get(sensor_id).device_id == child.id
+    assert hass.states.get(switch_id).attributes[ATTR_FRIENDLY_NAME] == expected_name
+    assert (
+        hass.states.get(sensor_id).attributes[ATTR_FRIENDLY_NAME]
+        == f"{expected_name} Outlet power"
+    )
 
 
 @pytest.mark.parametrize(

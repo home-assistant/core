@@ -134,12 +134,18 @@ def async_child_device_info_fn(
             config_entry_id=hub.config.entry.entry_id,
             device_info=async_device_device_info_fn(hub, obj_id),
         )
-    obj = hub.api.ports[obj_id] if kind == "port" else hub.api.outlets[obj_id]
-    return ChildDeviceInfo(
+    child_info = ChildDeviceInfo(
         identifiers={(DOMAIN, f"{kind}-{obj_id}")},
-        name=obj.name,
         parent_device_id=parent.id,
     )
+    if kind == "port":
+        child_info.name = hub.api.ports[obj_id].name
+    elif (outlet := hub.api.outlets[obj_id]).name:
+        child_info.name = outlet.name
+    else:
+        child_info.translation_key = "outlet"
+        child_info.translation_placeholders = {"index": str(outlet.index)}
+    return child_info
 
 
 async_port_device_info_fn = partial(async_child_device_info_fn, kind="port")
