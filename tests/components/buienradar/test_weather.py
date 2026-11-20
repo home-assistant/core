@@ -14,9 +14,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import TEST_DATA, setup_integration
+from . import PARSE_FAILED, PARSE_SUCCEEDED, setup_integration
 
 WEATHER_ENTITY = "weather.buienradar"
 
@@ -54,15 +53,15 @@ async def test_update_failure_and_recovery(
     await setup_integration(hass)
     assert hass.states.get(WEATHER_ENTITY).state != STATE_UNAVAILABLE
 
-    mock_buienradar_data.side_effect = UpdateFailed("Unable to retrieve data")
+    mock_buienradar_data.side_effect = None
+    mock_buienradar_data.return_value = PARSE_FAILED
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(WEATHER_ENTITY).state == STATE_UNAVAILABLE
 
     # A failed update is retried two minutes later.
-    mock_buienradar_data.side_effect = None
-    mock_buienradar_data.return_value = TEST_DATA
+    mock_buienradar_data.return_value = PARSE_SUCCEEDED
     freezer.tick(timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -81,7 +80,8 @@ async def test_failure_during_service_quiet_hour_keeps_data(
     state = hass.states.get(WEATHER_ENTITY)
     assert state.state != STATE_UNAVAILABLE
 
-    mock_buienradar_data.side_effect = UpdateFailed("Unable to retrieve data")
+    mock_buienradar_data.side_effect = None
+    mock_buienradar_data.return_value = PARSE_FAILED
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

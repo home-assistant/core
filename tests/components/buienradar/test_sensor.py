@@ -1,8 +1,7 @@
 """The tests for the Buienradar sensor platform."""
 
-import copy
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -17,9 +16,15 @@ from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import TEST_CFG_DATA, TEST_DATA, TEST_LATITUDE, TEST_LONGITUDE, setup_integration
+from . import (
+    PARSE_FAILED,
+    PARSE_SUCCEEDED,
+    TEST_CFG_DATA,
+    TEST_LATITUDE,
+    TEST_LONGITUDE,
+    setup_integration,
+)
 
 CONDITIONS = {"stationname": "Eindhoven (6370)", "temperature": "8.2"}
 
@@ -67,7 +72,7 @@ async def test_sensors(
 async def test_sensor_unavailable_and_recovery(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_buienradar_data: AsyncMock,
+    mock_buienradar_data: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors are unavailable after a failed update and recover."""
@@ -79,14 +84,15 @@ async def test_sensor_unavailable_and_recovery(
     assert entity_id
     assert hass.states.get(entity_id).state == "8.2"
 
-    mock_buienradar_data.side_effect = UpdateFailed("Unable to retrieve data")
+    mock_buienradar_data.side_effect = None
+    mock_buienradar_data.return_value = PARSE_FAILED
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # A failed update is retried two minutes later, with the same measurement.
-    mock_buienradar_data.side_effect = lambda *args: copy.deepcopy(TEST_DATA)
+    mock_buienradar_data.return_value = PARSE_SUCCEEDED
     freezer.tick(timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
