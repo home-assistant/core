@@ -554,10 +554,6 @@
         }
       },
       "title": "Unmapped sensor value: {device_name}"
-    },
-    "unmapped_enum_value_no_fix": {
-      "description": "{device_name} reported a sensor value ({raw_value}) on {entity_id} that is not in the list of known states for this setting. The sensor will show as unknown while the device reports this value.\n\nThese states come from the device's configuration file or the Z-Wave specification, so re-interviewing the device will not add the value. Check for a device firmware update, and report the value to the Z-Wave JS project if it persists.",
-      "title": "Unmapped sensor value: {device_name}"
     }
   },
   "selector": {

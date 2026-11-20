@@ -62,7 +62,7 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
 class UnmappedEnumValueFlow(RepairsFlow):
     """Handler for unmapped enum values that require a device re-interview."""
 
-    def __init__(self, issue_id: str, data: dict[str, str]) -> None:
+    def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
         self.description_placeholders: dict[str, str] = {
             "device_name": data["device_name"],
@@ -70,7 +70,6 @@ class UnmappedEnumValueFlow(RepairsFlow):
             "raw_value": data.get("raw_value", ""),
         }
         self.device_id: str = data["device_id"]
-        self._issue_id: str = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -101,8 +100,8 @@ class UnmappedEnumValueFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         issue_reg = ir.async_get(self.hass)
-        if issue_reg.async_get_issue(DOMAIN, self._issue_id):
-            issue_reg.async_ignore(DOMAIN, self._issue_id, True)
+        if issue_reg.async_get_issue(DOMAIN, self.issue_id):
+            issue_reg.async_ignore(DOMAIN, self.issue_id, True)
         return self.async_abort(
             reason="issue_ignored",
             description_placeholders=self.description_placeholders,
@@ -174,7 +173,7 @@ async def async_create_fix_flow(
         return DeviceConfigFileChangedFlow(data)
     if issue_id.split(".", maxsplit=1)[0] == "unmapped_enum_value":
         assert data
-        return UnmappedEnumValueFlow(issue_id, data)
+        return UnmappedEnumValueFlow(data)
     if issue_id.split(".", maxsplit=1)[0] == "migrate_unique_id":
         assert data
         return MigrateUniqueIDFlow(data)

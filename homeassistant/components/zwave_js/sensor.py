@@ -978,11 +978,16 @@ class ZWaveListSensor(ZwaveSensor):
         if self.info.primary_value.metadata.states:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
+        self._logged_unmapped_values: set[str] = set()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+        # A re-interview or metadata update may bring the value back on another
+        # platform, so nothing would clear the repair later. If the value is
+        # still unmapped, the next entity raises it again.
+        self.async_on_remove(self._async_clear_unmapped_value)
         self._async_update_unmapped_issue()
 
     @callback
@@ -1037,12 +1042,22 @@ class ZWaveListSensor(ZwaveSensor):
 
     @callback
     def _async_report_unmapped_value(self, raw_value: str) -> None:
-        """Raise a repair when the device reports a value not in its metadata.
+        """Report a value the device sent that is not in its metadata.
 
         Only notification values get their states from the interview, so only
-        those get the re-interview fix. Config parameter and battery states
-        come from the device config file and zwave-js itself.
+        those raise a repair offering a re-interview. Config parameter and
+        battery states come from the device config file and zwave-js itself,
+        which a re-interview won't change, so those are only logged.
         """
+        if self.info.primary_value.command_class != CommandClass.NOTIFICATION:
+            if raw_value not in self._logged_unmapped_values:
+                self._logged_unmapped_values.add(raw_value)
+                LOGGER.warning(
+                    "%s reported value %s, which is not one of its known states",
+                    self.entity_id,
+                    raw_value,
+                )
+            return
         if (device := self._node_device) is None or (
             issue_id := self._unmapped_issue_id
         ) is None:
@@ -1053,18 +1068,15 @@ class ZWaveListSensor(ZwaveSensor):
             "entity_id": self.entity_id,
             "raw_value": raw_value,
         }
-        fixable = self.info.primary_value.command_class == CommandClass.NOTIFICATION
         ir.async_create_issue(
             self.hass,
             DOMAIN,
             issue_id,
             config_entry_id=self.config_entry.entry_id,
             data={"device_id": device.id, **placeholders},
-            is_fixable=fixable,
+            is_fixable=True,
             is_persistent=False,
-            translation_key=(
-                "unmapped_enum_value" if fixable else "unmapped_enum_value_no_fix"
-            ),
+            translation_key="unmapped_enum_value",
             translation_placeholders=placeholders,
             severity=ir.IssueSeverity.WARNING,
         )
@@ -1089,17 +1101,6 @@ class ZWaveListSensor(ZwaveSensor):
         """Drop the repair when the entity is deleted."""
         if (issue_id := self._unmapped_issue_id) is not None:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Clear the repair when the entity goes away.
-
-        A re-interview or metadata update may bring the value back on another
-        platform, so nothing would clear it later. If the value is still
-        unmapped, the next entity raises the repair again.
-        """
-        await super().async_will_remove_from_hass()
-        self._async_clear_unmapped_value()
 
     @callback
     @override

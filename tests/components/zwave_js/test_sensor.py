@@ -12,7 +12,6 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -1387,236 +1386,12 @@ async def test_energy_production_sensors(
             assert attr not in state.attributes
 
 
-@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_creates_repair(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    climate_adc_t3000: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test that an unmapped config parameter value creates a repair."""
-    entity_id = "sensor.adc_t3000_power_source"
-    node = climate_adc_t3000
-
-    # Enable the disabled config parameter sensor and reload
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "C-Wire"
-
-    # Send value 99, which is not in states {"0": "Battery", "1": "C-Wire"}
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Configuration",
-                "commandClass": 112,
-                "endpoint": 0,
-                "property": 26,
-                "propertyName": "Power Source",
-                "newValue": 99,
-                "prevValue": 1,
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-    matching = [
-        (domain, issue_id)
-        for (domain, issue_id) in issue_registry.issues
-        if domain == DOMAIN and "unmapped_enum_value" in issue_id
-    ]
-    assert len(matching) == 1
-    issue = issue_registry.async_get_issue(*matching[0])
-    assert issue
-    assert issue.config_entry_id == integration.entry_id
-    # Config parameter states come from the device config file, so a
-    # re-interview would not help.
-    assert not issue.is_fixable
-    assert issue.translation_key == "unmapped_enum_value_no_fix"
+MOTION_STATUS_ENTITY = "sensor.multisensor_6_motion_sensor_status"
 
 
-@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_cleared_after_mapped_update(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    climate_adc_t3000: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test that the repair is cleared when the value resolves to a mapped state."""
-    entity_id = "sensor.adc_t3000_power_source"
-    node = climate_adc_t3000
-
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
-    await hass.async_block_till_done()
-
-    # Trigger the repair with an unmapped value
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Configuration",
-                "commandClass": 112,
-                "endpoint": 0,
-                "property": 26,
-                "propertyName": "Power Source",
-                "newValue": 99,
-                "prevValue": 1,
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    matching = [
-        (d, iid)
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
-    assert len(matching) == 1
-
-    # Send a mapped value (1 = "C-Wire") to clear the repair
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Configuration",
-                "commandClass": 112,
-                "endpoint": 0,
-                "property": 26,
-                "propertyName": "Power Source",
-                "newValue": 1,
-                "prevValue": 99,
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "C-Wire"
-
-    matching = [
-        (d, iid)
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
-    assert len(matching) == 0
-
-
-@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_cleared_after_metadata_rediscovery(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    climate_adc_t3000: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test that a re-interview mapping the raw value clears the repair."""
-    entity_id = "sensor.adc_t3000_power_source"
-    node = climate_adc_t3000
-
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
-    await hass.async_block_till_done()
-
-    node.receive_event(
-        Event(
-            "value updated",
-            {
-                "source": "node",
-                "event": "value updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Configuration",
-                    "commandClass": 112,
-                    "endpoint": 0,
-                    "property": 26,
-                    "propertyName": "Power Source",
-                    "newValue": 2,
-                    "prevValue": 1,
-                },
-            },
-        )
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert [
-        iid
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
-
-    # The re-interview learns the value; the raw value itself does not change.
-    node.receive_event(
-        Event(
-            "metadata updated",
-            {
-                "source": "node",
-                "event": "metadata updated",
-                "nodeId": node.node_id,
-                "args": {
-                    "commandClassName": "Configuration",
-                    "commandClass": 112,
-                    "endpoint": 0,
-                    "property": 26,
-                    "propertyName": "Power Source",
-                    "metadata": {
-                        "type": "number",
-                        "readable": True,
-                        "writeable": False,
-                        "description": "Which source of power is utilized.",
-                        "label": "Power Source",
-                        "default": 0,
-                        "min": 0,
-                        "max": 2,
-                        "states": {"0": "Battery", "1": "C-Wire", "2": "Solar"},
-                        "valueSize": 1,
-                        "format": 0,
-                        "allowManualEntry": False,
-                        "isFromConfig": True,
-                    },
-                },
-            },
-        )
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "Solar"
-    assert state.attributes[ATTR_OPTIONS] == ["Battery", "C-Wire", "Solar"]
-    assert not [
+def _unmapped_issue_ids(issue_registry: ir.IssueRegistry) -> list[str]:
+    """Return the IDs of all unmapped value repairs."""
+    return [
         iid
         for (d, iid) in issue_registry.issues
         if d == DOMAIN and iid.startswith("unmapped_enum_value.")
@@ -1644,72 +1419,130 @@ def _power_source_value_event(node: Node, new_value: int, prev_value: int) -> Ev
     )
 
 
+def _motion_status_value_event(node: Node, new_value: int, prev_value: int) -> Event:
+    """Return a value updated event for the Multisensor 6 motion sensor status."""
+    return Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Motion sensor status",
+                "propertyName": "Home Security",
+                "propertyKeyName": "Motion sensor status",
+                "newValue": new_value,
+                "prevValue": prev_value,
+            },
+        },
+    )
+
+
 @pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_ignore_survives_mapped_value(
+async def test_unmapped_config_value_logs_warning(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     climate_adc_t3000: Node,
     integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that an ignored repair stays ignored when the value flips back."""
+    """Test that an unmapped config parameter value is logged, not repaired."""
     entity_id = "sensor.adc_t3000_power_source"
     node = climate_adc_t3000
 
+    # Enable the disabled config parameter sensor and reload
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
     )
     await hass.async_block_till_done()
 
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "C-Wire"
+
+    def warnings(raw_value: int) -> int:
+        return caplog.text.count(
+            f"{entity_id} reported value {raw_value}, which is not one of its"
+            " known states"
+        )
+
+    # Send value 99, which is not in states {"0": "Battery", "1": "C-Wire"}
     node.receive_event(_power_source_value_event(node, 99, 1))
     await hass.async_block_till_done()
-    [issue_id] = [
-        iid
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
-    issue_registry.async_ignore(DOMAIN, issue_id, True)
 
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert warnings(99) == 1
+    # Config parameter states come from the device config file, so a
+    # re-interview would not help.
+    assert not _unmapped_issue_ids(issue_registry)
+
+    # Each value is logged once per entity.
     node.receive_event(_power_source_value_event(node, 1, 99))
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue
-    assert issue.dismissed_version is not None
-
     node.receive_event(_power_source_value_event(node, 99, 1))
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue
-    assert issue.dismissed_version is not None
+    assert warnings(99) == 1
+
+    node.receive_event(_power_source_value_event(node, 98, 99))
+    await hass.async_block_till_done()
+    assert warnings(98) == 1
+    assert not _unmapped_issue_ids(issue_registry)
 
 
-@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
-async def test_unmapped_enum_value_cleared_when_states_removed(
+async def test_unmapped_enum_value_cleared_after_mapped_update(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    climate_adc_t3000: Node,
+    unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that the repair clears when rediscovery drops the value's states."""
-    entity_id = "sensor.adc_t3000_power_source"
-    node = climate_adc_t3000
+    """Test that the repair is cleared when the value resolves to a mapped state."""
+    node = unmapped_motion_sensor
+    assert _unmapped_issue_ids(issue_registry)
 
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
+    node.receive_event(_motion_status_value_event(node, 0, 8))
     await hass.async_block_till_done()
 
-    node.receive_event(_power_source_value_event(node, 99, 1))
-    await hass.async_block_till_done()
-    assert [
-        iid
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
+    state = hass.states.get(MOTION_STATUS_ENTITY)
+    assert state
+    assert state.state == "idle"
+    assert not _unmapped_issue_ids(issue_registry)
 
+
+@pytest.mark.parametrize(
+    "states",
+    [{"0": "idle", "8": "Motion detection"}, None],
+    ids=["value_mapped", "states_removed"],
+)
+async def test_unmapped_enum_value_cleared_after_metadata_rediscovery(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+    states: dict[str, str] | None,
+) -> None:
+    """Test that a metadata update that rediscovers the value clears the repair."""
+    node = unmapped_motion_sensor
+    assert _unmapped_issue_ids(issue_registry)
+
+    metadata = {
+        "type": "number",
+        "readable": True,
+        "writeable": False,
+        "min": 0,
+        "max": 255,
+        "label": "Motion sensor status",
+        "ccSpecific": {"notificationType": 7},
+    }
+    if states is not None:
+        metadata["states"] = states
     node.receive_event(
         Event(
             "metadata updated",
@@ -1718,75 +1551,64 @@ async def test_unmapped_enum_value_cleared_when_states_removed(
                 "event": "metadata updated",
                 "nodeId": node.node_id,
                 "args": {
-                    "commandClassName": "Configuration",
-                    "commandClass": 112,
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
                     "endpoint": 0,
-                    "property": 26,
-                    "propertyName": "Power Source",
-                    "metadata": {
-                        "type": "number",
-                        "readable": True,
-                        "writeable": False,
-                        "description": "Which source of power is utilized.",
-                        "label": "Power Source",
-                        "default": 0,
-                        "min": 0,
-                        "max": 255,
-                        "valueSize": 1,
-                        "format": 0,
-                        "allowManualEntry": True,
-                        "isFromConfig": True,
-                    },
+                    "property": "Home Security",
+                    "propertyKey": "Motion sensor status",
+                    "propertyName": "Home Security",
+                    "propertyKeyName": "Motion sensor status",
+                    "metadata": metadata,
                 },
             },
         )
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "99"
-    assert not [
-        iid
-        for (d, iid) in issue_registry.issues
-        if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-    ]
+    assert not _unmapped_issue_ids(issue_registry)
 
 
-@pytest.mark.usefixtures("lock_id_lock_as_id150")
+async def test_unmapped_enum_value_ignore_survives_mapped_value(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that an ignored repair stays ignored when the value flips back."""
+    node = unmapped_motion_sensor
+    [issue_id] = _unmapped_issue_ids(issue_registry)
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    node.receive_event(_motion_status_value_event(node, 0, 8))
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
+    node.receive_event(_motion_status_value_event(node, 8, 0))
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
+
 async def test_unmapped_enum_value_repair_follows_entity(
     hass: HomeAssistant,
     client: MagicMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    climate_adc_t3000: Node,
+    unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test that the repair survives a reload and goes when the entity does."""
-    entity_id = "sensor.adc_t3000_power_source"
-    node = climate_adc_t3000
     # The reload schedules a firmware update check.
     client.async_send_command.return_value = {"updates": []}
-
-    def unmapped_issues() -> list[str]:
-        return [
-            iid
-            for (d, iid) in issue_registry.issues
-            if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-        ]
-
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
-    )
-    await hass.async_block_till_done()
-
-    node.receive_event(_power_source_value_event(node, 99, 1))
-    await hass.async_block_till_done()
-    [issue_id] = unmapped_issues()
+    [issue_id] = _unmapped_issue_ids(issue_registry)
 
     async def set_disabled(disabled_by: er.RegistryEntryDisabler | None) -> None:
-        entity_registry.async_update_entity(entity_id, disabled_by=disabled_by)
+        entity_registry.async_update_entity(
+            MOTION_STATUS_ENTITY, disabled_by=disabled_by
+        )
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
         )
@@ -1795,13 +1617,13 @@ async def test_unmapped_enum_value_repair_follows_entity(
     # A reload clears the repair and the new entity raises it again.
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
-    assert unmapped_issues() == [issue_id]
+    assert _unmapped_issue_ids(issue_registry) == [issue_id]
 
     await set_disabled(er.RegistryEntryDisabler.USER)
-    assert not unmapped_issues()
+    assert not _unmapped_issue_ids(issue_registry)
 
     await set_disabled(None)
-    assert unmapped_issues() == [issue_id]
+    assert _unmapped_issue_ids(issue_registry) == [issue_id]
 
     # An ignored repair stays ignored across disable and re-enable.
     issue_registry.async_ignore(DOMAIN, issue_id, True)
@@ -1811,9 +1633,9 @@ async def test_unmapped_enum_value_repair_follows_entity(
     assert issue
     assert issue.dismissed_version is not None
 
-    entity_registry.async_remove(entity_id)
+    entity_registry.async_remove(MOTION_STATUS_ENTITY)
     await hass.async_block_till_done()
-    assert not unmapped_issues()
+    assert not _unmapped_issue_ids(issue_registry)
 
 
 async def test_unmapped_notification_value_at_startup(
@@ -1834,6 +1656,7 @@ async def test_unmapped_notification_value_at_startup(
         if domain == DOMAIN and issue_id.startswith("unmapped_enum_value.")
     ]
     assert issue.is_fixable
+    assert issue.config_entry_id == integration.entry_id
     assert issue.translation_key == "unmapped_enum_value"
     assert issue.translation_placeholders == {
         "device_name": "Multisensor 6",
