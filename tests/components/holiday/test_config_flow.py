@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from holidays import UNOFFICIAL
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.holiday.const import (
@@ -581,3 +581,22 @@ async def test_options_country_options(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_ISLAMIC_SHOW_ESTIMATED: False}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_shows_saved_options(hass: HomeAssistant) -> None:
+    """Test the reconfigure form shows the saved country options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Sweden",
+        data={CONF_COUNTRY: "SE"},
+        options={CONF_INCLUDE_SUNDAYS: True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_INCLUDE_SUNDAYS)
+        is True
+    )

@@ -258,7 +258,10 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=options_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema,
+                {**reconfigure_entry.data, **reconfigure_entry.options},
+            ),
             description_placeholders={"country": reconfigure_entry.data[CONF_COUNTRY]},
         )
 
