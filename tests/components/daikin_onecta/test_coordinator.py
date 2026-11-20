@@ -320,6 +320,36 @@ async def test_rate_limited_poll_after_success_keeps_cached_state(
     coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
 
+async def test_poll_failure_is_logged_only_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Log the transition to unavailable without repeating it each poll."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    caplog.set_level(logging.INFO, logger=coordinator_module._LOGGER.name)
+    coordinator.client.get_gateway_devices = AsyncMock(
+        side_effect=OnectaConnectionError(
+            EXPECTED_CONNECTION_ERROR,
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+    )
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    unavailable_logs = [
+        record
+        for record in caplog.records
+        if record.name == coordinator_module._LOGGER.name
+        and "is unavailable" in record.message
+    ]
+    assert len(unavailable_logs) == 1
+
+
 async def test_rate_limited_first_refresh_does_not_load_empty_cache(
     coordinator: OnectaDataUpdateCoordinator,
 ) -> None:
@@ -452,26 +482,6 @@ class TestOnectaDataUpdateCoordinator:
         assert high_interval == timedelta(seconds=594)
         assert low_interval == timedelta(seconds=1782)
         assert ceil(15 * 3600 / 594) + ceil(9 * 3600 / 1782) == 110
-
-    async def test_command_token_rejection_starts_reauthentication(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Start reauthentication when token renewal rejects a command."""
-        error = OAuth2TokenRequestReauthError(
-            domain=DOMAIN,
-            request_info=MagicMock(),
-            status=401,
-            message="invalid_grant",
-        )
-        command = AsyncMock(side_effect=error)
-        coordinator.config_entry.async_start_reauth = MagicMock()
-
-        assert not await coordinator.async_execute_command(command)
-
-        coordinator.config_entry.async_start_reauth.assert_called_once_with(
-            coordinator.hass
-        )
-        assert coordinator.last_patch_call is None
 
     async def test_transient_command_token_failure_returns_failure(
         self, coordinator: OnectaDataUpdateCoordinator

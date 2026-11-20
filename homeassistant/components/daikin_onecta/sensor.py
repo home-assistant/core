@@ -366,6 +366,13 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             self._sub_type,
             self._value,
         )
+        management_point = self._management_point
+        if (
+            self._value == "errorCode"
+            and management_point is not None
+            and management_point.management_point_type == "gateway"
+        ):
+            self._attr_translation_key = "gateway_errorcode"
         self.update_state()
 
     @override

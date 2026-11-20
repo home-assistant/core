@@ -17,10 +17,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.components.daikin_onecta.entity import management_point_device_info
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 
@@ -192,28 +189,6 @@ async def test_remove_missing_gateway_rejects_failed_sites_lookup(
         hass, config_entry, missing_gateway
     )
     assert coordinator.data
-
-
-async def test_remove_missing_gateway_starts_reauth_for_revoked_token(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    missing_gateway: dr.DeviceEntry,
-) -> None:
-    """Start reauthentication when the Sites lookup rejects a refresh token."""
-    coordinator = config_entry.runtime_data
-    coordinator.async_get_sites = AsyncMock(
-        side_effect=OAuth2TokenRequestReauthError(
-            domain=DOMAIN,
-            request_info=AsyncMock(),
-            status=401,
-            message="invalid_grant",
-        )
-    )
-
-    assert not await async_remove_config_entry_device(
-        hass, config_entry, missing_gateway
-    )
-    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_remove_missing_gateway_starts_reauth_for_sites_401(

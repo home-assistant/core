@@ -201,27 +201,3 @@ async def test_diagnostics_reports_oauth_token_failure(
     assert diagnostics["sites"] == {
         "error": {"type": "OAuth2TokenRequestError", "status": 401}
     }
-
-
-async def test_diagnostics_does_not_start_reauth_for_revoked_token(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Report revoked tokens without starting a flow from diagnostics."""
-    await _async_setup_fixture(hass, config_entry, "minimal_data")
-    config_entry.runtime_data.client.get_sites = AsyncMock(
-        side_effect=OAuth2TokenRequestReauthError(
-            domain="daikin_onecta",
-            request_info=MagicMock(),
-            status=401,
-            message="invalid_grant",
-        )
-    )
-
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    )
-
-    assert diagnostics["sites"]["error"]["type"] == "OAuth2TokenRequestReauthError"
-    assert hass.config_entries.flow.async_progress() == []

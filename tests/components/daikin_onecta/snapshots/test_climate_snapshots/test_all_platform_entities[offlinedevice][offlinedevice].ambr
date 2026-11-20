@@ -1,6 +1,55 @@
 # serializer version: 1
 # name: test_all_platform_entities[offlinedevice][offlinedevice]
   dict({
+    'binary_sensor.studio_gateway_is_in_error_state': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000104')]>,
+        'disabled_by': None,
+        'domain': 'binary_sensor',
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+        'entity_id': 'binary_sensor.studio_gateway_is_in_error_state',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Gateway is in error state',
+        'options': dict({
+        }),
+        'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+        'original_icon': None,
+        'original_name': 'Gateway is in error state',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'gateway_isinerrorstate',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_isInErrorState',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Gateway is in error state',
+        }),
+        'context': <ANY>,
+        'entity_id': 'binary_sensor.studio_gateway_is_in_error_state',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'unavailable',
+      }),
+    }),
     'binary_sensor.studio_is_firmware_update_supported': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
@@ -179,55 +228,6 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_isInErrorState',
-        'unit_of_measurement': None,
-      }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Is in error state',
-        }),
-        'context': <ANY>,
-        'entity_id': 'binary_sensor.studio_is_in_error_state',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unavailable',
-      }),
-    }),
-    'binary_sensor.studio_is_in_error_state_2': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000104')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.studio_is_in_error_state_2',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is in error state',
-        'options': dict({
-        }),
-        'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': None,
-        'original_name': 'Is in error state',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isinerrorstate',
         'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
@@ -237,7 +237,7 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.studio_is_in_error_state_2',
+        'entity_id': 'binary_sensor.studio_is_in_error_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -999,7 +999,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_errorCode',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1014,7 +1014,7 @@
         'state': 'unavailable',
       }),
     }),
-    'sensor.studio_error_code_2': dict({
+    'sensor.studio_gateway_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1028,7 +1028,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.studio_error_code_2',
+        'entity_id': 'sensor.studio_gateway_error_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1036,26 +1036,26 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Error code',
+        'object_id_base': 'Gateway error code',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Error code',
+        'original_name': 'Gateway error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': 'errorcode',
-        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_errorCode',
+        'translation_key': 'gateway_errorcode',
+        'unique_id': '00000000-0000-4000-8000-000000000104_gateway_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Gateway error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.studio_error_code_2',
+        'entity_id': 'sensor.studio_gateway_error_code',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

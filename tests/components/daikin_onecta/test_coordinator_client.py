@@ -223,10 +223,8 @@ async def test_write_preserves_oauth_token_rejection(
     async def command(client: OnectaClient) -> None:
         await client.patch_characteristic("gateway", "zone", "temperatureControl", 21)
 
-    with patch.object(config_entry, "async_start_reauth") as start_reauth:
-        assert not await api.async_execute_command(command)
+    assert not await api.async_execute_command(command)
 
-    start_reauth.assert_called_once_with(hass)
     token_provider.assert_awaited_once_with()
     session.request.assert_not_called()
     assert api.last_patch_call is None

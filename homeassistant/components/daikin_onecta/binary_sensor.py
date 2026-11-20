@@ -104,6 +104,13 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         self._attr_unique_id = management_point_unique_id(
             self._device_id, self._embedded_id, self._value
         )
+        management_point = self._management_point
+        if (
+            self._value == "isInErrorState"
+            and management_point is not None
+            and management_point.management_point_type == "gateway"
+        ):
+            self._attr_translation_key = "gateway_isinerrorstate"
         self.entity_description = description
         self.update_state()
 

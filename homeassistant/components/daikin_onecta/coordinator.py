@@ -229,10 +229,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Get Sites and normalize expected lookup failures for callers."""
         try:
             sites = await self.async_get_sites(use_cache=use_cache)
-        except OAuth2TokenRequestReauthError as err:
-            if start_reauth:
-                self.config_entry.async_start_reauth(self.hass)
-            return SiteLookupResult([], err)
         except OnectaAuthenticationError as err:
             if start_reauth and err.status == 401:
                 self.config_entry.async_start_reauth(self.hass)
@@ -264,9 +260,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         async with self._cloud_lock:
             try:
                 await command(self._client)
-            except OAuth2TokenRequestReauthError:
-                self.config_entry.async_start_reauth(self.hass)
-                return False
             except OAuth2TokenRequestBaseError as err:
                 _LOGGER.debug(
                     "Daikin OAuth token request failed with %s",

@@ -88,6 +88,13 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             id="control-operation-mode",
         ),
         pytest.param(
+            "airPurificationMode",
+            Characteristic(value="autoFan"),
+            "climateControl",
+            None,
+            id="air-purification-mode-is-a-fan-preset",
+        ),
+        pytest.param(
             "operationMode",
             Characteristic(value="heating"),
             "outdoorUnit",
