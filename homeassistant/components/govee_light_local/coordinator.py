@@ -166,15 +166,14 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         )
 
     @callback
-    def async_adopt_device(self, device: GoveeDevice) -> bool:
-        """Claim an already-discovered device for its manual subentry.
+    def async_claim_subentry(self, device: GoveeDevice) -> str | None:
+        """Claim the subentry configured for the device's address, if any.
 
-        Marks it manual so eviction re-queues it instead of dropping it, and
-        moves its registrations under the subentry so deleting the subentry
-        cascades to them. Entities move first: changing the device's subentry
-        purges entities still pointing at the old one.
-
-        Returns whether the device is the subentry's lamp afterwards.
+        A subentry describes one lamp; its address is only the hint for
+        finding it. If the subentry's registry device is another lamp, this
+        device stays on the main entry: it is unmarked as manual (the library
+        marks whatever answers a queued probe) and the probe is restored so
+        the owner can still be found.
         """
         subentry_id = next(
             (
@@ -187,13 +186,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             None,
         )
         if subentry_id is None:
-            return False
+            return None
 
         device_registry = dr.async_get(self.hass)
-        # A subentry describes one lamp. If it already owns another lamp's
-        # registry entry, its address was reconfigured to this device's IP:
-        # adopting would put two lamps under one subentry and make either
-        # deletion cascade to both.
+        # Claiming a subentry that already owns another lamp's registry entry
+        # would put two lamps under one subentry and make either deletion
+        # cascade to both.
         for entry in dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         ):
@@ -201,10 +199,29 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 entry.config_subentry_id == subentry_id
                 and (DOMAIN, device.fingerprint) not in entry.identifiers
             ):
-                return False
+                if device.is_manual:
+                    device.is_manual = False
+                    self.add_device_to_discovery_queue(device.ip)
+                return None
 
         device.is_manual = True
+        return subentry_id
 
+    @callback
+    def async_adopt_device(self, device: GoveeDevice) -> bool:
+        """Claim an already-discovered device for its manual subentry.
+
+        Marks it manual so eviction re-queues it instead of dropping it, and
+        moves its registrations under the subentry so deleting the subentry
+        cascades to them. Entities move first: changing the device's subentry
+        purges entities still pointing at the old one.
+
+        Returns whether the device is the subentry's lamp afterwards.
+        """
+        if (subentry_id := self.async_claim_subentry(device)) is None:
+            return False
+
+        device_registry = dr.async_get(self.hass)
         if (
             device_entry := device_registry.async_get_device_by_identifier(
                 (DOMAIN, device.fingerprint), self.config_entry.entry_id

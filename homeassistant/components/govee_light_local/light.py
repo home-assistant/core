@@ -21,13 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_DEVICE_IP,
-    DEVICE_TIMEOUT,
-    DOMAIN,
-    MANUFACTURER,
-    SUBENTRY_TYPE_DEVICE,
-)
+from .const import DEVICE_TIMEOUT, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,31 +38,18 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    def _subentry_id_for(ip: str) -> str | None:
-        """Return the device subentry for an IP, read live as subentries change."""
-        return next(
-            (
-                subentry.subentry_id
-                for subentry in config_entry.get_subentries_of_type(
-                    SUBENTRY_TYPE_DEVICE
-                )
-                if subentry.data[CONF_DEVICE_IP] == ip
-            ),
-            None,
-        )
-
     def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
         if is_new:
             async_add_entities(
                 [GoveeLight(coordinator, device)],
-                config_subentry_id=_subentry_id_for(device.ip),
+                config_subentry_id=coordinator.async_claim_subentry(device),
             )
         return True
 
     for govee_device in coordinator.devices:
         async_add_entities(
             [GoveeLight(coordinator, govee_device)],
-            config_subentry_id=_subentry_id_for(govee_device.ip),
+            config_subentry_id=coordinator.async_claim_subentry(govee_device),
         )
 
     coordinator.set_discovery_callback(discovery_callback)
