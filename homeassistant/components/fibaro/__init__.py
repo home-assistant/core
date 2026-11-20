@@ -22,7 +22,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    AnyDeviceEntry,
+    ChildDeviceInfo,
+    DeviceInfo,
+    DeviceRegistry,
+)
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
@@ -93,6 +98,8 @@ class FibaroController:
         self.hub_serial = info.serial_number
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
+        self._endpoint_names_by_parent: dict[int, dict[int, str]] = defaultdict(dict)
+        self._child_device_infos: dict[tuple[int, int], ChildDeviceInfo] = {}
         self._read_devices()
 
     def disconnect(self) -> None:
@@ -200,9 +207,45 @@ class FibaroController:
             return self._device_infos[device.parent_fibaro_id]
         return DeviceInfo(identifiers={(DOMAIN, self.hub_serial)})
 
+    def get_child_device_info(
+        self, device: DeviceModel
+    ) -> DeviceInfo | ChildDeviceInfo:
+        """Get the child device info if the parent has multiple endpoints."""
+        if device.has_endpoint_id:
+            if endpoint_info := self._child_device_infos.get(
+                (device.parent_fibaro_id, device.endpoint_id)
+            ):
+                return endpoint_info
+        return self.get_device_info(device)
+
+    def create_child_device_infos(
+        self, device_registry: DeviceRegistry, config_entry_id: str
+    ) -> None:
+        """Create child device infos for parents with multiple endpoints."""
+        for parent_id, endpoint_names in self._endpoint_names_by_parent.items():
+            if len(endpoint_names) < 2:
+                continue
+
+            main_device_info = self._device_infos[parent_id]
+            main_device = device_registry.async_get_or_create(
+                config_entry_id=config_entry_id,
+                identifiers=main_device_info.identifiers,
+                manufacturer=main_device_info.manufacturer,
+                name=main_device_info.name,
+                via_device_id=main_device_info.via_device_id,
+            )
+            for endpoint_id, endpoint_name in endpoint_names.items():
+                self._child_device_infos[(parent_id, endpoint_id)] = ChildDeviceInfo(
+                    identifiers={(DOMAIN, f"{parent_id}_endpoint_{endpoint_id}")},
+                    name=endpoint_name,
+                    parent_device_id=main_device.id,
+                )
+
     def get_all_device_identifiers(self) -> list[set[tuple[str, str]]]:
         """Get all identifiers of fibaro integration."""
-        return [{(DOMAIN, str(fibaro_id))} for fibaro_id in self._device_infos]
+        return [{(DOMAIN, str(fibaro_id))} for fibaro_id in self._device_infos] + [
+            device_info.identifiers for device_info in self._child_device_infos.values()
+        ]
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id or "Unknown" if room does not exist."""
@@ -244,6 +287,13 @@ class FibaroController:
                     continue
 
                 self._device_map[device.fibaro_id] = device
+                if (
+                    device.has_endpoint_id
+                    and device.parent_fibaro_id in self._device_infos
+                ):
+                    self._endpoint_names_by_parent[device.parent_fibaro_id].setdefault(
+                        device.endpoint_id, device.name
+                    )
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
                     device.fibaro_id,
@@ -329,6 +379,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> No
         connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
     )
     controller.link_main_devices_to_hub(hub_device.id)
+    controller.create_child_device_infos(device_registry, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
