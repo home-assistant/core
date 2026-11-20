@@ -284,13 +284,13 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                     validate_custom_dates, combined_input
                 )
             except AddDatesError:
-                errors["add_holidays"] = "add_holiday_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "add_holiday_error"
             except AddDateRangeError:
-                errors["add_holidays"] = "add_holiday_range_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "add_holiday_range_error"
             except RemoveDatesError:
-                errors["remove_holidays"] = "remove_holiday_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "remove_holiday_error"
             except RemoveDateRangeError:
-                errors["remove_holidays"] = "remove_holiday_range_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "remove_holiday_range_error"
 
             abort_match = {
                 CONF_COUNTRY: combined_input.get(CONF_COUNTRY),
@@ -355,13 +355,13 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
                     validate_custom_dates, combined_input
                 )
             except AddDatesError:
-                errors["add_holidays"] = "add_holiday_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "add_holiday_error"
             except AddDateRangeError:
-                errors["add_holidays"] = "add_holiday_range_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "add_holiday_range_error"
             except RemoveDatesError:
-                errors["remove_holidays"] = "remove_holiday_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "remove_holiday_error"
             except RemoveDateRangeError:
-                errors["remove_holidays"] = "remove_holiday_range_error"
+                errors[SECTION_CUSTOM_HOLIDAYS] = "remove_holiday_range_error"
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
                 abort_match = {

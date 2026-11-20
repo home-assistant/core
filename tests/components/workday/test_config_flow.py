@@ -341,7 +341,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result3["errors"] == {"add_holidays": "add_holiday_error"}
+    assert result3["errors"] == {"custom_holidays": "add_holiday_error"}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -360,7 +360,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["errors"] == {"remove_holidays": "remove_holiday_error"}
+    assert result3["errors"] == {"custom_holidays": "remove_holiday_error"}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -436,7 +436,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["errors"] == {"add_holidays": "add_holiday_error"}
+    assert result2["errors"] == {"custom_holidays": "add_holiday_error"}
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -455,7 +455,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["errors"] == {"remove_holidays": "remove_holiday_error"}
+    assert result2["errors"] == {"custom_holidays": "remove_holiday_error"}
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -608,7 +608,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert result3["errors"] == {"add_holidays": "add_holiday_range_error"}
+    assert result3["errors"] == {"custom_holidays": "add_holiday_range_error"}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -627,7 +627,7 @@ async def test_form_incorrect_date_range(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["errors"] == {"remove_holidays": "remove_holiday_range_error"}
+    assert result3["errors"] == {"custom_holidays": "remove_holiday_range_error"}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -703,7 +703,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["errors"] == {"add_holidays": "add_holiday_range_error"}
+    assert result2["errors"] == {"custom_holidays": "add_holiday_range_error"}
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -722,7 +722,7 @@ async def test_options_form_incorrect_date_ranges(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["errors"] == {"remove_holidays": "remove_holiday_range_error"}
+    assert result2["errors"] == {"custom_holidays": "remove_holiday_range_error"}
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
