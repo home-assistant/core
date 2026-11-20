@@ -2077,9 +2077,7 @@ async def test_restore_state_after_unavailable_away_mode(hass: HomeAssistant) ->
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.attributes[ATTR_HUMIDITY] == 32.0
-    assert (
-        state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 62.0
-    )
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 62.0
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
