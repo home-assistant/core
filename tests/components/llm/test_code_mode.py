@@ -455,7 +455,7 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     assert result.data["result"] == {
         "items": [1, 2],
         "ids": [1],
-        "[1, 2]": None,
+        "(1, 2)": None,
         "kind": "<class 'int'>",
         "big": "1267650600228229401496703205376",
         "max": 2**64 - 1,
@@ -463,30 +463,6 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     }
     # The JSON encoder of Home Assistant accepts the result.
     json_dumps(result.data)
-
-
-@pytest.mark.parametrize(
-    "code",
-    [
-        # A small value that contains the same list many times.
-        "x = [1]\nfor _ in range(60):\n    x = [x, x]\nx",
-        "x = [1]\nfor _ in range(900):\n    x = [x]\nprint('deep')\nx",
-        "'a' * 100000",
-        "{'a' * 100000: 1}",
-        "b'a' * 100000",
-        "[1, b'a' * 100000]",
-        # A small dict key that contains the same tuple many times.
-        "k = (1,)\nfor _ in range(60):\n    k = (k, k)\n{k: 1}",
-    ],
-)
-async def test_result_too_large(api_instance: llm.APIInstance, code: str) -> None:
-    """Test a result that is too large to return gives an error."""
-    result = await _execute(api_instance, code)
-
-    assert result.error is True
-    assert result.data["error"] == (
-        "The result is too large or nested too deep. Return less data."
-    )
 
 
 async def test_python_names_are_unique(

@@ -4,7 +4,6 @@ import asyncio
 import builtins
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
-from datetime import date, time, timedelta
 from functools import partial
 import json
 import keyword
@@ -41,15 +40,9 @@ LIMITS = ResourceLimits(
 MAX_OUTPUT_BYTES = 64 * 1024
 # Code can raise an error with a message of any size.
 MAX_ERROR_SIZE = 4096
-# Limit for the result of the code, in values plus characters.
-MAX_RESULT_SIZE = 64 * 1024
-# The JSON encoder of Home Assistant fails on deeper values.
-MAX_RESULT_DEPTH = 100
 # The JSON encoder of Home Assistant fails on integers outside this range.
 MIN_JSON_INT = -(2**63)
 MAX_JSON_INT = 2**64 - 1
-# Types whose string has a size close to the size of the value.
-_SCALAR_TYPES = (bool, int, float, type, date, time, timedelta)
 SEARCH_LIMIT = 10
 # Modules that the code can use without an import.
 IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
@@ -420,66 +413,24 @@ class ExecuteTool(Tool):
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        try:
-            json_result = _to_bounded_json(result, [MAX_RESULT_SIZE], MAX_RESULT_DEPTH)
-        except ValueError:
-            return ToolResult(
-                data={
-                    "error": "The result is too large or nested too deep. "
-                    "Return less data.",
-                    "output": output.output,
-                },
-                error=True,
-            )
-        return ToolResult(data={"result": json_result, "output": output.output})
+        return ToolResult(data={"result": _to_json(result), "output": output.output})
 
 
-def _to_bounded_json(value: Any, budget: list[int], depth: int) -> JsonValueType:
-    """Return the sandbox result as a JSON value.
+def _to_json(value: Any) -> JsonValueType:
+    """Return the result of the code as a value that the JSON encoder accepts.
 
-    The sandbox can return values that JSON cannot represent, such as sets
-    and dicts with tuple keys. A small result can also contain the same list
-    many times, so the budget limits the size of the converted value.
+    The code can return values that JSON cannot represent, such as sets and
+    dicts with tuple keys.
     """
-    budget[0] -= 1 + (len(value) if isinstance(value, str) else 0)
-    if budget[0] < 0 or depth < 0:
-        raise ValueError("Result too large")
     if isinstance(value, int) and not MIN_JSON_INT <= value <= MAX_JSON_INT:
-        return _to_bounded_text(value, budget, depth)
+        return str(value)
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, dict):
         return {
-            _to_bounded_text(key, budget, depth): _to_bounded_json(
-                item, budget, depth - 1
-            )
+            key if isinstance(key, str) else str(key): _to_json(item)
             for key, item in value.items()
         }
     if isinstance(value, (list, tuple, set, frozenset)):
-        return [_to_bounded_json(item, budget, depth - 1) for item in value]
-    return _to_bounded_text(value, budget, depth)
-
-
-def _to_bounded_text(value: Any, budget: list[int], depth: int) -> str:
-    """Return a dict key, or a value without a JSON type, as a string.
-
-    The string of a value can be much larger than the value, so the size is
-    checked before the conversion where that is possible.
-    """
-    if isinstance(value, str):
-        text = value
-    elif isinstance(value, (tuple, frozenset)):
-        # The conversion of the items applies the budget.
-        text = str(_to_bounded_json(value, budget, depth))
-    elif isinstance(value, bytes):
-        if len(value) > budget[0]:
-            raise ValueError("Result too large")
-        text = str(value)
-    elif value is None or isinstance(value, _SCALAR_TYPES):
-        text = str(value)
-    else:
-        text = f"<{type(value).__name__}>"
-    budget[0] -= len(text)
-    if budget[0] < 0:
-        raise ValueError("Result too large")
-    return text
+        return [_to_json(item) for item in value]
+    return str(value)
