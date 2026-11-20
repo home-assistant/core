@@ -967,6 +967,9 @@
     "not_a_border_router": {
       "message": "The selected device is not a Matter Thread border router."
     },
+    "not_a_thread_device": {
+      "message": "The selected device is not a Matter Thread device that can be moved to another network."
+    },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
     },
@@ -988,11 +991,38 @@
     "thread_dataset_unusable": {
       "message": "The border router returned no usable Thread dataset."
     },
+    "thread_migration_failed": {
+      "message": "Could not move the device to the Thread network: {error}."
+    },
+    "thread_migration_incomplete": {
+      "message": "Could not move these devices to the Thread network: {devices}. Run the action again to retry them."
+    },
+    "thread_migration_not_switched": {
+      "message": "The device stayed on its Thread network and was not moved."
+    },
+    "thread_migration_running": {
+      "message": "A migration of all devices to a Thread network is under way. Try again once it is done."
+    },
+    "thread_migration_unconfirmed": {
+      "message": "The device reached the new Thread network but did not confirm the move. It stays there if the move was committed, and otherwise returns to its previous network when its fail-safe expires."
+    },
+    "thread_migration_unreachable": {
+      "message": "The device did not answer on the new Thread network and returns to its previous one when its fail-safe expires."
+    },
+    "thread_network_busy": {
+      "message": "Devices are being moved between Thread networks. Try again once that is done."
+    },
+    "thread_network_change_pending": {
+      "message": "A border router has a Thread network change pending. Try again once it has taken effect."
+    },
     "thread_network_missing": {
       "message": "The border router has no Thread network."
     },
     "thread_network_present": {
       "message": "The border router has a Thread network already, which the button would move as a whole. Use the Push Thread network to border router action for that."
+    },
+    "thread_network_unreadable": {
+      "message": "The Thread network of the device could not be read, so it was not moved. Try again once the device is reachable."
     },
     "thread_pan_change_unsupported": {
       "message": "The border router cannot change the Thread network it runs."
@@ -1086,6 +1116,30 @@
         }
       },
       "name": "Get Thread network from border router"
+    },
+    "migrate_thread_device": {
+      "description": "Moves a commissioned Matter Thread device to another Thread network without commissioning it again. A device that cannot reach the new network returns to its previous one by itself.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        },
+        "device_id": {
+          "description": "The Matter Thread device to move.",
+          "name": "Device"
+        }
+      },
+      "name": "Migrate device to Thread network"
+    },
+    "migrate_thread_fleet": {
+      "description": "Moves every commissioned Matter Thread device to another Thread network, one at a time. Devices already on the network are skipped, border routers are left alone, and end devices go before the routers they depend on; when a device fails to move, the routers are held back. Offline devices are reported as failed. Running it again picks up the devices that were not moved.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        }
+      },
+      "name": "Migrate all devices to Thread network"
     },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",

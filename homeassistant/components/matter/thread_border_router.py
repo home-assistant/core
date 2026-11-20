@@ -8,11 +8,12 @@ in step with its border routers.
 
 import asyncio
 from base64 import b64decode
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
 import contextlib
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+import math
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
@@ -36,7 +37,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
 
-from .const import BORDER_ROUTER_DEVICE_TYPES, DOMAIN, LOGGER
+from .const import BORDER_ROUTER_DEVICE_TYPES, DOMAIN, FLEET_MIGRATION, LOGGER
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -56,6 +57,8 @@ PENDING_DATASET_DELAY = 300_000  # milliseconds
 
 # Nodes under a fail-safe transaction started here
 _RECONFIGURING: HassKey[set[int]] = HassKey(f"{DOMAIN}_reconfiguring")
+# Loop time until which a pending dataset written here may move a network
+_NETWORK_CHANGE: HassKey[float] = HassKey(f"{DOMAIN}_thread_network_change")
 
 
 def get_dataset_attribute_paths(endpoint: MatterEndpoint) -> list[str]:
@@ -202,6 +205,32 @@ async def async_reconfiguring(
             release()
 
 
+def is_reconfiguring(hass: HomeAssistant, *, other_than: int | None = None) -> bool:
+    """Return whether a node, other than the given one, is held for a transaction."""
+    nodes: set[int] | None = hass.data.get(_RECONFIGURING)
+    return bool(nodes and nodes - {other_than})
+
+
+@contextmanager
+def _network_change(hass: HomeAssistant) -> Iterator[None]:
+    """Have the network changed while a pending dataset is written and its delay after.
+
+    Kept whatever answers the write: one whose answer got lost may have been
+    taken. Only one is written at a time, since none starts while one is held.
+    """
+    hass.data[_NETWORK_CHANGE] = math.inf
+    try:
+        yield
+    finally:
+        hass.data[_NETWORK_CHANGE] = hass.loop.time() + PENDING_DATASET_DELAY / 1000
+
+
+def network_change_pending(hass: HomeAssistant) -> bool:
+    """Return whether a pending dataset written here may still move a network."""
+    until: float | None = hass.data.get(_NETWORK_CHANGE)
+    return until is not None and until > hass.loop.time()
+
+
 async def async_run_on_entry[_R](
     hass: HomeAssistant,
     entry: MatterConfigEntry,
@@ -346,12 +375,27 @@ async def async_push_dataset(
                     translation_domain=DOMAIN,
                     translation_key="thread_pan_change_unsupported",
                 )
-            await send(
-                endpoint.endpoint_id,
-                management.SetPendingDatasetRequest(
-                    pendingDataset=_as_pending(dataset, active)
-                ),
-            )
+            # Moving the network under devices being moved could strand them.
+            if hass.data.get(FLEET_MIGRATION) or is_reconfiguring(
+                hass, other_than=endpoint.node.node_id
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="thread_network_busy"
+                )
+            # Another router of the mesh may not report a change written
+            # through this one yet.
+            if network_change_pending(hass):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="thread_network_change_pending",
+                )
+            with _network_change(hass):
+                await send(
+                    endpoint.endpoint_id,
+                    management.SetPendingDatasetRequest(
+                        pendingDataset=_as_pending(dataset, active)
+                    ),
+                )
             return
 
         # Held while the fail-safe may be armed, whatever ends this, from
