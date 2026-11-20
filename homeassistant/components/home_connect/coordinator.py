@@ -97,9 +97,7 @@ class HomeConnectApplianceData:
         if other.available_options is None:
             self.available_options = None
         else:
-            if self.available_options is None:
-                self.available_options = set()
-            self.available_options.update(other.available_options)
+            self.available_options = other.available_options.copy()
         self.programs.clear()
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
