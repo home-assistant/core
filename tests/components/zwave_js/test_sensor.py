@@ -49,7 +49,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -1635,6 +1639,28 @@ async def test_unmapped_enum_value_repair_follows_entity(
 
     entity_registry.async_remove(MOTION_STATUS_ENTITY)
     await hass.async_block_till_done()
+    assert not _unmapped_issue_ids(issue_registry)
+
+
+async def test_unmapped_enum_value_cleared_when_device_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unmapped_motion_sensor: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the repair goes with the node's device."""
+    assert _unmapped_issue_ids(issue_registry)
+    entry = entity_registry.async_get(MOTION_STATUS_ENTITY)
+    assert entry
+    assert entry.device_id
+
+    # Removing a node deletes the device before its entities are torn down.
+    device_registry.async_remove_device(entry.device_id)
+    await hass.async_block_till_done()
+
+    assert not entity_registry.async_get(MOTION_STATUS_ENTITY)
     assert not _unmapped_issue_ids(issue_registry)
 
 

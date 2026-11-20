@@ -979,11 +979,18 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
         self._logged_unmapped_values: set[str] = set()
+        self._unmapped_issue_id: str | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+        # Removing a node deletes its device before the entity is torn down,
+        # so the issue ID can't be looked up at cleanup time.
+        if (device := self._node_device) is not None:
+            self._unmapped_issue_id = (
+                f"unmapped_enum_value.{device.id}.{self.info.primary_value.value_id}"
+            )
         # A re-interview or metadata update may bring the value back on another
         # platform, so nothing would clear the repair later. If the value is
         # still unmapped, the next entity raises it again.
@@ -1016,13 +1023,6 @@ class ZWaveListSensor(ZwaveSensor):
         return dr.async_get(self.hass).async_get_device_by_identifier(
             get_device_id(self.driver, self.info.node), self.config_entry.entry_id
         )
-
-    @property
-    def _unmapped_issue_id(self) -> str | None:
-        """Return the issue ID for this entity's unmapped value repair."""
-        if (device := self._node_device) is None:
-            return None
-        return f"unmapped_enum_value.{device.id}.{self.info.primary_value.value_id}"
 
     @callback
     def _async_update_unmapped_issue(self) -> None:
