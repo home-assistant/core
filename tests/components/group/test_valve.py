@@ -10,9 +10,10 @@ from pytest_homeassistant.common import assert_setup_component, async_fire_time_
 
 from homeassistant.components.group.valve import DEFAULT_NAME
 from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
+    ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.const import (
@@ -22,13 +23,9 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
-    SERVICE_TOGGLE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -109,7 +106,7 @@ async def test_state(hass: HomeAssistant) -> None:
     assert ATTR_ENTITY_ID not in state.attributes
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ValveEntityStateAttribute.CURRENT_POSITION not in state.attributes
 
     # Test group members exposed as attribute
     hass.states.async_set(DEMO_VALVE1, STATE_UNKNOWN, {})
@@ -267,7 +264,7 @@ async def test_attributes(
     assert ATTR_ENTITY_ID not in state.attributes
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ValveEntityStateAttribute.CURRENT_POSITION not in state.attributes
 
     # Set entity as closed
     hass.states.async_set(DEMO_VALVE1, ValveState.CLOSED, {})
@@ -311,13 +308,13 @@ async def test_attributes(
     assert state.state == ValveState.OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 11
-    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ValveEntityStateAttribute.CURRENT_POSITION not in state.attributes
 
     # Add Entity that supports set_valve_position
     hass.states.async_set(
         DEMO_VALVE_POS1,
         ValveState.OPEN,
-        {ATTR_SUPPORTED_FEATURES: 4, ATTR_CURRENT_POSITION: 70},
+        {ATTR_SUPPORTED_FEATURES: 4, ValveEntityStateAttribute.CURRENT_POSITION: 70},
     )
     await hass.async_block_till_done()
 
@@ -325,7 +322,7 @@ async def test_attributes(
     assert state.state == ValveState.OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
-    assert state.attributes[ATTR_CURRENT_POSITION] == 70
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 70
 
     ### Test state when group members have different states ###
 
@@ -338,7 +335,7 @@ async def test_attributes(
     assert state.state == ValveState.OPEN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 11
-    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ValveEntityStateAttribute.CURRENT_POSITION not in state.attributes
 
     # Test entity registry integration
     entry = entity_registry.async_get(VALVE_GROUP)
@@ -351,7 +348,10 @@ async def test_attributes(
 async def test_open_valves(hass: HomeAssistant) -> None:
     """Test open valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -361,11 +361,21 @@ async def test_open_valves(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 100
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.OPEN
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 100
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 100
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 100
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 100
+    )
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
@@ -373,7 +383,10 @@ async def test_open_valves(hass: HomeAssistant) -> None:
 async def test_close_valves(hass: HomeAssistant) -> None:
     """Test close valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -383,11 +396,21 @@ async def test_close_valves(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 0
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.CLOSED
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 0
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 0
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 0
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 0
+    )
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
@@ -396,7 +419,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
     """Test toggle valve function."""
     # Start valves in open state
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -408,7 +434,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 
     # Toggle will close valves
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -417,15 +446,28 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 0
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.CLOSED
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 0
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 0
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 0
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 0
+    )
 
     # Toggle again will open valves
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -434,11 +476,21 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 100
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.OPEN
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 100
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 100
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 100
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 100
+    )
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
@@ -446,7 +498,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 async def test_stop_valves(hass: HomeAssistant) -> None:
     """Test stop valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -456,7 +511,10 @@ async def test_stop_valves(hass: HomeAssistant) -> None:
     assert state.state == ValveState.OPENING
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_STOP_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.STOP,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -464,11 +522,23 @@ async def test_stop_valves(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 60  # (40 + 80) / 2
+    assert (
+        state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 60
+    )  # (40 + 80) / 2
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.OPEN
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 80
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 40
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 80
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 40
+    )
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
@@ -477,8 +547,8 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     """Test set valve position function."""
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: VALVE_GROUP, ATTR_POSITION: 50},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: VALVE_GROUP, ValveServiceArgument.POSITION: 50},
         blocking=True,
     )
     for _ in range(4):
@@ -488,11 +558,21 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
 
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    assert state.attributes[ValveEntityStateAttribute.CURRENT_POSITION] == 50
 
     assert hass.states.get(DEMO_VALVE1).state == ValveState.OPEN
-    assert hass.states.get(DEMO_VALVE_POS1).attributes[ATTR_CURRENT_POSITION] == 50
-    assert hass.states.get(DEMO_VALVE_POS2).attributes[ATTR_CURRENT_POSITION] == 50
+    assert (
+        hass.states.get(DEMO_VALVE_POS1).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 50
+    )
+    assert (
+        hass.states.get(DEMO_VALVE_POS2).attributes[
+            ValveEntityStateAttribute.CURRENT_POSITION
+        ]
+        == 50
+    )
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_POS, 2)])
@@ -500,7 +580,10 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
 async def test_is_opening_closing(hass: HomeAssistant) -> None:
     """Test is_opening property."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -515,7 +598,10 @@ async def test_is_opening_closing(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     # Both valves closing -> closing
@@ -678,8 +764,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_CLOSE_VALVE,
-            {ATTR_ENTITY_ID: "valve.nested_group"},
+            ValveService.CLOSE,
+            {TargetKey.ENTITY_ID: "valve.nested_group"},
             blocking=True,
         )
     assert hass.states.get(DEMO_VALVE_POS1).state == ValveState.CLOSING

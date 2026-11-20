@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
     intent as media_player_intent,
 )
 from homeassistant.components.vacuum import intent as vaccum_intent
+from homeassistant.components.valve import ValveService, ValveServiceArgument
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
@@ -175,7 +176,7 @@ async def test_valve_intents(
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # open
-    calls = async_mock_service(hass, valve.DOMAIN, valve.SERVICE_OPEN_VALVE)
+    calls = async_mock_service(hass, valve.DOMAIN, ValveService.OPEN)
     result = await conversation.async_converse(
         hass, "open the main valve", None, Context(), None
     )
@@ -189,7 +190,7 @@ async def test_valve_intents(
     assert call.data == {"entity_id": entity_id}
 
     # close
-    calls = async_mock_service(hass, valve.DOMAIN, valve.SERVICE_CLOSE_VALVE)
+    calls = async_mock_service(hass, valve.DOMAIN, ValveService.CLOSE)
     result = await conversation.async_converse(
         hass, "close main valve", None, Context(), None
     )
@@ -203,7 +204,7 @@ async def test_valve_intents(
     assert call.data == {"entity_id": entity_id}
 
     # set position
-    calls = async_mock_service(hass, valve.DOMAIN, valve.SERVICE_SET_VALVE_POSITION)
+    calls = async_mock_service(hass, valve.DOMAIN, ValveService.SET_POSITION)
     result = await conversation.async_converse(
         hass, "set main valve position to 25", None, Context(), None
     )
@@ -214,7 +215,7 @@ async def test_valve_intents(
     assert response.speech["plain"]["speech"] == "Position set"
     assert len(calls) == 1
     call = calls[0]
-    assert call.data == {"entity_id": entity_id, valve.ATTR_POSITION: 25}
+    assert call.data == {"entity_id": entity_id, ValveServiceArgument.POSITION: 25}
 
 
 async def test_vacuum_intents(

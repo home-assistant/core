@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
-from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
+from homeassistant.components.valve import ValveEntityFeature, ValveService
 from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -2618,7 +2618,7 @@ async def test_stop_valve(
         instance="valve.stop",
     )
     assert call.data["entity_id"] == "valve.test"
-    assert call.service == SERVICE_STOP_VALVE
+    assert call.service == ValveService.STOP
 
 
 async def assert_percentage_changes(
