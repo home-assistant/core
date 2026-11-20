@@ -44,12 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> None
     if TYPE_CHECKING:
         assert mac is not None
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}_{BOX_NODE_ID}")},
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-        ),
+        identifiers={(DOMAIN, f"{mac}_{BOX_NODE_ID}")},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

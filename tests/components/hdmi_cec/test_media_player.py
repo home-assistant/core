@@ -31,17 +31,15 @@ from homeassistant.components.hdmi_cec import EVENT_HDMI_CEC_UNAVAILABLE
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerEntityFeature as MPEF,
+    MediaPlayerService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
@@ -52,6 +50,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -119,8 +118,8 @@ async def test_service_on(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.hdmi_3"},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
 
@@ -144,8 +143,8 @@ async def test_service_off(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "media_player.hdmi_3"},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
 
@@ -384,8 +383,8 @@ async def test_play_pause_service(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.hdmi_3"},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
 
@@ -397,8 +396,8 @@ async def test_play_pause_service(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.hdmi_3"},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
 

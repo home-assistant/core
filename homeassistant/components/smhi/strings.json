@@ -58,9 +58,6 @@
       "frozen_precipitation": {
         "name": "Frozen precipitation"
       },
-      "fwi": {
-        "name": "Fire weather index"
-      },
       "fwiindex": {
         "name": "FWI index",
         "state": {

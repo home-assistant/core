@@ -138,6 +138,7 @@
         'sensor.aqara_shutter_switch_h2_eu_thread_routing_role': 'Thread routing role',
         'sensor.aqara_shutter_switch_h2_eu_uptime': 'Uptime',
         'sensor.aqara_shutter_switch_h2_eu_voltage': 'Voltage',
+        'switch.aqara_shutter_switch_h2_eu_reverse_motor_direction': 'Reverse motor direction',
         'update.aqara_shutter_switch_h2_eu_firmware': 'Firmware',
       }),
       'name': 'Aqara Shutter Switch H2 EU',
@@ -220,6 +221,8 @@
         'sensor.smartwings_levitate_with_ductech_thread_routing_role': 'Thread routing role',
         'sensor.smartwings_levitate_with_ductech_uptime': 'Uptime',
         'switch.smartwings_levitate_with_ductech': None,
+        'switch.smartwings_levitate_with_ductech_reverse_motor_direction_1': 'Reverse motor direction (1)',
+        'switch.smartwings_levitate_with_ductech_reverse_motor_direction_2': 'Reverse motor direction (2)',
         'update.smartwings_levitate_with_ductech_firmware': 'Firmware',
       }),
       'name': 'SmartWings Levitate with DUCTECH',
@@ -261,7 +264,7 @@
 # ---
 # name: test_multi_endpoint_device_topology[fritz_bridge]
   dict({
-    '00000000000004D2-0000000000000001-42': dict({
+    '00000000000004D2-00000000000003E9-42': dict({
       'children': dict({
       }),
       'entities': dict({
@@ -269,9 +272,9 @@
         'switch.my_device': None,
       }),
       'name': 'my_device',
-      'via_device': '00000000000004D2-0000000000000001-MatterNodeDevice',
+      'via_device': '00000000000004D2-00000000000003E9-MatterNodeDevice',
     }),
-    '00000000000004D2-0000000000000001-MatterNodeDevice': dict({
+    '00000000000004D2-00000000000003E9-MatterNodeDevice': dict({
       'children': dict({
       }),
       'entities': dict({

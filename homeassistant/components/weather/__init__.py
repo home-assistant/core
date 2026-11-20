@@ -74,8 +74,11 @@ from .const import (
     SERVICE_GET_FORECASTS,
     UNIT_CONVERSIONS,
     VALID_UNITS,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityFeature,
     WeatherEntityStateAttribute,
+    WeatherService,
+    WeatherServiceArgument,
 )
 from .entity import (
     CoordinatorWeatherEntity,
@@ -165,9 +168,12 @@ __all__ = [
     "Forecast",
     "SingleCoordinatorWeatherEntity",
     "WeatherEntity",
+    "WeatherEntityCapabilityAttribute",
     "WeatherEntityDescription",
     "WeatherEntityFeature",
     "WeatherEntityStateAttribute",
+    "WeatherService",
+    "WeatherServiceArgument",
 ]
 
 # mypy: disallow-any-generics

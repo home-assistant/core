@@ -42,6 +42,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._device.mac_address)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._device.device_addr},
+                reload_on_update=False,
                 error="already_configured_device",
             )
             self.context.update(
@@ -67,7 +68,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._device.device_addr},
             )
 
-        self._set_confirm_only()
         placeholders = {
             "model": self._device.model,
             "device_id": self._device.device_id,

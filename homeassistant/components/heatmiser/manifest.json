@@ -3,6 +3,7 @@
   "name": "Heatmiser",
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@andylockran"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/heatmiser",
   "iot_class": "local_polling",
   "loggers": ["heatmiserV3"],

@@ -148,7 +148,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf: dict[str, Any] = config[DOMAIN]
     entity_filter: entityfilter.EntityFilter = conf[CONF_FILTER]
     namespace: str = conf[CONF_PROM_NAMESPACE]
-    climate_units = hass.config.units.temperature_unit
     override_metric: str | None = conf.get(CONF_OVERRIDE_METRIC)
     default_metric: str | None = conf.get(CONF_DEFAULT_METRIC)
     component_config = EntityValues(
@@ -165,7 +164,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
-        climate_units,
         component_config,
         override_metric,
         default_metric,
@@ -227,7 +225,6 @@ class PrometheusMetrics:
         self,
         entity_filter: entityfilter.EntityFilter,
         namespace: str,
-        climate_units: UnitOfTemperature,
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
@@ -260,7 +257,6 @@ class PrometheusMetrics:
         self._metrics_by_entity_id: dict[str, set[MetricNameWithLabelValues]] = (
             defaultdict(set)
         )
-        self._climate_units = climate_units
 
         self._area_info_metrics: dict[str, MetricNameWithLabelValues] = {}
         self._floor_info_metrics: dict[str, MetricNameWithLabelValues] = {}
@@ -664,15 +660,17 @@ class PrometheusMetrics:
         ).set(value)
 
     def _temperature_metric(
-        self, state: State, attr: str, metric_name: str, metric_description: str
+        self,
+        state: State,
+        attr: str,
+        unit: str,
+        metric_name: str,
+        metric_description: str,
     ) -> None:
         if (temp := state.attributes.get(attr)) is None:
             return
 
-        if self._climate_units == UnitOfTemperature.FAHRENHEIT:
-            temp = TemperatureConverter.convert(
-                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
-            )
+        temp = TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
         self._metric(
             metric_name,
             prometheus_client.Gauge,
@@ -860,27 +858,32 @@ class PrometheusMetrics:
         ).set(value)
 
     def _handle_climate(self, state: State) -> None:
+        unit = state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+            unit,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+            unit,
             "climate_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+            unit,
             "climate_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
+            unit,
             "climate_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
@@ -941,40 +944,47 @@ class PrometheusMetrics:
         )
 
     def _handle_water_heater(self, state: State) -> None:
+        unit = state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
         # Temperatures
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMPERATURE,
+            unit,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+            unit,
             "water_heater_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMP_HIGH,
+            unit,
             "water_heater_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterStateAttribute.TARGET_TEMP_LOW,
+            unit,
             "water_heater_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterCapabilityAttribute.MIN_TEMP,
+            unit,
             "water_heater_min_temperature_celsius",
             "Minimum allowed temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
             WaterHeaterCapabilityAttribute.MAX_TEMP,
+            unit,
             "water_heater_max_temperature_celsius",
             "Maximum allowed temperature in degrees Celsius",
         )

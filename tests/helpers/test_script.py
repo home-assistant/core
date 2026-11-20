@@ -27,12 +27,8 @@ from pytest_homeassistant.common import (
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
 from homeassistant.components import scene
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CommonServiceArgument
 from homeassistant.core import (
     Context,
     CoreState,
@@ -53,7 +49,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -635,7 +631,7 @@ async def test_activating_scene(
 ) -> None:
     """Test the activation of a scene."""
     context = Context()
-    calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
+    calls = async_mock_service(hass, scene.DOMAIN, scene.SceneService.TURN_ON)
 
     alias = "scene step"
     sequence = cv.SCRIPT_SCHEMA({"alias": alias, "scene": "scene.hello"})
@@ -646,7 +642,7 @@ async def test_activating_scene(
 
     assert len(calls) == 1
     assert calls[0].context is context
-    assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
+    assert calls[0].data.get(CommonServiceArgument.ENTITY_ID) == "scene.hello"
     assert f"Executing step {alias}" in caplog.text
 
     assert_action_trace(
@@ -6236,6 +6232,438 @@ async def test_platform_async_validate_action_config(hass: HomeAssistant) -> Non
         device_automation_validate_action_mock.assert_awaited()
 
 
+_VALID_ACTION = {"event": "test_event"}
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_VALID_TRIGGER = {"trigger": "event", "event_type": "test_event"}
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+_INVALID_TRIGGER = {"trigger": "non_existing"}
+_INVALID_TRIGGER_ERROR = "Invalid trigger 'non_existing' specified"
+_INVALID_DEVICE_ACTION = {"device_id": "abc", "domain": "light", "type": "turn_on"}
+_INVALID_DEVICE_ACTION_ERROR = "Unknown device 'abc'"
+_NESTED_INVALID_TRIGGER = {
+    "if": [],
+    "then": {
+        "choose": {
+            "conditions": [],
+            "sequence": {
+                "repeat": {
+                    "count": 2,
+                    "sequence": {
+                        "parallel": [
+                            [
+                                {
+                                    "sequence": {
+                                        "if": [],
+                                        "then": [],
+                                        "else": {"wait_for_trigger": _INVALID_TRIGGER},
+                                    }
+                                }
+                            ]
+                        ]
+                    },
+                }
+            },
+        }
+    },
+}
+
+
+@pytest.mark.parametrize(
+    ("actions", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [_VALID_ACTION, _INVALID_CONDITION],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1],
+            id="action_list",
+        ),
+        pytest.param(
+            [{"if": [_VALID_CONDITION, _INVALID_CONDITION], "then": []}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "if", 1],
+            id="if",
+        ),
+        pytest.param(
+            [{"if": [], "then": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "then", 1],
+            id="then",
+        ),
+        pytest.param(
+            [{"if": [], "then": [], "else": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "else", 1],
+            id="else",
+        ),
+        pytest.param(
+            [
+                {
+                    "choose": [
+                        {"conditions": [], "sequence": []},
+                        {"conditions": [_INVALID_CONDITION], "sequence": []},
+                    ]
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 1, "conditions", 0],
+            id="choose_list_conditions",
+        ),
+        pytest.param(
+            [
+                {
+                    "choose": [
+                        {"conditions": [], "sequence": []},
+                        {"conditions": [], "sequence": [_INVALID_CONDITION]},
+                    ]
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 1, "sequence", 0],
+            id="choose_list_sequence",
+        ),
+        pytest.param(
+            [{"choose": {"conditions": _INVALID_CONDITION, "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 0, "conditions", 0],
+            id="choose_single_conditions",
+        ),
+        pytest.param(
+            [{"choose": {"conditions": [], "sequence": _INVALID_CONDITION}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "choose", 0, "sequence", 0],
+            id="choose_single_sequence",
+        ),
+        pytest.param(
+            [{"choose": [], "default": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "default", 1],
+            id="choose_default",
+        ),
+        pytest.param(
+            [{"repeat": {"while": [_INVALID_CONDITION], "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "while", 0],
+            id="repeat_while",
+        ),
+        pytest.param(
+            [{"repeat": {"until": [_INVALID_CONDITION], "sequence": []}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "until", 0],
+            id="repeat_until",
+        ),
+        pytest.param(
+            [{"repeat": {"count": 2, "sequence": [_INVALID_CONDITION]}}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "repeat", "sequence", 0],
+            id="repeat_sequence",
+        ),
+        pytest.param(
+            [{"parallel": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 1, "sequence", 0],
+            id="parallel_action",
+        ),
+        pytest.param(
+            [{"parallel": [[_VALID_ACTION, _INVALID_CONDITION]]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 0, "sequence", 1],
+            id="parallel_action_list",
+        ),
+        pytest.param(
+            [{"parallel": [{"sequence": [_VALID_ACTION, _INVALID_CONDITION]}]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "parallel", 0, "sequence", 1],
+            id="parallel_sequence",
+        ),
+        pytest.param(
+            [{"sequence": [_VALID_ACTION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "sequence", 1],
+            id="sequence",
+        ),
+        pytest.param(
+            [{"wait_for_trigger": [_VALID_TRIGGER, _INVALID_TRIGGER]}],
+            probatio.Invalid,
+            _INVALID_TRIGGER_ERROR,
+            [0, "wait_for_trigger", 1],
+            id="wait_for_trigger",
+        ),
+        pytest.param(
+            [{"wait_for_trigger": [{"trigger": "numeric_state", "above": 1}]}],
+            probatio.MultipleInvalid,
+            "required key not provided",
+            [0, "wait_for_trigger", 0, "entity_id"],
+            id="wait_for_trigger_platform_path",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="condition_and",
+        ),
+        pytest.param(
+            [{"or": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="condition_or_shorthand",
+        ),
+        pytest.param(
+            [_NESTED_INVALID_TRIGGER],
+            probatio.Invalid,
+            _INVALID_TRIGGER_ERROR,
+            [
+                *(0, "then"),
+                *(0, "choose", 0, "sequence"),
+                *(0, "repeat", "sequence"),
+                *(0, "parallel", 0, "sequence"),
+                *(0, "sequence"),
+                *(0, "else"),
+                *(0, "wait_for_trigger"),
+                0,
+            ],
+            id="nested_7_levels",
+        ),
+    ],
+)
+async def test_validate_actions_config_error_path(
+    hass: HomeAssistant,
+    actions: list[dict[str, Any]],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated actions."""
+    config = cv.SCRIPT_SCHEMA(actions)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+@pytest.mark.parametrize(
+    ("actions", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            [_VALID_ACTION, _INVALID_DEVICE_ACTION],
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="action_list",
+        ),
+        pytest.param(
+            [{"if": [], "then": [{"parallel": [_INVALID_DEVICE_ACTION]}]}],
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="nested_action",
+        ),
+        pytest.param(
+            [{"repeat": {"while": [{"condition": "non_existing"}], "sequence": []}}],
+            HomeAssistantError,
+            'Invalid condition "non_existing" specified',
+            id="nested_condition",
+        ),
+    ],
+)
+async def test_validate_actions_config_homeassistant_error(
+    hass: HomeAssistant,
+    actions: list[dict[str, Any]],
+    expected_exception: type[HomeAssistantError],
+    expected_error: str,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.SCRIPT_SCHEMA(actions)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
+
+
+@pytest.mark.parametrize(
+    ("action_type", "action", "expected_key"),
+    [
+        pytest.param(cv.SCRIPT_ACTION_IF, {"then": []}, "if", id="if"),
+        pytest.param(cv.SCRIPT_ACTION_IF, {"if": []}, "then", id="then"),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"sequence": []}]},
+            "conditions",
+            id="choose_conditions",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"conditions": []}]},
+            "sequence",
+            id="choose_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_PARALLEL,
+            {"parallel": [{"sequence": []}, {}]},
+            "sequence",
+            id="parallel_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_REPEAT,
+            {"repeat": {"count": 2}},
+            "sequence",
+            id="repeat_sequence",
+        ),
+        pytest.param(cv.SCRIPT_ACTION_SEQUENCE, {}, "sequence", id="sequence"),
+        pytest.param(
+            cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER,
+            {},
+            "wait_for_trigger",
+            id="wait_for_trigger",
+        ),
+    ],
+)
+async def test_validate_action_config_missing_required_block(
+    hass: HomeAssistant, action_type: str, action: dict[str, Any], expected_key: str
+) -> None:
+    """Test a block required by the schema is not skipped when it is missing."""
+    with (
+        patch(
+            "homeassistant.helpers.config_validation.determine_script_action",
+            return_value=action_type,
+        ),
+        pytest.raises(KeyError) as exc_info,
+    ):
+        await script.async_validate_action_config(hass, action)
+
+    assert exc_info.value.args == (expected_key,)
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            {
+                "if": [_INVALID_CONDITION],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].if[0]'",
+            id="if_before_then",
+        ),
+        pytest.param(
+            {
+                "if": [],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="then_before_else",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+                "default": [_INVALID_DEVICE_ACTION],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_default_before_options",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {
+                        "conditions": [_INVALID_CONDITION],
+                        "sequence": [_INVALID_DEVICE_ACTION],
+                    },
+                ],
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].choose[0].conditions[0]'",
+            id="choose_conditions_before_sequence",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [], "sequence": [_INVALID_DEVICE_ACTION]},
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_option_sequence_before_next_option_conditions",
+        ),
+        pytest.param(
+            {
+                "repeat": {
+                    "until": [_INVALID_CONDITION],
+                    "sequence": [_INVALID_DEVICE_ACTION],
+                }
+            },
+            probatio.Invalid,
+            f"{_INVALID_CONDITION_ERROR} at '[0].repeat.until[0]'",
+            id="repeat_until_before_sequence",
+        ),
+        pytest.param(
+            {
+                "parallel": [
+                    {"sequence": [_INVALID_DEVICE_ACTION]},
+                    {"sequence": [{"wait_for_trigger": [_INVALID_TRIGGER]}]},
+                ]
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="parallel_branches_in_order",
+        ),
+    ],
+)
+async def test_validate_action_config_first_error(
+    hass: HomeAssistant,
+    action: dict[str, Any],
+    expected_exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test which error is raised when several nested blocks are invalid."""
+    config = cv.SCRIPT_SCHEMA([action])
+
+    with pytest.raises(expected_exception) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
+
+
 async def test_stop_action(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -7021,7 +7449,7 @@ async def test_conversation_response_not_set(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     result = await script_obj.async_run(context=Context())
-    assert result.conversation_response is UNDEFINED
+    assert result.conversation_response is Undefined
 
     assert_action_trace({})
 

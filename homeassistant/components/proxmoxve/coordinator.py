@@ -24,7 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .common import sanitize_config_entry
 from .const import (
@@ -153,7 +157,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -173,7 +177,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise ConfigEntryError(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -195,7 +199,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -205,7 +209,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -271,11 +275,19 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
         """Fetch all nodes with their VMs, containers, storages, etc."""
         nodes = self.proxmox.nodes.get() or []
-        return [(node, self._get_node_data(node)) for node in nodes]
+        # The node VM list reports host memory; cluster resources carry the
+        # guest memory that pvestatd reads from the balloon driver.
+        guest_memory = {
+            int(resource["vmid"]): resource["mem"]
+            for resource in self.proxmox.cluster.resources.get(type="vm") or []
+            if resource.get("type") == "qemu" and "mem" in resource
+        }
+        return [(node, self._get_node_data(node, guest_memory)) for node in nodes]
 
     def _get_node_data(
         self,
         node: dict[str, Any],
+        guest_memory: dict[int, int],
     ) -> NodeResources:
         """Get vms, containers, storages, etc. for a node."""
         if node.get("status") != NODE_ONLINE:
@@ -292,7 +304,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 update=False,
             )
 
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        vms = [
+            {**vm, "mem": guest_memory.get(int(vm["vmid"]), vm.get("mem"))}
+            for vm in self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        ]
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (
@@ -329,7 +344,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             new_node_data = [data[node_name] for node_name in new_nodes]
             device_registry = dr.async_get(self.hass)
             for node_data in new_node_data:
-                device_registry.async_get_or_create_device(
+                device_registry.async_get_or_create_from_info(
                     config_entry_id=self.config_entry.entry_id,
                     device_info=node_device_info(self, node_data),
                 )

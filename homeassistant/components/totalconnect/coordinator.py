@@ -14,7 +14,11 @@ from total_connect_client.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -61,7 +65,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 "TotalConnect authentication failed during operation."
             ) from exception
         except ServiceUnavailable as exception:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 "Error connecting to TotalConnect or the service is unavailable. "
                 "Check https://status.resideo.com/ for outages."
             ) from exception

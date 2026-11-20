@@ -55,7 +55,6 @@ class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=model_name, data={CONF_MODEL: discovery_info.name}
             )
 
-        self._set_confirm_only()
         placeholders = {"name": model_name}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

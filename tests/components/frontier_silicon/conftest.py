@@ -43,6 +43,8 @@ def mock_afsapi() -> Generator[AsyncMock]:
         client.get_webfsapi_endpoint = mock_client.get_webfsapi_endpoint
         client.get_friendly_name.return_value = "Name of the device"
         client.get_radio_id.return_value = "mock_radio_id"
+        client.get_version.return_value = "ir-mmi-FS2026-0500-0052.V2.11.7.EX65933-4RC1"
+        client.get_rssi.return_value = -50
 
         client.get_power.return_value = False
         client.get_play_status.return_value = PlayState.IDLE

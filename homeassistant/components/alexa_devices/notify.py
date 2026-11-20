@@ -8,7 +8,11 @@ from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 from aioamazondevices.structures import AmazonDevice
 
-from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityDescription,
+    NotifyEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,8 +28,9 @@ class AmazonNotifyEntityDescription(NotifyEntityDescription):
 
     is_supported_fn: Callable[[AmazonDevice], bool] = lambda _device: True
     is_available_fn: Callable[[AmazonDevice], bool] = lambda _device: True
-    method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
+    method: Callable[[AmazonEchoApi, AmazonDevice, str, str | None], Awaitable[None]]
     subkey: str
+    supported_features: NotifyEntityFeature | None = None
 
 
 NOTIFY: Final = (
@@ -34,17 +39,20 @@ NOTIFY: Final = (
         translation_key="speak",
         subkey="AUDIO_PLAYER",
         is_supported_fn=lambda _device: _device.device_family != SPEAKER_GROUP_FAMILY,
-        method=lambda api, device, message: api.call_alexa_speak(device, message),
+        method=lambda api, device, message, _title: api.call_alexa_speak(
+            device, message
+        ),
     ),
     AmazonNotifyEntityDescription(
         key="announce",
         translation_key="announce",
         subkey="AUDIO_PLAYER",
+        supported_features=NotifyEntityFeature.TITLE,
         is_available_fn=lambda device: (
             device.communication_settings.get("communications") != "OFF"
         ),
-        method=lambda api, device, message: api.call_alexa_announcement(
-            device, message
+        method=lambda api, device, message, title: api.call_alexa_announcement(
+            device, message, display_text=title
         ),
     ),
 )
@@ -86,6 +94,12 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
 
     @property
     @override
+    def supported_features(self) -> NotifyEntityFeature:
+        """Return the supported features."""
+        return self.entity_description.supported_features or NotifyEntityFeature(0)
+
+    @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -99,5 +113,5 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
         """Send a message."""
         async with alexa_api_call(self.coordinator):
             await self.entity_description.method(
-                self.coordinator.api, self.device, message
+                self.coordinator.api, self.device, message, title
             )

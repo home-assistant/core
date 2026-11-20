@@ -445,10 +445,9 @@ async def test_component_setup_dependencies_with_config_entry(
     """Test we wait for a dependency with config entry."""
     calls: list[str] = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await asyncio.sleep(0)
         calls.append("entry")
-        return True
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -605,6 +604,46 @@ async def test_component_setup_after_dependencies(hass: HomeAssistant) -> None:
     assert await setup.async_setup_component(hass, "comp2", {})
     assert "comp2" in hass.config.components
     assert "dep" in hass.config.components
+
+
+@pytest.mark.parametrize(
+    ("manifest", "expected_result"),
+    [
+        pytest.param({"dependencies": ["dep"]}, False, id="dependency"),
+        pytest.param({"after_dependencies": ["dep"]}, True, id="after_dependency"),
+        pytest.param(
+            {"dependencies": ["dep"], "after_dependencies": ["dep"]},
+            False,
+            id="dependency_and_after_dependency",
+        ),
+    ],
+)
+async def test_component_setup_failing_dependency(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    manifest: dict[str, list[str]],
+    expected_result: bool,
+) -> None:
+    """Test a failing dependency fails the component, a failing after dependency does not."""
+
+    async def mock_dep_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("dep", async_setup=mock_dep_setup))
+    mock_integration(hass, MockModule("comp", partial_manifest=manifest))
+    setup.async_set_domains_to_be_loaded(hass, {"comp", "dep"})
+
+    assert await setup.async_setup_component(hass, "comp", {}) is expected_result
+    assert ("comp" in hass.config.components) is expected_result
+    assert "dep" not in hass.config.components
+    assert "Setup failed for 'dep'" in caplog.text
+    assert (
+        "Unable to set up dependencies of 'comp'. "
+        "Setup failed for dependencies: ['dep']" in caplog.text
+    ) is not expected_result
+    assert (
+        "Ignoring failed after dependency 'dep' of 'comp'" in caplog.text
+    ) is expected_result
 
 
 async def test_component_setup_with_validation_and_dependency(
@@ -894,12 +933,11 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
 
     calls = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up an entry."""
         calls.append(entry.data["value"])
         await asyncio.sleep(0)
         calls.append(entry.data["value"])
-        return True
 
     mock_integration(
         hass,
@@ -986,7 +1024,7 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
@@ -1303,7 +1341,7 @@ async def test_async_start_setup_simple_integration_end_to_end(
         MockModule(
             "test_integration_no_platforms",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_no_platforms", {})
@@ -1380,7 +1418,7 @@ async def test_setup_config_entry_from_yaml(
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
 
@@ -1532,3 +1570,80 @@ async def test_async_wait_component_waiter_cancelled(hass: HomeAssistant) -> Non
 
     assert await setup_task is True
     assert setup_done_future.result() is True
+
+
+async def test_subscribe_bootstrap_progress(hass: HomeAssistant) -> None:
+    """Test the bootstrap progress is only built and sent for subscribers."""
+    progress = {"phase": "setup"}
+    source = Mock(return_value=progress)
+    first = Mock()
+    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
+    first.assert_not_called()
+
+    setup._async_set_bootstrap_progress_source(hass, source)
+    first.assert_called_once_with(progress)
+
+    # A late subscriber gets the current progress right away.
+    second = Mock()
+    unsubscribe_second = setup.async_subscribe_bootstrap_progress(hass, second)
+    second.assert_called_once_with(progress)
+
+    unsubscribe_first()
+    setup._async_dispatch_bootstrap_progress(hass)
+    assert first.call_count == 1
+    assert second.call_count == 2
+    assert source.call_count == 3
+
+    unsubscribe_second()
+    setup._async_dispatch_bootstrap_progress(hass)
+    assert second.call_count == 2
+    assert source.call_count == 3
+
+
+async def test_bootstrap_progress_listener_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a listener that raises does not stop the progress for the others."""
+    progress = {"phase": "setup"}
+    setup.async_subscribe_bootstrap_progress(hass, Mock(side_effect=ValueError))
+    listener = Mock()
+    setup.async_subscribe_bootstrap_progress(hass, listener)
+
+    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
+
+    listener.assert_called_once_with(progress)
+    assert "Error sending bootstrap progress to" in caplog.text
+
+
+async def test_bootstrap_progress_late_listener_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a late listener that raises still gets its unsubscribe callback."""
+    setup._async_set_bootstrap_progress_source(
+        hass, Mock(return_value={"phase": "setup"})
+    )
+    listener = Mock(side_effect=ValueError)
+
+    unsubscribe = setup.async_subscribe_bootstrap_progress(hass, listener)
+
+    assert "Error sending bootstrap progress to" in caplog.text
+    unsubscribe()
+    setup._async_dispatch_bootstrap_progress(hass)
+    listener.assert_called_once()
+
+
+async def test_bootstrap_progress_listener_unsubscribes_itself(
+    hass: HomeAssistant,
+) -> None:
+    """Test a listener unsubscribing itself does not skip the next listener."""
+    progress = {"phase": "running"}
+    first = Mock(side_effect=lambda _: unsubscribe_first())
+    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
+    second = Mock()
+    setup.async_subscribe_bootstrap_progress(hass, second)
+
+    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
+    setup._async_dispatch_bootstrap_progress(hass)
+
+    first.assert_called_once_with(progress)
+    assert second.call_count == 2

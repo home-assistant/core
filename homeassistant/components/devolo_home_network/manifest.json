@@ -4,6 +4,7 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@2Fake", "@Shutgun"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
   "integration_type": "device",

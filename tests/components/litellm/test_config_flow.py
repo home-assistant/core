@@ -272,12 +272,6 @@ async def _create_stt_with_hints(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: True},
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
         {
             CONF_MODEL: "gpt-4",
             CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
@@ -349,19 +343,18 @@ async def test_reconfigure_stt_hints(
 async def test_reconfigure_stt_disable_hints(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test disabling hints clears both saved STT fields."""
+    """Test disabling hints does not save the hidden STT fields."""
     subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+        {
+            CONF_MODEL: "gpt-4",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            CONF_STT_PROMPT: "New prompt",
+            CONF_STT_KEYWORDS: "New, keywords",
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

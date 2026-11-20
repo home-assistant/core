@@ -31,7 +31,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown
@@ -167,7 +167,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown

@@ -54,6 +54,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.async_iterator import async_close_iterator
 from homeassistant.util.enum import try_parse_enum
 
 from .config_entry import async_get_update_options
@@ -201,13 +202,13 @@ class SupervisorBackupAgent(BackupAgent):
         The upload will be skipped if the backup already exists in the agent's location.
         """
         with suppress(BackupNotFound):
-            if await self.async_get_backup(backup.backup_id):
-                _LOGGER.debug(
-                    "Backup %s already exists in location %s",
-                    backup.backup_id,
-                    self.location,
-                )
-                return
+            await self.async_get_backup(backup.backup_id)
+            _LOGGER.debug(
+                "Backup %s already exists in location %s",
+                backup.backup_id,
+                self.location,
+            )
+            return
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
             location={self.location},
@@ -574,13 +575,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # The backup manager has already checked that the backup exists so we don't
         # need to catch BackupNotFound here.
         backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
-        if (
-            # Check for None to be backwards compatible with the old BackupAgent API,
-            # this can be removed in HA Core 2025.10
-            backup
-            and restore_homeassistant
-            and restore_database != backup.database_included
-        ):
+        if restore_homeassistant and restore_database != backup.database_included:
             raise HomeAssistantError("Restore database must match backup")
         if not restore_homeassistant and restore_database:
             raise HomeAssistantError("Cannot restore database without Home Assistant")
@@ -595,11 +590,15 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
-            await self.async_receive_backup(
-                agent_ids=[],
-                stream=await open_stream(),
-                suggested_filename=f"{backup_id}.tar",
-            )
+            stream = await open_stream()
+            try:
+                await self.async_receive_backup(
+                    agent_ids=[],
+                    stream=stream,
+                    suggested_filename=f"{backup_id}.tar",
+                )
+            finally:
+                await async_close_iterator(stream)
             restore_location = LOCATION_CLOUD_BACKUP
         else:
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])

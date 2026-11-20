@@ -1,18 +1,15 @@
 """Config flow for Samsung TV."""
 
 from collections.abc import Mapping
-from functools import partial
 import socket
 from typing import Any, Self, override
 from urllib.parse import urlparse
 
-import getmac
 import probatio
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -66,6 +63,7 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
+from .coordinator import SamsungTVConfigEntry
 
 DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
@@ -75,7 +73,7 @@ def _strip_uuid(udn: str) -> str:
 
 
 def _entry_is_complete(
-    entry: ConfigEntry,
+    entry: SamsungTVConfigEntry,
     ssdp_rendering_control_location: str | None,
     ssdp_main_tv_agent_location: str | None,
 ) -> bool:
@@ -250,14 +248,8 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
-        if mac := mac_from_device_info(info):
-            # Samsung sometimes returns a value of "none" for the mac address
-            # this should be ignored - but also shouldn't trigger getmac
-            if mac != "none":
-                self._mac = mac
-        elif mac := await self.hass.async_add_executor_job(
-            partial(getmac.get_mac_address, ip=self._host)
-        ):
+        # Samsung sometimes returns a value of "none" for the mac address
+        if (mac := mac_from_device_info(info)) and mac != "none":
             self._mac = mac
         return True
 
@@ -404,9 +396,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_get_existing_matching_entry(
         self,
-    ) -> tuple[ConfigEntry | None, bool]:
+    ) -> tuple[SamsungTVConfigEntry | None, bool]:
         """Get first existing matching entry (prefer unique id)."""
-        matching_host_entry: ConfigEntry | None = None
+        matching_host_entry: SamsungTVConfigEntry | None = None
         for entry in self._async_current_entries(include_ignore=False):
             if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
                 self._upnp_udn and self._upnp_udn == entry.unique_id
@@ -423,7 +415,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_update_existing_matching_entry(
         self,
-    ) -> ConfigEntry | None:
+    ) -> SamsungTVConfigEntry | None:
         """Check existing entries and update them.
 
         Returns the existing entry if it was updated.

@@ -890,6 +890,7 @@
         'INVERTERS',
         'PRODUCTION',
       ]),
+      'token_lifetime': 200,
     }),
     'fixtures': dict({
     }),
@@ -1790,68 +1791,46 @@
         'INVERTERS',
         'PRODUCTION',
       ]),
+      'token_lifetime': 200,
     }),
     'fixtures': dict({
-      '/admin/lib/acb_config': 'Testing request replies.',
-      '/admin/lib/acb_config_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/admin/lib/network_display': 'Testing request replies.',
-      '/admin/lib/network_display_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/admin/lib/tariff': 'Testing request replies.',
-      '/admin/lib/tariff_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/admin/lib/wireless_display': 'Testing request replies.',
-      '/admin/lib/wireless_display_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/api/v1/production': 'Testing request replies.',
-      '/api/v1/production/inverters': 'Testing request replies.',
-      '/api/v1/production/inverters_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/api/v1/production_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/home': 'Testing request replies.',
-      '/home_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/info': 'Testing request replies.',
-      '/info_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/inventory.json?deleted=1': 'Testing request replies.',
-      '/inventory.json?deleted=1_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/dry_contacts': 'Testing request replies.',
-      '/ivp/ensemble/dry_contacts_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/generator': 'Testing request replies.',
-      '/ivp/ensemble/generator_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/inventory': 'Testing request replies.',
-      '/ivp/ensemble/inventory_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/power': 'Testing request replies.',
-      '/ivp/ensemble/power_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/relay': 'Testing request replies.',
-      '/ivp/ensemble/relay_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/secctrl': 'Testing request replies.',
-      '/ivp/ensemble/secctrl_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ensemble/status': 'Testing request replies.',
-      '/ivp/ensemble/status_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/livedata/status': 'Testing request replies.',
-      '/ivp/livedata/status_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/meters': 'Testing request replies.',
-      '/ivp/meters/readings': 'Testing request replies.',
-      '/ivp/meters/readings_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/meters_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/pdm/device_data': 'Testing request replies.',
-      '/ivp/pdm/device_data_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/pdm/energy': 'Testing request replies.',
-      '/ivp/pdm/energy_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/sc/pvlimit': 'Testing request replies.',
-      '/ivp/sc/pvlimit_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/sc/sched': 'Testing request replies.',
-      '/ivp/sc/sched_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ss/dry_contact_settings': 'Testing request replies.',
-      '/ivp/ss/dry_contact_settings_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ss/gen_config': 'Testing request replies.',
-      '/ivp/ss/gen_config_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ss/gen_schedule': 'Testing request replies.',
-      '/ivp/ss/gen_schedule_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/ivp/ss/pel_settings': 'Testing request replies.',
-      '/ivp/ss/pel_settings_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/production': 'Testing request replies.',
-      '/production.json': 'Testing request replies.',
-      '/production.json?details=1': 'Testing request replies.',
-      '/production.json?details=1_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/production.json_log': '{"headers":{"Hello":"World"},"code":200}',
-      '/production_log': '{"headers":{"Hello":"World"},"code":200}',
+      '/admin/lib/tariff': 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      '/admin/lib/tariff_log': dict({
+        'code': 200,
+        'error': 'ClientResponseError',
+        'line': '4',
+        'mask_state': 'unchanged',
+      }),
+      '/api/v1/production/inverters': 'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      '/api/v1/production/inverters_log': dict({
+        'code': 200,
+        'line': '1, second half',
+        'mask_state': 'masked',
+      }),
+      '/info': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,',
+      '/info_log': dict({
+        'code': 200,
+        'line': '1, first half',
+        'mask_state': 'unchanged',
+      }),
+      '/ivp/ensemble/power': 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+      '/ivp/ensemble/power_log': dict({
+        'code': 200,
+        'line': '3',
+        'mask_state': 'unchanged',
+      }),
+      '/ivp/meters/readings': 'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+      '/ivp/meters/readings_log': dict({
+        'code': 200,
+        'line': '2, second half',
+        'mask_state': 'failed',
+      }),
+      '/ivp/pdm/device_data': 'Ut enim ad minim veniam,',
+      '/ivp/pdm/device_data_log': dict({
+        'code': 200,
+        'line': '2, first half',
+        'mask_state': 'removed',
+      }),
     }),
     'raw_data': dict({
       'varies_by': 'firmware_version',
@@ -2750,98 +2729,10 @@
         'INVERTERS',
         'PRODUCTION',
       ]),
+      'token_lifetime': 200,
     }),
     'fixtures': dict({
-      '/admin/lib/acb_config_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/admin/lib/network_display_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/admin/lib/tariff_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/admin/lib/wireless_display_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/api/v1/production/inverters_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/api/v1/production_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/home_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/info_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/inventory.json?deleted=1_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/dry_contacts_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/generator_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/inventory_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/power_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/relay_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/secctrl_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ensemble/status_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/livedata/status_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/meters/readings_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/meters_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/pdm/device_data_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/pdm/energy_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/sc/pvlimit_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/sc/sched_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ss/dry_contact_settings_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ss/gen_config_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ss/gen_schedule_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/ivp/ss/pel_settings_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/production.json?details=1_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/production.json_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
-      '/production_log': dict({
-        'Error': "EnvoyError('Test')",
-      }),
+      'collection_aborted_log': 'Error: EnvoyError',
     }),
     'raw_data': dict({
       'varies_by': 'firmware_version',
@@ -3749,6 +3640,7 @@
         'INVERTERS',
         'PRODUCTION',
       ]),
+      'token_lifetime': 200,
     }),
     'fixtures': dict({
     }),
@@ -4919,7 +4811,7 @@
               'object_id_base': 'Reserve battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Reserve battery level',
               'platform': 'enphase_envoy',
@@ -4932,7 +4824,6 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'Enpower 654321 Reserve battery level',
                 'max': 100.0,
                 'min': 0.0,
@@ -18659,7 +18550,7 @@
               'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Cutoff battery level',
               'platform': 'enphase_envoy',
@@ -18668,16 +18559,16 @@
               'supported_features': 0,
               'translation_key': 'cutoff_battery_level',
               'unique_id': '654321_relay_NC1_soc_low',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC1 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc1_fixture_cutoff_battery_level',
               'state': '25.0',
@@ -18713,7 +18604,7 @@
               'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Restore battery level',
               'platform': 'enphase_envoy',
@@ -18722,16 +18613,16 @@
               'supported_features': 0,
               'translation_key': 'restore_battery_level',
               'unique_id': '654321_relay_NC1_soc_high',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC1 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc1_fixture_restore_battery_level',
               'state': '70.0',
@@ -19065,7 +18956,7 @@
               'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Cutoff battery level',
               'platform': 'enphase_envoy',
@@ -19074,16 +18965,16 @@
               'supported_features': 0,
               'translation_key': 'cutoff_battery_level',
               'unique_id': '654321_relay_NC2_soc_low',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC2 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc2_fixture_cutoff_battery_level',
               'state': '30.0',
@@ -19119,7 +19010,7 @@
               'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Restore battery level',
               'platform': 'enphase_envoy',
@@ -19128,16 +19019,16 @@
               'supported_features': 0,
               'translation_key': 'restore_battery_level',
               'unique_id': '654321_relay_NC2_soc_high',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC2 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc2_fixture_restore_battery_level',
               'state': '70.0',
@@ -19471,7 +19362,7 @@
               'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Cutoff battery level',
               'platform': 'enphase_envoy',
@@ -19480,16 +19371,16 @@
               'supported_features': 0,
               'translation_key': 'cutoff_battery_level',
               'unique_id': '654321_relay_NC3_soc_low',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC3 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc3_fixture_cutoff_battery_level',
               'state': '30.0',
@@ -19525,7 +19416,7 @@
               'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Restore battery level',
               'platform': 'enphase_envoy',
@@ -19534,16 +19425,16 @@
               'supported_features': 0,
               'translation_key': 'restore_battery_level',
               'unique_id': '654321_relay_NC3_soc_high',
-              'unit_of_measurement': None,
+              'unit_of_measurement': '%',
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'NC3 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
+                'unit_of_measurement': '%',
               }),
               'entity_id': 'number.nc3_fixture_restore_battery_level',
               'state': '70.0',
@@ -20090,6 +19981,7 @@
         'THREEPHASE',
         'CTMETERS',
       ]),
+      'token_lifetime': 200,
     }),
     'fixtures': dict({
     }),

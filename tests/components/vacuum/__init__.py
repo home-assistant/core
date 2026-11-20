@@ -63,19 +63,18 @@ class MockVacuum(MockEntity, StateVacuumEntity):
 
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.VACUUM]
     )
-    return True
 
 
 async def help_async_unload_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Unload test config emntry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, [Platform.VACUUM]
     )
 

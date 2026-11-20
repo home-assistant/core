@@ -42,6 +42,12 @@ class HassTypeHintChecker(BaseChecker):
             "home-assistant-return-type",
             "Used when method return type is incorrect",
         ),
+        "E7407": (
+            "%s should be defined with `%s`",
+            "home-assistant-function-async-mismatch",
+            "Used when a function Home Assistant awaits is not a coroutine, "
+            "or a function it runs in the executor is a coroutine",
+        ),
         "R7401": (
             "Argument %s is of type %s and could be moved to "
             "`@pytest.mark.usefixtures` decorator in %s",
@@ -203,6 +209,20 @@ class HassTypeHintChecker(BaseChecker):
     ) -> None:
         if self._ignore_function_match(node, annotations, match):
             return
+        # Nested functions are not loaded by Home Assistant
+        if match.coroutine is not None and node.parent is self._module_node:
+            expected_coroutine = (
+                # explicit
+                match.coroutine
+                # implicit from has_async_counterpart
+                or node.name != match.function_name
+            )
+            if isinstance(node, nodes.AsyncFunctionDef) != expected_coroutine:
+                self.add_message(
+                    "home-assistant-function-async-mismatch",
+                    node=node,
+                    args=(node.name, "async def" if expected_coroutine else "def"),
+                )
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():

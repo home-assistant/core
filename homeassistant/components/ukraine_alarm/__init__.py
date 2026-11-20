@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import aiohttp
 from uasiren.client import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -40,7 +39,9 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: UkraineAlarmConfigEntry
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
