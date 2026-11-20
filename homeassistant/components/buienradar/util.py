@@ -75,7 +75,7 @@ class BrData:
     def __init__(self, hass: HomeAssistant, coordinates, timeframe, devices) -> None:
         """Initialize the data object."""
         self.devices = devices
-        self.data: dict[str, Any] | None = {}
+        self.data: dict[str, Any] = {}
         self.hass = hass
         self.coordinates = coordinates
         self.timeframe = timeframe
