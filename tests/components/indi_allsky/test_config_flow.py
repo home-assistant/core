@@ -522,11 +522,19 @@ async def test_reconfigure_flow_clears_omitted_credentials(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "reconfigured_host",
+    [
+        pytest.param("proxy.example", id="domain_host"),
+        pytest.param("192.168.1.100", id="ip_host"),
+    ],
+)
 async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
+    reconfigured_host: str,
 ) -> None:
-    """Test Zeroconf rediscovery preserves reconfigured non-IP host and port."""
+    """Test Zeroconf rediscovery preserves reconfigured host and port."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="aa:bb:cc:dd:ee:ff",
@@ -547,7 +555,7 @@ async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "proxy.example",
+            CONF_HOST: reconfigured_host,
             CONF_PORT: 8443,
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
@@ -556,7 +564,7 @@ async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == "proxy.example"
+    assert entry.data[CONF_HOST] == reconfigured_host
     assert entry.data[CONF_PORT] == 8443
 
     discovery_info = ZeroconfServiceInfo(
@@ -577,7 +585,7 @@ async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == "proxy.example"
+    assert entry.data[CONF_HOST] == reconfigured_host
     assert entry.data[CONF_PORT] == 8443
 
 

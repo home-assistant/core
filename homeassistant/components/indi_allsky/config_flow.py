@@ -42,7 +42,7 @@ from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MANUAL_PORT = "manual_port"
+CONF_MANUAL_ENDPOINT = "manual_endpoint"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -242,13 +242,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             current_host = current_entry.data.get(CONF_HOST) if current_entry else None
             if current_entry and current_entry.data.get(CONF_SSL, True) != ssl:
                 return self.async_abort(reason="already_configured")
+            manual_endpoint = bool(
+                current_entry and current_entry.options.get(CONF_MANUAL_ENDPOINT)
+            )
             updates: dict[str, Any] = {
                 CONF_SSL: ssl,
             }
-            if not (current_entry and current_entry.options.get(CONF_MANUAL_PORT)):
+            if not manual_endpoint:
                 updates[CONF_PORT] = port
-            if not (current_host and not is_ip_address(current_host)):
-                updates[CONF_HOST] = host
+                if not (current_host and not is_ip_address(current_host)):
+                    updates[CONF_HOST] = host
             self._abort_if_unique_id_configured(updates=updates)
         else:
             for entry in self._async_current_entries(include_ignore=False):
@@ -471,7 +474,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     title=f"INDI Allsky ({host_str})",
                     data=entry_data,
-                    options={**entry.options, CONF_MANUAL_PORT: True},
+                    options={**entry.options, CONF_MANUAL_ENDPOINT: True},
                 )
 
         return self.async_show_form(
