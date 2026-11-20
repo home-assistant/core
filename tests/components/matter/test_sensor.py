@@ -1359,6 +1359,7 @@ async def test_general_diagnostics_sensors_disabled_by_default(
     "node_fixture",
     ["mock_meter_identification"],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "attribute", "initial", "new_value", "expected"),
     [
@@ -1394,6 +1395,30 @@ async def test_general_diagnostics_sensors_disabled_by_default(
             "1",
             id="protocol_version",
         ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            1,
+            "private",
+            id="meter_type_private",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            2,
+            "generic",
+            id="meter_type_generic",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            3,
+            "unknown",
+            id="meter_type_unknown_value",
+        ),
     ],
 )
 async def test_meter_identification_attributes(
@@ -1403,10 +1428,10 @@ async def test_meter_identification_attributes(
     entity_id: str,
     attribute: ClusterAttributeDescriptor,
     initial: str,
-    new_value: str | None,
+    new_value: str | int | None,
     expected: str,
 ) -> None:
-    """Test meter identification string attributes update their sensors."""
+    """Test meter identification attributes update their sensors."""
     state = hass.states.get(entity_id)
     assert state
     assert state.state == initial
@@ -1423,56 +1448,3 @@ async def test_meter_identification_attributes(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected
-
-
-@pytest.mark.parametrize(
-    "node_fixture",
-    ["mock_meter_identification"],
-)
-async def test_meter_type(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test meter type."""
-    entity_id = "sensor.mock_meter_identification_meter_type"
-    attribute = clusters.MeterIdentification.Attributes.MeterType
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "utility"
-
-    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 1)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "private"
-
-    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 2)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "generic"
-
-
-@pytest.mark.parametrize(
-    "node_fixture",
-    ["mock_meter_identification"],
-)
-async def test_meter_type_unknown_value(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test a meter type outside the known map results in an unknown state."""
-    entity_id = "sensor.mock_meter_identification_meter_type"
-    attribute = clusters.MeterIdentification.Attributes.MeterType
-
-    set_node_attribute(matter_node, 1, attribute.cluster_id, attribute.attribute_id, 3)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
