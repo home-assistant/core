@@ -4,18 +4,18 @@ from unittest.mock import AsyncMock
 
 from aioindiallsky import ExposureData, MediaData, SensorData
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.indi_allsky.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_indi_allsky_client: AsyncMock,
     mock_exposure_data: ExposureData,
@@ -47,11 +47,15 @@ async def test_diagnostics(
     mock_indi_allsky_client.is_connected = True
     mock_indi_allsky_client.is_control_connected = False
 
-    assert await async_get_config_entry_diagnostics(hass, mock_config_entry) == snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
 
 
 async def test_diagnostics_empty(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_indi_allsky_client: AsyncMock,
     snapshot: SnapshotAssertion,
@@ -67,11 +71,15 @@ async def test_diagnostics_empty(
     coordinator.latest_startrail = None
     coordinator.latest_sensor = None
 
-    assert await async_get_config_entry_diagnostics(hass, mock_config_entry) == snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
 
 
 async def test_diagnostics_redacts_credentials(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_indi_allsky_client: AsyncMock,
 ) -> None:
@@ -88,7 +96,9 @@ async def test_diagnostics_redacts_credentials(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
     assert result["entry_data"][CONF_HOST] == REDACTED
     assert result["entry_data"][CONF_USERNAME] == REDACTED
     assert result["entry_data"][CONF_PASSWORD] == REDACTED
