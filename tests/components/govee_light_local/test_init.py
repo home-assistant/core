@@ -548,6 +548,109 @@ async def test_remove_device_from_device_page(
     assert mock_govee_api.get_device_by_fingerprint(device.fingerprint) is None
 
 
+async def test_remove_queued_device_from_device_page(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test deleting a configured device that has not answered since startup.
+
+    Its registry entry persists from an earlier session, but the controller
+    only has the IP in its discovery queue, so the removal must be resolved
+    from the device's subentry link rather than from the controller.
+    """
+    assert await async_setup_component(hass, "config", {})
+
+    # Setup waits for discovery to find a device, so seed one that answered.
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="discovered-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [discovered])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries("192.168.1.100"),
+    )
+    config_entry.add_to_hass(hass)
+    subentry_id = next(iter(config_entry.subentries))
+
+    # The device registry entry left behind by an earlier session.
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id=subentry_id,
+        identifiers={(DOMAIN, "manual-fingerprint")},
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert "192.168.1.100" in mock_govee_api.discovery_queue
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert response["success"]
+    assert config_entry.subentries == {}
+    assert "192.168.1.100" not in mock_govee_api.discovery_queue
+    assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_remove_device_when_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test deleting a manual device while the entry is unloaded drops its subentry."""
+    assert await async_setup_component(hass, "config", {})
+
+    manual_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device.is_manual = True
+    set_mocked_devices(mock_govee_api, [manual_device])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries(manual_device.ip),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, manual_device.fingerprint), config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert response["success"]
+    assert config_entry.subentries == {}
+    assert device_registry.async_get(device_entry.id) is None
+
+
 async def test_removed_discovered_device_returns_on_next_scan(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL, SUBENTRY_TYPE_DEVICE
+from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
 from .coordinator import (
     GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
@@ -65,7 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
 
     @callback
     def _async_device_removed(event: Event[EventDeviceRegistryUpdatedData]) -> None:
-        """Forget a deleted device and unconfigure it if it was manual."""
+        """Make the controller forget a deleted device.
+
+        A device left in the controller answers the next scan as an already
+        known device, so the platform would never recreate its entity.
+        """
         if TYPE_CHECKING:
             # The event filter only lets removals through.
             assert event.data["action"] == "remove"
@@ -76,27 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             for identifier in device_info["identifiers"]
             if identifier[0] == DOMAIN
         }
-        # The device is still known to the controller at this point, which is
-        # what lets us map the fingerprint back to its IP.
-        removed = [
-            device
-            for device in coordinator.devices
-            if device.fingerprint in fingerprints
-        ]
-        removed_ips = {device.ip for device in removed}
-        # A device left in the controller answers the next scan as an already
-        # known device, so the platform would never recreate its entity.
-        for device in removed:
-            coordinator.remove_device(device)
-
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
-            # The subentry is already gone when this removal is the cascade of
-            # a subentry deletion; removing it again would raise.
-            if (
-                subentry.unique_id in removed_ips
-                and subentry.subentry_id in entry.subentries
-            ):
-                hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+        for device in coordinator.devices:
+            if device.fingerprint in fingerprints:
+                coordinator.remove_device(device)
 
     entry.async_on_unload(coordinator.async_cleanup)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -194,10 +180,16 @@ async def async_remove_config_entry_device(
     config_entry: GoveeLocalConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a device.
+    """Allow removing a device, dropping a manual device's configuration.
 
-    The actual cleanup is done in the device registry event.
+    Handled here rather than in the registry event listener so it also works
+    when the lamp never answered or the entry is not loaded, and so internal
+    removals (reconfigure, subentry cascade) never touch other subentries.
     """
+    if (
+        subentry_id := device_entry.config_subentry_id
+    ) is not None and subentry_id in config_entry.subentries:
+        hass.config_entries.async_remove_subentry(config_entry, subentry_id)
     return True
 
 
