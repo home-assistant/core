@@ -3,10 +3,12 @@
 from datetime import timedelta
 import http
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
+import orjson
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -21,7 +23,7 @@ from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -329,3 +331,68 @@ async def test_entity_unknown_when_point_is_missing(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
     assert "Unexpected error" not in caplog.text
+
+
+def _s320_point(parameter_id: str, name: str, **overrides: Any) -> dict[str, Any]:
+    """Return a writable data point as a NIBE S320 reports it."""
+    return {
+        "category": "NIBE VVM S320 CU EM 3x400V",
+        "parameterId": parameter_id,
+        "parameterName": name,
+        "parameterUnit": "",
+        "writable": True,
+        "timestamp": "2026-11-20T10:00:00+00:00",
+        "value": 0.0,
+        "strVal": "0",
+        "smartHomeCategories": [],
+        "minValue": None,
+        "maxValue": None,
+        "stepValue": 1.0,
+        "enumValues": [],
+        "scaleValue": "1",
+        "zoneId": None,
+    } | overrides
+
+
+@pytest.mark.parametrize(
+    "load_device_points_jv_file",
+    [
+        orjson.dumps(
+            [
+                _s320_point("47007", "Heating curve", minValue=0.0, maxValue=15.0),
+                _s320_point(
+                    "10613", "Activate SG Ready via API", minValue=0.0, maxValue=1.0
+                ),
+            ]
+        ).decode()
+    ],
+)
+async def test_settings_with_zero_limit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that settings with a limit of 0 can be changed, with the right range."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    device_id = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{device_id}-47007"
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.NUMBER, DOMAIN, f"{device_id}-47007"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 15
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{device_id}-10613"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{device_id}-10613"
+    )

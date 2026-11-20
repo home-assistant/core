@@ -9,6 +9,21 @@ from homeassistant.const import Platform
 from .const import F_SERIES
 
 
+def has_value_range(device_point: DevicePoint) -> bool:
+    """Return True if the device point has a usable minimum and maximum value.
+
+    A value of 0 is a valid limit, and some points report the limits the wrong
+    way round or as empty strings, which are not.
+    """
+    min_value = device_point.min_value
+    max_value = device_point.max_value
+    return (
+        isinstance(min_value, int | float)
+        and isinstance(max_value, int | float)
+        and min_value < max_value
+    )
+
+
 def find_matching_platform(
     device_point: DevicePoint,
     description: SensorEntityDescription | NumberEntityDescription | None = None,
@@ -26,9 +41,19 @@ def find_matching_platform(
     if len(device_point.enum_values) > 0 and device_point.writable:
         return Platform.SELECT
 
-    if (description and description.native_unit_of_measurement == "DM") or (
-        device_point.raw["maxValue"] and device_point.raw["minValue"]
+    if (
+        device_point.writable
+        and device_point.min_value == 0
+        and device_point.max_value == 1
+        and device_point.step_value == 1
+        and not device_point.parameter_unit
     ):
+        # An on/off setting that comes without enum values
+        return Platform.SWITCH
+
+    if (
+        description and description.native_unit_of_measurement == "DM"
+    ) or has_value_range(device_point):
         if device_point.writable:
             return Platform.NUMBER
         return Platform.SENSOR
