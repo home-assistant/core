@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import override
 
 from yoto_api import CardInsertionState, DayMode, YotoPlayer
@@ -21,6 +22,8 @@ from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoPlayerEntity
 
 PARALLEL_UPDATES = 0
+
+SLEEP_TIMER_END_TOLERANCE = timedelta(seconds=5)
 
 
 def _enum_state(value: CardInsertionState | None) -> str | None:
@@ -84,11 +87,16 @@ async def async_setup_entry(
         known_players.clear()
         known_players.update(current)
         if new_players:
-            async_add_entities(
+            entities: list[SensorEntity] = [
                 YotoSensor(coordinator, coordinator.data[player_id], description)
                 for player_id in new_players
                 for description in SENSORS
+            ]
+            entities.extend(
+                YotoSleepTimerSensor(coordinator, coordinator.data[player_id])
+                for player_id in new_players
             )
+            async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_players))
     _add_players()
@@ -115,3 +123,35 @@ class YotoSensor(YotoPlayerEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.player)
+
+
+class YotoSleepTimerSensor(YotoPlayerEntity, SensorEntity):
+    """Time at which the running sleep timer stops playback."""
+
+    _attr_translation_key = "sleep_timer"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(
+        self,
+        coordinator: YotoDataUpdateCoordinator,
+        player: YotoPlayer,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, player)
+        self._attr_unique_id = f"{player.id}_sleep_timer"
+        self._attr_native_value: datetime | None = player.sleep_timer_ends_at
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the end time stable across small reporting differences."""
+        if self._player_id in self.coordinator.data:
+            end = self.player.sleep_timer_ends_at
+            current = self._attr_native_value
+            if (
+                end is None
+                or current is None
+                or abs(end - current) > SLEEP_TIMER_END_TOLERANCE
+            ):
+                self._attr_native_value = end
+        super()._handle_coordinator_update()
