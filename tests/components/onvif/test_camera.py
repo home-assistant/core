@@ -144,8 +144,9 @@ async def test_stream_uri_waiting_call_and_request_cancelled(
         await first
 
     # The next call asks the camera again
-    assert (
-        await async_get_stream_source(hass, ENTITY_ID)
-        == f"rtsp://{USERNAME}:{PASSWORD}@1.2.3.4/stream"
-    )
+    async with asyncio.timeout(5):
+        assert (
+            await async_get_stream_source(hass, ENTITY_ID)
+            == f"rtsp://{USERNAME}:{PASSWORD}@1.2.3.4/stream"
+        )
     assert calls == 2
