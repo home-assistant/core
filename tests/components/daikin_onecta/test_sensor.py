@@ -146,6 +146,42 @@ async def test_unknown_enum_value_keeps_sensor_updating(
     assert caplog.text.count("Ignoring unsupported Daikin enum value") == 1
 
 
+async def test_operation_mode_is_exposed_as_raw_enum_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose the native operation mode separately from the climate mode."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.embedded_id == "climateControlMainZone"
+    )
+    characteristic = point.scalar_characteristic("operationMode")
+    assert characteristic is not None
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{device.id}_{point.embedded_id}_operationMode",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "cooling"
+    assert "heating" in state.attributes["options"]
+
+    characteristic.value = "heating"
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "heating"
+
+
 async def test_boolean_value_is_not_exposed_as_numeric_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -33,7 +33,7 @@ def scalar_platform(
     ):
         return Platform.BINARY_SENSOR
     if name in SENSOR_KEYS and not (
-        name in {"operationMode", "airPurificationMode"}
+        name == "airPurificationMode"
         and management_point_type in CONTROL_MANAGEMENT_POINT_TYPES
     ):
         return Platform.SENSOR

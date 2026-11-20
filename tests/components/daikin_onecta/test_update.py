@@ -80,9 +80,16 @@ async def test_firmware_install_executes_command(
         is True
     )
 
-    # A few fresh polls without status or version evidence may still be stale.
+    # Three fresh polls without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
     mock_onecta_client.get_gateway_devices.return_value = gateways
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+    assert (
+        hass.states.get(state.entity_id).attributes[
+            UpdateEntityStateAttribute.IN_PROGRESS
+        ]
+        is True
+    )
     await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert (
         hass.states.get(state.entity_id).attributes[

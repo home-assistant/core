@@ -84,8 +84,8 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
             "operationMode",
             Characteristic(value="heating"),
             "climateControl",
-            None,
-            id="control-operation-mode",
+            Platform.SENSOR,
+            id="control-operation-mode-sensor",
         ),
         pytest.param(
             "airPurificationMode",
