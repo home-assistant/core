@@ -1083,11 +1083,7 @@ async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
 async def test_wait_for_trigger_trigger_defined_variables(
     hass: HomeAssistant,
 ) -> None:
-    """Test variables defined on a wait_for_trigger trigger become available.
-
-    Variables configured on a trigger inside wait_for_trigger must be
-    available in the actions that run after the wait completes.
-    """
+    """Test variables defined on a wait_for_trigger trigger are available after the wait."""
     context = Context()
     wait_alias = "wait step"
     event = "test_event"
