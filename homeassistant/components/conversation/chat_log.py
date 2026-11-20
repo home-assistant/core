@@ -791,8 +791,15 @@ class ChatLog:
         user_llm_hass_api: str | list[str] | llm.API | None = None,
         user_llm_prompt: str | None = None,
         user_extra_system_prompt: str | None = None,
+        *,
+        code_mode: bool = True,
     ) -> None:
-        """Set the LLM system prompt."""
+        """Set the LLM system prompt.
+
+        With an API other than the Assist API, the model gets tools to search
+        the tools of the APIs and to run code that calls them. Set code_mode
+        to False to give the model the tools of the APIs directly.
+        """
         llm_api: llm.APIInstance | None = None
         if isinstance(user_llm_hass_api, llm.API):
             api_ids: tuple[str, ...] = (user_llm_hass_api.id,)
@@ -805,6 +812,7 @@ class ChatLog:
             llm_context.context.user_id if llm_context.context else None,
             llm_context.device_id,
             api_ids,
+            code_mode,
         )
 
         if (
@@ -861,7 +869,7 @@ class ChatLog:
         llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         # Assist alone has few tools, so the model calls them directly. With
         # other APIs, the model writes code that calls the tools.
-        if llm_api is not None and api_ids != (llm.LLM_API_ASSIST,):
+        if code_mode and llm_api is not None and api_ids != (llm.LLM_API_ASSIST,):
             llm_api = await self._async_apply_code_mode(llm_api)
 
         user_name: str | None = None

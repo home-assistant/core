@@ -36,7 +36,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
 
 
 async def _llm_data(
-    hass: HomeAssistant, api_ids: str | list[str]
+    hass: HomeAssistant, api_ids: str | list[str], *, code_mode: bool = True
 ) -> tuple[list[str], str]:
     """Return the tool names and the system prompt that an agent gets."""
     user_input = ConversationInput(
@@ -53,7 +53,7 @@ async def _llm_data(
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
-            user_input.as_llm_context("test"), api_ids
+            user_input.as_llm_context("test"), api_ids, code_mode=code_mode
         )
         assert chat_log.llm_api is not None
         system_prompt = chat_log.content[0]
@@ -76,6 +76,16 @@ async def test_other_apis(hass: HomeAssistant, api_ids: str | list[str]) -> None
     tool_names, _ = await _llm_data(hass, api_ids)
 
     assert tool_names == ["search", "execute"]
+
+
+async def test_code_mode_disabled(hass: HomeAssistant) -> None:
+    """Test an agent can get the tools of other APIs directly."""
+    tool_names, _ = await _llm_data(
+        hass, [llm.LLM_API_ASSIST, "other"], code_mode=False
+    )
+
+    assert "llm__GetDateTime" in tool_names
+    assert "execute" not in tool_names
 
 
 async def test_date_time_prompt(hass: HomeAssistant) -> None:
