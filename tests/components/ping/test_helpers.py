@@ -126,7 +126,10 @@ async def test_async_update_no_replies(
     ],
 )
 async def test_async_update_name_not_resolved(
-    hass: HomeAssistant, stderr: bytes, returncode: int
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    stderr: bytes,
+    returncode: int,
 ) -> None:
     """Test an unresolvable host clears stale data and reports no measurement."""
     ping = PingDataSubProcess(hass, host="nohost.invalid", count=3, privileged=False)
@@ -140,6 +143,8 @@ async def test_async_update_name_not_resolved(
 
     assert ping.is_alive is False
     assert ping.data is None
+    # Return code 1 means unreachable, so only higher codes log an error
+    assert ("Error running command" in caplog.text) is (returncode > 1)
 
 
 @pytest.mark.parametrize(
