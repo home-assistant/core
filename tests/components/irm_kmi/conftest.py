@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from .const import CURRENT_WEATHER, POLLEN, RADAR_FORECAST
+from .const import CURRENT_WEATHER, POLLEN, RADAR_FORECAST, WARNINGS
 
 
 @pytest.fixture
@@ -61,6 +61,7 @@ def mock_irm_kmi_api() -> Generator[MagicMock]:
         irm_kmi.get_current_weather.return_value = CURRENT_WEATHER
         irm_kmi.get_daily_forecast.return_value = []
         irm_kmi.get_hourly_forecast.return_value = []
+        irm_kmi.get_warnings.return_value = WARNINGS
         irm_kmi.get_radar_forecast.return_value = RADAR_FORECAST
         irm_kmi.get_pollen.return_value = POLLEN
         yield irm_kmi

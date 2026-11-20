@@ -484,6 +484,58 @@
     'state': 'active',
   })
 # ---
+# name: test_sensors[sensor.brussels_next_warning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('irm_kmi', '01JIRMKMI00000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.brussels_next_warning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next warning',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next warning',
+    'platform': 'irm_kmi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_warning',
+    'unique_id': 'brussels be-next_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.brussels_next_warning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data from the Royal Meteorological Institute of Belgium meteo.be',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Brussels Next warning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.brussels_next_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-12-28T15:00:00+00:00',
+  })
+# ---
 # name: test_sensors[sensor.brussels_oak_pollen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

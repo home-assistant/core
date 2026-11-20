@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import Platform, __version__
 
 DOMAIN: Final = "irm_kmi"
-PLATFORMS: Final = [Platform.SENSOR, Platform.WEATHER]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.WEATHER]
 
 OUT_OF_BENELUX: Final = [
     "außerhalb der Benelux (Brussels)",
