@@ -18,6 +18,7 @@ from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
 from homeassistant.components.alexa.handlers import RTC_MAX_SESSION_DURATION
+from homeassistant.components.camera import CameraService
 from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
@@ -6001,7 +6002,7 @@ async def test_camera_discovery_webrtc_camera_off(hass: HomeAssistant) -> None:
     """Test the RTC session controller is advertised for a switched off camera."""
     await hass.services.async_call(
         camera.DOMAIN,
-        camera.CameraService.TURN_OFF,
+        CameraService.TURN_OFF,
         {TargetKey.ENTITY_ID: "camera.demo_camera"},
         blocking=True,
     )
@@ -6485,7 +6486,7 @@ async def test_rtc_session_disconnected(
     """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
     await hass.services.async_call(
         camera.DOMAIN,
-        camera.CameraService.TURN_ON if camera_on else camera.CameraService.TURN_OFF,
+        CameraService.TURN_ON if camera_on else CameraService.TURN_OFF,
         {TargetKey.ENTITY_ID: "camera.demo_camera"},
         blocking=True,
     )
