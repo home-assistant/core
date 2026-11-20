@@ -1,20 +1,24 @@
 """Support for LG soundbars."""
 
+from collections.abc import Awaitable
+import contextlib
 from typing import Any, override
 
-import temescal
+import aiotemescal
+from aiotemescal import TemescalConnectionError
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LGSoundbarConfigEntry
 from .const import DOMAIN
 
 EQUIVALENT_FUNCTIONS = (
@@ -29,8 +33,7 @@ EQUIVALENT_FUNCTIONS = (
 def _display_name(names: list[str], index: int) -> str:
     """Return the display name for an index.
 
-    The temescal name tables stopped being maintained when the library was
-    archived in 2023, so newer models report indices past the end of them.
+    Newer models report indices past the end of the library name tables.
     Naming those keeps them selectable instead of silently dropping them.
     """
     if index < len(names):
@@ -61,25 +64,17 @@ def _offered_equivalent(function: str, offered: list[int]) -> str | None:
     """Return an offered function from the same group as the given one."""
     group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
     return next(
-        (name for name in group if temescal.functions.index(name) in offered), None
+        (name for name in group if aiotemescal.functions.index(name) in offered), None
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LGSoundbarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up media_player from a config entry created in the integrations UI."""
-    async_add_entities(
-        [
-            LGDevice(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-        ]
-    )
+    async_add_entities([LGDevice(config_entry)])
 
 
 class LGDevice(MediaPlayerEntity):
@@ -102,61 +97,67 @@ class LGDevice(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, host, port, unique_id):
+    def __init__(self, entry: LGSoundbarConfigEntry) -> None:
         """Initialize the LG speakers."""
-        self._host = host
-        self._port = port
+        self._entry = entry
+        self._client = entry.runtime_data
+        unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = unique_id
 
         self._volume = 0
-        self._volume_min = 0
         self._volume_max = 0
         self._function = -1
-        self._functions = []
+        self._functions: list[int] = []
         self._equaliser = -1
-        self._equalisers = []
-        self._mute = 0
-        self._rear_volume = 0
-        self._rear_volume_min = 0
-        self._rear_volume_max = 0
-        self._woofer_volume = 0
-        self._woofer_volume_min = 0
-        self._woofer_volume_max = 0
-        self._bass = 0
-        self._treble = 0
-        self._device = None
+        self._equalisers: list[int] = []
+        self._mute = False
         self._support_play_control = False
         # Starts out matching the ON default of _attr_state, for the same reason
         self._device_on = True
         self._stream_type = 0
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)}, name=host
+            identifiers={(DOMAIN, unique_id)}, name=entry.data[CONF_HOST]
         )
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register the callback after hass is ready for it."""
-        await self.hass.async_add_executor_job(self._connect)
+        """Follow the messages and the connection state of the device."""
+        self.async_on_remove(self._client.subscribe(self._handle_event))
+        self.async_on_remove(self._client.subscribe_connection(self._handle_connection))
+        self._attr_available = self._client.connected
 
-    def _connect(self) -> None:
-        """Perform the actual devices setup."""
-        self._device = temescal.temescal(
-            self._host, port=self._port, callback=self.handle_event
-        )
-        self._device.get_product_info()
-        self._device.get_mac_info()
-        self.update()
+    @callback
+    def _handle_connection(self, connected: bool) -> None:
+        """Track availability; the client fetches the state before connecting."""
+        self._attr_available = connected
+        self.async_write_ha_state()
 
-    def handle_event(self, response):
-        """Handle responses from the speakers."""
+    async def _async_get_play(self) -> None:
+        """Ask for the play info, whose answer arrives as a message."""
+        # A lost connection is reported through _handle_connection
+        with contextlib.suppress(TemescalConnectionError):
+            await self._client.get_play()
+
+    async def _async_send(self, command: Awaitable[None]) -> None:
+        """Send a command on behalf of an action."""
+        try:
+            await command
+        except TemescalConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    @callback
+    def _handle_event(self, response: dict[str, Any]) -> None:
+        """Handle messages from the speakers."""
         data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
             self._update_equalisers(data)
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
-            if "i_vol_min" in data:
-                self._volume_min = data["i_vol_min"]
             if "i_vol_max" in data:
                 self._volume_max = data["i_vol_max"]
             if "b_mute" in data:
@@ -175,18 +176,6 @@ class LGDevice(MediaPlayerEntity):
             if "ai_func_list" in data:
                 self._functions = data["ai_func_list"]
         elif response["msg"] == "SETTING_VIEW_INFO":
-            if "i_rear_min" in data:
-                self._rear_volume_min = data["i_rear_min"]
-            if "i_rear_max" in data:
-                self._rear_volume_max = data["i_rear_max"]
-            if "i_rear_level" in data:
-                self._rear_volume = data["i_rear_level"]
-            if "i_woofer_min" in data:
-                self._woofer_volume_min = data["i_woofer_min"]
-            if "i_woofer_max" in data:
-                self._woofer_volume_max = data["i_woofer_max"]
-            if "i_woofer_level" in data:
-                self._woofer_volume = data["i_woofer_level"]
             if "i_curr_eq" in data:
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
@@ -194,14 +183,10 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "PLAY_INFO":
             self._update_playinfo(data)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _update_equalisers(self, data: dict[str, Any]) -> None:
         """Update the equalisers."""
-        if "i_bass" in data:
-            self._bass = data["i_bass"]
-        if "i_treble" in data:
-            self._treble = data["i_treble"]
         if "ai_eq_list" in data:
             self._equalisers = data["ai_eq_list"]
         if "i_curr_eq" in data:
@@ -213,7 +198,9 @@ class LGDevice(MediaPlayerEntity):
             if self._stream_type != data["i_stream_type"]:
                 self._stream_type = data["i_stream_type"]
                 # Ask device for current play info when stream type changed.
-                self._device.get_play()
+                self._entry.async_create_background_task(
+                    self.hass, self._async_get_play(), "lg_soundbar play info"
+                )
             if data["i_stream_type"] == 0:
                 # If the stream type is 0 (aka the soundbar
                 # is used as an actual soundbar) the last
@@ -242,17 +229,9 @@ class LGDevice(MediaPlayerEntity):
         if "b_support_play_ctrl" in data:
             self._support_play_control = data["b_support_play_ctrl"]
 
-    def update(self) -> None:
-        """Trigger updates from the device."""
-        self._device.get_eq()
-        self._device.get_info()
-        self._device.get_func()
-        self._device.get_settings()
-        self._device.get_play()
-
     @property
     @override
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         if self._volume_max != 0:
             return self._volume / self._volume_max
@@ -260,101 +239,87 @@ class LGDevice(MediaPlayerEntity):
 
     @property
     @override
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self._mute
 
     @property
     @override
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Return the current sound mode."""
         if self._equaliser == -1:
             return None
-        return _display_name(temescal.equalisers, self._equaliser)
+        return _display_name(aiotemescal.equalisers, self._equaliser)
 
     @property
     @override
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str]:
         """Return the available sound modes."""
-        return _offered_names(temescal.equalisers, self._equalisers)
+        return _offered_names(aiotemescal.equalisers, self._equalisers)
 
     @property
     @override
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         if self._function == -1:
             return None
-        function = _display_name(temescal.functions, self._function)
+        function = _display_name(aiotemescal.functions, self._function)
         if self._function in self._functions:
             return function
         return _offered_equivalent(function, self._functions) or function
 
     @property
     @override
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
-        return _offered_names(temescal.functions, self._functions)
+        return _offered_names(aiotemescal.functions, self._functions)
 
     @override
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume = volume * self._volume_max
-        self._device.set_volume(int(volume))
+        await self._async_send(self._client.set_volume(int(volume * self._volume_max)))
 
     @override
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
-        self._device.set_mute(mute)
+        await self._async_send(self._client.set_mute(mute))
 
     @override
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.set_func(
-            _index_for_name(temescal.functions, self._functions, source)
+        await self._async_send(
+            self._client.set_func(
+                _index_for_name(aiotemescal.functions, self._functions, source)
+            )
         )
 
     @override
-    def select_sound_mode(self, sound_mode: str) -> None:
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
-        self._device.set_eq(
-            _index_for_name(temescal.equalisers, self._equalisers, sound_mode)
+        await self._async_send(
+            self._client.set_eq(
+                _index_for_name(aiotemescal.equalisers, self._equalisers, sound_mode)
+            )
         )
 
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        self._set_power(True)
+        await self._async_send(self._client.set_power(True))
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        self._set_power(False)
+        await self._async_send(self._client.set_power(False))
 
     @override
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Send play command."""
         if self._support_play_control:
-            self._device.send_packet(
-                {"cmd": "set", "data": {"i_play_ctrl": 0}, "msg": "PLAY_INFO"}
-            )
+            await self._async_send(self._client.set_play_ctrl(True))
 
     @override
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         if self._support_play_control:
-            self._device.send_packet(
-                {"cmd": "set", "data": {"i_play_ctrl": 1}, "msg": "PLAY_INFO"}
-            )
-
-    def media_play_pause(self) -> None:
-        """Send play/pause command."""
-        if self.state == MediaPlayerState.PLAYING:
-            self.media_pause()
-        else:
-            self.media_play()
-
-    def _set_power(self, status: bool) -> None:
-        """Set the media player state."""
-        self._device.send_packet(
-            {"cmd": "set", "data": {"b_powerkey": status}, "msg": "SPK_LIST_VIEW_INFO"}
-        )
+            await self._async_send(self._client.set_play_ctrl(False))
