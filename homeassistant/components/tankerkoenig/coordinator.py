@@ -114,7 +114,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 entry = cached.get(station_id)
                 saved = dt_util.parse_datetime(entry["saved"]) if entry else None
                 if entry and saved and now - saved < STATION_CACHE_MAX_AGE:
-                    self.stations[station_id] = Station(**entry["station"])
+                    self._restore_station(station_id, entry)
                     continue
                 try:
                     station = await self._tankerkoenig.station_details(station_id)
@@ -135,7 +135,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                         err,
                     )
                     if entry:  # outdated master data is better than no prices at all
-                        self.stations[station_id] = Station(**entry["station"])
+                        self._restore_station(station_id, entry)
                         continue
                     raise ConfigEntryNotReady(
                         translation_domain=DOMAIN,
@@ -143,7 +143,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     ) from err
                 except TankerkoenigError as err:
                     if entry:
-                        self.stations[station_id] = Station(**entry["station"])
+                        self._restore_station(station_id, entry)
                         continue
                     _LOGGER.error("Error when adding station %s %s", station_id, err)
                     continue
@@ -195,6 +195,12 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 "This might invalidate your api-key on the long run. "
                 "Try using a smaller radius"
             )
+
+    def _restore_station(self, station_id: str, entry: dict) -> None:
+        """Use the cached master data of a station."""
+        self.stations[station_id] = Station(**entry["station"])
+        # Opening times are not cached, so the first request fetches the details
+        self._station_details_fetched[station_id] = dt_util.utc_from_timestamp(0)
 
     async def async_get_station_details(self, station_id: str) -> Station:
         """Return the details of a station, fetched again once they are an hour old."""
