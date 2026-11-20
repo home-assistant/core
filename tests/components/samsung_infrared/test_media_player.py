@@ -14,14 +14,15 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -113,8 +114,11 @@ async def test_media_player_select_source_sends_correct_code(
     """Test selecting a source sends the mapped IR code."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: source,
+        },
         blocking=True,
     )
 
@@ -135,8 +139,11 @@ async def test_media_player_select_source_invalid_raises(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "hdmi_5"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "hdmi_5",
+            },
             blocking=True,
         )
 

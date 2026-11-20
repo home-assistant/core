@@ -543,6 +543,7 @@ REST_SENSORS: Final = {
 RPC_SENSORS: Final = {
     "power": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="apower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -674,6 +675,7 @@ RPC_SENSORS: Final = {
     ),
     "switch_pf": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="pf",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -710,6 +712,7 @@ RPC_SENSORS: Final = {
     ),
     "voltage": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
@@ -810,6 +813,7 @@ RPC_SENSORS: Final = {
     ),
     "current": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
@@ -921,6 +925,7 @@ RPC_SENSORS: Final = {
     ),
     "energy": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="aenergy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1220,6 +1225,7 @@ RPC_SENSORS: Final = {
     ),
     "freq": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="freq",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
@@ -1287,6 +1293,7 @@ RPC_SENSORS: Final = {
     ),
     "temperature": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
@@ -1890,6 +1897,7 @@ RPC_SENSORS: Final = {
     ),
     "switch_source": RpcSensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="source",
         translation_key="last_command_source",
         device_class=SensorDeviceClass.ENUM,
