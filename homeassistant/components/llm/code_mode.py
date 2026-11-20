@@ -44,8 +44,6 @@ MAX_ERROR_SIZE = 4096
 SEARCH_LIMIT = 10
 # Modules that the code can use without an import.
 IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
-# Dicts in a parameter type are written with their keys up to this depth.
-MAX_TYPE_DEPTH = 3
 # Sandbox processes for all chat sessions. A run waits when all are in use.
 MAX_SANDBOXES = 10
 
@@ -218,7 +216,7 @@ class ToolFunction:
         return call_tool
 
 
-def _python_type(schema: dict[str, Any], depth: int = MAX_TYPE_DEPTH) -> str:
+def _python_type(schema: dict[str, Any]) -> str:
     """Return the Python type hint for a JSON schema.
 
     A dict with known keys is written as `{"key": type, "optional_key"?: type}`.
@@ -226,21 +224,16 @@ def _python_type(schema: dict[str, Any], depth: int = MAX_TYPE_DEPTH) -> str:
     if "enum" in schema:
         return f"Literal[{', '.join(repr(value) for value in schema['enum'])}]"
     if variants := schema.get("anyOf") or schema.get("oneOf"):
-        return " | ".join(
-            dict.fromkeys(_python_type(variant, depth) for variant in variants)
-        )
+        return " | ".join(dict.fromkeys(_python_type(variant) for variant in variants))
     json_type = schema.get("type")
     if isinstance(json_type, list):
-        return " | ".join(
-            _python_type({**schema, "type": item}, depth) for item in json_type
-        )
+        return " | ".join(_python_type({**schema, "type": item}) for item in json_type)
     if json_type == "array":
-        return f"list[{_python_type(schema.get('items', {}), depth)}]"
-    if json_type == "object" and depth and (properties := schema.get("properties")):
+        return f"list[{_python_type(schema.get('items', {}))}]"
+    if json_type == "object" and (properties := schema.get("properties")):
         required = set(schema.get("required", []))
         keys = ", ".join(
-            f"{json.dumps(key)}{'' if key in required else '?'}: "
-            f"{_python_type(prop, depth - 1)}"
+            f"{json.dumps(key)}{'' if key in required else '?'}: {_python_type(prop)}"
             for key, prop in properties.items()
         )
         return f"{{{keys}}}"

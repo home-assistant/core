@@ -274,7 +274,7 @@ async def test_nested_parameters(
     assert (await _search(api_instance, "memory"))[0].startswith(
         """async def save_memory(
     *,
-    context: {"fact": str, "tags"?: list[str], "source"?: {"url": str, "meta"?: {"deep"?: dict}}},
+    context: {"fact": str, "tags"?: list[str], "source"?: {"url": str, "meta"?: {"deep"?: {"deeper"?: str}}}},
     items: list[{"id": int}] = None,
 ) -> dict:"""
     )
