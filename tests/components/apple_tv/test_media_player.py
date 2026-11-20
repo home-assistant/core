@@ -29,12 +29,11 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
-    SERVICE_TURN_OFF,
     SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_PLAYING,
@@ -409,8 +408,8 @@ async def test_remote_turn_off_reports_off(
     """Closing the connection after turning the remote off reports off."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: REMOTE_ENTITY_ID},
         blocking=True,
     )
     mock_atv.listener.connection_closed()
