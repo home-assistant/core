@@ -1,5 +1,6 @@
 """Test camera WebRTC."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 import logging
 from typing import Any
@@ -858,3 +859,58 @@ async def test_stream_source_retry_cancelled_on_removal(
 
         # Only the remaining camera looked again
         assert mock_stream_source.call_count == calls + calls // 2
+
+
+async def test_provider_lookup_cancelled_when_removed_during_retry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test removing a camera stops a retried lookup that waits for the stream source."""
+    attempts = 0
+    lookup_waiting = asyncio.Event()
+    lookup_cancelled = asyncio.Event()
+
+    async def stream_source() -> str:
+        nonlocal attempts
+        attempts += 1
+        if attempts <= 2:  # First lookup of each demo camera
+            raise TimeoutError("camera not ready")
+        lookup_waiting.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            lookup_cancelled.set()
+            raise
+        return STREAM_SOURCE
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch.object(
+            register_test_provider, "async_register_camera", autospec=True
+        ) as mock_register,
+    ):
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        other = get_camera_from_entity_id(hass, "camera.demo_camera_png")
+        await other.async_remove()
+
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await lookup_waiting.wait()
+
+        await camera.async_remove()
+
+        assert lookup_cancelled.is_set()
+        assert camera.webrtc_provider is None
+        mock_register.assert_not_called()
+
+        # Nothing is looked up for the removed cameras afterwards
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == 3
