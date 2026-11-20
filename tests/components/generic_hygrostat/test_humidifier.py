@@ -51,6 +51,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.restore_state import RestoreStateData
 from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2030,4 +2031,124 @@ async def test_restore_state_after_unavailable(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_HUMIDITY] == 62.0
     assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 50.0
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
-    
+
+
+async def test_restore_state_after_unavailable_away_mode(hass: HomeAssistant) -> None:
+    """Ensure away mode and saved target restore from extra data after unavailable."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("humidifier.test_hygrostat", STATE_UNAVAILABLE),
+                GenericHygrostatExtraStoredData(
+                    target_humidity=32.0,
+                    saved_target_humidity=62.0,
+                    is_away=True,
+                    is_on=True,
+                ).as_dict(),
+            ),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.attributes[ATTR_HUMIDITY] == 32.0
+    assert (
+        state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 62.0
+    )
+
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        HumidifierService.SET_MODE,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.MODE: MODE_NORMAL,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state is not None
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
+    assert state.attributes[ATTR_HUMIDITY] == 62.0
+
+
+async def test_persist_extra_restore_data_when_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure extra restore data is persisted even when entity becomes unavailable."""
+    _setup_sensor(hass, 45)
+    await _setup_switch(hass, False)
+
+    await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "away_humidity": 32,
+                "initial_state": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        HumidifierService.SET_HUMIDITY,
+        {
+            TargetKey.ENTITY_ID: "humidifier.test_hygrostat",
+            HumidifierServiceArgument.HUMIDITY: 62,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    restore_data = RestoreStateData.async_get_instance(hass)
+    await restore_data.async_dump_states()
+
+    stored = restore_data.last_states.get("humidifier.test_hygrostat")
+    assert stored is not None
+    assert stored.state.state == STATE_UNAVAILABLE
+    assert stored.extra_data is not None
+    assert stored.extra_data.as_dict() == {
+        "target_humidity": 62,
+        "saved_target_humidity": 32,
+        "is_away": False,
+        "is_on": True,
+    }
