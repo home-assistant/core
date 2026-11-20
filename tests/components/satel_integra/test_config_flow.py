@@ -13,6 +13,7 @@ from satel_integra import (
     SatelNoResponseError,
     SatelPanelBusyError,
     SatelPartitionInfo,
+    SatelZoneInfo,
 )
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -29,6 +30,7 @@ from homeassistant.components.satel_integra.const import (
     DEFAULT_PORT,
     DOMAIN,
     SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_ZONE,
 )
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -101,10 +103,12 @@ async def test_setup_flow(
         result["flow_id"],
         user_input_connection,
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["scan_partitions", "skip_scan"]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
+    assert (schema := result["data_schema"]) is not None
+    assert schema({}) == {"scan_partitions": True, "scan_zones": True}
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "skip_scan"}
+        result["flow_id"], {"scan_partitions": False, "scan_zones": False}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
@@ -112,6 +116,7 @@ async def test_setup_flow(
     assert result["options"] == {}
     assert not result["result"].subentries
     mock_satel.scan_partitions.assert_not_called()
+    mock_satel.scan_zones.assert_not_called()
 
     # Continues to options flow
     flow_type, flow_id = result["next_flow"]
@@ -167,17 +172,20 @@ async def test_setup_connection_failed(
         user_input,
     )
 
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "skip_scan"}
+        result["flow_id"], {"scan_partitions": False, "scan_zones": False}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["next_flow"][0] is FlowType.OPTIONS_FLOW
     assert mock_setup_entry.call_count == 1
 
 
-async def _start_partition_scan(hass: HomeAssistant) -> ConfigFlowResult:
-    """Submit the connection form and start a partition scan."""
+async def _start_scan(
+    hass: HomeAssistant, *, scan_partitions: bool = True, scan_zones: bool = False
+) -> ConfigFlowResult:
+    """Submit the connection form and start the selected scans."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -185,10 +193,12 @@ async def _start_partition_scan(hass: HomeAssistant) -> ConfigFlowResult:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG_DATA
     )
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
     assert not hass.config_entries.async_entries(DOMAIN)
     return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "scan_partitions"}
+        result["flow_id"],
+        {"scan_partitions": scan_partitions, "scan_zones": scan_zones},
     )
 
 
@@ -205,7 +215,7 @@ async def test_setup_adds_all_discovered_partitions(
         ),
     ]
 
-    result = await _start_partition_scan(hass)
+    result = await _start_scan(hass)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
@@ -235,24 +245,80 @@ async def test_setup_adds_all_discovered_partitions(
     }
     mock_satel.start.assert_awaited_once_with(enable_monitoring=False)
     mock_satel.scan_partitions.assert_awaited_once()
+    mock_satel.scan_zones.assert_not_called()
     mock_setup_entry.assert_awaited_once_with(hass, entry)
 
 
+@pytest.mark.parametrize("scan_partitions", [False, True])
+async def test_setup_adds_discovered_zones(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    scan_partitions: bool,
+) -> None:
+    """Add configured zones without inferring detector type or temperature support."""
+    mock_satel.scan_partitions.return_value = [
+        SatelPartitionInfo(
+            device_number=2, name="House", type_code=0, object_assignment=1
+        )
+    ]
+    mock_satel.scan_zones.return_value = [
+        SatelZoneInfo(
+            device_number=6, name="Zone 6", type_code=0, partition_assignment=2
+        ),
+        SatelZoneInfo(
+            device_number=7, name="Spare", type_code=1, partition_assignment=None
+        ),
+    ]
+    result = await _start_scan(hass, scan_partitions=scan_partitions, scan_zones=True)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    assert mock_satel.close.await_count == 2
+    mock_satel.start.assert_awaited_once_with(enable_monitoring=False)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    (zone,) = entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE)
+    assert zone.unique_id == "zone_6"
+    assert zone.title == "Zone 6 (6)"
+    assert zone.data == {
+        CONF_ZONE_NUMBER: 6,
+        CONF_NAME: "Zone 6",
+        CONF_ZONE_TYPE: None,
+        CONF_ENABLE_TEMPERATURE_SENSOR: False,
+    }
+    assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION)) == int(
+        scan_partitions
+    )
+    assert mock_satel.scan_partitions.await_count == int(scan_partitions)
+    mock_satel.scan_zones.assert_awaited_once()
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    mock_satel.read_temperature.assert_not_called()
+
+
 @pytest.mark.parametrize(
-    ("scan_error", "expected_error"),
-    [(None, "no_partitions"), (SatelNoResponseError, "scan_failed")],
+    ("failed_scan", "expected_error"),
+    [(None, "nothing_found"), ("partitions", "scan_failed"), ("zones", "scan_failed")],
 )
-async def test_setup_can_continue_without_discovered_partitions(
+async def test_setup_can_continue_without_discovery_results(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    scan_error: type[Exception] | None,
+    failed_scan: str | None,
     expected_error: str,
 ) -> None:
     """Allow continuing after an empty or failed scan."""
     mock_satel.scan_partitions.return_value = []
-    mock_satel.scan_partitions.side_effect = scan_error
-    result = await _start_partition_scan(hass)
+    if failed_scan == "partitions":
+        mock_satel.scan_partitions.side_effect = SatelNoResponseError
+    elif failed_scan == "zones":
+        mock_satel.scan_partitions.return_value = [
+            SatelPartitionInfo(
+                device_number=2, name="House", type_code=0, object_assignment=1
+            )
+        ]
+        mock_satel.scan_zones.side_effect = SatelNoResponseError
+    result = await _start_scan(hass, scan_zones=failed_scan == "zones")
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -288,7 +354,7 @@ async def test_cancel_partition_scan_closes_connection(
 
     hass.bus.async_listen(EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE, report_progress)
     mock_satel.scan_partitions.side_effect = scan
-    result = await _start_partition_scan(hass)
+    result = await _start_scan(hass)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     try:
         await asyncio.wait_for(progress.wait(), timeout=1)
@@ -919,11 +985,12 @@ async def test_partition_discovery_rechecks_host_before_creating_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG_DATA
     )
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
 
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "scan_partitions"}
+        result["flow_id"], {"scan_partitions": True, "scan_zones": False}
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()

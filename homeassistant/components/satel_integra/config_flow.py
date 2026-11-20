@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 import probatio
-from satel_integra import AsyncSatel, SatelPartitionInfo
+from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -150,7 +150,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 3
 
     _connection_data: dict[str, Any]
-    _scan_task: asyncio.Task[list[SatelPartitionInfo] | None] | None = None
+    _scan_task: asyncio.Task[list[ConfigSubentryData] | None] | None = None
 
     @staticmethod
     @callback
@@ -208,96 +208,136 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discover(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Offer to discover partitions before creating the entry."""
-        return self.async_show_menu(
-            step_id="discover", menu_options=["scan_partitions", "skip_scan"]
+        """Choose which resources to discover before creating the entry."""
+        if user_input is not None:
+            if not (user_input["scan_partitions"] or user_input["scan_zones"]):
+                return self._async_create_panel_entry()
+            self._scan_task = self.hass.async_create_task(
+                self._async_scan(
+                    scan_partitions=user_input["scan_partitions"],
+                    scan_zones=user_input["scan_zones"],
+                ),
+                eager_start=False,
+            )
+            return await self.async_step_scan()
+
+        return self.async_show_form(
+            step_id="discover",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required("scan_partitions", default=True): (
+                        selector.BooleanSelector()
+                    ),
+                    probatio.Required("scan_zones", default=True): (
+                        selector.BooleanSelector()
+                    ),
+                }
+            ),
         )
 
-    async def async_step_scan_partitions(
+    async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Scan the panel with progress reporting."""
-        if self._scan_task is None:
-            self._scan_task = self.hass.async_create_task(
-                self._async_scan_partitions(), eager_start=False
-            )
-
+        assert self._scan_task is not None
         if self._scan_task.done():
             return self.async_show_progress_done(next_step_id="finish_scan")
 
         return self.async_show_progress(
-            step_id="scan_partitions",
-            progress_action="scanning_partitions",
+            step_id="scan",
+            progress_action="scanning",
             progress_task=self._scan_task,
         )
 
-    async def _async_scan_partitions(self) -> list[SatelPartitionInfo] | None:
-        """Read partition metadata using a temporary connection."""
+    async def _async_scan(
+        self, *, scan_partitions: bool, scan_zones: bool
+    ) -> list[ConfigSubentryData] | None:
+        """Discover selected resources using one temporary connection."""
         controller = AsyncSatel(
             self._connection_data[CONF_HOST],
             self._connection_data[CONF_PORT],
             integration_key=self._connection_data[CONF_ENCRYPTION_KEY],
         )
+        subentries: list[ConfigSubentryData] = []
+        stages = int(scan_partitions) + int(scan_zones)
         try:
             await controller.connect(raise_exceptions=True)
             await controller.start(enable_monitoring=False)
-            return await controller.scan_partitions(
-                on_progress=lambda completed, total: self.async_update_progress(
-                    completed / total
+            if scan_partitions:
+                partitions = await controller.scan_partitions(
+                    on_progress=lambda completed, total: self.async_update_progress(
+                        completed / total / stages
+                    )
                 )
-            )
+                for partition in partitions:
+                    number = partition.device_number
+                    name = partition.name or f"Partition {number}"
+                    subentries.append(
+                        ConfigSubentryData(
+                            subentry_type=SUBENTRY_TYPE_PARTITION,
+                            unique_id=f"{SUBENTRY_TYPE_PARTITION}_{number}",
+                            title=f"{name} ({number})",
+                            data={
+                                CONF_PARTITION_NUMBER: number,
+                                CONF_NAME: name,
+                                CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
+                            },
+                        )
+                    )
+            if scan_zones:
+                zones = await controller.scan_zones(
+                    on_progress=lambda completed, total: self.async_update_progress(
+                        (int(scan_partitions) + completed / total) / stages
+                    )
+                )
+                for zone in zones:
+                    if zone.partition_assignment is None:
+                        continue
+                    number = zone.device_number
+                    name = zone.name or f"Zone {number}"
+                    subentries.append(
+                        ConfigSubentryData(
+                            subentry_type=SUBENTRY_TYPE_ZONE,
+                            unique_id=f"{SUBENTRY_TYPE_ZONE}_{number}",
+                            title=f"{name} ({number})",
+                            data={
+                                CONF_ZONE_NUMBER: number,
+                                CONF_NAME: name,
+                                CONF_ZONE_TYPE: None,
+                                CONF_ENABLE_TEMPERATURE_SENSOR: False,
+                            },
+                        )
+                    )
         except SatelIntegraError as err:
-            _LOGGER.debug("Partition discovery failed: %s", err)
+            _LOGGER.debug("Discovery scan failed: %s", err)
             return None
         finally:
             await controller.close()
+        return subentries
 
     async def async_step_finish_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add every discovered partition, or allow setup without partitions."""
+        """Add discovered resources, or allow setup without discovery results."""
         if user_input is not None:
             return self._async_create_panel_entry()
 
         assert self._scan_task is not None
-        partitions = self._scan_task.result()
-        if not partitions:
+        subentries = self._scan_task.result()
+        if not subentries:
             return self.async_show_form(
                 step_id="finish_scan",
                 errors={
-                    "base": "scan_failed" if partitions is None else "no_partitions"
+                    "base": "scan_failed" if subentries is None else "nothing_found"
                 },
             )
-
-        subentries = []
-        for partition in partitions:
-            number = partition.device_number
-            name = partition.name or f"Partition {number}"
-            subentries.append(
-                ConfigSubentryData(
-                    subentry_type=SUBENTRY_TYPE_PARTITION,
-                    unique_id=f"{SUBENTRY_TYPE_PARTITION}_{number}",
-                    title=f"{name} ({number})",
-                    data={
-                        CONF_PARTITION_NUMBER: number,
-                        CONF_NAME: name,
-                        CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
-                    },
-                )
-            )
         return self._async_create_panel_entry(subentries)
-
-    async def async_step_skip_scan(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Create the entry without scanning."""
-        return self._async_create_panel_entry()
 
     @callback
     def _async_create_panel_entry(
         self, subentries: list[ConfigSubentryData] | None = None
     ) -> ConfigFlowResult:
-        """Create the panel and any discovered partition subentries."""
+        """Create the panel and any discovered subentries."""
         host = self._connection_data[CONF_HOST]
         self._async_abort_entries_match({CONF_HOST: host})
         return self.async_create_entry(

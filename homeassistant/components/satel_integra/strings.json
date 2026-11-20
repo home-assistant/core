@@ -10,26 +10,31 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "connection_initialization_failed": "Successfully connected, but failed to read data from the panel. Please check the integration encryption key is correct if your panel requires encryption.",
-      "no_partitions": "No partitions were found.",
+      "nothing_found": "No resources of the selected types were found.",
       "panel_busy": "Successfully connected, but alarm panel reports it's busy. Please check no other connections are active.",
-      "scan_failed": "Could not scan for partitions.",
+      "scan_failed": "Could not complete the discovery scan.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "progress": {
-      "scanning_partitions": "Scanning for partitions…"
+      "scanning": "Scanning the alarm panel…"
     },
     "step": {
       "discover": {
-        "description": "Home Assistant can scan the panel and add all partitions it finds. You can also skip the scan and add partitions manually later.",
-        "menu_options": {
-          "scan_partitions": "Scan and add all partitions",
-          "skip_scan": "Skip scan"
+        "data": {
+          "scan_partitions": "Partitions",
+          "scan_zones": "Zones"
         },
-        "title": "Discover partitions"
+        "data_description": {
+          "scan_partitions": "Find partitions configured on the alarm panel.",
+          "scan_zones": "Find zones assigned to a partition. This can take longer on larger panels."
+        },
+        "description": "Home Assistant adds everything it finds for the selected types. Turn off all options to skip discovery.",
+        "submit": "Continue",
+        "title": "Choose what to scan"
       },
       "finish_scan": {
-        "description": "Continue to set up the panel without adding partitions. You can add them manually later.",
-        "title": "Continue without partitions"
+        "description": "Continue to set up the panel without adding discovered resources. You can add partitions and zones manually later.",
+        "title": "Continue without discovery results"
       },
       "reconfigure": {
         "data": {
