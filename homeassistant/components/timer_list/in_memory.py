@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from functools import partial
+import math
 from typing import override
 
 from homeassistant.core import CALLBACK_TYPE, callback
@@ -129,10 +130,11 @@ class InMemoryTimerListEntity(TimerListEntity):
             timer.paused_remaining = remaining
         else:
             self._schedule(timer, now + remaining)
-        # Timers count in whole seconds; the sub-second age of the timer would
-        # otherwise make the total fall short of what was asked for.
+        # Round up to whole seconds: the timer's sub-second age would otherwise
+        # make the total fall short of what was asked for.
         timer.total_duration = max(
-            timer.total_duration, timedelta(seconds=round(remaining.total_seconds()))
+            timer.total_duration,
+            timedelta(seconds=math.ceil(remaining.total_seconds())),
         )
         self._notify(TimerListEventType.TIME_CHANGED, timer, delta=duration)
 
