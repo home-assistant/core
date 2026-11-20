@@ -1004,12 +1004,13 @@ class ZWaveListSensor(ZwaveSensor):
 
     @callback
     def _async_states_updated(self, event_data: dict) -> None:
-        """Recheck the repair when new states arrive without a rediscovery."""
+        """Refresh the state and repair when states change without rediscovery."""
         if (
             event_data["value"].value_id == self.info.primary_value.value_id
             and not self.should_rediscover_on_metadata_update()
         ):
             self._async_update_unmapped_issue()
+            self.async_write_ha_state()
 
     @callback
     @override

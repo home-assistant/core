@@ -1596,6 +1596,9 @@ async def test_unmapped_enum_value_cleared_when_states_map_it(
 
     assert not _unmapped_issue_ids(issue_registry)
     assert entity_registry.async_get(MOTION_STATUS_ENTITY) == entity_entry
+    state = hass.states.get(MOTION_STATUS_ENTITY)
+    assert state
+    assert state.state == "idle"
 
 
 async def test_unmapped_enum_value_kept_until_every_value_mapped(
