@@ -50,7 +50,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Unstable',
   })
 # ---
 # name: test_sensors[sensor.barometer_2-entry]
@@ -104,7 +104,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Veranderlijk',
   })
 # ---
 # name: test_sensors[sensor.barometer_value-entry]
@@ -158,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5',
   })
 # ---
 # name: test_sensors[sensor.condition-entry]
@@ -211,7 +211,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://cdn.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -280,6 +280,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 1d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -295,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'rainy',
   })
 # ---
 # name: test_sensors[sensor.condition_2d-entry]
@@ -348,6 +349,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 2d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -363,7 +365,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'clear',
   })
 # ---
 # name: test_sensors[sensor.condition_3d-entry]
@@ -416,6 +418,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 3d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -431,7 +434,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cloudy',
   })
 # ---
 # name: test_sensors[sensor.condition_4d-entry]
@@ -484,6 +487,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 4d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -499,7 +503,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cloudy',
   })
 # ---
 # name: test_sensors[sensor.condition_5d-entry]
@@ -552,6 +556,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 5d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -567,7 +572,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cloudy',
   })
 # ---
 # name: test_sensors[sensor.condition_code-entry]
@@ -636,7 +641,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://cdn.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -737,6 +742,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 1d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -837,6 +843,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 2d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -937,6 +944,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 3d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -1037,6 +1045,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 4d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -1137,6 +1146,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 5d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'a',
@@ -1231,7 +1241,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://cdn.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1320,6 +1330,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 1d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1345,7 +1356,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'partlycloudy-light-rain',
   })
 # ---
 # name: test_sensors[sensor.detailed_condition_2d-entry]
@@ -1408,6 +1419,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 2d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1433,7 +1445,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'clear',
   })
 # ---
 # name: test_sensors[sensor.detailed_condition_3d-entry]
@@ -1496,6 +1508,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 3d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1521,7 +1534,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'partlycloudy',
   })
 # ---
 # name: test_sensors[sensor.detailed_condition_4d-entry]
@@ -1584,6 +1597,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 4d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1609,7 +1623,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'partlycloudy',
   })
 # ---
 # name: test_sensors[sensor.detailed_condition_5d-entry]
@@ -1672,6 +1686,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 5d',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clear',
@@ -1697,7 +1712,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'partlycloudy',
   })
 # ---
 # name: test_sensors[sensor.feel_temperature-entry]
@@ -1798,7 +1813,7 @@
 # name: test_sensors[sensor.full_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://cdn.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition',
     }),
     'context': <ANY>,
@@ -1849,6 +1864,7 @@
 # name: test_sensors[sensor.full_condition_1d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 1d',
     }),
     'context': <ANY>,
@@ -1856,7 +1872,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Alternatingly cloudy with some light rain',
   })
 # ---
 # name: test_sensors[sensor.full_condition_2d-entry]
@@ -1899,6 +1915,7 @@
 # name: test_sensors[sensor.full_condition_2d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 2d',
     }),
     'context': <ANY>,
@@ -1906,7 +1923,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Almost fully clear (sunny/clear)',
   })
 # ---
 # name: test_sensors[sensor.full_condition_3d-entry]
@@ -1949,6 +1966,7 @@
 # name: test_sensors[sensor.full_condition_3d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 3d',
     }),
     'context': <ANY>,
@@ -1956,7 +1974,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix of clear and medium or low clouds',
   })
 # ---
 # name: test_sensors[sensor.full_condition_4d-entry]
@@ -1999,6 +2017,7 @@
 # name: test_sensors[sensor.full_condition_4d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 4d',
     }),
     'context': <ANY>,
@@ -2006,7 +2025,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix of clear and medium or low clouds',
   })
 # ---
 # name: test_sensors[sensor.full_condition_5d-entry]
@@ -2049,6 +2068,7 @@
 # name: test_sensors[sensor.full_condition_5d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 5d',
     }),
     'context': <ANY>,
@@ -2056,7 +2076,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix of clear and medium or low clouds',
   })
 # ---
 # name: test_sensors[sensor.ground_temperature-entry]
@@ -2117,7 +2137,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '7.5',
   })
 # ---
 # name: test_sensors[sensor.humidity-entry]
@@ -2237,7 +2257,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '120',
   })
 # ---
 # name: test_sensors[sensor.maximum_rain_1d-entry]
@@ -2292,7 +2312,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3.0',
   })
 # ---
 # name: test_sensors[sensor.maximum_rain_2d-entry]
@@ -2347,7 +2367,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.maximum_rain_3d-entry]
@@ -2402,7 +2422,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.maximum_rain_4d-entry]
@@ -2457,7 +2477,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.maximum_rain_5d-entry]
@@ -2512,7 +2532,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_rain_1d-entry]
@@ -2567,7 +2587,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_rain_2d-entry]
@@ -2622,7 +2642,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_rain_3d-entry]
@@ -2677,7 +2697,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_rain_4d-entry]
@@ -2732,7 +2752,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_rain_5d-entry]
@@ -2787,7 +2807,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.minimum_temperature_1d-entry]
@@ -3117,7 +3137,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0.06',
   })
 # ---
 # name: test_sensors[sensor.precipitation_forecast_total-entry]
@@ -3172,7 +3192,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0.06',
   })
 # ---
 # name: test_sensors[sensor.precipitation_intensity-entry]
@@ -3233,7 +3253,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.pressure-entry]
@@ -3628,7 +3648,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.2',
   })
 # ---
 # name: test_sensors[sensor.rain_last_hour-entry]
@@ -3686,7 +3706,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.rainchance_1d-entry]
@@ -4051,7 +4071,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '40',
   })
 # ---
 # name: test_sensors[sensor.sunchance_2d-entry]
@@ -4103,7 +4123,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '90',
   })
 # ---
 # name: test_sensors[sensor.sunchance_3d-entry]
@@ -4155,7 +4175,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '70',
   })
 # ---
 # name: test_sensors[sensor.sunchance_4d-entry]
@@ -4207,7 +4227,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '70',
   })
 # ---
 # name: test_sensors[sensor.sunchance_5d-entry]
@@ -4259,7 +4279,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '70',
   })
 # ---
 # name: test_sensors[sensor.symbol-entry]
@@ -4302,7 +4322,7 @@
 # name: test_sensors[sensor.symbol-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://cdn.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol',
     }),
     'context': <ANY>,
@@ -4353,6 +4373,7 @@
 # name: test_sensors[sensor.symbol_1d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 1d',
     }),
     'context': <ANY>,
@@ -4360,7 +4381,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Afwisselend bewolkt met (mogelijk) wat lichte regen',
   })
 # ---
 # name: test_sensors[sensor.symbol_2d-entry]
@@ -4403,6 +4424,7 @@
 # name: test_sensors[sensor.symbol_2d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 2d',
     }),
     'context': <ANY>,
@@ -4410,7 +4432,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Vrijwel onbewolkt (zonnig/helder)',
   })
 # ---
 # name: test_sensors[sensor.symbol_3d-entry]
@@ -4453,6 +4475,7 @@
 # name: test_sensors[sensor.symbol_3d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 3d',
     }),
     'context': <ANY>,
@@ -4460,7 +4483,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
   })
 # ---
 # name: test_sensors[sensor.symbol_4d-entry]
@@ -4503,6 +4526,7 @@
 # name: test_sensors[sensor.symbol_4d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 4d',
     }),
     'context': <ANY>,
@@ -4510,7 +4534,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
   })
 # ---
 # name: test_sensors[sensor.symbol_5d-entry]
@@ -4553,6 +4577,7 @@
 # name: test_sensors[sensor.symbol_5d-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 5d',
     }),
     'context': <ANY>,
@@ -4560,7 +4585,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
   })
 # ---
 # name: test_sensors[sensor.temperature-entry]
@@ -4676,7 +4701,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '8.5',
   })
 # ---
 # name: test_sensors[sensor.temperature_2d-entry]
@@ -4731,7 +4756,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '6.5',
   })
 # ---
 # name: test_sensors[sensor.temperature_3d-entry]
@@ -4786,7 +4811,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '7.5',
   })
 # ---
 # name: test_sensors[sensor.temperature_4d-entry]
@@ -4841,7 +4866,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '8.5',
   })
 # ---
 # name: test_sensors[sensor.temperature_5d-entry]
@@ -4896,7 +4921,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '9.5',
   })
 # ---
 # name: test_sensors[sensor.visibility-entry]
@@ -5008,7 +5033,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'ZW',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_1d-entry]
@@ -5059,7 +5084,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'ZW',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_2d-entry]
@@ -5110,7 +5135,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'O',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_3d-entry]
@@ -5161,7 +5186,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Z',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_4d-entry]
@@ -5212,7 +5237,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Z',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_5d-entry]
@@ -5263,7 +5288,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Z',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_azimuth-entry]
@@ -5374,7 +5399,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '200',
+    'state': '225',
   })
 # ---
 # name: test_sensors[sensor.wind_direction_azimuth_2d-entry]
@@ -5641,7 +5666,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.wind_force_1d-entry]
@@ -5693,7 +5718,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.wind_force_2d-entry]
@@ -5745,7 +5770,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensors[sensor.wind_force_3d-entry]
@@ -5797,7 +5822,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.wind_force_4d-entry]
@@ -5849,7 +5874,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.wind_force_5d-entry]
@@ -5901,7 +5926,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.wind_gust-entry]
@@ -6069,7 +6094,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18.0',
+    'state': '13.0',
   })
 # ---
 # name: test_sensors[sensor.wind_speed_2d-entry]
@@ -6124,7 +6149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.8',
+    'state': '7.4',
   })
 # ---
 # name: test_sensors[sensor.wind_speed_3d-entry]
@@ -6179,7 +6204,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.4',
+    'state': '13.0',
   })
 # ---
 # name: test_sensors[sensor.wind_speed_4d-entry]
@@ -6234,7 +6259,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.4',
+    'state': '13.0',
   })
 # ---
 # name: test_sensors[sensor.wind_speed_5d-entry]
@@ -6289,6 +6314,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.4',
+    'state': '13.0',
   })
 # ---
