@@ -3,7 +3,7 @@
 from typing import cast, override
 
 from aiohomeconnect.client import AbstractAuth
-from aiohomeconnect.const import API_ENDPOINT
+from aiohomeconnect.const import API_ENDPOINT, API_ENDPOINT_CHINA
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -20,7 +20,10 @@ class AsyncConfigEntryAuth(AbstractAuth):
     ) -> None:
         """Initialize Home Connect Auth."""
         self.hass = hass
-        super().__init__(get_async_client(hass), host=API_ENDPOINT)
+        super().__init__(
+            get_async_client(hass),
+            host=API_ENDPOINT if hass.config.country != "CN" else API_ENDPOINT_CHINA,
+        )
         self.session = oauth_session
 
     @override

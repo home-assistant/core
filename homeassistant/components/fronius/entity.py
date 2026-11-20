@@ -1,13 +1,17 @@
 """Base entity for the Fronius integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from fronius_modbus import Controls, FroniusModbusInverter, Storage
 
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import SolarNetId
 
 if TYPE_CHECKING:
     from .coordinator import FroniusCoordinatorBase
@@ -72,3 +76,45 @@ class FroniusEntity(CoordinatorEntity["FroniusCoordinatorBase[Any]"]):
         Raises KeyError when the device was not in the latest update.
         """
         return self.entity_description.value_fn(self._device_data())
+
+
+@callback
+def async_add_entities_for_seen_keys[
+    _CoordinatorT: FroniusCoordinatorBase[Any],
+    _DescriptionT: FroniusEntityDescription[Any],
+](
+    coordinator: _CoordinatorT,
+    descriptions: Sequence[_DescriptionT],
+    entity_constructor: Callable[[_CoordinatorT, _DescriptionT, SolarNetId], Entity],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add entities for the values a coordinator's devices report.
+
+    An entity is added once its device reports the value, on this update or
+    any later one, so values a device only reports at times (e.g. during
+    daylight) get their entity when they first appear.
+    """
+    pending: dict[SolarNetId, list[_DescriptionT]] = {}
+
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add entities for values reported for the first time."""
+        new_entities: list[Entity] = []
+        for solar_net_id, device_data in coordinator.data.items():
+            if not coordinator.is_identifiable(device_data):
+                continue
+            remaining: list[_DescriptionT] = []
+            for description in pending.setdefault(solar_net_id, list(descriptions)):
+                if description.exists(device_data):
+                    new_entities.append(
+                        entity_constructor(coordinator, description, solar_net_id)
+                    )
+                else:
+                    remaining.append(description)
+            pending[solar_net_id] = remaining
+        async_add_entities(new_entities)
+
+    _async_add_new_entities()
+    coordinator.config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_new_entities)
+    )

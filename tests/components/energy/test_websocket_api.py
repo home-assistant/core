@@ -118,7 +118,6 @@ async def test_save_preferences(
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
                 "stat_rate": "sensor.grid_power",
-                "cost_adjustment_day": 1.2,
                 "name": "Main Grid",
             },
             # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
@@ -132,7 +131,6 @@ async def test_save_preferences(
                 "number_energy_price": 0.20,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.20,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -147,10 +145,25 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
                 "stat_rate": "my_battery_power",
                 "stat_soc": "sensor.my_battery_state_of_charge",
+                "entity_capacity": "sensor.my_battery_capacity",
                 "name": "Battery",
             },
-            {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
-            {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},
+            {
+                "type": "gas",
+                "stat_energy_from": "sensor.gas",
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "name": "My gas",
+            },
+            {
+                "type": "water",
+                "stat_energy_from": "sensor.water",
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "name": "My water",
+            },
         ],
         "device_consumption": [
             {
@@ -164,6 +177,12 @@ async def test_save_preferences(
             {
                 "stat_consumption": "sensor.water_meter",
                 "name": "Water Meter",
+            }
+        ],
+        "device_consumption_gas": [
+            {
+                "stat_consumption": "sensor.gas_meter",
+                "name": "Gas Meter",
             }
         ],
     }
@@ -214,7 +233,6 @@ async def test_save_preferences(
                 "number_energy_price": None,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -233,6 +251,81 @@ async def test_save_preferences(
     assert msg["result"] == {**new_prefs, **new_prefs_2}
 
 
+async def test_save_preferences_drops_cost_adjustment_day(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cost_adjustment_day is still accepted but not stored."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.heat_pump_meter",
+                    "cost_adjustment_day": 0,
+                }
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == [
+        {
+            "type": "grid",
+            "stat_energy_from": "sensor.heat_pump_meter",
+            "stat_energy_to": None,
+            "stat_cost": None,
+            "stat_compensation": None,
+            "entity_energy_price": None,
+            "number_energy_price": None,
+            "entity_energy_price_export": None,
+            "number_energy_price_export": None,
+        }
+    ]
+
+
+async def test_save_preferences_meter_cost_defaults(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test gas and water meters store the cost keys they leave out as None."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": source_type,
+                    "stat_energy_from": f"sensor.{source_type}",
+                    "number_energy_price": 0.5,
+                }
+                for source_type in ("gas", "water")
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == [
+        {
+            "type": source_type,
+            "stat_energy_from": f"sensor.{source_type}",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+        for source_type in ("gas", "water")
+    ]
+
+
 async def test_handle_duplicate_from_stat(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -248,12 +341,10 @@ async def test_handle_duplicate_from_stat(
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
             ],
         }
@@ -282,6 +373,7 @@ async def test_validate(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -1380,3 +1472,145 @@ async def test_fossil_energy_consumption_missing_sum(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
+
+
+async def test_save_home_source(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a whole-home consumption meter can be saved."""
+    client = await hass_ws_client(hass)
+    sources = [
+        {
+            "type": "solar",
+            "stat_energy_from": "sensor.solar_production",
+            "config_entry_solar_forecast": None,
+        },
+        {
+            "type": "home",
+            "stat_energy_to": "sensor.home_energy",
+            "stat_rate": "sensor.home_power",
+            "name": "Main meter",
+        },
+    ]
+
+    await client.send_json(
+        {"id": 5, "type": "energy/save_prefs", "energy_sources": sources}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == sources
+
+    await client.send_json({"id": 6, "type": "energy/get_prefs"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["energy_sources"] == sources
+
+
+@pytest.mark.parametrize(
+    "energy_sources",
+    [
+        pytest.param(
+            [
+                {"type": "home", "stat_energy_to": "sensor.home_a"},
+                {"type": "home", "stat_energy_to": "sensor.home_b"},
+            ],
+            id="two_home_sources",
+        ),
+        pytest.param([{"type": "home"}], id="missing_stat_energy_to"),
+    ],
+)
+async def test_save_home_source_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    energy_sources: list[dict[str, Any]],
+) -> None:
+    """Test invalid home source configurations are rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 5, "type": "energy/save_prefs", "energy_sources": energy_sources}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_save_battery_directions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery measured per direction next to one measured in total."""
+    client = await hass_ws_client(hass)
+    total_battery = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+    }
+    directions_battery = {
+        "type": "battery",
+        "stat_energy_from_grid": "sensor.battery_from_grid",
+        "stat_energy_from_solar": "sensor.battery_from_solar",
+        "stat_energy_to_home": "sensor.battery_to_home",
+        "power_config": {
+            "stat_rate_from_solar": "sensor.battery_from_solar_power",
+            "stat_rate_to_home": "sensor.battery_to_home_power",
+        },
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [total_battery, directions_battery],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    saved = [
+        total_battery,
+        {
+            **directions_battery,
+            "stat_rate": "sensor.energy_battery_battery_from_solar_power"
+            "_battery_to_home_power_net_power",
+        },
+    ]
+    assert msg["result"]["energy_sources"] == saved
+
+    # Saving the stored preferences again keeps them
+    await client.send_json(
+        {"id": 6, "type": "energy/save_prefs", "energy_sources": saved}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == saved
+
+
+async def test_save_battery_directions_invalid(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery mixing total and direction energy is rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"

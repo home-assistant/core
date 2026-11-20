@@ -185,6 +185,7 @@ OLD_ENTRY_ID = "OLD_OLD_ENTRY_ID"
             None,
         ),
         (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, "old_ciam_sub_uuid"),
+        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID),
         (1, 3, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID),
     ],
 )

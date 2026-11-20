@@ -15,16 +15,12 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
+from homeassistant.const import TargetKey, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import (
@@ -57,8 +53,8 @@ async def test_air_conditioner_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: "cool"},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: "cool"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -70,8 +66,8 @@ async def test_air_conditioner_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: "off"},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: "off"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -100,8 +96,8 @@ async def test_air_conditioner_set_fan_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: "high"},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: "high"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -130,8 +126,8 @@ async def test_air_conditioner_set_temperature(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -185,8 +181,8 @@ async def test_air_conditioner_set_temperature_while_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -222,11 +218,11 @@ async def test_air_conditioner_set_temperature_unsupported_hvac_mode(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TEMPERATURE: 27,
-                ATTR_HVAC_MODE: HVACMode.AUTO,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 27,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
             },
             blocking=True,
         )
@@ -391,8 +387,11 @@ async def test_air_conditioner_restore_temperature_unit(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
     mock_send_command.assert_called_once()
@@ -444,8 +443,8 @@ async def test_air_conditioner_turn_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -485,8 +484,8 @@ async def test_air_conditioner_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on_command.assert_called_once()
@@ -526,8 +525,8 @@ async def test_air_conditioner_turn_on_from_hvac_mode_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on_command.assert_called_once()
@@ -572,8 +571,8 @@ async def test_smart_radiator_thermostat_set_temperature(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, "temperature": 27},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, "temperature": 27},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -619,8 +618,8 @@ async def test_smart_radiator_thermostat_set_preset_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "none"},
+            ClimateService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "preset_mode": "none"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -632,8 +631,8 @@ async def test_smart_radiator_thermostat_set_preset_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "home"},
+            ClimateService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "preset_mode": "home"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -679,8 +678,8 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -692,8 +691,8 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -701,3 +700,31 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
         "command",
         5,
     )
+
+
+async def test_smart_radiator_thermostat_target_temperature(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat uses targetTemperature from coordinator data."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {
+        "mode": 1,
+        "temperature": 23.5,
+        "targetTemperature": 20.0,
+    }
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("climate.climate_1")
+    assert state is not None
+    assert state.attributes["current_temperature"] == 23.5
+    assert state.attributes["temperature"] == 20.0

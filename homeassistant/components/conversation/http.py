@@ -19,7 +19,7 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .chat_log import DATA_CHAT_LOGS, async_get_chat_log, async_subscribe_chat_logs
+from .chat_log import DATA_CHAT_LOGS, async_subscribe_chat_logs
 from .const import DATA_COMPONENT, ChatLogEventType
 from .entity import ConversationEntity
 from .models import ConversationInput
@@ -322,15 +322,13 @@ def websocket_subscribe_chat_log(
     connection.subscriptions[msg_id] = unsubscribe
     connection.send_result(msg_id)
 
-    with (
-        async_get_chat_session(hass, subscribed_conversation, context=None) as session,
-        async_get_chat_log(hass, session) as chat_log,
-    ):
+    # Read the chat log directly, because opening it fails during a turn.
+    with async_get_chat_session(hass, subscribed_conversation, context=None):
         connection.send_event(
             msg_id,
             {
                 "event_type": ChatLogEventType.INITIAL_STATE,
-                "data": chat_log.as_dict(),
+                "data": chat_logs[subscribed_conversation].as_dict(),
             },
         )
 

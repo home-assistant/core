@@ -4,6 +4,7 @@
   "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/london_underground",
   "integration_type": "service",
   "iot_class": "cloud_polling",

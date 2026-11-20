@@ -86,7 +86,7 @@ class _PipelineProcessor(Protocol):
         """Invalidate active processing."""
 
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -97,6 +97,7 @@ class _PipelineProcessorRequest:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_audio_ms: int | None = None
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -387,6 +388,11 @@ class PipelineInput:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_audio_ms: int | None = None
+    """Length of the audio of wake_word_phrase at the start of the stream.
+
+    It is removed before speech-to-text. Requires wake_word_phrase.
+    """
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -408,6 +414,7 @@ class PipelineInput:
             stt_metadata=self.stt_metadata,
             stt_stream=self.stt_stream,
             wake_word_phrase=self.wake_word_phrase,
+            wake_word_audio_ms=self.wake_word_audio_ms,
             intent_input=self.intent_input,
             tts_input=self.tts_input,
             conversation_extra_system_prompt=self.conversation_extra_system_prompt,

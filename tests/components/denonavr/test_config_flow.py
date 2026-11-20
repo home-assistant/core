@@ -1,5 +1,6 @@
 """Test the DenonAVR config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 from denonavr.exceptions import AvrNetworkError
@@ -564,3 +565,149 @@ async def test_config_flow_manual_host_no_serial_double_config(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+def _reconfigure_entry(
+    unique_id: str | None, serial_number: str | None
+) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: serial_number,
+        },
+        title=TEST_NAME,
+    )
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "serial_number"),
+    [
+        pytest.param(TEST_UNIQUE_ID, TEST_SERIALNUMBER, id="with_serial"),
+        pytest.param(None, None, id="without_serial"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant, unique_id: str | None, serial_number: str | None
+) -> None:
+    """Test reconfiguring the receiver host."""
+    entry = _reconfigure_entry(unique_id, serial_number)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
+        serial_number,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == TEST_HOST2
+
+
+@pytest.mark.parametrize(
+    ("target", "patch_kwargs"),
+    [
+        pytest.param(
+            "async_setup",
+            {"side_effect": AvrTimoutError("Timeout", "async_setup")},
+            id="timeout",
+        ),
+        pytest.param(
+            "async_setup",
+            {"side_effect": AvrNetworkError("Network error", "async_setup")},
+            id="network_error",
+        ),
+        pytest.param("receiver_type", {"new": None}, id="no_device_info"),
+    ],
+)
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant, target: str, patch_kwargs: dict[str, Any]
+) -> None:
+    """Test a connection error during reconfiguration and recovering from it."""
+    entry = _reconfigure_entry(TEST_UNIQUE_ID, TEST_SERIALNUMBER)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        f"homeassistant.components.denonavr.receiver.DenonAVR.{target}",
+        **patch_kwargs,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST2}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST2}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == TEST_HOST2
+
+
+@pytest.mark.parametrize(
+    "serial_number",
+    [
+        pytest.param("987654321", id="other_serial"),
+        pytest.param(None, id="no_serial"),
+    ],
+)
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, serial_number: str | None
+) -> None:
+    """Test reconfiguring to a different receiver aborts."""
+    entry = _reconfigure_entry(TEST_UNIQUE_ID, TEST_SERIALNUMBER)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
+        serial_number,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_host_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring to the host of another entry aborts."""
+    entry = _reconfigure_entry(None, None)
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={**entry.data, CONF_HOST: TEST_HOST2}
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
+        None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == TEST_HOST

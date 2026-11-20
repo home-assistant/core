@@ -64,7 +64,7 @@ class WhirlpoolOvenTargetTemperature(WhirlpoolOvenEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set a new target temperature, keeping the current cook mode."""
         mode = self._appliance.get_cook_mode(self.cavity)
-        if mode is None or mode == CookMode.Standby:
+        if mode is None or mode is CookMode.Standby:
             mode = CookMode.Bake
         try:
             WhirlpoolOvenTargetTemperature._check_service_request(

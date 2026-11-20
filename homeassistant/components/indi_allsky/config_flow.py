@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import aiohttp
 from aioindiallsky import (
     IndiAllSkyAuthError,
     IndiAllSkyClient,
@@ -23,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -100,6 +101,12 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     if (username and not password) or (password and not username):
         raise MissingCredentials
 
+    session = async_create_clientsession(
+        hass,
+        verify_ssl=data.get(CONF_VERIFY_SSL, True),
+        auto_cleanup=False,
+        cookie_jar=aiohttp.CookieJar(unsafe=True),
+    )
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
         port=int(data[CONF_PORT]),
@@ -109,7 +116,7 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         ),
         username=username or None,
         password=password or None,
-        session=async_get_clientsession(hass),
+        session=session,
     )
 
     try:
@@ -132,6 +139,8 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         raise CannotConnect from err
     except Exception as err:
         raise Unknown from err
+    finally:
+        session.detach()
 
 
 class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -317,7 +326,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_credentials()
             return self._create_discovered_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="unverified_ssl",
             description_placeholders=self.context.get("title_placeholders", {}),
@@ -330,7 +338,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_discovered_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context.get("title_placeholders", {}),

@@ -32,7 +32,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -108,14 +108,14 @@ def advance_time_to_next_fetch(hass: HomeAssistant) -> None:
 async def setup_subaru_config_entry(
     hass: HomeAssistant,
     config_entry,
-    vehicle_list: list[str] | UndefinedType = UNDEFINED,
-    vehicle_data: dict[str, Any] | UndefinedType = UNDEFINED,
-    vehicle_status: dict[str, Any] | UndefinedType = UNDEFINED,
+    vehicle_list: list[str] | Undefined = Undefined,
+    vehicle_data: dict[str, Any] | Undefined = Undefined,
+    vehicle_status: dict[str, Any] | Undefined = Undefined,
     connect_effect=None,
     fetch_effect=None,
 ):
     """Run async_setup with API mocks in place."""
-    if vehicle_data is UNDEFINED:
+    if vehicle_data is Undefined:
         vehicle_data = VEHICLE_DATA[TEST_VIN_2_EV]
 
     with (
@@ -126,7 +126,7 @@ async def setup_subaru_config_entry(
         ),
         patch(
             MOCK_API_GET_VEHICLES,
-            return_value=[TEST_VIN_2_EV] if vehicle_list is UNDEFINED else vehicle_list,
+            return_value=[TEST_VIN_2_EV] if vehicle_list is Undefined else vehicle_list,
         ),
         patch(
             MOCK_API_VIN_TO_NAME,
@@ -167,7 +167,7 @@ async def setup_subaru_config_entry(
         patch(
             MOCK_API_GET_DATA,
             return_value=VEHICLE_STATUS_EV
-            if vehicle_status is UNDEFINED
+            if vehicle_status is Undefined
             else vehicle_status,
         ),
         patch(

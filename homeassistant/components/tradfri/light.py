@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
@@ -71,18 +71,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._hs_color = None
-
-        # Calculate supported color modes
-        modes: set[ColorMode] = {ColorMode.ONOFF}
-        if self._supports_hs_color:
-            modes.add(ColorMode.HS)
-        if self._device_data.supports_color_temp:
-            modes.add(ColorMode.COLOR_TEMP)
-        if self._device_data.supports_dimmer:
-            modes.add(ColorMode.BRIGHTNESS)
-        self._attr_supported_color_modes = filter_supported_color_modes(modes)
-        if len(self._attr_supported_color_modes) == 1:
-            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+        self._update_color_modes()
 
         self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
             self._device_control.min_mireds
@@ -97,17 +86,32 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # supports_hsb_xy_color is False for color bulbs that also report mireds
         return self._device_data.raw.color_hue is not None
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.lights[0]
+        # A light whose control reported no values at setup gets its modes later
+        self._update_color_modes()
+
+    def _update_color_modes(self) -> None:
+        """Update the supported color modes from the device data."""
+        modes: set[ColorMode] = {ColorMode.ONOFF}
+        if self._supports_hs_color:
+            modes.add(ColorMode.HS)
+        if self._device_data.supports_color_temp:
+            modes.add(ColorMode.COLOR_TEMP)
+        if self._device_data.supports_dimmer:
+            modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        self._fixed_color_mode = None
+        if len(self._attr_supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        if not self._device_data:
-            return False
         return self._device_data.state
 
     @property
@@ -124,15 +128,13 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        if not self._device_data:
-            return None
         return cast(int, self._device_data.dimmer)
 
     @property
     @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if not self._device_data or not (color_temp := self._device_data.color_temp):
+        if not (color_temp := self._device_data.color_temp):
             return None
         return color_util.color_temperature_mired_to_kelvin(color_temp)
 

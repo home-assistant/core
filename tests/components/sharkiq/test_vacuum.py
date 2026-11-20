@@ -18,7 +18,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
-from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
+from homeassistant.components.sharkiq.services import (
+    SharkIqService,
+    SharkIqServiceArgument,
+)
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
@@ -247,10 +250,12 @@ async def test_clean_room_error(
     hass: HomeAssistant, room_list: list, exception: Exception
 ) -> None:
     """Test clean_room errors."""
-    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, SharkIqServiceArgument.ROOMS: room_list}
 
     with pytest.raises(exception):
-        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, SharkIqService.CLEAN_ROOM, data, blocking=True
+        )
 
 
 async def test_locate(hass: HomeAssistant) -> None:
@@ -268,8 +273,10 @@ async def test_locate(hass: HomeAssistant) -> None:
 async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
     """Test that the clean_room command works."""
     with patch.object(SharkIqVacuum, "async_clean_rooms") as mock_clean_room:
-        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, SharkIqServiceArgument.ROOMS: room_list}
+        await hass.services.async_call(
+            DOMAIN, SharkIqService.CLEAN_ROOM, data, blocking=True
+        )
         mock_clean_room.assert_called_once_with(room_list)
 
 

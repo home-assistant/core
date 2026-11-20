@@ -33,6 +33,14 @@ TARGET_TEMPERATURE_DESCRIPTION = NumberEntityDescription(
     device_class=NumberDeviceClass.TEMPERATURE,
 )
 
+SALT_OUTPUT_LEVEL_DESCRIPTION = NumberEntityDescription(
+    key="salt_output_level",
+    translation_key="salt_output_level",
+    native_min_value=0.0,
+    native_max_value=10.0,
+    native_step=1.0,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -40,9 +48,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hot Spring number entities."""
-    async_add_entities(
-        [HotSpringNumberEntity(entry.runtime_data, TARGET_TEMPERATURE_DESCRIPTION)]
-    )
+    coordinator = entry.runtime_data
+    entities: list[NumberEntity] = [
+        HotSpringNumberEntity(coordinator, TARGET_TEMPERATURE_DESCRIPTION)
+    ]
+    if coordinator.data.water_care.cartridge_installed:
+        entities.append(
+            HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)
+        )
+    async_add_entities(entities)
 
 
 class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
@@ -108,4 +122,32 @@ class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
         """Set the target temperature."""
         target = round(value / self.native_step) * self.native_step
         await self.coordinator.hotspring.set_temperature(target)
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+
+
+class HotSpringSaltOutputLevelEntity(HotSpringEntity, NumberEntity):
+    """Defines a Hot Spring salt output level number entity."""
+
+    entity_description: NumberEntityDescription
+
+    def __init__(
+        self,
+        coordinator: HotSpringDataUpdateCoordinator,
+        description: NumberEntityDescription,
+    ) -> None:
+        """Initialize the number entity."""
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the current salt output level."""
+        return self.coordinator.data.water_care.level
+
+    @hotspring_exception_handler
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the salt output level."""
+        await self.coordinator.hotspring.set_water_care_level(int(value))
         self.coordinator.async_set_updated_data(self.coordinator.data)

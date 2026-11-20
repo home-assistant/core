@@ -9,14 +9,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -162,8 +158,8 @@ async def test_on_off_light_state(
     # Turn on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -175,8 +171,8 @@ async def test_on_off_light_state(
     # Turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -194,8 +190,11 @@ async def test_dimmer_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 42, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.BRIGHTNESS: 42,
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -207,8 +206,11 @@ async def test_dimmer_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.BRIGHTNESS: 0,
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -219,8 +221,11 @@ async def test_dimmer_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 100, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.BRIGHTNESS: 100,
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -232,8 +237,8 @@ async def test_dimmer_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -245,8 +250,8 @@ async def test_dimmer_light_state(
     # Turn on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -264,11 +269,11 @@ async def test_color_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_BRIGHTNESS: 42,
-            ATTR_HS_COLOR: [0, 100],
-            ATTR_ENTITY_ID: "light.wl000000000099_1",
+            LightServiceArgument.BRIGHTNESS: 42,
+            LightServiceArgument.HS_COLOR: [0, 100],
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
         },
         blocking=True,
     )
@@ -286,8 +291,11 @@ async def test_color_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.BRIGHTNESS: 0,
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -298,11 +306,11 @@ async def test_color_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_BRIGHTNESS: 100,
-            ATTR_HS_COLOR: [270, 50],
-            ATTR_ENTITY_ID: "light.wl000000000099_1",
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.HS_COLOR: [270, 50],
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
         },
         blocking=True,
     )
@@ -320,8 +328,8 @@ async def test_color_light_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -333,8 +341,8 @@ async def test_color_light_state(
     # Turn on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
 
@@ -346,8 +354,11 @@ async def test_color_light_state(
     # Hue = 0, Saturation = 100
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_HS_COLOR: [0, 100], ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.HS_COLOR: [0, 100],
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -364,8 +375,11 @@ async def test_color_light_state(
     # Brightness = 60
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 60, ATTR_ENTITY_ID: "light.wl000000000099_1"},
+        LightService.TURN_ON,
+        {
+            LightServiceArgument.BRIGHTNESS: 60,
+            TargetKey.ENTITY_ID: "light.wl000000000099_1",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

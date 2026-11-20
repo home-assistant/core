@@ -31,12 +31,7 @@ from homeassistant.components.camera import (
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_VERIFY_SSL,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import CONF_VERIFY_SSL, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -462,7 +457,7 @@ async def test_camera_motion_detection(
         await hass.services.async_call(
             "camera",
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_method.assert_called_once_with(expected_value)
@@ -664,7 +659,7 @@ async def test_camera_motion_detection_uses_replaced_device(
         await hass.services.async_call(
             "camera",
             "enable_motion_detection",
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_method.assert_called_once_with(True)
@@ -695,7 +690,7 @@ async def test_public_only_camera_motion_detection_raises(
         await hass.services.async_call(
             "camera",
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

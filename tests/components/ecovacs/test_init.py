@@ -288,7 +288,7 @@ async def test_device_info_updated_from_events(
     [
         ("yna5x1", 27),
         ("5xu9h3", 25),
-        ("twunby", 51),
+        ("twunby", 53),
         ("123", 3),
     ],
 )

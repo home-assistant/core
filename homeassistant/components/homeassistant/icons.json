@@ -321,6 +321,74 @@
       }
     }
   },
+  "integration_connectivity": {
+    "bluetooth": {
+      "default": "mdi:bluetooth"
+    },
+    "cloud": {
+      "default": "mdi:cloud"
+    },
+    "dali": {
+      "default": "mdi:lightbulb-group"
+    },
+    "dect": {
+      "default": "mdi:phone-classic"
+    },
+    "enocean": {
+      "default": "mdi:leaf"
+    },
+    "esphome": {
+      "default": "mdi:esphome"
+    },
+    "homekit": {
+      "default": "mdi:apple"
+    },
+    "host": {
+      "default": "mdi:server"
+    },
+    "infrared": {
+      "default": "mdi:remote"
+    },
+    "insteon": {
+      "default": "mdi:home-lightning-bolt"
+    },
+    "knx": {
+      "default": "mdi:office-building-cog"
+    },
+    "lorawan": {
+      "default": "mdi:access-point-network"
+    },
+    "matter": {
+      "default": "mdi:matter"
+    },
+    "modbus": {
+      "default": "mdi:connection"
+    },
+    "mqtt": {
+      "default": "mdi:mqtt"
+    },
+    "network": {
+      "default": "mdi:lan"
+    },
+    "onewire": {
+      "default": "mdi:thermometer"
+    },
+    "rf": {
+      "default": "mdi:radio-tower"
+    },
+    "serial": {
+      "default": "mdi:serial-port"
+    },
+    "x10": {
+      "default": "mdi:power-plug"
+    },
+    "zigbee": {
+      "default": "mdi:zigbee"
+    },
+    "zwave": {
+      "default": "mdi:z-wave"
+    }
+  },
   "services": {
     "check_config": {
       "service": "mdi:receipt-text-check"

@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='partition' title='Home (1)'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('satel_integra', '1234567890_alarm_panel_1')]>,
     'disabled_by': None,
@@ -57,7 +57,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='partition' title='Home (1)'>,
     'configuration_url': None,
     'connections': set({
     }),

@@ -35,8 +35,14 @@
     }
   },
   "exceptions": {
+    "camera_not_found": {
+      "message": "Camera {entity_id} not found."
+    },
     "camera_off": {
       "message": "Camera {entity_id} is off."
+    },
+    "image_unavailable": {
+      "message": "Unable to get image."
     },
     "past_image_in_future": {
       "message": "{timestamp} is in the future."

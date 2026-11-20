@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from fronius_solarapi import PowerFlow
 
@@ -10,16 +10,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import FroniusEntity, FroniusEntityDescription
-
-if TYPE_CHECKING:
-    from . import FroniusConfigEntry
-    from .coordinator import FroniusPowerFlowUpdateCoordinator
-
+from .coordinator import FroniusPowerFlowUpdateCoordinator
+from .entity import (
+    FroniusEntity,
+    FroniusEntityDescription,
+    async_add_entities_for_seen_keys,
+)
+from .solar_net import FroniusConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -54,11 +55,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius binary sensor entities based on a config entry."""
-    solar_net = config_entry.runtime_data
-    if solar_net.power_flow_coordinator is not None:
-        solar_net.power_flow_coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.BINARY_SENSOR, PowerFlowBinarySensor
-        )
+    for coordinator in config_entry.runtime_data.coordinators:
+        if isinstance(coordinator, FroniusPowerFlowUpdateCoordinator):
+            async_add_entities_for_seen_keys(
+                coordinator,
+                POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS,
+                PowerFlowBinarySensor,
+                async_add_entities,
+            )
 
 
 class PowerFlowBinarySensor(FroniusEntity, BinarySensorEntity):
