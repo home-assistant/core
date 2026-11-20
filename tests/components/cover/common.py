@@ -22,6 +22,7 @@ class MockCover(MockEntity, CoverEntity):
             else CoverEntityFeature.STOP in self.supported_features
         )
         self.last_kwargs: dict[str, Any] | None = None
+        self.last_tilt_service: str | None = None
 
     @property
     def is_closed(self):
@@ -67,6 +68,14 @@ class MockCover(MockEntity, CoverEntity):
         """Set cover position."""
         self.last_kwargs = kwargs
 
+    def open_cover_tilt(self, **kwargs) -> None:
+        """Open cover tilt."""
+        self.last_tilt_service = "open"
+
+    def close_cover_tilt(self, **kwargs) -> None:
+        """Close cover tilt."""
+        self.last_tilt_service = "close"
+
     def stop_cover(self, **kwargs) -> None:
         """Stop cover."""
         assert CoverEntityFeature.STOP in self.supported_features
@@ -86,3 +95,18 @@ class MockCover(MockEntity, CoverEntity):
     def supported_speeds(self):
         """Return supported speeds of cover."""
         return self._handle("supported_speeds")
+
+    @property
+    def open_tilt_position(self):
+        """Return the open tilt position of cover."""
+        return self._handle("open_tilt_position")
+
+    @property
+    def tilt_start_angle(self):
+        """Return the angle of the slats at tilt 0."""
+        return self._handle("tilt_start_angle")
+
+    @property
+    def tilt_end_angle(self):
+        """Return the angle of the slats at tilt 100."""
+        return self._handle("tilt_end_angle")

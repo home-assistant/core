@@ -32,6 +32,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "is_closing",
     "is_closed",
     "supported_speeds",
+    "open_tilt_position",
+    "tilt_start_angle",
+    "tilt_end_angle",
 }
 
 
@@ -48,12 +51,18 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_state: None = None
     _attr_supported_features: CoverEntityFeature | None
     _attr_supported_speeds: list[str] | None = None
+    _attr_open_tilt_position: int | None = None
+    _attr_tilt_start_angle: int | None = None
+    _attr_tilt_end_angle: int | None = None
 
     _cover_is_last_toggle_direction_open = True
 
     _entity_component_unrecorded_attributes = frozenset(
         {
             CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS,
+            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION,
+            CoverEntityCapabilityAttribute.TILT_START_ANGLE,
+            CoverEntityCapabilityAttribute.TILT_END_ANGLE,
         }
     )
 
@@ -69,7 +78,8 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
-        None is unknown, 0 is closed, 100 is fully open.
+        None is unknown. By default 0 is closed and 100 is fully open,
+        open_tilt_position and the tilt angles describe other covers.
         """
         return self._attr_current_cover_tilt_position
 
@@ -174,14 +184,71 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_supported_speeds
 
+    @cached_property
+    def open_tilt_position(self) -> int | None:
+        """Return the tilt position open_cover_tilt goes to.
+
+        None means the default: the tilt where the slats are perpendicular
+        if the angles are known, 100 otherwise.
+        """
+        return self._attr_open_tilt_position
+
+    @cached_property
+    def tilt_start_angle(self) -> int | None:
+        """Return the angle of the slats at tilt 0, from -90 to 90 degrees."""
+        return self._attr_tilt_start_angle
+
+    @cached_property
+    def tilt_end_angle(self) -> int | None:
+        """Return the angle of the slats at tilt 100, from -90 to 90 degrees."""
+        return self._attr_tilt_end_angle
+
+    @final
+    def _tilt_angles(self) -> tuple[int, int] | None:
+        """Return the start and end angles of the tilt, if both are set."""
+        if (start := self.tilt_start_angle) is None or (
+            end := self.tilt_end_angle
+        ) is None:
+            return None
+        return start, end
+
+    @final
+    def _resolved_open_tilt_position(self) -> int:
+        """Return the open tilt position, with the default applied."""
+        if (position := self.open_tilt_position) is not None:
+            return position
+        if (angles := self._tilt_angles()) is None or angles[0] == angles[1]:
+            return 100
+        start, end = angles
+        return round(min(max(-start / (end - start), 0), 1) * 100)
+
+    @final
+    def _is_tilt_at_closed_end(self) -> bool:
+        """Return if the tilt is at an end of the scale where the slats are closed."""
+        if (tilt := self.current_cover_tilt_position) not in (0, 100):
+            return False
+        if (angles := self._tilt_angles()) is not None:
+            return abs(angles[0 if tilt == 0 else 1]) == 90
+        return tilt != self._resolved_open_tilt_position()
+
     @property
     @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
+        data: dict[str, Any] = {}
 
         if speeds := self.supported_speeds:
-            return {CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: speeds}
-        return None
+            data[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] = speeds
+
+        if self.supported_features & CoverEntityFeature.SET_TILT_POSITION:
+            data[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] = (
+                self._resolved_open_tilt_position()
+            )
+            if (angles := self._tilt_angles()) is not None:
+                data[CoverEntityCapabilityAttribute.TILT_START_ANGLE] = angles[0]
+                data[CoverEntityCapabilityAttribute.TILT_END_ANGLE] = angles[1]
+
+        return data or None
 
     @final
     def _without_unsupported_speed(self, kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -296,14 +363,14 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.current_cover_tilt_position == 0:
+        if self._is_tilt_at_closed_end():
             self.open_cover_tilt(**kwargs)
         else:
             self.close_cover_tilt(**kwargs)
 
     async def async_toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.current_cover_tilt_position == 0:
+        if self._is_tilt_at_closed_end():
             await self.async_open_cover_tilt(**kwargs)
         else:
             await self.async_close_cover_tilt(**kwargs)

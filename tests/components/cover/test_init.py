@@ -1,10 +1,12 @@
 """The tests for Cover."""
 
+from typing import Any
+
 import pytest
 from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components import cover
-from homeassistant.components.cover import ATTR_SPEED, CoverState
+from homeassistant.components.cover import ATTR_SPEED, CoverEntityFeature, CoverState
 from homeassistant.components.cover.const import ATTR_POSITION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,6 +15,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity import Entity
@@ -150,6 +153,156 @@ async def test_toggle_after_opened_outside_home_assistant(
     # Toggle should close it, not send open to an open cover
     await call_service(hass, SERVICE_TOGGLE, ent6)
     assert is_closing(hass, ent6)
+
+
+TILT_FEATURES = (
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.SET_TILT_POSITION
+)
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [
+        pytest.param(
+            {"supported_features": CoverEntityFeature.OPEN},
+            {},
+            id="no_tilt",
+        ),
+        pytest.param(
+            {
+                "supported_features": CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+            },
+            {},
+            id="no_tilt_position",
+        ),
+        pytest.param(
+            {"supported_features": TILT_FEATURES},
+            {"open_tilt_position": 100},
+            id="default",
+        ),
+        pytest.param(
+            {"supported_features": TILT_FEATURES, "open_tilt_position": 50},
+            {"open_tilt_position": 50},
+            id="open_position_set",
+        ),
+        pytest.param(
+            {
+                "supported_features": TILT_FEATURES,
+                "tilt_start_angle": -90,
+                "tilt_end_angle": 90,
+            },
+            {"open_tilt_position": 50, "tilt_start_angle": -90, "tilt_end_angle": 90},
+            id="180_degrees",
+        ),
+        pytest.param(
+            {
+                "supported_features": TILT_FEATURES,
+                "tilt_start_angle": 90,
+                "tilt_end_angle": 0,
+            },
+            {"open_tilt_position": 100, "tilt_start_angle": 90, "tilt_end_angle": 0},
+            id="90_degrees",
+        ),
+        pytest.param(
+            {
+                "supported_features": TILT_FEATURES,
+                "tilt_start_angle": -90,
+                "tilt_end_angle": -30,
+            },
+            {"open_tilt_position": 100, "tilt_start_angle": -90, "tilt_end_angle": -30},
+            id="never_perpendicular",
+        ),
+        pytest.param(
+            {
+                "supported_features": TILT_FEATURES,
+                "tilt_start_angle": -90,
+                "tilt_end_angle": 45,
+                "open_tilt_position": 100,
+            },
+            {"open_tilt_position": 100, "tilt_start_angle": -90, "tilt_end_angle": 45},
+            id="open_position_overrides_angles",
+        ),
+        pytest.param(
+            {"supported_features": TILT_FEATURES, "tilt_start_angle": -90},
+            {"open_tilt_position": 100},
+            id="one_angle",
+        ),
+    ],
+)
+async def test_tilt_capability_attributes(
+    hass: HomeAssistant, values: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test the tilt capability attributes."""
+    ent = MockCover(name="Cover", unique_id="cover", **values)
+    setup_test_component_platform(hass, cover.DOMAIN, [ent])
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get(ent.entity_id).attributes
+    assert {
+        key: attributes[key]
+        for key in ("open_tilt_position", "tilt_start_angle", "tilt_end_angle")
+        if key in attributes
+    } == expected
+
+
+@pytest.mark.parametrize(
+    ("values", "expected_service"),
+    [
+        pytest.param({"current_cover_tilt_position": 0}, "open", id="closed_at_0"),
+        pytest.param({"current_cover_tilt_position": 100}, "close", id="open_at_100"),
+        pytest.param({"current_cover_tilt_position": 30}, "close", id="partly_open"),
+        pytest.param(
+            {"current_cover_tilt_position": 100, "open_tilt_position": 50},
+            "open",
+            id="closed_at_100_without_angles",
+        ),
+        pytest.param(
+            {"current_cover_tilt_position": 50, "open_tilt_position": 50},
+            "close",
+            id="open_at_50",
+        ),
+        pytest.param(
+            {
+                "current_cover_tilt_position": 100,
+                "tilt_start_angle": -90,
+                "tilt_end_angle": 90,
+            },
+            "open",
+            id="closed_at_100_from_angles",
+        ),
+        pytest.param(
+            {
+                "current_cover_tilt_position": 100,
+                "tilt_start_angle": -90,
+                "tilt_end_angle": 45,
+                "open_tilt_position": 100,
+            },
+            "close",
+            id="pergola_open_at_100",
+        ),
+    ],
+)
+async def test_toggle_tilt(
+    hass: HomeAssistant, values: dict[str, Any], expected_service: str
+) -> None:
+    """Test toggle tilt opens the slats only at a closed end."""
+    ent = MockCover(
+        name="Cover", unique_id="cover", supported_features=TILT_FEATURES, **values
+    )
+    setup_test_component_platform(hass, cover.DOMAIN, [ent])
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    await call_service(hass, SERVICE_TOGGLE_COVER_TILT, ent)
+    assert ent.last_tilt_service == expected_service
 
 
 def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:

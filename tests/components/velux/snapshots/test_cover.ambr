@@ -6,6 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
@@ -49,6 +50,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 511>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
