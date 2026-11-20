@@ -185,7 +185,30 @@ async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light) ->
     await init_entry(hass, ufp, [light])
     assert ufp.entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    call_order: list[str] = []
+    original_stop = ufp.entry.runtime_data.async_stop
+
+    async def mock_stop(*args: Any, **kwargs: Any) -> None:
+        call_order.append("stop")
+        await original_stop(*args, **kwargs)
+
+    original_unload = hass.config_entries.async_unload_platforms_or_raise
+
+    async def mock_unload(*args: Any, **kwargs: Any) -> None:
+        call_order.append("unload_platforms")
+        await original_unload(*args, **kwargs)
+
+    with (
+        patch.object(ufp.entry.runtime_data, "async_stop", side_effect=mock_stop),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms_or_raise",
+            side_effect=mock_unload,
+        ),
+    ):
+        await hass.config_entries.async_unload(ufp.entry.entry_id)
+
+    assert call_order == ["stop", "unload_platforms"]
     assert ufp.entry.state is ConfigEntryState.NOT_LOADED
     assert ufp.api.async_disconnect_ws.called
     assert ufp.public_resync_unsub is not None
