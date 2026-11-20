@@ -9,16 +9,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CODE,
     DOMAIN as ALARM_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.comelit.const import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -90,10 +87,10 @@ async def test_entity_availability(
 @pytest.mark.parametrize(
     ("service", "alarm_state"),
     [
-        (SERVICE_ALARM_DISARM, AlarmControlPanelState.DISARMED),
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.DISARM, AlarmControlPanelState.DISARMED),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
     ],
 )
 async def test_arming_disarming(
@@ -113,7 +110,10 @@ async def test_arming_disarming(
     await hass.services.async_call(
         ALARM_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: VEDO_PIN},
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            AlarmControlPanelServiceArgument.CODE: VEDO_PIN,
+        },
         blocking=True,
     )
 
@@ -137,8 +137,8 @@ async def test_wrong_code(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: 1111},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: ENTITY_ID, AlarmControlPanelServiceArgument.CODE: 1111},
         blocking=True,
     )
 

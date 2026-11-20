@@ -11,17 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -133,20 +127,23 @@ async def test_alarm_control_panel(
 
     for path, service, code in (
         # Service set alarm to away mode
-        ("arm_away", SERVICE_ALARM_ARM_AWAY, "1234"),
+        ("arm_away", AlarmControlPanelService.ARM_AWAY, "1234"),
         # Service set alarm to home mode
-        ("arm_stay", SERVICE_ALARM_ARM_HOME, "2345"),
+        ("arm_stay", AlarmControlPanelService.ARM_HOME, "2345"),
         # Service set alarm to night mode
-        ("arm_night", SERVICE_ALARM_ARM_NIGHT, "3456"),
+        ("arm_night", AlarmControlPanelService.ARM_NIGHT, "3456"),
         # Service set alarm to disarmed
-        ("disarm", SERVICE_ALARM_DISARM, "4567"),
+        ("disarm", AlarmControlPanelService.DISARM, "4567"),
     ):
         aioclient_mock.mock_calls.clear()
         aioclient_mock = mock_put_request(f"/alarmsystems/0/{path}")
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.keypad", ATTR_CODE: code},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.keypad",
+                AlarmControlPanelServiceArgument.CODE: code,
+            },
             blocking=True,
         )
         assert aioclient_mock.mock_calls[0][2] == {"code0": code}

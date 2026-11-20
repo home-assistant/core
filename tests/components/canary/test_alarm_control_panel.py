@@ -6,15 +6,10 @@ from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_N
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -128,7 +123,7 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     # test arm away
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         service_data={"entity_id": entity_id},
         blocking=True,
     )
@@ -137,7 +132,7 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     # test arm home
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         service_data={"entity_id": entity_id},
         blocking=True,
     )
@@ -146,7 +141,7 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     # test arm night
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         service_data={"entity_id": entity_id},
         blocking=True,
     )
@@ -155,7 +150,7 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     # test disarm
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         service_data={"entity_id": entity_id},
         blocking=True,
     )

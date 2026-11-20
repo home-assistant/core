@@ -7,13 +7,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_DISARM,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "alarm_control_panel.blink_sync_module"
@@ -24,14 +21,14 @@ ENTITY_ID = "alarm_control_panel.blink_sync_module"
     [
         pytest.param(
             False,
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             True,
             AlarmControlPanelState.ARMED_AWAY,
             id="arm_away",
         ),
         pytest.param(
             True,
-            SERVICE_ALARM_DISARM,
+            AlarmControlPanelService.DISARM,
             False,
             AlarmControlPanelState.DISARMED,
             id="disarm",
@@ -69,7 +66,7 @@ async def test_arm_state_updates_when_refresh_is_skipped(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        ALARM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        ALARM_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     assert hass.states.get(ENTITY_ID).state == expected_state
