@@ -2523,7 +2523,7 @@ async def test_rpc_fan_energy_sensor(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-fan:0-energy_fan"
+    assert entry.unique_id == "123456789ABC-fan:0-energy"
 
 
 async def test_rpc_sensor_driver_missing_error(
