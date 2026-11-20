@@ -11,7 +11,7 @@ from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -163,6 +163,49 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """
         return {device.ip for device in self.devices if device.is_manual} | set(
             self.discovery_queue
+        )
+
+    @callback
+    def async_adopt_device(self, device: GoveeDevice) -> None:
+        """Claim an already-discovered device for its manual subentry.
+
+        Marks it manual so eviction re-queues it instead of dropping it, and
+        moves its registrations under the subentry so deleting the subentry
+        cascades to them. Entities move first: changing the device's subentry
+        purges entities still pointing at the old one.
+        """
+        subentry_id = next(
+            (
+                subentry.subentry_id
+                for subentry in self.config_entry.get_subentries_of_type(
+                    SUBENTRY_TYPE_DEVICE
+                )
+                if subentry.data[CONF_DEVICE_IP] == device.ip
+            ),
+            None,
+        )
+        if subentry_id is None:
+            return
+
+        device.is_manual = True
+
+        device_registry = dr.async_get(self.hass)
+        if (
+            device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.fingerprint), self.config_entry.entry_id
+            )
+        ) is None or device_entry.config_subentry_id == subentry_id:
+            return
+
+        entity_registry = er.async_get(self.hass)
+        for entity in er.async_entries_for_device(
+            entity_registry, device_entry.id, include_disabled_entities=True
+        ):
+            entity_registry.async_update_entity(
+                entity.entity_id, config_subentry_id=subentry_id
+            )
+        device_registry.async_update_device(
+            device_entry.id, new_config_subentry_id=subentry_id
         )
 
     @callback

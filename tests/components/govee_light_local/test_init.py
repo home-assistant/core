@@ -359,6 +359,69 @@ async def test_subentry_added_during_setup_is_queued(
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_add_subentry_adopts_discovered_device(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test adding a subentry for an already-discovered lamp claims it.
+
+    The lamp must become manual and its registrations must move under the
+    subentry, so deleting the subentry later cascades to them.
+    """
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="discovered-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [discovered])
+
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: discovered.ip}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(config_entry.subentries))
+    mock_govee_api.add_device_to_discovery_queue.assert_not_called()
+    assert discovered.is_manual is True
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, discovered.fingerprint), config_entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.config_subentry_id == subentry_id
+    entity = entity_registry.async_get("light.h615a")
+    assert entity is not None
+    assert entity.config_subentry_id == subentry_id
+    assert hass.states.get("light.H615A") is not None
+
+    # Deleting the subentry now cascades to the adopted registrations.
+    hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.H615A") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, discovered.fingerprint), config_entry.entry_id
+        )
+        is None
+    )
+    mock_govee_api.remove_device.assert_called_once_with(discovered)
+
+
 async def test_setup_without_listening_addresses(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:

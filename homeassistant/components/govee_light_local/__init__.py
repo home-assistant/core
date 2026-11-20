@@ -158,11 +158,12 @@ async def update_listener(
     for ip in config.manual_devices:
         # Re-queueing a known IP would strand it there: the queue is only
         # drained when a device with a new fingerprint answers.
-        if (
-            ip not in coordinator.discovery_queue
-            and coordinator.get_device_by_ip(ip) is None
-        ):
+        if ip in coordinator.discovery_queue:
+            continue
+        if (device := coordinator.get_device_by_ip(ip)) is None:
             coordinator.add_device_to_discovery_queue(ip)
+        elif not device.is_manual:
+            coordinator.async_adopt_device(device)
 
     # The difference is a new set, so removing entries below cannot mutate what
     # we are iterating over.
