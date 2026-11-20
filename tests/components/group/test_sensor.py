@@ -1377,3 +1377,31 @@ async def test_sensor_different_attributes_ignore_non_numeric(
             state.attributes.get("unit_of_measurement")
             == test_case["expected_unit_of_measurement"]
         )
+
+
+async def test_config_entry_without_ignore_non_numeric(hass: HomeAssistant) -> None:
+    """Test a group without the option does not ignore non-numeric members."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": ["sensor.test_1", "sensor.test_2"],
+            "group_type": "sensor",
+            "hide_members": False,
+            "name": "test_sum",
+            "type": "sum",
+        },
+        title="test_sum",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_1", "10")
+    hass.states.async_set("sensor.test_2", "20")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_sum").state == "30.0"
+
+    hass.states.async_set("sensor.test_2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_sum").state == STATE_UNKNOWN
