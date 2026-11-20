@@ -1,6 +1,7 @@
 """Tests for the Tankerkoening integration."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock
 
 from aiotankerkoenig.exceptions import (
@@ -9,6 +10,7 @@ from aiotankerkoenig.exceptions import (
     TankerkoenigInvalidKeyError,
     TankerkoenigRateLimitError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -224,3 +226,73 @@ async def test_many_stations_warning(
     await hass.async_block_till_done()
 
     assert "Found more than 10 stations to check" in caplog.text
+
+
+async def test_station_details_cached(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test station details are only fetched again after the cache expired."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert tankerkoenig.station_details.call_count == 1
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert tankerkoenig.station_details.call_count == 1
+    assert hass.states.get("binary_sensor.station_somewhere_street_1_status")
+
+    freezer.tick(timedelta(days=8))
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert tankerkoenig.station_details.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TankerkoenigConnectionError, id="connection_error"),
+        pytest.param(TankerkoenigRateLimitError, id="rate_limit"),
+    ],
+)
+async def test_expired_cache_used_when_details_fail(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: type[Exception],
+) -> None:
+    """Test expired station details are used when they cannot be fetched."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(days=8))
+    tankerkoenig.station_details.side_effect = exception
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert tankerkoenig.station_details.call_count == 2
+    assert hass.states.get("binary_sensor.station_somewhere_street_1_status")
+
+
+@pytest.mark.usefixtures("tankerkoenig")
+async def test_station_cache_removed_with_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the station cache is removed together with the config entry."""
+    key = f"{DOMAIN}.{config_entry.entry_id}.stations"
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert key in hass_storage
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert key not in hass_storage
