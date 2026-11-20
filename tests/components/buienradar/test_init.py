@@ -7,7 +7,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import PARSE_FAILED, setup_integration
 
 
 @pytest.mark.usefixtures("mock_buienradar_data")
@@ -27,7 +27,7 @@ async def test_setup_retry_when_fetch_fails(
 ) -> None:
     """Test setup is retried when the first update fails."""
     mock_buienradar_data.side_effect = None
-    mock_buienradar_data.return_value = None
+    mock_buienradar_data.return_value = PARSE_FAILED
 
     entry = await setup_integration(hass)
 

@@ -7,6 +7,7 @@ from buienradar.constants import (
     ATTRIBUTION,
     CONDCODE,
     CONDITION,
+    DATA,
     DATETIME,
     DETAILED,
     EXACT,
@@ -17,12 +18,14 @@ from buienradar.constants import (
     IMAGE,
     MAX_TEMP,
     MEASURED,
+    MESSAGE,
     MIN_TEMP,
     PRECIPITATION_FORECAST,
     PRESSURE,
     RAIN,
     RAIN_CHANCE,
     STATIONNAME,
+    SUCCESS,
     TEMPERATURE,
     TIMEFRAME,
     VISIBILITY,
@@ -82,8 +85,25 @@ TEST_DATA: dict[str, Any] = {
             WINDAZIMUTH: 90,
             WINDSPEED: 3,
         },
+        *(
+            {
+                DATETIME: dt.datetime(2026, 11, 23 + day, tzinfo=dt.UTC),
+                CONDITION: {CONDCODE: "b"},
+                MIN_TEMP: 3.0 + day,
+                MAX_TEMP: 8.0 + day,
+                RAIN: 1.0,
+                RAIN_CHANCE: 30,
+                WINDAZIMUTH: 180,
+                WINDSPEED: 4,
+            }
+            for day in range(3)
+        ),
     ],
 }
+
+
+PARSE_SUCCEEDED = {SUCCESS: True, MESSAGE: None, DATA: TEST_DATA}
+PARSE_FAILED = {SUCCESS: False, MESSAGE: "no data"}
 
 
 async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
