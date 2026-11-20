@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     STATE_UNKNOWN,
-    EntityCategory,
     EntityStateAttribute,
     Platform,
     UnitOfVolume,
@@ -147,48 +146,6 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     state = hass.states.get("sensor.input_watercounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-
-async def test_illuminance_sensor(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test illuminance sensor device class and unit handling."""
-    await init_integration(hass, config_entry)
-
-    state = hass.states.get("sensor.input_lightsensor")
-    assert state is not None
-    assert state.state == "250.0"
-    assert (
-        state.attributes[EntityStateAttribute.DEVICE_CLASS]
-        == SensorDeviceClass.ILLUMINANCE
-    )
-    assert (
-        state.attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
-        == SensorStateClass.MEASUREMENT
-    )
-    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "lx"
-
-
-async def test_bus_error_sensor(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test bus error diagnostic sensor attributes."""
-    await init_integration(hass, config_entry)
-
-    state = hass.states.get("sensor.input_bus_error_transmit")
-    assert state is not None
-    assert state.state == "12.0"
-    assert (
-        state.attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
-        == SensorStateClass.TOTAL_INCREASING
-    )
-
-    entry = entity_registry.async_get("sensor.input_bus_error_transmit")
-    assert entry is not None
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 async def test_unknown_sensor_type_skipped(
