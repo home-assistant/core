@@ -1,10 +1,13 @@
 """Test camera WebRTC."""
 
 from collections.abc import AsyncGenerator
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
@@ -761,3 +764,97 @@ async def test_camera_unregisters_from_webrtc_provider_on_removal(
         await camera.async_remove()
         mock_unregister.assert_called_once_with(camera)
         assert camera.webrtc_provider is None
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_camera_added_when_stream_source_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a camera is added and finds its provider later when the stream source fails."""
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ) as mock_stream_source:
+        # The provider is registered already, so the cameras look it up when added
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+
+        assert hass.states.get("camera.demo_camera") is not None
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        assert camera.webrtc_provider is None
+        assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
+        assert (
+            "Error getting the stream source of camera.demo_camera, "
+            "trying again in 30 seconds: camera not ready"
+        ) in caplog.text
+        calls = mock_stream_source.call_count
+
+        # Still failing: tried again after 30 seconds, without another warning
+        caplog.clear()
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 2 * calls
+        assert camera.webrtc_provider is None
+        assert not [
+            r
+            for r in caplog.records
+            if r.name == "homeassistant.components.camera.entity"
+            and r.levelno >= logging.WARNING
+        ]
+
+        # Next attempt after 60 seconds succeeds
+        camera_ready = True
+        freezer.tick(59)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 2 * calls
+        freezer.tick(1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 3 * calls
+
+        assert camera.webrtc_provider is not None
+        assert camera.camera_capabilities.frontend_stream_types == {
+            StreamType.HLS,
+            StreamType.WEB_RTC,
+        }
+
+        # No further attempts once the provider was found
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 3 * calls
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_stream_source_retry_cancelled_on_removal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending provider lookup is cancelled when the camera is removed."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=TimeoutError,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        calls = mock_stream_source.call_count
+
+        await camera.async_remove()
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Only the remaining camera looked again
+        assert mock_stream_source.call_count == calls + calls // 2

@@ -5,6 +5,7 @@ import collections
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
+import logging
 from random import SystemRandom
 import time
 from typing import Any, Final, final, override
@@ -17,9 +18,10 @@ from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CAMERA_STREAM_SOURCE_TIMEOUT,
@@ -41,6 +43,11 @@ from .webrtc import (
     async_call_webrtc_provider,
     async_get_supported_provider,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+# Seconds until the WebRTC providers are looked up again after the stream source failed
+PROVIDER_REFRESH_RETRY_DELAYS = (30, 60, 120, 300)
 
 _RND: Final = SystemRandom()
 
@@ -167,6 +174,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
+        self._provider_refresh_attempt = 0
+        self._provider_refresh_retry: CALLBACK_TYPE | None = None
         self._supports_native_async_webrtc = (
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
@@ -419,6 +428,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        self._async_cancel_provider_refresh_retry()
         if self._webrtc_provider:
             await async_call_webrtc_provider(
                 self._webrtc_provider.async_unregister_camera(self),
@@ -440,9 +450,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Skip all providers if the camera has a native WebRTC implementation
         if not self._supports_native_async_webrtc:
             # Camera doesn't have a native WebRTC implementation
-            new_provider = await self._async_get_supported_webrtc_provider(
-                async_get_supported_provider
-            )
+            try:
+                new_provider = await self._async_get_supported_webrtc_provider(
+                    async_get_supported_provider
+                )
+            except Exception as err:  # noqa: BLE001
+                # The stream source can fail for a moment, e.g. while the camera
+                # is still starting; the camera must be added anyway
+                self._async_schedule_provider_refresh_retry(err)
+                return
+            self._provider_refresh_attempt = 0
+            self._async_cancel_provider_refresh_retry()
 
         if old_provider == new_provider:
             return
@@ -464,6 +482,35 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._webrtc_provider = new_provider
         if write_state:
             self.async_write_ha_state()
+
+    @callback
+    def _async_schedule_provider_refresh_retry(self, err: Exception) -> None:
+        """Look up the WebRTC providers again later."""
+        delay = PROVIDER_REFRESH_RETRY_DELAYS[
+            min(self._provider_refresh_attempt, len(PROVIDER_REFRESH_RETRY_DELAYS) - 1)
+        ]
+        _LOGGER.log(
+            logging.DEBUG if self._provider_refresh_attempt else logging.WARNING,
+            "Error getting the stream source of %s, trying again in %s seconds: %s",
+            self.entity_id,
+            delay,
+            err,
+        )
+        self._provider_refresh_attempt += 1
+        self._async_cancel_provider_refresh_retry()
+
+        async def _async_retry(_now: Any) -> None:
+            self._provider_refresh_retry = None
+            await self.async_refresh_providers()
+
+        self._provider_refresh_retry = async_call_later(self.hass, delay, _async_retry)
+
+    @callback
+    def _async_cancel_provider_refresh_retry(self) -> None:
+        """Cancel a pending lookup of the WebRTC providers."""
+        if self._provider_refresh_retry:
+            self._provider_refresh_retry()
+            self._provider_refresh_retry = None
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
