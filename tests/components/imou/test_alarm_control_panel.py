@@ -11,17 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -115,8 +109,8 @@ async def test_arm_home_via_service(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.ARM_HOME,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -136,8 +130,8 @@ async def test_arm_away_via_service(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.ARM_AWAY,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -157,8 +151,8 @@ async def test_disarm_via_service(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -180,8 +174,8 @@ async def test_arm_home_propagates_api_error(
     with pytest.raises(HomeAssistantError, match="Imou rejected the arming change"):
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_ARM_HOME,
-            {ATTR_ENTITY_ID: entity_id},
+            AlarmControlPanelService.ARM_HOME,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -205,8 +199,8 @@ async def test_arm_home_invalid_auth_starts_reauth(
     ):
         await hass.services.async_call(
             ALARM_DOMAIN,
-            SERVICE_ALARM_ARM_HOME,
-            {ATTR_ENTITY_ID: entity_id},
+            AlarmControlPanelService.ARM_HOME,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()

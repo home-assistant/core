@@ -13,17 +13,14 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.manual_mqtt.alarm_control_panel import ManualMQTTAlarm
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
+    AlarmControlPanelState,
 )
+from homeassistant.components.manual_mqtt.alarm_control_panel import ManualMQTTAlarm
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
@@ -73,14 +70,14 @@ async def test_fail_setup_without_command_topic(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_no_pending(
@@ -114,7 +111,10 @@ async def test_no_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -124,14 +124,14 @@ async def test_no_pending(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_no_pending_when_code_not_req(
@@ -166,7 +166,10 @@ async def test_no_pending_when_code_not_req(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -176,14 +179,14 @@ async def test_no_pending_when_code_not_req(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_pending(
@@ -217,7 +220,10 @@ async def test_with_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -241,7 +247,10 @@ async def test_with_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -251,14 +260,14 @@ async def test_with_pending(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_invalid_code(
@@ -293,7 +302,10 @@ async def test_with_invalid_code(
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: f"{CODE}2"},
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.test",
+                AlarmControlPanelServiceArgument.CODE: f"{CODE}2",
+            },
             blocking=True,
         )
 
@@ -303,14 +315,14 @@ async def test_with_invalid_code(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_template_code(
@@ -344,7 +356,10 @@ async def test_with_template_code(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abc"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "abc",
+        },
         blocking=True,
     )
 
@@ -355,14 +370,14 @@ async def test_with_template_code(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_specific_pending(
@@ -393,7 +408,10 @@ async def test_with_specific_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "1234",
+        },
         blocking=True,
     )
 
@@ -889,7 +907,9 @@ async def test_disarm_during_trigger_with_invalid_code(
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert (
-        hass.states.get(entity_id).attributes[alarm_control_panel.ATTR_CODE_FORMAT]
+        hass.states.get(entity_id).attributes[
+            AlarmControlPanelEntityStateAttribute.CODE_FORMAT
+        ]
         == alarm_control_panel.CodeFormat.NUMBER
     )
 

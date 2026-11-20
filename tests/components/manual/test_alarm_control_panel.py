@@ -16,18 +16,13 @@ from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.manual.const import ManualEntityStateAttribute
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -41,14 +36,14 @@ CODE = "HELLO_CODE"
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_no_pending(hass: HomeAssistant, service, expected_state) -> None:
@@ -75,7 +70,10 @@ async def test_no_pending(hass: HomeAssistant, service, expected_state) -> None:
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -85,14 +83,14 @@ async def test_no_pending(hass: HomeAssistant, service, expected_state) -> None:
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_no_pending_when_code_not_req(
@@ -122,7 +120,10 @@ async def test_no_pending_when_code_not_req(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -132,14 +133,14 @@ async def test_no_pending_when_code_not_req(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_pending(hass: HomeAssistant, service, expected_state) -> None:
@@ -166,7 +167,10 @@ async def test_with_pending(hass: HomeAssistant, service, expected_state) -> Non
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -190,7 +194,10 @@ async def test_with_pending(hass: HomeAssistant, service, expected_state) -> Non
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: CODE,
+        },
         blocking=True,
     )
 
@@ -200,14 +207,14 @@ async def test_with_pending(hass: HomeAssistant, service, expected_state) -> Non
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -> None:
@@ -236,8 +243,8 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
             alarm_control_panel.DOMAIN,
             service,
             {
-                ATTR_ENTITY_ID: "alarm_control_panel.test",
-                ATTR_CODE: f"{CODE}2",
+                TargetKey.ENTITY_ID: "alarm_control_panel.test",
+                AlarmControlPanelServiceArgument.CODE: f"{CODE}2",
             },
             blocking=True,
         )
@@ -249,14 +256,14 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_template_code(hass: HomeAssistant, service, expected_state) -> None:
@@ -283,7 +290,10 @@ async def test_with_template_code(hass: HomeAssistant, service, expected_state) 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "abc"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "abc",
+        },
         blocking=True,
     )
 
@@ -294,14 +304,14 @@ async def test_with_template_code(hass: HomeAssistant, service, expected_state) 
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AlarmControlPanelService.ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
         (
-            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            AlarmControlPanelService.ARM_CUSTOM_BYPASS,
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         ),
-        (SERVICE_ALARM_ARM_HOME, AlarmControlPanelState.ARMED_HOME),
-        (SERVICE_ALARM_ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
-        (SERVICE_ALARM_ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
+        (AlarmControlPanelService.ARM_HOME, AlarmControlPanelState.ARMED_HOME),
+        (AlarmControlPanelService.ARM_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AlarmControlPanelService.ARM_VACATION, AlarmControlPanelState.ARMED_VACATION),
     ],
 )
 async def test_with_specific_pending(
@@ -327,7 +337,10 @@ async def test_with_specific_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test",
+            AlarmControlPanelServiceArgument.CODE: "1234",
+        },
         blocking=True,
     )
 
@@ -1158,7 +1171,9 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert (
-        hass.states.get(entity_id).attributes[alarm_control_panel.ATTR_CODE_FORMAT]
+        hass.states.get(entity_id).attributes[
+            AlarmControlPanelEntityStateAttribute.CODE_FORMAT
+        ]
         == alarm_control_panel.CodeFormat.NUMBER
     )
 

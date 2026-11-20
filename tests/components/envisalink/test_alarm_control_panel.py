@@ -7,17 +7,11 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import (
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import ALARM_ENTITY, DOMAIN, MOCK_CODE, MOCK_CONFIG, setup_envisalink
@@ -56,10 +50,10 @@ async def test_alarm_states(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_ALARM_ARM_HOME, "arm_stay_partition"),
-        (SERVICE_ALARM_ARM_AWAY, "arm_away_partition"),
-        (SERVICE_ALARM_ARM_NIGHT, "arm_night_partition"),
-        (SERVICE_ALARM_DISARM, "disarm_partition"),
+        (AlarmControlPanelService.ARM_HOME, "arm_stay_partition"),
+        (AlarmControlPanelService.ARM_AWAY, "arm_away_partition"),
+        (AlarmControlPanelService.ARM_NIGHT, "arm_night_partition"),
+        (AlarmControlPanelService.DISARM, "disarm_partition"),
     ],
 )
 async def test_arm_disarm_commands(
@@ -94,7 +88,7 @@ async def test_trigger_calls_panic(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelService.TRIGGER,
         {"entity_id": ALARM_ENTITY},
         blocking=True,
     )

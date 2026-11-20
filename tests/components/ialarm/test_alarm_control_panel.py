@@ -9,17 +9,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
 from homeassistant.components.ialarm.coordinator import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "alarm_control_panel.ialarm"
@@ -82,9 +76,9 @@ async def test_unavailable_on_connection_error(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_ALARM_ARM_AWAY, "arm_away"),
-        (SERVICE_ALARM_ARM_HOME, "arm_stay"),
-        (SERVICE_ALARM_DISARM, "disarm"),
+        (AlarmControlPanelService.ARM_AWAY, "arm_away"),
+        (AlarmControlPanelService.ARM_HOME, "arm_stay"),
+        (AlarmControlPanelService.DISARM, "disarm"),
     ],
 )
 async def test_actions(
@@ -100,7 +94,7 @@ async def test_actions(
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

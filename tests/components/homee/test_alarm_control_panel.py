@@ -9,14 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
+    AlarmControlPanelService,
 )
 from homeassistant.components.homee.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -45,10 +41,10 @@ async def setup_alarm_control_panel(
 @pytest.mark.parametrize(
     ("service", "state"),
     [
-        (SERVICE_ALARM_ARM_HOME, 0),
-        (SERVICE_ALARM_ARM_NIGHT, 1),
-        (SERVICE_ALARM_ARM_AWAY, 2),
-        (SERVICE_ALARM_ARM_VACATION, 3),
+        (AlarmControlPanelService.ARM_HOME, 0),
+        (AlarmControlPanelService.ARM_NIGHT, 1),
+        (AlarmControlPanelService.ARM_AWAY, 2),
+        (AlarmControlPanelService.ARM_VACATION, 3),
     ],
 )
 async def test_alarm_control_panel_services(
@@ -64,7 +60,7 @@ async def test_alarm_control_panel_services(
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.testhomee_status"},
+        {TargetKey.ENTITY_ID: "alarm_control_panel.testhomee_status"},
         blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(-1, 1, state)
@@ -81,8 +77,8 @@ async def test_alarm_control_panel_service_disarm_error(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: "alarm_control_panel.testhomee_status"},
+            AlarmControlPanelService.DISARM,
+            {TargetKey.ENTITY_ID: "alarm_control_panel.testhomee_status"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

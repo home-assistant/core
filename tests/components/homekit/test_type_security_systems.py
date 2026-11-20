@@ -7,17 +7,13 @@ from pytest_homeassistant.common import async_mock_service
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_CODE, STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import Event, HomeAssistant, State
 
 
@@ -86,8 +82,8 @@ async def test_switch_set_state(
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_arm_home
-    assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_arm_home[0].data[ATTR_CODE] == code
+    assert call_arm_home[0].data[TargetKey.ENTITY_ID] == entity_id
+    assert call_arm_home[0].data[AlarmControlPanelServiceArgument.CODE] == code
     assert acc.char_target_state.value == 0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
@@ -95,8 +91,8 @@ async def test_switch_set_state(
     acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert call_arm_away
-    assert call_arm_away[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_arm_away[0].data[ATTR_CODE] == code
+    assert call_arm_away[0].data[TargetKey.ENTITY_ID] == entity_id
+    assert call_arm_away[0].data[AlarmControlPanelServiceArgument.CODE] == code
     assert acc.char_target_state.value == 1
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
@@ -104,8 +100,8 @@ async def test_switch_set_state(
     acc.char_target_state.client_update_value(2)
     await hass.async_block_till_done()
     assert call_arm_night
-    assert call_arm_night[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_arm_night[0].data[ATTR_CODE] == code
+    assert call_arm_night[0].data[TargetKey.ENTITY_ID] == entity_id
+    assert call_arm_night[0].data[AlarmControlPanelServiceArgument.CODE] == code
     assert acc.char_target_state.value == 2
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
@@ -113,8 +109,8 @@ async def test_switch_set_state(
     acc.char_target_state.client_update_value(3)
     await hass.async_block_till_done()
     assert call_disarm
-    assert call_disarm[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_disarm[0].data[ATTR_CODE] == code
+    assert call_disarm[0].data[TargetKey.ENTITY_ID] == entity_id
+    assert call_disarm[0].data[AlarmControlPanelServiceArgument.CODE] == code
     assert acc.char_target_state.value == 3
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
@@ -139,8 +135,8 @@ async def test_no_alarm_code(
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_arm_home
-    assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
-    assert ATTR_CODE not in call_arm_home[0].data
+    assert call_arm_home[0].data[TargetKey.ENTITY_ID] == entity_id
+    assert AlarmControlPanelServiceArgument.CODE not in call_arm_home[0].data
     assert acc.char_target_state.value == 0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
