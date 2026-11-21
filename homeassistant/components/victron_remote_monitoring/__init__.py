@@ -4,14 +4,26 @@ from datetime import datetime
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import (
     VictronRemoteMonitoringConfigEntry,
     VictronRemoteMonitoringDataUpdateCoordinator,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Victron Remote Monitoring integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
