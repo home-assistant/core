@@ -363,12 +363,12 @@ class MatterEntity(Entity):
 
     @callback
     def _feature_removed(self, feature_map: int | None) -> bool:
-        """Return if the FeatureMap no longer has the feature this entity needs."""
+        """Return if the FeatureMap no longer has all the features this entity needs."""
         featuremap_contains = self._entity_info.discovery_schema.featuremap_contains
         return (
             feature_map is not None
             and featuremap_contains is not None
-            and not bool(feature_map & featuremap_contains)
+            and (feature_map & featuremap_contains) != featuremap_contains
         )
 
     @callback

@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry
+from .helpers import MatterConfigEntry, write_error_status
 from .models import MatterDiscoverySchema
 
 EVSE_SUPPLY_STATE_MAP = {
@@ -182,21 +182,6 @@ class MatterBitmapSwitchEntityDescription(MatterSwitchEntityDescription):
     bitmask: int
 
 
-def _write_error_status(result: Any) -> int | None:
-    """Return the first unsuccessful Matter status of a write response, if any.
-
-    A write is answered with a list of per-path results rather than an error, so
-    a device rejecting the write otherwise looks like a successful service call.
-    """
-    if not isinstance(result, list):
-        return None
-    for item in result:
-        status: int | None = item.get("Status") if isinstance(item, dict) else None
-        if status:
-            return status
-    return None
-
-
 class MatterBitmapSwitch(MatterSwitch):
     """Representation of a single bit of a Matter bitmap attribute as a Switch entity.
 
@@ -220,7 +205,7 @@ class MatterBitmapSwitch(MatterSwitch):
         bitmask = int(self.entity_description.bitmask)
         new_value = current_value | bitmask if value else current_value & ~bitmask
         result = await self.write_attribute(value=new_value)
-        if status := _write_error_status(result):
+        if status := write_error_status(result):
             # the spec answers an unsupported mode bit with CONSTRAINT_ERROR
             unsupported = status == clusters.Globals.Enums.status.kConstraintError
             raise HomeAssistantError(

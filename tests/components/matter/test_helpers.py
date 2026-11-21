@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -10,6 +11,7 @@ from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
     get_device_id,
     get_node_from_device_entry,
+    write_error_status,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -64,3 +66,53 @@ async def test_get_node_from_device_entry(
         node_from_device_entry = get_node_from_device_entry(hass, device_entry)
 
     assert "Matter server information is not available" in str(runtime_error.value)
+
+
+SUCCESS = clusters.Globals.Enums.status.kSuccess
+CONSTRAINT_ERROR = clusters.Globals.Enums.status.kConstraintError
+BUSY = clusters.Globals.Enums.status.kBusy
+
+
+def _write_result(attribute_id: int, status: int) -> dict:
+    """Return one path's result, as the Matter Server answers a write."""
+    return {
+        "Path": {"EndpointId": 1, "ClusterId": 513, "AttributeId": attribute_id},
+        "Status": status,
+    }
+
+
+@pytest.mark.parametrize(
+    ("result", "expected"),
+    [
+        pytest.param(None, None, id="no_result"),
+        pytest.param([], None, id="empty"),
+        pytest.param([_write_result(19, SUCCESS)], None, id="success"),
+        pytest.param(
+            [_write_result(19, SUCCESS), _write_result(20, SUCCESS)],
+            None,
+            id="all_success",
+        ),
+        pytest.param(
+            [_write_result(19, CONSTRAINT_ERROR)], CONSTRAINT_ERROR, id="failure"
+        ),
+        pytest.param(
+            [_write_result(19, SUCCESS), _write_result(20, CONSTRAINT_ERROR)],
+            CONSTRAINT_ERROR,
+            id="success_then_failure",
+        ),
+        pytest.param(
+            [_write_result(19, CONSTRAINT_ERROR), _write_result(20, SUCCESS)],
+            CONSTRAINT_ERROR,
+            id="failure_then_success",
+        ),
+        pytest.param(
+            [_write_result(19, BUSY), _write_result(20, CONSTRAINT_ERROR)],
+            BUSY,
+            id="first_failure_wins",
+        ),
+        pytest.param([{"Path": {}}, "unexpected"], None, id="no_status"),
+    ],
+)
+def test_write_error_status(result: object, expected: int | None) -> None:
+    """Test the first unsuccessful status of a write response is returned."""
+    assert write_error_status(result) == expected
