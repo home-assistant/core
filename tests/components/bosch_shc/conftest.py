@@ -832,7 +832,7 @@ class FakeLatestMotionService:
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -852,7 +852,7 @@ class FakeAlarmService:
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -869,7 +869,7 @@ class FakeSurveillanceAlarmService:
         """Remember the callback so tests can fire it."""
         self.callbacks[entity] = callback
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """Forget the callback."""
         self.callbacks.pop(entity, None)
 
