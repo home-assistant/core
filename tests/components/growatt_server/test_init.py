@@ -11,7 +11,6 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server import _CACHED_APIS
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
@@ -737,8 +736,44 @@ async def test_setup_reuses_cached_api_from_migration(
     # This confirms setup did NOT resolve plant_id again (optimization working)
     mock_growatt_classic_api.plant_list.assert_called_once_with(123456)
 
-    # Verify the cached API was removed after use (one-time handoff)
-    assert mock_config_entry.entry_id not in _CACHED_APIS
+
+async def test_setup_drops_cached_api_from_migration_after_use(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test the API handed over by migration is removed even if setup fails."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
+    }
+    mock_growatt_classic_api.device_list.side_effect = (
+        requests.exceptions.RequestException("Connection error")
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_growatt_classic_api.device_list.assert_called_once_with("RESOLVED_PLANT_789")
+    assert not hasattr(mock_config_entry, "runtime_data")
 
 
 async def test_migrate_failure_retries(

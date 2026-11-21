@@ -30,9 +30,10 @@ from json import JSONDecodeError
 import logging
 
 import growattServer
-from growattServer import GrowattV1ApiErrorCode
+from growattServer import GrowattApi, GrowattV1ApiErrorCode
 from requests import RequestException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -68,10 +69,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
-# to async_setup_entry. Avoids a second login() during the same startup, which
-# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
-_CACHED_APIS: dict[str, growattServer.GrowattApi] = {}
+# Migration hands the logged-in Classic API to async_setup_entry via runtime_data
+type _GrowattMigrationConfigEntry = ConfigEntry[GrowattApi]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -82,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: GrowattConfigEntry
+    hass: HomeAssistant, config_entry: _GrowattMigrationConfigEntry
 ) -> None:
     """Migrate old config entries.
 
@@ -197,7 +196,7 @@ async def async_migrate_entry(
                 )
 
                 # Cache the logged-in API instance for reuse in async_setup_entry()
-                _CACHED_APIS[config_entry.entry_id] = api
+                config_entry.runtime_data = api
 
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
@@ -212,7 +211,7 @@ async def async_migrate_entry(
 
 async def _create_api_and_login(
     hass: HomeAssistant, username: str, password: str, url: str
-) -> tuple[growattServer.GrowattApi, dict]:
+) -> tuple[GrowattApi, dict]:
     """Create API instance and perform login.
 
     Returns both the API instance (with authenticated session) and the login
@@ -229,9 +228,7 @@ async def _create_api_and_login(
     return api, login_response
 
 
-def _login_classic_api(
-    api: growattServer.GrowattApi, username: str, password: str
-) -> dict:
+def _login_classic_api(api: GrowattApi, username: str, password: str) -> dict:
     """Log in to Classic API and return user info."""
     try:
         login_response = api.login(username, password)
@@ -329,7 +326,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
-    api: growattServer.GrowattApi
+    api: GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
@@ -346,9 +343,11 @@ async def async_setup_entry(
         # Check if migration cached an authenticated API instance for us to reuse.
         # This avoids calling login() twice (once in migration, once here) which
         # would trigger rate limiting.
-        cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
+        cached_api = getattr(config_entry, "runtime_data", None)
 
-        if cached_api:
+        if isinstance(cached_api, GrowattApi):
+            # One-time handoff, so a setup retry logs in again
+            del config_entry.runtime_data
             # Reuse the logged-in API instance from migration (rate limit optimization)
             api = cached_api
             _LOGGER.debug("Reusing logged-in session from migration")
