@@ -5,6 +5,11 @@
         "default": "mdi:heart-plus"
       }
     },
+    "number": {
+      "queue_playback_speed": {
+        "default": "mdi:speedometer"
+      }
+    },
     "switch": {
       "queue_autoplay": {
         "default": "mdi:infinity"
