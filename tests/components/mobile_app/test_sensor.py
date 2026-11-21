@@ -785,3 +785,62 @@ async def test_dispatcher_cleanup_on_unload(
     # This sensor should be created successfully after reload
     assert hass.states.get("sensor.test_1_test_after_reload") is not None
     assert hass.states.get("sensor.test_1_test_after_reload").state == "123"
+
+
+async def test_reregister_without_device_class(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test a sensor registered again without device class drops the old one."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+    entity_id = "sensor.test_1_battery_state"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "device_class": "battery",
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.original_device_class == "battery"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": "Not Charging",
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Not Charging"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.original_device_class is None
+
+    entry = hass.config_entries.async_entries("mobile_app")[1]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Not Charging"

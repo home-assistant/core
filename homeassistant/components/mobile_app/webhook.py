@@ -602,6 +602,12 @@ async def webhook_register_sensor(
             if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
                 changes[ent_reg_key] = data[data_key]
 
+        # A registration without device class drops the one registered before.
+        # The registry is updated here because the entity may not be loaded.
+        device_class = data.setdefault(ATTR_SENSOR_DEVICE_CLASS, None)
+        if device_class != entry.original_device_class:
+            changes["original_device_class"] = device_class
+
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
