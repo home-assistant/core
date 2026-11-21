@@ -6638,7 +6638,7 @@
       "iot_class": "local_polling"
     },
     "hurrican_shutters_wholesale": {
-      "name": "Hurrican Shutters Wholesale",
+      "name": "Hurricane Shutters Wholesale",
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
