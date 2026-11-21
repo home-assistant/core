@@ -22,7 +22,6 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    MODEL_TOP_EV_CHARGER_EVE01,
     MOTION_MODELS,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
@@ -1170,7 +1169,7 @@ async def test_rpc_ev_charging_switch(
 
     entity_id = "switch.test_name_charging"
 
-    await init_integration(hass, 3, model=MODEL_TOP_EV_CHARGER_EVE01)
+    await init_integration(hass, 3)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
