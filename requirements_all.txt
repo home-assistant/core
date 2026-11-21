@@ -3201,7 +3201,7 @@ smart-meter-texas==0.6.0
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.2
+soco==0.32.4
 
 # homeassistant.components.sofar
 sofar-modbus==0.32.0
