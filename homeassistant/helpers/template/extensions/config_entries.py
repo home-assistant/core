@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.template.context import entity_filter_cv
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -72,10 +73,12 @@ class ConfigEntryExtension(BaseTemplateExtension):
         # fallback to just returning all entities for a domain
         from homeassistant.helpers.entity import entity_sources  # noqa: PLC0415
 
+        entity_filter = entity_filter_cv.get()
         return [
             entity_id
             for entity_id, info in entity_sources(hass).items()
             if info["domain"] == entry_name
+            and (entity_filter is None or entity_filter(entity_id))
         ]
 
     def config_entry_id(self, entity_id: str) -> str | None:
