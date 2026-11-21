@@ -8,7 +8,7 @@ from pythonxbox.api.client import XboxLiveClient
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -21,6 +21,7 @@ from . import api
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import (
+    XboxAchievementsCoordinator,
     XboxConfigEntry,
     XboxConsolesCoordinator,
     XboxConsoleStatusCoordinator,
@@ -34,6 +35,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.IMAGE,
     Platform.MEDIA_PLAYER,
     Platform.REMOTE,
@@ -61,9 +63,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None
         presence.async_config_entry_first_refresh(),
     )
 
-    entry.runtime_data = XboxCoordinators(consoles, status, presence)
+    achievements = XboxAchievementsCoordinator(hass, entry, client, presence)
+
+    entry.runtime_data = XboxCoordinators(consoles, status, presence, achievements)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Who gets polled for achievements depends on presence, so they are
+    # refreshed right after it, and never hold up the setup.
+    @callback
+    def _async_refresh_achievements() -> None:
+        entry.async_create_background_task(
+            hass, achievements.async_request_refresh(), "xbox_achievements_refresh"
+        )
+
+    entry.async_on_unload(presence.async_add_listener(_async_refresh_achievements))
+    _async_refresh_achievements()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 

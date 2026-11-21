@@ -1,0 +1,97 @@
+{
+  "achievements": [
+    {
+      "id": 149,
+      "titleId": 1480659550,
+      "name": "Flex Those Muscles",
+      "sequence": 15,
+      "flags": 1245193,
+      "unlockedOnline": true,
+      "unlocked": true,
+      "isSecret": false,
+      "platform": 1,
+      "gamerscore": 10,
+      "imageId": 71,
+      "description": "You completed a Muscle-Only Series",
+      "lockedDescription": "Complete your first Muscle-Only Series",
+      "type": 1,
+      "isRevoked": false,
+      "timeUnlocked": "2021-03-06T18:42:11.570000Z",
+      "rarity": {
+        "currentCategory": "Common",
+        "currentPercentage": 46.32
+      }
+    },
+    {
+      "id": 150,
+      "titleId": 1480659550,
+      "name": "Keep on Truckin'",
+      "sequence": 14,
+      "flags": 1245193,
+      "unlockedOnline": true,
+      "unlocked": true,
+      "isSecret": false,
+      "platform": 1,
+      "gamerscore": 10,
+      "imageId": 72,
+      "description": "You completed a Truck-Only Series",
+      "lockedDescription": "Complete your first Truck-Only Series",
+      "type": 1,
+      "isRevoked": false,
+      "timeUnlocked": "2021-03-06T18:34:18.703000Z",
+      "rarity": {
+        "currentCategory": "Common",
+        "currentPercentage": 33.07
+      }
+    },
+    {
+      "id": 9,
+      "titleId": 1480659414,
+      "name": "Supercharged",
+      "sequence": 14,
+      "flags": 1245193,
+      "unlockedOnline": true,
+      "unlocked": true,
+      "isSecret": false,
+      "platform": 1,
+      "gamerscore": 10,
+      "imageId": 13,
+      "description": "Detonate 2 Star Gems in one move.",
+      "lockedDescription": "Detonate 2 Star Gems in one move.",
+      "type": 1,
+      "isRevoked": false,
+      "timeUnlocked": "2020-12-13T16:47:31.327000Z",
+      "rarity": {
+        "currentCategory": "Common",
+        "currentPercentage": 53.26
+      }
+    },
+    {
+      "id": 52,
+      "titleId": 1431505011,
+      "name": "Databass",
+      "sequence": 72,
+      "flags": 1245193,
+      "unlockedOnline": true,
+      "unlocked": true,
+      "isSecret": false,
+      "platform": 1,
+      "gamerscore": 10,
+      "imageId": 60,
+      "description": "Play a song with emulated bass using a guitar",
+      "lockedDescription": "Play a song with emulated bass using a guitar",
+      "type": 1,
+      "isRevoked": false,
+      "timeUnlocked": "2013-01-14T23:21:13.210000Z",
+      "rarity": {
+        "currentCategory": "Rare",
+        "currentPercentage": 3.45
+      }
+    }
+  ],
+  "pagingInfo": {
+    "continuationToken": null,
+    "totalRecords": 4
+  },
+  "version": "2026-10-20T06:52:25.637000Z"
+}
