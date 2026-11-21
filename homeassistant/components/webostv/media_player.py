@@ -128,9 +128,13 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
                 tv_state.sound_output != "lineout" and volume_status.get("volume") != -1
             ):
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
-                # webOS 22+ reports volumeSyncable, webOS 4.x supportvolume,
-                # webOS 5/6 neither, so keep volume set when unknown
-                if volume_status.get(
+                # The TV speaker always supports volume set, also when combined
+                # with an output that does not. For other outputs webOS 22+
+                # reports volumeSyncable, webOS 4.x supportvolume, webOS 5/6
+                # neither, so keep volume set when unknown
+                if volume_status.get("soundOutput", "").startswith(
+                    "tv_"
+                ) or volume_status.get(
                     "volumeSyncable", volume_status.get("supportvolume", True)
                 ):
                     supported = supported | MediaPlayerEntityFeature.VOLUME_SET
