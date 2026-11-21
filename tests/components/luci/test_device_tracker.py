@@ -180,3 +180,66 @@ async def test_hostname_updated(
     device = device_registry.async_get(registry_entry.device_id)
     assert device is not None
     assert device.name == expected_device_name
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reload_without_hostname_keeps_device_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client without hostname on reload keeps its device name."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_luci_client.get_all_connected_devices.return_value = [
+        MOCK_DEVICE_1._replace(hostname="")
+    ]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MOCK_DEVICE_1.mac), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == MOCK_DEVICE_1.hostname
+
+
+@pytest.mark.parametrize(
+    ("new_hostname", "expected_device_name"),
+    [
+        pytest.param("work-laptop", "work-laptop", id="renamed"),
+        pytest.param("", MOCK_DEVICE_1.hostname, id="hostname_removed"),
+    ],
+)
+async def test_disabled_tracker_device_renamed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    new_hostname: str,
+    expected_device_name: str,
+) -> None:
+    """Test the device of a disabled tracker follows hostname changes."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    registry_entry = entity_registry.async_get(f"{DEVICE_TRACKER_DOMAIN}.device1")
+    assert registry_entry is not None
+    assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    mock_luci_client.get_all_connected_devices.return_value = [
+        MOCK_DEVICE_1._replace(hostname=new_hostname),
+        MOCK_DEVICE_2,
+    ]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name

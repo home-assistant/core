@@ -3,7 +3,12 @@
 from typing import cast
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa
+from hotspring import (
+    HotSpringConnectionError,
+    HotSpringConnectionTimeoutError,
+    HotSpringError,
+    Spa,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
@@ -40,28 +45,46 @@ async def test_device_info(
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [HotSpringConnectionError, HotSpringError],
+    ("exception", "reason"),
+    [
+        pytest.param(
+            HotSpringConnectionTimeoutError("no response within 10.0s"),
+            "Timed out while communicating with the Hot Spring API",
+            id="timeout",
+        ),
+        pytest.param(
+            HotSpringConnectionError("ServerDisconnectedError: Server disconnected"),
+            "An error occurred while communicating with the Hot Spring API",
+            id="connection_error",
+        ),
+        pytest.param(
+            HotSpringError("Unexpected status payload"),
+            "Invalid response received from the Hot Spring API",
+            id="invalid_response",
+        ),
+    ],
 )
 async def test_async_setup_error(
     hass: HomeAssistant,
     mock_hotspring: MagicMock,
     mock_config_entry: MockConfigEntry,
-    exception: type[Exception],
+    exception: Exception | type[Exception],
+    reason: str,
 ) -> None:
-    """Test a setup error when updating spa data."""
+    """Test a setup error when updating spa data reports its cause."""
     mock_hotspring.update.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == reason
 
 
 @pytest.mark.parametrize(
-    "root_topic",
+    ("root_topic", "found"),
     [
-        "unknownTopic123",
-        "mySpa112233445566",
+        ("unknownTopic123", "unknown"),
+        ("mySpa112233445566", "11:22:33:44:55:66"),
     ],
 )
 async def test_async_setup_mac_mismatch(
@@ -70,6 +93,7 @@ async def test_async_setup_mac_mismatch(
     mock_config_entry: MockConfigEntry,
     device_fixture: Spa,
     root_topic: str,
+    found: str,
 ) -> None:
     """Test setup fails when spa MAC is missing or mismatched."""
     device_fixture.info.root_topic = root_topic
@@ -77,3 +101,7 @@ async def test_async_setup_mac_mismatch(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        f"The device at the configured host has MAC address {found},"
+        " not AA:BB:CC:DD:EE:FF"
+    )

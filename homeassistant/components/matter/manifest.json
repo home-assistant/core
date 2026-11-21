@@ -10,6 +10,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
+  "connectivity": ["matter"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "integration_type": "hub",
@@ -19,5 +20,6 @@
     "matter-python-client==1.5.5",
     "matter-ble-proxy==0.7.1"
   ],
+  "requirements": ["matter-python-client==1.6.0", "matter-ble-proxy==0.7.1"],
   "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }

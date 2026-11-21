@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from aiohttp import ClientError
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import probatio
 
@@ -82,11 +83,6 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
             # Close connection
             await fbx.close()
 
-            return self.async_create_entry(
-                title=self._data[CONF_HOST],
-                data=self._data,
-            )
-
         except AuthorizationError as error:
             _LOGGER.error(error)
             errors["base"] = "register_failed"
@@ -97,7 +93,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
                 # rejected token forever.
                 await async_forget_registration(self.hass, self._data[CONF_HOST])
 
-        except HttpRequestError:
+        except HttpRequestError, ClientError, TimeoutError:
             _LOGGER.error(
                 "Error connecting to the Freebox router at %s", self._data[CONF_HOST]
             )
@@ -109,6 +105,12 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._data[CONF_HOST],
             )
             errors["base"] = "unknown"
+
+        else:
+            return self.async_create_entry(
+                title=self._data[CONF_HOST],
+                data=self._data,
+            )
 
         return self.async_show_form(step_id="link", errors=errors)
 

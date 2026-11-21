@@ -383,6 +383,14 @@
           "stretch": "Stretch"
         }
       },
+      "night_vision": {
+        "name": "Night vision",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "power_level": {
         "name": "Power level (W)"
       },
@@ -477,6 +485,9 @@
           "full_charge": "Full charge",
           "not_charging": "Not charging"
         }
+      },
+      "battery_quantity": {
+        "name": "Battery quantity"
       },
       "battery_replacement_description": {
         "name": "Battery type"
@@ -757,6 +768,9 @@
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "led_indicator": {
+        "name": "LED indicator"
       },
       "music_sync": {
         "name": "Music sync"

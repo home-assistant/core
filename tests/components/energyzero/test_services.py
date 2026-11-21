@@ -23,9 +23,8 @@ from homeassistant.components.energyzero.const import (
     DOMAIN,
 )
 from homeassistant.components.energyzero.services import (
-    ATTR_CONFIG_ENTRY,
-    ENERGY_SERVICE_NAME,
-    GAS_SERVICE_NAME,
+    EnergyZeroService,
+    EnergyZeroServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -39,11 +38,11 @@ pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
     ("service", "service_data"),
     [
         (
-            GAS_SERVICE_NAME,
+            EnergyZeroService.GET_GAS_PRICES,
             {"incl_vat": False},
         ),
         (
-            ENERGY_SERVICE_NAME,
+            EnergyZeroService.GET_ENERGY_PRICES,
             {"incl_vat": True},
         ),
     ],
@@ -56,7 +55,9 @@ async def test_service(
     service_data: dict[str, str | bool],
 ) -> None:
     """Test the EnergyZero Service."""
-    data = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data
+    data = {
+        EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id
+    } | service_data
 
     assert snapshot == await hass.services.async_call(
         DOMAIN,
@@ -71,10 +72,10 @@ async def test_service(
 @pytest.mark.parametrize(
     ("service", "incl_vat", "expected_price_type"),
     [
-        (GAS_SERVICE_NAME, True, PriceType.MARKET_WITH_VAT),
-        (GAS_SERVICE_NAME, False, PriceType.MARKET),
-        (ENERGY_SERVICE_NAME, True, PriceType.MARKET_WITH_VAT),
-        (ENERGY_SERVICE_NAME, False, PriceType.MARKET),
+        (EnergyZeroService.GET_GAS_PRICES, True, PriceType.MARKET_WITH_VAT),
+        (EnergyZeroService.GET_GAS_PRICES, False, PriceType.MARKET),
+        (EnergyZeroService.GET_ENERGY_PRICES, True, PriceType.MARKET_WITH_VAT),
+        (EnergyZeroService.GET_ENERGY_PRICES, False, PriceType.MARKET),
     ],
 )
 async def test_service_price_type_mapping(
@@ -90,7 +91,7 @@ async def test_service_price_type_mapping(
         DOMAIN,
         service,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": incl_vat,
         },
         blocking=True,
@@ -99,7 +100,7 @@ async def test_service_price_type_mapping(
 
     method = (
         mock_energyzero.get_gas_prices
-        if service == GAS_SERVICE_NAME
+        if service == EnergyZeroService.GET_GAS_PRICES
         else mock_energyzero.get_electricity_prices
     )
     assert method.await_args.kwargs["price_type"] is expected_price_type
@@ -107,7 +108,9 @@ async def test_service_price_type_mapping(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service", [EnergyZeroService.GET_GAS_PRICES, EnergyZeroService.GET_ENERGY_PRICES]
+)
 async def test_service_dates_normalized_to_hass_timezone(
     hass: HomeAssistant,
     mock_energyzero: AsyncMock,
@@ -121,7 +124,7 @@ async def test_service_dates_normalized_to_hass_timezone(
         DOMAIN,
         service,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": True,
             "start": "2023-01-01 23:30:00-01:00",
             "end": "2023-01-02 00:30:00-01:00",
@@ -132,7 +135,7 @@ async def test_service_dates_normalized_to_hass_timezone(
 
     method = (
         mock_energyzero.get_gas_prices
-        if service == GAS_SERVICE_NAME
+        if service == EnergyZeroService.GET_GAS_PRICES
         else mock_energyzero.get_electricity_prices
     )
     assert method.await_args.kwargs["start_date"] == date(2023, 1, 2)
@@ -144,7 +147,7 @@ async def test_service_dates_normalized_to_hass_timezone(
     ("service", "expected_prices"),
     [
         (
-            GAS_SERVICE_NAME,
+            EnergyZeroService.GET_GAS_PRICES,
             [
                 {
                     "price": 0.45193447944,
@@ -155,7 +158,7 @@ async def test_service_dates_normalized_to_hass_timezone(
             ],
         ),
         (
-            ENERGY_SERVICE_NAME,
+            EnergyZeroService.GET_ENERGY_PRICES,
             [
                 {
                     "price": 0.12572,
@@ -194,7 +197,7 @@ async def test_service_filters_datetime_range(
         DOMAIN,
         service,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": False,
             "start": "2026-04-10 23:00:00+02:00",
             "end": "2026-04-11 02:00:00+02:00",
@@ -209,7 +212,7 @@ async def test_service_filters_datetime_range(
 
     method = (
         mock_energyzero.get_gas_prices
-        if service == GAS_SERVICE_NAME
+        if service == EnergyZeroService.GET_GAS_PRICES
         else mock_energyzero.get_electricity_prices
     )
     assert [item.kwargs["start_date"] for item in method.await_args_list] == [
@@ -230,7 +233,7 @@ async def test_service_filters_datetime_range(
     ("service", "expected_count", "expected_first", "expected_last"),
     [
         (
-            GAS_SERVICE_NAME,
+            EnergyZeroService.GET_GAS_PRICES,
             1,
             {
                 "price": 0.430304930424,
@@ -246,7 +249,7 @@ async def test_service_filters_datetime_range(
             },
         ),
         (
-            ENERGY_SERVICE_NAME,
+            EnergyZeroService.GET_ENERGY_PRICES,
             24,
             {
                 "price": 0.125925,
@@ -282,7 +285,7 @@ async def test_service_equal_start_end_selects_full_local_day(
         DOMAIN,
         service,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": False,
             "start": equal_datetime,
             "end": equal_datetime,
@@ -298,7 +301,7 @@ async def test_service_equal_start_end_selects_full_local_day(
 
     method = (
         mock_energyzero.get_gas_prices
-        if service == GAS_SERVICE_NAME
+        if service == EnergyZeroService.GET_GAS_PRICES
         else mock_energyzero.get_electricity_prices
     )
     assert len(method.await_args_list) == 1
@@ -330,9 +333,9 @@ async def test_service_equal_start_end_full_day_respects_dst(
 
     response = await hass.services.async_call(
         DOMAIN,
-        ENERGY_SERVICE_NAME,
+        EnergyZeroService.GET_ENERGY_PRICES,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": False,
             "start": "2026-03-29 00:00:00",
             "end": "2026-03-29 00:00:00",
@@ -368,9 +371,9 @@ async def test_service_date_and_equal_datetime_selects_full_local_day(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GAS_SERVICE_NAME,
+        EnergyZeroService.GET_GAS_PRICES,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": False,
             "start": "2026-04-11",
             "end": "2026-04-11 00:00:00",
@@ -406,7 +409,9 @@ def config_entry_data(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service", [EnergyZeroService.GET_GAS_PRICES, EnergyZeroService.GET_ENERGY_PRICES]
+)
 @pytest.mark.parametrize(
     ("config_entry_data", "service_data", "error", "error_message"),
     [
@@ -499,7 +504,9 @@ async def test_service_validation(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service", [EnergyZeroService.GET_GAS_PRICES, EnergyZeroService.GET_ENERGY_PRICES]
+)
 async def test_service_called_with_unloaded_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -527,9 +534,12 @@ async def test_service_called_with_unloaded_entry(
 @pytest.mark.parametrize(
     ("service", "service_data"),
     [
-        (GAS_SERVICE_NAME, {}),
-        (ENERGY_SERVICE_NAME, {}),
-        (ENERGY_SERVICE_NAME, {"price_type": "all_in", "interval": "quarter"}),
+        (EnergyZeroService.GET_GAS_PRICES, {}),
+        (EnergyZeroService.GET_ENERGY_PRICES, {}),
+        (
+            EnergyZeroService.GET_ENERGY_PRICES,
+            {"price_type": "all_in", "interval": "quarter"},
+        ),
     ],
 )
 async def test_service_no_data_returns_validation_error(
@@ -542,7 +552,7 @@ async def test_service_no_data_returns_validation_error(
     """Test backend no-data errors are surfaced as service validation errors."""
     method = (
         mock_energyzero.get_gas_prices
-        if service == GAS_SERVICE_NAME
+        if service == EnergyZeroService.GET_GAS_PRICES
         else mock_energyzero.get_electricity_prices
     )
     method.side_effect = EnergyZeroNoDataError(
@@ -557,7 +567,7 @@ async def test_service_no_data_returns_validation_error(
             DOMAIN,
             service,
             {
-                ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+                EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
                 "incl_vat": True,
                 **service_data,
             },
@@ -620,9 +630,9 @@ async def test_energy_service_options(
 
     await hass.services.async_call(
         DOMAIN,
-        ENERGY_SERVICE_NAME,
+        EnergyZeroService.GET_ENERGY_PRICES,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": incl_vat,
             **price_data,
             **interval_data,
@@ -748,9 +758,9 @@ async def test_energy_service_quarter_ranges(
 
     response = await hass.services.async_call(
         DOMAIN,
-        ENERGY_SERVICE_NAME,
+        EnergyZeroService.GET_ENERGY_PRICES,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
             "incl_vat": True,
             "price_type": "all_in",
             "interval": "quarter",
@@ -789,10 +799,10 @@ async def test_energy_service_quarter_ranges(
 @pytest.mark.parametrize(
     ("service", "service_data"),
     [
-        (ENERGY_SERVICE_NAME, {"price_type": "market_with_vat"}),
-        (ENERGY_SERVICE_NAME, {"interval": "day"}),
-        (GAS_SERVICE_NAME, {"price_type": "all_in"}),
-        (GAS_SERVICE_NAME, {"interval": "quarter"}),
+        (EnergyZeroService.GET_ENERGY_PRICES, {"price_type": "market_with_vat"}),
+        (EnergyZeroService.GET_ENERGY_PRICES, {"interval": "day"}),
+        (EnergyZeroService.GET_GAS_PRICES, {"price_type": "all_in"}),
+        (EnergyZeroService.GET_GAS_PRICES, {"interval": "quarter"}),
     ],
 )
 async def test_service_rejects_unsupported_options(
@@ -809,7 +819,7 @@ async def test_service_rejects_unsupported_options(
             DOMAIN,
             service,
             {
-                ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+                EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
                 "incl_vat": True,
                 **service_data,
             },
@@ -831,9 +841,9 @@ async def test_energy_service_quarter_invalid_range(
     with pytest.raises(ServiceValidationError, match="Invalid date range provided"):
         await hass.services.async_call(
             DOMAIN,
-            ENERGY_SERVICE_NAME,
+            EnergyZeroService.GET_ENERGY_PRICES,
             {
-                ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+                EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
                 "incl_vat": True,
                 "price_type": "all_in",
                 "interval": "quarter",
@@ -867,9 +877,9 @@ async def test_gas_action_deduplicates_overlapping_days(
         await hass.async_block_till_done()
         response = await hass.services.async_call(
             DOMAIN,
-            GAS_SERVICE_NAME,
+            EnergyZeroService.GET_GAS_PRICES,
             {
-                ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+                EnergyZeroServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
                 "incl_vat": True,
                 "start": "2026-04-10",
                 "end": "2026-04-11",

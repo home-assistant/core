@@ -1751,7 +1751,17 @@
         "name": "Humidity alarm"
       },
       "hvac_action": {
-        "name": "HVAC action"
+        "name": "HVAC action",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrosting": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "drying": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::drying%]",
+          "fan": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::fan%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "preheating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::preheating%]"
+        }
       },
       "instantaneous_demand": {
         "name": "Instantaneous demand"
@@ -2689,16 +2699,6 @@
         }
       },
       "name": "Permit"
-    },
-    "reconfigure_device": {
-      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this action.",
-      "fields": {
-        "ieee": {
-          "description": "IEEE address of the device to reconfigure.",
-          "name": "[%key:component::zha::services::permit::fields::ieee::name%]"
-        }
-      },
-      "name": "Reconfigure device"
     },
     "remove": {
       "description": "Removes a node from the Zigbee network.",

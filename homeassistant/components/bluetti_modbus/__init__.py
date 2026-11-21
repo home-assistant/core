@@ -57,8 +57,8 @@ async def async_setup_entry(
         ),
         serial=serial,
     )
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **entry.runtime_data.device_info
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=entry.runtime_data.device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -16,7 +16,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
@@ -50,7 +50,7 @@ def _with_templow(forecast: Forecast, templow: float | None) -> Forecast:
 
 
 class IrmKmiWeather(
-    IrmKmiBaseEntity,  # WeatherEntity
+    IrmKmiBaseEntity[IrmKmiCoordinator],  # WeatherEntity
     SingleCoordinatorWeatherEntity[IrmKmiCoordinator],
 ):
     """Weather entity for IRM KMI weather."""
@@ -68,8 +68,9 @@ class IrmKmiWeather(
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        IrmKmiBaseEntity.__init__(self, entry)
-        SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
+        coordinator = entry.runtime_data.weather
+        IrmKmiBaseEntity.__init__(self, entry, coordinator)
+        SingleCoordinatorWeatherEntity.__init__(self, coordinator)
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
@@ -125,16 +126,20 @@ class IrmKmiWeather(
         """Return the UV index."""
         return self.current_weather.get("uv_index")
 
+    @callback
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.coordinator.data.daily_forecast
+        forecast: list[Forecast] = list(self.coordinator.data.daily_forecast)
+        return forecast
 
+    @callback
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.daily_forecast()
 
+    @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
@@ -142,7 +147,7 @@ class IrmKmiWeather(
 
     def daily_forecast(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        data: list[Forecast] = self.coordinator.data.daily_forecast
+        data: list[Forecast] = list(self.coordinator.data.daily_forecast)
 
         # The data in daily_forecast might contain nighttime forecast.
         # The following handles the lowest temperature

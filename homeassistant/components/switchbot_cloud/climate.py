@@ -326,7 +326,14 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
-            if self.preset_mode == PRESET_HOME:
+            if (
+                "targetTemperature" in self.coordinator.data
+                and self.coordinator.data["targetTemperature"] is not None
+            ):
+                self._attr_native_target_temperature = float(
+                    self.coordinator.data["targetTemperature"]
+                )
+            elif self.preset_mode == PRESET_HOME:
                 self._attr_native_target_temperature = (
                     self._attr_native_current_temperature
                 )

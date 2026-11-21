@@ -249,7 +249,7 @@
     'state': 'off',
   })
 # ---
-# name: test_rpc_ledstrip_reverse_switch[switch.test_name_ledstrip_0_reverse_effect-entry]
+# name: test_rpc_ledstrip_reverse_switch[switch.test_name_reverse_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -259,11 +259,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC-ledstrip:0')]>,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_name_ledstrip_0_reverse_effect',
+    'entity_id': 'switch.test_name_reverse_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -286,13 +286,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_ledstrip_reverse_switch[switch.test_name_ledstrip_0_reverse_effect-state]
+# name: test_rpc_ledstrip_reverse_switch[switch.test_name_reverse_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Ledstrip 0 Reverse effect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Reverse effect',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_name_ledstrip_0_reverse_effect',
+    'entity_id': 'switch.test_name_reverse_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

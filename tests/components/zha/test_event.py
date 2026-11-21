@@ -20,9 +20,9 @@ from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     EventDeviceClass,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.helpers import (
@@ -190,8 +190,8 @@ async def test_event_entity(
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
-    assert state.attributes[ATTR_EVENT_TYPES] == event_types
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == event_types
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
 
 
 @pytest.mark.freeze_time("2026-09-25 12:00:00+00:00")
@@ -210,7 +210,7 @@ async def test_event_triggered(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2026-09-25T12:00:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
     assert state.attributes[ATTR_PRESS_COUNT] == 2
 
     zha_entity.trigger(ButtonEventType.SINGLE_PRESS)
@@ -218,7 +218,7 @@ async def test_event_triggered(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPE] == "single_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "single_press"
     assert ATTR_PRESS_COUNT not in state.attributes
 
 
@@ -249,10 +249,10 @@ async def test_multiple_events(
 
     state = hass.states.get(button_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPE] == "single_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "single_press"
     state = hass.states.get(motion_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPE] == "motion"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "motion"
 
 
 async def test_event_restored(
@@ -281,7 +281,7 @@ async def test_event_restored(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2026-09-25T12:00:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
     assert state.attributes[ATTR_PRESS_COUNT] == 2
 
 

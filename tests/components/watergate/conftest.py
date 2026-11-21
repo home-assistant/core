@@ -14,6 +14,7 @@ from .const import (
     DEFAULT_DEVICE_STATE,
     DEFAULT_DEVICE_STATE_V2,
     DEFAULT_NETWORKING_STATE,
+    DEFAULT_POWER_SUPPLY,
     DEFAULT_SERIAL_NUMBER,
     DEFAULT_TELEMETRY_STATE,
     MOCK_CONFIG,
@@ -48,6 +49,9 @@ def mock_watergate_client() -> Generator[AsyncMock]:
         )
         mock_client_instance.async_get_networking = AsyncMock(
             return_value=deepcopy(DEFAULT_NETWORKING_STATE)
+        )
+        mock_client_instance.async_get_power_supply_data = AsyncMock(
+            return_value=deepcopy(DEFAULT_POWER_SUPPLY)
         )
         mock_client_instance.async_get_telemetry_data = AsyncMock(
             return_value=deepcopy(DEFAULT_TELEMETRY_STATE)

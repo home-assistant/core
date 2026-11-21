@@ -4,6 +4,7 @@
   "categories": ["energy.energy_prices", "energy.meters_monitoring"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "recorder"],
   "documentation": "https://www.home-assistant.io/integrations/tibber",
   "integration_type": "hub",

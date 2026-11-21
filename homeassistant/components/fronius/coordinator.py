@@ -41,8 +41,7 @@ from .entity import ModbusComponentFn, ModbusValues
 from .heartbeat import LimitHeartbeat
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry
-    from .solar_net import FroniusSolarNet
+    from .solar_net import FroniusConfigEntry, FroniusSolarNet
 
 
 class FroniusCoordinatorBase[_DataT](

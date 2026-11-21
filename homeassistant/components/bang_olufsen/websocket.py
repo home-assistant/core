@@ -19,7 +19,6 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import BaseWebSocketResponse, MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -36,6 +35,9 @@ from .const import (
 from .entity import BeoBase
 from .util import get_device, get_remotes
 
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -43,7 +45,7 @@ class BeoWebsocket(BeoBase):
     """The WebSocket listeners."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: MozartClient
+        self, hass: HomeAssistant, entry: BeoConfigEntry, client: MozartClient
     ) -> None:
         """Initialize the WebSocket listeners."""
 

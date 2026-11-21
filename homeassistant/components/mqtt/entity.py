@@ -49,10 +49,9 @@ from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
-    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
-    UndefinedType,
+    Undefined,
     VolSchemaType,
 )
 from homeassistant.util.json import json_loads
@@ -187,6 +186,52 @@ def _handle_discovery_failure(
     discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
     clear_discovery_hash(hass, discovery_hash)
     async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
+
+
+@callback
+def _async_is_unique_id_of_other_disabled_entity(
+    hass: HomeAssistant,
+    domain: str,
+    config: DiscoveryInfoType,
+    discovery_payload: MQTTDiscoveryPayload,
+) -> bool:
+    """Return True if a disabled entity discovered on another topic has the unique ID.
+
+    A disabled entity is not loaded, so the entity platform does not detect its
+    unique ID is used again, and the discoveries would take over the entity
+    registry entry from each other.
+    """
+    if (unique_id := config.get(CONF_UNIQUE_ID)) is None:
+        return False
+    registry_key = (domain, DOMAIN, unique_id)
+    discovered_and_disabled = hass.data[DATA_MQTT].discovery_discovered_and_disabled
+    discovery_data = discovery_payload.discovery_data
+    if (
+        other_discovery_hash := discovered_and_disabled.get_discovery_hash(registry_key)
+    ) is None or other_discovery_hash == discovery_data[ATTR_DISCOVERY_HASH]:
+        return False
+    entity_registry = er.async_get(hass)
+    if (
+        entity_id := entity_registry.async_get_entity_id(*registry_key)
+    ) is None or not entity_registry.entities[entity_id].disabled:
+        return False
+    other_discovery_data = discovered_and_disabled[other_discovery_hash].discovery_data
+    _LOGGER.error(
+        "Ignoring discovered %s on topic %s%s, unique ID '%s' is already used by "
+        "disabled entity %s which was discovered on topic %s%s; to resolve the "
+        "duplicate unique ID, publish an empty retained payload to at least one "
+        "of these discovery topics",
+        domain,
+        discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(discovery_payload, include_url=False),
+        unique_id,
+        entity_id,
+        other_discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(
+            other_discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+        ),
+    )
+    return True
 
 
 def _verify_mqtt_config_entry_enabled_for_discovery(
@@ -328,6 +373,8 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 hass,
                 DOMAIN,
                 subentry_id,
+                config_entry_id=entry.entry_id,
+                config_subentry_id=subentry_id,
                 issue_domain=DOMAIN,
                 is_fixable=True,
                 severity=IssueSeverity.WARNING,
@@ -368,6 +415,10 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "MQTT discovery skipped, as device exists in subentry, "
                     "and repair flow must be completed first"
                 )
+            elif _async_is_unique_id_of_other_disabled_entity(
+                hass, domain, config, discovery_payload
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
             else:
                 entity = entity_class(
                     hass, config, entry, discovery_payload.discovery_data
@@ -1532,20 +1583,49 @@ def _resolve_via_device_id(
     hass: HomeAssistant,
     specifications: dict[str, Any] | None,
     config_entry: ConfigEntry,
+    device_info: DeviceInfo,
 ) -> str | None:
     """Resolve the referenced via device to its device registry id.
 
-    Best-effort read-only lookup: returns None when no via device is referenced
-    or the referenced device is not (yet) registered. It never raises, so a
-    missing parent cannot abort entity setup given MQTT's non-deterministic
-    discovery order.
+    Best-effort read-only lookup: returns None when no via device is referenced,
+    the referenced device is not (yet) registered or it is the device itself. It
+    never raises, so a missing parent cannot abort entity setup given MQTT's
+    non-deterministic discovery order.
     """
     if (identifier := _via_device_identifier(specifications)) is None:
         return None
-    via_device = dr.async_get(hass).async_get_device_by_identifier(
+    if TYPE_CHECKING:
+        assert specifications is not None
+    device_registry = dr.async_get(hass)
+    via_device = device_registry.async_get_device_by_identifier(
         identifier, config_entry.entry_id
     )
-    return via_device.id if via_device else None
+    if via_device is None:
+        return None
+    # The via device can resolve to the device itself, through an identifier the
+    # device registry retained from an earlier registration or through a matching
+    # connection. A device can not be its own via device, so the reference is ignored.
+    identifiers = device_info.identifiers
+    connections = device_info.connections
+    if any(
+        device.id == via_device.id
+        for device in device_registry.async_get_devices(
+            identifiers=None if identifiers is Undefined else identifiers,
+            connections=None if connections is Undefined else connections,
+            config_entry_id=config_entry.entry_id,
+        )
+    ):
+        _LOGGER.warning(
+            "The device with identifiers %s and connections %s has via_device '%s' "
+            "that references the device itself, the via_device is ignored. A device "
+            "can not be its own via device, update the device configuration to remove "
+            "or correct via_device",
+            specifications[CONF_IDENTIFIERS],
+            specifications[CONF_CONNECTIONS],
+            identifier[1],
+        )
+        return None
+    return via_device.id
 
 
 class MqttEntityDeviceInfo(Entity):
@@ -1677,7 +1757,7 @@ class MqttEntityDeviceInfo(Entity):
         info = device_info_from_specifications(device_specifications)
         if info is not None and (
             via_device_id := _resolve_via_device_id(
-                self.hass, device_specifications, self._config_entry
+                self.hass, device_specifications, self._config_entry, info
             )
         ):
             info.via_device_id = via_device_id
@@ -1860,7 +1940,7 @@ class MqttEntity(
             )
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
-                disabled_by=None if reenable_condition else UNDEFINED,
+                disabled_by=None if reenable_condition else Undefined,
                 hidden_by=hidden_by,
             )
 
@@ -2029,9 +2109,9 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | Undefined | None = config.get(CONF_NAME, Undefined)
         # Only set _attr_name if it is needed
-        if entity_name is not UNDEFINED:
+        if entity_name is not Undefined:
             self._attr_name = entity_name
         elif not self._default_to_device_class_name():
             # Assign the default name
@@ -2077,13 +2157,13 @@ class MqttEntity(
 
     @callback
     def _attrs_have_changed(
-        self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
+        self, attrs_snapshot: tuple[tuple[str, Any | Undefined], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
         if self._attr_force_update:
             return True
         for attribute, last_value in attrs_snapshot:
-            if getattr(self, attribute, UNDEFINED) != last_value:
+            if getattr(self, attribute, Undefined) != last_value:
                 return True
         return False
 
@@ -2097,8 +2177,8 @@ class MqttEntity(
     ) -> None:
         """Process the message callback."""
         if attributes is not None:
-            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-                (attribute, getattr(self, attribute, UNDEFINED))
+            attrs_snapshot: tuple[tuple[str, Any | Undefined], ...] = tuple(
+                (attribute, getattr(self, attribute, Undefined))
                 for attribute in attributes
             )
         mqtt_data = self.hass.data[DATA_MQTT]
@@ -2168,7 +2248,9 @@ def update_device(
     device_info = device_info_from_specifications(specifications)
 
     if config_entry_id is not None and device_info is not None:
-        if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
+        if via_device_id := _resolve_via_device_id(
+            hass, specifications, config_entry, device_info
+        ):
             device_info.via_device_id = via_device_id
         device = device_registry.async_get_or_create_from_info(
             config_entry_id=config_entry_id, device_info=device_info
