@@ -53,9 +53,13 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
+    RESET_STORED_VARIABLES_SCHEMA,
+    SERVICE_RESET_STORED_VARIABLES,
     Script,
     ScriptRunResult,
     StoredVariablesExtraStoredData,
+    async_reset_stored_variables,
+    async_stored_variables_as_dict,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import StoredVariables
@@ -281,8 +285,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
+    component.async_register_entity_service(
+        SERVICE_RESET_STORED_VARIABLES,
+        RESET_STORED_VARIABLES_SCHEMA,
+        "async_reset_stored_variables",
+    )
 
     websocket_api.async_register_command(hass, websocket_config)
+    websocket_api.async_register_command(hass, websocket_stored_variables)
 
     return True
 
@@ -428,6 +438,17 @@ class BaseScriptEntity(ToggleEntity, ABC):
     )
 
     raw_config: ConfigType | None
+    _stored_variables: StoredVariables | None = None
+
+    @property
+    def stored_variables(self) -> StoredVariables | None:
+        """Return the stored variables of the script."""
+        return self._stored_variables
+
+    @callback
+    def async_reset_stored_variables(self, variables: list[str] | None = None) -> None:
+        """Reset stored variables to their defaults."""
+        async_reset_stored_variables(self.entity_id, self._stored_variables, variables)
 
     @cached_property
     @abstractmethod
@@ -571,7 +592,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_unique_id = key
 
         self.entity_id = ENTITY_ID_FORMAT.format(key)
-        self._stored_variables: StoredVariables | None = None
         if CONF_STORED_VARIABLES in cfg:
             self._stored_variables = StoredVariables(cfg[CONF_STORED_VARIABLES])
         self.script = Script(
@@ -831,4 +851,27 @@ def websocket_config(
         {
             "config": script.raw_config,
         },
+    )
+
+
+@websocket_api.websocket_command({"type": "script/stored_variables", "entity_id": str})
+@websocket_api.require_admin
+def websocket_stored_variables(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the stored variables of a script."""
+    component: EntityComponent[BaseScriptEntity] = hass.data[DOMAIN]
+
+    script = component.get_entity(msg["entity_id"])
+
+    if script is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"], async_stored_variables_as_dict(script.stored_variables)
     )

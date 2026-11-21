@@ -34,6 +34,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
+    SERVICE_RESET_STORED_VARIABLES,
     async_validate_actions_config,
     make_script_schema,
 )
@@ -64,6 +65,7 @@ _MINIMAL_SCRIPT_ENTITY_SCHEMA = probatio.Schema(
 
 _INVALID_OBJECT_IDS = {
     SERVICE_RELOAD,
+    SERVICE_RESET_STORED_VARIABLES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_TOGGLE,

@@ -307,3 +307,27 @@ async def test_script_vars_stored_parallel() -> None:
     assert script_vars_2b.exit_scope() is script_vars
     assert script_vars._full_scope == {"x": "a", "z": 1}
     assert script_vars.local_scope == {"z": 1}
+
+
+async def test_stored_vars_reset(hass: HomeAssistant) -> None:
+    """Test resetting stored variables to their defaults."""
+    stored = StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA({"count": 0, "items": [], "name": "{{ run_var }}"})
+    )
+    values = stored.values
+    stored.async_render(hass, {"run_var": "first"})
+    stored.assign("count", 5)
+    stored.assign("items", ["a"])
+    assert stored.as_dict() == {
+        "defaults": {"count": 0, "items": [], "name": "{{ run_var }}"},
+        "values": {"count": 5, "items": ["a"], "name": "first"},
+    }
+
+    stored.reset(["count"])
+    assert stored.values == {"count": 0, "items": ["a"], "name": "first"}
+
+    # A templated default is rendered again by the next run
+    stored.reset()
+    assert stored.values is values
+    assert stored.values == {"count": 0, "items": []}
+    assert stored.async_render(hass, {"run_var": "second"})["name"] == "second"

@@ -1,7 +1,7 @@
 """Script variables."""
 
 from collections import ChainMap, UserDict
-from collections.abc import KeysView, Mapping
+from collections.abc import Iterable, KeysView, Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast, override
 
@@ -142,6 +142,38 @@ class StoredVariables:
         self.values.update(
             {key: value for key, value in values.items() if key in self.names}
         )
+
+    def reset(self, names: Iterable[str] | None = None) -> None:
+        """Reset stored variables to their defaults.
+
+        Defaults without templates are stored right away. Templated defaults
+        are rendered when the next run starts; until then the variable is
+        undefined for runs which are already in progress.
+        """
+        for name in list(self.names) if names is None else names:
+            default = self.defaults.variables[name]
+            if template.is_complex(default):
+                self.values.pop(name, None)
+            else:
+                self.assign(name, default)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the declared defaults and the stored values."""
+        return {
+            "defaults": _raw_templates(self.defaults.variables),
+            "values": dict(self.values),
+        }
+
+
+def _raw_templates(value: Any) -> Any:
+    """Replace templates by their source."""
+    if isinstance(value, template.Template):
+        return value.template
+    if isinstance(value, Mapping):
+        return {key: _raw_templates(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_raw_templates(item) for item in value]
+    return value
 
 
 @dataclass

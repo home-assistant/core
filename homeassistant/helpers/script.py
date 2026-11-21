@@ -113,7 +113,7 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType, VolDictType
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -1531,6 +1531,38 @@ class StoredVariablesExtraStoredData(ExtraStoredData):
         if not isinstance(values, dict):
             return None
         return cls(values)
+
+
+SERVICE_RESET_STORED_VARIABLES = "reset_stored_variables"
+RESET_STORED_VARIABLES_SCHEMA: VolDictType = {
+    probatio.Optional(CONF_VARIABLES): probatio.All(probatio.EnsureList(), [cv.string])
+}
+
+
+@callback
+def async_reset_stored_variables(
+    entity_id: str,
+    stored_variables: StoredVariables | None,
+    names: list[str] | None,
+) -> None:
+    """Reset stored variables of a script entity to their defaults."""
+    declared = stored_variables.names if stored_variables else set[str]()
+    if unknown := set(names or ()) - declared:
+        raise exceptions.ServiceValidationError(
+            f"{entity_id} has no stored variables named: {', '.join(sorted(unknown))}"
+        )
+    if stored_variables:
+        stored_variables.reset(names)
+
+
+@callback
+def async_stored_variables_as_dict(
+    stored_variables: StoredVariables | None,
+) -> dict[str, Any]:
+    """Return the defaults and values of the stored variables of an entity."""
+    if stored_variables is None:
+        return {"defaults": {}, "values": {}}
+    return stored_variables.as_dict()
 
 
 class Script:

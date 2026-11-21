@@ -15,3 +15,14 @@ toggle:
   target:
     entity:
       domain: script
+
+reset_stored_variables:
+  target:
+    entity:
+      domain: script
+  fields:
+    variables:
+      example: '["count"]'
+      selector:
+        text:
+          multiple: true

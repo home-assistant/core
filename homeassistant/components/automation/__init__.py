@@ -63,9 +63,13 @@ from homeassistant.helpers.script import (  # noqa: F401
     ATTR_MAX,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
+    RESET_STORED_VARIABLES_SCHEMA,
+    SERVICE_RESET_STORED_VARIABLES,
     Script,
     ScriptRunResult,
     StoredVariablesExtraStoredData,
+    async_reset_stored_variables,
+    async_stored_variables_as_dict,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables, StoredVariables
@@ -290,6 +294,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         "async_turn_off",
     )
+    component.async_register_entity_service(
+        SERVICE_RESET_STORED_VARIABLES,
+        RESET_STORED_VARIABLES_SCHEMA,
+        "async_reset_stored_variables",
+    )
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
@@ -317,6 +326,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_config)
+    websocket_api.async_register_command(hass, websocket_stored_variables)
 
     return True
 
@@ -334,6 +344,17 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         )
     )
     raw_config: ConfigType | None
+    _stored_variables: StoredVariables | None = None
+
+    @property
+    def stored_variables(self) -> StoredVariables | None:
+        """Return the stored variables of the automation."""
+        return self._stored_variables
+
+    @callback
+    def async_reset_stored_variables(self, variables: list[str] | None = None) -> None:
+        """Reset stored variables to their defaults."""
+        async_reset_stored_variables(self.entity_id, self._stored_variables, variables)
 
     @property
     @override
@@ -1304,4 +1325,27 @@ def websocket_config(
         {
             "config": automation.raw_config,
         },
+    )
+
+
+@websocket_api.websocket_command(
+    {"type": "automation/stored_variables", "entity_id": str}
+)
+@websocket_api.require_admin
+def websocket_stored_variables(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the stored variables of an automation."""
+    automation = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
+
+    if automation is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"], async_stored_variables_as_dict(automation.stored_variables)
     )
