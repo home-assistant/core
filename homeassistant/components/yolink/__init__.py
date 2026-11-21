@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Any
 
 from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
@@ -9,6 +10,7 @@ from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
 from yolink.message_listener import MessageListener
+from yolink.uac_auth_mgr import YoLinkUACAuthMgr
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -26,10 +28,22 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
+from .const import (
+    ATTR_LORA_INFO,
+    AUTH_TYPE_UAC,
+    CONF_AUTH_TYPE,
+    CONF_HOME_ID,
+    CONF_SECRET_KEY,
+    CONF_UAID,
+    DOMAIN,
+    SUPPORTED_REMOTERS,
+    YOLINK_EVENT,
+)
 from .coordinator import YoLinkConfigEntry, YoLinkCoordinator, YoLinkHomeStore
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -107,13 +121,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Set up yolink from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    if entry.data.get(CONF_AUTH_TYPE) == AUTH_TYPE_UAC:
+        auth_mgr = YoLinkUACAuthMgr(
+            aiohttp_client.async_get_clientsession(hass),
+            entry.data[CONF_UAID],
+            entry.data[CONF_SECRET_KEY],
+        )
+    else:
+        implementation = await async_get_config_entry_implementation(hass, entry)
 
-    session = OAuth2Session(hass, entry, implementation)
+        session = OAuth2Session(hass, entry, implementation)
+        auth_mgr = api.ConfigEntryAuth(
+            hass, aiohttp_client.async_get_clientsession(hass), session
+        )
 
-    auth_mgr = api.ConfigEntryAuth(
-        hass, aiohttp_client.async_get_clientsession(hass), session
-    )
     yolink_home = YoLinkHome()
     try:
         async with asyncio.timeout(10):
@@ -124,6 +145,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> No
         raise ConfigEntryAuthFailed from yl_auth_err
     except (YoLinkClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
+
+    if CONF_HOME_ID not in entry.data:
+        # Backfill the home id of older entries, best effort.
+        try:
+            async with asyncio.timeout(10):
+                home_info = await yolink_home.async_get_home_info()
+        except (YoLinkClientError, TimeoutError) as err:
+            # Includes YoLinkAuthFailError: a failed backfill must not start a reauth.
+            _LOGGER.debug("Could not determine the home of the entry: %r", err)
+        else:
+            if home_id := (home_info.data or {}).get("id"):
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_HOME_ID: home_id}
+                )
 
     device_coordinators = {}
 

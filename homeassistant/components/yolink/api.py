@@ -1,4 +1,4 @@
-"""API for yolink bound to Home Assistant OAuth."""
+"""API for yolink."""
 
 from aiohttp import ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
@@ -29,3 +29,20 @@ class ConfigEntryAuth(YoLinkAuthMgr):
         """Check the token."""
         await self.oauth_session.async_ensure_token_valid()
         return self.access_token()
+
+
+class StaticTokenAuth(YoLinkAuthMgr):
+    """Provide yolink authentication with an already resolved access token."""
+
+    def __init__(self, websession: ClientSession, access_token: str) -> None:
+        """Initialize yolink static token Auth."""
+        super().__init__(websession)
+        self._access_token = access_token
+
+    def access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token
+
+    async def check_and_refresh_token(self) -> str:
+        """Return the access token, which cannot be refreshed."""
+        return self._access_token
