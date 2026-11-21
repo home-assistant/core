@@ -1,8 +1,10 @@
 """Tests for init module."""
 
+import asyncio
 from datetime import timedelta
 import http
 import time
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -42,6 +44,63 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_does_not_serialize_independent_requests(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: dict[str, Any],
+    filling_levels_fixture: dict[str, Any],
+) -> None:
+    """Test the two coordinators fetch independent endpoints concurrently."""
+
+    levels_requested = asyncio.Event()
+
+    async def _get_devices() -> dict[str, Any]:
+        # Blocks until the filling-level request is in flight, so a setup
+        # that runs the two coordinators one after the other never loads.
+        await asyncio.wait_for(levels_requested.wait(), timeout=1)
+        return device_fixture
+
+    async def _get_filling_levels() -> dict[str, Any]:
+        levels_requested.set()
+        return filling_levels_fixture
+
+    mock_miele_client.get_devices.side_effect = _get_devices
+    mock_miele_client.get_filling_levels.side_effect = _get_filling_levels
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("load_device_file", ["4_devices.json"])
+async def test_action_requests_are_concurrent(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the actions of all appliances are fetched concurrently."""
+    started: set[str] = set()
+    multiple_started = asyncio.Event()
+
+    async def _get_actions(device_id: str) -> dict[str, Any]:
+        started.add(device_id)
+        if len(started) > 1:
+            multiple_started.set()
+        try:
+            await asyncio.wait_for(multiple_started.wait(), timeout=2)
+        except TimeoutError as err:
+            raise AssertionError("actions requests did not overlap") from err
+        return {}
+
+    mock_miele_client.get_actions.side_effect = _get_actions
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(started) == 5
 
 
 @pytest.mark.parametrize(
@@ -196,7 +255,7 @@ async def test_setup_all_platforms(
     prev_devices = len(device_registry.devices)
 
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(device_registry.devices) == prev_devices + 1
 
