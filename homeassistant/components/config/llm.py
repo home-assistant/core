@@ -592,9 +592,99 @@ async def _async_finalize_flow_step(
     return ToolResult(data={"result": formatted})
 
 
-# Only user-initiated config flows are exposed here for now. Listing background
-# discovery/reauth flows in progress, as well as starting options, reconfigure,
-# and subentry flows on existing entries, are omitted for now.
+class GetFlowsInProgressTool(Tool):
+    """LLM Tool to list pending discovery and reauth config flows."""
+
+    name = "config__get_flows_in_progress"
+    title = "Get config flows in progress"
+    description = (
+        "List non-user-initiated config flows currently in progress, such as "
+        "newly discovered devices on the network (zeroconf, bluetooth, ssdp, dhcp, "
+        "mqtt, usb) and integrations requiring reauthentication (reauth). Use the "
+        "returned flow_id with config__configure_flow to inspect or complete a flow."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "domain",
+                description="Filter in-progress flows by integration domain.",
+            ): _DOMAIN_STRING,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """List non-user-initiated flows in progress."""
+        args = self.parameters(tool_input.tool_args)
+        domain_filter: str | None = args.get("domain")
+
+        flows = []
+        for flw in hass.config_entries.flow.async_progress():
+            if flw["context"]["source"] in (
+                config_entries.SOURCE_RECONFIGURE,
+                config_entries.SOURCE_USER,
+            ):
+                continue
+            if domain_filter is not None and flw["handler"] != domain_filter:
+                continue
+            flows.append(flw)
+        if not flows:
+            return ToolResult(data={"result": []})
+
+        lang = _resolve_language(hass, llm_context.language)
+        handlers = {flw["handler"] for flw in flows}
+        config_trans = await translation.async_get_translations(
+            hass, lang, "config", handlers
+        )
+        title_trans = await translation.async_get_translations(
+            hass, lang, "title", handlers
+        )
+        short_entry_ids = _format_short_entry_ids(
+            hass.config_entries.async_entries(
+                include_ignore=True, include_disabled=True
+            )
+        )
+
+        results: list[JsonValueType] = []
+        for flw in flows:
+            handler = flw["handler"]
+            context = flw["context"]
+            flow_title: str | None = None
+            if placeholders := context.get("title_placeholders"):
+                if template := config_trans.get(
+                    f"component.{handler}.config.flow_title"
+                ):
+                    with suppress(KeyError):
+                        flow_title = template.format_map(placeholders)
+                if not flow_title:
+                    flow_title = placeholders.get("name")
+            if not flow_title:
+                flow_title = title_trans.get(f"component.{handler}.title", handler)
+
+            item: JsonObjectType = {
+                "flow_id": f"{handler}:{flw['flow_id'][-_MIN_SHORT_ID_LEN:]}",
+                "domain": handler,
+                "source": context["source"],
+                "title": flow_title,
+            }
+            if (step_id := flw.get("step_id")) is not None:
+                item["step_id"] = step_id
+            if short_id := short_entry_ids.get(context.get("entry_id", "")):
+                item["entry_id"] = short_id
+            results.append(item)
+
+        return ToolResult(data={"result": results})
+
+
+# Only user-initiated config flows can be started here for now. Starting
+# options, reconfigure, and subentry flows on existing entries are omitted
+# for now.
 class StartFlowTool(Tool):
     """LLM Tool to start a new configuration flow."""
 
@@ -799,6 +889,7 @@ def async_get_tools(
             GetConfigEntriesTool(),
             ReloadConfigEntryTool(),
             SearchIntegrationsTool(),
+            GetFlowsInProgressTool(),
             StartFlowTool(),
             ConfigureFlowTool(),
         ]
