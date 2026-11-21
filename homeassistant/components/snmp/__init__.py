@@ -2,6 +2,7 @@
 
 from pysnmp.error import PySnmpError
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -62,3 +63,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> Non
     if not entry.runtime_data.coordinators:
         return
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SnmpConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a tracker whose MAC the watched table does not report."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        return False
+    if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:
+        # The SNMP device is the entry itself, not one of its trackers
+        return False
+    macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if not macs:
+        return False
+    if config_entry.state is not ConfigEntryState.LOADED:
+        # Nothing polls the table, so a tracker cannot reappear on its own
+        return True
+    tracked_macs = {
+        mac
+        for coordinator in config_entry.runtime_data.coordinators.values()
+        for mac in coordinator.data or {}
+    }
+    return not macs & tracked_macs

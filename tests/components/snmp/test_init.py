@@ -25,7 +25,7 @@ from homeassistant.components.snmp.const import (
 )
 from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -511,13 +511,21 @@ async def test_subentry_reconfigure_keeps_trackers_of_both_tables(
     assert _async_mac_entity_id(hass, subentry_id) == entity_id
 
 
-async def test_subentry_reconfigure_removes_trackers_after_confirming(
-    hass: HomeAssistant,
+async def test_subentry_reconfigure_keeps_tracker_of_the_previous_table(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that trackers only the previous table holds are removed on request."""
+    """Test that a tracker the new table does not report is kept as not_home."""
     entry = mock_entry()
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
+    # Enabling the tracker up front, because a tracker created disabled has no state
+    entity_id = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        f"{subentry_id}_{MAC}",
+        config_entry=entry,
+        config_subentry_id=subentry_id,
+    ).entity_id
     macs = [MAC_BYTES]
 
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
@@ -530,24 +538,102 @@ async def test_subentry_reconfigure_removes_trackers_after_confirming(
     with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert _async_mac_entity_id(hass, subentry_id) is not None
+        assert _async_mac_entity_id(hass, subentry_id) == entity_id
         assert _mac_device(hass, entry.entry_id) is not None
+        assert hass.states.get(entity_id).state == STATE_HOME
 
-        # The new table holds no device, so the tracker is dropped on request
+        # The new table holds no device, so the tracker becomes not_home
         macs = []
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             {CONF_BASEOID: BRIDGE_MAC_OID},
         )
-        assert result["step_id"] == "confirm"
-        assert _async_mac_entity_id(hass, subentry_id) is not None
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
         await hass.async_block_till_done()
 
     assert result["reason"] == "reconfigure_successful"
-    assert _async_mac_entity_id(hass, subentry_id) is None
-    assert _mac_device(hass, entry.entry_id) is None
+    assert _async_mac_entity_id(hass, subentry_id) == entity_id
+    assert _mac_device(hass, entry.entry_id) is not None
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+
+async def test_remove_config_entry_device_of_a_departed_mac(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the device of a MAC the table no longer reports can be removed."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    macs = [MAC_BYTES]
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Yield the MACs of the table which is currently being walked."""
+        oid = Mock()
+        oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
+        for mac in macs:
+            yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
+
+    with patch_walk(mock_walk):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        device = _mac_device(hass, entry.entry_id)
+        assert device is not None
+
+        # A MAC which is still reported comes back on the next poll
+        assert not await snmp.async_remove_config_entry_device(hass, entry, device)
+
+        macs = []
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert await snmp.async_remove_config_entry_device(hass, entry, device)
+
+
+async def test_remove_config_entry_device_of_the_snmp_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that the device of the SNMP endpoint itself is not removable."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    with patch_walk(_async_mock_walk_with_mac):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert not await snmp.async_remove_config_entry_device(hass, entry, device)
+
+
+async def test_remove_config_entry_device_of_a_device_without_a_mac(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that a device which is not a tracker is not removable."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "other")},
+        name="Other device",
+    )
+
+    assert not await snmp.async_remove_config_entry_device(hass, entry, device)
+
+
+async def test_remove_config_entry_device_of_a_departed_mac_while_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a tracker can be removed while the table is not polled."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    with patch_walk(_async_mock_walk_with_mac):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        device = _mac_device(hass, entry.entry_id)
+        assert device is not None
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert await snmp.async_remove_config_entry_device(hass, entry, device)

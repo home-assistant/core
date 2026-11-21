@@ -82,9 +82,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues: done
-  stale-devices:
-    status: todo
-    comment: Devices absent from a table are retained. Support for removing individual stale devices manually has not yet been implemented.
+  stale-devices: done
 
   # Platinum
   async-dependency: todo

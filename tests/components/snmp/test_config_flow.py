@@ -601,10 +601,10 @@ async def test_subentry_flow_reconfigure_normalizes_oid(
 
 
 @pytest.mark.usefixtures("mock_walk_empty")
-async def test_subentry_flow_reconfigure_confirms_removing_trackers(
+async def test_subentry_flow_reconfigure_keeps_trackers(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that a table change removes the dropped trackers only once confirmed."""
+    """Test that a table change keeps the tracker of the previous table."""
     entry = mock_entry()
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
@@ -622,17 +622,10 @@ async def test_subentry_flow_reconfigure_confirms_removing_trackers(
         {CONF_BASEOID: BRIDGE_MAC_OID},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-    assert result["description_placeholders"] == {"count": "1"}
-    assert entity_registry.async_get(entity_id) is not None
-
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.subentries[subentry_id].data[CONF_BASEOID] == BRIDGE_MAC_OID
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is not None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
