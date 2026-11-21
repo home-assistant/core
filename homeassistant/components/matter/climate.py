@@ -1,15 +1,21 @@
 """Matter climate platform."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, override
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
+from matter_server.client.exceptions import MatterClientException, ServerVersionTooOld
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -26,12 +32,22 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
+from .const import (
+    ATTR_COOLING_SETPOINT,
+    ATTR_HEATING_SETPOINT,
+    ATTR_PRESET_NAME,
+    ATTR_PRESET_SCENARIO,
+    DOMAIN,
+    PRESET_SCENARIO_REVERSE_MAP,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+from .thermostat_helpers import remove_thermostat_preset, set_thermostat_preset
 
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
@@ -55,6 +71,60 @@ PRESET_SCENARIO_TO_HA_PRESET: dict[int, str] = {
     clusters.Thermostat.Enums.PresetScenarioEnum.kVacation: "vacation",
     clusters.Thermostat.Enums.PresetScenarioEnum.kGoingToSleep: "going_to_sleep",
 }
+
+
+def _unique_preset_name(name: str, used_names: set[str]) -> str:
+    """Return `name`, with a counter suffix if another preset already uses it."""
+    candidate, counter = name, 1
+    while candidate in used_names:
+        counter += 1
+        candidate = f"{name} {counter}"
+    return candidate
+
+
+def _preset_handle(
+    preset: clusters.Thermostat.Structs.PresetStruct,
+) -> bytes | None:
+    """Return the preset's handle, or None if the device reported none."""
+    return preset.presetHandle if isinstance(preset.presetHandle, bytes) else None
+
+
+def _preset_names(
+    presets: list[clusters.Thermostat.Structs.PresetStruct],
+) -> list[str]:
+    """Return a unique name for each preset that does not depend on list order.
+
+    The plain scenario name goes to the scenario's built-in preset, or to its
+    lowest handle when none is built in. Other presets of that scenario get
+    their device name, which is unique per scenario, or their handle appended.
+    """
+    names: dict[int, str] = {}
+    used_names = {PRESET_NONE}
+    for index in sorted(
+        range(len(presets)),
+        key=lambda i: (
+            presets[i].builtIn is not True,
+            _preset_handle(presets[i]) or b"",
+        ),
+    ):
+        preset = presets[index]
+        handle = _preset_handle(preset)
+        device_name = (
+            "" if preset.name in (None, NullValue) else str(preset.name).strip()
+        )
+        if translation := PRESET_SCENARIO_TO_HA_PRESET.get(preset.presetScenario):
+            name = translation
+            if name in used_names and (suffix := device_name or (handle or b"").hex()):
+                name = f"{translation} ({suffix})"
+        else:
+            name = device_name or f"Preset{index + 1}"
+        if name in used_names and handle:
+            name = f"{name} ({handle.hex()})"
+        name = _unique_preset_name(name, used_names)
+        used_names.add(name)
+        names[index] = name
+    return [names[index] for index in range(len(presets))]
+
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     # Some devices only have a single setpoint while the matter spec
@@ -242,6 +312,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         # MatterEntity.__init__() calls _update_from_device()
         # which needs this attribute
         self._matter_presets = []
+        self._preset_write_in_progress = False
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
@@ -357,6 +428,108 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
 
+    def _get_preset_handle(self, preset_mode: str) -> bytes | None:
+        """Return the handle of a named preset, raising if it is unknown."""
+        if preset_mode not in self._preset_handle_by_name:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_unknown",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
+        return self._preset_handle_by_name[preset_mode]
+
+    @contextmanager
+    def _preset_write(self) -> Iterator[None]:
+        """Translate client errors of a preset write and refresh presets after it."""
+        self._preset_write_in_progress = True
+        try:
+            yield
+        except ServerVersionTooOld as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="preset_server_too_old"
+            ) from err
+        except (MatterError, MatterClientException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="preset_update_failed"
+            ) from err
+        finally:
+            self._preset_write_in_progress = False
+            self._update_presets()
+            self.async_write_ha_state()
+
+    async def async_set_thermostat_preset(self, **kwargs: Any) -> None:
+        """Create a new thermostat preset, or edit an existing one."""
+        preset_mode: str | None = kwargs.get(ATTR_PRESET_MODE)
+        preset_scenario_str: str | None = kwargs.get(ATTR_PRESET_SCENARIO)
+        preset_handle: bytes | None = None
+        if preset_mode is not None:
+            if preset_scenario_str is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="preset_scenario_not_editable",
+                )
+            preset_handle = self._get_preset_handle(preset_mode)
+            if preset_handle is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="preset_not_editable",
+                    translation_placeholders={"preset_mode": preset_mode},
+                )
+        preset_scenario = (
+            PRESET_SCENARIO_REVERSE_MAP[preset_scenario_str]
+            if preset_scenario_str is not None
+            else None
+        )
+        heating_setpoint: float | None = kwargs.get(ATTR_HEATING_SETPOINT)
+        cooling_setpoint: float | None = kwargs.get(ATTR_COOLING_SETPOINT)
+        with self._preset_write():
+            await set_thermostat_preset(
+                self.matter_client,
+                self._endpoint,
+                preset_handle=preset_handle,
+                preset_scenario=preset_scenario,
+                name=kwargs.get(ATTR_PRESET_NAME),
+                heating_setpoint=(
+                    round(heating_setpoint * TEMPERATURE_SCALING_FACTOR)
+                    if heating_setpoint is not None
+                    else None
+                ),
+                cooling_setpoint=(
+                    round(cooling_setpoint * TEMPERATURE_SCALING_FACTOR)
+                    if cooling_setpoint is not None
+                    else None
+                ),
+            )
+
+    async def async_clear_thermostat_preset(self, **kwargs: Any) -> None:
+        """Remove a thermostat preset."""
+        preset_mode: str = kwargs[ATTR_PRESET_MODE]
+        preset_handle = self._get_preset_handle(preset_mode)
+        if preset_handle is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_not_removable",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
+        if any(
+            p.presetHandle == preset_handle and p.builtIn is True
+            for p in self._matter_presets
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_builtin_not_removable",
+            )
+        if preset_handle == self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.ActivePresetHandle
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="preset_active_not_removable"
+            )
+        with self._preset_write():
+            await remove_thermostat_preset(
+                self.matter_client, self._endpoint, preset_handle
+            )
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -425,42 +598,21 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             self._attr_preset_mode = None
             return
 
-        self._matter_presets = (
+        presets = (
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
             or []
         )
-        # Build preset mapping: use device-provided name if
-        # available, else generate unique name
+        # The device may report an empty list in the middle of an atomic write.
+        if presets or not self._preset_write_in_progress:
+            self._matter_presets = presets
         self._preset_handle_by_name.clear()
         self._preset_name_by_handle.clear()
-        if self._matter_presets:
-            used_names = set()
-            for i, preset in enumerate(self._matter_presets, start=1):
-                preset_translation = PRESET_SCENARIO_TO_HA_PRESET.get(
-                    preset.presetScenario
-                )
-                if preset_translation:
-                    preset_name = preset_translation.lower()
-                else:
-                    name = str(preset.name) if preset.name is not None else ""
-                    name = name.strip()
-                    if name:
-                        preset_name = name
-                    else:
-                        # Ensure fallback name is unique
-                        j = i
-                        preset_name = f"Preset{j}"
-                        while preset_name in used_names:
-                            j += 1
-                            preset_name = f"Preset{j}"
-                used_names.add(preset_name)
-                preset_handle = (
-                    preset.presetHandle
-                    if isinstance(preset.presetHandle, (bytes, type(None)))
-                    else None
-                )
-                self._preset_handle_by_name[preset_name] = preset_handle
-                self._preset_name_by_handle[preset_handle] = preset_name
+        for preset, preset_name in zip(
+            self._matter_presets, _preset_names(self._matter_presets), strict=True
+        ):
+            preset_handle = _preset_handle(preset)
+            self._preset_handle_by_name[preset_name] = preset_handle
+            self._preset_name_by_handle[preset_handle] = preset_name
 
         # Always include PRESET_NONE to allow users to clear the preset
         self._preset_handle_by_name[PRESET_NONE] = None
