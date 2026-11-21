@@ -38,5 +38,24 @@
         }
       }
     }
+  },
+  "options": {
+    "abort": {
+      "cannot_fetch_registers": "Could not read the register list from the eGauge device. Check the device is reachable and try again.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_permission": "[%key:component::egauge::config::error::missing_permission%]",
+      "not_loaded": "The eGauge integration is not loaded or failed to set up. Reload the integration and try again.",
+      "unknown": "An unexpected error occurred reading the register list. Check the logs for details."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "invert_registers": "Registers to invert"
+        },
+        "data_description": {
+          "invert_registers": "Registers whose sign should be flipped, for example a current transformer installed backwards or a register that reports generation as negative"
+        }
+      }
+    }
   }
 }
