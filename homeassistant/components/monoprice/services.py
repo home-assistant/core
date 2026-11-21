@@ -25,7 +25,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         MonopriceService.SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func="snapshot",
+        func="async_snapshot",
     )
     service.async_register_platform_entity_service(
         hass,
@@ -33,5 +33,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         MonopriceService.RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func="restore",
+        func="async_restore",
     )
