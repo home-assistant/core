@@ -1,4 +1,104 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_command": "The settings are not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates.",
+      "invalid_url": "Enter an address that starts with http:// or https://, without a username or password, query (?) or fragment (#). Use the authentication section for credentials."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "Address of the server, including http:// or https://, for example `{example_url}`. The commands you add later send their requests to a path on this server."
+        },
+        "description": "Add a server that you want to send commands to. Authentication, headers and SSL settings apply to every command of this server.",
+        "sections": {
+          "additional": {
+            "data": {
+              "headers": "Headers",
+              "insecure_cipher": "Allow insecure ciphers",
+              "timeout": "Timeout",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "headers": "Headers to send with every command, one per line as name: value. Values can be templates, for example `{example_headers}`.",
+              "insecure_cipher": "Allow older, less secure encryption. Only needed for old devices that do not work otherwise.",
+              "timeout": "How long to wait for the server before a command fails.",
+              "verify_ssl": "Check the server's SSL/TLS certificate. Turn off only for devices with a self-signed certificate."
+            },
+            "description": "Headers, timeout and SSL settings. Most servers work without changing these.",
+            "name": "More settings"
+          },
+          "auth": {
+            "data": {
+              "authentication": "Authentication method",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "data_description": {
+              "authentication": "Basic sends the credentials with every request and is the default. Digest is used by some cameras and routers.",
+              "password": "Password for the server. It is stored in Home Assistant and not shown in logs.",
+              "username": "Username for the server. It cannot contain a colon."
+            },
+            "description": "Only needed when the server asks for a username and password.",
+            "name": "Authentication"
+          }
+        },
+        "title": "Add server"
+      }
+    }
+  },
+  "config_subentries": {
+    "command": {
+      "entry_type": "Command",
+      "error": {
+        "action_exists": "The action {action} already exists. Choose another name.",
+        "invalid_action": "Use only lowercase letters, numbers and underscores. The names reload and unknown are reserved.",
+        "invalid_command": "The command is not valid. Check that the header values are text or valid templates."
+      },
+      "initiate_flow": {
+        "user": "Add command"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "action": "Action name",
+            "method": "Method",
+            "path": "[%key:common::config_flow::data::path%]",
+            "payload": "Payload"
+          },
+          "data_description": {
+            "action": "Name of the action, in lowercase letters, numbers and underscores, for example open_garage_door. You use it in automations as rest_command.open_garage_door. It cannot be changed later.",
+            "method": "HTTP method of the request. GET reads data, POST sends data. PUT, PATCH and DELETE are used by some APIs to change or remove something.",
+            "path": "Added to the server address {url}, for example `{example_path}`. A leading / is added when it is missing. Can be a template. Leave empty to use the server address as it is.",
+            "payload": "Body of the request, usually used with POST, PUT or PATCH. Can be a template, for example `{example_payload}`. Leave empty to send no body."
+          },
+          "description": "A command sends one HTTP request to {url} when it is run. It becomes an action that you can use in automations, scripts and dashboards.\n\nPath, payload and header values can be templates. Values that you pass in the action data are available as variables: with the path `{example_path}` and the action data `{example_data}`, the request goes to the front door.",
+          "sections": {
+            "additional": {
+              "data": {
+                "content_type": "Content type",
+                "headers": "Headers",
+                "skip_url_encoding": "Skip URL encoding"
+              },
+              "data_description": {
+                "content_type": "Sets the Content-Type header, for example application/json when the payload is JSON.",
+                "headers": "Extra headers for this command, one per line as name: value. They are added to the headers of the server, and replace a server header with the same name.",
+                "skip_url_encoding": "Send the URL exactly as written, without encoding special characters. Only needed for APIs that expect raw characters in the URL."
+              },
+              "description": "Content type, extra headers and URL encoding. Most commands work without changing these.",
+              "name": "More settings"
+            }
+          },
+          "title": "Add command"
+        }
+      }
+    }
+  },
   "exceptions": {
     "client_error": {
       "message": "Client error occurred when calling resource \"{request_url}\""
@@ -8,6 +108,29 @@
     },
     "timeout": {
       "message": "Timeout when calling resource \"{request_url}\""
+    }
+  },
+  "issues": {
+    "invalid_command": {
+      "description": "The command {action} of {server} could not be set up, so the action is not available: {error}.\n\nThis can happen when its saved settings are no longer valid after an update. Go to Settings > Devices & services > RESTful Command, delete the command and add it again.",
+      "title": "RESTful Command {action} is not valid"
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest"
+      }
+    },
+    "method": {
+      "options": {
+        "delete": "DELETE",
+        "get": "GET",
+        "patch": "PATCH",
+        "post": "POST",
+        "put": "PUT"
+      }
     }
   },
   "services": {

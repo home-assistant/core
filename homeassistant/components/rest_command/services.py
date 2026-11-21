@@ -1,5 +1,7 @@
 """Services for the REST command integration."""
 
+from collections.abc import Callable
+from functools import partial
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -49,8 +51,8 @@ _LOGGER = logging.getLogger(__package__)
 @callback
 def async_register_rest_command(
     hass: HomeAssistant, name: str, command_config: dict[str, Any]
-) -> None:
-    """Create service for rest command."""
+) -> Callable[[], None]:
+    """Create service for rest command and return a callback that removes it."""
     websession = async_get_clientsession(
         hass,
         command_config[CONF_VERIFY_SSL],
@@ -230,9 +232,11 @@ def async_register_rest_command(
         supports_response=SupportsResponse.OPTIONAL,
     )
 
+    return partial(hass.services.async_remove, DOMAIN, name)
+
 
 async def _async_reload_service_handler(service: ServiceCall) -> None:
-    """Remove all rest_commands and load new ones from config."""
+    """Remove the YAML rest_commands and load new ones from config."""
     hass = service.hass
     conf = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -240,14 +244,22 @@ async def _async_reload_service_handler(service: ServiceCall) -> None:
     if conf is None:
         return
 
+    # Commands from the UI are set up by their config entry and win over YAML
+    ui_actions = {
+        name
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        for name in entry.runtime_data
+    }
+
     existing = hass.services.async_services_for_domain(DOMAIN)
     for existing_service in existing:
-        if existing_service == SERVICE_RELOAD:
+        if existing_service == SERVICE_RELOAD or existing_service in ui_actions:
             continue
         hass.services.async_remove(DOMAIN, existing_service)
 
     for name, command_config in conf.get(DOMAIN, {}).items():
-        async_register_rest_command(hass, name, command_config)
+        if name not in ui_actions:
+            async_register_rest_command(hass, name, command_config)
 
 
 @callback
