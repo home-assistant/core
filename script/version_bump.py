@@ -146,12 +146,20 @@ def write_version(version):
 
 
 def write_version_metadata(version: Version) -> None:
-    """Update pyproject.toml file with new version."""
+    """Update pyproject.toml and codemeta.json files with new version."""
     content = Path("pyproject.toml").read_text(encoding="utf8")
 
     content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
 
     Path("pyproject.toml").write_text(content, encoding="utf8")
+
+    codemeta_path = Path("codemeta.json")
+    if codemeta_path.is_file():
+        codemeta_content = codemeta_path.read_text(encoding="utf8")
+        codemeta_content = re.sub(
+            r'("version":\s*)"[^"]+"', f'\\g<1>"{version}"', codemeta_content, count=1
+        )
+        codemeta_path.write_text(codemeta_content, encoding="utf8")
 
 
 def write_ci_workflow(version: Version) -> None:
