@@ -24,5 +24,16 @@
     "get_forecasts": {
       "service": "mdi:weather-cloudy-clock"
     }
+  },
+  "triggers": {
+    "condition_changed": {
+      "trigger": "mdi:weather-partly-cloudy"
+    },
+    "started_raining": {
+      "trigger": "mdi:weather-rainy"
+    },
+    "stopped_raining": {
+      "trigger": "mdi:weather-sunny"
+    }
   }
 }

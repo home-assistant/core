@@ -1,0 +1,35 @@
+.trigger_common: &trigger_common
+  target: &trigger_weather_target
+    entity:
+      domain: weather
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+started_raining: *trigger_common
+stopped_raining: *trigger_common
+
+condition_changed:
+  target: *trigger_weather_target
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    condition:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
