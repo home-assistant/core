@@ -611,20 +611,20 @@ async def test_walk_errindication(
     oid = Mock()
     oid.asTuple.return_value = (1, 192, 168, 1, 1)
 
-    walks = 0
-
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        """Yield the MAC once, then fail on every later poll."""
-        nonlocal walks
-        walks += 1
-        if walks == 1:
-            yield None, None, None, [(oid, OctetString(mac_bytes))]
-        else:
-            yield errindication, None, None, []
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
+
+    async def mock_failing_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        yield errindication, None, None, []
 
     enable_tracker(MAC)
 
-    with patch_walk(mock_walk):
+    # One poll which sees the device, then one failure per attempt to recover
+    walks = [
+        mock_walk(),
+        *(mock_failing_walk() for _ in range(MAX_CONSECUTIVE_FAILURES)),
+    ]
+    with patch_walk(walks):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -660,20 +660,15 @@ async def test_walk_unknown_context_makes_the_entity_unavailable(
     oid = Mock()
     oid.asTuple.return_value = (1, 192, 168, 1, 1)
 
-    walks = 0
-
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        """Yield the MAC once, then report the missing context on every poll."""
-        nonlocal walks
-        walks += 1
-        if walks == 1:
-            yield None, None, None, [(oid, OctetString(mac_bytes))]
-        else:
-            yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
+
+    async def mock_failing_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
 
     enable_tracker(MAC)
 
-    with patch_walk(mock_walk):
+    with patch_walk([mock_walk(), mock_failing_walk()]):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
