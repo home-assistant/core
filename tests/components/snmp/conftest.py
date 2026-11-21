@@ -9,6 +9,7 @@ from pysnmp.proto.rfc1902 import OctetString
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import mock_entry, patch_walk
@@ -47,8 +48,14 @@ def mock_udp_transport() -> Iterator[Mock]:
 
 @pytest.fixture
 def mock_setup_entry() -> Iterator[Mock]:
-    """Patch async_setup_entry to avoid setting up the integration."""
+    """Patch async_setup_entry, leaving the runtime data unload reads behind."""
+
+    async def _async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry) -> None:
+        # The entry is set up without a tracker subentry, so without a coordinator
+        entry.runtime_data = Mock(coordinators={})
+
     with patch(
-        "homeassistant.components.snmp.async_setup_entry", return_value=None
+        "homeassistant.components.snmp.async_setup_entry",
+        side_effect=_async_setup_entry,
     ) as mock:
         yield mock
