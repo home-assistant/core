@@ -34,16 +34,23 @@ def prepare_condition_trace() -> None:
     trace.trace_clear()
 
 
-def _find_run_id(traces, trace_type, item_id):
-    """Find newest run_id for a script or automation."""
+def _find_run_id(traces, trace_type, item_id, now=None):
+    """Find newest run_id for a script or automation, or the one started at now."""
     for _trace in reversed(traces):
-        if _trace["domain"] == trace_type and _trace["item_id"] == item_id:
+        if (
+            _trace["domain"] == trace_type
+            and _trace["item_id"] == item_id
+            and (
+                now is None
+                or dt_util.parse_datetime(_trace["timestamp"]["start"]) == now
+            )
+        ):
             return _trace["run_id"]
 
     return None
 
 
-async def _get_automation_condition_trace(hass_ws_client, automation_id):
+async def _get_automation_condition_trace(hass_ws_client, automation_id, now=None):
     """Return the condition trace for a given automation."""
     msg_id = 1
 
@@ -60,7 +67,7 @@ async def _get_automation_condition_trace(hass_ws_client, automation_id):
     )
     response = await client.receive_json()
     assert response["success"]
-    run_id = _find_run_id(response["result"], "automation", automation_id)
+    run_id = _find_run_id(response["result"], "automation", automation_id, now)
 
     # Get trace
     await client.send_json(
@@ -79,10 +86,15 @@ async def _get_automation_condition_trace(hass_ws_client, automation_id):
     return trace["trace"]["condition/0"][0]
 
 
-async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
-    """Test the result of automation condition."""
+async def assert_automation_condition_trace(
+    hass_ws_client, automation_id, expected, now=None
+):
+    """Test the result of automation condition.
+
+    Pass now when the frozen time moved backwards, so the newest trace is not last.
+    """
     condition_trace = await _get_automation_condition_trace(
-        hass_ws_client, automation_id
+        hass_ws_client, automation_id, now
     )
     assert condition_trace["result"] == expected
 
@@ -136,6 +148,7 @@ async def test_if_action_before_sunrise_no_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local midnight -> 'before sunrise' true
@@ -148,6 +161,7 @@ async def test_if_action_before_sunrise_no_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-16T13:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local midnight - 1s -> 'before sunrise' not true
@@ -224,6 +238,7 @@ async def test_if_action_after_sunrise_no_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-09-16T13:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local midnight - 1s -> 'after sunrise' true
@@ -291,6 +306,7 @@ async def test_if_action_before_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = UTC midnight -> 'before sunrise' with offset +1h not true
@@ -315,6 +331,7 @@ async def test_if_action_before_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local midnight -> 'before sunrise' with offset +1h true
@@ -327,6 +344,7 @@ async def test_if_action_before_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local midnight - 1s -> 'before sunrise' with offset +1h not true
@@ -351,6 +369,7 @@ async def test_if_action_before_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = sunset -1s -> 'before sunrise' with offset +1h not true
@@ -363,6 +382,7 @@ async def test_if_action_before_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_before": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
 
@@ -427,6 +447,7 @@ async def test_if_action_before_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
     # now = UTC midnight -> 'before sunset' with offset +1h true
@@ -439,6 +460,7 @@ async def test_if_action_before_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
     # now = UTC midnight - 1s -> 'before sunset' with offset +1h true
@@ -451,6 +473,7 @@ async def test_if_action_before_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
     # now = sunrise -> 'before sunset' with offset +1h true
@@ -463,6 +486,7 @@ async def test_if_action_before_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
     # now = sunrise -1s -> 'before sunset' with offset +1h true
@@ -475,6 +499,7 @@ async def test_if_action_before_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
     # now = local midnight-1s -> 'after sunrise' with offset +1h not true
@@ -551,6 +576,7 @@ async def test_if_action_after_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = UTC noon - 1s -> 'after sunrise' with offset +1h not true
@@ -563,6 +589,7 @@ async def test_if_action_after_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = local noon -> 'after sunrise' with offset +1h true
@@ -587,6 +614,7 @@ async def test_if_action_after_sunrise_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_after": "2015-09-16T14:33:18.342542+00:00"},
+        now=now,
     )
 
     # now = sunset -> 'after sunrise' with offset +1h true
@@ -699,6 +727,7 @@ async def test_if_action_after_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_after": "2015-09-16T02:55:06.099767+00:00"},
+        now=now,
     )
 
     # now = midnight -> 'after sunset' with offset +1h not true
@@ -711,6 +740,7 @@ async def test_if_action_after_sunset_with_offset(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-09-17T02:53:44.723614+00:00"},
+        now=now,
     )
 
 
@@ -783,6 +813,7 @@ async def test_if_action_after_and_before_during(
             "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
     # now = sunset - 1s -> 'after sunrise' + 'before sunset' true
@@ -799,6 +830,7 @@ async def test_if_action_after_and_before_during(
             "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
     # now = 9AM local  -> 'after sunrise' + 'before sunset' true
@@ -815,6 +847,7 @@ async def test_if_action_after_and_before_during(
             "wanted_time_before": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_after": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
 
@@ -891,6 +924,7 @@ async def test_if_action_before_or_after_during(
             "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
     # now = sunset - 1s -> 'before sunrise' | 'after sunset' false
@@ -907,6 +941,7 @@ async def test_if_action_before_or_after_during(
             "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
     # now = midnight + 1s local  -> 'before sunrise' | 'after sunset' true
@@ -923,6 +958,7 @@ async def test_if_action_before_or_after_during(
             "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
             "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
         },
+        now=now,
     )
 
     # now = midnight - 1s local  -> 'before sunrise' | 'after sunset' true
@@ -996,6 +1032,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-07-24T12:48:24.249497+00:00"},
+        now=now,
     )
 
     # now = local midnight -> 'before sunrise' true
@@ -1008,6 +1045,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_before": "2015-07-24T12:48:24.249497+00:00"},
+        now=now,
     )
 
     # now = local midnight - 1s -> 'before sunrise' not true
@@ -1020,6 +1058,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_before": "2015-07-23T12:43:32.413351+00:00"},
+        now=now,
     )
 
 
@@ -1077,6 +1116,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-07-24T12:48:24.249497+00:00"},
+        now=now,
     )
 
     # now = local midnight -> 'after sunrise' not true
@@ -1089,6 +1129,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": False, "wanted_time_after": "2015-07-24T12:48:24.249497+00:00"},
+        now=now,
     )
 
     # now = local midnight - 1s -> 'after sunrise' true
@@ -1101,6 +1142,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
         hass_ws_client,
         "sun",
         {"result": True, "wanted_time_after": "2015-07-23T12:43:32.413351+00:00"},
+        now=now,
     )
 
 
