@@ -95,6 +95,8 @@ async def test_user(hass: HomeAssistant, service) -> None:
         result["flow_id"],
         {
             CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -107,6 +109,7 @@ async def test_user(hass: HomeAssistant, service) -> None:
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    service.assert_called_once_with(PASSWORD, HOST, USERNAME, PORT, SSL)
 
 
 async def test_user_connect_error(hass: HomeAssistant, service: Mock) -> None:
