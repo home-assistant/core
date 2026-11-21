@@ -286,10 +286,18 @@ async def test_snapshots(
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
-    registry_devices = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    registry_devices.sort(key=lambda device: device.name)
+    registry_devices: list[dr.AnyDeviceEntry] = []
+    for device in sorted(
+        dr.async_entries_for_config_entry(device_registry, config_entry.entry_id),
+        key=lambda device: device.name,
+    ):
+        registry_devices.append(device)
+        registry_devices.extend(
+            sorted(
+                dr.async_entries_for_parent_device(device_registry, device.id),
+                key=lambda child_device: child_device.name or "",
+            )
+        )
 
     devices = []
 

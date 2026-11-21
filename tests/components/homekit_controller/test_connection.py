@@ -6,16 +6,18 @@ from typing import Any
 from unittest import mock
 
 from aiohomekit.controller import TransportType
+from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import attr
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.homekit_controller.connection import (
+    IDENTIFIER_SERVICE_ID,
     MAX_CHARACTERISTICS_PER_REQUEST,
 )
 from homeassistant.components.homekit_controller.const import (
@@ -33,6 +35,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .common import (
+    device_config_changed,
     setup_accessories_from_file,
     setup_platform,
     setup_test_accessories,
@@ -795,3 +798,87 @@ async def test_device_via_device_links(
         )
         assert shade_device is not None
         assert shade_device.via_device_id == bridge_device.id
+
+
+OUTLET_A_ENTITY_ID = "switch.inwall_outlet_0394de_outlet_a"
+
+
+async def test_child_devices_follow_service_changes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test outlets move between the parent and child devices as services change."""
+    accessories = await setup_accessories_from_file(hass, "connectsense.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+    parent_device = device_registry.async_get_device_by_identifier(
+        (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"), config_entry.entry_id
+    )
+    assert parent_device is not None
+    entity_registry.async_update_entity(OUTLET_A_ENTITY_ID, name="Kettle")
+
+    # Removing outlet B leaves a single outlet, which needs no child device
+    accessories_json = hkloads(
+        await hass.async_add_executor_job(
+            load_fixture, "homekit_controller/connectsense.json"
+        )
+    )
+    accessories_json[0]["services"] = [
+        service for service in accessories_json[0]["services"] if service["iid"] != 25
+    ]
+    await device_config_changed(hass, Accessories.from_list(accessories_json))
+    await hass.async_block_till_done()
+
+    assert not dr.async_entries_for_parent_device(device_registry, parent_device.id)
+    entity_entry = entity_registry.async_get(OUTLET_A_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == parent_device.id
+    assert entity_entry.name == "Kettle"
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_b") is None
+
+    accessories = await setup_accessories_from_file(hass, "connectsense.json")
+    await device_config_changed(hass, accessories)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (IDENTIFIER_SERVICE_ID, "00:00:00:00:00:00:aid:1:iid:13"),
+        config_entry.entry_id,
+    )
+    assert child_device is not None
+    assert child_device.parent_device_id == parent_device.id
+    entity_entry = entity_registry.async_get(OUTLET_A_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+    assert entity_entry.name == "Kettle"
+    state = hass.states.get(OUTLET_A_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Outlet A Kettle"
+
+
+def create_two_lightbulbs(accessory: Accessory) -> None:
+    """Define two lightbulbs without a name."""
+    for _ in range(2):
+        service = accessory.add_service(ServicesTypes.LIGHTBULB)
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = False
+
+
+async def test_child_device_name_falls_back_to_service_type(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test child devices of unnamed services are named by type and position."""
+    helper = await setup_test_component(hass, get_next_aid(), create_two_lightbulbs)
+
+    for index in (1, 2):
+        entity_id = f"light.testdevice_light_{index}"
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        child_device = device_registry.async_get(entity_entry.device_id)
+        assert isinstance(child_device, dr.ChildDeviceEntry)
+        assert child_device.config_entry_id == helper.config_entry.entry_id
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["friendly_name"] == f"Light {index}"

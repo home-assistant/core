@@ -2929,6 +2929,28 @@
             'state': 'unknown',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:13',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet A',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -2941,11 +2963,11 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:13')]>,
             'disabled_by': None,
             'domain': 'sensor',
             'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_current',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_current',
             'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
@@ -2973,64 +2995,12 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Current',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet A Current',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
             }),
-            'entity_id': 'sensor.inwall_outlet_0394de_current',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_current',
             'state': '0.03',
-          }),
-        }),
-        dict({
-          'entry': EntityRegistryEntrySnapshot({
-            'aliases': list([
-              None,
-            ]),
-            'area_id': None,
-            'capabilities': dict({
-              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-            }),
-            'config_entry_id': <ANY>,
-            'config_subentry_id': None,
-            'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
-            'disabled_by': None,
-            'domain': 'sensor',
-            'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_current_2',
-            'has_entity_name': True,
-            'hidden_by': None,
-            'icon': None,
-            'id': <ANY>,
-            'labels': set({
-            }),
-            'name': None,
-            'object_id_base': 'Current',
-            'options': dict({
-              'sensor': dict({
-                'suggested_display_precision': 2,
-              }),
-            }),
-            'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-            'original_icon': None,
-            'original_name': 'Current',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'suggested_object_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_25_30',
-            'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-          }),
-          'state': dict({
-            'attributes': dict({
-              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Current',
-              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
-            }),
-            'entity_id': 'sensor.inwall_outlet_0394de_current_2',
-            'state': '0.05',
           }),
         }),
         dict({
@@ -3045,11 +3015,11 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:13')]>,
             'disabled_by': None,
             'domain': 'sensor',
             'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_energy_kwh',
             'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
@@ -3077,64 +3047,12 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Energy kWh',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet A Energy kWh',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
-            'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_energy_kwh',
             'state': '379.69299',
-          }),
-        }),
-        dict({
-          'entry': EntityRegistryEntrySnapshot({
-            'aliases': list([
-              None,
-            ]),
-            'area_id': None,
-            'capabilities': dict({
-              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-            }),
-            'config_entry_id': <ANY>,
-            'config_subentry_id': None,
-            'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
-            'disabled_by': None,
-            'domain': 'sensor',
-            'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh_2',
-            'has_entity_name': True,
-            'hidden_by': None,
-            'icon': None,
-            'id': <ANY>,
-            'labels': set({
-            }),
-            'name': None,
-            'object_id_base': 'Energy kWh',
-            'options': dict({
-              'sensor': dict({
-                'suggested_display_precision': 2,
-              }),
-            }),
-            'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-            'original_icon': None,
-            'original_name': 'Energy kWh',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'suggested_object_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_25_32',
-            'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-          }),
-          'state': dict({
-            'attributes': dict({
-              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Energy kWh',
-              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-            }),
-            'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh_2',
-            'state': '175.85001',
           }),
         }),
         dict({
@@ -3149,11 +3067,11 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:13')]>,
             'disabled_by': None,
             'domain': 'sensor',
             'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_power',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_power',
             'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
@@ -3181,12 +3099,183 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Power',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet A Power',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
             }),
-            'entity_id': 'sensor.inwall_outlet_0394de_power',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_a_power',
             'state': '0.8',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:13')]>,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.inwall_outlet_0394de_outlet_a',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': None,
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_13',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet A',
+              'outlet_in_use': True,
+            }),
+            'entity_id': 'switch.inwall_outlet_0394de_outlet_a',
+            'state': 'on',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:25',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet B',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:25')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_current',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Current',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 2,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+            'original_icon': None,
+            'original_name': 'Current',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_25_30',
+            'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet B Current',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+            }),
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_current',
+            'state': '0.05',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:25')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_energy_kwh',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Energy kWh',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 2,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+            'original_icon': None,
+            'original_name': 'Energy kWh',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_25_32',
+            'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet B Energy kWh',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+            }),
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_energy_kwh',
+            'state': '175.85001',
           }),
         }),
         dict({
@@ -3201,11 +3290,11 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:25')]>,
             'disabled_by': None,
             'domain': 'sensor',
             'entity_category': None,
-            'entity_id': 'sensor.inwall_outlet_0394de_power_2',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_power',
             'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
@@ -3233,11 +3322,11 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Power',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet B Power',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
             }),
-            'entity_id': 'sensor.inwall_outlet_0394de_power_2',
+            'entity_id': 'sensor.inwall_outlet_0394de_outlet_b_power',
             'state': '0.8',
           }),
         }),
@@ -3251,69 +3340,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
-            'disabled_by': None,
-            'domain': 'switch',
-            'entity_category': None,
-            'entity_id': 'switch.inwall_outlet_0394de_outlet_a',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'id': <ANY>,
-            'labels': set({
-            }),
-            'name': None,
-            'object_id_base': 'InWall Outlet-0394DE Outlet A',
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'InWall Outlet-0394DE Outlet A',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'suggested_object_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_13',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Outlet A',
-              'outlet_in_use': True,
-            }),
-            'entity_id': 'switch.inwall_outlet_0394de_outlet_a',
-            'state': 'on',
-          }),
-        }),
-        dict({
-          'entry': EntityRegistryEntrySnapshot({
-            'aliases': list([
-              None,
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'config_entry_id': <ANY>,
-            'config_subentry_id': None,
-            'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:25')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.inwall_outlet_0394de_outlet_b',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'InWall Outlet-0394DE Outlet B',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'InWall Outlet-0394DE Outlet B',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -3324,7 +3368,7 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'InWall Outlet-0394DE Outlet B',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet B',
               'outlet_in_use': True,
             }),
             'entity_id': 'switch.inwall_outlet_0394de_outlet_b',
@@ -11082,6 +11126,585 @@
     }),
   ])
 # ---
+# name: test_snapshots[eve_energy_strip]
+  list([
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'configuration_url': None,
+        'connections': set({
+        }),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '1',
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ),
+        }),
+        'labels': set({
+        }),
+        'manufacturer': 'Eve Systems',
+        'model': 'Eve Energy Strip 20EAZ8301',
+        'model_id': None,
+        'name': 'Eve Energy Strip 3655',
+        'name_by_user': None,
+        'serial_number': 'AA00A0A00000',
+        'sw_version': '1.0.10',
+        'via_device_id': None,
+      }),
+      'entities': list([
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'binary_sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'binary_sensor.eve_energy_strip_3655_problem',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Problem',
+            'options': dict({
+            }),
+            'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+            'original_icon': None,
+            'original_name': 'Problem',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_41_46',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Problem',
+            }),
+            'entity_id': 'binary_sensor.eve_energy_strip_3655_problem',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.eve_energy_strip_3655_identify',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Identify',
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Identify',
+            }),
+            'entity_id': 'button.eve_energy_strip_3655_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.eve_energy_strip_3655_amps',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Amps',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 2,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+            'original_icon': None,
+            'original_name': 'Amps',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_41_43',
+            'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Amps',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+            }),
+            'entity_id': 'sensor.eve_energy_strip_3655_amps',
+            'state': '0',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.eve_energy_strip_3655_energy_kwh',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Energy kWh',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 2,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+            'original_icon': None,
+            'original_name': 'Energy kWh',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_41_45',
+            'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Energy kWh',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+            }),
+            'entity_id': 'sensor.eve_energy_strip_3655_energy_kwh',
+            'state': '0.460751',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.eve_energy_strip_3655_power',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Power',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 0,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+            'original_icon': None,
+            'original_name': 'Power',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_41_44',
+            'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Power',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+            }),
+            'entity_id': 'sensor.eve_energy_strip_3655_power',
+            'state': '0',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.eve_energy_strip_3655_volts',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Volts',
+            'options': dict({
+              'sensor': dict({
+                'suggested_display_precision': 0,
+              }),
+            }),
+            'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+            'original_icon': None,
+            'original_name': 'Volts',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_41_42',
+            'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Volts',
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+            }),
+            'entity_id': 'sensor.eve_energy_strip_3655_volts',
+            'state': '220',
+          }),
+        }),
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': <EntityCategory.CONFIG: 'config'>,
+            'entity_id': 'switch.eve_energy_strip_3655_lock_physical_controls',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': 'Lock physical controls',
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Lock physical controls',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': 'lock_physical_controls',
+            'unique_id': '00:00:00:00:00:00_1_41_47',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3655 Lock physical controls',
+            }),
+            'entity_id': 'switch.eve_energy_strip_3655_lock_physical_controls',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:13',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Eve Energy Strip 1',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:13')]>,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_1',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': None,
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_13',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 1',
+              'outlet_in_use': True,
+            }),
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_1',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:20',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Eve Energy Strip 2',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:20')]>,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_2',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': None,
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_20',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 2',
+              'outlet_in_use': True,
+            }),
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_2',
+            'state': 'on',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:27',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Eve Energy Strip 3',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
+        dict({
+          'entry': EntityRegistryEntrySnapshot({
+            'aliases': list([
+              None,
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': <ANY>,
+            'config_subentry_id': None,
+            'device_class': None,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:27')]>,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_3',
+            'has_entity_name': True,
+            'hidden_by': None,
+            'icon': None,
+            'id': <ANY>,
+            'labels': set({
+            }),
+            'name': None,
+            'object_id_base': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': None,
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'suggested_object_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_27',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Strip 3',
+              'outlet_in_use': True,
+            }),
+            'entity_id': 'switch.eve_energy_strip_3655_eve_energy_strip_3',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[haa_fan1]
   list([
     dict({
@@ -17997,6 +18620,28 @@
             'state': '0',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:8',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Switch 1',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18007,24 +18652,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:8')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.koogeek_sw2_187a91_switch_1',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'Koogeek-SW2-187A91 Switch 1',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'Koogeek-SW2-187A91 Switch 1',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18035,12 +18680,34 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koogeek-SW2-187A91 Switch 1',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1',
             }),
             'entity_id': 'switch.koogeek_sw2_187a91_switch_1',
             'state': 'off',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:11',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Switch 2',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18051,24 +18718,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:11')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.koogeek_sw2_187a91_switch_2',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'Koogeek-SW2-187A91 Switch 2',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'Koogeek-SW2-187A91 Switch 2',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18079,7 +18746,7 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koogeek-SW2-187A91 Switch 2',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 2',
             }),
             'entity_id': 'switch.koogeek_sw2_187a91_switch_2',
             'state': 'off',
@@ -18873,6 +19540,28 @@
             'state': 'unknown',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:12',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet-1',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18883,24 +19572,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:12')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.mss425f_15cc_outlet_1',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'MSS425F-15cc Outlet-1',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'MSS425F-15cc Outlet-1',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18911,12 +19600,34 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MSS425F-15cc Outlet-1',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet-1',
             }),
             'entity_id': 'switch.mss425f_15cc_outlet_1',
             'state': 'on',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:15',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet-2',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18927,24 +19638,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:15')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.mss425f_15cc_outlet_2',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'MSS425F-15cc Outlet-2',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'MSS425F-15cc Outlet-2',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18955,12 +19666,34 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MSS425F-15cc Outlet-2',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet-2',
             }),
             'entity_id': 'switch.mss425f_15cc_outlet_2',
             'state': 'on',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:18',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet-3',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18971,24 +19704,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:18')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.mss425f_15cc_outlet_3',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'MSS425F-15cc Outlet-3',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'MSS425F-15cc Outlet-3',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18999,12 +19732,34 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MSS425F-15cc Outlet-3',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet-3',
             }),
             'entity_id': 'switch.mss425f_15cc_outlet_3',
             'state': 'on',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:21',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'Outlet-4',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -19015,24 +19770,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:21')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.mss425f_15cc_outlet_4',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'MSS425F-15cc Outlet-4',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'MSS425F-15cc Outlet-4',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -19043,12 +19798,34 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MSS425F-15cc Outlet-4',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet-4',
             }),
             'entity_id': 'switch.mss425f_15cc_outlet_4',
             'state': 'on',
           }),
         }),
+      ]),
+    }),
+    dict({
+      'device': DeviceRegistryEntrySnapshot({
+        'area_id': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'disabled_by': None,
+        'id': <ANY>,
+        'identifiers': set({
+          tuple(
+            'homekit_controller:service-id',
+            '00:00:00:00:00:00:aid:1:iid:24',
+          ),
+        }),
+        'labels': set({
+        }),
+        'name': 'USB',
+        'name_by_user': None,
+        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+      }),
+      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -19059,24 +19836,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
+            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:24')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.mss425f_15cc_usb',
-            'has_entity_name': False,
+            'has_entity_name': True,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': 'MSS425F-15cc USB',
+            'object_id_base': None,
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': 'MSS425F-15cc USB',
+            'original_name': None,
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -19087,7 +19864,7 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MSS425F-15cc USB',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'USB',
             }),
             'entity_id': 'switch.mss425f_15cc_usb',
             'state': 'on',
