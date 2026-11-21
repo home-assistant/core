@@ -126,6 +126,7 @@ FIXTURES = [
     "silabs_range_hood",
     "silabs_refrigerator",
     "silabs_water_heater",
+    "smart_tcl_portable_ac",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
     "tapo_smart_outdoor_plug_in_dimmer",
