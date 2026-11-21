@@ -4,9 +4,11 @@ import functools
 import logging
 from typing import Any, override
 
+from zigpy.zcl.clusters import general
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +46,8 @@ async def async_setup_entry(
 class Switch(ZHAEntity, SwitchEntity):
     """ZHA switch."""
 
+    _group_target_cluster_ids = frozenset({general.OnOff.cluster_id})
+
     @property
     @override
     def is_on(self) -> bool:
@@ -54,6 +58,7 @@ class Switch(ZHAEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        self._propagate_group_context(STATE_ON)
         await self.entity_data.entity.async_turn_on()
         self.async_write_ha_state()
 
@@ -61,5 +66,6 @@ class Switch(ZHAEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        self._propagate_group_context(STATE_OFF)
         await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
