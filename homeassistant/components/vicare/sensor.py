@@ -1461,6 +1461,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     SUPPLY_TEMPERATURE_SENSOR,
+    ViCareSensorEntityDescription(
+        key="target_supply_temperature",
+        translation_key="target_supply_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getTargetTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 FLOOR_HEATING_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
