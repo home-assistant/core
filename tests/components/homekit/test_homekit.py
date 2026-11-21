@@ -882,6 +882,45 @@ async def test_homekit_start_with_a_device(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_start_with_a_device_renamed_by_user(
+    hass: HomeAssistant,
+    hk_driver,
+    demo_cleanup,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HomeKit uses the user assigned name for a device."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {"demo": {}})
+    await hass.async_block_till_done()
+
+    reg_entry = entity_registry.async_get("light.ceiling_lights")
+    assert reg_entry is not None
+    device_id = reg_entry.device_id
+    device_registry.async_update_device(device_id, name_by_user="Kitchen Switch")
+    await async_init_entry(hass, entry)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[device_id])
+    homekit.driver = hk_driver
+    homekit.aid_storage = MagicMock()
+
+    with (
+        patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception),
+        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+    ):
+        await homekit.async_start()
+
+    await hass.async_block_till_done()
+    acc = list(homekit.driver.accessory.accessories.values())[0]
+    assert isinstance(acc, DeviceTriggerAccessory)
+    assert acc.display_name == "Kitchen Switch"
+    await homekit.async_stop()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_start_with_a_child_device(
     hass: HomeAssistant,
     hk_driver: HomeDriver,
