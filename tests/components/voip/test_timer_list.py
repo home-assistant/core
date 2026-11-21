@@ -42,7 +42,7 @@ async def test_timer_finished_without_satellite(
     hass: HomeAssistant, voip_device: VoIPDevice
 ) -> None:
     """Test a timer finishing while the device has no satellite announces nothing."""
-    timer_list = async_get_timer_list_entity(hass, voip_device.device_id)
+    timer_list = async_get_timer_list_entity(hass, TIMER_LIST_ENTITY_ID)
     assert timer_list is not None
     assert timer_list.entity_id == TIMER_LIST_ENTITY_ID
     timer_id = await timer_list.async_create_timer(

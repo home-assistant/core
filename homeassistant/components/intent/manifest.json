@@ -3,7 +3,7 @@
   "name": "Intent",
   "codeowners": ["@home-assistant/core", "@synesthesiam", "@arturpragacz"],
   "config_flow": false,
-  "dependencies": ["http", "timer_list"],
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/intent",
   "integration_type": "system",
   "quality_scale": "internal"

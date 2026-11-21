@@ -12,15 +12,22 @@ from typing import Any, override
 import probatio
 from propcache.api import cached_property
 
+from homeassistant.auth.permissions import AbstractPermissions
+from homeassistant.auth.permissions.const import (
+    CAT_ENTITIES,
+    POLICY_CONTROL,
+    POLICY_READ,
+)
 from homeassistant.components.timer_list import (
+    DOMAIN as TIMER_LIST_DOMAIN,
     TimerItem,
     TimerListEntity,
     TimerStatus,
-    async_get_timer_list_entities,
     async_get_timer_list_entity,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -169,6 +176,25 @@ class TimerInfo:
         self.seconds = 0
         self.updated_at = time.monotonic_ns()
         self.is_active = False
+
+    def to_timer_item(self, now: datetime, monotonic_now: int) -> TimerItem:
+        """Snapshot a legacy timer using UTC timestamps."""
+        remaining = timedelta(seconds=self.seconds_left)
+        return TimerItem(
+            timer_id=self.id,
+            name=self.name,
+            status=TimerStatus.ACTIVE if self.is_active else TimerStatus.PAUSED,
+            created_duration=timedelta(
+                hours=self.start_hours or 0,
+                minutes=self.start_minutes or 0,
+                seconds=self.start_seconds or 0,
+            ),
+            created_at=now
+            - timedelta(microseconds=(monotonic_now - self.created_at) // 1000),
+            total_duration=timedelta(seconds=self.created_seconds),
+            finishes_at=now + remaining if self.is_active else None,
+            paused_remaining=remaining if not self.is_active else None,
+        )
 
 
 class TimerEventType(StrEnum):
@@ -352,7 +378,7 @@ class TimerManager:
         except asyncio.CancelledError:
             pass  # expected when timer is updated
 
-    def cancel_timer(self, timer_id: str) -> None:
+    async def async_cancel_timer(self, timer_id: str) -> None:
         """Cancel a timer."""
         timer = self.timers.pop(timer_id, None)
         if timer is None:
@@ -374,12 +400,13 @@ class TimerManager:
             timer.device_id,
         )
 
-    def add_time(self, timer_id: str, seconds: int) -> None:
-        """Add time to a timer."""
+    async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
+        """Add time to a timer, or remove it if duration is negative."""
         timer = self.timers.get(timer_id)
         if timer is None:
             raise TimerNotFoundError
 
+        seconds = round(duration.total_seconds())
         if seconds == 0:
             # Don't bother cancelling and recreating the timer task
             return
@@ -413,11 +440,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    def remove_time(self, timer_id: str, seconds: int) -> None:
-        """Remove time from a timer."""
-        self.add_time(timer_id, -seconds)
-
-    def pause_timer(self, timer_id: str) -> None:
+    async def async_pause_timer(self, timer_id: str) -> None:
         """Pauses a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -441,7 +464,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    def unpause_timer(self, timer_id: str) -> None:
+    async def async_unpause_timer(self, timer_id: str) -> None:
         """Unpause a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -528,9 +551,21 @@ def async_device_supports_timers(hass: HomeAssistant, device_id: str) -> bool:
     timer_manager: TimerManager | None = hass.data.get(TIMER_DATA)
     if timer_manager is None:
         return False
-    return timer_manager.is_timer_device(device_id) or (
-        async_get_timer_list_entity(hass, device_id) is not None
+    return timer_manager.is_timer_device(device_id) or bool(
+        _async_get_device_timer_list_entity_ids(hass, device_id)
     )
+
+
+@callback
+def _async_get_device_timer_list_entity_ids(
+    hass: HomeAssistant, device_id: str
+) -> list[str]:
+    """Find a device's enabled timer lists in the entity registry."""
+    return [
+        entry.entity_id
+        for entry in er.async_entries_for_device(er.async_get(hass), device_id)
+        if entry.domain == TIMER_LIST_DOMAIN
+    ]
 
 
 @callback
@@ -556,83 +591,135 @@ class _VoiceTimer:
     timer handler instead, in the timer manager.
     """
 
-    id: str
-    name: str | None
+    item: TimerItem
     device_id: str | None
     area_id: str | None
     area_name: str | None
     """Normalized name of the area."""
     floor_id: str | None
-    start_hours: int | None
-    start_minutes: int | None
-    start_seconds: int | None
-    is_active: bool
-    seconds_left: int
     language: str
-    entity: TimerListEntity | None = None
-    """Timer list holding the timer, or None for the timer manager."""
+    owner: TimerManager | TimerListEntity
 
     @property
     def name_normalized(self) -> str:
         """Return normalized timer name."""
-        return _normalize_name(self.name or "")
+        return _normalize_name(self.item.name or "")
 
-    @property
-    def start_total_seconds(self) -> int:
-        """Return the duration the timer was started with, in seconds."""
-        return (
-            60 * 60 * (self.start_hours or 0)
-            + 60 * (self.start_minutes or 0)
-            + (self.start_seconds or 0)
+    def as_speech_dict(self, now: datetime) -> dict[str, Any]:
+        """Format timer status for a voice response."""
+        item = self.item
+        total_seconds = round(item.remaining_at(now).total_seconds())
+        if isinstance(self.owner, TimerManager):
+            # Preserve the units used to start legacy timers.
+            legacy_timer = self.owner.timers[item.timer_id]
+            start_hours = legacy_timer.start_hours or 0
+            start_minutes = legacy_timer.start_minutes or 0
+            start_seconds = legacy_timer.start_seconds or 0
+        else:
+            start_minutes, start_seconds = divmod(
+                round(item.created_duration.total_seconds()), 60
+            )
+            start_hours, start_minutes = divmod(start_minutes, 60)
+
+        minutes, seconds = divmod(total_seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+
+        # Get lower-precision time for feedback
+        rounded_hours, rounded_minutes, rounded_seconds = _round_time(
+            hours, minutes, seconds
         )
 
+        return {
+            ATTR_ID: item.timer_id,
+            ATTR_NAME: item.name or "",
+            ATTR_DEVICE_ID: self.device_id or "",
+            "language": self.language,
+            "start_hours": start_hours,
+            "start_minutes": start_minutes,
+            "start_seconds": start_seconds,
+            "is_active": item.status == TimerStatus.ACTIVE,
+            "hours_left": hours,
+            "minutes_left": minutes,
+            "seconds_left": seconds,
+            "rounded_hours_left": rounded_hours,
+            "rounded_minutes_left": rounded_minutes,
+            "rounded_seconds_left": rounded_seconds,
+            "total_seconds_left": total_seconds,
+        }
 
-@callback
-def _async_get_voice_timers(hass: HomeAssistant, language: str) -> list[_VoiceTimer]:
-    """Return the active and paused timers of every device."""
+    async def async_cancel(self) -> None:
+        """Cancel the timer."""
+        await self.owner.async_cancel_timer(self.item.timer_id)
+
+    async def async_add_time(self, seconds: int) -> None:
+        """Add time to a timer, or remove it if seconds is negative."""
+        await self.owner.async_add_time(self.item.timer_id, timedelta(seconds=seconds))
+
+    async def async_pause(self) -> None:
+        """Pause the timer."""
+        await self.owner.async_pause_timer(self.item.timer_id)
+
+    async def async_unpause(self) -> None:
+        """Unpause the timer."""
+        await self.owner.async_unpause_timer(self.item.timer_id)
+
+
+async def _async_get_user_permissions(
+    intent_obj: intent.Intent,
+) -> AbstractPermissions | None:
+    """Return the caller's permissions, if the intent has a user context."""
+    if not (user_id := intent_obj.context.user_id):
+        return None
+    if (user := await intent_obj.hass.auth.async_get_user(user_id)) is None:
+        raise UnknownUser(context=intent_obj.context, user_id=user_id)
+    return user.permissions
+
+
+async def _async_get_voice_timers(
+    intent_obj: intent.Intent, permission: str
+) -> list[_VoiceTimer]:
+    """Return active and paused timers accessible to the caller."""
+    hass = intent_obj.hass
+    permissions = await _async_get_user_permissions(intent_obj)
     timer_manager: TimerManager = hass.data[TIMER_DATA]
+    now = dt_util.utcnow()
+    monotonic_now = time.monotonic_ns()
     timers = [
         _VoiceTimer(
-            id=timer.id,
-            name=timer.name,
+            item=timer.to_timer_item(now, monotonic_now),
+            owner=timer_manager,
             device_id=timer.device_id,
             area_id=timer.area_id,
             area_name=timer.area_name,
             floor_id=timer.floor_id,
-            start_hours=timer.start_hours,
-            start_minutes=timer.start_minutes,
-            start_seconds=timer.start_seconds,
-            is_active=timer.is_active,
-            seconds_left=timer.seconds_left,
             language=timer.language,
         )
         for timer in timer_manager.timers.values()
         if not timer.conversation_command
     ]
 
-    now = dt_util.utcnow()
-    for entity in async_get_timer_list_entities(hass):
-        timers.extend(_async_get_timer_list_voice_timers(hass, entity, now, language))
+    for entry in er.async_get(hass).entities.values():
+        if (
+            entry.domain == TIMER_LIST_DOMAIN
+            and not entry.disabled
+            and (
+                permissions is None
+                or permissions.check_entity(entry.entity_id, permission)
+            )
+        ):
+            timers.extend(
+                _async_get_timer_list_voice_timers(hass, entry, intent_obj.language)
+            )
 
     return timers
 
 
 @callback
 def _async_get_timer_list_voice_timers(
-    hass: HomeAssistant, entity: TimerListEntity, now: datetime, language: str
+    hass: HomeAssistant, entity_entry: er.RegistryEntry, language: str
 ) -> list[_VoiceTimer]:
     """Return the active and paused timers of a timer list."""
-    device_id: str | None = None
-    area_id: str | None = None
-    if entity_entry := er.async_get(hass).async_get(entity.entity_id):
-        device_id = entity_entry.device_id
-        area_id = entity_entry.area_id
-        if (
-            area_id is None
-            and device_id is not None
-            and (device := dr.async_get(hass).async_get(device_id))
-        ):
-            area_id = dr.async_get_effective_area_id(hass, device)
+    area_id = er.async_get_effective_area_id(hass, entity_entry)
 
     area_name: str | None = None
     floor_id: str | None = None
@@ -640,12 +727,14 @@ def _async_get_timer_list_voice_timers(
         area_name = _normalize_name(area.name)
         floor_id = area.floor_id
 
+    if (entity := async_get_timer_list_entity(hass, entity_entry.entity_id)) is None:
+        return []
+
     return [
-        _timer_item_to_voice_timer(
-            item,
-            now,
-            entity=entity,
-            device_id=device_id,
+        _VoiceTimer(
+            item=item,
+            owner=entity,
+            device_id=entity_entry.device_id,
             area_id=area_id,
             area_name=area_name,
             floor_id=floor_id,
@@ -656,100 +745,20 @@ def _async_get_timer_list_voice_timers(
     ]
 
 
-def _timer_item_to_voice_timer(
-    item: TimerItem,
-    now: datetime,
-    *,
-    entity: TimerListEntity,
-    device_id: str | None,
-    area_id: str | None,
-    area_name: str | None,
-    floor_id: str | None,
-    language: str,
-) -> _VoiceTimer:
-    """Return the voice timer of a timer list item."""
-    minutes, seconds = divmod(round(item.created_duration.total_seconds()), 60)
-    hours, minutes = divmod(minutes, 60)
-    return _VoiceTimer(
-        id=item.timer_id,
-        name=item.name,
-        device_id=device_id,
-        area_id=area_id,
-        area_name=area_name,
-        floor_id=floor_id,
-        start_hours=hours,
-        start_minutes=minutes,
-        start_seconds=seconds,
-        is_active=item.status == TimerStatus.ACTIVE,
-        seconds_left=round(item.remaining_at(now).total_seconds()),
-        language=language,
-        entity=entity,
-    )
-
-
-async def _async_cancel_timer(hass: HomeAssistant, timer: _VoiceTimer) -> None:
-    """Cancel a timer."""
-    if timer.entity is None:
-        timer_manager: TimerManager = hass.data[TIMER_DATA]
-        timer_manager.cancel_timer(timer.id)
-    else:
-        await timer.entity.async_cancel_timer(timer.id)
-
-
-async def _async_add_time(
-    hass: HomeAssistant, timer: _VoiceTimer, seconds: int
-) -> None:
-    """Add time to a timer, or remove it if seconds is negative."""
-    if timer.entity is None:
-        timer_manager: TimerManager = hass.data[TIMER_DATA]
-        timer_manager.add_time(timer.id, seconds)
-    else:
-        await timer.entity.async_add_time(timer.id, timedelta(seconds=seconds))
-
-
-async def _async_pause_timer(hass: HomeAssistant, timer: _VoiceTimer) -> None:
-    """Pause a timer."""
-    if timer.entity is None:
-        timer_manager: TimerManager = hass.data[TIMER_DATA]
-        timer_manager.pause_timer(timer.id)
-    else:
-        await timer.entity.async_pause_timer(timer.id)
-
-
-async def _async_unpause_timer(hass: HomeAssistant, timer: _VoiceTimer) -> None:
-    """Unpause a timer."""
-    if timer.entity is None:
-        timer_manager: TimerManager = hass.data[TIMER_DATA]
-        timer_manager.unpause_timer(timer.id)
-    else:
-        await timer.entity.async_unpause_timer(timer.id)
-
-
-class FindTimerFilter(StrEnum):
-    """Type of filter to apply when finding a timer."""
-
-    ONLY_ACTIVE = "only_active"
-    ONLY_INACTIVE = "only_inactive"
-
-
-def _find_timer(
+async def _async_find_timer(
     intent_obj: intent.Intent,
     slots: dict[str, Any],
-    find_filter: FindTimerFilter | None = None,
+    status: TimerStatus | None = None,
 ) -> _VoiceTimer:
     """Match a single timer with constraints or raise an error."""
     hass = intent_obj.hass
     device_id = intent_obj.device_id
-    matching_timers = _async_get_voice_timers(hass, intent_obj.language)
+    matching_timers = await _async_get_voice_timers(intent_obj, POLICY_CONTROL)
     has_filter = False
 
-    if find_filter:
-        # Filter by active state
+    if status is not None:
         has_filter = True
-        if find_filter == FindTimerFilter.ONLY_ACTIVE:
-            matching_timers = [t for t in matching_timers if t.is_active]
-        elif find_filter == FindTimerFilter.ONLY_INACTIVE:
-            matching_timers = [t for t in matching_timers if not t.is_active]
+        matching_timers = [t for t in matching_timers if t.item.status == status]
 
         if len(matching_timers) == 1:
             # Only 1 match
@@ -787,7 +796,9 @@ def _find_timer(
         has_filter = True
         start_total_seconds = _get_total_seconds(slots, "start_")
         matching_timers = [
-            t for t in matching_timers if t.start_total_seconds == start_total_seconds
+            t
+            for t in matching_timers
+            if round(t.item.created_duration.total_seconds()) == start_total_seconds
         ]
 
         if len(matching_timers) == 1:
@@ -845,11 +856,13 @@ def _find_timer(
     raise TimerNotFoundError
 
 
-def _find_timers(intent_obj: intent.Intent, slots: dict[str, Any]) -> list[_VoiceTimer]:
+async def _async_find_timers(
+    intent_obj: intent.Intent, slots: dict[str, Any], permission: str
+) -> list[_VoiceTimer]:
     """Match multiple timers with constraints or raise an error."""
     hass = intent_obj.hass
     device_id = intent_obj.device_id
-    matching_timers = _async_get_voice_timers(hass, intent_obj.language)
+    matching_timers = await _async_get_voice_timers(intent_obj, permission)
 
     # Filter by name first
     name: str | None = None
@@ -879,7 +892,9 @@ def _find_timers(intent_obj: intent.Intent, slots: dict[str, Any]) -> list[_Voic
     if _has_start_time(slots):
         start_total_seconds = _get_total_seconds(slots, "start_")
         matching_timers = [
-            t for t in matching_timers if t.start_total_seconds == start_total_seconds
+            t
+            for t in matching_timers
+            if round(t.item.created_duration.total_seconds()) == start_total_seconds
         ]
         if not matching_timers:
             # No matches
@@ -1018,7 +1033,13 @@ class StartTimerIntentHandler(intent.IntentHandler):
 
         timer_list: TimerListEntity | None = None
         if intent_obj.device_id:
-            timer_list = async_get_timer_list_entity(hass, intent_obj.device_id)
+            for entity_id in _async_get_device_timer_list_entity_ids(
+                hass, intent_obj.device_id
+            ):
+                if (
+                    timer_list := async_get_timer_list_entity(hass, entity_id)
+                ) is not None:
+                    break
 
         if (
             (not conversation_command)
@@ -1054,6 +1075,16 @@ class StartTimerIntentHandler(intent.IntentHandler):
             seconds = int(slots["seconds"]["value"])
 
         if (not conversation_command) and (timer_list is not None):
+            permissions = await _async_get_user_permissions(intent_obj)
+            if permissions is not None and not permissions.check_entity(
+                timer_list.entity_id, POLICY_CONTROL
+            ):
+                raise Unauthorized(
+                    context=intent_obj.context,
+                    entity_id=timer_list.entity_id,
+                    permission=POLICY_CONTROL,
+                    perm_category=CAT_ENTITIES,
+                )
             await timer_list.async_create_timer(
                 name=name, duration=timedelta(seconds=_get_total_seconds(slots))
             )
@@ -1130,11 +1161,10 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(intent_obj, slots)
-        await _async_cancel_timer(hass, timer)
+        timer = await _async_find_timer(intent_obj, slots)
+        await timer.async_cancel()
         return intent_obj.create_response()
 
 
@@ -1150,12 +1180,11 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         canceled = 0
 
-        for timer in _find_timers(intent_obj, slots):
-            await _async_cancel_timer(hass, timer)
+        for timer in await _async_find_timers(intent_obj, slots, POLICY_CONTROL):
+            await timer.async_cancel()
             canceled += 1
 
         response = intent_obj.create_response()
@@ -1183,12 +1212,11 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(intent_obj, slots)
-        await _async_add_time(hass, timer, total_seconds)
+        timer = await _async_find_timer(intent_obj, slots)
+        await timer.async_add_time(total_seconds)
         return intent_obj.create_response()
 
 
@@ -1207,12 +1235,11 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(intent_obj, slots)
-        await _async_add_time(hass, timer, -total_seconds)
+        timer = await _async_find_timer(intent_obj, slots)
+        await timer.async_add_time(-total_seconds)
         return intent_obj.create_response()
 
 
@@ -1230,11 +1257,10 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(intent_obj, slots, find_filter=FindTimerFilter.ONLY_ACTIVE)
-        await _async_pause_timer(hass, timer)
+        timer = await _async_find_timer(intent_obj, slots, status=TimerStatus.ACTIVE)
+        await timer.async_pause()
         return intent_obj.create_response()
 
 
@@ -1252,13 +1278,10 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(
-            intent_obj, slots, find_filter=FindTimerFilter.ONLY_INACTIVE
-        )
-        await _async_unpause_timer(hass, timer)
+        timer = await _async_find_timer(intent_obj, slots, status=TimerStatus.PAUSED)
+        await timer.async_unpause()
         return intent_obj.create_response()
 
 
@@ -1278,39 +1301,11 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
 
-        statuses: list[dict[str, Any]] = []
-        for timer in _find_timers(intent_obj, slots):
-            total_seconds = timer.seconds_left
-
-            minutes, seconds = divmod(total_seconds, 60)
-            hours, minutes = divmod(minutes, 60)
-
-            # Get lower-precision time for feedback
-            rounded_hours, rounded_minutes, rounded_seconds = _round_time(
-                hours, minutes, seconds
-            )
-
-            statuses.append(
-                {
-                    ATTR_ID: timer.id,
-                    ATTR_NAME: timer.name or "",
-                    ATTR_DEVICE_ID: timer.device_id or "",
-                    "language": timer.language,
-                    "start_hours": timer.start_hours or 0,
-                    "start_minutes": timer.start_minutes or 0,
-                    "start_seconds": timer.start_seconds or 0,
-                    "is_active": timer.is_active,
-                    "hours_left": hours,
-                    "minutes_left": minutes,
-                    "seconds_left": seconds,
-                    "rounded_hours_left": rounded_hours,
-                    "rounded_minutes_left": rounded_minutes,
-                    "rounded_seconds_left": rounded_seconds,
-                    "total_seconds_left": total_seconds,
-                }
-            )
-
+        timers = await _async_find_timers(intent_obj, slots, POLICY_READ)
+        now = dt_util.utcnow()
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"timers": statuses})
+        response.async_set_speech_slots(
+            {"timers": [timer.as_speech_dict(now) for timer in timers]}
+        )
 
         return response
