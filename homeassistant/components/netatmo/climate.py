@@ -1,5 +1,6 @@
 """Support for Netatmo Smart thermostats."""
 
+from datetime import datetime
 import logging
 from typing import Any, cast, override
 
@@ -22,9 +23,10 @@ from homeassistant.const import (
     STATE_OFF,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -39,7 +41,7 @@ from .const import (
     NETATMO_CREATE_CLIMATE,
     NetatmoServiceArgument,
 )
-from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
+from .coordinator import ACCOUNT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
 from .helper import device_type_to_str
 
@@ -139,6 +141,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
+    _unsub_therm_mode_end: CALLBACK_TYPE | None = None
     _connected: bool | None = None
 
     _away_temperature: float | None = None
@@ -189,6 +192,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     self.handle_event,
                 )
             )
+        self.async_on_remove(self._async_cancel_therm_mode_end)
 
     @callback
     def handle_event(self, event: dict) -> None:
@@ -235,10 +239,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode == PRESET_AWAY:
                 self._attr_native_target_temperature = self._away_temperature
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
-                self.async_update_callback()
-                self.data_handler.async_force_update(self._signal_name)
+                # The cached home mode is stale until the refresh below.
+                self.async_update_callback(home[EVENT_TYPE_THERM_MODE])
+                self._async_refresh_home_therm_mode()
                 return
             self.async_write_ha_state()
+            self._async_refresh_home_therm_mode()
             return
 
         for room in home.get("rooms", []):
@@ -332,11 +338,47 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self.device.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
         elif preset_mode in THERM_MODES:
-            await self.device.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            await self._async_set_home_therm_mode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
         self.async_write_ha_state()
+
+    async def _async_set_home_therm_mode(
+        self, mode: str, end_time: int | None = None
+    ) -> None:
+        """Set the home mode and refresh it from Netatmo."""
+        if not await self.home.async_set_thermmode(mode, end_time=end_time):
+            return
+        self._async_refresh_home_therm_mode()
+        self._async_cancel_therm_mode_end()
+        if end_time is not None and mode in (STATE_NETATMO_AWAY, STATE_NETATMO_HG):
+            # Netatmo returns to the schedule on its own when a timed mode ends.
+            self._unsub_therm_mode_end = async_track_point_in_utc_time(
+                self.hass,
+                self._async_handle_therm_mode_end,
+                dt_util.utc_from_timestamp(end_time),
+            )
+
+    @callback
+    def _async_cancel_therm_mode_end(self) -> None:
+        """Cancel the refresh scheduled for the end of a timed mode."""
+        if self._unsub_therm_mode_end is not None:
+            self._unsub_therm_mode_end()
+            self._unsub_therm_mode_end = None
+
+    @callback
+    def _async_handle_therm_mode_end(self, _now: datetime) -> None:
+        """Refresh the home mode once a timed mode has ended."""
+        self._unsub_therm_mode_end = None
+        self._async_refresh_home_therm_mode()
+
+    @callback
+    def _async_refresh_home_therm_mode(self) -> None:
+        """Fetch the home mode, which only the topology reports, then the rooms."""
+        self.data_handler.async_force_update(self._signal_name)
+        # Forced last so the topology is fetched before the room status.
+        self.data_handler.async_force_update(ACCOUNT)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -372,8 +414,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
     @callback
     @override
-    def async_update_callback(self) -> None:
-        """Update the entity's state."""
+    def async_update_callback(self, home_therm_mode: str | None = None) -> None:
+        """Update the entity's state, optionally with a home mode just reported."""
         if not self.device.reachable:
             if self._connected:
                 self._connected = False
@@ -389,8 +431,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
 
-        if therm_setpoint_mode is None:
-            therm_setpoint_mode = STATE_NETATMO_SCHEDULE
+        # A room in "home" mode follows the home mode (schedule, away or frost
+        # guard), which the API only reports on the home.
+        if therm_setpoint_mode in (None, STATE_NETATMO_HOME):
+            therm_setpoint_mode = home_therm_mode or self.home.therm_mode
+            if therm_setpoint_mode not in NETATMO_MAP_PRESET:
+                therm_setpoint_mode = STATE_NETATMO_SCHEDULE
 
         self._attr_preset_mode = NETATMO_MAP_PRESET[therm_setpoint_mode]
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
@@ -451,8 +497,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         end_datetime = kwargs[NetatmoServiceArgument.END_DATETIME]
         end_timestamp = int(dt_util.as_timestamp(end_datetime))
 
-        await self.home.async_set_thermmode(
-            mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
+        await self._async_set_home_therm_mode(
+            PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
         )
         _LOGGER.debug(
             "Setting %s preset to %s with end datetime %s",
