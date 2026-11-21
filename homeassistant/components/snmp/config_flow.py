@@ -48,7 +48,6 @@ from .const import (
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
-    DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
@@ -57,13 +56,7 @@ from .const import (
     SUBENTRY_TYPE_DEVICE_TRACKER,
     USM_WRONG_DIGEST_INDICATIONS,
 )
-from .util import (
-    async_create_request_cmd_args,
-    async_create_transport_target,
-    async_normalize_oid,
-    create_auth_data,
-    is_unknown_context,
-)
+from .util import async_normalize_oid, is_unknown_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,29 +126,20 @@ DEVICE_TRACKER_DATA_SCHEMA = probatio.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
-    host = data[CONF_HOST]
-    port = data.get(CONF_PORT, DEFAULT_PORT)
     version = data.get(CONF_VERSION, DEFAULT_VERSION)
-    context_name = data.get(CONF_CONTEXT_NAME)
 
     try:
-        target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
+        client = await SnmpClient.async_create(hass, data)
     except PySnmpError as err:
         _LOGGER.debug("SNMP target creation failed: %s", err)
         raise CannotConnect from err
 
-    # The coherence check of the v3 step keeps pysnmp from refusing the credentials
-    auth_data = create_auth_data(data, version)
-
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.
-    test_oid = "1.3.6.1.2.1.1.1.0"
-    request_args = await async_create_request_cmd_args(
-        hass, auth_data, target, test_oid, context_name
-    )
-
     try:
-        err_indication, err_status, _, _ = await get_cmd(*request_args)
+        err_indication, err_status, _, _ = await get_cmd(
+            *client.request_args("1.3.6.1.2.1.1.1.0")
+        )
     except WrongValueError as err:
         # pysnmp raises WrongValueError when v3 credentials/keys match the wrong protocol
         raise UsmWrongDigests from err

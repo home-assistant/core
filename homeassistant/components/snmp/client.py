@@ -32,6 +32,7 @@ from .const import (
     INVALID_CREDENTIAL_INDICATIONS,
 )
 from .util import (
+    RequestArgsType,
     async_create_transport_target,
     async_get_snmp_engine,
     create_auth_data,
@@ -88,6 +89,16 @@ class SnmpClient:
             target=await async_create_transport_target(host, port, DEFAULT_TIMEOUT),
             context_data=create_context_data(data.get(CONF_CONTEXT_NAME)),
             version=version,
+        )
+
+    def request_args(self, object_id: str) -> RequestArgsType:
+        """Return the arguments to read the given object of the device."""
+        return (
+            self.engine,
+            self.auth_data,
+            self.target,
+            self.context_data,
+            ObjectType(ObjectIdentity(object_id)),
         )
 
     async def async_walk(self, baseoid: str) -> AsyncGenerator[tuple[Any, Any]]:
