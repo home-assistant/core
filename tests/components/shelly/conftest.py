@@ -506,8 +506,8 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000000.0,
         "duration": 12,
         "size": 123456,
-        "url": "http://192.168.1.37/storage/0/aaaa1111/MOV_0001.mp4",
-        "thumbnail_url": "http://192.168.1.37/storage/0/aaaa1111/thumb_0001.jpg",
+        "url": "/storage/0/aaaa1111/MOV_0001.mp4",
+        "thumbnail_url": "/storage/0/aaaa1111/thumb_0001.jpg",
         "trigger": {
             "component": "camerazone:200",
             "event": "motion_detected",
@@ -520,7 +520,7 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000060.0,
         "duration": 30,
         "size": 234567,
-        "url": "http://192.168.1.37/storage/0/bbbb2222/MOV_0002.mp4",
+        "url": "/storage/0/bbbb2222/MOV_0002.mp4",
         "thumbnail_url": "/storage/0/bbbb2222/thumb_0002.jpg",
         "trigger": {
             "component": "camerazone:200",
@@ -533,7 +533,7 @@ MOCK_STORAGE_ITEMS = [
         "type": "image",
         "ts": 1750000120.0,
         "size": 34567,
-        "url": "http://192.168.1.37/storage/0/cccc3333/IMG_0003.jpg",
+        "url": "/storage/0/cccc3333/IMG_0003.jpg",
         "thumbnail_url": "/storage/0/cccc3333/thumb_0003.jpg",
     },
     {
@@ -542,8 +542,8 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000180.0,
         "duration": 15,
         "size": 345678,
-        "url": "http://192.168.1.37/storage/0/dddd4444/MOV_0004.mp4",
-        "thumbnail_url": "http://192.168.1.37/storage/0/dddd4444/thumb_0004.jpg",
+        "url": "/storage/0/dddd4444/MOV_0004.mp4",
+        "thumbnail_url": "/storage/0/dddd4444/thumb_0004.jpg",
     },
     {
         "media_id": "55555555-5555-5555-5555-555555555555",
@@ -551,7 +551,7 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000240.0,
         "duration": 8,
         "size": 456789,
-        "url": "http://192.168.1.37/storage/0/eeee5555/MOV_0005.mp4",
+        "url": "/storage/0/eeee5555/MOV_0005.mp4",
         "thumbnail_url": "/storage/0/eeee5555/thumb_0005.jpg",
         "trigger": {
             "component": "camerazone:200",
@@ -564,8 +564,8 @@ MOCK_STORAGE_ITEMS = [
         "type": "image",
         "ts": 1750000300.0,
         "size": 45678,
-        "url": "http://192.168.1.37/storage/0/ffff6666/IMG_0006.jpg",
-        "thumbnail_url": "http://192.168.1.37/storage/0/ffff6666/thumb_0006.jpg",
+        "url": "/storage/0/ffff6666/IMG_0006.jpg",
+        "thumbnail_url": "/storage/0/ffff6666/thumb_0006.jpg",
         "trigger": {
             "component": "camerazone:200",
             "event": "motion_detected",
@@ -578,8 +578,8 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000360.0,
         "duration": 20,
         "size": 567890,
-        "url": "http://192.168.1.37/storage/0/gggg7777/MOV_0007.mp4",
-        "thumbnail_url": "http://192.168.1.37/storage/0/gggg7777/thumb_0007.jpg",
+        "url": "/storage/0/gggg7777/MOV_0007.mp4",
+        "thumbnail_url": "/storage/0/gggg7777/thumb_0007.jpg",
     },
     {
         "media_id": "88888888-8888-8888-8888-888888888888",
@@ -587,7 +587,7 @@ MOCK_STORAGE_ITEMS = [
         "ts": 1750000420.0,
         "duration": 5,
         "size": 678901,
-        "url": "http://192.168.1.37/storage/0/hhhh8888/MOV_0008.mp4",
+        "url": "/storage/0/hhhh8888/MOV_0008.mp4",
         "thumbnail_url": "/storage/0/hhhh8888/thumb_0008.jpg",
         "trigger": {
             "component": "camerazone:200",

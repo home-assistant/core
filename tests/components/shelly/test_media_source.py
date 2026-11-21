@@ -1,10 +1,15 @@
 """Tests for Shelly camera storage media source."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import MODEL_CAMERA
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    NotInitialized,
+    RpcCallError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -76,6 +81,26 @@ async def test_root_skips_non_camera(
     result = await media_source.async_browse_media(hass, "media-source://shelly")
 
     assert result.children == []
+
+
+async def test_sleeping_device_is_ignored(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
+    """Test a sleeping device is not listed and its status is never read."""
+    type(mock_rpc_device).status = PropertyMock(side_effect=NotInitialized)
+    assert await async_setup_component(hass, "media_source", {})
+    entry = await init_integration(hass, 2, sleep_period=1000)
+
+    result = await media_source.async_browse_media(hass, "media-source://shelly")
+
+    assert result.children == []
+
+    with pytest.raises(BrowseError) as excinfo:
+        await media_source.async_browse_media(
+            hass, f"media-source://shelly/{entry.entry_id}"
+        )
+
+    assert excinfo.value.translation_key == "unexpected_identifier"
 
 
 async def test_browse_storage(

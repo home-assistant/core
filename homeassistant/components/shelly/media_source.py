@@ -50,6 +50,15 @@ async def async_get_media_source(hass: HomeAssistant) -> ShellyStorageMediaSourc
     return ShellyStorageMediaSource(hass)
 
 
+def _get_storage_coordinator(entry: ShellyConfigEntry) -> ShellyRpcCoordinator | None:
+    """Return the RPC coordinator of a device that can have storage."""
+    coordinator = entry.runtime_data.rpc
+    if coordinator is None or coordinator.sleep_period:
+        return None
+
+    return coordinator
+
+
 def _has_active_storage(coordinator: ShellyRpcCoordinator) -> bool:
     """Return true if the device storage is mounted and ready."""
     return bool(coordinator.device.status.get(STORAGE_KEY, {}).get("active"))
@@ -126,7 +135,7 @@ class ShellyStorageMediaSource(MediaSource):
             entry is None
             or entry.domain != DOMAIN
             or entry.state is not ConfigEntryState.LOADED
-            or (coordinator := entry.runtime_data.rpc) is None
+            or (coordinator := _get_storage_coordinator(entry)) is None
         ):
             raise error_cls(
                 translation_domain=DOMAIN,
@@ -169,7 +178,7 @@ class ShellyStorageMediaSource(MediaSource):
             children=[
                 self._async_storage_folder(entry)
                 for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
-                if (coordinator := entry.runtime_data.rpc) is not None
+                if (coordinator := _get_storage_coordinator(entry)) is not None
                 and _has_active_storage(coordinator)
             ],
         )
