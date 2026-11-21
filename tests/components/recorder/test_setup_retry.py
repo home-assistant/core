@@ -283,18 +283,28 @@ async def test_extended_retry_stops_on_a_non_connection_error(
     assert attempt.call_count == 1
 
 
-@pytest.mark.parametrize("released_early", [True, False])
+@pytest.mark.parametrize(
+    ("released_early", "current_version", "refused"),
+    [
+        (True, 1, True),
+        (False, 1, False),
+        # Live-compatible upgrades still recover after an early release
+        (True, migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION, False),
+    ],
+)
 async def test_late_database_needing_offline_migration(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     released_early: bool,
+    current_version: int,
+    refused: bool,
 ) -> None:
     """A database reached after setup was released is not migrated offline."""
     instance = await _make_instance(async_setup_recorder_instance, hass)
     instance._setup_released_early = released_early
     status = migration.SchemaValidationStatus(
-        current_version=1,
+        current_version=current_version,
         initial_version=1,
         migration_needed=True,
         non_live_data_migration_needed=False,
@@ -317,8 +327,52 @@ async def test_late_database_needing_offline_migration(
     ):
         await hass.async_add_executor_job(instance._run)
 
-    assert migrate.called is (not released_early)
-    assert ("needs an offline schema migration" in caplog.text) is released_early
+    assert migrate.called is (not refused)
+    assert ("needs an offline migration" in caplog.text) is refused
+
+
+async def test_queries_wait_for_a_database_that_arrives_late(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """After an early release a job waits for db ready instead of failing."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance._setup_released_early = True
+    instance.async_db_ready = hass.loop.create_future()
+
+    job = instance.async_add_executor_job(lambda: "ran")
+    await asyncio.sleep(0)
+    assert not job.done()
+
+    instance.async_db_ready.set_result(True)
+    assert await job == "ran"
+
+
+async def test_queries_fail_cleanly_when_the_database_never_arrives(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """A recorder that gave up fails queued jobs with a plain error."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance._setup_released_early = True
+    instance.async_db_ready = hass.loop.create_future()
+
+    job = instance.async_add_executor_job(lambda: "ran")
+    instance.async_db_ready.set_result(False)
+
+    with pytest.raises(RuntimeError, match="has not been established"):
+        await job
+
+
+async def test_queries_run_at_once_without_an_early_release(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """The normal path is untouched: no waiting when setup was not released."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance.async_db_ready = hass.loop.create_future()
+
+    assert await instance.async_add_executor_job(lambda: "ran") == "ran"
 
 
 async def test_sqlite_does_not_extend(

@@ -372,7 +372,21 @@ class Recorder(threading.Thread):
         self, target: Callable[..., _T], *args: Any
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
+        if self._setup_released_early and not self.async_db_ready.done():
+            # Setup returned before the database was reachable, so dependents
+            # can call in before the executor and session exist.
+            return self.hass.loop.create_task(
+                self._async_run_once_db_ready(target, *args)
+            )
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
+
+    async def _async_run_once_db_ready[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> _T:
+        """Run an executor job once the database is ready, or fail cleanly."""
+        if not await self.async_db_ready:
+            raise RuntimeError("The database connection has not been established")
+        return await self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
     @callback
     def _async_check_queue(self, *_: Any) -> None:
@@ -816,12 +830,12 @@ class Recorder(threading.Thread):
             return
         self.schema_version = schema_status.current_version
 
-        if self._setup_released_early and schema_status.migration_needed:
+        if self._setup_released_early and not migration.live_migration(schema_status):
             # Dependents were set up while the database was unreachable and
             # would query tables the offline migration is altering.
             _LOGGER.error(
                 "The database became reachable after startup but needs an "
-                "offline schema migration, restart Home Assistant to run it"
+                "offline migration, restart Home Assistant to run it"
             )
             return
 
