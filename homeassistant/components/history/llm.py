@@ -190,16 +190,16 @@ class GetHistoryTool(Tool):
     title = "Get history"
     description = (
         "Retrieve the long-term statistics of one or more entities or other "
-        "statistics as CSV, with "
-        "times as ISO 8601 datetimes in local time. Use this to answer questions "
-        "about past values or how a value evolved over time. Each row aggregates "
-        "one period, such as the mean, min and max of a temperature or the change "
-        "of an energy meter. Statistics are only available for entities with "
-        "numeric statistics (sensors with a state class) and are based on completed "
-        "recording intervals, but daily, weekly, and monthly aggregates may be "
-        "partial. Values are converted to the unit of the entity when possible. "
-        "'unit' gives the unit of the values. A 'period' on a statistic replaces "
-        "the period of the result for that statistic."
+        "statistics as CSV, with times as ISO 8601 datetimes in local time. Use this "
+        "to answer questions about past values or how a value evolved over time. "
+        "Each row aggregates one period, such as the mean, min and max of a temperature "
+        "or the change of an energy meter. Entities only have statistics when they "
+        "are numeric sensors with a state class, and integrations can add statistics "
+        "without an entity. history__search_statistics finds them. Statistics are "
+        "based on completed recording intervals, but daily, weekly, and monthly "
+        "aggregates may be partial. Values are converted to the unit of the entity "
+        "when possible. 'unit' gives the unit of the values. A 'period' on a "
+        "statistic replaces the period of the result for that statistic."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
