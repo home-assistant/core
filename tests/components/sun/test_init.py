@@ -1,6 +1,7 @@
 """The tests for the Sun component."""
 
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import patch
 
 from astral import LocationInfo
@@ -12,8 +13,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
 from homeassistant.components.sun.const import SunEntityStateAttribute
-from homeassistant.const import EVENT_STATE_CHANGED, Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -254,6 +256,43 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(entity.ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("translations_mock", "expected_name"),
+    [
+        pytest.param(
+            {"return_value": {"component.sun.entity.sun.sun.name": "Zon"}},
+            "Zon",
+            id="translated",
+        ),
+        pytest.param(
+            {"side_effect": HomeAssistantError("Error while loading")},
+            "Sun",
+            id="translation_load_error",
+        ),
+    ],
+)
+async def test_sun_name_translated(
+    hass: HomeAssistant,
+    translations_mock: dict[str, Any],
+    expected_name: str,
+) -> None:
+    """Test the sun entity name follows the system language, falling back to English."""
+    hass.config.language = "nl"
+    config_entry = MockConfigEntry(domain=sun.DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        **translations_mock,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity.ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_name
 
 
 async def test_cleanup_deprecated_solar_rising(
