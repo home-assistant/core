@@ -1,0 +1,10 @@
+[
+  {
+    "id": "device_12345",
+    "deviceName": "Test Hinen Device",
+    "serialNumber": "SN123456789",
+    "imgUrl": "https://example.com/device_image.jpg",
+    "createTime": "2023-01-01 12:00:00",
+    "updateTime": "2023-01-01 12:00:00"
+  }
+]
