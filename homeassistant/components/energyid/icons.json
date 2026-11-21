@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_directive_schedule": {
+      "service": "mdi:timeline-clock-outline"
+    }
+  }
+}

@@ -9,20 +9,26 @@ from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 
-from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -38,10 +44,20 @@ from .coordinator import (
     EnergyIDRuntimeData,
     async_directives_enabled,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
+PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the EnergyID component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
@@ -115,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         _LOGGER.warning(
             "Unable to retrieve EnergyID directives, retrying later: %s", err
         )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
         """Callback for periodically synchronizing sensor data."""
@@ -391,6 +408,8 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
+
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     try:
         # Unload subentries if present (guarded for test and reload scenarios)
