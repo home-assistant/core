@@ -393,3 +393,75 @@ async def test_set_expiry_date(
 
     store.async_set_expiry(token, enable_expiry=True)
     assert token.expire_at is not None
+
+
+# Policies only grant access, so cameras are hidden by not listing their domain.
+NO_CAMERA_POLICY = {"entities": {"domains": {"light": True, "switch": True}}}
+
+
+async def test_custom_group_crud_and_persistence(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test creating, updating, persisting and removing a custom group."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+
+    group = await store.async_create_group("Guests", NO_CAMERA_POLICY)
+    assert not group.system_generated
+    user = await store.async_create_user("Guest", group_ids=[group.id])
+    assert not user.permissions.check_entity("camera.front_door", "read")
+    assert user.permissions.check_entity("light.kitchen", "read")
+
+    # Policy changes take effect for existing members.
+    await store.async_update_group(
+        group, name="Visitors", policy={"entities": {"all": True}}
+    )
+    assert group.name == "Visitors"
+    assert user.permissions.check_entity("camera.front_door", "read")
+
+    await store.async_update_group(group, policy=NO_CAMERA_POLICY)
+    hass_storage[auth_store.STORAGE_KEY] = {
+        "version": auth_store.STORAGE_VERSION,
+        "data": store._data_to_save(),
+    }
+
+    loaded_store = auth_store.AuthStore(hass)
+    await loaded_store.async_load()
+    loaded_group = await loaded_store.async_get_group(group.id)
+    assert loaded_group is not None
+    assert loaded_group.name == "Visitors"
+    assert loaded_group.policy == NO_CAMERA_POLICY
+    loaded_user = await loaded_store.async_get_user(user.id)
+    assert loaded_user.groups == [loaded_group]
+    assert not loaded_user.permissions.check_entity("camera.front_door", "read")
+
+    await loaded_store.async_remove_group(loaded_group)
+    assert await loaded_store.async_get_group(group.id) is None
+    assert loaded_user.groups == []
+    assert not loaded_user.permissions.check_entity("light.kitchen", "read")
+    assert group.id not in [g["id"] for g in loaded_store._data_to_save()["groups"]]
+
+
+@pytest.mark.parametrize(
+    "group_id",
+    [
+        auth_store.GROUP_ID_ADMIN,
+        auth_store.GROUP_ID_USER,
+        auth_store.GROUP_ID_READ_ONLY,
+    ],
+)
+async def test_system_groups_cannot_be_modified(
+    hass: HomeAssistant, group_id: str
+) -> None:
+    """Test system groups cannot be updated or removed."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    group = await store.async_get_group(group_id)
+
+    with pytest.raises(ValueError):
+        await store.async_update_group(group, name="Hacked")
+    with pytest.raises(ValueError):
+        await store.async_remove_group(group)
+
+    assert group.name != "Hacked"
+    assert await store.async_get_group(group_id) is group
