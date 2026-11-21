@@ -39,7 +39,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import TargetKey
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -1072,7 +1072,7 @@ _TURN_ON_MODES = [
 async def _setup_turn_on_entity(
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    mode: ClimateMode,
+    mode: ClimateMode | None,
 ):
     """Set up a climate entity with several modes for turn_on tests."""
     return await mock_esphome_device(
@@ -1085,7 +1085,7 @@ async def _setup_turn_on_entity(
                 supported_modes=_TURN_ON_MODES,
             )
         ],
-        states=[ClimateState(key=1, mode=mode)],
+        states=[] if mode is None else [ClimateState(key=1, mode=mode)],
     )
 
 
@@ -1297,4 +1297,37 @@ async def test_climate_turn_on_after_supported_modes_change(
     await _turn_on(hass)
     mock_client.climate_command.assert_called_once_with(
         key=1, mode=ClimateMode.HEAT_COOL, device_id=0
+    )
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "expected_mode"),
+    [
+        pytest.param(HVACMode.COOL, ClimateMode.COOL, id="restored"),
+        pytest.param(None, ClimateMode.HEAT_COOL, id="none_stored"),
+    ],
+)
+async def test_climate_turn_on_before_first_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    stored_mode: HVACMode | None,
+    expected_mode: ClimateMode,
+) -> None:
+    """Test turn_on is not dropped while the mode is still unknown."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.test_my_climate", HVACMode.OFF),
+                {"last_hvac_mode": stored_mode},
+            )
+        ],
+    )
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, None)
+    assert hass.states.get("climate.test_my_climate").state == STATE_UNKNOWN
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=expected_mode, device_id=0
     )

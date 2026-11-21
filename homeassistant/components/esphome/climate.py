@@ -427,7 +427,8 @@ class EsphomeClimateEntity(
     @override
     async def async_turn_on(self) -> None:
         """Turn on using the last supported running mode."""
-        if self.hvac_mode != HVACMode.OFF:
+        # The entity is available before the device reports its first state
+        if self.hvac_mode not in (None, HVACMode.OFF):
             return
         if self._last_hvac_mode is not None and self._last_hvac_mode in self.hvac_modes:
             await self.async_set_hvac_mode(self._last_hvac_mode)
