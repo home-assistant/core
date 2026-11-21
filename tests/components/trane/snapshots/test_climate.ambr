@@ -58,6 +58,7 @@
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 72,
+      'deadband_fahrenheit': 3.0,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
