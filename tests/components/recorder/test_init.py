@@ -1086,7 +1086,7 @@ async def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     "function_to_patch", ["_get_current_schema_version", "_get_initial_schema_version"]
 )
 async def test_recorder_validate_schema_failure(
-    hass: HomeAssistant, function_to_patch: str
+    hass: HomeAssistant, function_to_patch: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
@@ -1102,6 +1102,8 @@ async def test_recorder_validate_schema_failure(
         rec.start()
         rec.join()
 
+    assert "Recorder setup failed, recorder shutting down" in caplog.text
+    assert "threw unexpected exception" not in caplog.text
     hass.stop()
 
 
@@ -2975,6 +2977,57 @@ async def test_setup_fails_after_downgrade(
         f"than {SCHEMA_VERSION} which is the maximum database schema "
         "version supported by the installed version of Home Assistant Core"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "func_to_patch",
+    [
+        "_initialize_database",
+        "_get_initial_schema_version",
+        "non_live_data_migration_needed",
+    ],
+)
+async def test_recorder_recovers_from_database_error_during_schema_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, func_to_patch: str
+) -> None:
+    """Test a transient database error during startup validation is retried."""
+    original = getattr(migration, func_to_patch)
+    calls = 0
+
+    def _fail_once(*args: Any, **kwargs: Any) -> Any:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise OperationalError(
+                "SELECT 1", {}, Exception("Lost connection to server during query")
+            )
+        return original(*args, **kwargs)
+
+    with (
+        patch.object(migration, func_to_patch, side_effect=_fail_once),
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 3,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        instance = recorder.get_instance(hass)
+        await async_wait_recording_done(hass)
+
+    assert calls == 2
+    assert instance.recording
+    assert "recorder shutting down" not in caplog.text
+    await hass.async_stop()
 
 
 async def test_events_are_recorded_until_final_write(
