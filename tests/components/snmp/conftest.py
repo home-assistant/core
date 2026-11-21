@@ -52,7 +52,7 @@ def mock_setup_entry() -> Iterator[Mock]:
 
     async def _async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry) -> None:
         # The entry is set up without a tracker subentry, so without a coordinator
-        entry.runtime_data = Mock(coordinators={})
+        entry.runtime_data = Mock(coordinator=None)
 
     with patch(
         "homeassistant.components.snmp.async_setup_entry",

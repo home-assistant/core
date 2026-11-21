@@ -30,16 +30,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None
     except PySnmpError as err:
         raise ConfigEntryNotReady(f"Unable to set up the SNMP device: {err}") from err
 
-    coordinators = {
-        subentry.subentry_id: SnmpDeviceTrackerCoordinator(
-            hass, entry, subentry, client
-        )
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
-    }
-    for coordinator in coordinators.values():
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
+    coordinator = (
+        SnmpDeviceTrackerCoordinator(hass, entry, subentries[0], client)
+        if subentries
+        else None
+    )
+    if coordinator is not None:
         await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = SnmpRuntimeData(client=client, coordinators=coordinators)
+    entry.runtime_data = SnmpRuntimeData(client=client, coordinator=coordinator)
 
     # The tracker devices link to the SNMP device through via_device_id, which can
     # only resolve a device which already exists. The name follows the entry, so a
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None
         ),
     )
 
-    if not coordinators:
+    if coordinator is None:
         return
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -64,7 +64,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: SnmpConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None:
     """Unload a config entry."""
-    if not entry.runtime_data.coordinators:
+    if entry.runtime_data.coordinator is None:
         return
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
@@ -90,9 +90,7 @@ async def async_remove_config_entry_device(
     if config_entry.state is not ConfigEntryState.LOADED:
         # Nothing polls the table, so a tracker cannot reappear on its own
         return True
-    tracked_macs = {
-        mac
-        for coordinator in config_entry.runtime_data.coordinators.values()
-        for mac in coordinator.data or {}
-    }
-    return not macs & tracked_macs
+    coordinator = config_entry.runtime_data.coordinator
+    if coordinator is None:
+        return True
+    return not macs.intersection(coordinator.data or {})

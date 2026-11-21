@@ -339,7 +339,8 @@ async def test_device_tracker_update_empty_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(entry.runtime_data.coordinators.values()))
+    coordinator = entry.runtime_data.coordinator
+    assert coordinator is not None
     assert coordinator.last_update_success
 
     entity_id = _tracker_entity_id(entity_registry, entry, MAC)

@@ -242,7 +242,7 @@ async def test_async_setup_entry_without_subentries(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not entry.runtime_data.coordinators
+    assert entry.runtime_data.coordinator is None
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, entry.entry_id), entry.entry_id
     )
@@ -326,8 +326,8 @@ async def test_walk_value_error_makes_coordinator_fail(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    subentry_id = next(iter(entry.subentries))
-    coordinator = entry.runtime_data.coordinators[subentry_id]
+    coordinator = entry.runtime_data.coordinator
+    assert coordinator is not None
     mock_walk.side_effect = WrongValueError
 
     await _async_advance_poll(hass, freezer)
@@ -424,7 +424,7 @@ async def test_subentry_added_after_setup(
     with patch_walk(_async_mock_walk_with_mac):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert not entry.runtime_data.coordinators
+        assert entry.runtime_data.coordinator is None
         assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
         subentry = ConfigSubentry(
@@ -436,8 +436,10 @@ async def test_subentry_added_after_setup(
         assert hass.config_entries.async_add_subentry(entry, subentry)
         await hass.async_block_till_done()
 
-    assert set(entry.runtime_data.coordinators) == {subentry.subentry_id}
-    assert set(entry.runtime_data.coordinators[subentry.subentry_id].data) == {MAC}
+    coordinator = entry.runtime_data.coordinator
+    assert coordinator is not None
+    assert coordinator.subentry_id == subentry.subentry_id
+    assert set(coordinator.data) == {MAC}
     assert _async_mac_entity_id(hass, subentry.subentry_id) is not None
 
 
@@ -455,7 +457,7 @@ async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:
         assert hass.config_entries.async_remove_subentry(entry, subentry_id)
         await hass.async_block_till_done()
 
-    assert not entry.runtime_data.coordinators
+    assert entry.runtime_data.coordinator is None
     assert _async_mac_entity_id(hass, subentry_id) is None
 
 
@@ -468,7 +470,8 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
     with patch_walk(_async_mock_walk_with_mac):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        previous_coordinator = entry.runtime_data.coordinators[subentry_id]
+        previous_coordinator = entry.runtime_data.coordinator
+        assert previous_coordinator is not None
 
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
@@ -479,7 +482,7 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
 
     assert result["reason"] == "reconfigure_successful"
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data.coordinators[subentry_id] is not previous_coordinator
+    assert entry.runtime_data.coordinator is not previous_coordinator
 
 
 async def test_subentry_reconfigure_reloads_a_failed_entry(
@@ -638,6 +641,24 @@ async def test_remove_config_entry_device_of_the_snmp_device(
     )
     assert device is not None
     assert not await snmp.async_remove_config_entry_device(hass, entry, device)
+
+
+async def test_remove_config_entry_device_of_an_entry_without_a_tracker(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that a leftover tracker device is removable when no table is polled."""
+    entry = mock_entry(baseoid=None)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, MAC)},
+    )
+
+    assert await snmp.async_remove_config_entry_device(hass, entry, device)
 
 
 async def test_remove_config_entry_device_of_a_device_without_a_mac(

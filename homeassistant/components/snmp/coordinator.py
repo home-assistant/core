@@ -27,7 +27,7 @@ class SnmpRuntimeData:
     """Runtime data of an SNMP config entry."""
 
     client: SnmpClient
-    coordinators: dict[str, SnmpDeviceTrackerCoordinator]
+    coordinator: SnmpDeviceTrackerCoordinator | None
 
 
 type SnmpConfigEntry = ConfigEntry[SnmpRuntimeData]

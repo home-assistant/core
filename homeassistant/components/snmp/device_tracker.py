@@ -240,24 +240,23 @@ async def async_setup_entry(
     entry: SnmpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the device trackers of the entry's subentries."""
-    ent_reg = er.async_get(hass)
-
-    # Iterate the coordinators, not the subentries: a subentry added while the
-    # entry was starting has no coordinator yet and is handled by the reload.
-    for subentry_id in entry.runtime_data.coordinators:
-        _async_setup_subentry(entry, subentry_id, ent_reg, async_add_entities)
+    """Set up the device tracker of the entry's subentry."""
+    coordinator = entry.runtime_data.coordinator
+    if TYPE_CHECKING:
+        # Platforms are forwarded only when the entry has a coordinator
+        assert coordinator is not None
+    _async_setup_subentry(entry, coordinator, er.async_get(hass), async_add_entities)
 
 
 @callback
 def _async_setup_subentry(
     entry: SnmpConfigEntry,
-    subentry_id: str,
+    coordinator: SnmpDeviceTrackerCoordinator,
     ent_reg: er.EntityRegistry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the tracker entities of a single subentry."""
-    coordinator = entry.runtime_data.coordinators[subentry_id]
+    """Add the tracker entities of the table the coordinator polls."""
+    subentry_id = coordinator.subentry_id
 
     # Ensure previously known MACs show up as 'not_home' instead of disappearing
     # if missing from the current poll.
