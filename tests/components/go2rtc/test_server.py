@@ -458,6 +458,8 @@ async def test_server_restart_error(
                 "?auth=token&channel=0&user=admin&password=hunter2",
                 "10:27:02.624 WRN [streams] url=http://camera.local"
                 "?user=alice@example.com",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826/"
+                "?device_id=AA:BB:CC:DD:EE:FF&client_private=deadbeefcafe",
             ],
             [
                 "10:27:02.622 WRN producer.go:170 >"
@@ -466,6 +468,8 @@ async def test_server_restart_error(
                 "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
                 "?auth=****&channel=0&user=****&password=****",
                 "10:27:02.624 WRN [streams] url=http://camera.local?user=****",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826/"
+                "?device_id=AA:BB:CC:DD:EE:FF&client_private=****",
             ],
         )
     ],
@@ -486,5 +490,6 @@ async def test_credentials_redacted_from_server_output(
     assert "hunter2" not in caplog.text
     assert "token" not in caplog.text
     assert "alice@example.com" not in caplog.text
+    assert "deadbeefcafe" not in caplog.text
 
     await server.stop()
