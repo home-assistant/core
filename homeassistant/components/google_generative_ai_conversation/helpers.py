@@ -67,3 +67,11 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
                 bits_per_sample = int(param.upper().split("L", 1)[1])
 
     return {"bits_per_sample": bits_per_sample, "rate": rate}
+
+
+def streaming_wav_header(mime_type: str) -> bytes:
+    """Build a WAV header with unknown RIFF and data lengths for streaming."""
+    header = bytearray(convert_to_wav(b"", mime_type))
+    header[4:8] = b"\xff" * 4  # RIFF chunk size
+    header[40:44] = b"\xff" * 4  # data chunk size
+    return bytes(header)
