@@ -13,11 +13,10 @@ from elke27_lib.events import (
     TableCsmChanged,
     ZoneStatusUpdated,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from elke27_lib import AreaState, LinkKeys
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
@@ -15,8 +16,6 @@ from homeassistant.components.elke27.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 
 from . import build_snapshot
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

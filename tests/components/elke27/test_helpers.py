@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elke27.const import CONF_LINK_KEYS_JSON, DEFAULT_PORT
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
@@ -15,8 +16,6 @@ from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 def _snapshot(panel: PanelInfo | None = None) -> PanelSnapshot:
@@ -69,13 +68,13 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     entry.runtime_data = Elke27RuntimeData(coordinator=coordinator)
 
     device_info = device_info_for_entry(coordinator, entry)
-    assert device_info["name"] == "Snapshot Panel"
-    assert device_info["serial_number"] == "1234"
-    assert device_info["connections"] == {
+    assert device_info.name == "Snapshot Panel"
+    assert device_info.serial_number == "1234"
+    assert device_info.connections == {
         ("mac", "aa:bb:cc:dd:ee:ff"),
     }
-    assert device_info["identifiers"] == {("elke27", "entryclientid")}
-    assert device_info["manufacturer"] == "Elk Products"
+    assert device_info.identifiers == {("elke27", "entryclientid")}
+    assert device_info.manufacturer == "Elk Products"
     assert unique_base(entry) == "entryclientid"
 
     hass.config_entries.async_update_entry(entry, unique_id="entry-unique")
@@ -92,7 +91,7 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     )
     assert unique_base(entry) == "entry-unique"
     device_info = device_info_for_entry(coordinator, entry)
-    assert device_info["identifiers"] == {("elke27", "entry-unique")}
+    assert device_info.identifiers == {("elke27", "entry-unique")}
 
     hass.config_entries.async_update_entry(entry, unique_id=None)
     assert unique_base(entry) == entry.entry_id
@@ -115,7 +114,7 @@ async def test_device_info_ignores_invalid_mac(hass: HomeAssistant) -> None:
     ):
         device_info = device_info_for_entry(coordinator, entry)
 
-    assert device_info["connections"] == set()
+    assert device_info.connections == set()
 
 
 async def test_device_info_uses_title_fallback(hass: HomeAssistant) -> None:
@@ -132,7 +131,7 @@ async def test_device_info_uses_title_fallback(hass: HomeAssistant) -> None:
 
     device_info = device_info_for_entry(coordinator, entry)
 
-    assert device_info["name"] == "Panel\x00 One"
+    assert device_info.name == "Panel\x00 One"
 
 
 def test_build_unique_id() -> None:

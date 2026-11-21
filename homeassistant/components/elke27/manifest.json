@@ -1,6 +1,10 @@
 {
   "domain": "elke27",
   "name": "Elk E27 Alarm Engine",
+  "categories": [
+    "security_safety.alarm_systems",
+    "hubs_protocols.smart_home_hubs"
+  ],
   "codeowners": ["@mitchmitchell"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elke27",

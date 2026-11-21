@@ -3733,6 +3733,10 @@
     "elke27": {
       "name": "Elk E27 Alarm Engine",
       "integration_type": "hub",
+      "categories": [
+        "security_safety.alarm_systems",
+        "hubs_protocols.smart_home_hubs"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },

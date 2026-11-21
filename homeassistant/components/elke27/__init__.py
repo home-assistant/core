@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> None:
     """Set up Elke27 from a config entry."""
     coordinator = Elke27DataUpdateCoordinator(hass, entry)
     entry.async_on_unload(coordinator.async_disconnect)
@@ -21,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
     entry.runtime_data = Elke27RuntimeData(coordinator=coordinator)
     _async_register_panel_device(hass, coordinator, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def _async_register_panel_device(
@@ -36,6 +35,6 @@ def _async_register_panel_device(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> None:
     """Unload an Elke27 config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

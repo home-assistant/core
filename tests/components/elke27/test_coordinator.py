@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 from elke27_lib.errors import Elke27ConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elke27 import coordinator as coordinator_module
 from homeassistant.config_entries import ConfigEntryState
@@ -18,8 +19,6 @@ from . import (
     setup_integration,
     table_csm_changed_event,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

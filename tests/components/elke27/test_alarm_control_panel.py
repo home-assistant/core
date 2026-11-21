@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 from elke27_lib import AreaState, ArmMode, PanelSnapshot, ZoneState
 from elke27_lib.errors import Elke27PinRequiredError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
@@ -36,8 +37,6 @@ from . import (
     setup_integration,
     zone_status_updated_event,
 )
-
-from tests.common import MockConfigEntry
 
 AREA_1_ENTITY_ID = "alarm_control_panel.area_1"
 
