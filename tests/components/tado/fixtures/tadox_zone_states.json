@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "name": "Room 1",
+    "sensorDataPoints": {
+      "insideTemperature": {
+        "value": 24.0
+      },
+      "humidity": {
+        "percentage": 38
+      }
+    },
+    "setting": {
+      "power": "ON",
+      "temperature": {
+        "value": 22.0
+      }
+    },
+    "manualControlTermination": null,
+    "boostMode": null,
+    "heatingPower": {
+      "percentage": 100
+    },
+    "connection": {
+      "state": "CONNECTED"
+    },
+    "openWindow": null,
+    "nextScheduleChange": {
+      "start": "2024-12-19T21:00:00Z",
+      "setting": {
+        "power": "ON",
+        "temperature": {
+          "value": 18.0
+        }
+      }
+    },
+    "nextTimeBlock": {
+      "start": "2024-12-19T21:00:00Z"
+    },
+    "balanceControl": null
+  },
+  {
+    "id": 2,
+    "name": "Room 2",
+    "sensorDataPoints": {
+      "insideTemperature": {
+        "value": 18.0
+      },
+      "humidity": {
+        "percentage": 38
+      }
+    },
+    "setting": {
+      "power": "ON",
+      "temperature": {
+        "value": 20.0
+      }
+    },
+    "manualControlTermination": {
+      "type": "NEXT_TIME_BLOCK",
+      "remainingTimeInSeconds": 4549,
+      "projectedExpiry": "2024-12-19T21:00:00Z"
+    },
+    "boostMode": null,
+    "heatingPower": {
+      "percentage": 0
+    },
+    "connection": {
+      "state": "CONNECTED"
+    },
+    "openWindow": null,
+    "nextScheduleChange": {
+      "start": "2024-12-19T21:00:00Z",
+      "setting": {
+        "power": "ON",
+        "temperature": {
+          "value": 18.0
+        }
+      }
+    },
+    "nextTimeBlock": {
+      "start": "2024-12-19T21:00:00Z"
+    },
+    "balanceControl": null
+  }
+]

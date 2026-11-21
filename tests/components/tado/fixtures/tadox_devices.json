@@ -1,0 +1,12 @@
+[
+  [
+    {
+      "connection": {
+        "state": "CONNECTED"
+      },
+      "firmwareVersion": "245.1",
+      "serialNumber": "IB1234567890",
+      "type": "IB02"
+    }
+  ]
+]

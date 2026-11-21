@@ -5,8 +5,9 @@ import logging
 from typing import Any, override
 from zoneinfo import ZoneInfo
 
+from PyTado.exceptions import TadoNotSupportedException
 from PyTado.interface import Tado
-from PyTado.zone import TadoZone
+from PyTado.zone import TadoXZone, TadoZone
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -88,6 +89,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
+    @property
+    def is_tadox(self) -> bool:
+        """Return True if connected to a TadoX system (hops.tado.com API)."""
+        http = getattr(self._tado, "_http", None)
+        return bool(http and http.is_x_line)
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
@@ -113,6 +120,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if ratelimit.get("remaining") == "0":
                 raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
+
+        self.zones = self._normalize_zones(self.zones)
+        self.devices = self._normalize_devices(self.devices)
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -216,6 +226,53 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             remaining_calls,
         )
 
+    @staticmethod
+    def _backfill_device_keys(device: dict[str, Any]) -> None:
+        """Backfill old API keys for downstream compatibility."""
+        serial = device.get("shortSerialNo") or device.get("serialNumber")
+        if serial:
+            device.setdefault("shortSerialNo", serial)
+            device.setdefault("serialNo", serial)
+        if "deviceType" not in device and "type" in device:
+            device["deviceType"] = device["type"]
+        if "currentFwVersion" not in device and "firmwareVersion" in device:
+            device["currentFwVersion"] = device["firmwareVersion"]
+        if TEMP_OFFSET in device and isinstance(device[TEMP_OFFSET], (int, float)):
+            value = device[TEMP_OFFSET]
+            device[TEMP_OFFSET] = {"celsius": value, "fahrenheit": value * 1.8}
+
+    @staticmethod
+    def _normalize_devices(raw_devices: list) -> list[dict[str, Any]]:
+        """Flatten and normalize the raw device list from the Tado API."""
+        flat: list[dict[str, Any]] = []
+        for entry in raw_devices:
+            if isinstance(entry, list):
+                flat.extend(device for device in entry if isinstance(device, dict))
+            elif isinstance(entry, dict):
+                flat.append(entry)
+        for device in flat:
+            TadoDataUpdateCoordinator._backfill_device_keys(device)
+        return flat
+
+    @staticmethod
+    def _normalize_zones(raw_zones: list) -> list[dict[str, Any]]:
+        """Normalize zone data from both old and new Tado API formats."""
+        normalized: list[dict[str, Any]] = []
+        for zone in raw_zones:
+            if "id" not in zone and "roomId" in zone:
+                zone["id"] = zone["roomId"]
+            if "name" not in zone and "roomName" in zone:
+                zone["name"] = zone["roomName"]
+            if "type" not in zone:
+                zone["type"] = TYPE_HEATING
+            if "devices" not in zone:
+                zone["devices"] = []
+            for device in zone["devices"]:
+                if isinstance(device, dict):
+                    TadoDataUpdateCoordinator._backfill_device_keys(device)
+            normalized.append(zone)
+        return normalized
+
     async def _async_update_devices(self) -> dict[str, dict]:
         """Update the device data from Tado."""
 
@@ -227,7 +284,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not devices:
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
-        return await self.hass.async_add_executor_job(self._update_device_info, devices)
+        return await self.hass.async_add_executor_job(
+            self._update_device_info, self._normalize_devices(devices)
+        )
 
     def _update_device_info(self, devices: list[dict[str, Any]]) -> dict[str, dict]:
         """Update the device data from Tado."""
@@ -236,10 +295,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
             try:
-                if (
-                    INSIDE_TEMPERATURE_MEASUREMENT
-                    in device["characteristics"]["capabilities"]
-                ):
+                if INSIDE_TEMPERATURE_MEASUREMENT in device.get(
+                    "characteristics", {}
+                ).get("capabilities", []):
                     _LOGGER.debug(
                         "Updating temperature offset for device %s",
                         device_short_serial_no,
@@ -266,13 +324,23 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             zone_states_call = await self.hass.async_add_executor_job(
                 self._tado.get_zone_states
             )
-            zone_states = zone_states_call["zoneStates"]
+            zone_states = (
+                zone_states_call["zoneStates"]
+                if isinstance(zone_states_call, dict)
+                else zone_states_call
+            )
         except RequestException as err:
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
         mapped_zones: dict[int, TadoZone] = {}
-        for zone_id_str, raw_state in zone_states.items():
-            zone_id = int(zone_id_str)
+        if isinstance(zone_states, dict):
+            pairs = ((int(k), v) for k, v in zone_states.items())
+        else:
+            pairs = (
+                (int(s.get("id") or s.get("roomId")), s.get("state", s))
+                for s in zone_states
+            )
+        for zone_id, raw_state in pairs:
             mapped_zones[zone_id] = await self._build_zone(zone_id, raw_state)
 
         return mapped_zones
@@ -284,10 +352,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             overlay_default = await self.hass.async_add_executor_job(
                 self._tado.get_zone_overlay_default, zone_id
             )
+        except TadoNotSupportedException:
+            _LOGGER.debug("Zone %s: overlay defaults unsupported on this API", zone_id)
+            overlay_default = {}
         except RequestException as err:
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
-        data = TadoZone.from_data(zone_id, {**raw_state, **overlay_default})
+        zone_cls = TadoXZone if self.is_tadox else TadoZone
+        data = zone_cls.from_data(zone_id, {**raw_state, **overlay_default})
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
         return data
 
@@ -326,6 +398,15 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
+
+        if self.is_tadox:
+            return {
+                "type": TYPE_HEATING,
+                "temperatures": {
+                    "celsius": {"min": 5, "max": 25, "step": 0.1},
+                    "fahrenheit": {"min": 41, "max": 77, "step": 0.18},
+                },
+            }
 
         try:
             return await self.hass.async_add_executor_job(
