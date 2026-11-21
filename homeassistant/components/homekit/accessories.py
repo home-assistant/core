@@ -98,6 +98,7 @@ from .const import (
     ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
@@ -495,6 +496,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self.device_id = None
             serial_number = entity_id
             domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if self.config.get(ATTR_SERIAL_NUMBER) is not None:
+            serial_number = str(self.config[ATTR_SERIAL_NUMBER])
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = str(self.config[ATTR_MANUFACTURER])
