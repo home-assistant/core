@@ -487,7 +487,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
-        vendor_id=(4874,),
+        vendor_id=(4874, 5415),  # Eve Systems, Habi
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
