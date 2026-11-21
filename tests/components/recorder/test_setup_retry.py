@@ -7,6 +7,11 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy import exc
 
 from homeassistant.components.recorder import Recorder, migration
@@ -16,14 +21,6 @@ from homeassistant.components.recorder.const import (
 )
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.core import CoreState, HomeAssistant
-
-from pytest_homeassistant.components.recorder.common import (
-    async_wait_recording_done,
-)
-from pytest_homeassistant.typing import (
-    RecorderInstanceContextManager,
-    RecorderInstanceGenerator,
-)
 
 
 @pytest.fixture
