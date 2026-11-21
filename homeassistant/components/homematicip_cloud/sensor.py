@@ -53,6 +53,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
+    EntityCategory,
     UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
@@ -194,6 +195,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
+VALVE_STATE_VALUES = [valve_state.name.lower() for valve_state in ValveState]
 WINDOW_STATE_VALUES = ["open", "closed", "tilted"]
 
 
@@ -641,6 +643,17 @@ async def async_setup_entry(
         and getattr(channel, "valvePosition", None) is not None
     )
 
+    entities.extend(
+        HomematicipFloorTerminalBlockMechanicChannelValveState(
+            hap, device, channel=channel.index
+        )
+        for device in hap.home.devices
+        if isinstance(device, floor_terminal_blocks)
+        for channel in device.functionalChannels
+        if isinstance(channel, FloorTerminalBlockMechanicChannel)
+        and getattr(channel, "valveState", None) is not None
+    )
+
     # Handle smoke detector extended sensors (e.g., HmIP-SWSD-2)
     entities.extend(
         HmipSmokeDetectorSensor(hap, device, description)
@@ -880,6 +893,38 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         if channel.valveState != ValveState.ADAPTION_DONE:
             return None
         return round(channel.valvePosition * 100)
+
+
+class HomematicipFloorTerminalBlockMechanicChannelValveState(
+    HomematicipGenericEntity, SensorEntity
+):
+    """Representation of the HomematicIP floor terminal block valve state."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "valve_state"
+    _attr_options = VALVE_STATE_VALUES
+
+    def __init__(
+        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
+    ) -> None:
+        """Initialize the floor terminal block valve state sensor."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            channel_real_index=channel,
+            is_multi_channel=is_multi_channel,
+            post="Valve State",
+            feature_id="ftb_valve_state",
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the floor terminal block valve state."""
+        valve_state = self.get_channel_or_raise().valveState
+        return valve_state.name.lower() if valve_state is not None else None
 
 
 class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):

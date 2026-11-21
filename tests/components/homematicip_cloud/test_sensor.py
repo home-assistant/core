@@ -620,6 +620,34 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
+async def test_hmip_floor_terminal_block_mechanic_channel_valve_state(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test FloorTerminalBlockMechanicChannelValveState."""
+    entity_id = "sensor.fussbodenheizungsaktor_heizkreislauf_1_og_bad_r_2"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fußbodenheizungsaktor"]
+    )
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state is not None
+    assert ha_state.state == "adaption_done"
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valveState", ValveState.ADAPTION_IN_PROGRESS
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "adaption_in_progress"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "adaption_done"
+
+
 async def test_hmip_esi_iec_current_power_consumption(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
