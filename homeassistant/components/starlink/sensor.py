@@ -97,6 +97,15 @@ uptime_to_stable_datetime = ignore_variance(
     lambda value: now() - timedelta(seconds=value), timedelta(minutes=1)
 )
 
+
+def signal_quality_to_percentage(data: StarlinkData) -> float | None:
+    """Convert the 0-1 signal quality reported by the dish to a percentage."""
+    signal_quality: float | None = data.status["signal_quality"]
+    if signal_quality is None:
+        return None
+    return signal_quality * 100
+
+
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="ping",
@@ -165,6 +174,15 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
+        entity_class=StarlinkSensorEntity,
+    ),
+    StarlinkSensorEntityDescription(
+        key="signal_quality",
+        translation_key="signal_quality",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=signal_quality_to_percentage,
         entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(
