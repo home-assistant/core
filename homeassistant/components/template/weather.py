@@ -1,8 +1,10 @@
 """Template platform that aggregates meteorological data."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
+import hashlib
 import logging
+import os
 from typing import Any, Literal, Self, override
 
 import probatio
@@ -40,10 +42,15 @@ from homeassistant.const import (
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    template,
+)
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -63,6 +70,7 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
     DEFAULT_NAMES,
+    DOMAIN,
 )
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -148,11 +156,7 @@ CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.WEATHER]
 
-LEGACY_OPTIONS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_FRIENDLY_NAME: CONF_NAME,
+DEPRECATED_TEMPLATE_OPTIONS = {
     CONF_APPARENT_TEMPERATURE_TEMPLATE: CONF_APPARENT_TEMPERATURE,
     CONF_ATTRIBUTION_TEMPLATE: CONF_ATTRIBUTION,
     CONF_CLOUD_COVERAGE_TEMPLATE: CONF_CLOUD_COVERAGE,
@@ -172,8 +176,17 @@ LEGACY_OPTIONS = {
     CONF_WIND_SPEED_TEMPLATE: CONF_WIND_SPEED,
 }
 
-# These options that are templates all have _template. These fields will
-# enter deprecation after legacy templates are removed.
+LEGACY_OPTIONS = {
+    CONF_ICON_TEMPLATE: CONF_ICON,
+    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
+    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
+    CONF_FRIENDLY_NAME: CONF_NAME,
+    **DEPRECATED_TEMPLATE_OPTIONS,
+}
+
+DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID = "deprecated_weather_template_options"
+DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN = "2027.6.0"
+
 WEATHER_COMMON_LEGACY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
@@ -297,6 +310,77 @@ def rewrite_legacy_options_to_modern_options(
         entity_cfg[CONF_NAME] = template.Template(entity_cfg[CONF_NAME], hass)
 
     return entity_cfg
+
+
+@callback
+def async_update_deprecated_template_options_issues(
+    hass: HomeAssistant, config_sections: Iterable[ConfigType]
+) -> None:
+    """Create an issue per weather entity using *_template options."""
+    issue_ids: set[str] = set()
+    for section_unique_id, weather_config in (
+        (section.get(CONF_UNIQUE_ID), weather_config)
+        for section in config_sections
+        for weather_config in section.get(WEATHER_DOMAIN, [])
+    ):
+        deprecated = [
+            key for key in weather_config if key in DEPRECATED_TEMPLATE_OPTIONS
+        ]
+        if not deprecated:
+            continue
+
+        identifier = tcv.entity_config_repair_identifier(
+            Platform.WEATHER, weather_config, section_unique_id
+        )
+        # The id only changes with the configuration, so a dismissed issue stays
+        # dismissed until the configuration changes
+        fingerprint = "\n".join(
+            [
+                identifier,
+                *(
+                    f"{key}={getattr(weather_config[key], 'template', weather_config[key])}"
+                    for key in sorted(deprecated)
+                ),
+            ]
+        )
+        issue_id = (
+            f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_"
+            f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
+        )
+        issue_ids.add(issue_id)
+
+        changes: list[str] = []
+        for key in deprecated:
+            change = f"`{key}` → `{DEPRECATED_TEMPLATE_OPTIONS[key]}`"
+            # Keys loaded from YAML carry the file and line they were defined on
+            if (config_file := getattr(key, "__config_file__", None)) is not None:
+                path = os.path.relpath(config_file, hass.config.config_dir)
+                change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
+            changes.append(f"- {change}")
+
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+            translation_placeholders={
+                "identifier": identifier,
+                "breaks_in_ha_version": DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN,
+                "options": "\n".join(changes),
+            },
+            learn_more_url="https://www.home-assistant.io/integrations/template/#weather",
+        )
+
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_")
+            and issue_id not in issue_ids
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup_platform(

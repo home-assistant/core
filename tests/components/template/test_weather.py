@@ -15,7 +15,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
 from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
-from homeassistant.components.template.weather import DEFAULT_NAME
+from homeassistant.components.template.weather import (
+    DEFAULT_NAME,
+    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+)
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
@@ -32,6 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -44,6 +48,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_entity,
     setup_mock_template_entity_restore_state,
@@ -1118,3 +1123,44 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_WEATHER.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("config", [TEST_LEGACY_REQUIRED])
+@pytest.mark.usefixtures("setup_weather")
+async def test_deprecated_template_options_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair issue is created for deprecated *_template options."""
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].translation_key == DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: template_weather",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": (
+            "- `condition_template` → `condition`\n"
+            "- `temperature_template` → `temperature`\n"
+            "- `humidity_template` → `humidity`"
+        ),
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("config", [TEST_MODERN_REQUIRED])
+@pytest.mark.usefixtures("setup_weather")
+async def test_no_deprecated_template_options_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for modern options."""
+    assert (
+        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        == []
+    )

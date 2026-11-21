@@ -22,7 +22,11 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -723,3 +727,14 @@ async def assert_attributes_template(
     assert error in caplog.text
     state = hass.states.get(platform_setup.entity_id)
     assert "run" not in state.attributes
+
+
+def get_issues_with_prefix(
+    issue_registry: ir.IssueRegistry, issue_id_prefix: str
+) -> list[ir.IssueEntry]:
+    """Return the template issues whose id starts with the prefix."""
+    return [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == template.DOMAIN and issue_id.startswith(f"{issue_id_prefix}_")
+    ]

@@ -1,5 +1,8 @@
 """Test Template config."""
 
+from pathlib import Path
+from unittest.mock import patch
+
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -7,12 +10,16 @@ from pytest_homeassistant.common import (
     assert_setup_component,
 )
 
+from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
-from homeassistant.components.template.const import PLATFORMS
+from homeassistant.components.template.const import PLATFORMS, TemplateService
+from homeassistant.components.template.weather import (
+    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -24,12 +31,14 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
     async_trigger,
+    get_issues_with_prefix,
     make_mock_device_actions,
     make_test_trigger,
     setup_entity,
@@ -1437,3 +1446,183 @@ async def test_multiple_configuration_keys(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == expected
+
+
+async def async_setup_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and set up the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def async_reload_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and reload the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
+    await hass.async_block_till_done()
+
+
+WEATHER_LEGACY_YAML = """\
+template:
+  - weather:
+      - name: Test
+        condition_template: sunny
+        temperature_template: "{{ 20 }}"
+        humidity_template: "{{ 25 }}"
+"""
+
+
+@pytest.fixture
+def yaml_config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Use a temporary configuration directory."""
+    hass.config.config_dir = str(tmp_path)
+    return tmp_path
+
+
+async def test_deprecated_template_options_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
+
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": (
+            "- `configuration.yaml:4`: `condition_template` → `condition`\n"
+            "- `configuration.yaml:5`: `temperature_template` → `temperature`\n"
+            "- `configuration.yaml:6`: `humidity_template` → `humidity`"
+        ),
+    }
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        WEATHER_LEGACY_YAML.replace("_template:", ":"),
+    )
+
+    assert (
+        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        == []
+    )
+
+
+async def test_deprecated_template_options_issue_per_entity(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a repair is created for each weather entity with deprecated options."""
+    await async_setup_yaml_config(
+        hass,
+        yaml_config_dir,
+        WEATHER_LEGACY_YAML
+        + """\
+      - unique_id: second
+        condition_template: cloudy
+        temperature_template: "{{ 10 }}"
+        humidity_template: "{{ 50 }}"
+      - name: Modern
+        condition: sunny
+        temperature: "{{ 20 }}"
+        humidity: "{{ 25 }}"
+""",
+    )
+
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert sorted(
+        issue.translation_placeholders["identifier"]  # type: ignore[index]
+        for issue in issues
+    ) == ["name: Test", "unique_id: second"]
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "expected_identifier"),
+    [
+        pytest.param(
+            WEATHER_LEGACY_YAML.replace(
+                "- name: Test", "- name: Test\n        unique_id: kitchen"
+            ),
+            "unique_id: kitchen",
+            id="unique_id",
+        ),
+        pytest.param(
+            WEATHER_LEGACY_YAML.replace(
+                "  - weather:", "  - unique_id: first_floor\n    weather:"
+            ).replace("- name: Test", "- name: Test\n        unique_id: kitchen"),
+            "unique_id: first_floor-kitchen",
+            id="section_unique_id",
+        ),
+        pytest.param(
+            WEATHER_LEGACY_YAML.replace(
+                "- name: Test",
+                "- name: Test\n        default_entity_id: weather.kitchen",
+            ),
+            "default_entity_id: weather.kitchen",
+            id="default_entity_id",
+        ),
+        pytest.param(WEATHER_LEGACY_YAML, "name: Test", id="name"),
+    ],
+)
+async def test_deprecated_template_options_issue_identifier(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    yaml_config_dir: Path,
+    yaml_config: str,
+    expected_identifier: str,
+) -> None:
+    """Test the repair identifies the entity by its most stable identifier."""
+    await async_setup_yaml_config(hass, yaml_config_dir, yaml_config)
+
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders is not None
+    assert issues[0].translation_placeholders["identifier"] == expected_identifier
+
+
+async def test_deprecated_template_options_issue_dismissed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a dismissed repair stays dismissed until the configuration changes."""
+    await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    dismissed_issue_id = issues[0].issue_id
+    issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
+
+    # Moving the options to other lines is not a configuration change
+    await async_reload_yaml_config(hass, yaml_config_dir, "\n" + WEATHER_LEGACY_YAML)
+
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    assert issues[0].issue_id == dismissed_issue_id
+    assert issues[0].dismissed_version is not None
+
+    await async_reload_yaml_config(
+        hass, yaml_config_dir, WEATHER_LEGACY_YAML.replace("sunny", "cloudy")
+    )
+
+    issues = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert len(issues) == 1
+    assert issues[0].issue_id != dismissed_issue_id
+    assert issues[0].dismissed_version is None

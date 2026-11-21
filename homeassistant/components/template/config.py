@@ -443,6 +443,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
+        weather_platform.async_update_deprecated_template_options_issues(hass, [])
         return config
 
     config_sections = []
@@ -464,6 +465,10 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             continue
 
         config_sections.append(template_config)
+
+    weather_platform.async_update_deprecated_template_options_issues(
+        hass, config_sections
+    )
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
