@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
 )
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -35,6 +35,7 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    rank_name_match,
 )
 from homeassistant.helpers.service import (
     async_get_all_descriptions,
@@ -205,6 +206,27 @@ def async_get_exposed_entities(
     return entities
 
 
+def _search_name_matches(
+    hass: HomeAssistant, name_filter: str, states: list[State]
+) -> list[State]:
+    """Return the states that best match the filter, ranked like search__search."""
+    if not (query := name_filter.strip().casefold()):
+        return []
+    entity_registry = er.async_get(hass)
+    ranks: dict[str, int] = {}
+    for state in states:
+        entry = entity_registry.async_get(state.entity_id)
+        aliases = er.async_get_entity_aliases(hass, entry) if entry else ()
+        if (
+            rank := rank_name_match(query, (state.name,), aliases, (state.entity_id,))
+        ) is not None:
+            ranks[state.entity_id] = rank
+    if not ranks:
+        return []
+    best = min(ranks.values())
+    return [state for state in states if ranks.get(state.entity_id) == best]
+
+
 def _live_context_match_error(
     match_result: intent.MatchTargetsResult,
     name_filter: str | None,
@@ -258,7 +280,11 @@ class GetLiveContextTool(Tool):
         {
             probatio.Optional(
                 "name",
-                description="Filter entities by name or alias (case-insensitive).",
+                description=(
+                    "Filter entities by name or alias (case-insensitive)."
+                    " Without an exact match, returns the entities whose name,"
+                    " alias or entity ID contains it."
+                ),
             ): cv.string,
             probatio.Optional(
                 "domain",
@@ -322,6 +348,35 @@ class GetLiveContextTool(Tool):
                 ),
                 states=exposed_states,
             )
+
+            if (
+                name_filter
+                and match_result.no_match_reason is intent.MatchFailedReason.NAME
+            ):
+                # No exact name match: fall back to the entities whose names
+                # contain the filter. Only the entities the other filters
+                # allow are searched.
+                if area_filter or domain_filter:
+                    match_result = intent.async_match_targets(
+                        hass,
+                        intent.MatchTargetsConstraints(
+                            area_name=area_filter,
+                            domains=domain_filter,
+                        ),
+                        states=exposed_states,
+                    )
+                    candidates = match_result.states
+                else:
+                    candidates = exposed_states
+                if candidates:
+                    found = _search_name_matches(hass, name_filter, candidates)
+                    match_result = intent.MatchTargetsResult(
+                        is_match=bool(found),
+                        no_match_reason=(
+                            None if found else intent.MatchFailedReason.NAME
+                        ),
+                        states=found,
+                    )
 
             if not match_result.is_match:
                 return ToolResult(

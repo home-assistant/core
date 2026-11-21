@@ -749,6 +749,49 @@ async def test_get_live_context_tool_filter(
         error=True,
     )
 
+    # Without an exact match, the name filter returns the entities whose
+    # names contain it
+    result = await _get_live_context({"name": "light"})
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
+
+    # Aliases and entity IDs are searched too
+    result = await _get_live_context({"name": "lamp"})
+    assert result.error is False
+    assert "Cooking Lamp" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+
+    result = await _get_live_context({"name": "office_ac"})
+    assert result.error is False
+    assert "state: cool" in result.data["result"]
+    assert "state: heat" not in result.data["result"]
+
+    # The search honours the other filters
+    result = await _get_live_context({"name": "office", "domain": "switch"})
+    assert result.error is False
+    assert "Office Switch" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+
+    result = await _get_live_context({"name": "light", "area": "Kitchen"})
+    assert result.error is False
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+
+    result = await _get_live_context({"name": "door", "domain": "light"})
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities matched name 'door'"},
+        error=True,
+    )
+
+    result = await _get_live_context({"name": "door", "domain": "fan"})
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in domain(s): fan"},
+        error=True,
+    )
+
     # Name filter strips surrounding whitespace
     result = await _get_live_context({"name": "  Front Door  "})
     assert result.error is False
