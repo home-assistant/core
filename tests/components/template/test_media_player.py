@@ -70,6 +70,8 @@ TEST_MEDIA_PLAYER = TemplatePlatformSetup(
 STATE_TEMPLATE = "{{ states('sensor.test_state') }}"
 SOURCE_LIST = {"source_list": "{{ ['TV', 'Radio'] }}"}
 SOUND_MODE_LIST = {"sound_mode_list": "{{ ['Movie', 'Music'] }}"}
+SOURCE_OPTIONS = {**SOURCE_LIST, **make_test_action("select_source")}
+SOUND_MODE_OPTIONS = {**SOUND_MODE_LIST, **make_test_action("select_sound_mode")}
 
 ON_OFF_ACTIONS = {
     **make_test_action("turn_on"),
@@ -180,11 +182,13 @@ async def test_deprecated_standby_state_logs_error(
         pytest.param("shuffle", {}, "maybe", None, id="shuffle_invalid"),
         pytest.param("repeat", {}, "one", "one", id="repeat"),
         pytest.param("repeat", {}, "never", None, id="repeat_invalid"),
-        pytest.param("source", SOURCE_LIST, "TV", "TV", id="source"),
-        pytest.param("source", SOURCE_LIST, "DVD", None, id="source_not_in_list"),
-        pytest.param("sound_mode", SOUND_MODE_LIST, "Movie", "Movie", id="sound_mode"),
+        pytest.param("source", SOURCE_OPTIONS, "TV", "TV", id="source"),
+        pytest.param("source", SOURCE_OPTIONS, "DVD", None, id="source_not_in_list"),
         pytest.param(
-            "sound_mode", SOUND_MODE_LIST, "Disco", None, id="sound_mode_not_in_list"
+            "sound_mode", SOUND_MODE_OPTIONS, "Movie", "Movie", id="sound_mode"
+        ),
+        pytest.param(
+            "sound_mode", SOUND_MODE_OPTIONS, "Disco", None, id="sound_mode_not_in_list"
         ),
     ],
 )
@@ -1079,6 +1083,15 @@ async def test_templated_attributes_are_not_optimistic(
         pytest.param(make_test_action("select_source"), id="select_source"),
         pytest.param({"sound_mode": "{{ 'Movie' }}"}, id="sound_mode_without_list"),
         pytest.param(make_test_action("select_sound_mode"), id="select_sound_mode"),
+        pytest.param(SOURCE_LIST, id="source_list_without_action"),
+        pytest.param(
+            {"source": "{{ 'TV' }}", **SOURCE_LIST}, id="source_without_action"
+        ),
+        pytest.param(SOUND_MODE_LIST, id="sound_mode_list_without_action"),
+        pytest.param(
+            {"sound_mode": "{{ 'Movie' }}", **SOUND_MODE_LIST},
+            id="sound_mode_without_action",
+        ),
         pytest.param(make_test_action("volume_up"), id="volume_up_without_down"),
         pytest.param(make_test_action("volume_down"), id="volume_down_without_up"),
     ],
@@ -1120,6 +1133,7 @@ async def test_selection_revalidated_on_list_change(
             option: _attribute_template(option),
             list_option: f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{list_option}')"
             " or [] }}",
+            **make_test_action(f"select_{option}"),
         },
         STATE_TEMPLATE,
     )
@@ -1726,6 +1740,7 @@ async def test_flow_preview(
             "state": "{{ 'playing' }}",
             "source": "{{ 'TV' }}",
             "source_list": "{{ ['TV', 'Radio'] }}",
+            "select_source": [],
         },
     )
 

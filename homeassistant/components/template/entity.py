@@ -204,6 +204,9 @@ class AbstractTemplateEntity(Entity):
         option: str,
         attribute: str,
         item_validator: Callable[[Any], Any],
+        list_on_update: Callable[[Any], None] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
     ) -> None:
         """Set up a list template and an item template validated against it.
 
@@ -211,6 +214,10 @@ class AbstractTemplateEntity(Entity):
         rendered item is cached because the item attribute holds None when
         validation fails, and an unchanged item template does not re-render,
         so the cache is needed to revalidate the item when only the list changes.
+
+        When option is the state option, the item is set up as the state template.
+        list_on_update and on_update replace storing the validated list and item
+        in their attributes; template errors are passed to them as None.
         """
         # The list template must be set up first, the item validator reads it.
         self.setup_template(
@@ -218,18 +225,29 @@ class AbstractTemplateEntity(Entity):
             list_attribute,
             list_validator,
             partial(
-                self._update_list, option, list_attribute, attribute, item_validator
+                self._update_list,
+                option,
+                list_attribute,
+                attribute,
+                item_validator,
+                list_on_update,
+                on_update,
             ),
+            render_complex=render_complex,
             none_on_template_error=False,
         )
-        self.setup_template(
-            option,
-            attribute,
-            on_update=partial(
-                self._update_list_item, option, attribute, item_validator
-            ),
-            none_on_template_error=False,
+        update_item = partial(
+            self._update_list_item, option, attribute, item_validator, on_update
         )
+        if option == self._state_option:
+            self.setup_state_template(attribute, on_update=update_item)
+        else:
+            self.setup_template(
+                option,
+                attribute,
+                on_update=update_item,
+                none_on_template_error=False,
+            )
 
     @callback
     def _update_list(
@@ -238,14 +256,21 @@ class AbstractTemplateEntity(Entity):
         list_attribute: str,
         attribute: str,
         item_validator: Callable[[Any], Any],
+        list_on_update: Callable[[Any], None] | None,
+        on_update: Callable[[Any], None] | None,
         items: list[Any] | TemplateError | None,
     ) -> None:
         """Update a list and revalidate the item rendered against it."""
-        setattr(
-            self, list_attribute, None if isinstance(items, TemplateError) else items
-        )
+        if isinstance(items, TemplateError):
+            items = None
+        if list_on_update:
+            list_on_update(items)
+        else:
+            setattr(self, list_attribute, items)
         if option in self._rendered_list_items:
-            setattr(self, attribute, item_validator(self._rendered_list_items[option]))
+            self._set_list_item(
+                attribute, on_update, item_validator(self._rendered_list_items[option])
+            )
 
     @callback
     def _update_list_item(
@@ -253,13 +278,23 @@ class AbstractTemplateEntity(Entity):
         option: str,
         attribute: str,
         item_validator: Callable[[Any], Any],
+        on_update: Callable[[Any], None] | None,
         result: Any,
     ) -> None:
         """Store the rendered item and validate it against its list."""
         if isinstance(result, TemplateError):
             result = None
         self._rendered_list_items[option] = result
-        setattr(self, attribute, item_validator(result))
+        self._set_list_item(attribute, on_update, item_validator(result))
+
+    def _set_list_item(
+        self, attribute: str, on_update: Callable[[Any], None] | None, value: Any
+    ) -> None:
+        """Store a validated list item."""
+        if on_update:
+            on_update(value)
+        else:
+            setattr(self, attribute, value)
 
     def add_template(
         self,

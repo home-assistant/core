@@ -32,7 +32,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -438,16 +437,14 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_native_target_temperature_low = None
         self._attr_native_target_temperature_high = None
 
-        self.setup_template(
+        self.setup_list_item_templates(
             CONF_HVAC_MODES,
             "_attr_hvac_modes",
             hvac_modes_list(self),
-            self._update_hvac_modes,
-            none_on_template_error=False,
-        )
-        self.setup_state_template(
+            CONF_HVAC_MODE,
             "_attr_hvac_mode",
             tcv.item_in_list(self, CONF_HVAC_MODE, "_attr_hvac_modes", CONF_HVAC_MODES),
+            self._update_hvac_modes,
             self._update_hvac_mode,
         )
         self.setup_template(
@@ -502,85 +499,47 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             tcv.number(self, CONF_CURRENT_HUMIDITY, 0, 100, int),
         )
 
-        self.setup_template(
-            CONF_FAN_MODES,
-            "_attr_fan_modes",
-            tcv.list_of_strings(self, CONF_FAN_MODES),
-        )
-        self.setup_template(
-            CONF_FAN_MODE,
-            "_attr_fan_mode",
-            tcv.item_in_list(
-                self,
-                CONF_FAN_MODE,
-                "_attr_fan_modes",
+        for list_option, list_attr, option, attr, action in (
+            (
                 CONF_FAN_MODES,
-                stringify_result=True,
+                "_attr_fan_modes",
+                CONF_FAN_MODE,
+                "_attr_fan_mode",
+                SET_FAN_MODE_ACTION,
             ),
-        )
-        self.add_assumed_attribute("_attr_fan_mode", CONF_FAN_MODE, SET_FAN_MODE_ACTION)
-
-        self.setup_template(
-            CONF_SWING_MODES,
-            "_attr_swing_modes",
-            tcv.list_of_strings(self, CONF_SWING_MODES),
-        )
-        self.setup_template(
-            CONF_SWING_MODE,
-            "_attr_swing_mode",
-            tcv.item_in_list(
-                self,
-                CONF_SWING_MODE,
-                "_attr_swing_modes",
+            (
                 CONF_SWING_MODES,
-                stringify_result=True,
+                "_attr_swing_modes",
+                CONF_SWING_MODE,
+                "_attr_swing_mode",
+                SET_SWING_MODE_ACTION,
             ),
-        )
-        self.add_assumed_attribute(
-            "_attr_swing_mode", CONF_SWING_MODE, SET_SWING_MODE_ACTION
-        )
-
-        self.setup_template(
-            CONF_SWING_HORIZONTAL_MODES,
-            "_attr_swing_horizontal_modes",
-            tcv.list_of_strings(self, CONF_SWING_HORIZONTAL_MODES),
-        )
-        self.setup_template(
-            CONF_SWING_HORIZONTAL_MODE,
-            "_attr_swing_horizontal_mode",
-            tcv.item_in_list(
-                self,
-                CONF_SWING_HORIZONTAL_MODE,
-                "_attr_swing_horizontal_modes",
+            (
                 CONF_SWING_HORIZONTAL_MODES,
-                stringify_result=True,
+                "_attr_swing_horizontal_modes",
+                CONF_SWING_HORIZONTAL_MODE,
+                "_attr_swing_horizontal_mode",
+                SET_SWING_HORIZONTAL_MODE_ACTION,
             ),
-        )
-        self.add_assumed_attribute(
-            "_attr_swing_horizontal_mode",
-            CONF_SWING_HORIZONTAL_MODE,
-            SET_SWING_HORIZONTAL_MODE_ACTION,
-        )
-
-        self.setup_template(
-            CONF_PRESET_MODES,
-            "_attr_preset_modes",
-            tcv.list_of_strings(self, CONF_PRESET_MODES),
-        )
-        self.setup_template(
-            CONF_PRESET_MODE,
-            "_attr_preset_mode",
-            tcv.item_in_list(
-                self,
-                CONF_PRESET_MODE,
-                "_attr_preset_modes",
+            (
                 CONF_PRESET_MODES,
-                stringify_result=True,
+                "_attr_preset_modes",
+                CONF_PRESET_MODE,
+                "_attr_preset_mode",
+                SET_PRESET_MODE_ACTION,
             ),
-        )
-        self.add_assumed_attribute(
-            "_attr_preset_mode", CONF_PRESET_MODE, SET_PRESET_MODE_ACTION
-        )
+        ):
+            self.setup_list_item_templates(
+                list_option,
+                list_attr,
+                tcv.list_of_strings(self, list_option),
+                option,
+                attr,
+                tcv.item_in_list(
+                    self, option, list_attr, list_option, stringify_result=True
+                ),
+            )
+            self.add_assumed_attribute(attr, option, action)
 
         self._attr_supported_features = ClimateEntityFeature(0)
         for action_id, supported_feature in (
@@ -613,16 +572,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
 
-    def _update_hvac_mode(self, render) -> None:
+    def _update_hvac_mode(self, render: str | None) -> None:
         if render is None:
             self._attr_hvac_mode = None
             return
 
         self._attr_hvac_mode = HVACMode(render)
 
-    def _update_hvac_modes(self, render) -> None:
-
-        if isinstance(render, TemplateError):
+    def _update_hvac_modes(self, render: list[HVACMode] | None) -> None:
+        if render is None:
             self._attr_hvac_modes = []
             return
 
