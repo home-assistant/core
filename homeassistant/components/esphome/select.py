@@ -223,10 +223,26 @@ class EsphomeAssistSatelliteWakeWordSelect(
 
         option = self._attr_current_option
 
+        # Use the device's wake word if the current option is not active,
+        # including when it is NO_WAKE_WORD, unless another select already
+        # has that wake word.
         if (
             (self._wake_word_index == 0)
             and (len(config.active_wake_words) == 1)
-            and (option in (None, NO_WAKE_WORD))
+            and (
+                (option is None)
+                or (self._wake_words.get(option) not in config.active_wake_words)
+            )
+            and (
+                config.active_wake_words[0]
+                not in (
+                    wake_word_id
+                    for index, wake_word_id in (
+                        self._entry_data.assist_satellite_wake_words.items()
+                    )
+                    if index != self._wake_word_index
+                )
+            )
         ):
             option = next(
                 (

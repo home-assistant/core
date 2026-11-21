@@ -488,3 +488,111 @@ async def test_wake_word_select_first_active_wake_word(
     state_2 = hass.states.get("select.test_wake_word_2")
     assert state_2 is not None
     assert state_2.state == NO_WAKE_WORD
+
+
+async def test_wake_word_select_follows_device_wake_word_change(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test wake word select follows a wake word changed on the device."""
+    available_wake_words = [
+        AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
+        AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
+    ]
+    mock_client.get_voice_assistant_configuration.return_value = (
+        AssistSatelliteConfiguration(
+            available_wake_words=available_wake_words,
+            active_wake_words=["hey_jarvis"],
+            max_active_wake_words=1,
+        )
+    )
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == "Hey Jarvis"
+
+    # Wake word is changed on the device, then it reconnects
+    mock_client.get_voice_assistant_configuration.return_value = (
+        AssistSatelliteConfiguration(
+            available_wake_words=available_wake_words,
+            active_wake_words=["okay_nabu"],
+            max_active_wake_words=1,
+        )
+    )
+    await mock_device.mock_disconnect(False)
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == "Okay Nabu"
+
+    # Second wake word should not be selected
+    state_2 = hass.states.get("select.test_wake_word_2")
+    assert state_2 is not None
+    assert state_2.state == NO_WAKE_WORD
+
+
+async def test_wake_word_select_keeps_secondary_wake_word(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test first wake word select does not take the second select's wake word."""
+    device_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
+            AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
+        ],
+        active_wake_words=["okay_nabu", "hey_jarvis"],
+        max_active_wake_words=2,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = device_config
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id, option in (
+        ("select.test_wake_word", "Okay Nabu"),
+        ("select.test_wake_word_2", "Hey Jarvis"),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    # Only the secondary wake word is active on the device after it reconnects
+    device_config.active_wake_words = ["hey_jarvis"]
+    await mock_device.mock_disconnect(False)
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == NO_WAKE_WORD
+
+    state_2 = hass.states.get("select.test_wake_word_2")
+    assert state_2 is not None
+    assert state_2.state == "Hey Jarvis"
