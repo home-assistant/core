@@ -5,11 +5,14 @@ import threading
 import time
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from PyTado.http import Http
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from requests import RequestException
 
 from homeassistant.components.tado import DOMAIN
+from homeassistant.components.tado.coordinator import RATE_LIMITED_INTERVAL
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -84,3 +87,46 @@ async def test_refresh_token_threading_lock(hass: HomeAssistant) -> None:
     assert start2 >= end1, (
         f"Second refresh started before first ended: start2={start2}, end1={end1}."
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_rate_limit_backoff_on_exhausted_quota(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that a successful refresh with zero remaining calls backs off."""
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    with patch(
+        "PyTado.interface.Tado.rate_limit_info",
+        return_value={"per-day": 1000, "remaining": "0"},
+    ):
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.update_interval >= RATE_LIMITED_INTERVAL
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_rate_limit_backoff_on_failed_request(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that a request failing on an exhausted quota applies the backoff."""
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    with (
+        patch(
+            "PyTado.interface.Tado.rate_limit_info",
+            return_value={"per-day": 1000, "remaining": "0"},
+        ),
+        patch.object(
+            coordinator._tado,
+            "get_me",
+            side_effect=RequestException("429"),
+        ),
+    ):
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.update_interval == RATE_LIMITED_INTERVAL
