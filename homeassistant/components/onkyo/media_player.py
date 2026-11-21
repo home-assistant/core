@@ -240,9 +240,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     # Cover art: the receiver reports an address on itself. It serves the same
     # address for every track, so the image hash is built from the track and a
-    # counter that grows with every art report.
+    # counter that grows with every art report. The stock image cache is keyed
+    # by address, so the last image is kept here under its hash instead.
     _net_art_url: str | None = None
     _net_art_serial: int = 0
+    _net_art_cache: tuple[str, tuple[bytes, str | None]] | None = None
 
     def __init__(
         self,
@@ -371,6 +373,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
         self._net_art_url = None
+        self._net_art_cache = None
 
     @property
     @override
@@ -399,14 +402,26 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Return the cover art, fetched again only when the image hash changes."""
+        if (url := self.media_image_url) is None or (
+            image_hash := self.media_image_hash
+        ) is None:
+            return None, None
+        if self._net_art_cache is not None and self._net_art_cache[0] == image_hash:
+            return self._net_art_cache[1]
+        body, content_type = await self._async_fetch_net_art(url)
+        if body is None:
+            return None, None
+        self._net_art_cache = (image_hash, (body, content_type))
+        return body, content_type
+
+    async def _async_fetch_net_art(self, url: str) -> tuple[bytes | None, str | None]:
         """Fetch the cover art from the receiver.
 
         These receivers answer with a few header-like lines in front of the image
         ("Content-size: 129128", "Content-type: image/jpeg", empty line), so they are
         removed here to leave a plain image.
         """
-        if (url := self.media_image_url) is None:
-            return None, None
         session = async_get_clientsession(self.hass)
         try:
             async with asyncio.timeout(10):

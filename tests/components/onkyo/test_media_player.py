@@ -753,3 +753,48 @@ async def test_net_cover_art_unavailable(
     aioclient_mock.get(ART_URL, exc=TimeoutError)
     player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
     assert await player.async_get_media_image() == (None, None)
+
+
+async def test_net_cover_art_cached(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the cover art is fetched again only for a new track or art report."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, _net_jacket_art(ART_URL))
+    player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+
+    # A failed fetch is not kept
+    aioclient_mock.get(ART_URL, exc=TimeoutError)
+    assert await player.async_get_media_image() == (None, None)
+    assert aioclient_mock.call_count == 1
+
+    aioclient_mock.clear_requests()
+    image = b"\xff\xd8\xff\xd9"
+    aioclient_mock.get(
+        ART_URL,
+        content=b"Content-size: 4\nContent-type: image/jpeg\n\n" + image,
+    )
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+    assert aioclient_mock.call_count == 1
+
+    # The same track reuses the image
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+    assert aioclient_mock.call_count == 1
+
+    # A new title fetches it again
+    await receive_messages(
+        read_queue,
+        status.NetTitle(Code.from_kind_zone(Kind.NET_TITLE, Zone.MAIN), None, "Next"),
+    )
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+    assert aioclient_mock.call_count == 2
+
+    # So does a new art report for the same track
+    await receive_messages(read_queue, _net_jacket_art(ART_URL))
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+    assert aioclient_mock.call_count == 3
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+    assert aioclient_mock.call_count == 3
