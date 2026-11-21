@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unique_id_mismatch": "The device at this address is not the Daikin AC that was configured.",
       "unsupported_device": "This Daikin adapter has no local control API. BRP069C4x/C8x require firmware 2.8.0 or later, while built-in adapters such as the Stylish FTXA20C2V1BW have no local API at all (2.6.3 is the latest firmware). Control the device through the Daikin cloud/Onecta app."
     },
     "error": {
@@ -12,6 +13,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "[%key:component::daikin::config::step::user::description%]",
+        "title": "Reconfigure Daikin AC"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
