@@ -25,7 +25,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_projector() -> Generator[MagicMock]:
     """Mock the pySDCP projector, which reports it is on."""
-    with patch("pysdcp.Projector") as projector_class:
+    with (
+        patch(
+            "homeassistant.components.sony_projector.config_flow.pysdcp.Projector",
+            autospec=True,
+        ) as projector_class,
+        patch(
+            "homeassistant.components.sony_projector.switch.pysdcp.Projector",
+            new=projector_class,
+        ),
+    ):
         projector = projector_class.return_value
         projector.get_power.return_value = True
         projector.set_power.return_value = True

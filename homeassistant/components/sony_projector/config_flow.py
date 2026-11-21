@@ -45,8 +45,6 @@ class SonyProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: host})
 
             if await self._async_can_connect(host):
-                # Another flow may have set up the projector during the validation.
-                self._async_abort_entries_match({CONF_HOST: host})
                 return self.async_create_entry(
                     title=DEFAULT_NAME, data={CONF_HOST: host}
                 )
@@ -68,8 +66,6 @@ class SonyProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         if not await self._async_can_connect(host):
             return self.async_abort(reason="cannot_connect")
 
-        # A user flow may have set up the projector during the validation.
-        self._async_abort_entries_match({CONF_HOST: host})
         return self.async_create_entry(
             title=import_data[CONF_NAME], data={CONF_HOST: host}
         )

@@ -23,6 +23,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -32,6 +33,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {CONF_HOST: TEST_HOST}
+    assert mock_setup_entry.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -43,7 +45,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_flow_cannot_connect_recovers(
-    hass: HomeAssistant, mock_projector: MagicMock, error: Exception
+    hass: HomeAssistant, mock_projector: MagicMock, error: Exception | type[Exception]
 ) -> None:
     """Test a failed connection shows an error and the flow can recover."""
     mock_projector.get_power.side_effect = error
@@ -51,6 +53,11 @@ async def test_user_flow_cannot_connect_recovers(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id] == "user"
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: TEST_HOST}
     )
@@ -63,7 +70,9 @@ async def test_user_flow_cannot_connect_recovers(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
+    assert result["title"] == DEFAULT_NAME  
+    assert result["data"] == {CONF_HOST: TEST_HOST}  
+    assert mock_setup_entry.call_count == 1  
 
 @pytest.mark.usefixtures("mock_projector")
 async def test_user_flow_already_configured(

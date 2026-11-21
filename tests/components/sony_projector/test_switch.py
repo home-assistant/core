@@ -57,7 +57,8 @@ async def test_yaml_import_keeps_entity_id(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert hass.states.get(expected_entity_id).state == STATE_ON
+    assert (state := hass.states.get(expected_entity_id))
+    assert state.state == STATE_ON
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -175,8 +176,10 @@ async def test_yaml_import_failure(
     assert await async_setup_component(hass, SWITCH_DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    assert (
+        issue := issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
     )
     assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue_registry.async_get_issue(
