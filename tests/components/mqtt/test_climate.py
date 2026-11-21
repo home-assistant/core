@@ -502,7 +502,13 @@ async def test_turn_on_and_off_without_power_command(
             help_custom_config(
                 climate.DOMAIN,
                 DEFAULT_CONFIG,
-                ({"modes": ["cool", "heat"], "optimistic": True},),
+                (
+                    {
+                        "modes": ["cool", "heat"],
+                        "mode_state_topic": "mode-state-topic",
+                        "optimistic": True,
+                    },
+                ),
             ),
             "cool",
             id="optimistic-first-mode",
