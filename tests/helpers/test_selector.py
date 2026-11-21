@@ -196,6 +196,17 @@ def _test_selector(
             ("abc123",),
             (None,),
         ),
+        ({"filter": {"device_type": "smart_plug"}}, ("abc123",), (None,)),
+        (
+            {"filter": [{"device_type": ["smart_plug", "generic"]}]},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {"entity": {"domain": "switch"}, "filter": {"device_type": "smart_plug"}},
+            ("abc123",),
+            (None,),
+        ),
     ],
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -208,6 +219,9 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
     [
         # model_id should be used under the filter key
         {"model_id": "mock-model_id"},
+        # device_type should be used under the filter key
+        {"device_type": "smart_plug"},
+        {"filter": {"device_type": 1}},
     ],
 )
 def test_device_selector_schema_error(schema) -> None:

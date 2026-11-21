@@ -105,6 +105,7 @@ ALLOWED_USED_COMPONENTS = {
     "conversation",
     "default_config",
     "device_automation",
+    "device_type",
     "frontend",
     "group",
     "input_boolean",

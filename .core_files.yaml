@@ -83,6 +83,7 @@ components: &components
   - homeassistant/components/configurator/**
   - homeassistant/components/demo/**
   - homeassistant/components/device_automation/**
+  - homeassistant/components/device_type/**
   - homeassistant/components/dhcp/**
   - homeassistant/components/discovery/**
   - homeassistant/components/energy/**

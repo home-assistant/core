@@ -29,7 +29,9 @@ from pytest_homeassistant.common import (
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.components.device_type import SmartPlug
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import CoreState, HomeAssistant, ReleaseChannel
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
@@ -38,6 +40,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     frame,
 )
+from homeassistant.helpers.device_type import DeviceSlot, DeviceType, EntityReference
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
 
@@ -45,6 +48,19 @@ VIA_DEVICE_DEPRECATION = (
     "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
     "parameter"
 )
+
+
+class _TestLight(DeviceType, type_id="device_registry_test_light"):
+    """A light, whose slots do not apply to a smart plug."""
+
+    relay = DeviceSlot(Platform.SWITCH)
+
+
+class _TestPowerStrip(SmartPlug, type_id="device_registry_test_power_strip"):
+    """A power strip, a smart plug with more slots."""
+
+    power = DeviceSlot(SensorDeviceClass.POWER, required=True)
+    relay = DeviceSlot(Platform.SWITCH)
 
 
 @pytest.fixture(autouse=True)
@@ -421,6 +437,10 @@ async def test_loading_from_storage(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": "model_id",
+                    "original_device_slots": {
+                        "outlet": [["switch", "hue", "outlet_unique_id"]]
+                    },
+                    "original_device_type": "smart_plug",
                     "modified_at": modified_at,
                     "name_by_user": "Test Friendly Name",
                     "name": "name",
@@ -506,6 +526,8 @@ async def test_loading_from_storage(
         modified_at=datetime.fromisoformat(modified_at),
         name_by_user="Test Friendly Name",
         name="name",
+        original_device_slots={"outlet": (("switch", "hue", "outlet_unique_id"),)},
+        original_device_type="smart_plug",
         serial_number="serial_no",
         sw_version="version",
     )
@@ -648,6 +670,8 @@ async def test_migration_from_1_1(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
@@ -676,6 +700,8 @@ async def test_migration_from_1_1(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -811,6 +837,8 @@ async def test_migration_from_1_2(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
@@ -839,6 +867,8 @@ async def test_migration_from_1_2(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -957,6 +987,8 @@ async def test_migration_fom_1_3(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
@@ -985,6 +1017,8 @@ async def test_migration_fom_1_3(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
                     "name_by_user": None,
@@ -1105,6 +1139,8 @@ async def test_migration_from_1_4(
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
@@ -1133,6 +1169,8 @@ async def test_migration_from_1_4(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -1256,6 +1294,8 @@ async def test_migration_from_1_5(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": utcnow().isoformat(),
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -1283,6 +1323,8 @@ async def test_migration_from_1_5(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -1408,6 +1450,8 @@ async def test_migration_from_1_6(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -1435,6 +1479,8 @@ async def test_migration_from_1_6(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -1562,6 +1608,8 @@ async def test_migration_from_1_7(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -1589,6 +1637,8 @@ async def test_migration_from_1_7(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -1717,6 +1767,8 @@ async def test_migration_from_1_10(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -1860,6 +1912,8 @@ async def test_migration_from_1_11(
                     "model": "model",
                     "name": "name",
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -5386,6 +5440,13 @@ async def test_loading_saving_data(
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
         model="via",
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
+        ),
         name="Original Name",
         sw_version="Orig SW 1",
         entry_type=None,
@@ -5479,7 +5540,14 @@ async def test_loading_saving_data(
     new_light4 = registry2.async_get_device(identifiers={("hue", "abc")})
 
     assert orig_via == new_via
+    assert new_via.original_device_type == "smart_plug"
+    assert new_via.original_device_slots == {
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
+    }
     assert orig_light == new_light
+    assert new_light.original_device_type is None
+    assert new_light.original_device_slots == {}
     assert orig_light4 == new_light4
 
     # Ensure enums converted
@@ -5514,6 +5582,236 @@ async def test_no_unnecessary_changes(
 
     assert entry.id == entry2.id
     assert len(mock_save.mock_calls) == 0
+
+
+async def test_get_or_create_device_type(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_get_or_create stores the id and the slots of the device type."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
+        ),
+    )
+    assert entry.original_device_type == "smart_plug"
+    assert entry.original_device_slots == {
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
+    }
+    with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
+        entry.original_device_slots["outlet"] = (("switch", "hue", "other"),)
+
+    # An equal device type and not passing device_type leave the device untouched
+    with patch.object(device_registry, "async_schedule_save") as mock_save:
+        for device_type in (
+            SmartPlug(
+                outlet=[EntityReference(Platform.SWITCH, "hue", "outlet")],
+                power=[
+                    EntityReference(Platform.SENSOR, "hue", "power"),
+                    EntityReference(Platform.SENSOR, "hue", "power_2"),
+                ],
+                energy=(),
+            ),
+            Undefined,
+        ):
+            entry = device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("hue", "456")},
+                device_type=device_type,
+            )
+    assert len(mock_save.mock_calls) == 0
+
+    # The slots of the passed device type replace the stored ones as a whole
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "new_outlet")
+        ),
+    )
+    assert entry.original_device_type == "smart_plug"
+    assert entry.original_device_slots == {"outlet": (("switch", "hue", "new_outlet"),)}
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=_TestLight(relay=EntityReference(Platform.SWITCH, "hue", "relay")),
+    )
+    assert entry.original_device_type == "device_registry_test_light"
+    assert entry.original_device_slots == {"relay": (("switch", "hue", "relay"),)}
+
+    # A device info cannot declare a device type, registering with one keeps it
+    with pytest.raises(TypeError, match="device_type"):
+        dr.DeviceInfo(  # type: ignore[call-arg]
+            identifiers={("hue", "456")},
+            device_type=SmartPlug(
+                outlet=EntityReference(Platform.SWITCH, "hue", "outlet")
+            ),
+        )
+    entry = device_registry.async_get_or_create_from_info(
+        config_entry_id=mock_config_entry.entry_id,
+        device_info=dr.DeviceInfo(identifiers={("hue", "456")}, name="Light"),
+    )
+    assert entry.original_device_type == "device_registry_test_light"
+    assert entry.original_device_slots == {"relay": (("switch", "hue", "relay"),)}
+
+    await hass.async_block_till_done()
+    assert [event.data for event in update_events] == [
+        {"action": "create", "device_id": entry.id},
+        {
+            "action": "update",
+            "device_id": entry.id,
+            "changes": {
+                "original_device_slots": {
+                    "outlet": (("switch", "hue", "outlet"),),
+                    "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
+                }
+            },
+        },
+        {
+            "action": "update",
+            "device_id": entry.id,
+            "changes": {
+                "original_device_slots": {"outlet": (("switch", "hue", "new_outlet"),)},
+                "original_device_type": "smart_plug",
+            },
+        },
+        {
+            "action": "update",
+            "device_id": entry.id,
+            "changes": {"name": None},
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    ("device_type", "original_device_type", "changes"),
+    [
+        pytest.param(
+            None,
+            None,
+            {
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet"),)},
+                "original_device_type": "smart_plug",
+            },
+            id="none",
+        ),
+        pytest.param(
+            DeviceType(),
+            None,
+            {
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet"),)},
+                "original_device_type": "smart_plug",
+            },
+            id="generic",
+        ),
+        pytest.param(
+            SmartPlug(),
+            "smart_plug",
+            {"original_device_slots": {"outlet": (("switch", "hue", "outlet"),)}},
+            id="no_slots",
+        ),
+    ],
+)
+async def test_get_or_create_device_type_cleared(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    device_type: DeviceType | None,
+    original_device_type: str | None,
+    changes: dict[str, Any],
+) -> None:
+    """Test the generic type is stored as no type, and no slots clear the slots."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
+    )
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=device_type,
+    )
+
+    assert entry.original_device_type == original_device_type
+    assert entry.original_device_slots == {}
+    await hass.async_block_till_done()
+    assert [event.data for event in update_events] == [
+        {"action": "update", "device_id": entry.id, "changes": changes},
+    ]
+
+
+async def test_get_or_create_device_type_of_subtype(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a subtype stores its own slots and the ones of its parent types."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=_TestPowerStrip(
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
+            relay=EntityReference(Platform.SWITCH, "hue", "relay"),
+        ),
+    )
+
+    assert entry.original_device_type == "device_registry_test_power_strip"
+    assert entry.original_device_slots == {
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
+        "relay": (("switch", "hue", "relay"),),
+    }
+
+
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        pytest.param("smart_plug", id="type_id"),
+        pytest.param(SmartPlug, id="class"),
+        pytest.param(SmartPlug.outlet, id="slot"),
+        pytest.param({"outlet": "outlet"}, id="slots"),
+    ],
+)
+async def test_get_or_create_invalid_device_type(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    device_type: Any,
+) -> None:
+    """Test a device type which is not an instance raises before any change."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "456")},
+        device_type=SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
+    )
+
+    for identifier in ("456", "789"):
+        with pytest.raises(
+            TypeError, match="device_type must be a DeviceType instance"
+        ):
+            device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("hue", identifier)},
+                name="New name",
+                device_type=device_type,
+            )
+
+    assert device_registry.async_get(entry.id) is entry
+    assert device_registry.async_get_device(identifiers={("hue", "789")}) is None
 
 
 async def test_format_mac(
@@ -8027,6 +8325,8 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "2024-02-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
@@ -9362,6 +9662,8 @@ async def test_loading_from_storage_with_legacy_duplicates(
             "manufacturer": None,
             "model": None,
             "model_id": None,
+            "original_device_slots": {},
+            "original_device_type": None,
             "modified_at": created_at,
             "name_by_user": None,
             "name": None,
@@ -10794,6 +11096,34 @@ async def test_dict_repr_dual_writes_deprecated_keys(
     assert "has_composite_identifiers" not in repr_
 
 
+@pytest.mark.parametrize(
+    ("device_type", "original_device_type"),
+    [
+        (None, None),
+        (
+            SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
+            "smart_plug",
+        ),
+    ],
+)
+async def test_dict_repr_original_device_type(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    device_type: DeviceType | None,
+    original_device_type: str | None,
+) -> None:
+    """Test dict_repr and json_repr expose original_device_type, not the slots."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+        device_type=device_type,
+    )
+
+    assert device.dict_repr["original_device_type"] == original_device_type
+    assert json.loads(device.json_repr)["original_device_type"] == original_device_type
+    assert "original_device_slots" not in device.dict_repr
+
+
 def _create_parent_and_child(
     device_registry: dr.DeviceRegistry,
     config_entry_id: str,
@@ -11838,6 +12168,9 @@ async def test_convert_device_to_child_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         identifiers={("test", "strip_outlet_1")},
         manufacturer="acme",
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet_1")
+        ),
         name="Outlet 1",
         via_device_id=parent.id,
     )
@@ -11872,6 +12205,8 @@ async def test_convert_device_to_child_device(
             "changes": {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
                 "manufacturer": "acme",
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet_1"),)},
+                "original_device_type": "smart_plug",
                 "parent_device_id": None,
                 "via_device_id": parent.id,
             },
@@ -12344,8 +12679,112 @@ async def test_migration_3_3_to_3_4(
     assert not registry.child_devices
 
     await flush_store(registry._store)
-    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == 4
+    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == dr.STORAGE_VERSION_MINOR
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_3_4_to_3_5(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from 3.4 adds the device type and slots to devices."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 3,
+        "minor_version": 4,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "child_devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": mock_config_entry.entry_id,
+                    "config_subentry_id": None,
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "id": "childdeviceid",
+                    "identifiers": [["test", "strip_outlet_1"]],
+                    "labels": [],
+                    "modified_at": "2024-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "Outlet 1",
+                    "parent_device_id": "abcdefghijklm",
+                }
+            ],
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": mock_config_entry.entry_id,
+                    "config_subentry_id": None,
+                    "composite_device_id": None,
+                    "composite_primary_config_entry": None,
+                    "split_at": None,
+                    "has_composite_identifiers": False,
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "abcdefghijklm",
+                    "identifiers": [["test", "strip"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "2024-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "Power strip",
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [
+                {
+                    "area_id": None,
+                    "config_entry_id": mock_config_entry.entry_id,
+                    "config_subentry_id": None,
+                    "connections": [],
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "id": "deletedid",
+                    "identifiers": [["test", "deleted"]],
+                    "labels": [],
+                    "modified_at": "2024-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "orphaned_timestamp": None,
+                    "domain": None,
+                }
+            ],
+        },
+    }
+    stored_child_device = deepcopy(
+        hass_storage[dr.STORAGE_KEY]["data"]["child_devices"][0]
+    )
+    stored_deleted_device = deepcopy(
+        hass_storage[dr.STORAGE_KEY]["data"]["deleted_devices"][0]
+    )
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+    device = registry.async_get("abcdefghijklm")
+    assert device is not None
+    assert device.original_device_type is None
+    assert device.original_device_slots == {}
+
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    stored = hass_storage[dr.STORAGE_KEY]
+    assert stored["minor_version"] == dr.STORAGE_VERSION_MINOR
+    assert stored["data"]["devices"][0]["original_device_type"] is None
+    assert stored["data"]["devices"][0]["original_device_slots"] == {}
+    # Child and deleted devices do not store a device type or slots
+    assert stored["data"]["child_devices"] == [stored_child_device]
+    assert stored["data"]["deleted_devices"] == [stored_deleted_device]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -12692,6 +13131,8 @@ async def test_async_cleanup_removes_child_device_with_stale_config_entry(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "2024-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": "Power strip",
@@ -13127,6 +13568,8 @@ async def test_legacy_undefined_disabled_deleted_device_restored_as_child(
                     "manufacturer": None,
                     "model": None,
                     "model_id": None,
+                    "original_device_slots": {},
+                    "original_device_type": None,
                     "modified_at": "2024-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": "Power strip",

@@ -1,0 +1,269 @@
+# serializer version: 1
+# name: test_device_type[sensor_first-child_device][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'outlet_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Outlet 1',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('kitchen_sink', '2_ch_power_strip')]>,
+  })
+# ---
+# name: test_device_type[sensor_first-child_device][device_type]
+  dict({
+    'slots': dict({
+    }),
+    'type_id': 'generic',
+  })
+# ---
+# name: test_device_type[sensor_first-smart_plug][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'smart_plug',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Smart plug',
+    'name_by_user': None,
+    'original_device_slots': dict({
+      'energy': tuple(
+        tuple(
+          'sensor',
+          'kitchen_sink',
+          'smart_plug_energy',
+        ),
+      ),
+      'outlet': tuple(
+        tuple(
+          'switch',
+          'kitchen_sink',
+          'smart_plug',
+        ),
+      ),
+      'power': tuple(
+        tuple(
+          'sensor',
+          'kitchen_sink',
+          'smart_plug_power',
+        ),
+      ),
+    }),
+    'original_device_type': 'smart_plug',
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_type[sensor_first-smart_plug][device_type]
+  dict({
+    'slots': dict({
+      'energy': tuple(
+        'sensor.smart_plug_energy',
+      ),
+      'outlet': tuple(
+        'switch.smart_plug',
+      ),
+      'power': tuple(
+        'sensor.smart_plug_power',
+      ),
+    }),
+    'type_id': 'smart_plug',
+  })
+# ---
+# name: test_device_type[sensor_first-untyped_device][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'hub_switch',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Hub switch',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <DeviceEntry identifiers=[('kitchen_sink', 'hub')]>,
+  })
+# ---
+# name: test_device_type[sensor_first-untyped_device][device_type]
+  dict({
+    'slots': dict({
+    }),
+    'type_id': 'generic',
+  })
+# ---
+# name: test_device_type[switch_first-child_device][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'outlet_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Outlet 1',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('kitchen_sink', '2_ch_power_strip')]>,
+  })
+# ---
+# name: test_device_type[switch_first-child_device][device_type]
+  dict({
+    'slots': dict({
+    }),
+    'type_id': 'generic',
+  })
+# ---
+# name: test_device_type[switch_first-smart_plug][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'smart_plug',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Smart plug',
+    'name_by_user': None,
+    'original_device_slots': dict({
+      'energy': tuple(
+        tuple(
+          'sensor',
+          'kitchen_sink',
+          'smart_plug_energy',
+        ),
+      ),
+      'outlet': tuple(
+        tuple(
+          'switch',
+          'kitchen_sink',
+          'smart_plug',
+        ),
+      ),
+      'power': tuple(
+        tuple(
+          'sensor',
+          'kitchen_sink',
+          'smart_plug_power',
+        ),
+      ),
+    }),
+    'original_device_type': 'smart_plug',
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_type[switch_first-smart_plug][device_type]
+  dict({
+    'slots': dict({
+      'energy': tuple(
+        'sensor.smart_plug_energy',
+      ),
+      'outlet': tuple(
+        'switch.smart_plug',
+      ),
+      'power': tuple(
+        'sensor.smart_plug_power',
+      ),
+    }),
+    'type_id': 'smart_plug',
+  })
+# ---
+# name: test_device_type[switch_first-untyped_device][device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kitchen_sink',
+        'hub_switch',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Hub switch',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <DeviceEntry identifiers=[('kitchen_sink', 'hub')]>,
+  })
+# ---
+# name: test_device_type[switch_first-untyped_device][device_type]
+  dict({
+    'slots': dict({
+    }),
+    'type_id': 'generic',
+  })
+# ---

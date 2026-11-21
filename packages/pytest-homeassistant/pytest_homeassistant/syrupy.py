@@ -208,6 +208,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             )
             | {"id": ANY}
         )
+        # Omitted while unset so snapshots of untyped devices stay unchanged
+        if data.original_device_type is None:
+            serialized.pop("original_device_type")
+        if not data.original_device_slots:
+            serialized.pop("original_device_slots")
         serialized["via_device_id"] = cls._serializable_device_id(data.via_device_id)
 
         serialized["config_entry_id"] = ANY
