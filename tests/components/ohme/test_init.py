@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ohme.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -42,6 +41,8 @@ async def test_device(
     """Snapshot the device from registry."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(DOMAIN, mock_client.serial)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_client.serial), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot

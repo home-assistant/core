@@ -1,5 +1,6 @@
 """Handle KNX project data."""
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Final
@@ -63,6 +64,7 @@ class KNXProject:
     devices: dict[str, Device]
     group_addresses: dict[str, GroupAddressInfo]
     info: ProjectInfo | None
+    _project: KNXProjectModel | None
 
     def __init__(
         self,
@@ -72,6 +74,9 @@ class KNXProject:
         """Initialize project data."""
         self.hass = hass
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
+        # Serializes the cached project against upload and removal, so a load
+        # in flight cannot resurrect a project that was replaced or removed.
+        self._project_lock = asyncio.Lock()
 
         self.initial_state()
 
@@ -81,6 +86,7 @@ class KNXProject:
         self.devices = {}
         self.group_addresses = {}
         self.info = None
+        self._project = None
 
     async def load_project(
         self, xknx: XKNX, data: KNXProjectModel | None = None
@@ -92,14 +98,17 @@ class KNXProject:
             GroupAddress.address_format = self.get_address_format()
             xknx.group_address_dpt.clear()
             xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
+            # Replace rather than extend: addresses of a previous project don't stay.
+            group_addresses: dict[str, GroupAddressInfo] = {}
 
             for ga_model in project["group_addresses"].values():
                 ga_info = _create_group_address_info(ga_model)
-                self.group_addresses[ga_info.address] = ga_info
+                group_addresses[ga_info.address] = ga_info
                 if (dpt_model := ga_model.get("dpt")) is not None:
                     xknx_ga_dict[ga_model["address"]] = dpt_model
 
             xknx.group_address_dpt.set(xknx_ga_dict)
+            self.group_addresses = group_addresses
 
             _LOGGER.debug(
                 "Loaded KNX project data with %s group addresses from storage",
@@ -122,17 +131,29 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
-        await self._store.async_save(project)
-        await self.load_project(xknx, data=project)
+        async with self._project_lock:
+            await self._store.async_save(project)
+            # Invalidate rather than populate: whether the full project is held
+            # is left to whoever asks for it.
+            self._project = None
+            await self.load_project(xknx, data=project)
 
     async def remove_project_file(self) -> None:
         """Remove project file from storage."""
-        await self._store.async_remove()
-        self.initial_state()
+        async with self._project_lock:
+            await self._store.async_remove()
+            self.initial_state()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
-        """Load the project file from local storage."""
-        return await self._store.async_load()
+        """Return the full project, reading it from local storage on first use.
+
+        `Store.async_load` skips its own cache for keys containing "/", so it
+        would re-parse the multi-megabyte file on every call.
+        """
+        async with self._project_lock:
+            if self._project is None:
+                self._project = await self._store.async_load()
+            return self._project
 
     def get_address_format(self) -> GroupAddressType:
         """Return the address format for group addresses used in the project."""

@@ -3,11 +3,16 @@
 from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
+from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.energenie_power_sockets.const import (
+    CONF_DEVICE_API_ID,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from .conftest import DEMO_CONFIG_DATA
 
 
 async def test_load_unload_entry(
@@ -59,3 +64,25 @@ async def test_usb_error(
     await hass.async_block_till_done()
 
     assert valid_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    mock_get_device: MagicMock,
+) -> None:
+    """Test migrating a version 1 config entry to version 2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={"api-device-id": DEMO_CONFIG_DATA[CONF_DEVICE_API_ID]},
+        unique_id=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID],
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert "api-device-id" not in entry.data
+    assert entry.data[CONF_DEVICE_API_ID] == DEMO_CONFIG_DATA[CONF_DEVICE_API_ID]
+    assert entry.state is ConfigEntryState.LOADED

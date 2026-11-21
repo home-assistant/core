@@ -20,7 +20,7 @@ PLACEHOLDER_DEVICE_NAME = "device_name"
 DOCS_URL = "https://www.home-assistant.io/integrations/plaato/"
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-DEFAULT_SCAN_INTERVAL = 5
+SCAN_INTERVAL = 5
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 
 EXTRA_STATE_ATTRIBUTES = {

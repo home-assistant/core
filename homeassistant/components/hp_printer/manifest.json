@@ -1,0 +1,24 @@
+{
+  "domain": "hp_printer",
+  "name": "HP Printer",
+  "categories": ["computers_network.printers"],
+  "codeowners": ["@chemelli74"],
+  "config_flow": true,
+  "connectivity": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/hp_printer",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aiohpprinter"],
+  "quality_scale": "platinum",
+  "requirements": ["aiohpprinter==3.7.0"],
+  "zeroconf": [
+    {
+      "name": "hp*",
+      "type": "_ipp._tcp.local."
+    },
+    {
+      "name": "hp*",
+      "type": "_ipps._tcp.local."
+    }
+  ]
+}

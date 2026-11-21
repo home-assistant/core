@@ -16,6 +16,7 @@ from roborock.data import (
     ValleyElectricityTimer,
     WorkStatusMapping,
 )
+from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import (
     YXDeviceState,
     YXFanLevel,
@@ -1505,9 +1506,10 @@ STATUS = StatusV2.from_dict(
         "adbumper_status": [0, 0, 0],
         "water_shortage_status": 0,
         "clean_fluid_status": 0,
-        "dock_type": 3,
+        "dock_type": 21,
         "dust_collection_status": 0,
         "auto_dust_collection": 1,
+        "dry_status": 0,
         "avoid_count": 19,
         "mop_mode": 300,
         "debug_mode": 0,
@@ -1604,6 +1606,7 @@ SCENES = [
 Q7_B01_PROPS = B01Props(
     status=WorkStatusMapping.SWEEP_MOPING,
     clean_path_preference=CleanPathPreferenceMapping.BALANCED,
+    repeat_state=CleanRepeatMapping.ONE,
     main_brush=5000,
     side_brush=3000,
     hypa=1500,

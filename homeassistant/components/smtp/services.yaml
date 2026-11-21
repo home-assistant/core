@@ -44,3 +44,17 @@ send_message:
               selector:
                 text:
           translation_key: attachments
+    priority:
+      required: false
+      selector:
+        select:
+          options:
+            - highest
+            - high
+            - normal
+            - low
+            - lowest
+          mode: dropdown
+          translation_key: "priority"
+          sort: false
+      example: highest

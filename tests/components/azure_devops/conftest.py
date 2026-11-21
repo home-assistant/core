@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.azure_devops.const import DOMAIN
 
@@ -17,8 +18,6 @@ from . import (
     PAT,
     UNIQUE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -64,6 +63,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.azure_devops.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_entry:
         yield mock_entry

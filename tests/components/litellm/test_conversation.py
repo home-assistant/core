@@ -1,10 +1,11 @@
 """Tests for the LiteLLM conversation entity."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+from freezegun.api import FrozenDateTimeFactory
+import httpx2
 import openai
 from openai.types import CompletionUsage
 from openai.types.chat import (
@@ -15,17 +16,22 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
+from homeassistant.components.litellm.coordinator import UPDATE_INTERVAL_DISCONNECTED
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import ToolInput
+from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 AGENT_ID = "conversation.gpt_3_5_turbo"
@@ -141,6 +147,7 @@ async def test_connection_error_availability(
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a connection error marks the entity unavailable until it recovers."""
     await setup_integration(hass, mock_config_entry)
@@ -148,7 +155,7 @@ async def test_connection_error_availability(
 
     mock_openai_client.chat.completions.create = AsyncMock(
         side_effect=openai.APIConnectionError(
-            request=httpx.Request("POST", "http://localhost")
+            request=httpx2.Request("POST", "http://localhost")
         )
     )
     result = await conversation.async_converse(
@@ -164,8 +171,9 @@ async def test_connection_error_availability(
     assert hass.states.get(AGENT_ID).state == STATE_UNAVAILABLE
 
     # A successful availability ping restores the entity.
-    await mock_config_entry.runtime_data.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL_DISCONNECTED)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE
 
 
@@ -201,12 +209,14 @@ async def test_function_call(
             agent_id=AGENT_ID,
             tool_call_id="mock_tool_call_id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": dt.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(

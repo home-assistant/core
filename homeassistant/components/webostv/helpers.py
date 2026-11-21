@@ -1,21 +1,13 @@
 """Helper functions for LG webOS TV."""
 
-import logging
+from aiowebostv import WebOsTvState
 
-from aiowebostv import WebOsClient, WebOsTvState
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, LIVE_TV_APP_ID
-
-_LOGGER = logging.getLogger(__name__)
-
-type WebOsTvConfigEntry = ConfigEntry[WebOsClient]
 
 
 @callback
@@ -27,7 +19,7 @@ def async_get_device_entry_by_device_id(
     Raises ValueError if device ID is invalid.
     """
     device_reg = dr.async_get(hass)
-    if (device := device_reg.async_get(device_id)) is None:
+    if (device := device_reg.async_get(device_id, include_child_devices=False)) is None:
         raise ValueError(f"Device {device_id} is not a valid {DOMAIN} device.")
 
     return device
@@ -75,15 +67,3 @@ def get_sources(tv_state: WebOsTvState) -> list[str]:
 
     # Preserve order when filtering duplicates
     return list(dict.fromkeys(sources))
-
-
-def update_client_key(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
-    """Check and update stored client key if key has changed."""
-    client: WebOsClient = entry.runtime_data
-    host = entry.data[CONF_HOST]
-    key = entry.data[CONF_CLIENT_SECRET]
-
-    if client.client_key != key:
-        _LOGGER.debug("Updating client key for host %s", host)
-        data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
-        hass.config_entries.async_update_entry(entry, data=data)

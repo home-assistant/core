@@ -4,19 +4,18 @@ from datetime import timedelta
 import time
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-
-from homeassistant.components.private_ble_device.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
     inject_bluetooth_service_info_bleak,
     patch_bluetooth_time,
 )
+
+from homeassistant.components.private_ble_device.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 MAC_RPA_VALID_1 = "40:01:02:0a:c4:a6"
 MAC_RPA_VALID_2 = "40:02:03:d2:74:ce"

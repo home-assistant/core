@@ -4,6 +4,7 @@ import asyncio
 from collections import deque
 from contextlib import suppress
 import logging
+import re
 from tempfile import NamedTemporaryFile
 
 from aiohttp import ClientSession
@@ -103,6 +104,21 @@ _LOG_LEVEL_MAP = {
     "FTL": logging.ERROR,
     "PNC": logging.ERROR,
 }
+
+
+# go2rtc logs stream urls verbatim, which may embed camera credentials.
+# Upstream strips the url userinfo since AlexxIT/go2rtc#2051, but no release
+# includes it yet (v1.9.14 is the newest). It does not touch query parameters.
+_URL_USERINFO = re.compile(r"://[^/?#\s@]+@")
+_URL_CREDENTIAL_QUERY = re.compile(
+    r"([?&](?:auth|user|password)=)[^&\s]+", re.IGNORECASE
+)
+
+
+def _redact_url_credentials(msg: str) -> str:
+    """Redact credentials from urls in a go2rtc log message."""
+    msg = _URL_USERINFO.sub("://****@", msg)
+    return _URL_CREDENTIAL_QUERY.sub(r"\1****", msg)
 
 
 class Go2RTCServerStartError(HomeAssistantError):
@@ -238,7 +254,7 @@ class Server:
         assert process.stdout is not None
 
         async for line in process.stdout:
-            msg = line[:-1].decode().strip()
+            msg = _redact_url_credentials(line[:-1].decode().strip())
             self._log_buffer.append(msg)
             loglevel = logging.WARNING
             if len(split_msg := msg.split(" ", 2)) == 3:

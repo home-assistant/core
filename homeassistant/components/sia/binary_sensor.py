@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,6 +27,7 @@ from .const import (
     SIA_HUB_ZONE,
 )
 from .entity import SIABaseEntity, SIAEntityDescription
+from .hub import SIAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,9 @@ ENTITY_DESCRIPTION_CONNECTIVITY = SIABinarySensorEntityDescription(
 )
 
 
-def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
+def generate_binary_sensors(
+    hass: HomeAssistant, entry: SIAConfigEntry
+) -> Iterable[SIABinarySensor]:
     """Generate binary sensors.
 
     For each Account there is one power sensor with zone == 0.
@@ -93,21 +95,25 @@ def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
         zones = entry.options[CONF_ACCOUNTS][account][CONF_ZONES]
 
         yield SIABinarySensorConnectivity(
-            entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_CONNECTIVITY
+            hass, entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_CONNECTIVITY
         )
-        yield SIABinarySensor(entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_POWER)
+        yield SIABinarySensor(
+            hass, entry, account, SIA_HUB_ZONE, ENTITY_DESCRIPTION_POWER
+        )
         for zone in range(1, zones + 1):
-            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_SMOKE)
-            yield SIABinarySensor(entry, account, zone, ENTITY_DESCRIPTION_MOISTURE)
+            yield SIABinarySensor(hass, entry, account, zone, ENTITY_DESCRIPTION_SMOKE)
+            yield SIABinarySensor(
+                hass, entry, account, zone, ENTITY_DESCRIPTION_MOISTURE
+            )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SIAConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SIA binary sensors from a config entry."""
-    async_add_entities(generate_binary_sensors(entry))
+    async_add_entities(generate_binary_sensors(hass, entry))
 
 
 class SIABinarySensor(SIABaseEntity, BinarySensorEntity):

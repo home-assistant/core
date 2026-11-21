@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.assist_pipeline import PipelineStage
 from homeassistant.components.assist_satellite.websocket_api import (
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_intercept_wake_word(
@@ -292,6 +291,7 @@ async def test_get_configuration(
     with (
         patch.object(entity, "_attr_pipeline_entity_id", "select.test_pipeline"),
         patch.object(entity, "_attr_vad_sensitivity_entity_id", "select.test_vad"),
+        patch.object(entity, "_attr_timer_list_entity_id", "timer_list.test_timers"),
     ):
         await ws_client.send_json_auto_id(
             {
@@ -310,6 +310,7 @@ async def test_get_configuration(
             "max_active_wake_words": 1,
             "pipeline_entity_id": "select.test_pipeline",
             "vad_entity_id": "select.test_vad",
+            "timer_list_entity_id": "timer_list.test_timers",
         }
 
 
@@ -341,6 +342,7 @@ async def test_get_configuration_not_implemented(
             "max_active_wake_words": 1,
             "pipeline_entity_id": None,
             "vad_entity_id": None,
+            "timer_list_entity_id": None,
         }
 
 

@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from pynina import Warning
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -14,12 +19,7 @@ from .const import (
     DUMMY_CONFIG_ENTRY,
     DUMMY_CONFIG_ENTRY_AREA_FILTERS,
     DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
+    DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS,
 )
 
 
@@ -27,7 +27,7 @@ from tests.common import (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.nina.async_setup_entry", return_value=True
+        "homeassistant.components.nina.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -71,6 +71,22 @@ def mock_config_entry_area_filter(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY_AREA_FILTERS),
+        version=1,
+        minor_version=3,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    return config_entry
+
+
+@pytest.fixture
+def mock_config_entry_multiple_regions(hass: HomeAssistant) -> MockConfigEntry:
+    """Provide a common mock config entry with an area filter."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=deepcopy(DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS),
         version=1,
         minor_version=3,
     )

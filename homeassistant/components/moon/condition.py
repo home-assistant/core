@@ -2,7 +2,7 @@
 
 from typing import Unpack, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant
@@ -16,11 +16,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_PHASE
 from .helpers import MOON_PHASES, is_waxing, moon_phase
 
-_STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
-_IS_PHASE_CONDITION_SCHEMA = vol.Schema(
+_STATE_CONDITION_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): {}}
+)
+_IS_PHASE_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Required(CONF_PHASE): vol.In(MOON_PHASES),
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Required(CONF_PHASE): probatio.In(MOON_PHASES),
         }
     }
 )

@@ -7,6 +7,7 @@ from typing import override
 
 from pyenphase import EnvoyC6CC, EnvoyCollar, EnvoyEncharge, EnvoyEnpower
 from pyenphase.models.acb import EnvoyACB
+from pyenphase.models.generator import EnvoyGenerator
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,12 +16,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyACBBatteryEntity, EnvoyBaseEntity
+from .entity import EnvoyACBBatteryEntity, EnvoyBaseEntity, EnvoyGeneratorStatusEntity
 
 PARALLEL_UPDATES = 0
 
@@ -68,6 +70,29 @@ ENPOWER_SENSORS = (
         key="mains_oper_state",
         translation_key="grid_status",
         value_fn=lambda enpower: enpower.mains_oper_state == "closed",
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyGeneratorBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Envoy standby generator binary sensor entity."""
+
+    value_fn: Callable[[EnvoyGenerator], bool]
+
+
+GENERATOR_STATUS_SENSORS = (
+    EnvoyGeneratorBinarySensorEntityDescription(
+        key="generator_present",
+        translation_key="generator_present",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("present"),
+    ),
+    EnvoyGeneratorBinarySensorEntityDescription(
+        key="generator_schedule_enabled",
+        translation_key="generator_schedule_enabled",
+        value_fn=lambda generator: generator.schedule == 1,
     ),
 )
 
@@ -160,6 +185,12 @@ async def async_setup_entry(
             for description in ENPOWER_SENSORS
         )
 
+    if envoy_data.generator:
+        entities.extend(
+            EnvoyGeneratorBinarySensorEntity(coordinator, description)
+            for description in GENERATOR_STATUS_SENSORS
+        )
+
     if envoy_data.collar:
         entities.extend(
             EnvoyCollarBinarySensorEntity(coordinator, description)
@@ -209,7 +240,11 @@ class EnvoyEnchargeBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="Encharge",
             name=f"Encharge {serial_number}",
             sw_version=str(encharge_inventory[self._serial_number].firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=serial_number,
         )
 
@@ -243,7 +278,11 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="Enpower",
             name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=enpower.serial_number,
         )
 
@@ -254,6 +293,20 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         enpower = self.data.enpower
         assert enpower is not None
         return self.entity_description.value_fn(enpower)
+
+
+class EnvoyGeneratorBinarySensorEntity(EnvoyGeneratorStatusEntity, BinarySensorEntity):
+    """Defines a standby generator binary_sensor entity."""
+
+    entity_description: EnvoyGeneratorBinarySensorEntityDescription
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the generator binary_sensor."""
+        generator = self.data.generator
+        assert generator
+        return self.entity_description.value_fn(generator)
 
 
 class EnvoyCollarBinarySensorEntity(EnvoyBaseBinarySensorEntity):
@@ -277,7 +330,11 @@ class EnvoyCollarBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="IQ Meter Collar",
             name=f"Collar {collar_data.serial_number}",
             sw_version=str(collar_data.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=collar_data.serial_number,
         )
 
@@ -311,7 +368,11 @@ class EnvoyC6CCBinarySensorEntity(EnvoyBaseBinarySensorEntity):
             model="C6 COMBINER CONTROLLER",
             name=f"C6 Combiner {c6cc_data.serial_number}",
             sw_version=str(c6cc_data.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=c6cc_data.serial_number,
         )
 

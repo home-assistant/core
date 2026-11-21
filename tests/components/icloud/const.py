@@ -56,6 +56,28 @@ TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
 
+FEATURES = {
+    "MSG": True,
+    "SND": True,
+    "WIP": True,
+    "LOC": True,
+    "LCK": True,
+}
+
+LOCATION_TIMESTAMP_MS = 1_700_000_000_000
+
+LOCATION = {
+    "latitude": 60.2,
+    "longitude": 24.7,
+    "horizontalAccuracy": 10,
+    "altitude": 5.0,
+    "floorLevel": 2,
+    "positionType": "GPS",
+    "isOld": False,
+    "isInaccurate": False,
+    "timeStamp": LOCATION_TIMESTAMP_MS,
+}
+
 DEVICE = {
     "id": "device1",
     "name": "iPhone",
@@ -66,6 +88,79 @@ DEVICE = {
     "deviceClass": "iPhone",
     "deviceDisplayName": "iPhone",
     "prsId": None,
+    "features": FEATURES,
+    "lostModeCapable": True,
+    "lowPowerMode": False,
+    "activationLocked": False,
+    "isLocating": False,
+    "locationEnabled": True,
+    "wipeInProgress": False,
+    "remoteWipe": None,
+    "remoteLock": None,
+    "lockedTimestamp": None,
+    "lostTimestamp": "",
+    "wipedTimestamp": None,
+    "location": LOCATION,
+}
+
+# iCloud reports no battery for a device that is asleep or has none of its
+# own, such as a Mac mini, but still reports where it is.
+DEVICE_WITHOUT_BATTERY = {
+    "id": "device2",
+    "name": "Mac mini",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
+    "rawDeviceModel": "Macmini9,1",
+    "deviceClass": "Mac",
+    "deviceDisplayName": "Mac mini",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": LOCATION,
+}
+
+# An account that is not sharing its location reports no location at all,
+# but a device of the account itself still reports its battery.
+DEVICE_WITHOUT_LOCATION = {
+    "id": "device3",
+    "name": "iPad",
+    "deviceStatus": "200",
+    "batteryStatus": "NotCharging",
+    "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
     "lowPowerMode": False,
     "location": None,
+}
+
+# Neither signal: nothing for the tracker or the battery sensor to use.
+DEVICE_WITHOUT_LOCATION_OR_BATTERY = {
+    "id": "device4",
+    "name": "iPad (family)",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
+}
+
+# A fix carrying only half of the coordinates is no location at all.
+DEVICE_WITH_HALF_A_LOCATION = {
+    "id": "device5",
+    "name": "iPad (half a fix)",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": {"latitude": 60.2, "longitude": None},
 }

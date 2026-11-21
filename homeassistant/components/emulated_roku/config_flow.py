@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
@@ -46,14 +46,14 @@ class EmulatedRokuFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(CONF_NAME, default=default_name): str,
-                    vol.Required(CONF_LISTEN_PORT, default=default_port): vol.Coerce(
-                        int
-                    ),
+                    probatio.Required(CONF_NAME, default=default_name): str,
+                    probatio.Required(
+                        CONF_LISTEN_PORT, default=default_port
+                    ): probatio.Coerce(int),
                 }
             ),
             errors=errors,

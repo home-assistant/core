@@ -76,4 +76,5 @@ def _get_accessory_diagnostics(
     }
     if entity_state:
         data["entity_state"] = async_redact_data(entity_state, TO_REDACT)
+    data.update(accessory.diagnostics())
     return data

@@ -320,6 +320,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
                 )
             )
 
+    @callback
     @override
     def _unschedule_refresh(self) -> None:
         """Stop listening to fetched price data when unused."""
@@ -477,5 +478,7 @@ class TibberDataAPICoordinator(TibberCoordinator[dict[str, TibberDevice]]):
                 f"Rate limit exceeded, retry after {err.retry_after} seconds",
                 retry_after=err.retry_after,
             ) from err
+        except tibber.exceptions.HttpExceptionError as err:
+            raise UpdateFailed(f"Error communicating with API ({err})") from err
         self._build_sensor_lookup(devices)
         return devices

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from nibe.heatpump import Model
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_add_model
-
-from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)

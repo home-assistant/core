@@ -8,11 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 
-from .const import DOMAIN, LOGGER, format_dispatch_call
+from .const import DOMAIN, LOGGER
+from .util import format_dispatch_call
 
 PLATFORMS = [
     Platform.EVENT,
@@ -22,7 +23,7 @@ PLATFORMS = [
 type WeatherFlowConfigEntry = ConfigEntry[WeatherFlowListener]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) -> None:
     """Set up WeatherFlow from a config entry."""
 
     client = WeatherFlowListener()
@@ -67,23 +68,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherFlowConfigEntry) 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_handle_ha_shutdown)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WeatherFlowConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.stop_listening()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.stop_listening()
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: WeatherFlowConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     client = config_entry.runtime_data

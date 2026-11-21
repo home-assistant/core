@@ -1,7 +1,7 @@
 """Coordinator for FYTA integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_EXPIRATION, DOMAIN
 
@@ -54,10 +55,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
     ) -> dict[int, Plant]:
         """Fetch data from API endpoint."""
 
-        if (
-            self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
-        ):
+        if self.fyta.expiration is None or self.fyta.expiration < dt_util.now():
             await self.renew_authentication()
 
         try:
@@ -101,10 +99,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
                     (DOMAIN, f"{self.config_entry.entry_id}-{plant_id}"),
                     self.config_entry.entry_id,
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                     _LOGGER.debug("Device removed from device registry: %s", device.id)
 
         # add new devices

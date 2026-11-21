@@ -206,6 +206,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_name = sensor.name.strip()
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_entity_category = (
@@ -219,6 +220,8 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             else:
                 self.entity_description = DIAG_SENSOR
                 self._attr_native_unit_of_measurement = sensor.unit
+        if sensor.id_ == "timestamp":
+            self._attr_entity_registry_enabled_default = False
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:

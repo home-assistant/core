@@ -1,7 +1,8 @@
 """StarLine Account."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
 from typing import Any
 
 from starline import StarlineApi, StarlineDevice
@@ -23,6 +24,8 @@ from .const import (
     LOGGER,
 )
 
+type StarlineConfigEntry = ConfigEntry[StarlineAccount]
+
 
 def _parse_datetime(dt_str: str | None) -> str | None:
     if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
@@ -33,10 +36,10 @@ def _parse_datetime(dt_str: str | None) -> str | None:
 class StarlineAccount:
     """StarLine Account class."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: StarlineConfigEntry) -> None:
         """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
-        self._config_entry: ConfigEntry = config_entry
+        self._config_entry: StarlineConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._update_obd_interval: int = DEFAULT_SCAN_OBD_INTERVAL
         self._unsubscribe_auto_updater: Callable | None = None
@@ -47,7 +50,7 @@ class StarlineAccount:
 
     def _check_slnet_token(self, interval: int) -> None:
         """Check SLNet token expiration and update if needed."""
-        now = datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
+        now = time.time()
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
         if now + interval > slnet_token_expires:

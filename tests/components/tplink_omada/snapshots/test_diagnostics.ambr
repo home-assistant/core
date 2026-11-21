@@ -1251,6 +1251,14 @@
         'uptime': '5day(s) 3h 29m 49s',
         'uptimeLong': 444589,
         'version': '1.1.1',
+        'wlan': dict({
+          'ssids': list([
+            dict({
+              'psk': '**REDACTED**',
+              'ssid': '**REDACTED**',
+            }),
+          ]),
+        }),
       }),
     }),
   })

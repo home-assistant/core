@@ -1,12 +1,11 @@
 """Fixtures for the tests for the feedreader component."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, load_fixture_bytes
 
 from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.components.feedreader.coordinator import EVENT_FEEDREADER
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_capture_events, load_fixture_bytes
 
 
 @pytest.fixture(name="feed_one_event")
@@ -73,6 +72,18 @@ def fixture_feed_htmlentities(hass: HomeAssistant) -> bytes:
 def fixture_feed_atom_htmlentities(hass: HomeAssistant) -> bytes:
     """Load test ATOM feed data with HTML Entities."""
     return load_fixture_bytes("feedreader10.xml", DOMAIN)
+
+
+@pytest.fixture(name="feed_unsorted")
+def fixture_feed_unsorted(hass: HomeAssistant) -> bytes:
+    """Load test ATOM feed data with HTML Entities."""
+    return load_fixture_bytes("feedreader11.xml", DOMAIN)
+
+
+@pytest.fixture(name="feed_unsorted_update")
+def fixture_feed_unsorted_update(hass: HomeAssistant) -> bytes:
+    """Load test ATOM feed data with HTML Entities."""
+    return load_fixture_bytes("feedreader12.xml", DOMAIN)
 
 
 @pytest.fixture(name="events")

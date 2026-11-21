@@ -1,8 +1,9 @@
 """Provides device automations for Kodi."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -11,7 +12,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    async_noop,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -22,8 +30,8 @@ TRIGGER_TYPES = {"turn_on", "turn_off"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -37,7 +45,7 @@ async def async_get_triggers(
 
     # Get all the integrations entities for this device
     for entry in er.async_entries_for_device(registry, device_id):
-        if entry.domain == "media_player":
+        if entry.domain == MEDIA_PLAYER_DOMAIN:
             triggers.append(
                 {
                     CONF_PLATFORM: "device",
@@ -105,4 +113,4 @@ async def async_attach_trigger(
     if config[CONF_TYPE] == "turn_off":
         return _attach_trigger(hass, config, action, EVENT_TURN_OFF, trigger_info)
 
-    return lambda: None
+    return async_noop

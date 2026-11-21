@@ -8,6 +8,7 @@ from pyenphase import EnvoyData
 from pyenphase.exceptions import EnvoyError
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -85,7 +86,11 @@ class EnvoyACBAggregateEntity(EnvoyBaseEntity):
             manufacturer="Enphase",
             model="ACB",
             name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
 
@@ -97,6 +102,62 @@ class EnvoyACBAggregateControlEntity(EnvoyACBAggregateEntity):
     def available(self) -> bool:
         """Return if the ACB controls are available."""
         return super().available and bool(self.data.acb_inventory)
+
+
+class EnvoyGeneratorEntity(EnvoyBaseEntity):
+    """Defines a base entity on the standby generator device."""
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Init the standby generator device entity."""
+        super().__init__(coordinator, description)
+        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+        config = self.data.generator_config
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.envoy_serial_num}_generator")},
+            name=f"Generator {self.envoy_serial_num}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
+        )
+        if config is not None:
+            self._attr_device_info.manufacturer = config.manufacturer
+            self._attr_device_info.model = config.model
+
+
+class EnvoyGeneratorStatusEntity(EnvoyGeneratorEntity):
+    """Defines a generator entity backed by the generator status endpoint."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the generator status is available."""
+        return super().available and self.data.generator is not None
+
+
+class EnvoyGeneratorConfigEntity(EnvoyGeneratorEntity):
+    """Defines a generator entity backed by the generator config endpoint."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the generator configuration is available."""
+        return super().available and self.data.generator_config is not None
+
+
+class EnvoyGeneratorModeEntity(EnvoyGeneratorEntity):
+    """Defines a generator entity backed by the generator mode endpoint."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the generator mode is available."""
+        return super().available and self.data.generator_mode is not None
 
 
 class EnvoyACBBatteryEntity(EnvoyBaseEntity):
@@ -117,6 +178,10 @@ class EnvoyACBBatteryEntity(EnvoyBaseEntity):
             manufacturer="Enphase",
             model="AC Battery",
             name=f"AC Battery {serial_number}",
-            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{self.envoy_serial_num}_acb"),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=serial_number,
         )

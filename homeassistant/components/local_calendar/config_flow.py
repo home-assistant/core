@@ -7,7 +7,7 @@ from typing import Any, override
 
 from ical.calendar_stream import CalendarStream
 from ical.exceptions import CalendarParseError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,10 +29,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CALENDAR_NAME): str,
-        vol.Optional(CONF_IMPORT, default=ATTR_CREATE_EMPTY): selector.SelectSelector(
+        probatio.Required(CONF_CALENDAR_NAME): str,
+        probatio.Optional(
+            CONF_IMPORT, default=ATTR_CREATE_EMPTY
+        ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[
                     ATTR_CREATE_EMPTY,
@@ -44,9 +46,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_IMPORT_DATA_SCHEMA = vol.Schema(
+STEP_IMPORT_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ICS_FILE): selector.FileSelector(
+        probatio.Required(CONF_ICS_FILE): selector.FileSelector(
             config=selector.FileSelectorConfig(accept=".ics")
         ),
     }

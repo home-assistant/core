@@ -26,11 +26,15 @@ async def async_setup_entry(
     api = config_entry.runtime_data
 
     lights: list[ZimiLight | ZimiDimmer] = [
-        ZimiLight(device, api) for device in api.lights if device.type != "dimmer"
+        ZimiLight(hass, device, api, config_entry.entry_id)
+        for device in api.lights
+        if device.type != "dimmer"
     ]
 
     lights.extend(
-        ZimiDimmer(device, api) for device in api.lights if device.type == "dimmer"
+        ZimiDimmer(hass, device, api, config_entry.entry_id)
+        for device in api.lights
+        if device.type == "dimmer"
     )
 
     async_add_entities(lights)
@@ -39,10 +43,16 @@ async def async_setup_entry(
 class ZimiLight(ZimiEntity, LightEntity):
     """Representation of a Zimi Light."""
 
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: ControlPointDevice,
+        api: ControlPoint,
+        config_entry_id: str,
+    ) -> None:
         """Initialize a ZimiLight."""
 
-        super().__init__(device, api)
+        super().__init__(hass, device, api, config_entry_id)
 
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
@@ -77,9 +87,15 @@ class ZimiLight(ZimiEntity, LightEntity):
 class ZimiDimmer(ZimiLight):
     """Zimi Light supporting dimming."""
 
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: ControlPointDevice,
+        api: ControlPoint,
+        config_entry_id: str,
+    ) -> None:
         """Initialize a ZimiDimmer."""
-        super().__init__(device, api)
+        super().__init__(hass, device, api, config_entry_id)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 

@@ -9,17 +9,17 @@ from peco import (
     PecoOutageApi,
     UnresponsiveMeterError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COUNTY): vol.In(COUNTY_LIST),
-        vol.Optional(CONF_PHONE_NUMBER): cv.string,
+        probatio.Required(CONF_COUNTY): probatio.In(COUNTY_LIST),
+        probatio.Optional(CONF_PHONE_NUMBER): cv.string,
     }
 )
 
@@ -93,6 +93,7 @@ class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the finish smart meter step."""
         if "phone_number" in self.meter_error:
             if self.meter_error["type"] == "error":
+                # pylint: disable-next=home-assistant-step_id-match-method
                 return self.async_show_form(
                     step_id="user",
                     data_schema=STEP_USER_DATA_SCHEMA,

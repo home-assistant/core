@@ -25,7 +25,7 @@ async def async_setup_entry(
     entry_data = config_entry.runtime_data
     async_add_entities(
         [
-            LutronFan(area_name, device, entry_data.client)
+            LutronFan(hass, area_name, device, entry_data.client, config_entry.entry_id)
             for area_name, device in entry_data.fans
         ],
         True,

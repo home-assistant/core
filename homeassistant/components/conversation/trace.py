@@ -25,6 +25,9 @@ class ConversationTraceEventType(enum.StrEnum):
     TOOL_CALL = "tool_call"
     """A conversation agent Tool call or default agent intent call."""
 
+    TURN_CONTENT = "turn_content"
+    """The content added to the chat log during the turn."""
+
 
 @dataclass(frozen=True)
 class ConversationTraceEvent:

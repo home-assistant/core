@@ -8,12 +8,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
-from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
+from .coordinator import (
+    IrmKmiConfigEntry,
+    IrmKmiCoordinator,
+    IrmKmiPollenCoordinator,
+    IrmKmiRuntimeData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
     """Set up this integration using UI."""
     api_client = IrmKmiApiClientHa(
         session=async_get_clientsession(hass),
@@ -21,18 +26,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bo
         cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
     )
 
-    entry.runtime_data = IrmKmiCoordinator(hass, entry, api_client)
+    weather_coordinator = IrmKmiCoordinator(hass, entry, api_client)
+    await weather_coordinator.async_config_entry_first_refresh()
 
-    await entry.runtime_data.async_config_entry_first_refresh()
+    # The pollen link comes from the forecast, so this refresh runs after it.
+    # A pollen outage only makes the pollen sensors unavailable.
+    pollen_coordinator = IrmKmiPollenCoordinator(hass, entry, api_client)
+    await pollen_coordinator.async_refresh()
+
+    entry.runtime_data = IrmKmiRuntimeData(
+        weather=weather_coordinator, pollen=pollen_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:

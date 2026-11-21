@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,7 +41,13 @@ async def async_setup_entry(
 
     async_add_entities(
         AnthemAVR(
-            avr.protocol, name, mac_address, model, zone_number, config_entry.entry_id
+            hass,
+            avr.protocol,
+            name,
+            mac_address,
+            model,
+            zone_number,
+            config_entry.entry_id,
         )
         for zone_number in avr.protocol.zones
     )
@@ -64,6 +71,7 @@ class AnthemAVR(MediaPlayerEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         avr: AVR,
         name: str,
         mac_address: str,
@@ -85,7 +93,11 @@ class AnthemAVR(MediaPlayerEntity):
                 name=f"Zone {zone_number}",
                 manufacturer=MANUFACTURER,
                 model=model,
-                via_device=(DOMAIN, mac_address),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, mac_address),
+                    config_entry_id=entry_id,
+                ),
             )
         else:
             # Zone 1 is the physical receiver that owns the network MAC; higher

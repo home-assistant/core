@@ -4,7 +4,7 @@ from typing import Any, override
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -16,10 +16,10 @@ from .const import CONF_UID, DOMAIN, LOGGER
 
 DEFAULT_PORT = 7777
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -132,6 +132,5 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Finish the configuration via any discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(step_id="discovery_confirm")
         return await self.async_step_user(self.discovery_info)

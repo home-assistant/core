@@ -31,13 +31,14 @@ SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
 
 
 async def add_select_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee select entities."""
     async_add_entities(
-        HomeeSelect(attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
+        HomeeSelect(hass, attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if attribute.type in SELECT_DESCRIPTIONS and attribute.editable
@@ -51,7 +52,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the select component."""
 
-    await setup_homee_platform(add_select_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_select_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeSelect(HomeeEntity, SelectEntity):
@@ -59,12 +62,13 @@ class HomeeSelect(HomeeEntity, SelectEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: SelectEntityDescription,
     ) -> None:
         """Initialize a Homee select entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         assert description.options is not None
         self._attr_options = description.options

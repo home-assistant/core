@@ -1,7 +1,14 @@
 """Tests for HomematicIP Cloud sensor."""
 
+from unittest.mock import patch
+
 from homematicip.base.enums import ValveState, WindowState
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -27,14 +34,21 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfLength,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -51,7 +65,7 @@ async def test_hmip_accesspoint_status(
 ) -> None:
     """Test HomematicipSwitch."""
     entity_id = "sensor.home_control_access_point_duty_cycle"
-    entity_name = "HOME_CONTROL_ACCESS_POINT Duty Cycle"
+    entity_name = "HOME_CONTROL_ACCESS_POINT Duty cycle"
     device_model = "HmIP-HAP"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["HOME_CONTROL_ACCESS_POINT"]
@@ -63,6 +77,7 @@ async def test_hmip_accesspoint_status(
     assert hmip_device
     assert ha_state.state == "8.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.attributes["icon"] == "mdi:access-point-network"
 
 
 async def test_hmip_heating_thermostat(
@@ -294,6 +309,38 @@ async def test_hmip_power_sensor(
     assert ha_state.attributes[ATTR_CONFIG_PENDING]
 
 
+async def test_hmip_power_and_energy_without_device_class(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the power and energy of a device the library has no class for."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Deckenlicht"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = "sensor.deckenlicht_power"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "currentPowerConsumption",
+        23.5,
+        channel=0,
+        channel_real_index=1,
+    )
+    assert hass.states.get(entity_id).state == "23.5"
+
+
 async def test_hmip_illuminance_sensor1(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -364,12 +411,39 @@ async def test_hmip_motion_detector_push_button_single_illuminance(
     assert "does not generate unique IDs" not in caplog.text
 
 
+async def test_hmip_motion_detector_switch_outdoor_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the illuminance of a motion detector with switching actuator."""
+    entity_id = "sensor.bewegungsmelder_haustur_illuminance"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Bewegungsmelder Haustür"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "illumination", 231, channel=0, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == "231"
+
+
 async def test_hmip_windspeed_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipWindspeedSensor."""
-    entity_id = "sensor.wettersensor_pro_windspeed"
-    entity_name = "Wettersensor - pro Windspeed"
+    entity_id = "sensor.wettersensor_pro_wind_speed"
+    entity_name = "Wettersensor - pro Wind speed"
     device_model = "HmIP-SWO-PR"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wettersensor - pro"]
@@ -421,7 +495,7 @@ async def test_hmip_today_rain_sensor(
 ) -> None:
     """Test HomematicipTodayRainSensor."""
     entity_id = "sensor.weather_sensor_plus_today_rain"
-    entity_name = "Weather Sensor – plus Today Rain"
+    entity_name = "Weather Sensor – plus Today rain"
     device_model = "HmIP-SWO-PL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Weather Sensor – plus"]
@@ -444,7 +518,7 @@ async def test_hmip_temperature_external_sensor_channel_1(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_1_temperature"
-    entity_name = "STE2 Channel 1 Temperature"
+    entity_name = "STE2 Channel 1 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -469,7 +543,7 @@ async def test_hmip_temperature_external_sensor_channel_2(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_2_temperature"
-    entity_name = "STE2 Channel 2 Temperature"
+    entity_name = "STE2 Channel 2 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -494,7 +568,7 @@ async def test_hmip_temperature_external_sensor_delta(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_delta_temperature"
-    entity_name = "STE2 Delta Temperature"
+    entity_name = "STE2 Delta temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -577,6 +651,84 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
         hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
     )
     ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes["icon"] == "mdi:heating-coil"
+
+
+async def test_hmip_floor_terminal_block_valve_names_match_their_channel(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test each valve sensor carries the label of its own channel.
+
+    The channels are listed as 0, 1, 10, 11, 12, 2, ..., so a lookup by list
+    position would put the label of channel 10 on the sensor of channel 2.
+    """
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fußbodenheizungsaktor"]
+    )
+    device = next(
+        device
+        for device in mock_hap.home.devices
+        if device.id == "3014F7110000000000000049"
+    )
+    labels = {channel.index: channel.label for channel in device.functionalChannels}
+
+    entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id.startswith("3014F7110000000000000049_")
+        and entry.unique_id.endswith("_ftb_valve_position")
+    ]
+    assert len(entries) == 12
+    for entry in entries:
+        index = int(entry.unique_id.split("_")[1])
+        name = hass.states.get(entry.entity_id).name
+        assert name == f"Fußbodenheizungsaktor {labels[index]}"
+
+
+async def test_hmip_floor_terminal_block_thermal_valve_position(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the valve positions of a floor terminal block with thermal actuators."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    # the fixture's floor terminal blocks share a label, give this one its own
+    device = fixture["devices"]["3014F7110000000000BBBBB1"]
+    device["label"] = "FAL230"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["FAL230"], test_groups=[], extra_devices=[device]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = next(
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id == "3014F7110000000000BBBBB1_2_ftb_valve_position"
+    )
+    assert hass.states.get(entity_id).state == "100"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", 0.0, channel=0, channel_real_index=2
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "0"
+    # no valveState on these channels, so no adaption warning either
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
@@ -806,7 +958,7 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
 ) -> None:
     """Test HomematicipTiltVibrationSensor."""
     entity_id = "sensor.neigungssensor_tor_tilt_angle"
-    entity_name = "Neigungssensor Tor Tilt Angle"
+    entity_name = "Neigungssensor Tor Tilt angle"
     device_model = "ELV-SH-CTV"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Neigungssensor Tor"]
@@ -819,12 +971,53 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
     assert ha_state.state == "89"
 
 
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    device_model = "ELV-SH-TACO"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_state",
+        "Wassertemperatursensor Tilt State",
+        device_model,
+    )
+    assert ha_state.state == "non_neutral"
+
+    await async_manipulate_test_data(hass, hmip_device, "tiltState", "TILTED", 2)
+    ha_state = hass.states.get("sensor.wassertemperatursensor_tilt_state")
+    assert ha_state.state == "tilted"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_angle",
+        "Wassertemperatursensor Tilt angle",
+        device_model,
+    )
+    assert ha_state.state == "92"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_temperature",
+        "Wassertemperatursensor Temperature",
+        device_model,
+    )
+    assert ha_state.state == "22.9"
+
+
 async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test absolute humidity sensor (vaporAmount)."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
@@ -842,7 +1035,7 @@ async def test_hmip_absolute_humidity_sensor_invalid_value(
 ) -> None:
     """Test absolute humidity sensor with invalid value for vaporAmount."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
@@ -879,6 +1072,31 @@ async def test_hmip_water_valve_current_water_flow(
         == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
     )
     assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_hmip_water_supply_stop_water_flow(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the water flow of a water supply stop."""
+    entity_id = "sensor.wasserstopp_water_flow"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Wasserstopp"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(hass, hmip_device, "waterFlow", 11.55)
+    assert hass.states.get(entity_id).state == "11.55"
 
 
 async def test_hmip_water_valve_water_volume(
@@ -922,7 +1140,9 @@ async def test_hmip_water_valve_water_volume_since_open(
 
 
 async def test_hmip_smoke_detector_dirt_level(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test HomematicipSmokeDetectorDirtLevel."""
     entity_id = "sensor.rauchwarnmelder_dirt_level"
@@ -930,7 +1150,6 @@ async def test_hmip_smoke_detector_dirt_level(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -1079,3 +1298,305 @@ async def test_hmip_soil_temperature_sensor(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "18.3"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "entity_name", "attribute", "value", "new_value"),
+    [
+        ("sensor.zisterne_distance", "Zisterne Distance", "distance", "30.8", 39.4),
+        (
+            "sensor.zisterne_height",
+            "Zisterne Height",
+            "calculatedHeight",
+            "619.2",
+            610.6,
+        ),
+    ],
+)
+async def test_hmip_ultrasonic_distance_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_id: str,
+    entity_name: str,
+    attribute: str,
+    value: str,
+    new_value: float,
+) -> None:
+    """Test the ELV-SH-DUSI distance and height sensors."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Zisterne"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, "ELV-SH-DUSI"
+    )
+
+    assert ha_state.state == value
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.CENTIMETERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert ha_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+
+    await async_manipulate_test_data(hass, hmip_device, attribute, new_value)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == str(new_value)
+
+
+@pytest.mark.parametrize(
+    ("device_data_fixture", "device_label", "entity_id", "device_model", "channel"),
+    [
+        (
+            "wall_mounted_thermostat_with_carbon_device_data",
+            "Wandthermostat mit CO2",
+            "sensor.wandthermostat_mit_co2_carbon_dioxide",
+            "HmIP-WGTC",
+            3,
+        ),
+        (
+            "carbon_dioxide_sensor_device_data",
+            "CO2 Sensor miko ",
+            "sensor.co2_sensor_miko_carbon_dioxide",
+            "HmIP-SCTH230",
+            1,
+        ),
+    ],
+)
+async def test_hmip_carbon_dioxide_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomematicipHAP,
+    request: pytest.FixtureRequest,
+    device_data_fixture: str,
+    device_label: str,
+    entity_id: str,
+    device_model: str,
+    channel: int,
+) -> None:
+    """Test the carbon dioxide sensor on both channel types."""
+    device_data = request.getfixturevalue(device_data_fixture)
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[device_label], extra_devices=[device_data]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, f"{device_label} Carbon dioxide", device_model
+    )
+
+    assert (
+        ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfRatio.PARTS_PER_MILLION
+    )
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "carbonDioxideConcentration",
+        812.0,
+        channel=channel,
+        channel_real_index=channel,
+    )
+    assert hass.states.get(entity_id).state == "812.0"
+
+
+async def test_hmip_sensor_unknown_device_type(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test a device type the library does not know gets its weather sensors."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device_data = fixture["devices"]["3014F711AAAA000000000001"]
+    device_data.update(
+        id="3014F711000000000000UNKN", label="Unknown sensor", type="NEW_SENSOR"
+    )
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Unknown sensor"], extra_devices=[device_data]
+    )
+
+    assert hass.states.get("sensor.unknown_sensor_temperature").state == "15.4"
+    assert hass.states.get("sensor.unknown_sensor_wind_speed").state == "2.6"
+    assert hass.states.get("sensor.unknown_sensor_today_rain").state == "6.5"
+
+
+async def test_hmip_sensor_second_channel_of_same_kind(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a second channel of the same kind gets its own sensor."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device_data = fixture["devices"]["3014F711AAAA000000000002"]
+    device_data["functionalChannels"]["2"] = dict(
+        device_data["functionalChannels"]["1"], index=2, actualTemperature=7.5
+    )
+    device_data.update(id="3014F711000000000000TWO2", label="Two climate channels")
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Two climate channels"], extra_devices=[device_data]
+    )
+
+    states = {
+        entry.unique_id: hass.states.get(entry.entity_id).state
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.endswith("_temperature")
+    }
+    assert states == {
+        "3014F711000000000000TWO2_1_temperature": "15.1",
+        "3014F711000000000000TWO2_2_temperature": "7.5",
+    }
+
+
+async def test_hmip_sensor_unique_ids(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that every sensor keeps its unique id."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=None, test_groups=None
+    )
+
+    assert {
+        entry.entity_id: entry.unique_id
+        for entry in entity_registry.entities.values()
+        if entry.domain == "sensor"
+    } == {
+        "sensor.ap1_duty_cycle": "3014F711A000000BAD0CAAAA_0_duty_cycle",
+        "sensor.ausschalter_terrasse_bewegungsmelder_energy": "3014F7110000000000000109_1_energy",
+        "sensor.ausschalter_terrasse_bewegungsmelder_power": "3014F7110000000000000109_1_power",
+        "sensor.aussen_kuche_illuminance": "3014F71100000000000BBB17_1_illuminance",
+        "sensor.balkon_heizung_heating": "3014F7110000000000000017_1_valve_position",
+        "sensor.balkon_heizung_temperature": "3014F7110000000000000017_1_temperature",
+        "sensor.bewaesserungsaktor_currentwaterflow": "3014F71100000000000SHWSM_1_water_flow",
+        "sensor.bewaesserungsaktor_watervolume": "3014F71100000000000SHWSM_1_water_volume",
+        "sensor.bewaesserungsaktor_watervolumesinceopen": "3014F71100000000000SHWSM_1_water_volume_since_open",
+        "sensor.bewegungsmelder_fur_55er_rahmen_innen_illuminance": "3014F711000000000AAAAA25_1_illuminance",
+        "sensor.bewegungsmelder_haustur_illuminance": "3014F711000000000SMO230A_1_illuminance",
+        "sensor.brunnen_energy": "3014F7110000000000000009_1_energy",
+        "sensor.brunnen_power": "3014F7110000000000000009_1_power",
+        "sensor.buro_energy": "3014F7110000000000000010_1_energy",
+        "sensor.buro_power": "3014F7110000000000000010_1_power",
+        "sensor.bwth_1_absolute_humidity": "3014F7110000000000000055_1_absolute_humidity",
+        "sensor.bwth_1_humidity": "3014F7110000000000000055_1_humidity",
+        "sensor.bwth_1_temperature": "3014F7110000000000000055_1_temperature",
+        "sensor.deckenlicht_energy": "3014F7110000000000000BSI_1_energy",
+        "sensor.deckenlicht_power": "3014F7110000000000000BSI_1_power",
+        "sensor.elvshctv_absolute_humidity": "3014F71100000000000SVCTH_1_absolute_humidity",
+        "sensor.elvshctv_humidity": "3014F71100000000000SVCTH_1_humidity",
+        "sensor.elvshctv_temperature": "3014F71100000000000SVCTH_1_temperature",
+        "sensor.esi_gas_currentgasflow": "3014F7110000000000ESIGAS_1_esi_gas_flow",
+        "sensor.esi_gas_gasvolume": "3014F7110000000000ESIGAS_1_esi_gas_volume",
+        "sensor.esi_iec2_currentpowerconsumption": "3014F711000000000ESIIEC2_1_esi_iec_power",
+        "sensor.esi_iec2_energy_counter_usage_high_tariff": "3014F711000000000ESIIEC2_1_esi_iec_energy_high",
+        "sensor.esi_iec2_energy_counter_usage_low_tariff": "3014F711000000000ESIIEC2_1_esi_iec_energy_low",
+        "sensor.esi_iec_currentpowerconsumption": "3014F7110000000000ESIIEC_1_esi_iec_power",
+        "sensor.esi_iec_energy_counter_input_single_tariff": "3014F7110000000000ESIIEC_1_esi_iec_energy_input",
+        "sensor.esi_iec_energy_counter_usage_high_tariff": "3014F7110000000000ESIIEC_1_esi_iec_energy_high",
+        "sensor.esi_iec_energy_counter_usage_low_tariff": "3014F7110000000000ESIIEC_1_esi_iec_energy_low",
+        "sensor.esi_led_currentpowerconsumption": "3014F7110000000000ESIIE3_1_esi_led_power",
+        "sensor.esi_led_energy_counter_usage_high_tariff": "3014F7110000000000ESIIE3_1_esi_led_energy_high",
+        "sensor.fenstergriffsensor_window_state": "3014F711AAAA000000000004_1_window_state",
+        "sensor.flur_oben_energy": "3014F7110000000000000108_1_energy",
+        "sensor.flur_oben_power": "3014F7110000000000000108_1_power",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_10_og_az_rechts": "3014F7110000000000000049_10_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_11_og_az_links": "3014F7110000000000000049_11_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_12_og_bad_heizkorper": "3014F7110000000000000049_12_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_1_og_bad_r": "3014F7110000000000000049_1_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_2_og_bad_l": "3014F7110000000000000049_2_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_3_og_wz_rechts": "3014F7110000000000000049_3_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_4_og_wz_mitte_rechts": "3014F7110000000000000049_4_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_5_og_wz_mitte_links": "3014F7110000000000000049_5_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_6_og_wz_links": "3014F7110000000000000049_6_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_7_og_kuche": "3014F7110000000000000049_7_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_8_og_sz_rechts": "3014F7110000000000000049_8_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_heizkreislauf_9_og_sz_links": "3014F7110000000000000049_9_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_1": "3014F7110000000000BBBBB1_1_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_2": "3014F7110000000000BBBBB1_2_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_3": "3014F7110000000000BBBBB1_3_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_4": "3014F7110000000000BBBBB1_4_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_5": "3014F7110000000000BBBBB1_5_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_position_6": "3014F7110000000000BBBBB1_6_ftb_valve_position",
+        "sensor.garage_neigungs_und_erschutterungssensor_tilt_angle": "3014F7110TILTVIBRATIONSENSOR_1_tilt_angle",
+        "sensor.garage_neigungs_und_erschutterungssensor_tilt_state": "3014F7110TILTVIBRATIONSENSOR_1_tilt_state",
+        "sensor.heizkorperthermostat2_heating": "3014F7110000000000000013_1_valve_position",
+        "sensor.heizkorperthermostat2_temperature": "3014F7110000000000000013_1_temperature",
+        "sensor.heizkorperthermostat3_heating": "3014F7110000000000000016_1_valve_position",
+        "sensor.heizkorperthermostat3_temperature": "3014F7110000000000000016_1_temperature",
+        "sensor.heizkorperthermostat4_heating": "3014F71100000000ETRV0013_1_valve_position",
+        "sensor.heizkorperthermostat4_temperature": "3014F71100000000ETRV0013_1_temperature",
+        "sensor.heizkorperthermostat_heating": "3014F7110000000000000012_1_valve_position",
+        "sensor.heizkorperthermostat_temperature": "3014F7110000000000000012_1_temperature",
+        "sensor.heizung_heating": "3014F7110000000000000011_1_valve_position",
+        "sensor.heizung_temperature": "3014F7110000000000000011_1_temperature",
+        "sensor.home_control_access_point_duty_cycle": "3014F711A000000BAD0C0DED_0_duty_cycle",
+        "sensor.kuche_heizung_heating": "3014F7110000000000000014_1_valve_position",
+        "sensor.kuche_heizung_temperature": "3014F7110000000000000014_1_temperature",
+        "sensor.lichtsensor_nord_illuminance": "3014F711SLO0000000000026_1_illuminance",
+        "sensor.neigungssensor_tor_tilt_angle": "3014F7110000000000000CTV_1_tilt_angle",
+        "sensor.neigungssensor_tor_tilt_state": "3014F7110000000000000CTV_1_tilt_state",
+        "sensor.pc_energy": "3014F7110000000000000008_1_energy",
+        "sensor.pc_power": "3014F7110000000000000008_1_power",
+        "sensor.rauchwarnmelder_alarm_counter": "3014F7110000000000000018_smoke_alarm_counter",
+        "sensor.rauchwarnmelder_dirt_level": "3014F7110000000000000018_dirt_level",
+        "sensor.rauchwarnmelder_last_alarm": "3014F7110000000000000018_last_smoke_alarm",
+        "sensor.rauchwarnmelder_last_test": "3014F7110000000000000018_last_smoke_test",
+        "sensor.rauchwarnmelder_test_counter": "3014F7110000000000000018_smoke_test_counter",
+        "sensor.raumbediengerat_absolute_humidity": "3014F711000BBBB000000000_1_absolute_humidity",
+        "sensor.raumbediengerat_analog_temperature": "3014F711000000BBBB000005_1_temperature",
+        "sensor.raumbediengerat_humidity": "3014F711000BBBB000000000_1_humidity",
+        "sensor.raumbediengerat_temperature": "3014F711000BBBB000000000_1_temperature",
+        "sensor.soil_sensor_soil_moisture": "3014F7110000000000000SMS_1_soil_moisture",
+        "sensor.soil_sensor_soil_temperature": "3014F7110000000000000SMS_1_soil_temperature",
+        "sensor.spdr_1": "3014F7110000000000000054_1_passage_counter",
+        "sensor.spi_1_illuminance": "3014F711AAAAAAAAAAAAAA51_1_illuminance",
+        "sensor.ste2_channel_1_temperature": "3014F7110000000000STE2015_1_temperature_external_ch1",
+        "sensor.ste2_channel_2_temperature": "3014F7110000000000STE2015_1_temperature_external_ch2",
+        "sensor.ste2_delta_temperature": "3014F7110000000000STE2015_1_temperature_external_delta",
+        "sensor.temperatur_und_luftfeuchtigkeitssensor_aussen_absolute_humidity": "3014F711AAAA000000000002_1_absolute_humidity",
+        "sensor.temperatur_und_luftfeuchtigkeitssensor_aussen_humidity": "3014F711AAAA000000000002_1_humidity",
+        "sensor.temperatur_und_luftfeuchtigkeitssensor_aussen_temperature": "3014F711AAAA000000000002_1_temperature",
+        "sensor.thermostat_evo_heating": "3014F7110000000000000E70_1_valve_position",
+        "sensor.thermostat_evo_temperature": "3014F7110000000000000E70_1_temperature",
+        "sensor.thermostat_schlafen_tal_absolute_humidity": "3014F711000000000000AAA5_1_absolute_humidity",
+        "sensor.thermostat_schlafen_tal_humidity": "3014F711000000000000AAA5_1_humidity",
+        "sensor.thermostat_schlafen_tal_temperature": "3014F711000000000000AAA5_1_temperature",
+        "sensor.wandthermostat2_absolute_humidity": "3014F7110000000000000024_1_absolute_humidity",
+        "sensor.wandthermostat2_humidity": "3014F7110000000000000024_1_humidity",
+        "sensor.wandthermostat2_temperature": "3014F7110000000000000024_1_temperature",
+        "sensor.wandthermostat3_absolute_humidity": "3014F7110000000000000025_1_absolute_humidity",
+        "sensor.wandthermostat3_humidity": "3014F7110000000000000025_1_humidity",
+        "sensor.wandthermostat3_temperature": "3014F7110000000000000025_1_temperature",
+        "sensor.wandthermostat4_absolute_humidity": "3014F7110000000000000023_1_absolute_humidity",
+        "sensor.wandthermostat4_humidity": "3014F7110000000000000023_1_humidity",
+        "sensor.wandthermostat4_temperature": "3014F7110000000000000023_1_temperature",
+        "sensor.wandthermostat_absolute_humidity": "3014F7110000000000000022_1_absolute_humidity",
+        "sensor.wandthermostat_humidity": "3014F7110000000000000022_1_humidity",
+        "sensor.wandthermostat_temperature": "3014F7110000000000000022_1_temperature",
+        "sensor.wasserstopp_water_flow": "3014F7110000000000000WSS_1_water_flow",
+        "sensor.wassertemperatursensor_temperature": "3014F711000000000000TACO_1_temperature",
+        "sensor.wassertemperatursensor_tilt_angle": "3014F711000000000000TACO_2_tilt_angle",
+        "sensor.wassertemperatursensor_tilt_state": "3014F711000000000000TACO_2_tilt_state",
+        "sensor.weather_sensor_plus_absolute_humidity": "3014F7110000000000000038_1_absolute_humidity",
+        "sensor.weather_sensor_plus_humidity": "3014F7110000000000000038_1_humidity",
+        "sensor.weather_sensor_plus_illuminance": "3014F7110000000000000038_1_illuminance",
+        "sensor.weather_sensor_plus_temperature": "3014F7110000000000000038_1_temperature",
+        "sensor.weather_sensor_plus_today_rain": "3014F7110000000000000038_1_today_rain",
+        "sensor.weather_sensor_plus_wind_speed": "3014F7110000000000000038_1_wind_speed",
+        "sensor.wettersensor_absolute_humidity": "3014F711AAAA000000000003_1_absolute_humidity",
+        "sensor.wettersensor_humidity": "3014F711AAAA000000000003_1_humidity",
+        "sensor.wettersensor_illuminance": "3014F711AAAA000000000003_1_illuminance",
+        "sensor.wettersensor_pro_absolute_humidity": "3014F711AAAA000000000001_1_absolute_humidity",
+        "sensor.wettersensor_pro_humidity": "3014F711AAAA000000000001_1_humidity",
+        "sensor.wettersensor_pro_illuminance": "3014F711AAAA000000000001_1_illuminance",
+        "sensor.wettersensor_pro_temperature": "3014F711AAAA000000000001_1_temperature",
+        "sensor.wettersensor_pro_today_rain": "3014F711AAAA000000000001_1_today_rain",
+        "sensor.wettersensor_pro_wind_speed": "3014F711AAAA000000000001_1_wind_speed",
+        "sensor.wettersensor_temperature": "3014F711AAAA000000000003_1_temperature",
+        "sensor.wettersensor_wind_speed": "3014F711AAAA000000000003_1_wind_speed",
+        "sensor.wohnzimmer_3_heating": "3014F71100000000ABCDEF10_1_valve_position",
+        "sensor.wohnzimmer_3_temperature": "3014F71100000000ABCDEF10_1_temperature",
+        "sensor.wohnzimmer_heizung_heating": "3014F7110000000000000015_1_valve_position",
+        "sensor.wohnzimmer_heizung_temperature": "3014F7110000000000000015_1_temperature",
+        "sensor.wohnzimmer_illuminance": "3014F711000000000000BB11_1_illuminance",
+        "sensor.zisterne_distance": "3014F711000000000000DUSI_1_distance",
+        "sensor.zisterne_height": "3014F711000000000000DUSI_1_height",
+    }
