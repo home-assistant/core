@@ -18,6 +18,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
+    CONF_CODE_FROM_APPLE_DEVICE,
     CONF_REQUEST_NEW_CODE,
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
@@ -778,6 +779,100 @@ async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock) -> 
     assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
+
+
+@pytest.mark.parametrize(
+    ("code_from_apple_device", "expected_device_calls"),
+    [
+        pytest.param(True, 1, id="apple-device-code-after-sms-delivery"),
+        pytest.param(False, 0, id="sms-code"),
+    ],
+)
+async def test_2fa_code_source(
+    hass: HomeAssistant,
+    service_2fa: MagicMock,
+    code_from_apple_device: bool,
+    expected_device_calls: int,
+) -> None:
+    """Route device codes correctly even when the library selected SMS delivery."""
+    service = service_2fa.return_value
+    service.two_factor_delivery_method = "sms"
+    result = await _submit_user_form(hass)
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+
+    _accept_2fa_code(service)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_VERIFICATION_CODE: "123456",
+            CONF_CODE_FROM_APPLE_DEVICE: code_from_apple_device,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert service.use_existing_trusted_device_code.call_count == expected_device_calls
+    service.validate_2fa_code.assert_called_once_with("123456")
+    service.request_2fa_code.assert_not_called()
+
+
+async def test_2fa_sms_source_survives_failed_code(
+    hass: HomeAssistant, service_validate_2fa_code_failed: MagicMock
+) -> None:
+    """Keep the selected SMS route when redisplaying a rejected code."""
+    service = service_validate_2fa_code_failed.return_value
+    service.two_factor_delivery_method = "sms"
+    result = await _submit_user_form(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_VERIFICATION_CODE: "123456",
+            CONF_CODE_FROM_APPLE_DEVICE: False,
+        },
+    )
+    assert result["errors"] == {"base": "validate_verification_code"}
+
+    _accept_2fa_code(service)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "654321"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.use_existing_trusted_device_code.assert_not_called()
+    service.validate_2fa_code.assert_called_once_with("654321")
+
+
+async def test_2fa_sms_code_requires_sms_delivery(
+    hass: HomeAssistant, service_2fa: MagicMock
+) -> None:
+    """Do not send an SMS code through the trusted-device verifier."""
+    service = service_2fa.return_value
+    service.two_factor_delivery_method = "trusted_device"
+    result = await _submit_user_form(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_VERIFICATION_CODE: "123456",
+            CONF_CODE_FROM_APPLE_DEVICE: False,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "sms_code_not_requested"}
+    service.validate_2fa_code.assert_not_called()
+    service.request_2fa_code.assert_not_called()
+
+    _accept_2fa_code(service)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_VERIFICATION_CODE: "654321",
+            CONF_CODE_FROM_APPLE_DEVICE: True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.use_existing_trusted_device_code.assert_called_once()
+    service.validate_2fa_code.assert_called_once_with("654321")
 
 
 async def test_2fa_new_code_success(

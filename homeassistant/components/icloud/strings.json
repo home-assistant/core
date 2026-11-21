@@ -10,6 +10,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
+      "sms_code_not_requested": "Request a new verification code before submitting an SMS code. If no SMS arrives, use a code shown on an Apple device instead.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "validate_verification_code": "Failed to verify your verification code, try again"
     },
@@ -48,10 +49,11 @@
       },
       "verification_code": {
         "data": {
+          "code_from_apple_device": "Code was shown on an Apple device",
           "request_new_code": "Request a new verification code",
           "verification_code": "Verification code"
         },
-        "description": "Please enter the verification code you just received from Apple",
+        "description": "Enter your verification code. Keep \"Code was shown on an Apple device\" enabled for a code displayed on an iPhone, iPad, or Mac after selecting Allow. Turn it off for a code received by SMS. Leave \"Request a new verification code\" off when submitting a code.",
         "title": "Apple Account code"
       }
     }
