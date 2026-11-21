@@ -40,6 +40,9 @@
     "firmware_too_old": {
       "message": "OPNsense firmware at {url} is below the minimum supported version"
     },
+    "firmware_update_failed": {
+      "message": "Could not start the OPNsense firmware update"
+    },
     "invalid_auth": {
       "message": "Authentication failure while connecting to OPNsense API endpoint at {url}"
     },
@@ -60,6 +63,12 @@
     },
     "unknown_firmware": {
       "message": "Could not determine the OPNsense firmware version at {url}"
+    }
+  },
+  "issues": {
+    "firmware_privilege_missing": {
+      "description": "Home Assistant cannot check firmware updates for {url} because the API user is missing the System: Firmware privilege. In OPNsense, edit the API user under System > Access > Users, add System: Firmware to its privileges, and save. Reload this integration entry to resume firmware updates. Device tracking continues to work while this permission is missing.",
+      "title": "OPNsense firmware privilege is missing"
     }
   }
 }
