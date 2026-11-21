@@ -5,8 +5,13 @@ import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
+import glob
+import hashlib
 import logging
 import os
+from pathlib import Path
+import re
+import stat
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
@@ -65,6 +70,12 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+
+CORRUPT_DATABASE_ISSUE_PREFIX = "corrupt_database_files"
+# The UTC isoformat() time that move_away_broken_database appends.
+CORRUPT_DATABASE_TIME = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?\+00:00"
+)
 
 
 # Our minimum versions for each database
@@ -421,6 +432,70 @@ def move_away_broken_database(dbfile: str) -> None:
         if not os.path.exists(path):
             continue
         os.rename(path, f"{path}{corrupt_postfix}")
+
+
+def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
+    """Return the files move_away_broken_database kept, with their size."""
+    # The path from a sqlite://// URL starts with //, which resolve() normalizes.
+    path = Path(dbfile).resolve()
+    corrupt_files: dict[Path, int] = {}
+    for postfix in SQLITE3_POSTFIXES:
+        prefix = f"{path.name}{postfix}.corrupt."
+        for corrupt_file in path.parent.glob(f"{glob.escape(prefix)}*"):
+            if not CORRUPT_DATABASE_TIME.fullmatch(
+                corrupt_file.name.removeprefix(prefix)
+            ):
+                continue
+            try:
+                file_stat = corrupt_file.stat()
+            except FileNotFoundError:
+                continue
+            if stat.S_ISREG(file_stat.st_mode):
+                corrupt_files[corrupt_file] = file_stat.st_size
+    return corrupt_files
+
+
+def delete_corrupt_database_files(dbfile: str, names: Iterable[str]) -> None:
+    """Delete the given corrupt database files next to the database."""
+    directory = Path(dbfile).resolve().parent
+    for name in names:
+        (directory / name).unlink(missing_ok=True)
+
+
+@callback
+def async_update_corrupt_database_issue(
+    hass: HomeAssistant, corrupt_files: dict[Path, int]
+) -> None:
+    """Create or delete the repair issue for kept corrupt database files."""
+    issue_id: str | None = None
+    if corrupt_files:
+        # Joined with "/", which can't be in a file name.
+        names = "/".join(sorted(file.name for file in corrupt_files))
+        # Other files get a new issue, so ignoring an older one doesn't hide them.
+        issue_id = f"{CORRUPT_DATABASE_ISSUE_PREFIX}_{hashlib.sha256(names.encode()).hexdigest()[:16]}"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
+            translation_key="corrupt_database_files",
+            # The fix flow deletes only these files.
+            data={"files": names},
+            translation_placeholders={
+                "count": str(len(corrupt_files)),
+                "size": f"{sum(corrupt_files.values()) / 1_000_000:.1f}",
+                "path": str(next(iter(corrupt_files)).parent),
+            },
+        )
+    for domain, other_issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and other_issue_id.startswith(CORRUPT_DATABASE_ISSUE_PREFIX)
+            and other_issue_id != issue_id
+        ):
+            ir.async_delete_issue(hass, DOMAIN, other_issue_id)
 
 
 def execute_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> None:
