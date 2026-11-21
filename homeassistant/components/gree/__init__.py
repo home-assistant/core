@@ -140,6 +140,9 @@ def _async_transfer_legacy_records(
 ) -> None:
     """Transfer legacy registry ownership after device initialization succeeds."""
     device_registry = dr.async_get(hass)
+    if (current_device := device_registry.async_get(device.id)) is None:
+        raise ConfigEntryError("Legacy Gree device no longer exists")
+    device = current_device
     entity_registry = er.async_get(hass)
     entities = [
         entity
