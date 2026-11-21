@@ -8,7 +8,7 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, str]:
+) -> dict[str, str | None]:
     """Return diagnostics for a config entry."""
 
     emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
