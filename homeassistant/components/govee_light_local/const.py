@@ -19,3 +19,12 @@ DISCOVERY_TIMEOUT = 5
 # Addresses that failed to bind are retried on this cadence rather than every
 # poll: the library warns on each address that still fails.
 REBIND_INTERVAL = timedelta(minutes=5)
+
+# Passed to GoveeController.cleanup(): how long the library waits for connection_lost
+# before force-completing. Our own wait must exceed it, otherwise we walk away while the
+# socket is still bound and the next setup fails with EADDRINUSE.
+CLEANUP_TIMEOUT = 2
+CLEANUP_WAIT_TIMEOUT = 3
+
+CONF_DEVICE_IP = "device_ip"
+SUBENTRY_TYPE_DEVICE = "device"

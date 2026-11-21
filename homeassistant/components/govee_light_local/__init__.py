@@ -1,20 +1,26 @@
 """The Govee Light local integration."""
 
 import asyncio
-from contextlib import suppress
 from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
 import logging
+from typing import TYPE_CHECKING
 
 from govee_local_api.controller import LISTENING_PORT
 
 from homeassistant.components import network
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
-from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
+from .coordinator import (
+    GoveeLocalApiConfig,
+    GoveeLocalApiCoordinator,
+    GoveeLocalConfigEntry,
+)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -41,15 +47,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
+    # Assigned before the update listener registers: a subentry changed while
+    # setup is still waiting for discovery must find the coordinator.
+    entry.runtime_data = coordinator
 
-    async def await_cleanup() -> None:
-        # Wait for a running rebind, so cleanup() does not race a bind in flight.
-        await coordinator.async_wait_rebind()
-        cleanup_complete_event = coordinator.cleanup()
-        with suppress(TimeoutError):
-            await asyncio.wait_for(cleanup_complete_event.wait(), 1)
+    @callback
+    def _async_device_removed_filter(
+        event_data: EventDeviceRegistryUpdatedData,
+    ) -> bool:
+        """Filter for removals of this entry's devices."""
+        return (
+            event_data["action"] == "remove"
+            and event_data["device"]["config_entry_id"] == entry.entry_id
+        )
 
-    entry.async_on_unload(await_cleanup)
+    @callback
+    def _async_device_removed(event: Event[EventDeviceRegistryUpdatedData]) -> None:
+        """Make the controller forget a deleted device.
+
+        A device left in the controller answers the next scan as an already
+        known device, so the platform would never recreate its entity.
+        """
+        if TYPE_CHECKING:
+            # The event filter only lets removals through.
+            assert event.data["action"] == "remove"
+        device_info = event.data["device"]
+
+        fingerprints = {
+            identifier[1]
+            for identifier in device_info["identifiers"]
+            if identifier[0] == DOMAIN
+        }
+        for device in coordinator.devices:
+            if device.fingerprint in fingerprints:
+                coordinator.remove_device(device)
+
+    entry.async_on_unload(coordinator.async_cleanup)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_device_removed,
+            event_filter=_async_device_removed_filter,
+        )
+    )
+
+    coordinator.async_reconcile_subentries()
 
     try:
         await coordinator.start()
@@ -94,13 +137,66 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_domain=DOMAIN, translation_key="no_devices_found"
         ) from ex
 
-    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def update_listener(
+    hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+) -> None:
+    """Reconcile the controller with the configured subentries.
+
+    The device subentries describe the desired set of manual devices, so the
+    listener diffs them against what the controller currently tracks. This is
+    idempotent and never writes back to the entry.
+    """
+    coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
+    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
+
+    coordinator.async_reconcile_subentries()
+
+    device_registry = dr.async_get(hass)
+    # The difference is a new set, so removing entries below cannot mutate what
+    # we are iterating over.
+    for ip in coordinator.manual_device_ips - config.manual_devices:
+        if (
+            (device := coordinator.get_device_by_ip(ip)) is not None
+            and (
+                device_entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device.fingerprint), config_entry.entry_id
+                )
+            )
+            is not None
+            and device_entry.config_subentry_id in config_entry.subentries
+        ):
+            # The lamp's subentry survived, so its address was reconfigured and
+            # the lamp was not deleted. Keep it, with its registry entries and
+            # entity: the library updates its IP in place when it answers the
+            # probe at the new address.
+            continue
+        coordinator.async_remove_manual_device(ip)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: GoveeLocalConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a device, dropping a manual device's configuration.
+
+    Handled here rather than in the registry event listener so it also works
+    when the lamp never answered or the entry is not loaded, and so internal
+    removals (reconfigure, subentry cascade) never touch other subentries.
+    """
+    if (
+        subentry_id := device_entry.config_subentry_id
+    ) is not None and subentry_id in config_entry.subentries:
+        hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    return True
 
 
 async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:

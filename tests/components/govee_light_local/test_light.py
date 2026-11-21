@@ -16,10 +16,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
+    CONF_DEVICE_IP,
     DEVICE_TIMEOUT,
     DOMAIN,
     REBIND_INTERVAL,
     SCAN_INTERVAL,
+    SUBENTRY_TYPE_DEVICE,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,16 +37,17 @@ from homeassistant.components.light import (
     LightService,
     LightServiceArgument,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.const import SERVICE_TURN_ON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
     DEFAULT_CAPABILITIES,
-    DISABLED_NETWORK_ADAPTERS,
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
+    set_mocked_devices,
     setup_light,
 )
 
@@ -136,7 +139,7 @@ async def test_light_setup_retry(
 ) -> None:
     """Test setup retry."""
 
-    mock_govee_api.devices = []
+    set_mocked_devices(mock_govee_api, [])
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -176,15 +179,18 @@ async def test_light_setup_retry_when_no_address_binds(
     """Test setup is retried whenever the controller binds no address at all."""
 
     mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -753,7 +759,7 @@ async def test_one_silent_device_does_not_affect_others(
         sku="H615B",
         capabilities=DEFAULT_CAPABILITIES,
     )
-    mock_govee_api.devices = [silent, chatty]
+    set_mocked_devices(mock_govee_api, [silent, chatty])
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -776,6 +782,78 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state is not None
     assert silent_state.state == STATE_UNAVAILABLE
     assert chatty_state.state == STATE_OFF
+
+
+async def test_discovered_device_is_added(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a device found after setup gets an entity.
+
+    Manually added devices arrive through this callback, so it is the path the
+    manual IP feature depends on end to end.
+    """
+    await setup_light(hass, mock_govee_api)
+    assert len(hass.states.async_all()) == 1
+
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+
+    new_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="second_device",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    assert discovery_callback(new_device, True) is True
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+    assert hass.states.get("light.H615B") is not None
+
+    # A repeat announcement of a known device must not add it twice.
+    assert discovery_callback(new_device, False) is True
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+
+async def test_light_unavailable_when_update_fails(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test the entity follows the coordinator's update failure."""
+    entry, _ = await setup_light(hass, mock_govee_api)
+
+    coordinator = entry.runtime_data
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_light_fixed_color_mode(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a light with a single supported color mode reports it directly."""
+    _, device = await setup_light(hass, mock_govee_api, ON_OFF_CAPABILITIES)
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": light.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    mock_govee_api.turn_on_off.assert_awaited_with(device, True)
 
 
 @pytest.mark.usefixtures("mock_network_adapters")
@@ -941,7 +1019,7 @@ async def test_unload_waits_for_in_flight_rebind(
         return []
 
     mock_govee_api.rebind_failed.side_effect = rebind_failed
-    mock_govee_api.cleanup.side_effect = lambda: (
+    mock_govee_api.cleanup.side_effect = lambda **_: (
         events.append("cleanup") or mock_govee_api.cleanup.return_value
     )
 
@@ -1007,20 +1085,54 @@ async def test_reload_when_all_endpoints_lost(
     assert entry.runtime_data.last_update_success
 
 
-async def test_light_setup_retry_without_listening_addresses(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+async def test_manual_device_linked_to_subentry(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test setup is retried when no enabled adapter has an IPv4 address."""
+    """Test a manual device is tied to its subentry and a discovered one is not."""
+    manual = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual.is_manual = True
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="discovered-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [manual, discovered])
 
-    entry = MockConfigEntry(domain=DOMAIN)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: manual.ip},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title=manual.ip,
+                unique_id=manual.ip,
+            )
+        ],
+    )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=DISABLED_NETWORK_ADAPTERS,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    subentry_id = next(iter(entry.subentries))
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.reason == "No enabled network adapter has an IPv4 address to listen on"
-    mock_govee_api.start.assert_not_awaited()
+    manual_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, manual.fingerprint), entry.entry_id
+    )
+    assert manual_device is not None
+    assert manual_device.config_subentry_id == subentry_id
+
+    discovered_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, discovered.fingerprint), entry.entry_id
+    )
+    assert discovered_device is not None
+    assert discovered_device.config_subentry_id is None
