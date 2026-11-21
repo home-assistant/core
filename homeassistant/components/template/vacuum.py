@@ -78,7 +78,7 @@ CLEAN_AREA_GROUP = "clean_area_group"
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
+        probatio.Optional(CONF_FAN_SPEED_LIST): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
@@ -260,6 +260,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     _restore_state_extra_data = VacuumExtraStoredData
     _restore_state_properties = ("_attr_activity",)
     _blocked_attributes = _BLOCKED_ATTRIBUTES
+    _deprecated_inclusive_groups = (
+        (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, SERVICE_SET_FAN_SPEED),
+    )
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -270,7 +273,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         """Initialize the features."""
 
         # List of valid fan speeds
-        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._attr_fan_speed_list = config.get(CONF_FAN_SPEED_LIST, [])
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
@@ -280,6 +283,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             CONF_FAN_SPEED,
             "_attr_fan_speed",
             tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
+        )
+        self.add_assumed_attribute(
+            "_attr_fan_speed", CONF_FAN_SPEED, SERVICE_SET_FAN_SPEED
         )
 
         self.setup_template(
@@ -406,6 +412,8 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             await self.async_run_script(
                 script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
+
+        self.write_assumed_attribute(CONF_FAN_SPEED, fan_speed)
 
     @property
     @override
