@@ -14,6 +14,7 @@ from aiotankerkoenig import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tankerkoenig.const import DOMAIN
@@ -153,3 +154,29 @@ async def test_get_opening_times_fetch_fails(
     with pytest.raises(HomeAssistantError) as err:
         await get_opening_times(hass)
     assert err.value.translation_key == translation_key
+
+
+async def test_get_opening_times_station_from_cache(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+) -> None:
+    """Test a station restored from the cache fetches its details for opening times."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Restored from the cache: no details request, and no opening times cached
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    tankerkoenig.station_details.reset_mock()
+
+    changed: Station = replace(STATION, overrides=[OVERRIDE])
+    tankerkoenig.station_details.return_value = changed
+    response = await get_opening_times(hass)
+
+    assert response[ENTITY_ID]["overrides"] == [OVERRIDE]
+    tankerkoenig.station_details.assert_called_once_with(STATION.id)
+
+    # Fetched now, so the next request within the hour uses it
+    await get_opening_times(hass)
+    tankerkoenig.station_details.assert_called_once()
