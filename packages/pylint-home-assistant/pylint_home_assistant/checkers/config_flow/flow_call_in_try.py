@@ -33,6 +33,7 @@ _FLOW_METHODS = frozenset(
         "async_external_step",
         "async_external_step_done",
         "async_set_unique_id",
+        "async_set_unique_id_or_abort",
         "async_show_form",
         "async_show_menu",
         "async_show_progress",

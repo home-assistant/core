@@ -25,6 +25,9 @@ _IP_HOST_NAMES: frozenset[str] = frozenset(
         "ip_address",
     }
 )
+_SET_UNIQUE_ID_METHODS = frozenset(
+    {"async_set_unique_id", "async_set_unique_id_or_abort"}
+)
 
 
 class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
@@ -49,14 +52,14 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
     options = ()
 
     def visit_call(self, node: nodes.Call) -> None:
-        """Check async_set_unique_id(host-based-value) calls."""
+        """Check async_set_unique_id(_or_abort)(host-based-value) calls."""
         parsed = parse_module(node.root().name)
         if parsed is None or parsed.module != Module.CONFIG_FLOW:
             return
 
         if not isinstance(node.func, nodes.Attribute):
             return
-        if node.func.attrname != "async_set_unique_id":
+        if node.func.attrname not in _SET_UNIQUE_ID_METHODS:
             return
 
         unique_id_node: nodes.NodeNG | None = None
