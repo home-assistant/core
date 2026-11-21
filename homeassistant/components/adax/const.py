@@ -12,3 +12,4 @@ WIFI_SSID = "wifi_ssid"
 WIFI_PSWD = "wifi_pswd"
 
 SCAN_INTERVAL = dt.timedelta(seconds=60)
+STALE_DATA_TIMEOUT = dt.timedelta(minutes=10)

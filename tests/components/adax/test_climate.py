@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import CLOUD_DEVICE_DATA
 
 from tests.test_setup import FrozenDateTimeFactory
 
@@ -249,3 +250,64 @@ async def test_climate_local_set_temperature_when_heat_calls_device(
     assert state
     assert state.state == HVACMode.HEAT
     assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 24
+
+
+async def test_climate_cloud_stale_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_config_entry: MockConfigEntry,
+) -> None:
+    """Test the cloud entity goes unavailable when the client has no new data."""
+    clients = []
+
+    def _client(*args, **kwargs) -> AsyncMock:
+        # adax 0.4.0: fetch_rooms_info() returns None, and get_rooms() returns
+        # the same list until the client gets a response again.
+        client = AsyncMock()
+        client.fetch_rooms_info.return_value = None
+        client.get_rooms.return_value = [dict(room) for room in CLOUD_DEVICE_DATA]
+        clients.append(client)
+        return client
+
+    with patch("homeassistant.components.adax.coordinator.Adax", _client):
+        await setup_integration(hass, mock_cloud_config_entry)
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+
+        for _ in range(9):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert hass.states.get(entity_id).state == HVACMode.HEAT
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert len(clients) == 2
+
+        # The new client's first data is new data.
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == HVACMode.HEAT
+
+
+async def test_climate_cloud_new_data_with_same_values(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_config_entry: MockConfigEntry,
+    mock_adax_cloud: AsyncMock,
+) -> None:
+    """Test a new list with the same values counts as new data."""
+    mock_adax_cloud.fetch_rooms_info.return_value = None
+    mock_adax_cloud.get_rooms.side_effect = lambda: [
+        dict(room) for room in CLOUD_DEVICE_DATA
+    ]
+    await setup_integration(hass, mock_cloud_config_entry)
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+
+    for _ in range(15):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == HVACMode.HEAT
