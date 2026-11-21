@@ -14,6 +14,8 @@ CONF_UNIT_ID: Final = "unit_id"
 # with the entry so that setting it up again does not wait out their timeouts.
 CONF_SILENT_BLOCKS: Final = "silent_blocks"
 
+DISCOVERY_INSTANCE_PREFIX: Final = "solaredgeinv"
+
 TYPE_SERIAL: Final = "serial"
 TYPE_TCP: Final = "tcp"
 
