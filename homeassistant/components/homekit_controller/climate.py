@@ -5,6 +5,7 @@ from typing import Any, Final, override
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
+    Characteristic,
     CharacteristicsTypes,
     CurrentFanStateValues,
     CurrentHeaterCoolerStateValues,
@@ -251,30 +252,51 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
             {CharacteristicsTypes.ROTATION_SPEED: speed}
         )
 
+    def _active_threshold(self) -> Characteristic | None:
+        """Return the applicable threshold for the current mode, if unambiguous."""
+        state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
+        if state == TargetHeaterCoolerStateValues.COOL:
+            char_type = CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+        elif state == TargetHeaterCoolerStateValues.HEAT:
+            char_type = CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+        elif state == TargetHeaterCoolerStateValues.AUTOMATIC:
+            has_heating = self.service.has(
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+            )
+            has_cooling = self.service.has(
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+            )
+            # Only single-threshold devices have an unambiguous setpoint
+            # in AUTO. Preserve existing dual-threshold HVAC behavior.
+            if has_heating == has_cooling:
+                return None
+            char_type = (
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+                if has_heating
+                else CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+            )
+        else:
+            return None
+        return self.service[char_type] if self.service.has(char_type) else None
+
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        if temp is not None and (threshold := self._active_threshold()) is not None:
+            await self.async_put_characteristics({threshold.type: temp})
+            return
         state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL:
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: temp}
-            )
-        elif state == TargetHeaterCoolerStateValues.HEAT:
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: temp}
-            )
-        else:
-            hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
-            _LOGGER.warning(
-                (
-                    "HomeKit device %s: Setting temperature in %s mode is not supported"
-                    " yet; Consider raising a ticket if you have this device and want"
-                    " to help us implement this feature"
-                ),
-                self.entity_id,
-                hvac_mode,
-            )
+        hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
+        _LOGGER.warning(
+            (
+                "HomeKit device %s: Setting temperature in %s mode is not supported"
+                " yet; Consider raising a ticket if you have this device and want"
+                " to help us implement this feature"
+            ),
+            self.entity_id,
+            hvac_mode,
+        )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -307,86 +329,32 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     @override
     def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL:
-            return self.service.value(
-                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-            )
-        if state == TargetHeaterCoolerStateValues.HEAT:
-            return self.service.value(
-                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-            )
+        if threshold := self._active_threshold():
+            return threshold.value
         return None
 
     @property
     @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
-        state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-        ):
-            return (
-                self.service[CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD].minStep
-                or DEFAULT_MIN_STEP
-            )
-        if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-        ):
-            return (
-                self.service[CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD].minStep
-                or DEFAULT_MIN_STEP
-            )
+        if threshold := self._active_threshold():
+            return threshold.minStep or DEFAULT_MIN_STEP
         return DEFAULT_MIN_STEP
 
     @property
     @override
     def min_temp(self) -> float:
         """Return the minimum target temp."""
-        state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-        ):
-            return (
-                self.service[
-                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-                ].minValue
-                or DEFAULT_MIN_TEMP
-            )
-        if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-        ):
-            return (
-                self.service[
-                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-                ].minValue
-                or DEFAULT_MIN_TEMP
-            )
+        if threshold := self._active_threshold():
+            return threshold.minValue or DEFAULT_MIN_TEMP
         return super().min_temp
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the maximum target temp."""
-        state = self.service.value(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
-        if state == TargetHeaterCoolerStateValues.COOL and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-        ):
-            return (
-                self.service[
-                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
-                ].maxValue
-                or DEFAULT_MAX_TEMP
-            )
-        if state == TargetHeaterCoolerStateValues.HEAT and self.service.has(
-            CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-        ):
-            return (
-                self.service[
-                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
-                ].maxValue
-                or DEFAULT_MAX_TEMP
-            )
+        if threshold := self._active_threshold():
+            return threshold.maxValue or DEFAULT_MAX_TEMP
         return super().max_temp
 
     @property
