@@ -1,5 +1,6 @@
 """Tests for the Samsung Infrared diagnostics."""
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -8,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 
 
+@pytest.mark.usefixtures("init_infrared")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
