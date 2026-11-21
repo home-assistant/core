@@ -25,10 +25,15 @@ from neopool_modbus.registers import (
     FiltValveMode,
     RelayKind,
     TimerRelayMode,
+    aux_relay_available,
     is_valid_relay_gpio,
 )
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -44,6 +49,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 1
 
@@ -248,6 +254,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "1"},
         write_fn=_make_write_relay_state(RelayKind.AUX1),
         is_on_fn=_make_is_on_from_key("AUX1"),
+        supported_fn=lambda data: aux_relay_available(1, data),
     ),
     "aux2": NeoPoolSwitchEntityDescription(
         key="aux2",
@@ -255,6 +262,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "2"},
         write_fn=_make_write_relay_state(RelayKind.AUX2),
         is_on_fn=_make_is_on_from_key("AUX2"),
+        supported_fn=lambda data: aux_relay_available(2, data),
     ),
     "aux3": NeoPoolSwitchEntityDescription(
         key="aux3",
@@ -262,6 +270,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "3"},
         write_fn=_make_write_relay_state(RelayKind.AUX3),
         is_on_fn=_make_is_on_from_key("AUX3"),
+        supported_fn=lambda data: aux_relay_available(3, data),
     ),
     "aux4": NeoPoolSwitchEntityDescription(
         key="aux4",
@@ -269,6 +278,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "4"},
         write_fn=_make_write_relay_state(RelayKind.AUX4),
         is_on_fn=_make_is_on_from_key("AUX4"),
+        supported_fn=lambda data: aux_relay_available(4, data),
     ),
 }
 
@@ -291,6 +301,8 @@ async def async_setup_entry(
     """Set up NeoPool switches from a config entry."""
     coordinator = entry.runtime_data
     options = entry.options
+
+    cleanup_occupied_aux_entities(hass, entry.entry_id, SWITCH_DOMAIN, coordinator.data)
 
     async_add_entities(
         NeoPoolSwitch(coordinator, desc)

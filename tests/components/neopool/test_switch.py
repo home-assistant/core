@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import InvalidStateReason, NeoPoolInvalidStateError
@@ -23,7 +23,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
+from homeassistant.components.neopool.const import DOMAIN, FOLLOW_UP_REFRESH_DELAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -626,6 +626,83 @@ async def test_aux_and_cover_absent_when_options_off(
         )
     ]
     assert gated == []
+
+
+@pytest.mark.parametrize(
+    ("occupied_relay", "hidden_suffix"),
+    [(4, "_aux1"), (5, "_aux2"), (6, "_aux3"), (7, "_aux4")],
+)
+async def test_aux_switch_absent_when_relay_assigned_to_function(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+    occupied_relay: int,
+    hidden_suffix: str,
+) -> None:
+    """An AUX switch is not created when its relay is assigned to a function.
+
+    The option is enabled (mock_config_entry_switch), so this exercises the
+    entity-level safety net, not the option gate.
+    """
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = occupied_relay
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    await setup_integration(hass, mock_config_entry_switch)
+
+    aux_suffixes = {
+        suffix
+        for suffix in ("_aux1", "_aux2", "_aux3", "_aux4")
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry_switch.entry_id
+        )
+        if e.domain == SWITCH_DOMAIN and e.unique_id.endswith(suffix)
+    }
+    assert hidden_suffix not in aux_suffixes
+    # The other three AUX relays stay free and keep their switches.
+    assert aux_suffixes == {"_aux1", "_aux2", "_aux3", "_aux4"} - {hidden_suffix}
+
+
+async def test_occupied_aux_cleanup_removes_only_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+) -> None:
+    """Setup removes a disabled occupied-AUX entry but keeps an enabled one.
+
+    On an existing install the gate alone leaves a registered AUX entity as a
+    restored, unavailable state. The cleanup drops such a stale entry only when
+    it is disabled, so a user-enabled AUX keeps its customisations even once its
+    relay becomes occupied.
+    """
+    mock_config_entry_switch.add_to_hass(hass)
+    # AUX1 relay 4 and AUX2 relay 5 are both claimed by a function.
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_ACID_RELAY_GPIO"] = 4
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = 5
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    serial = mock_config_entry_switch.unique_id
+    # A stale disabled AUX1 entry (should be removed) and an enabled, customised
+    # AUX2 entry (should be kept).
+    disabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux1",
+        config_entry=mock_config_entry_switch,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    enabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux2",
+        config_entry=mock_config_entry_switch,
+    )
+
+    await setup_integration(hass, mock_config_entry_switch)
+
+    assert entity_registry.async_get(disabled.entity_id) is None
+    assert entity_registry.async_get(enabled.entity_id) is not None
 
 
 async def test_switch_write_schedules_follow_up_refresh(
