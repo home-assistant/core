@@ -343,6 +343,9 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         if not speeds:
             self._raise_service_validation_error("air_purifier_speed_unavailable")
         speed = percentage_to_ordered_list_item(speeds, percentage)
+        fixed = self._fixed_speed_characteristic("manualFan")
+        if fixed is not None and fixed.value == speed:
+            return
         await self._async_execute_air_purification_command(
             lambda purifier: purifier.set_fixed_fan_speed("manualFan", speed),
             "air_purifier_set_percentage_failed",

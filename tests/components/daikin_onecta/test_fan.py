@@ -273,6 +273,16 @@ async def test_air_purifier_uses_discrete_speed_percentages(
         blocking=True,
     )
 
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: AIR_PURIFIER_ENTITY_ID,
+            FanServiceArgument.PERCENTAGE: 24,
+        },
+        blocking=True,
+    )
+
     coordinator.client.patch_characteristic.assert_awaited_once()
     assert coordinator.client.patch_characteristic.await_args.args[3] == 1
     assert (
