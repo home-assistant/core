@@ -5,6 +5,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.LIGHT,
 ]
 
