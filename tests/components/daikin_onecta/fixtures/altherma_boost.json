@@ -1,0 +1,235 @@
+[
+  {
+    "_id": "00000000-0000-4000-8000-000000000105",
+    "deviceModel": "Altherma",
+    "type": "heating-wlan",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "gateway",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "firmwareVersion": {
+          "settable": false,
+          "value": "3.2.5",
+          "maxLength": 8
+        },
+        "ipAddress": {
+          "settable": false,
+          "value": "192.0.2.18",
+          "maxLength": 15
+        },
+        "isFirmwareUpdateSupported": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": true
+        },
+        "macAddress": {
+          "settable": false,
+          "value": "02:00:00:00:01:04",
+          "maxLength": 17
+        },
+        "modelInfo": {
+          "settable": false,
+          "value": "BRP069A78",
+          "maxLength": 9
+        },
+        "name": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "Gateway",
+          "maxLength": 63
+        }
+      },
+      {
+        "embeddedId": "climateControlMainZone",
+        "managementPointType": "climateControl",
+        "managementPointCategory": "primary",
+        "managementPointSubType": "mainZone",
+        "controlMode": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "roomTemperature",
+          "values": [
+            "leavingWaterTemperature",
+            "externalRoomTemperature",
+            "roomTemperature"
+          ]
+        },
+        "errorCode": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "",
+          "maxLength": 16
+        },
+        "holidayMode": {
+          "settable": true,
+          "requiresReboot": false,
+          "ref": "#holidayMode",
+          "value": {
+            "enabled": false,
+            "startDate": "2023-10-30",
+            "endDate": "2023-11-06"
+          }
+        },
+        "isHolidayModeActive": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInEmergencyState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInErrorState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInInstallerState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInWarningState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "name": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "Altherma",
+          "maxLength": 63
+        },
+        "onOffMode": {
+          "settable": true,
+          "requiresReboot": false,
+          "value": "on",
+          "values": ["off", "on"]
+        },
+        "operationMode": {
+          "settable": true,
+          "requiresReboot": false,
+          "value": "heating",
+          "values": ["heating", "cooling", "auto"]
+        },
+        "sensoryData": {
+          "settable": false,
+          "ref": "#sensoryData",
+          "value": {
+            "leavingWaterTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 26,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 1
+            },
+            "outdoorTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 10,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 1
+            },
+            "roomTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 19.4,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 0.1
+            }
+          }
+        },
+        "setpointMode": {
+          "settable": false,
+          "requiresReboot": true,
+          "value": "weatherDependentHeatingFixedCooling",
+          "values": [
+            "fixed",
+            "weatherDependentHeatingFixedCooling",
+            "weatherDependent"
+          ]
+        },
+        "temperatureControl": {
+          "settable": true,
+          "ref": "#temperatureControl",
+          "value": {
+            "operationModes": {
+              "auto": {
+                "setpoints": {
+                  "leavingWaterOffset": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 0,
+                    "maxValue": 10,
+                    "minValue": -10,
+                    "stepValue": 1
+                  },
+                  "roomTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 19,
+                    "maxValue": 23,
+                    "minValue": 18,
+                    "stepValue": 0.5
+                  }
+                }
+              },
+              "cooling": {
+                "setpoints": {
+                  "leavingWaterTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 19,
+                    "maxValue": 20,
+                    "minValue": 18,
+                    "stepValue": 1
+                  },
+                  "roomTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 23,
+                    "maxValue": 28,
+                    "minValue": 23,
+                    "stepValue": 0.5
+                  }
+                }
+              },
+              "heating": {
+                "setpoints": {
+                  "leavingWaterOffset": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 0,
+                    "maxValue": 10,
+                    "minValue": -10,
+                    "stepValue": 1
+                  },
+                  "roomTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 19,
+                    "maxValue": 23,
+                    "minValue": 18,
+                    "stepValue": 0.5
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "embeddedId": "test-embedded-115",
+    "timestamp": "2024-03-19T07:34:25.14Z",
+    "id": "00000000-0000-4000-8000-000000000105"
+  }
+]

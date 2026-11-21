@@ -1,0 +1,215 @@
+[
+  {
+    "_id": "00000000-0000-4000-8000-000000000115",
+    "id": "00000000-0000-4000-8000-000000000115",
+    "deviceModel": "dx23",
+    "isCloudConnectionUp": {
+      "value": true,
+      "settable": false
+    },
+    "timestamp": "2018-11-13T20:20:39.000Z",
+    "managementPoints": [
+      {
+        "embeddedId": "0",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "name": {
+          "value": "My Gateway",
+          "settable": true,
+          "maxLength": 64
+        },
+        "ipAddress": {
+          "value": "192.0.2.11",
+          "settable": false
+        },
+        "macAddress": {
+          "value": "02:00:00:00:01:02",
+          "settable": false
+        },
+        "firmwareVersion": {
+          "value": "436CC038000",
+          "settable": false
+        },
+        "serialNumber": {
+          "value": "TEST-SERIAL-0106",
+          "settable": false
+        },
+        "modelInfo": {
+          "value": "BRP069A62",
+          "settable": false
+        },
+        "firmwareUpdate": {
+          "settable": false,
+          "value": {
+            "id": "507f1f77bcf86cd799439011",
+            "description": "Lorem ipsum",
+            "version": "436CC038000",
+            "type": "blocking"
+          }
+        },
+        "firmwareUpdateStatus": {
+          "settable": false,
+          "value": "in-progress",
+          "values": ["in-progress", "succeeded"]
+        }
+      },
+      {
+        "embeddedId": "1",
+        "managementPointType": "climateControl",
+        "managementPointSubType": "mainZone",
+        "managementPointCategory": "primary",
+        "name": {
+          "value": "My Living Room",
+          "settable": true,
+          "maxLength": 64
+        },
+        "onOffMode": {
+          "value": "on",
+          "settable": true,
+          "values": ["on", "off"]
+        },
+        "sensoryData": {
+          "ref": "#sensoryData",
+          "settable": false,
+          "value": {
+            "roomTemperature": {
+              "value": 20,
+              "settable": false
+            },
+            "outdoorTemperature": {
+              "value": 25,
+              "settable": false
+            },
+            "leavingWaterTemperature": {
+              "value": 12,
+              "settable": false
+            }
+          }
+        },
+        "controlMode": {
+          "value": "roomTemperature",
+          "settable": false,
+          "values": [
+            "roomTemperature",
+            "leavingWaterTemperature",
+            "externalRoomTemperature"
+          ]
+        },
+        "powerfulMode": {
+          "value": "on",
+          "settable": true,
+          "values": ["on", "off"]
+        },
+        "operationMode": {
+          "value": "heating",
+          "settable": true,
+          "values": ["heating", "cooling", "auto"]
+        },
+        "temperatureControl": {
+          "ref": "#temperatureControl",
+          "settable": true,
+          "value": {
+            "operationModes": {
+              "heating": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "value": 25,
+                    "settable": true,
+                    "minValue": 20,
+                    "maxValue": 30
+                  },
+                  "leavingWaterTemperature": {
+                    "value": 21,
+                    "settable": false,
+                    "minValue": 20,
+                    "maxValue": 30
+                  },
+                  "calculatedLeavingWaterTemperature": {
+                    "value": 50,
+                    "settable": false,
+                    "minValue": 10,
+                    "maxValue": 65
+                  }
+                }
+              },
+              "cooling": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "value": 25,
+                    "settable": true,
+                    "minValue": 20,
+                    "maxValue": 30
+                  },
+                  "leavingWaterTemperature": {
+                    "value": 21,
+                    "settable": false,
+                    "minValue": 20,
+                    "maxValue": 30
+                  },
+                  "calculatedLeavingWaterTemperature": {
+                    "value": 50,
+                    "settable": false,
+                    "minValue": 10,
+                    "maxValue": 65
+                  }
+                }
+              },
+              "auto": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "value": 25,
+                    "settable": true,
+                    "minValue": 20,
+                    "maxValue": 30
+                  },
+                  "calculatedLeavingWaterTemperature": {
+                    "value": 50,
+                    "settable": false,
+                    "minValue": 10,
+                    "maxValue": 65
+                  }
+                }
+              }
+            }
+          }
+        },
+        "holidayMode": {
+          "ref": "#holidayMode",
+          "settable": true,
+          "value": {
+            "enabled": true,
+            "startDate": "2018-11-13",
+            "endDate": "2019-11-15"
+          }
+        },
+        "heatupMode": {
+          "value": "reheatOnly",
+          "settable": true,
+          "values": [
+            "reheatOnly",
+            "reheatSchedule",
+            "scheduleOnly",
+            "scheduledReheat"
+          ]
+        },
+        "setpointMode": {
+          "value": "weatherDependent",
+          "settable": false,
+          "values": [
+            "weatherDependent",
+            "fixed",
+            "weatherDependentHeatingFixedCooling"
+          ]
+        },
+        "isHolidayModeActive": {
+          "value": true,
+          "settable": false
+        },
+        "isPowerfulModeActive": {
+          "value": true,
+          "settable": false
+        }
+      }
+    ]
+  }
+]

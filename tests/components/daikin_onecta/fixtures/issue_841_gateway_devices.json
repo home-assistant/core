@@ -1,0 +1,13 @@
+[
+  {
+    "id": "test-altherma-gateway",
+    "type": "heating",
+    "deviceModel": "Altherma",
+    "isCloudConnectionUp": {
+      "value": true,
+      "settable": false
+    },
+    "embeddedId": "test-embedded-id",
+    "timestamp": "2026-01-01T00:00:00Z"
+  }
+]
