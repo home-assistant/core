@@ -144,7 +144,6 @@ class LGDevice(MediaPlayerEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     @callback

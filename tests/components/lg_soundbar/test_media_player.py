@@ -434,7 +434,7 @@ async def test_action_while_connection_is_lost(
     await setup_integration(hass, mock_config_entry)
     mock_client.set_volume.side_effect = TemescalConnectionError("gone")
 
-    with pytest.raises(HomeAssistantError, match="gone") as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.VOLUME_SET,
@@ -446,6 +446,7 @@ async def test_action_while_connection_is_lost(
         )
 
     assert exc_info.value.translation_key == "communication_error"
+    assert isinstance(exc_info.value.__cause__, TemescalConnectionError)
 
 
 @pytest.mark.parametrize(
