@@ -212,5 +212,17 @@
         "name": "Position {number}"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "persistent_connection": "Use persistent connection"
+        },
+        "data_description": {
+          "persistent_connection": "Keep the Bluetooth connection open between updates. This may prevent access from the Gardena app, occupy a Bluetooth proxy connection slot, and increase battery use."
+        }
+      }
+    }
   }
 }
