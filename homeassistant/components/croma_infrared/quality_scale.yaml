@@ -86,7 +86,8 @@ rules:
   entity-category:
     status: exempt
     comment: |
-      The media player entity is the primary entity and does not need a category.
+      The media player and the buttons for the remote's keys are all primary
+      controls and do not need a category.
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
@@ -94,10 +95,7 @@ rules:
       No entities should be disabled by default.
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      The media player entity uses the default icons for its device class.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
