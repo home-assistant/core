@@ -19,7 +19,9 @@ from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.snmp.const import (
     CONF_BASEOID,
+    DEFAULT_RETRIES,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
@@ -110,8 +112,9 @@ async def test_async_setup_entry_custom_port(
         await hass.async_block_till_done()
 
     mock_udp_transport.assert_called_once()
-    args, _ = mock_udp_transport.call_args
+    args, kwargs = mock_udp_transport.call_args
     assert args[0] == ("1.2.3.4", 161)
+    assert kwargs == {"timeout": DEFAULT_TIMEOUT, "retries": DEFAULT_RETRIES}
 
 
 async def test_async_setup_entry_custom_port_used(hass: HomeAssistant) -> None:

@@ -1,8 +1,5 @@
 """Tests for SNMP utility methods."""
 
-from unittest.mock import patch
-
-from pysnmp.error import PySnmpError
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import UsmUserData
 import pytest
@@ -12,12 +9,8 @@ from homeassistant.components.snmp.const import (
     CONF_AUTH_PROTOCOL,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
-    DEFAULT_RETRIES,
 )
-from homeassistant.components.snmp.util import (
-    async_create_transport_target,
-    create_auth_data,
-)
+from homeassistant.components.snmp.util import create_auth_data
 from homeassistant.const import CONF_USERNAME
 
 
@@ -103,51 +96,3 @@ def test_create_auth_data_v3_protocols_need_keys(
     assert isinstance(auth_data, UsmUserData)
     assert auth_data.authProtocol == expected_auth_protocol
     assert auth_data.privProtocol == expected_priv_protocol
-
-
-async def test_async_create_transport_target_ipv4_success() -> None:
-    """Test IPv4 transport target creation succeeds."""
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value="ipv4_target",
-    ) as mock_create:
-        result = await async_create_transport_target("192.168.1.1", 161, 5.0)
-        assert result == "ipv4_target"
-        mock_create.assert_called_once_with(
-            ("192.168.1.1", 161), timeout=5.0, retries=DEFAULT_RETRIES
-        )
-
-
-async def test_async_create_transport_target_ipv6_fallback() -> None:
-    """Test IPv6 fallback when IPv4 transport creation fails."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        patch(
-            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
-            return_value="ipv6_target",
-        ) as mock_create6,
-    ):
-        result = await async_create_transport_target("::1", 161, 5.0)
-        assert result == "ipv6_target"
-        mock_create6.assert_called_once_with(
-            ("::1", 161), timeout=5.0, retries=DEFAULT_RETRIES
-        )
-
-
-async def test_async_create_transport_target_all_fail() -> None:
-    """Test when both IPv4 and IPv6 transport creation fail."""
-    with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        patch(
-            "homeassistant.components.snmp.util.Udp6TransportTarget.create",
-            side_effect=PySnmpError,
-        ),
-        pytest.raises(PySnmpError),
-    ):
-        await async_create_transport_target("::1", 161, 5.0)

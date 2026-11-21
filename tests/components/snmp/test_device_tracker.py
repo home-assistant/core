@@ -430,6 +430,7 @@ async def test_mac_normalization(
         ),
         pytest.param(_arp_oid(192, 168, 70000, 1), None, id="octet_out_of_range"),
         pytest.param((*ARP_MAC_OID, 1, 192, 168, 1), None, id="missing_octet"),
+        pytest.param((1, 2, 3), None, id="oid_too_short"),
     ],
 )
 async def test_ip_extraction(
@@ -462,36 +463,6 @@ async def test_ip_extraction(
     assert state is not None
     assert state.state == STATE_HOME
     assert state.attributes.get(ATTR_IP) == expected_ip
-
-
-async def test_ip_extraction_oid_too_short(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_coordinator_entry: MockConfigEntry,
-    enable_tracker: Callable[[str], None],
-) -> None:
-    """Test that IP is None when OID is too short."""
-    mac_bytes = binascii.unhexlify("001122334455")
-
-    oid = Mock()
-    oid.asTuple.return_value = (1, 2, 3)
-
-    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield None, None, None, [(oid, OctetString(mac_bytes))]
-
-    enable_tracker(MAC)
-
-    with patch_walk(mock_walk):
-        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
-    assert state.attributes.get(ATTR_IP) is None
 
 
 @pytest.mark.parametrize(
