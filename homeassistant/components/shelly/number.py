@@ -211,7 +211,9 @@ class RpcWallDisplayBrightnessNumber(ShellyRpcEntity, NumberEntity):
         brightness = cast(
             ShellyWallDisplayUiBrightness, {self.entity_description.key: round(value)}
         )
-        await self.coordinator.device.ui_setconfig({"brightness": brightness})
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": brightness}
+        )
 
 
 class RpcWallDisplayLevelNumber(RpcWallDisplayBrightnessNumber):

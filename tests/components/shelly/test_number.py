@@ -790,9 +790,11 @@ async def test_rpc_wall_display_brightness_numbers(
         },
         blocking=True,
     )
-    mock_rpc_device.ui_setconfig.assert_called_once_with({"brightness": {"level": 55}})
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"level": 55}}
+    )
 
-    mock_rpc_device.ui_setconfig.reset_mock()
+    mock_rpc_device.wall_display_ui_setconfig.reset_mock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
@@ -802,7 +804,7 @@ async def test_rpc_wall_display_brightness_numbers(
         },
         blocking=True,
     )
-    mock_rpc_device.ui_setconfig.assert_called_once_with(
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
         {"brightness": {"min_level": 10}}
     )
 

@@ -1449,18 +1449,20 @@ async def test_rpc_wall_display_auto_brightness_switch(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_rpc_device.ui_setconfig.assert_called_once_with(
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
         {"brightness": {"auto": False}}
     )
 
-    mock_rpc_device.ui_setconfig.reset_mock()
+    mock_rpc_device.wall_display_ui_setconfig.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_rpc_device.ui_setconfig.assert_called_once_with({"brightness": {"auto": True}})
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"auto": True}}
+    )
 
     # The device reports the change with an event, the new config is then fetched
     def _update_component_config(key: str) -> set[str]:

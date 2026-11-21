@@ -266,13 +266,17 @@ class RpcWallDisplayAutoBrightnessSwitch(ShellyRpcEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on auto brightness."""
-        await self.coordinator.device.ui_setconfig({"brightness": {"auto": True}})
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": True}}
+        )
 
     @rpc_call
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off auto brightness."""
-        await self.coordinator.device.ui_setconfig({"brightness": {"auto": False}})
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": False}}
+        )
 
 
 WALL_DISPLAY_AUTO_BRIGHTNESS_SWITCH = SwitchEntityDescription(
