@@ -2,6 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 from pypaperless.exceptions import (
+    AsnRequestError,
     PaperlessConnectionError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
@@ -67,6 +68,43 @@ async def test_statistic_sensor_state(
 
     state = hass.states.get("sensor.paperless_ngx_total_documents")
     assert state.state == "420"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_next_asn_sensor_state(
+    hass: HomeAssistant,
+    mock_paperless: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure the next ASN sensor updates from the API."""
+    state = hass.states.get("sensor.paperless_ngx_next_asn")
+    assert state.state == "100"
+
+    mock_paperless.documents.get_next_asn.return_value = 101
+
+    freezer.tick(UPDATE_INTERVAL_STATISTICS)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.paperless_ngx_next_asn")
+    assert state.state == "101"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_next_asn_sensor_unavailable_on_error(
+    hass: HomeAssistant,
+    mock_paperless: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure the next ASN sensor becomes unavailable on API errors."""
+    mock_paperless.documents.get_next_asn.side_effect = AsnRequestError
+
+    freezer.tick(UPDATE_INTERVAL_STATISTICS)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.paperless_ngx_next_asn")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
