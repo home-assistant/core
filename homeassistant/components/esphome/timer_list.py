@@ -106,7 +106,7 @@ class EsphomeTimerList(InMemoryTimerListEntity):
             native_event_type,
             item.timer_id,
             item.name,
-            round(item.total_duration.total_seconds()),
+            math.ceil(item.total_duration.total_seconds()),
             seconds_left,
             is_active,
         )

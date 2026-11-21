@@ -128,6 +128,30 @@ async def test_voice_timer_events(
     assert len(timer_ids) == 1
 
 
+@pytest.mark.usefixtures("freezer")
+@pytest.mark.parametrize(
+    ("duration_seconds", "expected_seconds"), [(0.4, 1), (10.2, 11)]
+)
+async def test_fractional_duration_timer_event(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_device: MockESPHomeDevice,
+    duration_seconds: float,
+    expected_seconds: int,
+) -> None:
+    """Round fractional durations up consistently in device timer events."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+
+    result = await _call(
+        hass, entity_id, "create_timer", duration={"seconds": duration_seconds}
+    )
+
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        STARTED, result["timer_id"], None, expected_seconds, expected_seconds, True
+    )
+
+
 async def test_pause_unpause_fractional_second(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
