@@ -63,7 +63,12 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 
 def _validate_stored_variables(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that stored variables are not also defined as run variables."""
+    """Validate stored variables.
+
+    Stored variables must not also be defined as run variables, and they need
+    an automation with an id, so the values stay with the automation when its
+    alias changes.
+    """
     if CONF_STORED_VARIABLES not in config:
         return config
     stored_names = config[CONF_STORED_VARIABLES].variables.keys()
@@ -73,6 +78,8 @@ def _validate_stored_variables(config: dict[str, Any]) -> dict[str, Any]:
                 f"Stored variables must not also be defined in {key}: "
                 f"{', '.join(sorted(overlap))}"
             )
+    if CONF_ID not in config:
+        raise probatio.Invalid("Stored variables require the automation to have an id")
     return config
 
 

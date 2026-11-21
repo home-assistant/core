@@ -1579,6 +1579,7 @@ RESET_STORED_VARIABLES_SCHEMA: VolDictType = {
 
 @callback
 def async_reset_stored_variables(
+    hass: HomeAssistant,
     entity_id: str,
     stored_variables: StoredVariables | None,
     names: list[str] | None,
@@ -1590,7 +1591,7 @@ def async_reset_stored_variables(
             f"{entity_id} has no stored variables named: {', '.join(sorted(unknown))}"
         )
     if stored_variables:
-        stored_variables.reset(names)
+        stored_variables.async_reset(hass, names)
 
 
 @callback

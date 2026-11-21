@@ -1919,6 +1919,16 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             "Stored variables must not also be defined in trigger_variables: count",
             "validation_failed_schema",
         ),
+        (
+            {
+                "stored_variables": {"count": 0},
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            "could not be validated",
+            "Stored variables require the automation to have an id",
+            "validation_failed_schema",
+        ),
     ],
 )
 async def test_automation_bad_config_validation(
@@ -3387,11 +3397,12 @@ async def test_automation_stored_variables(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "hello_id",
                 "alias": "hello",
                 "stored_variables": {
                     "count": 0,
                     "seen": [],
-                    "first_event": "{{ trigger.event.event_type }}",
+                    "first_event": "{{ 'init' ~ 'ial' }}",
                 },
                 "triggers": [
                     {"trigger": "event", "event_type": "test_event"},
@@ -3430,7 +3441,7 @@ async def test_automation_stored_variables(
     assert calls[0].data == {
         "count": 1,
         "seen": ["test_event"],
-        "first_event": "test_event",
+        "first_event": "initial",
     }
 
     # Stored variables are not exposed as state attributes
@@ -3439,6 +3450,7 @@ async def test_automation_stored_variables(
     assert set(state.attributes) == {
         "current",
         "friendly_name",
+        "id",
         "last_triggered",
         "mode",
     }
@@ -3449,7 +3461,7 @@ async def test_automation_stored_variables(
     assert calls[1].data == {
         "count": 2,
         "seen": ["test_event", "test_event_2"],
-        "first_event": "test_event",
+        "first_event": "initial",
     }
 
     # The condition reads the stored value
@@ -3468,7 +3480,7 @@ async def test_automation_stored_variables(
     assert calls[2].data == {
         "count": 3,
         "seen": ["test_event", "test_event_2", "manual"],
-        "first_event": "test_event",
+        "first_event": "initial",
     }
 
 
@@ -3491,6 +3503,7 @@ async def test_automation_stored_variables_restore(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "hello_id",
                 "alias": "hello",
                 "stored_variables": {"count": 0, "name": "default"},
                 "triggers": {"trigger": "event", "event_type": "test_event"},
@@ -3530,6 +3543,7 @@ async def test_automation_stored_variables_reset_and_read(
         {
             automation.DOMAIN: [
                 {
+                    "id": "hello_id",
                     "alias": "hello",
                     "stored_variables": {"count": 0, "last": "{{ 'none' }}"},
                     "triggers": {"trigger": "event", "event_type": "test_event"},
@@ -3557,7 +3571,7 @@ async def test_automation_stored_variables_reset_and_read(
     msg = await read("automation.hello")
     assert msg["result"] == {
         "defaults": {"count": 0, "last": "{{ 'none' }}"},
-        "values": {},
+        "values": {"count": 0, "last": "none"},
     }
 
     hass.bus.async_fire("test_event")
@@ -3586,7 +3600,10 @@ async def test_automation_stored_variables_reset_and_read(
         {ATTR_ENTITY_ID: "automation.hello"},
         blocking=True,
     )
-    assert (await read("automation.hello"))["result"]["values"] == {"count": 0}
+    assert (await read("automation.hello"))["result"]["values"] == {
+        "count": 0,
+        "last": "none",
+    }
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
@@ -3604,6 +3621,34 @@ async def test_automation_stored_variables_reset_and_read(
     msg = await read("automation.not_exist")
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_automation_stored_variables_default_error(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a default which is not a limited template stops the automation."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello_id",
+                "alias": "hello",
+                "stored_variables": {"value": "{{ states('sensor.test') }}"},
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": {"action": "test.automation"},
+            }
+        },
+    )
+    assert (
+        "Error rendering defaults of stored variables of automation.hello"
+    ) in caplog.text
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+    assert "Error rendering variables" in caplog.text
 
 
 async def test_automation_stored_variables_reload(

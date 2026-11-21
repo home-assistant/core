@@ -206,19 +206,49 @@ async def test_script_vars_parallel() -> None:
 async def test_stored_vars_render_defaults(hass: HomeAssistant) -> None:
     """Test rendering stored variables stores the defaults once."""
     stored = StoredVariables(
-        cv.STORED_VARIABLES_SCHEMA({"count": 0, "name": "{{ run_var ~ '!' }}"})
+        cv.STORED_VARIABLES_SCHEMA(
+            {"count": 0, "name": "{{ run_var | default('no run') }}"}
+        )
     )
     assert stored.values == {}
 
-    # Run variables with the name of a stored variable are ignored
+    # Run variables are not available to defaults and
+    # run variables with the name of a stored variable are ignored
     rendered = stored.async_render(hass, {"run_var": "hello", "count": 5})
-    assert rendered == {"run_var": "hello", "count": 0, "name": "hello!"}
-    assert stored.values == {"count": 0, "name": "hello!"}
+    assert rendered == {"run_var": "hello", "count": 0, "name": "no run"}
+    assert stored.values == {"count": 0, "name": "no run"}
 
     # Defaults are not rendered again once a value is stored
     stored.assign("count", 3)
+    stored.assign("name", "changed")
     rendered = stored.async_render(hass, {"run_var": "other"})
-    assert rendered == {"run_var": "other", "count": 3, "name": "hello!"}
+    assert rendered == {"run_var": "other", "count": 3, "name": "changed"}
+
+
+async def test_stored_vars_set_missing_defaults(hass: HomeAssistant) -> None:
+    """Test defaults are only stored for variables without a value."""
+    stored = StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA({"count": "{{ 1 + 1 }}", "items": []})
+    )
+    stored.restore({"count": 7})
+
+    stored.async_set_missing_defaults(hass)
+
+    assert stored.values == {"count": 7, "items": []}
+
+
+async def test_stored_vars_defaults_are_limited_templates(
+    hass: HomeAssistant,
+) -> None:
+    """Test defaults can not access the state machine."""
+    stored = StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA({"count": 0, "name": "{{ states('sensor.x') }}"})
+    )
+
+    with pytest.raises(TemplateError, match="not supported in limited templates"):
+        stored.async_set_missing_defaults(hass)
+
+    assert stored.values == {}
 
 
 async def test_stored_vars_assign_normalizes_json() -> None:
@@ -312,22 +342,24 @@ async def test_script_vars_stored_parallel() -> None:
 async def test_stored_vars_reset(hass: HomeAssistant) -> None:
     """Test resetting stored variables to their defaults."""
     stored = StoredVariables(
-        cv.STORED_VARIABLES_SCHEMA({"count": 0, "items": [], "name": "{{ run_var }}"})
+        cv.STORED_VARIABLES_SCHEMA(
+            {"count": 0, "items": [], "name": "{{ 'de' ~ 'fault' }}"}
+        )
     )
     values = stored.values
-    stored.async_render(hass, {"run_var": "first"})
+    stored.async_set_missing_defaults(hass)
     stored.assign("count", 5)
     stored.assign("items", ["a"])
+    stored.assign("name", "changed")
     assert stored.as_dict() == {
-        "defaults": {"count": 0, "items": [], "name": "{{ run_var }}"},
-        "values": {"count": 5, "items": ["a"], "name": "first"},
+        "defaults": {"count": 0, "items": [], "name": "{{ 'de' ~ 'fault' }}"},
+        "values": {"count": 5, "items": ["a"], "name": "changed"},
     }
 
-    stored.reset(["count"])
-    assert stored.values == {"count": 0, "items": ["a"], "name": "first"}
+    stored.async_reset(hass, ["count"])
+    assert stored.values == {"count": 0, "items": ["a"], "name": "changed"}
 
-    # A templated default is rendered again by the next run
-    stored.reset()
+    # A templated default is rendered right away
+    stored.async_reset(hass)
     assert stored.values is values
-    assert stored.values == {"count": 0, "items": []}
-    assert stored.async_render(hass, {"run_var": "second"})["name"] == "second"
+    assert stored.values == {"count": 0, "items": [], "name": "default"}

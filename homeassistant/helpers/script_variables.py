@@ -95,6 +95,9 @@ class StoredVariables:
 
     A single instance is shared by all runs of a script. The stored values
     are read live by every run, so `values` must only be mutated in place.
+
+    Defaults are limited templates which do not depend on a run, so a variable
+    without a value can be set to its default at any time.
     """
 
     def __init__(self, defaults: ScriptVariables) -> None:
@@ -114,18 +117,27 @@ class StoredVariables:
         """Return the run variables with the stored values on top.
 
         Run variables with the name of a stored variable are discarded.
-        Defaults of stored variables without a value are rendered and stored.
         """
+        self.async_set_missing_defaults(hass)
         variables = {
             key: value
             for key, value in (run_variables or {}).items()
             if key not in self.names
         }
-        if missing := [name for name in self.names if name not in self.values]:
-            rendered = self.defaults.async_render(hass, {**variables, **self.values})
-            for name in missing:
-                self.assign(name, rendered[name])
         return {**variables, **self.values}
+
+    @callback
+    def async_set_missing_defaults(self, hass: HomeAssistant) -> None:
+        """Store the default of every variable which has no value."""
+        if missing := [name for name in self.names if name not in self.values]:
+            self._async_set_defaults(hass, missing)
+
+    @callback
+    def _async_set_defaults(self, hass: HomeAssistant, names: Iterable[str]) -> None:
+        """Render the defaults and store them for the given variables."""
+        rendered = self.defaults.async_render(hass, None, limited=True)
+        for name in names:
+            self.assign(name, rendered[name])
 
     def assign(self, key: str, value: Any) -> None:
         """Store a value, normalized to JSON compatible types."""
@@ -143,19 +155,12 @@ class StoredVariables:
             {key: value for key, value in values.items() if key in self.names}
         )
 
-    def reset(self, names: Iterable[str] | None = None) -> None:
-        """Reset stored variables to their defaults.
-
-        Defaults without templates are stored right away. Templated defaults
-        are rendered when the next run starts; until then the variable is
-        undefined for runs which are already in progress.
-        """
-        for name in list(self.names) if names is None else names:
-            default = self.defaults.variables[name]
-            if template.is_complex(default):
-                self.values.pop(name, None)
-            else:
-                self.assign(name, default)
+    @callback
+    def async_reset(
+        self, hass: HomeAssistant, names: Iterable[str] | None = None
+    ) -> None:
+        """Reset stored variables to their defaults."""
+        self._async_set_defaults(hass, list(self.names) if names is None else names)
 
     def as_dict(self) -> dict[str, Any]:
         """Return the declared defaults and the stored values."""

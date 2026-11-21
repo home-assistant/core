@@ -103,7 +103,9 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     @callback
     def async_reset_stored_variables(self, variables: list[str] | None = None) -> None:
         """Reset stored variables to their defaults."""
-        async_reset_stored_variables(self.entity_id, self._stored_variables, variables)
+        async_reset_stored_variables(
+            self.hass, self.entity_id, self._stored_variables, variables
+        )
 
     @property
     @override
@@ -453,6 +455,16 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             is not None
         ):
             self._stored_variables.restore(stored_data.values)
+
+        if self._stored_variables is not None:
+            try:
+                self._stored_variables.async_set_missing_defaults(self.hass)
+            except HomeAssistantError as err:
+                self._logger.error(
+                    "Error rendering defaults of stored variables of %s: %s",
+                    self.entity_id,
+                    err,
+                )
 
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON

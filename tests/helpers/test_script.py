@@ -8104,14 +8104,18 @@ async def test_stored_variables(hass: HomeAssistant) -> None:
                 "data": {
                     "count": "{{ count }}",
                     "seen": "{{ seen }}",
-                    "first_run_var": "{{ first_run_var }}",
+                    "from_default": "{{ from_default }}",
                 },
             },
         ]
     )
     stored_variables = script_variables.StoredVariables(
         cv.STORED_VARIABLES_SCHEMA(
-            {"count": 0, "seen": [], "first_run_var": "{{ run_var }}"}
+            {
+                "count": 0,
+                "seen": [],
+                "from_default": "{{ run_var | default('no run') }}",
+            }
         )
     )
     script_obj = script.Script(
@@ -8128,8 +8132,17 @@ async def test_stored_variables(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(mock_calls) == 1
-    assert mock_calls[0].data == {"count": 1, "seen": ["a"], "first_run_var": "a"}
-    assert stored_variables.values == {"count": 1, "seen": ["a"], "first_run_var": "a"}
+    # Run variables are not available to defaults
+    assert mock_calls[0].data == {
+        "count": 1,
+        "seen": ["a"],
+        "from_default": "no run",
+    }
+    assert stored_variables.values == {
+        "count": 1,
+        "seen": ["a"],
+        "from_default": "no run",
+    }
 
     await script_obj.async_run({"run_var": "b"}, context=Context())
     await hass.async_block_till_done()
@@ -8138,12 +8151,12 @@ async def test_stored_variables(hass: HomeAssistant) -> None:
     assert mock_calls[1].data == {
         "count": 2,
         "seen": ["a", "b"],
-        "first_run_var": "a",
+        "from_default": "no run",
     }
     assert stored_variables.values == {
         "count": 2,
         "seen": ["a", "b"],
-        "first_run_var": "a",
+        "from_default": "no run",
     }
 
 
@@ -8203,3 +8216,78 @@ async def test_stored_variables_live_across_runs(hass: HomeAssistant) -> None:
     assert not script_obj.is_running
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "done"
+
+
+async def test_stored_variables_response_variable(hass: HomeAssistant) -> None:
+    """Test a response variable with the name of a stored variable is stored."""
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Return a response."""
+        return {"value": 5}
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=SupportsResponse.ONLY
+    )
+    sequence = cv.SCRIPT_SCHEMA(
+        [{"action": "test.script", "response_variable": "last_response"}]
+    )
+    stored_variables = script_variables.StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA({"last_response": None})
+    )
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "test script",
+        "test_domain",
+        stored_variables=stored_variables,
+    )
+
+    await script_obj.async_run(context=Context())
+
+    assert stored_variables.values == {"last_response": {"value": 5}}
+
+
+async def test_stored_variables_reset_during_run(hass: HomeAssistant) -> None:
+    """Test a running script reads the default after a reset."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"count": "{{ count + 1 }}"}},
+            {
+                "alias": "wait step",
+                "wait_for_trigger": {
+                    "platform": "template",
+                    "value_template": "{{ is_state('switch.test', 'on') }}",
+                },
+            },
+            {"action": "test.script", "data": {"count": "{{ count }}"}},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    stored_variables = script_variables.StoredVariables(
+        cv.STORED_VARIABLES_SCHEMA({"count": "{{ 5 * 2 }}"})
+    )
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "test script",
+        "test_domain",
+        stored_variables=stored_variables,
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+    wait_started_flag = async_watch_for_action(script_obj, "wait step")
+
+    try:
+        hass.states.async_set("switch.test", "off")
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert stored_variables.values == {"count": 11}
+
+        stored_variables.async_reset(hass)
+        hass.states.async_set("switch.test", "on")
+        await hass.async_block_till_done()
+    except AssertionError, TimeoutError:
+        await script_obj.async_stop()
+        raise
+
+    assert len(mock_calls) == 1
+    assert mock_calls[0].data == {"count": 10}
