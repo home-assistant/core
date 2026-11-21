@@ -1,0 +1,227 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_unconfigured_devices": "No unconfigured devices",
+      "unreachable": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_device": "Unsupported device"
+    },
+    "step": {
+      "reconfigure": {
+        "description": "Do you want to reconfigure this device?"
+      },
+      "user": {
+        "description": "Do you want to add this device?"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_1_i_c": {
+        "name": "AC 1 Input Current"
+      },
+      "ac_1_i_p": {
+        "name": "AC 1 Input Power"
+      },
+      "ac_1_i_v": {
+        "name": "AC 1 Input Voltage"
+      },
+      "ac_1_o_c": {
+        "name": "AC 1 Output Current"
+      },
+      "ac_1_o_p": {
+        "name": "AC 1 Output Power"
+      },
+      "ac_1_o_v": {
+        "name": "AC 1 Output Voltage"
+      },
+      "ac_2_i_c": {
+        "name": "AC 2 Input Current"
+      },
+      "ac_2_i_p": {
+        "name": "AC 2 Input Power"
+      },
+      "ac_2_i_v": {
+        "name": "AC 2 Input Voltage"
+      },
+      "ac_2_o_c": {
+        "name": "AC 2 Output Current"
+      },
+      "ac_2_o_p": {
+        "name": "AC 2 Output Power"
+      },
+      "ac_2_o_v": {
+        "name": "AC 2 Output Voltage"
+      },
+      "ac_3_i_c": {
+        "name": "AC 3 Input Current"
+      },
+      "ac_3_i_p": {
+        "name": "AC 3 Input Power"
+      },
+      "ac_3_i_v": {
+        "name": "AC 3 Input Voltage"
+      },
+      "ac_3_o_c": {
+        "name": "AC 3 Output Current"
+      },
+      "ac_3_o_p": {
+        "name": "AC 3 Output Power"
+      },
+      "ac_3_o_v": {
+        "name": "AC 3 Output Voltage"
+      },
+      "ac_eco_mode": {
+        "name": "AC ECO Mode"
+      },
+      "ac_eco_switch": {
+        "name": "AC ECO Switch"
+      },
+      "ac_i_f": {
+        "name": "AC Input Frequency"
+      },
+      "ac_i_p_total": {
+        "name": "AC Input Power Total"
+      },
+      "ac_o_f": {
+        "name": "AC Output Frequency"
+      },
+      "ac_o_mode": {
+        "name": "AC Output Mode"
+      },
+      "ac_o_p_total": {
+        "name": "AC Output Power Total"
+      },
+      "ac_o_switch": {
+        "name": "AC Output Switch"
+      },
+      "ac_power_lifting_switch": {
+        "name": "AC Power Lifting Switch"
+      },
+      "ac_ups_mode": {
+        "name": "AC UPS Mode"
+      },
+      "b_soc_high": {
+        "name": "Battery SOC High"
+      },
+      "b_soc_low": {
+        "name": "Battery SOC Low"
+      },
+      "b_soc_total": {
+        "name": "Battery SOC Total"
+      },
+      "b_type": {
+        "name": "Battery Type"
+      },
+      "b_ver_bms": {
+        "name": "Battery BMS Version"
+      },
+      "d_charging_mode": {
+        "name": "Charging Mode"
+      },
+      "d_display_mode": {
+        "name": "Display Mode"
+      },
+      "d_inverter_type": {
+        "name": "Inverter Type"
+      },
+      "d_led_mode": {
+        "name": "LED Mode"
+      },
+      "d_power_off": {
+        "name": "Power Off"
+      },
+      "d_serial": {
+        "name": "Serial Number"
+      },
+      "d_split_phase_mode": {
+        "name": "Split Phase Mode"
+      },
+      "d_split_phase_switch": {
+        "name": "Split Phase Switch"
+      },
+      "d_time_remaining": {
+        "name": "Time Remaining"
+      },
+      "d_ver_arm": {
+        "name": "ARM Version"
+      },
+      "d_ver_dsp": {
+        "name": "DSP Version"
+      },
+      "dc_eco_mode": {
+        "name": "DC ECO Mode"
+      },
+      "dc_eco_switch": {
+        "name": "DC ECO Switch"
+      },
+      "dc_i_c": {
+        "name": "DC Input Current"
+      },
+      "dc_i_p_total": {
+        "name": "DC Input Power Total"
+      },
+      "dc_i_v": {
+        "name": "DC Input Voltage"
+      },
+      "dc_o_p_total": {
+        "name": "DC Output Power Total"
+      },
+      "dc_o_switch": {
+        "name": "DC Output Switch"
+      },
+      "g_i_f": {
+        "name": "Generator Input Frequency"
+      },
+      "pv_1_i_c": {
+        "name": "PV 1 Input Current"
+      },
+      "pv_1_i_p": {
+        "name": "PV 1 Input Power"
+      },
+      "pv_1_i_v": {
+        "name": "PV 1 Input Voltage"
+      },
+      "pv_2_i_c": {
+        "name": "PV 2 Input Current"
+      },
+      "pv_2_i_p": {
+        "name": "PV 2 Input Power"
+      },
+      "pv_2_i_v": {
+        "name": "PV 2 Input Voltage"
+      },
+      "pv_3_i_c": {
+        "name": "PV 3 Input Current"
+      },
+      "pv_3_i_p": {
+        "name": "PV 3 Input Power"
+      },
+      "pv_3_i_v": {
+        "name": "PV 3 Input Voltage"
+      },
+      "pv_4_i_c": {
+        "name": "PV 4 Input Current"
+      },
+      "pv_4_i_p": {
+        "name": "PV 4 Input Power"
+      },
+      "pv_4_i_v": {
+        "name": "PV 4 Input Voltage"
+      },
+      "pv_5_i_c": {
+        "name": "PV 5 Input Current"
+      },
+      "pv_5_i_p": {
+        "name": "PV 5 Input Power"
+      },
+      "pv_5_i_v": {
+        "name": "PV 5 Input Voltage"
+      },
+      "pv_i_e_total": {
+        "name": "PV Input Energy Total"
+      }
+    }
+  }
+}
