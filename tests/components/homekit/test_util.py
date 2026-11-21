@@ -15,6 +15,7 @@ from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_LIGHT,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_VALVE_DURATION,
     CONF_LINKED_VALVE_END_TIME,
@@ -331,6 +332,23 @@ def test_validate_entity_config() -> None:
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
     }
+
+
+@pytest.mark.parametrize("entity_id", ["fan.demo", "media_player.demo"])
+def test_validate_entity_config_linked_light(entity_id: str) -> None:
+    """Test a linked light is accepted for fans and media players."""
+    config = vec({entity_id: {CONF_LINKED_LIGHT: "light.demo"}})
+    assert config[entity_id][CONF_LINKED_LIGHT] == "light.demo"
+
+    with pytest.raises(probatio.Invalid):
+        vec({entity_id: {CONF_LINKED_LIGHT: "switch.demo"}})
+
+
+@pytest.mark.parametrize("entity_id", ["light.demo", "switch.demo", "cover.demo"])
+def test_validate_entity_config_linked_light_other_domains(entity_id: str) -> None:
+    """Test a linked light is rejected for other domains."""
+    with pytest.raises(probatio.Invalid):
+        vec({entity_id: {CONF_LINKED_LIGHT: "light.other"}})
 
 
 def test_validate_media_player_features() -> None:

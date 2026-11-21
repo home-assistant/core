@@ -5,6 +5,7 @@ from typing import Any, override
 
 from pyhap.const import CATEGORY_FAN
 from pyhap.service import Service
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -38,6 +39,7 @@ from .const import (
     SERV_FANV2,
     SERV_SWITCH,
 )
+from .linked_light import async_create_linked_light
 from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,8 +146,18 @@ class Fan(HomeAccessory):
 
         if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
+        self.linked_light = async_create_linked_light(self)
         self.async_update_state(state)
         serv_fan.setter_callback = self.set_chars
+
+    @callback
+    @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
+    def run(self) -> None:
+        """Handle accessory driver started event."""
+        if self.linked_light:
+            self._subscriptions.append(self.linked_light.async_subscribe())
+        super().run()
 
     def create_services(self) -> Service:
         """Create and configure the primary service for this accessory."""
