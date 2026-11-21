@@ -1,0 +1,118 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register any actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This is a local_push integration; entities are updated from Haus-Bus
+      events, there is no polling.
+  brands:
+    status: done
+    comment: |
+      https://github.com/home-assistant/brands/pull/11059
+  common-modules: done
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      tests/components/hausbus/test_config_flow.py covers the device-found,
+      search-timeout/retry, and single-instance-only paths.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register any actions.
+  docs-conditions:
+    status: exempt
+    comment: |
+      This integration does not provide any conditions.
+  docs-high-level-description:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-installation-instructions:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-removal-instructions:
+    status: done
+    comment: |
+      https://github.com/home-assistant/home-assistant.io/pull/47688
+  docs-triggers:
+    status: exempt
+    comment: |
+      This integration does not provide any triggers.
+  entity-event-setup:
+    status: done
+    comment: |
+      Entities subscribe to their Haus-Bus channel updates in
+      async_added_to_hass via async_dispatcher_connect, and unsubscribe
+      through self.async_on_remove.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: |
+      async_setup_entry raises ConfigEntryNotReady if the Haus-Bus network
+      connection cannot be opened.
+  unique-config-entry:
+    status: done
+    comment: |
+      The integration only supports a single Haus-Bus network per Home
+      Assistant instance (manifest sets single_config_entry).
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      The config flow has no configurable parameters; devices are found
+      automatically.
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates:
+    status: done
+    comment: |
+      cover.py sets PARALLEL_UPDATES = 0: cover actions are fire-and-forget
+      UDP sends that the shared Haus-Bus socket handles concurrently, so
+      there is no need to limit parallel entity actions.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: todo
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
