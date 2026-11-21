@@ -168,6 +168,7 @@ class CastStatusListener(
         self._uuid = chromecast.uuid
         self._valid = True
         self._mz_mgr = mz_mgr
+        self._mz_only = mz_only
 
         if cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.add_multizone(chromecast)
@@ -177,8 +178,8 @@ class CastStatusListener(
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if not cast_device._cast_info.is_audio_group:  # noqa: SLF001
-            self._mz_mgr.register_listener(chromecast.uuid, self)
+        # A static audio group, such as a stereo pair, can be a member of another group
+        self._mz_mgr.register_listener(chromecast.uuid, self)
 
     @override
     def new_cast_status(self, status):
@@ -218,7 +219,7 @@ class CastStatusListener(
     @override
     def removed_from_multizone(self, group_uuid):
         """Handle the cast removed from a group."""
-        if self._valid:
+        if self._valid and group_uuid != str(self._uuid):
             self._cast_device.multizone_new_media_status(group_uuid, None)
 
     @override
@@ -228,7 +229,8 @@ class CastStatusListener(
     @override
     def multizone_new_media_status(self, group_uuid, media_status):
         """Handle reception of a new MediaStatus for a group."""
-        if self._valid:
+        # A stereo pair reports itself as a member of its own group
+        if self._valid and group_uuid != str(self._uuid):
             self._cast_device.multizone_new_media_status(group_uuid, media_status)
 
     def invalidate(self):
@@ -238,7 +240,7 @@ class CastStatusListener(
         """
         if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.remove_multizone(self._uuid)
-        else:
+        if not self._mz_only:
             self._mz_mgr.deregister_listener(self._uuid, self)
         self._valid = False
 

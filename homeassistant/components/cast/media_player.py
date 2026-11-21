@@ -486,11 +486,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             )
 
             self._attr_available = new_available
-            if new_available and not self._cast_info.is_audio_group:
+            if new_available:
                 # Poll current group status
                 for group_uuid in mz_mgr.get_multizone_memberships(
                     self._cast_info.uuid
                 ):
+                    if group_uuid == str(self._cast_info.uuid):
+                        continue
                     group_media_controller = mz_mgr.get_multizone_mediacontroller(
                         group_uuid
                     )

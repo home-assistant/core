@@ -1995,6 +1995,102 @@ async def test_group_media_states_early(
     assert hass.states.get(entity_id).state == "playing"
 
 
+async def test_static_group_media_states(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mz_mock: MagicMock
+) -> None:
+    """Test a static group, such as a stereo pair, follows a group it is a member of."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info(port=42, uuid=FakeUUID)
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    mz_mock.add_multizone.assert_called_once_with(chromecast)
+    mz_mock.register_listener.assert_called_once_with(FakeUUID, ANY)
+    _, conn_status_cb, _, group_media_status_cb = get_status_callbacks(
+        chromecast, mz_mock
+    )
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
+
+    assert hass.states.get(entity_id).state == "off"
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
+
+    # The stereo pair is a member of its own group, its own status is ignored
+    own_media_status = MagicMock(images=None, player_state="PLAYING")
+    group_media_status_cb(str(FakeUUID), own_media_status)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "off"
+
+    group_media_status = MagicMock(images=None, player_state="PLAYING")
+    group_media_status_cb(str(FakeGroupUUID), group_media_status)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "playing"
+
+
+async def test_static_group_media_states_early(
+    hass: HomeAssistant, mz_mock: MagicMock
+) -> None:
+    """Test a static group polls the status of groups it is a member of."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info(port=42, uuid=FakeUUID)
+
+    mz_mock.get_multizone_memberships = MagicMock(
+        return_value=[str(FakeUUID), str(FakeGroupUUID)]
+    )
+    mz_mock.get_multizone_mediacontroller = MagicMock(
+        return_value=MagicMock(status=MagicMock(images=None, player_state="PLAYING"))
+    )
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _, _ = get_status_callbacks(chromecast, mz_mock)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    await async_send_connection_status(hass, conn_status_cb, connection_status)
+
+    assert hass.states.get(entity_id).state == "playing"
+    # The stereo pair's own group is skipped when polling
+    mz_mock.get_multizone_mediacontroller.assert_called_once_with(str(FakeGroupUUID))
+
+
+@pytest.mark.parametrize(
+    ("is_audio_group", "mz_only", "registered", "added"),
+    [
+        pytest.param(False, False, True, False, id="speaker"),
+        pytest.param(True, False, True, True, id="static_group"),
+        pytest.param(True, True, False, True, id="dynamic_group"),
+    ],
+)
+async def test_status_listener_multizone_registration(
+    hass: HomeAssistant,
+    is_audio_group: bool,
+    mz_only: bool,
+    registered: bool,
+    added: bool,
+) -> None:
+    """Test which casts register with the multizone manager."""
+    entity = MagicMock()
+    entity.hass = hass
+    entity._cast_info.is_audio_group = is_audio_group
+
+    chromecast = MagicMock(uuid=FakeUUID)
+    mz_mgr = MagicMock()
+    listener = CastStatusListener(entity, chromecast, mz_mgr, mz_only)
+
+    assert mz_mgr.add_multizone.called is added
+    assert mz_mgr.register_listener.called is registered
+
+    listener.invalidate()
+
+    assert mz_mgr.remove_multizone.called is added
+    assert mz_mgr.deregister_listener.called is registered
+
+
 async def test_group_media_control(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mz_mock, quick_play_mock
 ) -> None:
