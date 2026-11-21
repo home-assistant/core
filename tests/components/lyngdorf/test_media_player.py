@@ -81,7 +81,7 @@ def media_proxy_token() -> Generator[None]:
 @pytest.fixture
 def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
     """Return a receiver that is streaming a track."""
-    mock_receiver.power_on = True
+    mock_receiver.power.value = True
     mock_receiver.player.now_playing = NowPlaying(
         state=PlaybackState.PLAYING,
         title="The Killing Moon",
@@ -144,10 +144,10 @@ async def test_no_zone_b_entity_for_model_without_zone_b(
 @pytest.mark.parametrize(
     ("entity_id", "service", "attr", "expected"),
     [
-        (MAIN_ZONE, SERVICE_TURN_ON, "set_power", True),
-        (MAIN_ZONE, SERVICE_TURN_OFF, "set_power", False),
-        (ZONE_B, SERVICE_TURN_ON, "zone_b.set_power", True),
-        (ZONE_B, SERVICE_TURN_OFF, "zone_b.set_power", False),
+        (MAIN_ZONE, SERVICE_TURN_ON, "power.set", True),
+        (MAIN_ZONE, SERVICE_TURN_OFF, "power.set", False),
+        (ZONE_B, SERVICE_TURN_ON, "zone_b.power.set", True),
+        (ZONE_B, SERVICE_TURN_OFF, "zone_b.power.set", False),
     ],
 )
 async def test_power(
@@ -231,8 +231,8 @@ async def test_volume_set(
 @pytest.mark.parametrize(
     ("entity_id", "attr"),
     [
-        (MAIN_ZONE, "set_muted"),
-        (ZONE_B, "zone_b.set_muted"),
+        (MAIN_ZONE, "mute.set"),
+        (ZONE_B, "zone_b.mute.set"),
     ],
 )
 async def test_mute(
@@ -258,8 +258,8 @@ async def test_mute(
 @pytest.mark.parametrize(
     ("entity_id", "attr"),
     [
-        (MAIN_ZONE, "set_source"),
-        (ZONE_B, "zone_b.set_source"),
+        (MAIN_ZONE, "source_selector.select"),
+        (ZONE_B, "zone_b.source_selector.select"),
     ],
 )
 async def test_select_source(
@@ -286,21 +286,21 @@ async def test_select_source(
             MAIN_ZONE,
             SERVICE_SELECT_SOURCE,
             {ATTR_INPUT_SOURCE: "Bogus"},
-            "set_source",
+            "source_selector.select",
             id="main_source",
         ),
         pytest.param(
             ZONE_B,
             SERVICE_SELECT_SOURCE,
             {ATTR_INPUT_SOURCE: "Bogus"},
-            "zone_b.set_source",
+            "zone_b.source_selector.select",
             id="zone_b_source",
         ),
         pytest.param(
             MAIN_ZONE,
             SERVICE_SELECT_SOUND_MODE,
             {ATTR_SOUND_MODE: "Bogus"},
-            "set_sound_mode",
+            "sound_mode_selector.select",
             id="sound_mode",
         ),
     ],
@@ -346,7 +346,7 @@ async def test_select_sound_mode(
         },
         blocking=True,
     )
-    mock_receiver.set_sound_mode.assert_awaited_once_with("Movie")
+    mock_receiver.sound_mode_selector.select.assert_awaited_once_with("Movie")
 
 
 async def test_availability(
@@ -376,13 +376,13 @@ async def test_main_zone_state_properties(
     mock_receiver: MagicMock,
 ) -> None:
     """Test main zone state properties are reported correctly."""
-    mock_receiver.power_on = True
+    mock_receiver.power.value = True
     mock_receiver.volume.value = -40.0
-    mock_receiver.muted = False
-    mock_receiver.source = "HDMI"
-    mock_receiver.sound_mode = "Movie"
-    mock_receiver.sources = ["HDMI", "Optical"]
-    mock_receiver.sound_modes = ["Movie", "Stereo"]
+    mock_receiver.mute.value = False
+    mock_receiver.source_selector.value = "HDMI"
+    mock_receiver.sound_mode_selector.value = "Movie"
+    mock_receiver.source_selector.options = ["HDMI", "Optical"]
+    mock_receiver.sound_mode_selector.options = ["Movie", "Stereo"]
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
@@ -401,7 +401,7 @@ async def test_main_zone_state_properties(
     state = hass.states.get(MAIN_ZONE)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
-    mock_receiver.power_on = False
+    mock_receiver.power.value = False
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
     state = hass.states.get(MAIN_ZONE)
@@ -414,11 +414,11 @@ async def test_zone_b_state_properties(
     mock_receiver: MagicMock,
 ) -> None:
     """Test zone B state properties are reported correctly."""
-    mock_receiver.zone_b.power_on = True
+    mock_receiver.zone_b.power.value = True
     mock_receiver.zone_b.volume.value = -30.0
-    mock_receiver.zone_b.muted = True
-    mock_receiver.zone_b.source = "Optical"
-    mock_receiver.zone_b.sources = ["HDMI", "Optical"]
+    mock_receiver.zone_b.mute.value = True
+    mock_receiver.zone_b.source_selector.value = "Optical"
+    mock_receiver.zone_b.source_selector.options = ["HDMI", "Optical"]
     notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
@@ -673,3 +673,23 @@ async def test_position_jump_updates_state(
     state = hass.states.get(MAIN_ZONE)
     assert state.attributes[ATTR_MEDIA_POSITION] == 1
     assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == POSITION_UPDATED_AT
+
+
+@pytest.mark.usefixtures("receiver_without_optional_features", "init_integration")
+async def test_sound_mode_feature_absent_without_selector(
+    hass: HomeAssistant,
+) -> None:
+    """Test a model without sound modes does not advertise selecting one."""
+    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
+    assert not features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sound_mode_feature_present_with_empty_options(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a sound mode selector with no options still advertises the feature."""
+    assert mock_receiver.sound_mode_selector.options == []
+    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
+    assert features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
