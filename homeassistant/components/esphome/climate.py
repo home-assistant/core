@@ -225,7 +225,11 @@ class EsphomeClimateEntity(
     def _update_state_from_entry_data(self) -> None:
         """Update state and remember the last running mode."""
         super()._update_state_from_entry_data()
-        if self._has_state and (mode := self.hvac_mode) not in (None, HVACMode.OFF):
+        if (
+            self._has_state
+            and (mode := self.hvac_mode) not in (None, HVACMode.OFF)
+            and mode in self.hvac_modes
+        ):
             self._last_hvac_mode = mode
 
     def _get_precision(self) -> float:
@@ -423,7 +427,7 @@ class EsphomeClimateEntity(
     @override
     async def async_turn_on(self) -> None:
         """Turn on using the last supported running mode."""
-        if self.hvac_mode not in (None, HVACMode.OFF):
+        if self.hvac_mode != HVACMode.OFF:
             return
         if self._last_hvac_mode is not None and self._last_hvac_mode in self.hvac_modes:
             await self.async_set_hvac_mode(self._last_hvac_mode)

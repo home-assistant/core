@@ -1161,10 +1161,10 @@ async def test_climate_turn_on_keeps_running_mode(
 @pytest.mark.parametrize(
     ("stored_mode", "expected_mode"),
     [
-        (HVACMode.COOL, ClimateMode.COOL),
-        (HVACMode.OFF, ClimateMode.HEAT_COOL),
-        (HVACMode.FAN_ONLY, ClimateMode.HEAT_COOL),
-        (None, ClimateMode.HEAT_COOL),
+        pytest.param(HVACMode.COOL, ClimateMode.COOL, id="restored"),
+        pytest.param(HVACMode.OFF, ClimateMode.HEAT_COOL, id="off_ignored"),
+        pytest.param(HVACMode.FAN_ONLY, ClimateMode.HEAT_COOL, id="unsupported"),
+        pytest.param(None, ClimateMode.HEAT_COOL, id="none_stored"),
     ],
 )
 async def test_climate_turn_on_restored_mode(
