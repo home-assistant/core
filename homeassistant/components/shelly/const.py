@@ -361,6 +361,7 @@ DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"
 class ShellyService(StrEnum):
     """Store keys for Shelly services."""
 
+    COMMAND = "command"
     GET_KVS_VALUE = "get_kvs_value"
     SET_KVS_VALUE = "set_kvs_value"
     SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
@@ -369,7 +370,9 @@ class ShellyService(StrEnum):
 class ShellyServiceArgument(StrEnum):
     """Store keys for Shelly service arguments."""
 
+    COMMAND = "command"
     KEY = "key"
+    PARAMS = "params"
     VALUE = "value"
     POSITION = "position"
     TILT_POSITION = "tilt_position"
