@@ -1,9 +1,11 @@
 """Support for Iperf3 network measurement tool."""
 
 import asyncio
+from datetime import datetime
 import logging
 import threading
 import traceback
+from typing import Any
 
 import iperf3
 import probatio
@@ -24,7 +26,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -144,13 +146,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Iperf3Data:
     """Get the latest data from iperf3."""
 
-    def __init__(self, hass, host, test_lock):
+    def __init__(
+        self, hass: HomeAssistant, host: dict[str, Any], test_lock: asyncio.Lock
+    ) -> None:
         """Initialize the data object."""
         self._hass = hass
         self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
         self._test_lock = test_lock
-        self._update_task = None
+        self._update_task: asyncio.Task[None] | None = None
+        self._skipped = False
         self._skip_logged = False
 
     def create_client(self):
@@ -179,45 +184,52 @@ class Iperf3Data:
         """Return the port on the host connected to."""
         return self._host[CONF_PORT]
 
-    async def async_scheduled_update(self, now):
+    async def async_scheduled_update(self, now: datetime) -> None:
         """Update on the scan interval, unless the last update hasn't finished."""
         if self._update_task is not None:
+            self._skipped = True
             if not self._skip_logged:
                 self._skip_logged = True
                 _LOGGER.warning(
-                    "Skipping scheduled updates of %s until its previous update "
-                    "has finished",
+                    "Scheduled updates of %s are falling behind, skipping the "
+                    "intervals while an update is still running",
                     self.host,
                 )
             return
         await self.async_update()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from iperf3, joining an update already underway."""
         if self._update_task is None:
-            self._skip_logged = False
             self._update_task = self._hass.async_create_background_task(
                 self._async_run_update(),
                 f"iperf3 update of {self.host}",
                 eager_start=False,
             )
+            # Also runs when shutdown cancels the task before it has started
+            self._update_task.add_done_callback(self._async_update_done)
         # A cancelled caller must not cancel a test that is running in libiperf
         await asyncio.shield(self._update_task)
 
-    async def _async_run_update(self):
+    async def _async_run_update(self) -> None:
         """Run the tests once no other host's test is running."""
-        try:
-            async with self._test_lock:
-                await self._hass.async_add_executor_job(self._update_exclusively)
-        finally:
-            self._update_task = None
+        async with self._test_lock:
+            await self._hass.async_add_executor_job(self._update_exclusively)
 
-    def _update_exclusively(self):
+    @callback
+    def _async_update_done(self, _task: asyncio.Task[None]) -> None:
+        """Allow the next update, and warn again only after one that kept up."""
+        self._update_task = None
+        if not self._skipped:
+            self._skip_logged = False
+        self._skipped = False
+
+    def _update_exclusively(self) -> None:
         """Run the tests while no other test is in libiperf."""
         with _LIBIPERF_LOCK:
-            self.update()
+            self._update()
 
-    def update(self):
+    def _update(self) -> None:
         """Run the download and upload tests and store the results."""
         if self.protocol == "udp":
             # UDP only have 1 way attribute
@@ -238,7 +250,7 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
-        # The traceback keeps the client alive; free it while the lock is held
+        # A log handler can keep the traceback, and with it the client
         try:
             result = self._run_client(test_type)
         except (AttributeError, OSError, ValueError) as error:
@@ -256,8 +268,8 @@ class Iperf3Data:
 
         return result
 
-    def _run_client(self, test_type):
-        """Run a test with a new client, which is deleted when this returns."""
+    def _run_client(self, test_type: str) -> Any:
+        """Run a test with a new client."""
         client = self.create_client()
         client.reverse = test_type == ATTR_DOWNLOAD
         return client.run()
