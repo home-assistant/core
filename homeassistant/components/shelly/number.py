@@ -2,11 +2,12 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.rpc_device.models import ShellyWallDisplayUiBrightness
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
@@ -40,6 +41,7 @@ from .entity import (
     BlockEntityDescription,
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
+    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_block,
     async_setup_entry_rpc,
@@ -52,6 +54,7 @@ from .utils import (
     get_virtual_component_ids,
     get_virtual_component_unit,
     is_rpc_ledstrip_control_available,
+    is_rpc_wall_display_brightness_supported,
     is_view_for_platform,
 )
 
@@ -166,6 +169,62 @@ class RpcLedStripNumber(RpcNumber):
             assert method is not None
 
         await method(self._id, {self.entity_description.sub_key: round(value)})
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcWallDisplayBrightnessNumberDescription(NumberEntityDescription):
+    """Class to describe a RPC Wall Display brightness number."""
+
+    entity_class: type[RpcWallDisplayBrightnessNumber]
+
+
+class RpcWallDisplayBrightnessNumber(ShellyRpcEntity, NumberEntity):
+    """Represent a RPC Wall Display brightness config number."""
+
+    entity_description: RpcWallDisplayBrightnessNumberDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        description: RpcWallDisplayBrightnessNumberDescription,
+    ) -> None:
+        """Initialize Wall Display brightness number."""
+        super().__init__(coordinator, "ui")
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.mac}-ui-{description.key}"
+
+    @property
+    def brightness_config(self) -> dict[str, Any]:
+        """Display brightness config."""
+        return cast(dict[str, Any], self.coordinator.device.config["ui"]["brightness"])
+
+    @property
+    @override
+    def native_value(self) -> float:
+        """Return the brightness config value."""
+        return cast(float, self.brightness_config[self.entity_description.key])
+
+    @rpc_call
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the brightness config value."""
+        brightness = cast(
+            ShellyWallDisplayUiBrightness, {self.entity_description.key: round(value)}
+        )
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": brightness}
+        )
+
+
+class RpcWallDisplayLevelNumber(RpcWallDisplayBrightnessNumber):
+    """Represent a RPC Wall Display brightness level number."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # The device ignores the level while auto brightness is on
+        return super().available and not self.brightness_config["auto"]
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -399,6 +458,32 @@ RPC_NUMBERS: Final = (
 )
 
 
+WALL_DISPLAY_BRIGHTNESS_NUMBERS: Final = (
+    RpcWallDisplayBrightnessNumberDescription(
+        key="level",
+        translation_key="display_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        entity_class=RpcWallDisplayLevelNumber,
+    ),
+    RpcWallDisplayBrightnessNumberDescription(
+        key="min_level",
+        translation_key="min_auto_display_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1,
+        native_max_value=50,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        entity_class=RpcWallDisplayBrightnessNumber,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
@@ -441,6 +526,15 @@ def _async_setup_rpc_entry(
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
     )
+
+    # The Wall Display does not report the ui component in the status
+    if is_rpc_wall_display_brightness_supported(coordinator.device):
+        brightness = coordinator.device.config["ui"]["brightness"]
+        async_add_entities(
+            description.entity_class(coordinator, description)
+            for description in WALL_DISPLAY_BRIGHTNESS_NUMBERS
+            if description.key in brightness
+        )
 
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities

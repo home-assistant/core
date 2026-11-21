@@ -24,6 +24,9 @@
       }
     },
     "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
       "effect_intensity": {
         "default": "mdi:brightness-percent"
       },
@@ -32,6 +35,9 @@
       },
       "external_temperature": {
         "default": "mdi:thermometer-check"
+      },
+      "min_auto_display_brightness": {
+        "default": "mdi:brightness-4"
       },
       "valve_position": {
         "default": "mdi:pipe-valve"
@@ -126,6 +132,9 @@
       }
     },
     "switch": {
+      "auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
       "boost": {
         "default": "mdi:rocket-launch"
       },
