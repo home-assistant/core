@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_TARGET,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    STATE_UNAVAILABLE,
     TargetKey,
 )
 from homeassistant.core import (
@@ -36,6 +37,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
     callback,
+    split_entity_id,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -697,6 +699,30 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+@callback
+def _raise_for_other_domain_entity(
+    hass: HomeAssistant, call: ServiceCall, missing: set[str]
+) -> None:
+    """Raise if an explicitly referenced entity belongs to another domain.
+
+    An available entity of another domain is not missing: the action cannot act
+    on it, and the call would otherwise succeed without doing anything. An entity
+    of the integration that registered the action may still be loaded, so it is
+    only logged as missing.
+    """
+    ent_reg = entity_registry.async_get(hass)
+    for entity_id in sorted(missing):
+        if split_entity_id(entity_id)[0] == call.domain:
+            continue
+        state = hass.states.get(entity_id)
+        if state is None or state.state == STATE_UNAVAILABLE:
+            continue
+        entry = ent_reg.async_get(entity_id)
+        if entry is not None and entry.platform == call.domain:
+            continue
+        raise ServiceNotSupported(call.domain, call.service, entity_id)
+
+
 async def _resolve_entity_service_call_entities(
     hass: HomeAssistant,
     registered_entities: Mapping[str, Entity] | Callable[[], Mapping[str, Entity]],
@@ -761,6 +787,8 @@ async def _resolve_entity_service_call_entities(
         missing = referenced.referenced.copy()
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
+        if missing:
+            _raise_for_other_domain_entity(hass, call, missing)
         referenced.log_missing(missing, _LOGGER)
 
     entities: list[Entity] = []

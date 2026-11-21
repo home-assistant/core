@@ -40,6 +40,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     EntityCategory,
 )
 from homeassistant.core import (
@@ -2824,6 +2825,62 @@ async def test_entity_service_call_warn_unavailable(
     assert (
         "Referenced entities light.kitchen are missing or not currently available"
     ) in caplog.text
+
+
+async def test_entity_service_call_other_domain_entity(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
+) -> None:
+    """Test an action targeting an available entity of another domain raises.
+
+    Such an entity is not missing, so the call used to succeed without doing
+    anything, with a warning that it was missing.
+    """
+    hass.states.async_set("input_select.test", "abc")
+    call = ServiceCall(
+        hass,
+        "light",
+        "turn_on",
+        {"entity_id": ["light.kitchen", "input_select.test"]},
+    )
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match="Entity input_select.test does not support action light.turn_on",
+    ):
+        await service.entity_service_call(hass, mock_entities, "test_method", call)
+    assert mock_entities_method.call_count == 0
+
+
+async def test_entity_service_call_other_domain_entity_still_warn(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test referenced entities that may yet be loaded are still only logged.
+
+    These are an entity of the action's own domain, an unavailable entity of
+    another domain, and an entity of the integration that registered the action.
+    """
+    hass.states.async_set("light.ceiling", STATE_ON)
+    hass.states.async_set("switch.heater", STATE_UNAVAILABLE)
+    entity_registry.async_get_or_create(
+        "switch", "test_domain", "1234", suggested_object_id="fan"
+    )
+    hass.states.async_set("switch.fan", STATE_ON)
+
+    for domain, entity_id in (
+        ("light", "light.ceiling"),
+        ("light", "switch.heater"),
+        ("test_domain", "switch.fan"),
+    ):
+        caplog.clear()
+        call = ServiceCall(hass, domain, "test_service", {"entity_id": [entity_id]})
+        await service.entity_service_call(hass, mock_entities, "", call)
+        assert (
+            f"Referenced entities {entity_id} are missing or not currently available"
+        ) in caplog.text
 
 
 async def test_async_extract_entities_warn_referenced(
