@@ -29,7 +29,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_ENCODING, CONF_QOS, CONF_TOPIC, DOMAIN
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
-from .models import DATA_MQTT
+from .models import DATA_MQTT, ReceiveMessage
 from .schemas import MQTT_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +108,7 @@ class TriggerInstance:
             mqtt_config,
             self.action,
             self.trigger_info,
+            message_callback=self.trigger.async_log_message,
         )
 
 
@@ -126,6 +127,24 @@ class Trigger:
     type: str
     value_template: str | None
     trigger_instances: list[TriggerInstance] = field(default_factory=list)
+
+    @callback
+    def async_log_message(self, msg: ReceiveMessage) -> None:
+        """Keep a received message in the debug info of a discovered trigger."""
+        debug_info_triggers = self.hass.data[DATA_MQTT].debug_info_triggers
+        # Each automation that uses the trigger receives the message
+        if (
+            self.discovery_data is None
+            or (
+                trigger_debug_info := debug_info_triggers.get(
+                    self.discovery_data[ATTR_DISCOVERY_HASH]
+                )
+            )
+            is None
+            or msg in trigger_debug_info["messages"]
+        ):
+            return
+        trigger_debug_info["messages"].append(msg)
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
@@ -166,9 +185,10 @@ class Trigger:
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
         # because unsubscribe is done with help of async_create_task
-        if topic_changed:
-            for trig in self.trigger_instances:
-                await trig.async_attach_trigger()
+        if not topic_changed:
+            return
+        for trig in self.trigger_instances:
+            await trig.async_attach_trigger()
 
     def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""
@@ -236,9 +256,10 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
                 value_template=self._config[CONF_VALUE_TEMPLATE],
             )
         else:
-            await self._mqtt_data.device_triggers[self.trigger_id].update_trigger(
-                self._config
-            )
+            # The trigger can exist from an automation or an earlier discovery
+            trigger = self._mqtt_data.device_triggers[self.trigger_id]
+            trigger.discovery_data = self.discovery_data
+            await trigger.update_trigger(self._config)
         debug_info.add_trigger_discovery_data(
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )

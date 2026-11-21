@@ -1,5 +1,6 @@
 """Provides tag scanning for MQTT."""
 
+from collections import deque
 from collections.abc import Callable
 import functools
 import logging
@@ -18,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
+from .debug_info import STORED_MESSAGES
 from .discovery import MQTTDiscoveryPayload
 from .entity import (
     MqttDiscoveryDeviceUpdateMixin,
@@ -71,8 +73,6 @@ async def _async_setup_tag(
     discovery_id = discovery_hash[1]
 
     device_id = update_device(hass, config_entry, config)
-    if device_id is not None and device_id not in (tags := hass.data[DATA_MQTT].tags):
-        tags[device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
@@ -84,8 +84,8 @@ async def _async_setup_tag(
 
     await tag_scanner.subscribe_topics()
 
-    if device_id:
-        tags[device_id][discovery_id] = tag_scanner
+    # Tag scanners without a device are kept under None
+    hass.data[DATA_MQTT].tags.setdefault(device_id, {})[discovery_id] = tag_scanner
 
     send_discovery_done(hass, discovery_data)
 
@@ -117,6 +117,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         self.discovery_data = discovery_data
         self.hass = hass
         self._sub_state: dict[str, EntitySubscription] | None = None
+        self.messages: deque[ReceiveMessage] = deque(maxlen=STORED_MESSAGES)
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
@@ -141,6 +142,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     @callback
     def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
         """Handle new tag scanned."""
+        self.messages.append(msg)
         try:
             tag_id = str(self._value_template(msg.payload, "")).strip()
         except MqttValueTemplateException as exc:
