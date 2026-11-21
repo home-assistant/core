@@ -1,0 +1,40 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 0,
+  "version": "3.0",
+  "data": {
+    "stations": [
+      {
+        "station_id": "s1",
+        "num_vehicles_available": 5,
+        "vehicle_types_available": [
+          { "vehicle_type_id": "classic", "count": 3 },
+          { "vehicle_type_id": "ebike", "count": 2 }
+        ],
+        "num_docks_available": 5,
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": "2026-11-05T11:59:00Z"
+      },
+      {
+        "station_id": "s2",
+        "num_vehicles_available": 1,
+        "vehicle_types_available": [{ "vehicle_type_id": "ebike", "count": 1 }],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": "2026-11-05T11:59:00Z"
+      },
+      {
+        "station_id": "s3",
+        "num_vehicles_available": 0,
+        "num_docks_available": 8,
+        "is_installed": false,
+        "is_renting": false,
+        "is_returning": false,
+        "last_reported": "2026-11-05T11:00:00Z"
+      }
+    ]
+  }
+}

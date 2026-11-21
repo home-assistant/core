@@ -1,0 +1,22 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "vehicle_types": [
+      {
+        "vehicle_type_id": "classic",
+        "form_factor": "bicycle",
+        "propulsion_type": "human",
+        "name": [{ "text": "Classic bike", "language": "en" }]
+      },
+      {
+        "vehicle_type_id": "ebike",
+        "form_factor": "bicycle",
+        "propulsion_type": "electric_assist",
+        "name": [{ "text": "E-bike", "language": "en" }],
+        "max_range_meters": 50000
+      }
+    ]
+  }
+}

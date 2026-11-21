@@ -1,0 +1,16 @@
+{
+  "last_updated": 1730808000,
+  "ttl": 300,
+  "version": "2.3",
+  "data": {
+    "stations": [
+      {
+        "station_id": "a",
+        "name": "Gare",
+        "lat": 48.84,
+        "lon": 2.37,
+        "capacity": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "stations": [
+      {
+        "station_id": "s1",
+        "name": [{ "text": "Main St & 1st Ave", "language": "en" }],
+        "lat": 40.7,
+        "lon": -74.0,
+        "capacity": 10
+      },
+      {
+        "station_id": "s2",
+        "name": [{ "text": "Park Ave & 2nd St", "language": "en" }],
+        "lat": 40.71,
+        "lon": -74.01,
+        "is_virtual_station": true
+      },
+      {
+        "station_id": "s3",
+        "name": [{ "text": "River Rd", "language": "en" }],
+        "lat": 40.8,
+        "lon": -74.1,
+        "capacity": 8
+      }
+    ]
+  }
+}

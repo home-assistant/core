@@ -1,0 +1,85 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 0,
+  "version": "3.0",
+  "data": {
+    "stations": [
+      {
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": "2026-11-05T11:59:00Z",
+        "station_id": "m1",
+        "num_vehicles_available": 81,
+        "num_docks_available": 35,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "bike_human",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "bike_unpowered",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "bike_assist",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "bike_electric",
+            "count": 8
+          },
+          {
+            "vehicle_type_id": "bike_future",
+            "count": 16
+          },
+          {
+            "vehicle_type_id": "cargo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "scooter_standing",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "scooter_seated",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "scooter_legacy",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "moped",
+            "count": 5
+          },
+          {
+            "vehicle_type_id": "car",
+            "count": 6
+          },
+          {
+            "vehicle_type_id": "other",
+            "count": 7
+          },
+          {
+            "vehicle_type_id": "hoverboard",
+            "count": 8
+          },
+          {
+            "vehicle_type_id": "unspecified",
+            "count": 16
+          }
+        ]
+      },
+      {
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": "2026-11-05T11:59:00Z",
+        "station_id": "m2",
+        "num_vehicles_available": 3,
+        "num_docks_available": 7
+      }
+    ]
+  }
+}
