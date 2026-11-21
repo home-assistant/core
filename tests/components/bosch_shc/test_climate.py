@@ -15,19 +15,12 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -185,8 +178,8 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
@@ -205,8 +198,8 @@ async def test_set_hvac_mode_leaves_summer_mode_and_eco(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
 
@@ -227,8 +220,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.5},
         blocking=True,
     )
 
@@ -248,8 +241,8 @@ async def test_set_temperature_while_off_is_ignored(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.5},
         blocking=True,
     )
 
@@ -268,10 +261,10 @@ async def test_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 22.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 22.5,
             "hvac_mode": HVACMode.HEAT,
         },
         blocking=True,
@@ -293,8 +286,8 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_ECO},
         blocking=True,
     )
     assert device.boost_mode is False
@@ -302,8 +295,8 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_BOOST},
         blocking=True,
     )
     assert device.boost_mode is True
@@ -329,8 +322,8 @@ async def test_cancel_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_NONE},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_NONE},
         blocking=True,
     )
 
@@ -353,10 +346,10 @@ async def test_set_temperature_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 22.5,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 22.5,
                 "hvac_mode": hvac_mode,
             },
             blocking=True,
@@ -377,12 +370,18 @@ async def test_turn_on_off(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert device.summer_mode is True
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert device.summer_mode is False
     assert device.operation_mode == AUTOMATIC
@@ -467,8 +466,8 @@ async def test_heating_circuit_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: HC_ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: HC_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
@@ -487,8 +486,8 @@ async def test_heating_circuit_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: HC_ENTITY_ID, ATTR_TEMPERATURE: 24.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: HC_ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 24.0},
         blocking=True,
     )
 
@@ -507,10 +506,10 @@ async def test_heating_circuit_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: HC_ENTITY_ID,
-            ATTR_TEMPERATURE: 24.0,
+            TargetKey.ENTITY_ID: HC_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 24.0,
             "hvac_mode": HVACMode.HEAT,
         },
         blocking=True,
@@ -534,10 +533,10 @@ async def test_heating_circuit_set_temperature_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: HC_ENTITY_ID,
-                ATTR_TEMPERATURE: 24.0,
+                TargetKey.ENTITY_ID: HC_ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 24.0,
                 "hvac_mode": HVACMode.COOL,
             },
             blocking=True,

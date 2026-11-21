@@ -390,5 +390,6 @@ async def test_invalid_trigger(
         )
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
-            "not a valid option at 'invalid'. Got None" in caplog.records[0].message
+            "not a valid option at 'triggers[0].invalid'. Got True"
+            in caplog.records[0].message
         )

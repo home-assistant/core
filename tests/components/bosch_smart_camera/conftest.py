@@ -45,17 +45,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 def mock_list_cameras() -> Generator[AsyncMock]:
     """Mock the camera list of the library."""
-    with (
-        patch(
-            "homeassistant.components.bosch_smart_camera.coordinator.list_cameras",
-            autospec=True,
-            return_value=list(CAMERAS),
-        ) as mock,
-        patch(
-            "homeassistant.components.bosch_smart_camera.config_flow.list_cameras",
-            new=mock,
-        ),
-    ):
+    with patch(
+        "bosch_shc_camera_client.client.list_cameras",
+        autospec=True,
+        return_value=list(CAMERAS),
+    ) as mock:
         yield mock
 
 

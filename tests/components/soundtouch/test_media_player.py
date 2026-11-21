@@ -18,17 +18,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
-from homeassistant.components.soundtouch.const import (
-    DOMAIN,
-    SERVICE_ADD_ZONE_SLAVE,
-    SERVICE_CREATE_ZONE,
-    SERVICE_PLAY_EVERYWHERE,
-    SERVICE_REMOVE_ZONE_SLAVE,
-)
+from homeassistant.components.soundtouch.const import DOMAIN
 from homeassistant.components.soundtouch.media_player import (
     ATTR_SOUNDTOUCH_GROUP,
     ATTR_SOUNDTOUCH_ZONE,
 )
+from homeassistant.components.soundtouch.services import SoundTouchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
@@ -494,7 +489,7 @@ async def test_play_everywhere(
     # no slaves, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_EVERYWHERE,
+        SoundTouchService.PLAY_EVERYWHERE,
         {"master": DEVICE_1_ENTITY_ID},
         True,
     )
@@ -505,7 +500,7 @@ async def test_play_everywhere(
     # one master, one slave => set zone
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_EVERYWHERE,
+        SoundTouchService.PLAY_EVERYWHERE,
         {"master": DEVICE_1_ENTITY_ID},
         True,
     )
@@ -514,7 +509,7 @@ async def test_play_everywhere(
     # unknown master, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_EVERYWHERE,
+        SoundTouchService.PLAY_EVERYWHERE,
         {"master": "media_player.entity_X"},
         True,
     )
@@ -537,7 +532,7 @@ async def test_create_zone(
     # one master, one slave => set zone
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_ZONE,
+        SoundTouchService.CREATE_ZONE,
         {
             "master": DEVICE_1_ENTITY_ID,
             "slaves": [DEVICE_2_ENTITY_ID],
@@ -549,7 +544,7 @@ async def test_create_zone(
     # unknown master, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_ZONE,
+        SoundTouchService.CREATE_ZONE,
         {"master": "media_player.entity_X", "slaves": [DEVICE_2_ENTITY_ID]},
         True,
     )
@@ -558,7 +553,7 @@ async def test_create_zone(
     # no slaves, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_ZONE,
+        SoundTouchService.CREATE_ZONE,
         {"master": DEVICE_1_ENTITY_ID, "slaves": []},
         True,
     )
@@ -579,7 +574,7 @@ async def test_remove_zone_slave(
     # remove one slave
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_ZONE_SLAVE,
+        SoundTouchService.REMOVE_ZONE_SLAVE,
         {
             "master": DEVICE_1_ENTITY_ID,
             "slaves": [DEVICE_2_ENTITY_ID],
@@ -591,7 +586,7 @@ async def test_remove_zone_slave(
     # unknown master, remove zone slave is not called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_ZONE_SLAVE,
+        SoundTouchService.REMOVE_ZONE_SLAVE,
         {"master": "media_player.entity_X", "slaves": [DEVICE_2_ENTITY_ID]},
         True,
     )
@@ -600,7 +595,7 @@ async def test_remove_zone_slave(
     # no slave to remove, remove zone slave is not called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_ZONE_SLAVE,
+        SoundTouchService.REMOVE_ZONE_SLAVE,
         {"master": DEVICE_1_ENTITY_ID, "slaves": []},
         True,
     )
@@ -621,7 +616,7 @@ async def test_add_zone_slave(
     # add one slave
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ZONE_SLAVE,
+        SoundTouchService.ADD_ZONE_SLAVE,
         {
             "master": DEVICE_1_ENTITY_ID,
             "slaves": [DEVICE_2_ENTITY_ID],
@@ -633,7 +628,7 @@ async def test_add_zone_slave(
     # unknown master, add zone slave is not called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ZONE_SLAVE,
+        SoundTouchService.ADD_ZONE_SLAVE,
         {"master": "media_player.entity_X", "slaves": [DEVICE_2_ENTITY_ID]},
         True,
     )
@@ -642,7 +637,7 @@ async def test_add_zone_slave(
     # no slave to add, add zone slave is not called
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ZONE_SLAVE,
+        SoundTouchService.ADD_ZONE_SLAVE,
         {"master": DEVICE_1_ENTITY_ID, "slaves": ["media_player.entity_X"]},
         True,
     )

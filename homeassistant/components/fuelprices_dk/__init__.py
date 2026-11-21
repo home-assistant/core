@@ -1,15 +1,14 @@
 """Initialize the Fuelprices.dk component."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_COMPANY, CONF_STATION, SUBENTRY_TYPE_STATION
 from .coordinator import FuelPricesDKCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-type FuelpricesDkConfigEntry = ConfigEntry[dict[str, FuelPricesDKCoordinator]]
+type FuelpricesDkConfigEntry = ConfigEntry[FuelPricesDKCoordinator]
 
 
 async def async_setup_entry(
@@ -17,26 +16,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fuelprices.dk from a config entry."""
     config_entry.async_on_unload(config_entry.add_update_listener(_update_listener))
-    api_key = config_entry.data[CONF_API_KEY]
-    runtime_data: dict[str, FuelPricesDKCoordinator] = {}
-
-    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_STATION):
-        subentry_id = subentry.subentry_id
-        company = subentry.data[CONF_COMPANY]
-        station = subentry.data[CONF_STATION]
-
-        coordinator = FuelPricesDKCoordinator(
-            hass,
-            api_key,
-            company,
-            station,
-            subentry_id,
-            config_entry,
-        )
-        runtime_data[subentry_id] = coordinator
-        await coordinator.async_config_entry_first_refresh()
-
-    config_entry.runtime_data = runtime_data
+    coordinator = FuelPricesDKCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 
