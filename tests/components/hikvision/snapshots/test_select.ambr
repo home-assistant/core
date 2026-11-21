@@ -1,0 +1,722 @@
+# serializer version: 1
+# name: test_all_entities[select.front_camera_backlight_compensation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'up',
+        'down',
+        'left',
+        'right',
+        'center',
+        'region',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_backlight_compensation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backlight compensation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Backlight compensation mode',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backlight_compensation_mode',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_backlight_compensation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_backlight_compensation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Backlight compensation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'up',
+        'down',
+        'left',
+        'right',
+        'center',
+        'region',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_backlight_compensation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_all_entities[select.front_camera_day_night_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'day',
+        'night',
+        'auto',
+        'schedule',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_day_night_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Day/night mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day/night mode',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'day_night_mode',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_day_night_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_day_night_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Day/night mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'day',
+        'night',
+        'auto',
+        'schedule',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_day_night_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'night',
+  })
+# ---
+# name: test_all_entities[select.front_camera_flip_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'leftright',
+        'updown',
+        'center',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_flip_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flip direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flip direction',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flip_direction',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_flip_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_flip_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Flip direction',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'leftright',
+        'updown',
+        'center',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_flip_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.front_camera_night_to_day_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_night_to_day_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Night-to-day sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night-to-day sensitivity',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'night_to_day_sensitivity',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_night_to_day_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_night_to_day_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Night-to-day sensitivity',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_night_to_day_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_all_entities[select.front_camera_noise_reduction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'general',
+        'advanced',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_noise_reduction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Noise reduction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Noise reduction',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'noise_reduction',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_noise_reduction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_noise_reduction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Noise reduction',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'general',
+        'advanced',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_noise_reduction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'general',
+  })
+# ---
+# name: test_all_entities[select.front_camera_power_line_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '50hz',
+        '60hz',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_power_line_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power line frequency',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power line frequency',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_line_frequency',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_power_line_frequency',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_power_line_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Power line frequency',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '50hz',
+        '60hz',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_power_line_frequency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60hz',
+  })
+# ---
+# name: test_all_entities[select.front_camera_scene_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'outdoor',
+        'indoor',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_scene_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scene mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scene mode',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scene_mode',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_scene_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_scene_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Scene mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'outdoor',
+        'indoor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_scene_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'outdoor',
+  })
+# ---
+# name: test_all_entities[select.front_camera_shutter_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1/3',
+        '1/6',
+        '1/12',
+        '1/30',
+        '1/60',
+        '1/120',
+        '1/150',
+        '1/200',
+        '1/250',
+        '1/500',
+        '1/750',
+        '1/1000',
+        '1/2000',
+        '1/4000',
+        '1/10000',
+        '1/100000',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_shutter_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Shutter speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shutter speed',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'shutter_speed',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_shutter_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_shutter_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Shutter speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1/3',
+        '1/6',
+        '1/12',
+        '1/30',
+        '1/60',
+        '1/120',
+        '1/150',
+        '1/200',
+        '1/250',
+        '1/500',
+        '1/750',
+        '1/1000',
+        '1/2000',
+        '1/4000',
+        '1/10000',
+        '1/100000',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_shutter_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1/1000',
+  })
+# ---
+# name: test_all_entities[select.front_camera_smart_supplement_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'manual',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_smart_supplement_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smart supplement light mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart supplement light mode',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_supplement_light_mode',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_smart_supplement_light_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_smart_supplement_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Smart supplement light mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_smart_supplement_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---
+# name: test_all_entities[select.front_camera_wdr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'open',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_wdr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WDR',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WDR',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wdr',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_wdr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_wdr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera WDR',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'close',
+        'open',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_wdr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'close',
+  })
+# ---
+# name: test_all_entities[select.front_camera_white_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'auto1',
+        'locked',
+        'daylightlamp',
+        'incandescentlight',
+        'warmlight',
+        'naturallight',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.front_camera_white_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'White balance',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White balance',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_balance',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_white_balance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.front_camera_white_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera White balance',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'manual',
+        'auto1',
+        'locked',
+        'daylightlamp',
+        'incandescentlight',
+        'warmlight',
+        'naturallight',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.front_camera_white_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto1',
+  })
+# ---
