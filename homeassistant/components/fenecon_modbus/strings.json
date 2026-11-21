@@ -1,0 +1,163 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_openems": "The device answered, but it does not provide the OpenEMS Modbus/TCP interface. Check the unit ID and that the \"FEMS App Modbus/TCP lesend\" is active.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Unit ID"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your FEMS.",
+          "port": "The Modbus/TCP port of your FEMS.",
+          "unit_id": "The Modbus unit ID of your FEMS."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "consumption_active_energy": {
+        "name": "Consumption energy"
+      },
+      "consumption_active_power": {
+        "name": "Consumption power"
+      },
+      "consumption_active_power_l1": {
+        "name": "Consumption power L1"
+      },
+      "consumption_active_power_l2": {
+        "name": "Consumption power L2"
+      },
+      "consumption_active_power_l3": {
+        "name": "Consumption power L3"
+      },
+      "consumption_max_active_power": {
+        "name": "Consumption peak power"
+      },
+      "ess_active_charge_energy": {
+        "name": "Battery charge energy"
+      },
+      "ess_active_discharge_energy": {
+        "name": "Battery discharge energy"
+      },
+      "ess_active_power": {
+        "name": "Battery power"
+      },
+      "ess_active_power_l1": {
+        "name": "Battery power L1"
+      },
+      "ess_active_power_l2": {
+        "name": "Battery power L2"
+      },
+      "ess_active_power_l3": {
+        "name": "Battery power L3"
+      },
+      "ess_capacity": {
+        "name": "Battery capacity"
+      },
+      "ess_dc_charge_energy": {
+        "name": "Battery DC charge energy"
+      },
+      "ess_dc_discharge_energy": {
+        "name": "Battery DC discharge energy"
+      },
+      "ess_discharge_power": {
+        "name": "Battery AC discharge power"
+      },
+      "ess_reactive_power": {
+        "name": "Battery reactive power"
+      },
+      "grid_active_power": {
+        "name": "Grid power"
+      },
+      "grid_active_power_l1": {
+        "name": "Grid power L1"
+      },
+      "grid_active_power_l2": {
+        "name": "Grid power L2"
+      },
+      "grid_active_power_l3": {
+        "name": "Grid power L3"
+      },
+      "grid_buy_active_energy": {
+        "name": "Grid import energy"
+      },
+      "grid_max_active_power": {
+        "name": "Grid peak import power"
+      },
+      "grid_min_active_power": {
+        "name": "Grid peak export power"
+      },
+      "grid_mode": {
+        "name": "Grid mode",
+        "state": {
+          "off_grid": "Off-grid",
+          "off_grid_genset": "Off-grid with generator",
+          "on_grid": "On-grid"
+        }
+      },
+      "grid_mode_off_grid_time": {
+        "name": "Off-grid time"
+      },
+      "grid_sell_active_energy": {
+        "name": "Grid export energy"
+      },
+      "production_ac_active_energy": {
+        "name": "AC production energy"
+      },
+      "production_ac_active_power": {
+        "name": "AC production power"
+      },
+      "production_ac_active_power_l1": {
+        "name": "AC production power L1"
+      },
+      "production_ac_active_power_l2": {
+        "name": "AC production power L2"
+      },
+      "production_ac_active_power_l3": {
+        "name": "AC production power L3"
+      },
+      "production_active_energy": {
+        "name": "Production energy"
+      },
+      "production_active_power": {
+        "name": "Production power"
+      },
+      "production_dc_active_energy": {
+        "name": "DC production energy"
+      },
+      "production_dc_actual_power": {
+        "name": "DC production power"
+      },
+      "production_max_active_power": {
+        "name": "Production peak power"
+      },
+      "state": {
+        "name": "System state",
+        "state": {
+          "fault": "Fault",
+          "info": "Info",
+          "ok": "OK",
+          "warning": "Warning"
+        }
+      },
+      "system_time": {
+        "name": "System time"
+      }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error communicating with the FEMS: {error}"
+    }
+  }
+}

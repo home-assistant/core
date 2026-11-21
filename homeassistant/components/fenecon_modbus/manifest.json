@@ -1,0 +1,14 @@
+{
+  "domain": "fenecon_modbus",
+  "name": "Fenecon Modbus",
+  "categories": ["energy.solar_batteries"],
+  "codeowners": ["@Tomson124"],
+  "config_flow": true,
+  "connectivity": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/fenecon_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["fenecon_modbus", "pymodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["fenecon-modbus==0.1.0"]
+}

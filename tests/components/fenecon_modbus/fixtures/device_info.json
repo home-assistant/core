@@ -1,0 +1,11 @@
+{
+  "openems_version_major": 2026,
+  "openems_version_minor": 10,
+  "openems_version_patch": 1,
+  "manufacturer": "FENECON GmbH",
+  "manufacturer_model": "FENECON Home 10",
+  "manufacturer_options": null,
+  "manufacturer_version": null,
+  "manufacturer_serial_number": "2208123456",
+  "manufacturer_ems_serial_number": "12345"
+}
