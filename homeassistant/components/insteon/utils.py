@@ -1,5 +1,6 @@
 """Utilities used by insteon component."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DOMAIN,
@@ -32,6 +34,17 @@ if TYPE_CHECKING:
     from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+_STATUS_LOCK_KEY: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_status_lock")
+
+
+@callback
+def async_get_status_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Return the lock that serializes Insteon status requests.
+
+    The Insteon protocol cannot handle concurrent status requests.
+    """
+    return hass.data.setdefault(_STATUS_LOCK_KEY, asyncio.Lock())
 
 
 def _register_event(event: Event, listener: Callable) -> None:
@@ -100,7 +113,9 @@ def register_new_device_callback(hass: HomeAssistant) -> None:
         )
         await devices.async_save(workdir=hass.config.config_dir)
         device = devices[address]
-        await device.async_status()
+        if not device.is_battery:
+            async with async_get_status_lock(hass):
+                await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
             groups = get_device_platform_groups(device, platform)

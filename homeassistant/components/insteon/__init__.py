@@ -28,7 +28,11 @@ from .const import (
 )
 from .ipdb import get_device_platforms
 from .services import async_setup_services
-from .utils import add_insteon_events, register_new_device_callback
+from .utils import (
+    add_insteon_events,
+    async_get_status_lock,
+    register_new_device_callback,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +48,8 @@ async def async_get_device_config(hass, config_entry):
         if devices[address].is_battery:
             continue
         with suppress(AttributeError):
-            await devices[address].async_status()
+            async with async_get_status_lock(hass):
+                await devices[address].async_status()
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
