@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
         "available_circuits": data.available_circuits,
     }
 
-    # Add DHW config and schedule from slow coordinator if available
+    # Even loaded entries may still be waiting for the initial slow-data fetch.
     if data.slow_coordinator.data:
         slow_data = {}
         if data.slow_coordinator.data.dhw_config:

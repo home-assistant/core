@@ -275,7 +275,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
         available_circuits=circuits,
     )
 
-    # Fetch slow data in the background so it does not block startup.
+    # Slow serial-bus reads must not block startup. Until this background fetch
+    # completes, entities and diagnostics may see slow_coordinator.data as None.
     entry.async_create_background_task(
         hass,
         slow_coordinator.async_refresh(),
