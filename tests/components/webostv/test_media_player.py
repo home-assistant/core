@@ -383,6 +383,13 @@ async def test_entity_attributes(
 
     assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
+    # Sound output without volume control reports volume -1
+    client.tv_state.volume = -1
+    await client.mock_state_update()
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
+
     # Channel change
     client.tv_state.current_channel = CHANNEL_2
     await client.mock_state_update()
@@ -869,6 +876,18 @@ WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME = {
     "active": False,
     "mute": False,
 }
+WEBOS_4_OPTICAL_NO_VOLUME_CONTROL = {
+    "returnValue": True,
+    "volumeMax": 100,
+    "scenario": "mastervolume_ext_speaker_optical",
+    "muted": False,
+    "subscribed": True,
+    "volume": -1,
+    "action": "requested",
+    "supportvolume": False,
+    "slider": False,
+    "active": False,
+}
 WEBOS_6_ARC_UNKNOWN = {
     "activeStatus": True,
     "adjustVolume": True,
@@ -915,6 +934,12 @@ SUPPORT_WEBOSTV_VOLUME_SET = (
             WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME,
             SUPPORT_WEBOSTV_VOLUME_SET,
             id="webos_4_support_volume",
+        ),
+        pytest.param(
+            "external_optical",
+            WEBOS_4_OPTICAL_NO_VOLUME_CONTROL,
+            SUPPORT_WEBOSTV,
+            id="webos_4_no_volume_control",
         ),
         pytest.param(
             "external_arc",
