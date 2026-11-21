@@ -1,15 +1,15 @@
 # serializer version: 1
-# name: test_audio_codec_resolve[aac]
-  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=aac'
+# name: test_audio_codec_resolve[aac-aac-audio/aac]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username&DeviceId=TEST-UUID&MaxStreamingBitrate=140000000&AudioCodec=aac&TranscodingContainer=aac'
 # ---
-# name: test_audio_codec_resolve[mp3]
-  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=mp3'
+# name: test_audio_codec_resolve[mp3-mp3-audio/mpeg]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username&DeviceId=TEST-UUID&MaxStreamingBitrate=140000000&AudioCodec=mp3&TranscodingContainer=mp3'
 # ---
-# name: test_audio_codec_resolve[vorbis]
-  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=vorbis'
+# name: test_audio_codec_resolve[vorbis-vorbis-audio/ogg]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username&DeviceId=TEST-UUID&MaxStreamingBitrate=140000000&AudioCodec=vorbis&TranscodingContainer=ogg'
 # ---
-# name: test_audio_codec_resolve[wma]
-  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=wma'
+# name: test_audio_codec_resolve[wma-wmav2-audio/x-ms-wma]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username&DeviceId=TEST-UUID&MaxStreamingBitrate=140000000&AudioCodec=wmav2&TranscodingContainer=asf'
 # ---
 # name: test_movie_library
   dict({
@@ -84,7 +84,7 @@
   })
 # ---
 # name: test_resolve
-  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000'
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username&DeviceId=TEST-UUID&MaxStreamingBitrate=140000000&Container=flac'
 # ---
 # name: test_resolve.1
   'http://localhost/Videos/MOVIE-UUID/stream?static=true,DeviceId=TEST-UUID,api_key=TEST-API-KEY'
