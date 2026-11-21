@@ -21,6 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import SoundTouchConfigEntry
 from .const import DOMAIN
@@ -36,6 +37,9 @@ MAP_STATUS = {
 
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
+
+# Refresh playback position once it is this many seconds off the frontend's estimate
+POSITION_DRIFT_TOLERANCE = 1.5
 
 
 async def async_setup_entry(
@@ -94,6 +98,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._status = None
         self._volume = None
         self._zone = None
+        self._position_play_status: str | None = None
 
     @property
     def device(self):
@@ -102,9 +107,34 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def update(self) -> None:
         """Retrieve the latest data."""
-        self._status = self._device.status()
+        status = self._device.status()
+        self._status = status
         self._volume = self._device.volume()
         self._zone = self.get_zone_info()
+
+        self._update_media_position(status.position, status.play_status)
+
+    def _update_media_position(self, position: int | None, play_status: str) -> None:
+        """Refresh the position only when it differs from the frontend's estimate."""
+        last_position = self._attr_media_position
+        last_updated = self._attr_media_position_updated_at
+        if position is None or last_position is None or last_updated is None:
+            refresh = True
+        else:
+            expected_position: float = last_position
+            if self._position_play_status == "PLAY_STATE":
+                expected_position += (dt_util.utcnow() - last_updated).total_seconds()
+            refresh = (
+                play_status != self._position_play_status
+                or abs(position - expected_position) > POSITION_DRIFT_TOLERANCE
+            )
+
+        if refresh:
+            self._attr_media_position = position
+            self._attr_media_position_updated_at = (
+                dt_util.utcnow() if position is not None else None
+            )
+        self._position_play_status = play_status
 
     @property
     @override
