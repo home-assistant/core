@@ -4,7 +4,8 @@ A timer list entity holds many independent countdown timers (its *items*),
 mirroring how a to-do list holds many to-do items. The entity state is the
 number of active timers. The platform provides the abstract entity, the shared
 data model, and the generic services/websocket API; storing timers and
-scheduling their completion is left to concrete implementations.
+scheduling their completion is left to concrete implementations, such as the
+reusable ``InMemoryTimerListEntity``.
 """
 
 import logging
@@ -32,6 +33,7 @@ from .const import (
     TimerStatus,
 )
 from .entity import TimerItem, TimerListEntity, TimerListEvent
+from .in_memory import InMemoryTimerListEntity
 from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_websocket_api
 
@@ -40,6 +42,7 @@ __all__ = [
     "ENTITY_ID_FORMAT",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "InMemoryTimerListEntity",
     "TimerItem",
     "TimerListEntity",
     "TimerListEntityFeature",
@@ -47,6 +50,7 @@ __all__ = [
     "TimerListEventType",
     "TimerListServices",
     "TimerStatus",
+    "async_get_timer_list_entity",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,6 +73,14 @@ def entity_became_available(event: Event[EventStateChangedData]) -> bool:
     if new_state is None or new_state.state == STATE_UNAVAILABLE:
         return False
     return old_state is None or old_state.state == STATE_UNAVAILABLE
+
+
+@callback
+def async_get_timer_list_entity(
+    hass: HomeAssistant, entity_id: str
+) -> TimerListEntity | None:
+    """Return the timer list entity for an entity ID."""
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

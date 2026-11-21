@@ -2873,7 +2873,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.18.0
+python-qube-heatpump==1.19.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3490,7 +3490,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.7.0
+vizaio==0.7.1
 
 # homeassistant.components.caldav
 vobject==0.9.9
@@ -3622,7 +3622,7 @@ youtubeaio==2.1.2
 yt-dlp[default]==2026.07.04
 
 # homeassistant.components.zabbix
-zabbix-utils==2.0.4
+zabbix-utils==2.0.5
 
 # homeassistant.components.zamg
 zamg==0.5.0
