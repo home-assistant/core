@@ -147,9 +147,6 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
-    "oauth2_token_request_failed": {
-      "message": "Unable to obtain Daikin OAuth token"
-    },
     "preset_mode_unavailable": {
       "message": "The requested preset mode is unavailable for {device}"
     },

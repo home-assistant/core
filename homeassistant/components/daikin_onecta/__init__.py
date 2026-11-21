@@ -1,10 +1,8 @@
 """Platform for the Daikin AC."""
 
-import aiohttp
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -35,17 +33,6 @@ async def async_setup_entry(
         ) from err
 
     coordinator = OnectaDataUpdateCoordinator(hass, config_entry, implementation)
-
-    try:
-        await coordinator.async_get_access_token()
-    except OAuth2TokenRequestError:
-        raise
-    except (TimeoutError, aiohttp.ClientError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_token_request_failed",
-        ) from err
-
     config_entry.runtime_data = coordinator
 
     await config_entry.runtime_data.async_config_entry_first_refresh()
