@@ -33,7 +33,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import GoogleHealthConfigEntry
@@ -44,16 +43,53 @@ from .coordinator import (
     GoogleHealthDataUpdateCoordinator,
     GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
+    GoogleHealthNutritionData,
     GoogleHealthSleepCoordinator,
+    GoogleHealthSleepData,
 )
 
 PARALLEL_UPDATES = 0
 
 
+def _sleep_stage_minutes(
+    data: GoogleHealthSleepData | None, stage_type: str
+) -> int | None:
+    """Return duration in minutes for a sleep stage type."""
+    if (
+        not data
+        or not data.sleep
+        or not data.sleep.summary
+        or not data.sleep.summary.stages_summary
+    ):
+        return None
+    return next(
+        (
+            stage.minutes
+            for stage in data.sleep.summary.stages_summary
+            if stage.type == stage_type
+        ),
+        None,
+    )
+
+
+def _nutrient_grams(data: GoogleHealthNutritionData | None, nutrient: str) -> float:
+    """Return daily intake in grams for a nutrient type."""
+    if not data or not data.nutrition:
+        return 0.0
+    return next(
+        (
+            item.quantity.grams_sum
+            for item in data.nutrition.nutrients
+            if item.nutrient == nutrient
+        ),
+        0.0,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class GoogleHealthSensorEntityDescription[
     _CoordinatorT: GoogleHealthDataUpdateCoordinator[Any],
-    _ValueT: StateType,
+    _ValueT: datetime | StateType,
 ](SensorEntityDescription):
     """Class describing Google Health sensor entities."""
 
@@ -220,6 +256,48 @@ SLEEP_SENSORS: list[
             else None
         ),
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
+        key="sleep_start_time",
+        translation_key="sleep_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.sleep.start_time if data and data.sleep else None,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
+        key="sleep_end_time",
+        translation_key="sleep_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.sleep.end_time if data and data.sleep else None,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_rem",
+        translation_key="sleep_rem",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "REM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_deep",
+        translation_key="sleep_deep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "DEEP"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
+        key="sleep_light",
+        translation_key="sleep_light",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _sleep_stage_minutes(data, "LIGHT"),
+    ),
 ]
 
 
@@ -253,6 +331,85 @@ NUTRITION_SENSORS: list[
             else 0.0
         ),
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_fat",
+        translation_key="total_fat",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_fat.grams_sum
+            if data and data.nutrition and data.nutrition.total_fat
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_carbohydrate",
+        translation_key="total_carbohydrate",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_carbohydrate.grams_sum
+            if data and data.nutrition and data.nutrition.total_carbohydrate
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="protein",
+        translation_key="protein",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _nutrient_grams(data, "PROTEIN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="dietary_fiber",
+        translation_key="dietary_fiber",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "DIETARY_FIBER"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sugar",
+        translation_key="sugar",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SUGAR"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sodium",
+        translation_key="sodium",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.MILLIGRAMS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SODIUM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="calories_from_fat",
+        translation_key="calories_from_fat",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.nutrition.energy_from_fat.kcal_sum
+            if data and data.nutrition and data.nutrition.energy_from_fat
+            else 0.0
+        ),
+    ),
 ]
 
 
@@ -275,11 +432,7 @@ DEVICE_SENSORS: list[GoogleHealthDeviceSensorEntityDescription] = [
         key="last_sync_time",
         translation_key="last_sync_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: (
-            dt_util.parse_datetime(device.last_sync_time)
-            if device.last_sync_time
-            else None
-        ),
+        value_fn=lambda device: device.last_sync_time,
     ),
 ]
 
@@ -387,9 +540,12 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
+        return cast(
+            datetime | StateType,
+            self.entity_description.value_fn(self.coordinator.data),
+        )
 
     @property
     @override
@@ -438,7 +594,7 @@ class GoogleHealthDeviceSensor(
         )
 
         if device.mac_address:
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, device.mac_address)}
         self._attr_device_info = device_info
 
     @property

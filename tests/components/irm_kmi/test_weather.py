@@ -1,16 +1,17 @@
-"""Test for the weather entity of the IRM KMI integration."""
+"""Tests for the IRM KMI weather platform."""
 
+from collections.abc import Generator
 from typing import Any
+from unittest.mock import MagicMock, patch
 
+from irm_kmi_api import ExtendedForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
@@ -18,7 +19,12 @@ import homeassistant.helpers.entity_registry as er
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Load only the weather platform."""
+    with patch("homeassistant.components.irm_kmi.PLATFORMS", [Platform.WEATHER]):
+        yield
 
 
 async def _get_forecast(
@@ -27,9 +33,9 @@ async def _get_forecast(
     """Return the forecast from weather.get_forecasts."""
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
-            ATTR_ENTITY_ID: WEATHER_ENTITY_ID,
+            TargetKey.ENTITY_ID: WEATHER_ENTITY_ID,
             "type": forecast_type,
         },
         blocking=True,
@@ -40,7 +46,7 @@ async def _get_forecast(
 
 @pytest.mark.usefixtures("mock_get_forecasts_coord")
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
-@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_weather_nl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -57,9 +63,9 @@ async def test_weather_nl(
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
 @pytest.mark.parametrize(
     "forecast_type",
-    ["daily", "hourly"],
+    ["daily", "twice_daily", "hourly"],
 )
-@pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -129,6 +135,13 @@ async def test_daily_forecast_night_low_above_day_high(
             "Koninklijk Meteorologisch Instituut van België",
             id="follow_home_assistant",
         ),
+        pytest.param(
+            "nl",
+            {},
+            "Foo",
+            "Koninklijk Meteorologisch Instituut van België",
+            id="follow_home_assistant_by_default",
+        ),
     ],
 )
 @pytest.mark.freeze_time("2024-01-23T14:15:00+01:00")
@@ -155,3 +168,102 @@ async def test_forecast_language(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device.manufacturer == expected_manufacturer
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize("forecast_fixture", ["high_low_temp.json"])
+@pytest.mark.freeze_time("2024-01-21T14:15:00+01:00")
+async def test_forecasts_do_not_mutate_coordinator_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reading the daily forecast does not change the twice daily forecast."""
+    await setup_integration(hass, mock_config_entry)
+
+    twice_daily = await _get_forecast(hass, "twice_daily")
+    await _get_forecast(hass, "daily")
+
+    assert await _get_forecast(hass, "twice_daily") == twice_daily
+
+
+@pytest.mark.parametrize(
+    ("daily_forecast", "expected"),
+    [
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=False,
+                    native_temperature=None,
+                    native_templow=2.0,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-23",
+                    is_daytime=True,
+                    native_temperature=9.0,
+                    native_templow=3.0,
+                ),
+            ],
+            [(None, 2.0), (8.0, 2.0), (9.0, 3.0)],
+            id="borrowed_low",
+        ),
+        # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=False,
+                    native_temperature=None,
+                    native_templow=12.0,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+            ],
+            [(None, 12.0), (12.0, 8.0)],
+            id="borrowed_low_swapped",
+        ),
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=10.0,
+                    native_templow=3.0,
+                ),
+            ],
+            [(8.0, None), (10.0, 3.0)],
+            id="consecutive_days_keep_their_own_low",
+        ),
+    ],
+)
+async def test_daily_forecast_templow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    daily_forecast: list[ExtendedForecast],
+    expected: list[tuple[float | None, float | None]],
+) -> None:
+    """Test how the daily forecast fills in the lowest temperature."""
+    mock_irm_kmi_api.get_daily_forecast.return_value = daily_forecast
+    await setup_integration(hass, mock_config_entry)
+
+    assert [
+        (forecast.get("temperature"), forecast.get("templow"))
+        for forecast in await _get_forecast(hass, "daily")
+    ] == expected

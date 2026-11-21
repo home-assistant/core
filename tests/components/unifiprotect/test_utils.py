@@ -1,6 +1,9 @@
 """Test the UniFi Protect utils."""
 
+from unittest.mock import patch
+
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.unifiprotect.const import (
     CONF_CONNECTION_MODE,
@@ -23,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture
-
-from tests.common import MockConfigEntry
 
 
 async def test_session_client_is_full_access_for_api_key_only_entry(
@@ -96,3 +97,39 @@ async def test_host_override_reaches_the_client(
 
     assert protect.is_public_only is public_only
     assert protect.override_connection_host is True
+
+
+@pytest.mark.parametrize(
+    ("connection_mode", "public_only"),
+    [
+        pytest.param({}, False, id="hybrid"),
+        pytest.param(
+            {CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY}, True, id="public_only"
+        ),
+    ],
+)
+async def test_alarm_hubs_are_loaded(
+    hass: HomeAssistant, connection_mode: dict[str, str], public_only: bool
+) -> None:
+    """The client is asked to load the alarm hubs in both modes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 443,
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_API_KEY: "test-api-key",
+            CONF_VERIFY_SSL: False,
+            **connection_mode,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+    ) as client:
+        async_create_api_client(hass, entry)
+
+    create = client.public_only if public_only else client
+    assert create.call_args.kwargs["alarm_hubs"] is True

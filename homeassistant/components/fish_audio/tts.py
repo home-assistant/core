@@ -1,18 +1,24 @@
 """TTS platform for the Fish Audio integration."""
 
+from collections.abc import AsyncGenerator
+from enum import StrEnum
 import logging
 from typing import Any, override
 
-from fishaudio.exceptions import APIError, RateLimitError
+from fishaudio.exceptions import APIError, RateLimitError, WebSocketError
 
-from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
+from homeassistant.components.tts import (
+    TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
+    TtsAudioType,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FishAudioConfigEntry
 from .const import (
     CONF_BACKEND,
     CONF_LATENCY,
@@ -25,9 +31,19 @@ from .const import (
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import UnexpectedError
+from .types import FishAudioConfigEntry
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
+
+
+class FishAudioTextToSpeechOption(StrEnum):
+    """Store keys for the Fish Audio text-to-speech options."""
+
+    BACKEND = "backend"
+    LATENCY = "latency"
+    SPEED = "speed"
+    VOICE_ID = "voice_id"
 
 
 async def async_setup_entry(
@@ -54,7 +70,12 @@ class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND, CONF_LATENCY, CONF_SPEED]
+    _attr_supported_options = [
+        FishAudioTextToSpeechOption.VOICE_ID,
+        FishAudioTextToSpeechOption.BACKEND,
+        FishAudioTextToSpeechOption.LATENCY,
+        FishAudioTextToSpeechOption.SPEED,
+    ]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
@@ -63,7 +84,9 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         self._attr_unique_id = sub_entry.subentry_id
         # Configured speed must be a default option so it is part of the TTS cache key.
         self._attr_default_options = {
-            CONF_SPEED: sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+            FishAudioTextToSpeechOption.SPEED: sub_entry.data.get(
+                CONF_SPEED, DEFAULT_SPEED
+            )
         }
         title = sub_entry.title
         backend = sub_entry.data[CONF_BACKEND]
@@ -89,24 +112,20 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         """Return a list of supported languages."""
         return TTS_SUPPORTED_LANGUAGES
 
-    @override
-    async def async_get_tts_audio(
-        self,
-        message: str,
-        language: str,
-        options: dict[str, Any],
-    ) -> TtsAudioType:
-        """Load tts audio file from engine."""
-
-        _LOGGER.debug("Getting TTS audio for %s", message)
-
-        voice_id = options.get(CONF_VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID))
-        backend = options.get(CONF_BACKEND, self.sub_entry.data.get(CONF_BACKEND))
+    def _get_options(self, options: dict[str, Any]) -> tuple[str, str, str, float]:
+        voice_id = options.get(
+            FishAudioTextToSpeechOption.VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID)
+        )
+        backend = options.get(
+            FishAudioTextToSpeechOption.BACKEND, self.sub_entry.data.get(CONF_BACKEND)
+        )
         latency = options.get(
-            CONF_LATENCY, self.sub_entry.data.get(CONF_LATENCY, "balanced")
+            FishAudioTextToSpeechOption.LATENCY,
+            self.sub_entry.data.get(CONF_LATENCY, "balanced"),
         )
         speed = options.get(
-            CONF_SPEED, self.sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+            FishAudioTextToSpeechOption.SPEED,
+            self.sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED),
         )
 
         if voice_id is None:
@@ -118,6 +137,21 @@ class FishAudioTTSEntity(TextToSpeechEntity):
                 f"Speed must be between {MIN_SPEED} and {MAX_SPEED}"
             )
 
+        return voice_id, backend, latency, speed
+
+    @override
+    async def async_get_tts_audio(
+        self,
+        message: str,
+        language: str,
+        options: dict[str, Any],
+    ) -> TtsAudioType:
+        """Load tts audio file from engine."""
+
+        _LOGGER.debug("Getting TTS audio for %s", message)
+
+        voice_id, backend, latency, speed = self._get_options(options)
+
         try:
             audio = await self.client.tts.convert(
                 text=message,
@@ -128,12 +162,45 @@ class FishAudioTTSEntity(TextToSpeechEntity):
                 format="mp3",
             )
         except RateLimitError as err:
-            _LOGGER.error("Fish Audio TTS rate limited: %s", err)
             raise HomeAssistantError(f"Rate limited: {err}") from err
         except APIError as err:
-            _LOGGER.error("Fish Audio TTS request failed: %s", err)
             raise HomeAssistantError(f"TTS request failed: {err}") from err
         except Exception as err:
             raise UnexpectedError(err) from err
 
         return "mp3", audio
+
+    @override
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Stream TTS audio from engine."""
+
+        voice_id, backend, latency, speed = self._get_options(request.options)
+
+        stream = self.client.tts.stream_websocket(
+            request.message_gen,
+            reference_id=voice_id,
+            latency=latency,
+            speed=speed,
+            model=backend,
+            format="mp3",
+        )
+
+        async def gen() -> AsyncGenerator[bytes]:
+            try:
+                async for chunk in stream:
+                    yield chunk
+
+            except RateLimitError as err:
+                raise HomeAssistantError(f"Rate limited: {err}") from err
+            except APIError as err:
+                raise HomeAssistantError(f"TTS request failed: {err}") from err
+            except WebSocketError as err:
+                raise HomeAssistantError(
+                    f"Websocket connection closed unexpectedly: {err}"
+                ) from err
+            except Exception as err:
+                raise UnexpectedError(err) from err
+
+        return TTSAudioResponse("mp3", gen())

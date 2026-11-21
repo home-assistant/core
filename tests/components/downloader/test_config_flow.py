@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 CONFIG = {CONF_DOWNLOAD_DIR: "download_dir"}
 
@@ -36,7 +35,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.downloader.async_setup_entry", return_value=True
+            "homeassistant.components.downloader.async_setup_entry", return_value=None
         ),
         patch(
             "os.path.isdir",

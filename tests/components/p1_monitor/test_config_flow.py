@@ -25,7 +25,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             "homeassistant.components.p1_monitor.config_flow.P1Monitor.settings"
         ) as mock_p1monitor,
         patch(
-            "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
+            "homeassistant.components.p1_monitor.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -63,3 +63,15 @@ async def test_api_error(hass: HomeAssistant) -> None:
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
+
+    with (
+        patch("homeassistant.components.p1_monitor.config_flow.P1Monitor.settings"),
+        patch(
+            "homeassistant.components.p1_monitor.async_setup_entry", return_value=None
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "example.com", CONF_PORT: 80},
+        )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY

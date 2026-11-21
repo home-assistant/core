@@ -3,6 +3,8 @@
 import json
 from unittest.mock import patch
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pyuptimerobot import UptimeRobotException
 from pyuptimerobot.const import API_PATH_USER_ME
 
@@ -15,9 +17,6 @@ from .common import (
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

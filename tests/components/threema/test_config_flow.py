@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.threema.client import (
@@ -29,14 +30,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async_setup_entry to avoid full setup during flow tests."""
     with patch(
-        "homeassistant.components.threema.async_setup_entry", return_value=True
+        "homeassistant.components.threema.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 
@@ -311,6 +310,7 @@ async def test_credentials_private_key_prefix_stripped(
         result["data"][CONF_PRIVATE_KEY]
         == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     )
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_credentials_public_key_in_private_key_field_rejected(
@@ -457,6 +457,7 @@ async def test_credentials_public_key_matches(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == private_key
     assert _CONF_PUBLIC_KEY not in result["data"]
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_credentials_public_key_mismatch(
@@ -539,9 +540,9 @@ async def test_credentials_public_key_invalid_hex(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_credentials")
 async def test_credentials_invalid_private_key_preserves_other_fields(
     hass: HomeAssistant,
-    mock_credentials: AsyncMock,
 ) -> None:
     """Test gateway ID and API secret stay filled in after an invalid key error."""
     result = await hass.config_entries.flow.async_init(
@@ -572,6 +573,16 @@ async def test_credentials_invalid_private_key_preserves_other_fields(
     }
     assert defaults[CONF_GATEWAY_ID] == MOCK_GATEWAY_ID
     assert defaults[CONF_API_SECRET] == MOCK_API_SECRET
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "1" * 64,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_credentials_already_configured(

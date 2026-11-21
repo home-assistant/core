@@ -187,7 +187,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_HOST: self._name,
+                "host": self._name,
             },
             last_step=True,
         )
@@ -289,6 +289,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

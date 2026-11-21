@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.html5.const import (
     ATTR_VAPID_EMAIL,
@@ -13,8 +14,6 @@ from homeassistant.components.html5.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_NAME
-
-from tests.common import MockConfigEntry, patch
 
 MOCK_CONF = {
     ATTR_VAPID_EMAIL: "test@example.com",
@@ -30,7 +29,7 @@ MOCK_CONF_PUB_KEY = (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.html5.async_setup_entry", return_value=True
+        "homeassistant.components.html5.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

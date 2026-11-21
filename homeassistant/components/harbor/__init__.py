@@ -10,7 +10,7 @@ from .const import CONF_CERT_PEM, CONF_KEY_PEM, CONF_SERIAL, DOMAIN, PLATFORMS
 from .coordinator import HarborConfigEntry, HarborCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> None:
     """Set up Harbor from a config entry."""
     coordinator = HarborCoordinator(
         hass,
@@ -33,11 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> None:
     """Unload a Harbor config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_shutdown()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_shutdown()

@@ -78,3 +78,4 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"] == {CONF_ZIP_CODE: "12345"}
+    assert result["result"].unique_id == "12345"

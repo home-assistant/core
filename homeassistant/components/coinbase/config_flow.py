@@ -76,6 +76,13 @@ async def validate_api(hass: HomeAssistant, data):
     return {"title": user}
 
 
+def _get_accounts_and_exchange_rates(
+    client: RESTClient,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Get the accounts and the exchange rates."""
+    return get_accounts(client), client.get("/v2/exchange-rates")
+
+
 async def validate_options(
     hass: HomeAssistant, config_entry: CoinbaseConfigEntry, options
 ):
@@ -83,7 +90,9 @@ async def validate_options(
 
     client = config_entry.runtime_data.client
 
-    accounts = await hass.async_add_executor_job(get_accounts, client)
+    accounts, resp = await hass.async_add_executor_job(
+        _get_accounts_and_exchange_rates, client
+    )
 
     accounts_currencies = [
         account[API_ACCOUNT_CURRENCY]
@@ -91,7 +100,6 @@ async def validate_options(
         if not account[ACCOUNT_IS_VAULT]
     ]
 
-    resp = await hass.async_add_executor_job(client.get, "/v2/exchange-rates")
     available_rates = resp[API_DATA]
 
     if CONF_CURRENCIES in options:

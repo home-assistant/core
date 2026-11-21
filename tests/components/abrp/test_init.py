@@ -1,0 +1,507 @@
+"""Tests for the A Better Routeplanner integration setup."""
+
+from dataclasses import replace
+from http import HTTPStatus
+import time
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
+
+from aioabrp import (
+    AbrpApiError,
+    AbrpAuthError,
+    AbrpVehicle,
+    ConnectionEvent,
+    ConnectionState,
+)
+from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
+from homeassistant.components.abrp.const import ABRP_APP_KEY, DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.abrp.coordinator import GARAGE_SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
+
+from . import setup_integration
+from .conftest import (
+    MOCK_VEHICLE_ID,
+    MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL_2,
+    MOCK_VEHICLE_NAME,
+    MOCK_VEHICLE_NAME_2,
+    build_vehicle_model_display,
+    fire_connection,
+    stream_auth,
+)
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_setup_and_unload(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Setup loads the entry; unload stops the stream once the platforms unload."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
+    mock_telemetry_stream.return_value.stop.assert_not_awaited()
+
+    assert await hass.config_entries.async_unload(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_with_vehicles.state is ConfigEntryState.NOT_LOADED
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
+
+    # The shutdown listener must go with the entry.
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
+
+
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+@pytest.mark.usefixtures("mock_abrp_client", "mock_telemetry_stream")
+async def test_setup_token_refresh_success(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """An expired token is refreshed during setup."""
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "updated-access-token",
+            "refresh_token": "updated-refresh-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data["token"]["access_token"] == "updated-access-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("status", "exc", "expected_state", "expected_reauth"),
+    [
+        pytest.param(
+            HTTPStatus.UNAUTHORIZED,
+            None,
+            ConfigEntryState.SETUP_ERROR,
+            True,
+            id="rejected",
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            None,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="server_error",
+        ),
+        pytest.param(
+            None,
+            ClientError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="client_error",
+        ),
+        pytest.param(
+            None,
+            TimeoutError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="timeout",
+        ),
+    ],
+)
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+async def test_setup_token_refresh_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus | None,
+    exc: Exception | None,
+    expected_state: ConfigEntryState,
+    expected_reauth: bool,
+) -> None:
+    """A rejected refresh starts reauth; a 5xx, connection error or timeout retries."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=status, exc=exc)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert (
+        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
+
+
+def _expire_token(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Mark the stored token as expired so the next use refreshes it."""
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, "token": {**entry.data["token"], "expires_at": 0}},
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_auth_refreshes_expired_token(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """The stream gets a refreshed token once the stored one expires."""
+    await setup_integration(hass, config_entry_with_vehicles)
+    _expire_token(hass, config_entry_with_vehicles)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "refreshed-access-token",
+            "refresh_token": "refreshed-refresh-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    token = await stream_auth(mock_telemetry_stream).async_get_access_token()
+
+    assert token == "refreshed-access-token"
+    assert (
+        config_entry_with_vehicles.data["token"]["access_token"]
+        == "refreshed-access-token"
+    )
+
+
+@pytest.mark.parametrize(
+    ("status", "exc", "expected", "expected_reauth"),
+    [
+        pytest.param(HTTPStatus.BAD_REQUEST, None, AbrpAuthError, True, id="rejected"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            None,
+            AbrpApiError,
+            False,
+            id="server_error",
+        ),
+        pytest.param(None, ClientError("boom"), AbrpApiError, False, id="client_error"),
+        pytest.param(None, TimeoutError(), AbrpApiError, False, id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_auth_refresh_failure(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus | None,
+    exc: Exception | None,
+    expected: type[Exception],
+    expected_reauth: bool,
+) -> None:
+    """Only a rejected refresh is terminal and starts reauth; others are API errors.
+
+    The library stops on ``AbrpAuthError`` and backs off on anything else.
+    """
+    await setup_integration(hass, config_entry_with_vehicles)
+    _expire_token(hass, config_entry_with_vehicles)
+    aioclient_mock.post(OAUTH2_TOKEN, status=status, exc=exc)
+
+    with pytest.raises(expected):
+        await stream_auth(mock_telemetry_stream).async_get_access_token()
+    await hass.async_block_till_done()
+
+    assert (
+        any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
+
+
+async def test_setup_missing_implementation(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A missing OAuth2 implementation surfaces as SETUP_RETRY."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.abrp.config_entry_oauth2_flow"
+        ".async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "expected_reauth"),
+    [
+        pytest.param(
+            AbrpAuthError("invalid session"),
+            ConfigEntryState.SETUP_ERROR,
+            True,
+            id="auth_error",
+        ),
+        pytest.param(
+            AbrpApiError("backend overloaded"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="api_error",
+        ),
+    ],
+)
+async def test_garage_fetch_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+    expected_reauth: bool,
+) -> None:
+    """A garage-fetch auth error starts reauth; an API error retries."""
+    config_entry.add_to_hass(hass)
+    mock_abrp_client.side_effect = side_effect
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert (
+        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reauth"),
+    [
+        pytest.param(AbrpAuthError("HTTP 401"), True, id="auth_error"),
+        pytest.param(AbrpApiError("HTTP 503"), False, id="api_error"),
+    ],
+)
+@pytest.mark.usefixtures("mock_telemetry_stream")
+async def test_garage_poll_failure(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
+    expected_reauth: bool,
+) -> None:
+    """A poll-time auth error starts reauth; an API error waits for the next poll."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    mock_abrp_client.side_effect = side_effect
+    freezer.tick(GARAGE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
+    assert (
+        any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
+
+
+@pytest.mark.usefixtures("mock_telemetry_stream")
+async def test_devices_created_from_garage(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Each vehicle gets a device; without a name or display it shows the typecode."""
+    display = build_vehicle_model_display()
+    mock_abrp_client.return_value = [
+        replace(mock_abrp_vehicles[0], display=display),
+        replace(mock_abrp_vehicles[1], name=None),
+    ]
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    devices = [
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{vehicle_id}"),
+            config_entry_with_vehicles.entry_id,
+        )
+        for vehicle_id in (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2)
+    ]
+    # ``model_name`` drops the make, which has its own field.
+    assert [
+        (device.name, device.manufacturer, device.model, device.configuration_url)
+        for device in devices
+    ] == [
+        (
+            MOCK_VEHICLE_NAME,
+            display.manufacturer,
+            display.model_name,
+            f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID}",
+        ),
+        (
+            MOCK_VEHICLE_MODEL_2,
+            None,
+            MOCK_VEHICLE_MODEL_2,
+            f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID_2}",
+        ),
+    ]
+
+
+@pytest.mark.usefixtures("mock_telemetry_stream")
+async def test_display_missing_on_poll_keeps_device_metadata(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll without display metadata keeps the make and model already shown."""
+    display = build_vehicle_model_display()
+    mock_abrp_client.return_value = [replace(mock_abrp_vehicles[0], display=display)]
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    mock_abrp_client.return_value = mock_abrp_vehicles[:1]
+    freezer.tick(GARAGE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"),
+        config_entry_with_vehicles.entry_id,
+    )
+    assert (device.manufacturer, device.model) == (
+        display.manufacturer,
+        display.model_name,
+    )
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_connection_logged_once_per_transition(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Repeated identical connection states log only on the transition."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    for reason in ("first", "second"):
+        fire_connection(
+            mock_telemetry_stream,
+            ConnectionEvent(ConnectionState.DISCONNECTED, reason),
+        )
+    fire_connection(mock_telemetry_stream, ConnectionEvent(ConnectionState.CONNECTED))
+
+    assert caplog.text.count("stream disconnected") == 1
+    assert caplog.text.count("stream connected") == 1
+
+
+@pytest.mark.parametrize(
+    "garage_indexes",
+    [
+        pytest.param([0, 1], id="two_vehicles"),
+        pytest.param([0, 1, 0], id="duplicate_vehicle"),
+    ],
+)
+async def test_stream_spawned_for_every_garage_vehicle(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    mock_telemetry_stream: MagicMock,
+    garage_indexes: list[int],
+) -> None:
+    """Setup subscribes the stream to every garage vehicle, each once."""
+    mock_abrp_client.return_value = [mock_abrp_vehicles[i] for i in garage_indexes]
+
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    mock_telemetry_stream.assert_called_once_with(
+        ANY,
+        ABRP_APP_KEY,
+        ANY,
+        [],
+        on_update=ANY,
+        on_connection_change=ANY,
+        name=config_entry_with_vehicles.title,
+    )
+    mock_telemetry_stream.return_value.set_vehicle_ids.assert_called_once_with(
+        {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
+    )
+    mock_telemetry_stream.return_value.start.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_shutdown_stops_stream(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+) -> None:
+    """Home Assistant stopping stops the stream without unloading the entry."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_telemetry_stream.return_value.stop.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "initial_indexes",
+    [
+        pytest.param([0], id="vehicle_added"),
+        pytest.param([], id="added_to_empty_garage"),
+    ],
+)
+async def test_vehicle_added_to_garage_appears_without_reload(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
+    device_registry: dr.DeviceRegistry,
+    mock_telemetry_stream: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    initial_indexes: list[int],
+) -> None:
+    """A vehicle added to the ABRP garage becomes a device on the next poll.
+
+    The first vehicle also comes back renamed, which the poll carries over.
+    """
+    mock_abrp_client.return_value = [mock_abrp_vehicles[i] for i in initial_indexes]
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    mock_telemetry_stream.return_value.set_vehicle_ids.reset_mock()
+    polled = [replace(mock_abrp_vehicles[0], name="Weekend car"), mock_abrp_vehicles[1]]
+    mock_abrp_client.return_value = polled
+    freezer.tick(GARAGE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    scope = config_entry_with_vehicles.unique_id
+    assert [
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{scope}_{raw.vehicle_id}"), config_entry_with_vehicles.entry_id
+        ).name
+        for raw in polled
+    ] == ["Weekend car", MOCK_VEHICLE_NAME_2]
+    # Not reloaded: the one stream is resubscribed in place.
+    mock_telemetry_stream.assert_called_once()
+    mock_telemetry_stream.return_value.set_vehicle_ids.assert_called_once_with(
+        {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
+    )
+    assert caplog.text.count(f"No display metadata for vehicle {MOCK_VEHICLE_ID}") == 1

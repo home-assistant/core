@@ -14,6 +14,9 @@ from aiogithubapi import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.frontend import DATA_PANELS
@@ -48,10 +51,6 @@ from .const import (
     REPOSITORY_PLUGIN,
     REPOSITORY_PLUGIN_ID,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_load_unload_entry(

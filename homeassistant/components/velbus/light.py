@@ -9,14 +9,12 @@ from velbusaio.channels import (
 )
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -73,24 +71,28 @@ class VelbusLight(VelbusEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
-        if ATTR_BRIGHTNESS in kwargs:
+        if LightServiceArgument.BRIGHTNESS in kwargs:
             # Make sure a low but non-zero value is not rounded down to zero
-            if kwargs[ATTR_BRIGHTNESS] == 0:
+            if kwargs[LightServiceArgument.BRIGHTNESS] == 0:
                 brightness = 0
             else:
                 brightness = max(
                     1,
-                    int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
+                    int(
+                        brightness_to_value(
+                            BRIGHTNESS_SCALE, kwargs[LightServiceArgument.BRIGHTNESS]
+                        )
+                    ),
                 )
             attr, *args = (
                 "set_dimmer_state",
                 brightness,
-                kwargs.get(ATTR_TRANSITION, 0),
+                kwargs.get(LightServiceArgument.TRANSITION, 0),
             )
         else:
             attr, *args = (
                 "restore_dimmer_state",
-                kwargs.get(ATTR_TRANSITION, 0),
+                kwargs.get(LightServiceArgument.TRANSITION, 0),
             )
         await getattr(self._channel, attr)(*args)
 
@@ -101,7 +103,7 @@ class VelbusLight(VelbusEntity, LightEntity):
         attr, *args = (
             "set_dimmer_state",
             0,
-            kwargs.get(ATTR_TRANSITION, 0),
+            kwargs.get(LightServiceArgument.TRANSITION, 0),
         )
         await getattr(self._channel, attr)(*args)
 
@@ -120,7 +122,8 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""
         super().__init__(channel)
-        self._attr_name = f"LED {self._channel.get_name()}"
+        del self._attr_name
+        self._attr_translation_placeholders = {"channel_name": channel.get_name()}
 
     @property
     @override
@@ -132,9 +135,11 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
-        if (flash := ATTR_FLASH in kwargs) and kwargs[ATTR_FLASH] == FLASH_LONG:
+        if (flash := LightServiceArgument.FLASH in kwargs) and kwargs[
+            LightServiceArgument.FLASH
+        ] == FLASH_LONG:
             await self._channel.set_led_state("slow")
-        elif flash and kwargs[ATTR_FLASH] == FLASH_SHORT:
+        elif flash and kwargs[LightServiceArgument.FLASH] == FLASH_SHORT:
             await self._channel.set_led_state("fast")
         else:
             await self._channel.set_led_state("on")

@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 import switchbot
-from switchbot import NightLightState, SwitchbotOperationError
+from switchbot import NightLightState
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity, exception_handler
+from .entity import SwitchbotConnectionPolledEntity, SwitchbotEntity, exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -33,16 +33,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
-        async_add_entities([SwitchBotMeterProCO2TimeFormatSelect(coordinator)], True)
+        async_add_entities([SwitchBotMeterProCO2TimeFormatSelect(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
         async_add_entities([SwitchBotStandingFanNightLightSelect(coordinator)])
 
 
-class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
+class SwitchBotMeterProCO2TimeFormatSelect(
+    SwitchbotConnectionPolledEntity, SelectEntity
+):
     """Select entity to set time display format on Meter Pro CO2."""
 
-    _attr_should_poll = True
-    _attr_entity_registry_enabled_default = False
     _device: switchbot.SwitchbotMeterProCO2
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "time_format"
@@ -64,15 +64,9 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
         self.async_write_ha_state()
 
     @override
-    async def async_update(self) -> None:
+    async def _async_read_value(self) -> None:
         """Fetch the latest time format from the device."""
-        try:
-            device_time = await self._device.get_datetime()
-        except SwitchbotOperationError:
-            _LOGGER.debug(
-                "Failed to update time format for %s", self._address, exc_info=True
-            )
-            return
+        device_time = await self._device.get_datetime()
         self._attr_current_option = (
             TIME_FORMAT_12H if device_time["12h_mode"] else TIME_FORMAT_24H
         )

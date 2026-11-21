@@ -38,7 +38,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
@@ -54,6 +53,7 @@ from .const import (
     REGION_CUSTOM,
     REGION_OPTIONS,
 )
+from .coordinator import RoborockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

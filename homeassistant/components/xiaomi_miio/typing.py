@@ -1,24 +1,16 @@
 """Typings for the xiaomi_miio integration."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any
 
 from miio import Device as MiioDevice
 from miio.gateway.gateway import Gateway
-import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .coordinator import GatewayDeviceCoordinator
-
-
-class ServiceMethodDetails(NamedTuple):
-    """Details for SERVICE_TO_METHOD mapping."""
-
-    method: str
-    schema: probatio.Schema | None = None
 
 
 @dataclass

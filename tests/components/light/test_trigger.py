@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.light.trigger import TRIGGERS
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -24,6 +18,11 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light.trigger import TRIGGERS
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 # Brightness is stored as a uint8 (0-255) but the trigger threshold is in
 # percent (0-100). The generic numerical-attribute helpers feed values in

@@ -3,11 +3,10 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.discord.notify import DiscordNotificationService
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MESSAGE = "Testing Discord Messenger platform"
 CONTENT = b"TestContent"

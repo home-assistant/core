@@ -4,10 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.accuweather.const import DOMAIN
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 @pytest.fixture

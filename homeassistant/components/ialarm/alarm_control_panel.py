@@ -56,16 +56,16 @@ class IAlarmPanel(
         return self.coordinator.state
 
     @override
-    def alarm_disarm(self, code: str | None = None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.coordinator.ialarm.disarm()
+        await self.coordinator.ialarm.disarm()
 
     @override
-    def alarm_arm_home(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self.coordinator.ialarm.arm_stay()
+        await self.coordinator.ialarm.arm_stay()
 
     @override
-    def alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self.coordinator.ialarm.arm_away()
+        await self.coordinator.ialarm.arm_away()

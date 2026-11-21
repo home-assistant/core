@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import (
     CleaningMode,
     CleanRoutes,
@@ -99,8 +100,6 @@ from .mock_data import (
     USER_EMAIL,
     VALLEY_ELECTRICITY_TIMER,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -291,6 +290,7 @@ def create_b01_q10_trait() -> Mock:
 
     q10_trait.volume.set_volume = AsyncMock(side_effect=_set_volume)
     q10_trait.map = Mock()
+    q10_trait.map.current_room = None
     q10_trait.map.image_content = b"\x89PNG-q10"
     q10_trait.map.rooms = [
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),

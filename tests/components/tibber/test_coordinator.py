@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import tibber
 
 from homeassistant.components.recorder import Recorder
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_tibber_device, create_tibber_home
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _prices_for_days(*days: str) -> dict[str, float]:

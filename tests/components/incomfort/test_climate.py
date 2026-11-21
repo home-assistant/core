@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import climate
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HEATER_STATUS, MOCK_HEATER_STATUS_HEATING
-
-from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.CLIMATE])

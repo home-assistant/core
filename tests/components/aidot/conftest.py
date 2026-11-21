@@ -14,20 +14,19 @@ from aidot.const import (
 )
 from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.core import callback
 
 from .const import TEST_DEVICE1, TEST_DEVICE_LIST, TEST_EMAIL, TEST_LOGIN_RESP
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.aidot.async_setup_entry", return_value=True
+        "homeassistant.components.aidot.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -59,6 +58,8 @@ def create_device_client(device: dict[str, Any]) -> MagicMock:
     mock_info.model_id = device.get(CONF_MODEL_ID)
     mock_info.name = device.get(CONF_NAME)
     mock_info.hw_version = device.get(CONF_HARDWARE_VERSION)
+    mock_info.presets = {}
+    mock_info.preset_names = []
     mock_device_client.info = mock_info
 
     status = Mock(spec=DeviceStatusData)
@@ -67,6 +68,7 @@ def create_device_client(device: dict[str, Any]) -> MagicMock:
     status.cct = 3000
     status.on = True
     status.rgbw = (255, 255, 255, 255)
+    status.effect = ""
     mock_device_client.status = status
     mock_device_client.read_status = AsyncMock(return_value=status)
 

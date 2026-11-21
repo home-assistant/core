@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
 from homeassistant.components.todo import (
@@ -14,13 +15,11 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import items_to_shopping_list
-
-from tests.common import async_fire_time_changed
 
 
 def _mock_version_id(og: AsyncMock, version: int) -> None:
@@ -77,7 +76,7 @@ async def test_add_todo_list_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Soda"},
-        target={ATTR_ENTITY_ID: "todo.test_list"},
+        target={TargetKey.ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
 
@@ -116,7 +115,7 @@ async def test_update_todo_item_status(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "12345", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.test_list"},
+        target={TargetKey.ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -140,7 +139,7 @@ async def test_update_todo_item_status(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "12345", ATTR_STATUS: "needs_action"},
-        target={ATTR_ENTITY_ID: "todo.test_list"},
+        target={TargetKey.ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -189,7 +188,7 @@ async def test_update_todo_item_summary(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "12345", ATTR_RENAME: "Milk"},
-        target={ATTR_ENTITY_ID: "todo.test_list"},
+        target={TargetKey.ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.change_item_on_list
@@ -226,7 +225,7 @@ async def test_remove_todo_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["12345", "54321"]},
-        target={ATTR_ENTITY_ID: "todo.test_list"},
+        target={TargetKey.ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     ourgroceries.edit_items.assert_called_once_with(

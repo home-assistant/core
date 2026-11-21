@@ -14,6 +14,7 @@ from cookidoo_api import (
 )
 from cookidoo_api.types import CookidooCalendarDay, CookidooCalendarDayRecipe
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.const import (
@@ -23,8 +24,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
@@ -49,7 +48,7 @@ STALE_AUTH_DATA = CookidooAuthData(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.cookidoo.async_setup_entry", return_value=True
+        "homeassistant.components.cookidoo.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

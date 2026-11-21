@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from bleak.exc import BleakError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -14,6 +15,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
@@ -24,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import UPDATE_DEBOUNCE_TIME, init_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_cover_available(
@@ -39,6 +39,7 @@ async def test_cover_available(
     assert state
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
     mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False

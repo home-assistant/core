@@ -1,6 +1,15 @@
 """Test Xiaomi BLE events."""
 
 import pytest
+from pytest_homeassistant.common import (
+    Any,
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components import automation
 from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
@@ -12,14 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import make_advertisement
-
-from tests.common import (
-    Any,
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 
 @callback

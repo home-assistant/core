@@ -4,18 +4,17 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
-from . import (
-    ATTR_HUMIDITY,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
-    SERVICE_TURN_ON,
-    HumidifierEntityFeature,
+from . import HumidifierEntityFeature
+from .const import (
+    DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
-from .const import DOMAIN, HumidifierEntityCapabilityAttribute
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
@@ -64,16 +63,19 @@ class HumidityHandler(intent.IntentHandler):
 
         if state.state == STATE_OFF:
             await hass.services.async_call(
-                DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context
+                DOMAIN,
+                HumidifierService.TURN_ON,
+                service_data,
+                context=intent_obj.context,
             )
             speech = f"Turned {state.name} on and set humidity to {humidity}%"
         else:
             speech = f"The {state.name} is set to {humidity}%"
 
-        service_data[ATTR_HUMIDITY] = humidity
+        service_data[HumidifierServiceArgument.HUMIDITY] = humidity
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HUMIDITY,
+            HumidifierService.SET_HUMIDITY,
             service_data,
             context=intent_obj.context,
             blocking=True,
@@ -129,7 +131,7 @@ class SetModeHandler(intent.IntentHandler):
         if state.state == STATE_OFF:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_TURN_ON,
+                HumidifierService.TURN_ON,
                 service_data,
                 context=intent_obj.context,
                 blocking=True,
@@ -138,10 +140,10 @@ class SetModeHandler(intent.IntentHandler):
         else:
             speech = f"The mode for {state.name} is set to {mode}"
 
-        service_data[ATTR_MODE] = mode
+        service_data[HumidifierServiceArgument.MODE] = mode
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_MODE,
+            HumidifierService.SET_MODE,
             service_data,
             context=intent_obj.context,
             blocking=True,

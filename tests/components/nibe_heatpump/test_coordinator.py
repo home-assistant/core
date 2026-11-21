@@ -1,16 +1,20 @@
 """Test the Nibe Heat Pump config flow."""
 
 import asyncio
+from collections.abc import AsyncGenerator
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nibe.coil import Coil, CoilData
 from nibe.heatpump import Model
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.core import CoreState, HomeAssistant
 
 from . import MockConnection, async_add_model
 
@@ -111,6 +115,7 @@ async def test_pushed_update_during_refresh(
     mock_connection: MockConnection,
     seeded_address: int,
     read_address: int,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a completed polling batch preserves newer pushed values."""
     entity_id = "number.heating_offset_climate_system_1_40031"
@@ -132,7 +137,9 @@ async def test_pushed_update_during_refresh(
         return data
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.0"
     assert coordinator.data[40031].value == 22
@@ -141,7 +148,9 @@ async def test_pushed_update_during_refresh(
     # Without more broadcasts, the following refresh must read both coils again.
     coils[40031] = 30
     coils[40035] = 40
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "30.0"
     assert coordinator.data[40035].value == 40
@@ -152,6 +161,7 @@ async def test_pushed_update_during_partial_refresh(
     hass: HomeAssistant,
     coils: dict[int, float | None],
     mock_connection: MockConnection,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a partial polling batch preserves broadcasts for failed coils."""
     entity_id = "number.heating_offset_climate_system_1_40031"
@@ -176,7 +186,9 @@ async def test_pushed_update_during_partial_refresh(
         return data
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.0"
     assert coordinator.data[40031].value == 22
@@ -187,7 +199,9 @@ async def test_pushed_update_during_partial_refresh(
     # Without more broadcasts, the following refresh must read both coils again.
     coils[40031] = 30
     coils[40035] = 40
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "30.0"
     assert coordinator.data[40035].value == 40
@@ -209,6 +223,7 @@ async def test_pushed_update_during_failed_refresh(
     broadcast_addresses: tuple[int, ...],
     expected_success: bool,
     expected_state: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test availability when all polling reads fail during a broadcast."""
     entity_id = "number.heating_offset_climate_system_1_40031"
@@ -231,7 +246,9 @@ async def test_pushed_update_during_failed_refresh(
                 mock_connection.mock_coil_update(address, 22)
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
-        await coordinator.async_refresh()
+        freezer.tick(timedelta(seconds=60))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is expected_success
     assert hass.states.get(entity_id).state == expected_state
@@ -239,7 +256,9 @@ async def test_pushed_update_during_failed_refresh(
     # The following refresh must recover with fresh reads, without more broadcasts.
     coils[40031] = 30
     coils[40035] = 40
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success
     assert hass.states.get(entity_id).state == "30.0"
@@ -279,3 +298,73 @@ async def test_shutdown(
 
     assert done.is_set()
     mock_connection.stop.assert_called_once()
+
+
+@pytest.fixture
+async def pending_initial_refresh(
+    hass: HomeAssistant,
+    coils: dict[int, Any],
+    mock_connection: MockConnection,
+) -> AsyncGenerator[tuple[MockConfigEntry, asyncio.Event]]:
+    """Start HA while the initial register read remains pending."""
+    coils[40031] = 10
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
+        started.set()
+        await release.wait()
+        return CoilData(coil, 10)
+
+    with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        try:
+            # Bound the wait so a startup-blocking refresh fails instead of hanging.
+            async with asyncio.timeout(5):
+                entry = await async_add_model(hass, Model.S320)
+                await started.wait()
+                await hass.async_start()
+                await hass.async_block_till_done()
+
+            assert hass.state is CoreState.running
+            assert not entry.runtime_data.task.done()
+            assert (
+                hass.states.get("number.heating_offset_climate_system_1_40031").state
+                == STATE_UNAVAILABLE
+            )
+            yield entry, release
+        finally:
+            release.set()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_initial_refresh_completes_after_startup(
+    hass: HomeAssistant,
+    pending_initial_refresh: tuple[MockConfigEntry, asyncio.Event],
+) -> None:
+    """Initial readings update entities after HA has finished starting."""
+    entry, release = pending_initial_refresh
+    task = entry.runtime_data.task
+    release.set()
+    await task
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.task is None
+    assert (
+        hass.states.get("number.heating_offset_climate_system_1_40031").state == "10.0"
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unload_cancels_initial_refresh(
+    hass: HomeAssistant,
+    pending_initial_refresh: tuple[MockConfigEntry, asyncio.Event],
+    mock_connection: MockConnection,
+) -> None:
+    """Unloading cancels the pending initial read and closes its connection."""
+    entry, _ = pending_initial_refresh
+    task = entry.runtime_data.task
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert task.cancelled()
+    mock_connection.stop.assert_awaited_once()

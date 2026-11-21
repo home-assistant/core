@@ -36,6 +36,10 @@
     ]
   },
 
+  "constraints": {
+    "ghActionsLock": "v0.5.0"
+  },
+
   "customManagers": [
     {
       "customType": "regex",
@@ -88,6 +92,20 @@
       ],
       "datasourceTemplate": "pypi",
       "versioningTemplate": "pep440"
+    },
+    {
+      "customType": "regex",
+      "description": "Keep gh-actions-lock in CI and Renovate's lockfile generator on the same version",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/actions-lock\\.yml$/",
+        "/^\\.github/renovate\\.json$/"
+      ],
+      "matchStrings": [
+        "GH_ACTIONS_LOCK_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)",
+        "\"ghActionsLock\": \"(?<currentValue>v\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "github/gh-actions-lock",
+      "datasourceTemplate": "github-releases"
     }
   ],
 
@@ -121,7 +139,7 @@
         "aiohttp_cors",
         "aiohttp-asyncmdnsresolver",
         "yarl",
-        "httpx",
+        "httpx2",
         "requests",
         "urllib3",
         "certifi",
@@ -241,6 +259,12 @@
       "labels": ["dependency", "github_actions"]
     },
     {
+      "description": "No cooldown for our own actions. A # master pin has no release timestamp, so a cooldown would hold its digest updates indefinitely",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["home-assistant/**"],
+      "minimumReleaseAge": null
+    },
+    {
       "description": "Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.",
       "matchPackageNames": [
         "github/gh-aw-actions",
@@ -248,6 +272,13 @@
         "/^ghcr\\.io\\/github\\/gh-aw/"
       ],
       "enabled": false
+    },
+    {
+      "description": "gh-actions-lock used to verify and regenerate actions.lock (allowlisted). The CI workflow and Renovate's constraint are bumped in the same PR.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["github/gh-actions-lock"],
+      "enabled": true,
+      "labels": ["dependency", "github_actions"]
     },
     {
       "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",

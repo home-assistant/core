@@ -79,7 +79,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     """Define an Econet thermostat."""
 
     _attr_should_poll = True
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, thermostat: Thermostat) -> None:
         """Initialize."""
@@ -103,7 +103,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int:
+    def native_current_temperature(self) -> int:
         """Return the current temperature."""
         return self._econet.set_point
 
@@ -123,7 +123,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self._econet.cool_set_point
@@ -133,7 +133,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> int | None:
+    def native_target_temperature_low(self) -> int | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.heat_set_point
@@ -141,7 +141,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> int | None:
+    def native_target_temperature_high(self) -> int | None:
         """Return the higher bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.cool_set_point

@@ -6,20 +6,19 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pycfdns
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cloudflare.const import (
     CONF_RECORDS,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
-    SERVICE_UPDATE_RECORDS,
 )
+from homeassistant.components.cloudflare.services import CloudflareService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, init_integration
 from .conftest import LOCATION_PATCH_TARGET
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -97,7 +96,7 @@ async def test_integration_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_RECORDS,
+        CloudflareService.UPDATE_RECORDS,
         {},
         blocking=True,
     )
@@ -123,7 +122,7 @@ async def test_integration_services_with_issue(
     with patch(LOCATION_PATCH_TARGET, return_value=None):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_RECORDS,
+            CloudflareService.UPDATE_RECORDS,
             {},
             blocking=True,
         )
@@ -146,7 +145,7 @@ async def test_integration_services_with_nonexisting_record(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_RECORDS,
+        CloudflareService.UPDATE_RECORDS,
         {},
         blocking=True,
     )

@@ -1,8 +1,10 @@
 """Tests for the HueBLE Bluetooth integration."""
 
 from habluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 TEST_DEVICE_NAME = "Hue Light"
 TEST_DEVICE_MAC = "AA:BB:CC:DD:EE:FF"

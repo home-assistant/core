@@ -9,6 +9,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
@@ -152,9 +153,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = {
-        event_trigger.CONF_PLATFORM: CONF_EVENT,
-        event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
-        event_trigger.CONF_EVENT_DATA: {
+        EventTriggerArgument.PLATFORM: CONF_EVENT,
+        EventTriggerArgument.EVENT_TYPE: EVENT_SHELLY_CLICK,
+        EventTriggerArgument.EVENT_DATA: {
             ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
             ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
             ATTR_CLICK_TYPE: config[CONF_TYPE],

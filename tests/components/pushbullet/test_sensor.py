@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.components.pushbullet.sensor import (
@@ -13,8 +14,6 @@ from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 def _create_mock_provider() -> Mock:

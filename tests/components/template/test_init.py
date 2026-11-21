@@ -4,17 +4,20 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.const import TemplateService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 
 
 @pytest.mark.parametrize(("count", "domain"), [(2, "template")])
@@ -251,7 +254,7 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            TemplateService.RELOAD,
             {},
             blocking=True,
         )

@@ -4,6 +4,7 @@ import math
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform, async_mock_service
 
 from homeassistant.components.media_player import (
     DOMAIN,
@@ -43,8 +44,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform, async_mock_service
 
 
 async def test_pause_media_player_intent(hass: HomeAssistant) -> None:

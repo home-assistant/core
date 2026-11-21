@@ -6,6 +6,7 @@ from typing import Literal
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
@@ -24,8 +25,6 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PowerConverter
-
-from .common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -70,6 +69,16 @@ def _unoptimized_statistics(
         ),
         orm_rows=False,
     )
+
+
+def _assert_statistics_row_matches(
+    actual: statistics.StatisticsRow, expected: statistics.StatisticsRow
+) -> None:
+    """Compare numeric statistics with tolerance and missing values exactly."""
+    assert actual == {
+        key: pytest.approx(value, rel=1e-12, abs=1e-12) if value is not None else None
+        for key, value in expected.items()
+    }
 
 
 def test_period_statement_metadata_ids_do_not_use_driver_binds(
@@ -761,22 +770,17 @@ async def test_reducer_flushes_final_dst_fallback_period(
     start = datetime(2025, 10, 26, tzinfo=timezone)
     end = datetime(2025, 10, 27, tzinfo=timezone)
 
-    stats: dict[str, list[statistics.StatisticsRow]] = {
-        "test:statistic_1": [
-            {
-                "start": start.timestamp(),
-                "min": 10.0,
-            }
-        ]
-    }
-
-    result = statistics._reduce_statistics_per_day(
-        stats,
+    same_period, period_start_end = statistics.reduce_day_ts_factory()
+    result = statistics._reduce_statistic(
+        "test:statistic_1",
+        [{"start": start.timestamp(), "min": 10.0}],
+        same_period,
+        period_start_end,
         {"min"},
         {},
     )
 
-    assert result["test:statistic_1"] == [
+    assert result == [
         {
             "start": start.timestamp(),
             "end": end.timestamp(),
@@ -874,11 +878,7 @@ async def test_arithmetic_mean_returns_average_per_period(
             rows,
             strict=True,
         ):
-            assert actual_row == pytest.approx(
-                expected_row,
-                rel=1e-12,
-                abs=1e-12,
-            )
+            _assert_statistics_row_matches(actual_row, expected_row)
 
 
 @pytest.mark.parametrize("period", ["day", "week", "month", "year"])
@@ -967,11 +967,7 @@ async def test_aggregate_statistics_return_reduced_values_per_period(
     for statistic_id, rows in expected.items():
         assert len(actual[statistic_id]) == len(rows)
         for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
-            assert actual_row == pytest.approx(
-                expected_row,
-                rel=1e-12,
-                abs=1e-12,
-            )
+            _assert_statistics_row_matches(actual_row, expected_row)
 
 
 @pytest.mark.parametrize("period", ["day", "week", "month", "year"])
@@ -1069,11 +1065,7 @@ async def test_mixed_statistics_return_period_values(
     for statistic_id, rows in expected.items():
         assert len(actual[statistic_id]) == len(rows)
         for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
-            assert actual_row == pytest.approx(
-                expected_row,
-                rel=1e-12,
-                abs=1e-12,
-            )
+            _assert_statistics_row_matches(actual_row, expected_row)
 
 
 @pytest.mark.parametrize(
@@ -1735,11 +1727,7 @@ async def test_circular_mean_uses_fast_path(
     for statistic_id, rows in expected.items():
         assert len(actual[statistic_id]) == len(rows)
         for actual_row, expected_row in zip(actual[statistic_id], rows, strict=True):
-            assert actual_row == pytest.approx(
-                expected_row,
-                rel=1e-12,
-                abs=1e-12,
-            )
+            _assert_statistics_row_matches(actual_row, expected_row)
 
     assert actual["test:statistic_1"][0]["mean"] == pytest.approx(5.0)
 
