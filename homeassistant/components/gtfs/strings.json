@@ -1,0 +1,76 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_feed": "The URL did not return a valid GTFS feed. A GTFS feed is a zip file containing agency.txt, routes.txt, stop_times.txt, stops.txt, trips.txt, and calendar.txt or calendar_dates.txt. Check the logs for details.",
+      "invalid_url": "Enter an http or https URL.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "progress": {
+      "load_feed": "Downloading and importing the GTFS feed. Large feeds can take several minutes."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::gtfs::config::step::user::data_description::url%]"
+        },
+        "description": "Download the feed again to pick up a new timetable, optionally from a new URL. Your routes are kept."
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "Direct link to the agency's static GTFS zip file."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "route": {
+      "abort": {
+        "already_configured": "This route is already configured.",
+        "entry_not_loaded": "The feed must finish loading before routes can be added."
+      },
+      "entry_type": "Route",
+      "error": {
+        "same_stop": "Origin and destination must be different stops."
+      },
+      "initiate_flow": {
+        "user": "Add route"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "destination": "Destination stop",
+            "origin": "Origin stop"
+          },
+          "data_description": {
+            "destination": "The stop to travel to.",
+            "origin": "The stop to depart from."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not download the GTFS feed. Check the feed URL and your network connection."
+    },
+    "invalid_feed": {
+      "message": "The downloaded file is not a valid GTFS feed: {error}"
+    }
+  },
+  "issues": {
+    "feed_expired": {
+      "description": "The GTFS feed {title} has no service after {last_date}, so its route calendars stay empty. If the agency has published a new timetable, reconfigure the feed to download it again, entering a new URL if it has moved.",
+      "title": "GTFS feed {title} has expired"
+    }
+  }
+}
