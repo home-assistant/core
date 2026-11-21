@@ -8,6 +8,7 @@ import logging
 import os
 from socket import gaierror
 from typing import Any, override
+from urllib.parse import urlsplit
 
 import mpd
 from mpd.asyncio import MPDClient
@@ -314,8 +315,16 @@ class MpdDevice(MediaPlayerEntity):
         commands = []
         with suppress(mpd.ConnectionError):
             commands = list(await self._client.commands())
-        can_albumart = "albumart" in commands
+
         can_readpicture = "readpicture" in commands
+
+        # MPD cannot authenticate requests for Home Assistant media URLs
+        # when looking for external album artwork.
+        file_path = urlsplit(file).path
+        is_home_assistant_media = file_path.startswith(
+            ("/api/tts_proxy/", "/media/local/")
+        )
+        can_albumart = "albumart" in commands and not is_home_assistant_media
 
         response = None
 
