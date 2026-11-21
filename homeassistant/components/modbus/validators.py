@@ -28,6 +28,7 @@ from .const import (
     CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
+    CONF_OPERATION_MODE_VALUES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -321,6 +322,20 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_SWING_MODE_VALUES][key]
+    return config
+
+
+def duplicate_operation_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus water heater operation mode values for duplicates."""
+    operation_modes: set[int] = set()
+    for key, values in config[CONF_OPERATION_MODE_VALUES].items():
+        for value in values if isinstance(values, list) else [values]:
+            if value in operation_modes:
+                raise probatio.Invalid(
+                    f"Modbus operation mode {key} has a duplicate value {value},"
+                    " values must be unique"
+                )
+            operation_modes.add(value)
     return config
 
 
