@@ -14,12 +14,14 @@ from .const import (
     SuggestionFilter,
 )
 from .functional_blocks import FunctionalBlockSuggestionProvider
+from .functions import FunctionSuggestionProvider
 
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
 SUGGESTION_PROVIDERS: list[SuggestionProvider] = [
     FunctionalBlockSuggestionProvider(),
+    FunctionSuggestionProvider(),
 ]
 
 
