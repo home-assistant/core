@@ -410,7 +410,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         if self._net_art_cache is not None and self._net_art_cache[0] == image_hash:
             return self._net_art_cache[1]
         body, content_type = await self._async_fetch_net_art(url)
-        if body is None:
+        if not body:
             return None, None
         self._net_art_cache = (image_hash, (body, content_type))
         return body, content_type
@@ -451,7 +451,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                         return None, None
                     size = int(value)
                 elif name == b"content-type":
-                    content_type = value.decode("ascii", "replace")
+                    # Keep only the type, without parameters such as a charset
+                    mime_type = value.partition(b";")[0].strip()
+                    content_type = mime_type.decode("ascii", "replace")
             if size is None or len(rest) < size:
                 return None, None
             body = rest

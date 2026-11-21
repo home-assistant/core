@@ -720,8 +720,9 @@ async def test_net_cover_art(
         b"Content-size: 4\nContent-type: image/png\n\n",
         b"Content-size: 4\r\nContent-type: image/png\r\n\r\n",
         b"content-size: 4\r\nCONTENT-TYPE: image/png\r\n\r\n",
+        b"Content-size: 4\nContent-type: image/png; charset=UTF-8\n\n",
     ],
-    ids=["lf", "crlf", "mixed_case"],
+    ids=["lf", "crlf", "mixed_case", "parameters"],
 )
 async def test_net_cover_art_preamble(
     hass: HomeAssistant,
@@ -760,8 +761,10 @@ async def test_net_cover_art_unavailable(
     [
         b"Content-size: 4\nContent-type: image/jpeg\n\n\xff\xd8",
         b"Content-size: many\nContent-type: image/jpeg\n\n\xff\xd8\xff\xd9",
+        b"Content-size: 0\nContent-type: image/jpeg\n\n",
+        b"",
     ],
-    ids=["short", "invalid_size"],
+    ids=["short", "invalid_size", "empty_image", "empty_response"],
 )
 async def test_net_cover_art_truncated(
     hass: HomeAssistant,
@@ -770,7 +773,7 @@ async def test_net_cover_art_truncated(
     aioclient_mock: AiohttpClientMocker,
     content: bytes,
 ) -> None:
-    """Test that an image shorter than its stated size is rejected and not kept."""
+    """Test that an empty image, or one shorter than its stated size, is not kept."""
     await _select_net_source(hass, freezer, read_queue)
     await receive_messages(read_queue, *NET_TRACK_MESSAGES, _net_jacket_art(ART_URL))
 
