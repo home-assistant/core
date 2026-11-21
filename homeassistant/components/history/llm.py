@@ -10,8 +10,7 @@ import probatio
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.recorder import get_instance, statistics
 from homeassistant.components.recorder.models import StatisticMeanType
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -21,7 +20,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 
@@ -45,7 +44,11 @@ _AUTO_PERIOD_MAX_SPAN: list[tuple[timedelta, _Period]] = [
     (timedelta(days=62), "day"),
     (timedelta(days=366), "week"),
 ]
-_NO_STATISTICS = "No statistics are recorded for this entity."
+_NO_STATISTICS = "No statistics are recorded for this ID."
+_SEARCH_LIMIT = 20
+_UNIT_CLASSES = sorted(
+    unit_class for unit_class in statistics.UNIT_CLASS_TO_UNIT_CONVERTER if unit_class
+)
 
 
 def _auto_period(span: timedelta, short_term_available: bool) -> _Period:
@@ -81,15 +84,15 @@ def _get_statistics(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime,
-    entity_ids: list[str],
+    statistic_ids: list[str],
     period: _Period,
     fall_back_to_hour: bool,
 ) -> JsonObjectType:
     """Fetch and format the long-term statistics in the recorder executor."""
-    metadata = statistics.get_metadata(hass, statistic_ids=set(entity_ids))
-    entity_types: dict[str, list[_StatisticType]] = {}
-    for entity_id, (_, meta) in metadata.items():
-        types = entity_types[entity_id] = []
+    metadata = statistics.get_metadata(hass, statistic_ids=set(statistic_ids))
+    statistic_types: dict[str, list[_StatisticType]] = {}
+    for statistic_id, (_, meta) in metadata.items():
+        types = statistic_types[statistic_id] = []
         if meta["mean_type"] is StatisticMeanType.ARITHMETIC:
             types.extend(["mean", "min", "max"])
         elif meta["mean_type"] is StatisticMeanType.CIRCULAR:
@@ -98,7 +101,7 @@ def _get_statistics(
             types.append("change")
 
     def query(
-        query_period: _Period, statistic_ids: set[str]
+        query_period: _Period, ids: set[str]
     ) -> dict[str, list[statistics.StatisticsRow]]:
         return statistics.statistics_during_period(
             hass,
@@ -106,43 +109,47 @@ def _get_statistics(
             # The recorder moves the end time to the next period boundary, which
             # includes the period that starts at end_time.
             end_time - timedelta(microseconds=1),
-            statistic_ids,
+            ids,
             query_period,
             None,
-            {stat_type for types in entity_types.values() for stat_type in types},
+            {stat_type for types in statistic_types.values() for stat_type in types},
         )
 
     rows: dict[str, list[statistics.StatisticsRow]] = {}
     hourly_ids: set[str] = set()
-    if entity_types:
-        rows = query(period, set(entity_types))
+    if statistic_types:
+        rows = query(period, set(statistic_types))
         # Some statistics, such as imported ones, only have hourly rows.
         if fall_back_to_hour and (
             missing := {
-                entity_id for entity_id in entity_types if not rows.get(entity_id)
+                statistic_id
+                for statistic_id in statistic_types
+                if not rows.get(statistic_id)
             }
         ):
             hourly_rows = query("hour", missing)
             hourly_ids = {
-                entity_id
-                for entity_id, entity_rows in hourly_rows.items()
-                if entity_rows
+                statistic_id
+                for statistic_id, statistic_rows in hourly_rows.items()
+                if statistic_rows
             }
-            rows.update({entity_id: hourly_rows[entity_id] for entity_id in hourly_ids})
+            rows.update(
+                {statistic_id: hourly_rows[statistic_id] for statistic_id in hourly_ids}
+            )
     result: dict[str, Any] = {}
-    for entity_id in entity_ids:
-        if (columns := entity_types.get(entity_id)) is None:
-            result[entity_id] = {"error": _NO_STATISTICS}
+    for statistic_id in statistic_ids:
+        if (columns := statistic_types.get(statistic_id)) is None:
+            result[statistic_id] = {"error": _NO_STATISTICS}
             continue
-        meta = metadata[entity_id][1]
+        meta = metadata[statistic_id][1]
         # Statistics are converted to the unit of the current state when possible.
         unit = statistics.get_display_unit(
-            hass, entity_id, meta["unit_class"], meta["unit_of_measurement"]
+            hass, statistic_id, meta["unit_class"], meta["unit_of_measurement"]
         )
         entry: dict[str, Any] = {}
         if unit:
             entry["unit"] = unit
-        if entity_id in hourly_ids:
+        if statistic_id in hourly_ids:
             entry["period"] = "hour"
         entry["csv"] = _to_csv(
             ["start", *columns],
@@ -151,11 +158,20 @@ def _get_statistics(
                     _format_time(row["start"]),
                     *(_format_number(row.get(column)) for column in columns),
                 ]
-                for row in rows.get(entity_id, [])
+                for row in rows.get(statistic_id, [])
             ],
         )
-        result[entity_id] = entry
-    return {"period": period, "entities": result}
+        result[statistic_id] = entry
+    return {"period": period, "statistics": result}
+
+
+def _statistic_id(value: Any) -> str:
+    """Validate an entity ID or the ID of a statistic without an entity."""
+    if isinstance(value, str) and (
+        valid_entity_id(value) or statistics.valid_statistic_id(value)
+    ):
+        return value
+    raise probatio.Invalid(f"Invalid statistic ID: {value}")
 
 
 def _parse_time(value: str) -> datetime | None:
@@ -168,12 +184,13 @@ def _parse_time(value: str) -> datetime | None:
 
 
 class GetHistoryTool(Tool):
-    """LLM Tool allowing querying the long-term statistics of entities."""
+    """LLM Tool allowing querying the long-term statistics."""
 
     name = "history__get_history"
     title = "Get history"
     description = (
-        "Retrieve the long-term statistics of one or more entities as CSV, with "
+        "Retrieve the long-term statistics of one or more entities or other "
+        "statistics as CSV, with "
         "times as ISO 8601 datetimes in local time. Use this to answer questions "
         "about past values or how a value evolved over time. Each row aggregates "
         "one period, such as the mean, min and max of a temperature or the change "
@@ -181,8 +198,8 @@ class GetHistoryTool(Tool):
         "numeric statistics (sensors with a state class) and are based on completed "
         "recording intervals, but daily, weekly, and monthly aggregates may be "
         "partial. Values are converted to the unit of the entity when possible. "
-        "'unit' gives the unit of the values. A 'period' on an entity replaces "
-        "the period of the result for that entity."
+        "'unit' gives the unit of the values. A 'period' on a statistic replaces "
+        "the period of the result for that statistic."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -191,9 +208,13 @@ class GetHistoryTool(Tool):
     parameters = probatio.Schema(
         {
             probatio.Required(
-                "entity_ids",
-                description="Entity IDs to get the history for (e.g. 'sensor.outside_temperature').",
-            ): probatio.All([cv.entity_id], probatio.Length(min=1)),
+                "statistic_ids",
+                description=(
+                    "Entity IDs, like 'sensor.outside_temperature', or the IDs of "
+                    "statistics without an entity, like 'opower:electricity'. "
+                    "history__search_statistics finds them."
+                ),
+            ): probatio.All([probatio.All(str, _statistic_id)], probatio.Length(min=1)),
             probatio.Optional(
                 "start_time",
                 description=(
@@ -269,11 +290,105 @@ class GetHistoryTool(Tool):
             hass,
             start_time,
             end_time,
-            args["entity_ids"],
+            args["statistic_ids"],
             period,
             auto_period and period == "5minute",
         )
         return ToolResult(data={"result": result})
+
+
+class SearchStatisticsTool(Tool):
+    """LLM Tool to search the long-term statistics."""
+
+    name = "history__search_statistics"
+    title = "Search statistics"
+    description = (
+        "Search the long-term statistics, also those without an entity, like the "
+        "meters of a utility. A statistic with has_sum is a meter that counts up, "
+        "like the energy used. A statistic with has_mean is a measurement, like a "
+        "power or a temperature. Use the statistic_id with history__get_history "
+        "or in the energy preferences. Returns at most "
+        f"{_SEARCH_LIMIT} statistics per call."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "query",
+                description=(
+                    "Words to find in the statistic ID or name, case-insensitive."
+                ),
+            ): probatio.All(str, probatio.NonEmpty()),
+            probatio.Optional(
+                "unit_class",
+                description=(
+                    "The kind of unit. The energy dashboard uses energy and volume "
+                    "for meters, and power and volume_flow_rate for rates."
+                ),
+            ): probatio.In(_UNIT_CLASSES),
+            probatio.Optional(
+                "statistic_type",
+                description="sum for meters, mean for measurements.",
+            ): probatio.In(["sum", "mean"]),
+            probatio.Optional(
+                "offset",
+                description=(
+                    "Number of results to skip. Use the next_offset of the "
+                    "previous result."
+                ),
+                default=0,
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Search the long-term statistics."""
+        args = self.parameters(tool_input.tool_args)
+        words = args.get("query", "").casefold().split()
+        unit_class: str | None = args.get("unit_class")
+        offset: int = args["offset"]
+
+        matches: list[JsonObjectType] = []
+        for item in await statistics.async_list_statistic_ids(
+            hass, statistic_type=args.get("statistic_type")
+        ):
+            if unit_class is not None and item["unit_class"] != unit_class:
+                continue
+            statistic_id: str = item["statistic_id"]
+            # Statistics of entities have no name of their own
+            name: str | None = item["name"] or (
+                state.name if (state := hass.states.get(statistic_id)) else None
+            )
+            if not all(
+                word in f"{statistic_id} {name or ''}".casefold() for word in words
+            ):
+                continue
+            matches.append(
+                {
+                    "statistic_id": statistic_id,
+                    "name": name,
+                    "source": item["source"],
+                    "unit": item["display_unit_of_measurement"],
+                    "unit_class": item["unit_class"],
+                    "has_sum": item["has_sum"],
+                    "has_mean": item["mean_type"] is not StatisticMeanType.NONE,
+                }
+            )
+        matches.sort(key=lambda match: str(match["statistic_id"]))
+
+        result: JsonObjectType = {
+            "statistics": list[JsonValueType](matches[offset : offset + _SEARCH_LIMIT]),
+            "total": len(matches),
+        }
+        if (next_offset := offset + _SEARCH_LIMIT) < len(matches):
+            result["next_offset"] = next_offset
+        return ToolResult(data=result)
 
 
 @callback
@@ -284,4 +399,4 @@ def async_get_tools(
     if api_id != LLM_API_HOME_ASSISTANT:
         return None
 
-    return LLMTools(tools=[GetHistoryTool()])
+    return LLMTools(tools=[GetHistoryTool(), SearchStatisticsTool()])
