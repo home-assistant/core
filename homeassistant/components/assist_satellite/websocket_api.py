@@ -193,7 +193,7 @@ async def websocket_test_connection(
 
     # Announce and wait for event
     connection_test_data = hass.data[CONNECTION_TEST_DATA]
-    connection_id = uuid_util.random_uuid_hex()
+    connection_id = uuid_util.secure_uuid_hex()
     connection_test_event = asyncio.Event()
     connection_test_data[connection_id] = connection_test_event
 

@@ -20,7 +20,7 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     UpdateService,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -80,7 +80,7 @@ async def test_install_firmware(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
+        {TargetKey.ENTITY_ID: "update.peblar_ev_charger_firmware"},
         blocking=True,
     )
 
@@ -99,7 +99,7 @@ async def test_install_customization(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_customization"},
+        {TargetKey.ENTITY_ID: "update.peblar_ev_charger_customization"},
         blocking=True,
     )
 
@@ -123,7 +123,7 @@ async def test_install_firmware_refuses_while_customization_is_pending(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            {TargetKey.ENTITY_ID: "update.peblar_ev_charger_firmware"},
             blocking=True,
         )
 
@@ -164,7 +164,7 @@ async def test_install_firmware_asks_the_charger_for_fresh_versions(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            {TargetKey.ENTITY_ID: "update.peblar_ev_charger_firmware"},
             blocking=True,
         )
 
@@ -193,7 +193,7 @@ async def test_install_firmware_after_the_customization_landed(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
+        {TargetKey.ENTITY_ID: "update.peblar_ev_charger_firmware"},
         blocking=True,
     )
 
@@ -205,7 +205,7 @@ async def _async_install(hass: HomeAssistant, package: str = "firmware") -> None
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: f"update.peblar_ev_charger_{package}"},
+        {TargetKey.ENTITY_ID: f"update.peblar_ev_charger_{package}"},
         blocking=True,
     )
 
@@ -496,7 +496,7 @@ async def test_a_second_install_is_refused_while_one_runs(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -529,7 +529,7 @@ async def test_the_button_returns_for_a_charger_that_never_came_back(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

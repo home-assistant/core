@@ -44,8 +44,8 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -292,7 +292,7 @@ async def test_invoke_pin_calls_device(
     await hass.services.async_call(
         DOMAIN,
         OpenhomeService.INVOKE_PIN,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, OpenhomeServiceArgument.PIN: 3},
+        {TargetKey.ENTITY_ID: ENTITY_ID, OpenhomeServiceArgument.PIN: 3},
         blocking=True,
     )
 
@@ -325,7 +325,7 @@ async def test_invoke_pin(
             DOMAIN,
             OpenhomeService.INVOKE_PIN,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 OpenhomeServiceArgument.PIN: 1,
             },
             blocking=True,

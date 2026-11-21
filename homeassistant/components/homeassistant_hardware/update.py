@@ -153,11 +153,10 @@ class BaseFirmwareUpdateEntity(
             self._config_entry.async_on_state_change(self._on_config_entry_change)
         )
 
-        if (extra_data := await self.async_get_last_extra_data()) and (
-            hardware_extra_data := FirmwareUpdateExtraStoredData.from_dict(
+        if extra_data := await self.async_get_last_extra_data():
+            hardware_extra_data = FirmwareUpdateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-        ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
 
         self._update_attributes()

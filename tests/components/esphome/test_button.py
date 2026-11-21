@@ -5,7 +5,7 @@ from unittest.mock import call
 from aioesphomeapi import APIClient, ButtonInfo
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -35,7 +35,7 @@ async def test_button_generic_entity(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.test_my_button"},
+        {TargetKey.ENTITY_ID: "button.test_my_button"},
         blocking=True,
     )
     mock_client.button_command.assert_has_calls([call(1, device_id=0)])
