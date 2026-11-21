@@ -65,3 +65,11 @@ def quality_scale_rule_is_done_or_exempt(module: nodes.Module, rule: str) -> boo
     if integration_dir is None:
         return False
     return _get_rule_status(integration_dir, rule) in ("done", "exempt")
+
+
+def quality_scale_rule_is_exempt(module: nodes.Module, rule: str) -> bool:
+    """Return True if a quality scale rule is marked ``exempt``."""
+    integration_dir = get_integration_dir(module)
+    if integration_dir is None:
+        return False
+    return _get_rule_status(integration_dir, rule) == "exempt"

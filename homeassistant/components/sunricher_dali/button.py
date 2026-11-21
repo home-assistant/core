@@ -1,4 +1,5 @@
 """Support for Sunricher DALI device identify button."""
+# pylint: disable=home-assistant-action-exceptions-exempt
 
 import logging
 from typing import override

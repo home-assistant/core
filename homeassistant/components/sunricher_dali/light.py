@@ -1,4 +1,5 @@
 """Platform for light integration."""
+# pylint: disable=home-assistant-action-exceptions-exempt
 
 import logging
 from typing import Any, override
