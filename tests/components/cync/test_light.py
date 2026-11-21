@@ -17,6 +17,13 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Limit platform setup to light only."""
+    with patch("homeassistant.components.cync._PLATFORMS", [Platform.LIGHT]):
+        yield
+
+
 async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -62,7 +69,7 @@ async def test_turn_on(
     entity_id_parameter = {"entity_id": "light.office_lamp_bulb_1"}
     action_parameters = entity_id_parameter | input_parameters
 
-    test_device = mock_config_entry.runtime_data.data["1000-2"]
+    test_device = mock_config_entry.runtime_data.data["10000-2"]
     test_device.set_combo = AsyncMock(name="set_combo")
     test_device.turn_on = AsyncMock(name="turn_on")
 
@@ -92,7 +99,7 @@ async def test_turn_on_without_parameters(
     """A bare turn-on must not overwrite retained settings with cached values."""
     await setup_integration(hass, mock_config_entry)
 
-    device = mock_config_entry.runtime_data.data["1000-2"]
+    device = mock_config_entry.runtime_data.data["10000-2"]
     device.update_state(False, brightness=brightness, color_temp=device_mode)
     with (
         patch.object(device, "turn_on") as turn_on,
@@ -187,18 +194,26 @@ async def test_recognized_color_mode(
 
 
 @pytest.mark.parametrize(
-    ("unique_id", "mesh_unique_id"),
+    ("unique_id", "mesh_unique_id", "is_online", "expected_state"),
     [
-        pytest.param("1000-1101", "1000-1", id="room-light"),
-        pytest.param("1000-1111", "1000-2", id="group-light"),
-        pytest.param("1000-1112", "1000-3", id="initially-offline-light"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("is_online", "expected_state"),
-    [
-        pytest.param(True, STATE_ON, id="online"),
-        pytest.param(False, STATE_UNAVAILABLE, id="offline"),
+        pytest.param("10000-1101", "10000-1", True, STATE_ON, id="online-room-light"),
+        pytest.param("10000-1111", "10000-2", True, STATE_ON, id="online-group-light"),
+        pytest.param(
+            "10000-1112", "10000-3", True, STATE_ON, id="online-initially-offline-light"
+        ),
+        pytest.param(
+            "10000-1101", "10000-1", False, STATE_ON, id="offline-room-light-in-grace"
+        ),
+        pytest.param(
+            "10000-1111", "10000-2", False, STATE_ON, id="offline-group-light-in-grace"
+        ),
+        pytest.param(
+            "10000-1112",
+            "10000-3",
+            False,
+            STATE_UNAVAILABLE,
+            id="offline-initially-offline-light",
+        ),
     ],
 )
 async def test_mesh_state_callback(
@@ -234,7 +249,5 @@ async def test_mesh_state_callback(
     assert state.state == expected_state
     assert mock_config_entry.runtime_data.data[mesh_unique_id] is updated_light
     assert set(mock_config_entry.runtime_data.data) == {
-        "1000-1",
-        "1000-2",
-        mesh_unique_id,
-    }
+        device.unique_id for device in cync_client.get_devices.return_value
+    } | {mesh_unique_id}
