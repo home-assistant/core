@@ -1,0 +1,35 @@
+"""The Gaposa integration."""
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+
+from .coordinator import DataUpdateCoordinatorGaposa
+
+PLATFORMS: list[Platform] = [Platform.COVER]
+
+type GaposaConfigEntry = ConfigEntry[DataUpdateCoordinatorGaposa]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bool:
+    """Set up Gaposa from a config entry."""
+    coordinator = DataUpdateCoordinatorGaposa(hass, entry)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except BaseException:
+        # BaseException so a cancellation during login also releases
+        # the Gaposa client held by the coordinator; async_shutdown is
+        # idempotent.
+        await coordinator.async_shutdown()
+        raise
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.async_shutdown()
+    return unload_ok
