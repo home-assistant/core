@@ -5,7 +5,13 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    MODEL_1PM,
+    MODEL_CAMERA,
+    MODEL_MOTION,
+    MODEL_PLUS_2PM,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1435,7 +1441,7 @@ async def test_rpc_wall_display_auto_brightness_switch(
         "ui",
         {"brightness": {"auto": True, "level": 40, "min_level": 3}},
     )
-    await init_integration(hass, 2)
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     assert (state := hass.states.get(entity_id))
     assert state == snapshot(name=f"{entity_id}-state")
@@ -1493,24 +1499,34 @@ async def test_rpc_wall_display_auto_brightness_switch(
 
 
 @pytest.mark.parametrize(
-    ("firmware", "ui_config"),
+    ("model", "firmware", "ui_config"),
     [
         pytest.param(
-            "2.6.1", {"brightness": {"auto": True, "level": 40}}, id="old_firmware"
+            MODEL_WALL_DISPLAY,
+            "2.6.1",
+            {"brightness": {"auto": True, "level": 40}},
+            id="old_firmware",
         ),
-        pytest.param("2.8.5", {}, id="no_brightness_config"),
+        pytest.param(MODEL_WALL_DISPLAY, "2.8.5", {}, id="no_brightness_config"),
+        pytest.param(
+            MODEL_PLUS_2PM,
+            "2.8.5",
+            {"brightness": {"auto": True, "level": 40}},
+            id="not_wall_display",
+        ),
     ],
 )
 async def test_rpc_wall_display_auto_brightness_switch_not_supported(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    model: str,
     firmware: str,
     ui_config: dict[str, Any],
 ) -> None:
-    """Test RPC Wall Display auto brightness switch needs firmware and config."""
+    """Test RPC Wall Display auto brightness switch needs model, firmware and config."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", firmware)
     monkeypatch.setitem(mock_rpc_device.config, "ui", ui_config)
-    await init_integration(hass, 2)
+    await init_integration(hass, 2, model=model)
 
     assert hass.states.get(f"{SWITCH_DOMAIN}.test_name_auto_display_brightness") is None

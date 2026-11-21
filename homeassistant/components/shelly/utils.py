@@ -83,7 +83,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from .coordinator import ShellyConfigEntry
+    from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 
 
 @callback
@@ -589,11 +589,17 @@ def brightness_to_percentage(brightness: int) -> int:
     return int(100 * (brightness + 1) / 255)
 
 
-def is_rpc_wall_display_brightness_supported(device: RpcDevice) -> bool:
+def is_rpc_wall_display_brightness_supported(
+    coordinator: ShellyRpcCoordinator,
+) -> bool:
     """Return true if the device has a supported Wall Display brightness config."""
-    return "brightness" in device.config.get("ui", {}) and AwesomeVersion(
-        device.shelly["ver"]
-    ) >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    device = coordinator.device
+    return (
+        coordinator.model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX)
+        and "brightness" in device.config.get("ui", {})
+        and AwesomeVersion(device.shelly["ver"])
+        >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    )
 
 
 def percentage_to_brightness(percentage: int) -> int:

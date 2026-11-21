@@ -528,7 +528,7 @@ def _async_setup_rpc_entry(
     )
 
     # The Wall Display does not report the ui component in the status
-    if is_rpc_wall_display_brightness_supported(coordinator.device):
+    if is_rpc_wall_display_brightness_supported(coordinator):
         brightness = coordinator.device.config["ui"]["brightness"]
         async_add_entities(
             description.entity_class(coordinator, description)
