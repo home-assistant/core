@@ -1,12 +1,18 @@
 """Test Times of the Day Binary Sensor."""
 
 from datetime import datetime, timedelta, tzinfo
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
+from homeassistant.components.tod.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -65,6 +71,87 @@ async def test_setup_no_sensors(hass: HomeAssistant) -> None:
         assert await async_setup_component(
             hass, "binary_sensor", {"binary_sensor": {"platform": "tod"}}
         )
+
+
+@pytest.mark.freeze_time("2022-03-16 12:00:00+00:00")
+@pytest.mark.parametrize(
+    ("after", "before"),
+    [
+        pytest.param({"time": "10:00"}, {"time": "18:00"}, id="time"),
+        pytest.param({"event": "sunrise"}, {"event": "sunset"}, id="daylight"),
+        pytest.param({"event": "sunset"}, {"event": "sunrise"}, id="overnight"),
+        pytest.param(
+            {"event": "sunrise", "offset": {"minutes": -120}},
+            {"time": "12:00"},
+            id="sun-to-time",
+        ),
+        pytest.param(
+            {"time": "10:00"},
+            {"event": "sunset", "offset": {"minutes": 30}},
+            id="time-to-sun",
+        ),
+        pytest.param(
+            {"event": "sunrise", "offset": {"minutes": -120}},
+            {"event": "sunset", "offset": {"minutes": 30}},
+            id="negative-after-positive-before",
+        ),
+        pytest.param(
+            {"event": "sunrise", "offset": {"minutes": 30}},
+            {"event": "sunset", "offset": {"minutes": -60}},
+            id="positive-after-negative-before",
+        ),
+    ],
+)
+async def test_config_entry_matches_yaml(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    after: dict[str, Any],
+    before: dict[str, Any],
+) -> None:
+    """Test UI boundaries and offsets behave like their YAML equivalents."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": [
+                {
+                    "platform": DOMAIN,
+                    "name": "YAML tod",
+                    "after": after.get("time", after.get("event")),
+                    "before": before.get("time", before.get("event")),
+                    "after_offset": after.get("offset", {"seconds": 0}),
+                    "before_offset": before.get("offset", {"seconds": 0}),
+                }
+            ]
+        },
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UI tod",
+        data={},
+        options={
+            "name": "UI tod",
+            "after": after,
+            "before": before,
+        },
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for _ in range(4):
+        yaml_state = hass.states.get("binary_sensor.yaml_tod")
+        ui_state = hass.states.get("binary_sensor.ui_tod")
+        assert ui_state.state == yaml_state.state
+        for attribute in TodEntityStateAttribute:
+            assert ui_state.attributes[attribute] == yaml_state.attributes[attribute]
+        next_update = dt_util.parse_datetime(
+            yaml_state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        )
+        freezer.move_to(next_update)
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
 
 
 @pytest.mark.freeze_time("2019-01-10 18:43:00-08:00")

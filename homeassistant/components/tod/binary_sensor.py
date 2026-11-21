@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, time, timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Literal, TypeGuard, override
+from typing import Any, Literal, TypeIs, cast, override
 
 import probatio
 
@@ -16,7 +16,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
+    CONF_EVENT,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_UNIQUE_ID,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -31,12 +33,7 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_AFTER_OFFSET,
-    CONF_AFTER_TIME,
-    CONF_BEFORE_OFFSET,
-    CONF_BEFORE_TIME,
-)
+from .const import CONF_AFTER_OFFSET, CONF_BEFORE_OFFSET, CONF_TIME
 
 type SunEventType = Literal["sunrise", "sunset"]
 
@@ -77,10 +74,20 @@ async def async_setup_entry(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
-    after = cv.time(config_entry.options[CONF_AFTER_TIME])
-    after_offset = timedelta(0)
-    before = cv.time(config_entry.options[CONF_BEFORE_TIME])
-    before_offset = timedelta(0)
+    after_config = config_entry.options[CONF_AFTER]
+    after = (
+        cv.time(after_config[CONF_TIME])
+        if CONF_TIME in after_config
+        else cast(SunEventType, after_config[CONF_EVENT])
+    )
+    after_offset = cv.time_period(after_config.get(CONF_OFFSET, timedelta(0)))
+    before_config = config_entry.options[CONF_BEFORE]
+    before = (
+        cv.time(before_config[CONF_TIME])
+        if CONF_TIME in before_config
+        else cast(SunEventType, before_config[CONF_EVENT])
+    )
+    before_offset = cv.time_period(before_config.get(CONF_OFFSET, timedelta(0)))
     name = config_entry.title
     unique_id = config_entry.entry_id
 
@@ -111,7 +118,7 @@ async def async_setup_platform(
     async_add_entities([sensor])
 
 
-def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
+def _is_sun_event(sun_event: time | SunEventType) -> TypeIs[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
@@ -127,9 +134,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time,
+        after: time | SunEventType,
         after_offset: timedelta,
-        before: time,
+        before: time | SunEventType,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
