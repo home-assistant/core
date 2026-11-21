@@ -315,17 +315,19 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             )
 
 
-RPC_UPDATES: Final = {
-    "fwupdate": RpcUpdateDescription(
-        key="sys",
+RPC_UPDATES: Final = (
+    RpcUpdateDescription(
+        key="fwupdate",
+        components=("sys",),
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
     ),
-    "fwupdate_beta": RpcUpdateDescription(
-        key="sys",
+    RpcUpdateDescription(
+        key="fwupdate_beta",
+        components=("sys",),
         sub_key="available_updates",
         translation_key="beta_firmware",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
@@ -334,8 +336,9 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "loraupdate": RpcUpdateDescription(
-        key="lora",
+    RpcUpdateDescription(
+        key="loraupdate",
+        components=("lora",),
         translation_key="lora_firmware",
         # Right after firmware update, lora status can be None
         latest_version=lambda status: status or {},
@@ -344,14 +347,15 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcLoraAddOnUpdateEntity,
     ),
-    "blutrv_fwupdate": RpcBluTrvUpdateDescription(
-        key="blutrv",
+    RpcBluTrvUpdateDescription(
+        key="blutrv_fwupdate",
+        components=("blutrv",),
         sub_key="fw_ver",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcBluTrvUpdateEntity,
     ),
-}
+)
 
 
 async def async_setup_entry(

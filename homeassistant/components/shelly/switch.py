@@ -243,9 +243,10 @@ class RpcLedStripSwitch(RpcSwitch):
         )
 
 
-RPC_SWITCHES = {
-    "switch": RpcSwitchDescription(
+RPC_SWITCHES = (
+    RpcSwitchDescription(
         key="switch",
+        components=("switch",),
         sub_key="output",
         removal_condition=is_rpc_exclude_from_relay,
         is_on=lambda status: bool(status["output"]),
@@ -254,8 +255,9 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, value),
         entity_class=RpcRelaySwitch,
     ),
-    "cb": RpcSwitchDescription(
+    RpcSwitchDescription(
         key="cb",
+        components=("cb",),
         sub_key="output",
         is_on=lambda status: bool(status["output"]),
         method_on="cb_set",
@@ -263,8 +265,9 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, value),
         entity_class=RpcCircuitBreakerSwitch,
     ),
-    "boolean_generic": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_generic",
+        components=("boolean",),
         sub_key="value",
         removal_condition=lambda config, _, key: (
             not is_view_for_platform(config, key, SWITCH_DOMAIN)
@@ -275,8 +278,9 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, value),
         role=ROLE_GENERIC,
     ),
-    "boolean_anti_freeze": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_anti_freeze",
+        components=("boolean",),
         sub_key="value",
         translation_key="frost_protection",
         entity_registry_enabled_default=False,
@@ -287,8 +291,9 @@ RPC_SWITCHES = {
         role="anti_freeze",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_child_lock": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_child_lock",
+        components=("boolean",),
         sub_key="value",
         translation_key="child_lock",
         is_on=lambda status: bool(status["value"]),
@@ -298,8 +303,9 @@ RPC_SWITCHES = {
         role="child_lock",
         models={MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_enable": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_enable",
+        components=("boolean",),
         sub_key="value",
         translation_key="thermostat_enabled",
         entity_registry_enabled_default=False,
@@ -310,8 +316,9 @@ RPC_SWITCHES = {
         role="enable",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_start_charging": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_start_charging",
+        components=("boolean",),
         sub_key="value",
         translation_key="charging",
         is_on=lambda status: bool(status["value"]),
@@ -321,8 +328,9 @@ RPC_SWITCHES = {
         role="start_charging",
         models={MODEL_TOP_EV_CHARGER_EVE01},
     ),
-    "boolean_state": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_state",
+        components=("boolean",),
         sub_key="value",
         translation_key="valve_opened",
         entity_registry_enabled_default=False,
@@ -333,8 +341,9 @@ RPC_SWITCHES = {
         role="state",
         models={MODEL_NEO_WATER_VALVE},
     ),
-    "boolean_zone0": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone0",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "1"},
@@ -346,8 +355,9 @@ RPC_SWITCHES = {
         role="zone0",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone1": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone1",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "2"},
@@ -359,8 +369,9 @@ RPC_SWITCHES = {
         role="zone1",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone2": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone2",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "3"},
@@ -372,8 +383,9 @@ RPC_SWITCHES = {
         role="zone2",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone3": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone3",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "4"},
@@ -385,8 +397,9 @@ RPC_SWITCHES = {
         role="zone3",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone4": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone4",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "5"},
@@ -398,8 +411,9 @@ RPC_SWITCHES = {
         role="zone4",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone5": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone5",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "6"},
@@ -411,8 +425,9 @@ RPC_SWITCHES = {
         role="zone5",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "script": RpcSwitchDescription(
+    RpcSwitchDescription(
         key="script",
+        components=("script",),
         sub_key="running",
         is_on=lambda status: bool(status["running"]),
         method_on="script_start",
@@ -421,8 +436,9 @@ RPC_SWITCHES = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    "cury_left": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_left",
+        components=("cury",),
         sub_key="slots",
         translation_key="left_slot",
         is_on=lambda status: bool(status["slots"]["left"]["on"]),
@@ -434,8 +450,9 @@ RPC_SWITCHES = {
             and left.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_left_boost": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_left_boost",
+        components=("cury",),
         sub_key="slots",
         translation_key="left_slot_boost",
         is_on=lambda status: status["slots"]["left"]["boost"] is not None,
@@ -447,8 +464,9 @@ RPC_SWITCHES = {
             and left.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_right": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_right",
+        components=("cury",),
         sub_key="slots",
         translation_key="right_slot",
         is_on=lambda status: bool(status["slots"]["right"]["on"]),
@@ -460,8 +478,9 @@ RPC_SWITCHES = {
             and right.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_right_boost": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_right_boost",
+        components=("cury",),
         sub_key="slots",
         translation_key="right_slot_boost",
         is_on=lambda status: status["slots"]["right"]["boost"] is not None,
@@ -473,8 +492,9 @@ RPC_SWITCHES = {
             and right.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_away_mode": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_away_mode",
+        components=("cury",),
         sub_key="away_mode",
         translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
@@ -482,8 +502,9 @@ RPC_SWITCHES = {
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
     ),
-    "fan_boost": RpcSwitchDescription(
-        key="fan",
+    RpcSwitchDescription(
+        key="fan_boost",
+        components=("fan",),
         sub_key="boost",
         translation_key="boost",
         is_on=lambda status: status["boost"]["active"],
@@ -492,8 +513,9 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, _: (id,),
         entity_class=RpcFanBoostSwitch,
     ),
-    "ledstrip_reverse": RpcSwitchDescription(
-        key="ledstrip",
+    RpcSwitchDescription(
+        key="ledstrip_reverse",
+        components=("ledstrip",),
         sub_key="reverse",
         translation_key="effect_reverse",
         is_on=lambda status: bool(status["reverse"]),
@@ -503,8 +525,8 @@ RPC_SWITCHES = {
         supported=lambda _: True,
         entity_class=RpcLedStripSwitch,
     ),
-    "in_locked": RpcSwitchDescription(
-        key="switch",
+    RpcSwitchDescription(
+        key="in_locked",
         components=("switch", "cover"),
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
@@ -516,8 +538,9 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, {"in_locked": value}),
         entity_class=RpcConfigSwitch,
     ),
-    "camera_privacy": RpcSwitchDescription(
-        key="camera",
+    RpcSwitchDescription(
+        key="camera_privacy",
+        components=("camera",),
         sub_key="privacy",
         translation_key="camera_privacy",
         is_on=lambda status: status["privacy"],
@@ -526,7 +549,7 @@ RPC_SWITCHES = {
         method_params_fn=lambda id, value: (id, value),
         entity_category=EntityCategory.CONFIG,
     ),
-}
+)
 
 
 async def async_setup_entry(
