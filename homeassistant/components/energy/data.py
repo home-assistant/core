@@ -293,6 +293,9 @@ class DeviceConsumption(TypedDict):
     # that includes this device's consumption in its total
     included_in_stat: NotRequired[str]
 
+    # An optional RGB color for the device
+    color: NotRequired[list[int]]
+
 
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
@@ -828,6 +831,10 @@ DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
         probatio.Optional("stat_rate"): str,
         probatio.Optional("name"): str,
         probatio.Optional("included_in_stat"): str,
+        probatio.Optional("color"): probatio.All(
+            list,
+            probatio.ExactSequence((cv.byte,) * 3),
+        ),
     }
 )
 
