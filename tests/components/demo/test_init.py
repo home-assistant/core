@@ -1,8 +1,6 @@
 """The tests for the Demo component."""
 
-from collections.abc import Generator
 import json
-from unittest.mock import patch
 
 import pytest
 
@@ -16,13 +14,6 @@ from homeassistant.setup import async_setup_component
 def mock_history(hass: HomeAssistant) -> None:
     """Mock history component loaded."""
     hass.config.components.add("history")
-
-
-@pytest.fixture(autouse=True)
-def mock_device_tracker_update_config() -> Generator[None]:
-    """Prevent device tracker from creating known devices file."""
-    with patch("homeassistant.components.device_tracker.legacy.update_config"):
-        yield
 
 
 async def test_setting_up_demo(mock_history: None, hass: HomeAssistant) -> None:
