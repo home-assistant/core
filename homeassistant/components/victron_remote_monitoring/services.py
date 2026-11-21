@@ -104,7 +104,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             start = dt_util.as_utc(start)
         if end is not None:
             end = dt_util.as_utc(end)
-        if start is not None and end is not None and end < start:
+        if start is not None and end is not None and end <= start:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="end_before_start",

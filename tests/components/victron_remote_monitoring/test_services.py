@@ -414,11 +414,19 @@ async def test_get_forecast_naive_bounds_use_default_timezone(
     )
 
 
-async def test_get_forecast_rejects_end_before_start(
+@pytest.mark.parametrize(
+    "end",
+    [
+        pytest.param(datetime.fromisoformat("2025-04-23T10:00:00+00:00"), id="before"),
+        pytest.param(datetime.fromisoformat("2025-04-25T11:00:00+00:00"), id="equal"),
+    ],
+)
+async def test_get_forecast_rejects_end_not_after_start(
     hass: HomeAssistant,
     utc_entry: MockConfigEntry,
+    end: datetime,
 ) -> None:
-    """Reject a range whose end is earlier than its start."""
+    """Reject a range whose end is not later than its start."""
     with pytest.raises(ServiceValidationError) as err:
         await _async_get_forecast(
             hass,
@@ -427,33 +435,12 @@ async def test_get_forecast_rejects_end_before_start(
                 VictronRemoteMonitoringServiceArgument.START: datetime.fromisoformat(
                     "2025-04-25T11:00:00+00:00"
                 ),
-                VictronRemoteMonitoringServiceArgument.END: datetime.fromisoformat(
-                    "2025-04-23T10:00:00+00:00"
-                ),
+                VictronRemoteMonitoringServiceArgument.END: end,
             },
         )
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "end_before_start"
-
-
-async def test_get_forecast_allows_empty_half_open_range(
-    hass: HomeAssistant,
-    utc_entry: MockConfigEntry,
-) -> None:
-    """An end equal to the start is an empty range."""
-    bound = datetime.fromisoformat("2025-04-24T10:00:00+00:00")
-
-    response = await _async_get_forecast(
-        hass,
-        utc_entry.entry_id,
-        **{
-            VictronRemoteMonitoringServiceArgument.START: bound,
-            VictronRemoteMonitoringServiceArgument.END: bound,
-        },
-    )
-
-    assert response == {"forecast": []}
 
 
 async def test_consumption_series_can_be_shorter(
