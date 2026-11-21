@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
-    await _async_check_ipv6_enabled(hass)
+    await _async_check_ipv6_enabled(hass, entry)
 
     ble_proxy: MatterBleProxy | None = None
 
@@ -306,7 +306,9 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     return str(parsed.with_path(new_path))
 
 
-async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
+async def _async_check_ipv6_enabled(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Raise a repair issue when IPv6 is disabled in Supervisor network settings.
 
     Matter relies on IPv6 to communicate with devices. On Supervised/HAOS
@@ -314,6 +316,8 @@ async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
     which silently breaks Matter, so we surface a repair pointing the user at
     the network settings.
     """
+    # Remove the issue created before it was keyed per config entry.
+    async_delete_issue(hass, DOMAIN, "ipv6_disabled")
     if not is_hassio(hass):
         return
 
@@ -334,18 +338,20 @@ async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
     if not connected_interfaces:
         return
 
+    issue_id = f"ipv6_disabled_{entry.entry_id}"
     if any(
         interface.ipv6 is not None
         and interface.ipv6.method is not InterfaceMethod.DISABLED
         for interface in connected_interfaces
     ):
-        async_delete_issue(hass, DOMAIN, "ipv6_disabled")
+        async_delete_issue(hass, DOMAIN, issue_id)
         return
 
     async_create_issue(
         hass,
         DOMAIN,
-        "ipv6_disabled",
+        issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="ipv6_disabled",
