@@ -151,11 +151,20 @@
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     },
+    "no_online_devices": {
+      "message": "{count} devices found, none online"
+    },
     "select_option_not_found": {
       "message": "Selected option not found: {option}"
     },
     "unknown_exception": {
       "message": "Unknown error occurred: {error}"
+    }
+  },
+  "issues": {
+    "no_online_devices": {
+      "description": "Your Amazon account has {count} Alexa devices, but none of them is online. Home Assistant keeps checking and adds them once they come online.",
+      "title": "No online Alexa devices found"
     }
   },
   "selector": {

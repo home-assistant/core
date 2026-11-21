@@ -28,7 +28,7 @@ from aioamazondevices.structures import (
 )
 from aiohttp import ClientSession
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -36,10 +36,18 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import slugify
 
 from .const import CONF_LOGIN_DATA, DOMAIN, LOGGER
@@ -212,12 +220,14 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="cannot_connect_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (CannotRetrieveData, NoOnlineDevicesError) as err:
+        except CannotRetrieveData as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except NoOnlineDevicesError as err:
+            return self._handle_no_online_devices(err)
         except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -231,6 +241,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
+            ir.async_delete_issue(self.hass, DOMAIN, self.no_online_devices_issue_id)
             current_devices = set(data.keys())
             device_list_changed = current_devices != self.previous_devices
             if stale_devices := self.previous_devices - current_devices:
@@ -259,6 +270,36 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             self.previous_todo_lists = current_todo_lists
 
             return data
+
+    @property
+    def no_online_devices_issue_id(self) -> str:
+        """Return the repair issue ID for an account without online devices."""
+        return f"no_online_devices_{self.config_entry.entry_id}"
+
+    def _handle_no_online_devices(
+        self, err: NoOnlineDevicesError
+    ) -> dict[str, AmazonDevice]:
+        """Load without devices on setup, mark unavailable at runtime."""
+        placeholders = {"count": str(err.devices_count)}
+        if self.last_update_success:
+            LOGGER.warning("%s devices found, none online", err.devices_count)
+        if self.config_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="no_online_devices",
+                translation_placeholders=placeholders,
+            ) from err
+        # Previous devices are kept, so registered devices are not removed as stale
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self.no_online_devices_issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="no_online_devices",
+            translation_placeholders=placeholders,
+        )
+        return {}
 
     async def _async_sync_on_device_list_change(self) -> None:
         """Sync per-device state on first refresh and after the device list changes."""

@@ -6,6 +6,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    NoOnlineDevicesError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,12 +15,15 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
+
+ENTITY_ID_CONNECTIVITY = "binary_sensor.echo_test_connectivity"
+ENTITY_ID_DEFAULT_DEVICE = "select.fake_email_gmail_com_default_device"
 
 
 async def test_coordinator_stale_device(
@@ -318,3 +322,99 @@ async def test_device_state_sync_on_device_list_change(
     # Device list unchanged: no additional resync
     assert mock_amazon_devices_client.sync_dnd_state.call_count == 2
     assert mock_amazon_devices_client.sync_media_state.call_count == 2
+
+
+async def test_setup_without_online_devices(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup loads without entities and raises a repair issue."""
+    issue_id = f"no_online_devices_{mock_config_entry.entry_id}"
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)},
+    )
+    mock_amazon_devices_client.get_devices_data.side_effect = NoOnlineDevicesError(1)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "1 devices found, none online" in caplog.text
+    assert "Traceback" not in caplog.text
+    assert not hass.states.get(ENTITY_ID_CONNECTIVITY)
+    assert (state := hass.states.get(ENTITY_ID_DEFAULT_DEVICE))
+    assert state.state == STATE_UNKNOWN
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.translation_placeholders == {"count": "1"}
+    # Offline devices are not removed as stale
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
+    )
+
+    mock_amazon_devices_client.get_devices_data.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID_CONNECTIVITY))
+    assert state.state == STATE_ON
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_no_online_devices_at_runtime(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test devices going offline at runtime keep polling without a repair issue."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_amazon_devices_client.get_devices_data.side_effect = NoOnlineDevicesError(1)
+    for _ in range(2):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(ENTITY_ID_CONNECTIVITY))
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("1 devices found, none online") == 2
+    assert "Traceback" not in caplog.text
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"no_online_devices_{mock_config_entry.entry_id}"
+    )
+
+    mock_amazon_devices_client.get_devices_data.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID_CONNECTIVITY))
+    assert state.state == STATE_ON
+
+
+async def test_remove_entry_deletes_issue(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the entry deletes its repair issue."""
+    mock_amazon_devices_client.get_devices_data.side_effect = NoOnlineDevicesError(1)
+    await setup_integration(hass, mock_config_entry)
+    issue_id = f"no_online_devices_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
