@@ -69,7 +69,7 @@ rules:
     status: exempt
     comment: This integration has a fixed single service device per config entry.
   entity-category: done
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done

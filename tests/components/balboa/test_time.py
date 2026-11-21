@@ -12,7 +12,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,7 +62,7 @@ async def test_time(
         TimeService.SET_VALUE,
         service_data={TimeServiceArgument.TIME: new_time},
         blocking=True,
-        target={ATTR_ENTITY_ID: time_entity},
+        target={TargetKey.ENTITY_ID: time_entity},
     )
 
     # check we made a call with the right parameters

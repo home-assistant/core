@@ -39,7 +39,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_STOP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -242,7 +242,7 @@ async def test_get_maps(
     response = await hass.services.async_call(
         DOMAIN,
         RoborockService.GET_MAPS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -267,7 +267,7 @@ async def test_get_maps_not_supported(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_MAPS,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
         )
@@ -314,7 +314,7 @@ async def test_goto_not_supported(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.SET_VACUUM_GOTO_POSITION,
-            {ATTR_ENTITY_ID: entity_id, "x": 25500, "y": 25500},
+            {TargetKey.ENTITY_ID: entity_id, "x": 25500, "y": 25500},
             blocking=True,
         )
 
@@ -329,7 +329,7 @@ async def test_zoned_cleaning(
         DOMAIN,
         RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "x1": 28582,
             "y1": 21363,
             "x2": 27425,
@@ -364,7 +364,7 @@ async def test_zoned_cleaning_not_supported(
             DOMAIN,
             RoborockService.SET_VACUUM_ZONED_CLEANING,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 "x1": 28582,
                 "y1": 21363,
                 "x2": 27425,
@@ -387,7 +387,7 @@ async def test_get_current_position(
     response = await hass.services.async_call(
         DOMAIN,
         RoborockService.GET_VACUUM_CURRENT_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -415,7 +415,7 @@ async def test_get_current_position_no_map_data(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_VACUUM_CURRENT_POSITION,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -435,7 +435,7 @@ async def test_get_current_position_no_robot_position(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_VACUUM_CURRENT_POSITION,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -460,7 +460,7 @@ async def test_get_current_position_not_supported(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_VACUUM_CURRENT_POSITION,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
         )
@@ -927,7 +927,7 @@ async def test_q7_get_maps(
     response = await hass.services.async_call(
         DOMAIN,
         RoborockService.GET_MAPS,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -962,7 +962,7 @@ async def test_q7_get_maps_empty(
     response = await hass.services.async_call(
         DOMAIN,
         RoborockService.GET_MAPS,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -987,7 +987,7 @@ async def test_q7_get_maps_exception(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_MAPS,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -1342,7 +1342,7 @@ async def test_q10_get_current_position(
     response = await hass.services.async_call(
         DOMAIN,
         RoborockService.GET_VACUUM_CURRENT_POSITION,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -1362,7 +1362,7 @@ async def test_q10_get_current_position_not_available(
         await hass.services.async_call(
             DOMAIN,
             RoborockService.GET_VACUUM_CURRENT_POSITION,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -1378,7 +1378,7 @@ async def test_q10_zoned_cleaning(
         DOMAIN,
         RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
-            ATTR_ENTITY_ID: Q10_ENTITY_ID,
+            TargetKey.ENTITY_ID: Q10_ENTITY_ID,
             "x1": 28580,
             "y1": 21365,
             "x2": 27425,
@@ -1406,7 +1406,7 @@ async def test_q10_goto(
     await hass.services.async_call(
         DOMAIN,
         RoborockService.SET_VACUUM_GOTO_POSITION,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
         blocking=True,
     )
 
