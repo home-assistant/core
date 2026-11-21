@@ -33,6 +33,11 @@
       "allow_call": {
         "name": "Allow calls"
       }
+    },
+    "timer_list": {
+      "timers": {
+        "name": "Timers"
+      }
     }
   },
   "exceptions": {
