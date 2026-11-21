@@ -1,5 +1,9 @@
 {
   "domain": "geosphere_austria",
   "name": "GeoSphere Austria",
-  "integrations": ["zamg", "geosphere_austria_warnings"]
+  "integrations": [
+    "zamg",
+    "geosphere_austria_warnings",
+    "geosphere_austria_forecast"
+  ]
 }
