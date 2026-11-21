@@ -8,7 +8,9 @@ from daikin_onecta import ClimateControl, ClimateControlClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
+    FanDirectionMode,
     FanOperationMode,
+    FanSpeedMode,
     Setpoint,
 )
 
@@ -64,6 +66,9 @@ DAIKIN_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
 }
+
+FixedFanMode = FanDirectionMode | FanSpeedMode
+FixedFanControlState = tuple[Characteristic[str], FixedFanMode | None]
 
 HA_PRESET_TO_DAIKIN = {
     PRESET_AWAY: "holidayMode",
@@ -190,6 +195,48 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 client.climate_control(self._device_id, self._embedded_id)
             )
         )
+
+    async def _async_set_fixed_fan_control(
+        self,
+        *,
+        get_state: Callable[[], FixedFanControlState | None],
+        target: int,
+        set_mode: Callable[[ClimateControlClient], Awaitable[None]],
+        set_position: Callable[[ClimateControlClient, int], Awaitable[None]],
+        unavailable_key: str,
+    ) -> bool:
+        """Select fixed fan mode and its requested speed or louvre position."""
+        if (state := get_state()) is None:
+            self._raise_service_validation_error(unavailable_key)
+        current_mode, fixed = state
+        if fixed is None or not fixed.settable:
+            self._raise_service_validation_error(unavailable_key)
+
+        if current_mode.value != FANMODE_FIXED:
+            if not current_mode.settable:
+                self._raise_service_validation_error(unavailable_key)
+            if not await self._async_execute_climate_command(set_mode):
+                return False
+            if (state := get_state()) is None:
+                return True
+            current_mode, fixed = state
+            current_mode.value = FANMODE_FIXED
+            # Keep the confirmed mode if the subsequent position write fails.
+            self._publish_write_update()
+            if (state := get_state()) is None:
+                return True
+            current_mode, fixed = state
+            if fixed is None:
+                return True
+
+        if fixed.value != target:
+            if not await self._async_execute_climate_command(
+                lambda climate: set_position(climate, target)
+            ):
+                return False
+            if (state := get_state()) is not None and (fixed := state[1]) is not None:
+                fixed.value = target
+        return True
 
     @property
     @override
@@ -542,46 +589,28 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
         if fan_mode.isnumeric():
-            fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
-            if (
-                fixed is None
-                or not fixed.settable
-                or (
-                    fan_speed.current_mode.value != FANMODE_FIXED
-                    and not fan_speed.current_mode.settable
-                )
-            ):
-                self._raise_service_validation_error("fan_control_unavailable")
-            if fan_speed.current_mode.value != FANMODE_FIXED:
-                if not await self._async_execute_climate_command(
-                    lambda climate: climate.set_fan_mode(operation_mode, FANMODE_FIXED)
-                ):
-                    self._raise_command_failed("set_fan_mode_failed")
-                fan_operation = self._fan_operation(operation_mode)
-                if fan_operation is None or fan_operation.fan_speed is None:
-                    return
-                fan_speed = fan_operation.fan_speed
-                fan_speed.current_mode.value = FANMODE_FIXED
-                # The fan is already in fixed mode even if the following speed
-                # write fails, so publish this confirmed intermediate state.
-                self._publish_write_update()
-            fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
-            new_fixed_mode = int(fan_mode)
-            if fixed is not None and fixed.value != new_fixed_mode:
-                if not await self._async_execute_climate_command(
-                    lambda climate: climate.set_fixed_fan_speed(
-                        operation_mode, new_fixed_mode
-                    )
-                ):
-                    self._raise_command_failed("set_fan_mode_failed")
-                fan_operation = self._fan_operation(operation_mode)
-                if fan_operation is None or fan_operation.fan_speed is None:
-                    return
+
+            def get_fixed_speed_state() -> FixedFanControlState | None:
+                if (
+                    fan_operation := self._fan_operation(operation_mode)
+                ) is None or fan_operation.fan_speed is None:
+                    return None
                 fan_speed = fan_operation.fan_speed
                 fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
-                if fixed is None:
-                    return
-                fixed.value = new_fixed_mode
+                return fan_speed.current_mode, fixed
+
+            if not await self._async_set_fixed_fan_control(
+                get_state=get_fixed_speed_state,
+                target=int(fan_mode),
+                set_mode=lambda climate: climate.set_fan_mode(
+                    operation_mode, FANMODE_FIXED
+                ),
+                set_position=lambda climate, speed: climate.set_fixed_fan_speed(
+                    operation_mode, speed
+                ),
+                unavailable_key="fan_control_unavailable",
+            ):
+                self._raise_command_failed("set_fan_mode_failed")
         elif fan_speed.current_mode.value != fan_mode:
             if not fan_speed.current_mode.settable:
                 self._raise_service_validation_error("fan_control_unavailable")
@@ -691,43 +720,25 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         operation_mode = cc.operation_mode.value
 
         if swing_mode.isnumeric():
-            fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
-            if fixed is None or not fixed.settable:
-                self._raise_service_validation_error("swing_control_unavailable")
 
-            if axis.current_mode.value != FANMODE_FIXED:
-                if not axis.current_mode.settable:
-                    self._raise_service_validation_error("swing_control_unavailable")
-                if not await self._async_execute_climate_command(
-                    lambda climate: climate.set_fan_direction(
-                        operation_mode, direction, FANMODE_FIXED
-                    )
-                ):
-                    return False
+            def get_fixed_direction_state() -> FixedFanControlState | None:
                 axis = self._fan_direction_axis(direction, operation_mode)
                 if axis is None:
-                    return True
-                axis.current_mode.value = FANMODE_FIXED
-                # The mode change is committed even if the position write fails.
-                self._publish_write_update()
+                    return None
                 fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
-                if fixed is None:
-                    return True
+                return axis.current_mode, fixed
 
-            position = int(swing_mode)
-            if fixed.value != position:
-                if not await self._async_execute_climate_command(
-                    lambda climate: climate.set_fixed_fan_direction(
-                        operation_mode, direction, position
-                    )
-                ):
-                    return False
-                axis = self._fan_direction_axis(direction, operation_mode)
-                fixed = axis.modes.get(FANMODE_FIXED) if axis and axis.modes else None
-                if fixed is None:
-                    return True
-                fixed.value = position
-            return True
+            return await self._async_set_fixed_fan_control(
+                get_state=get_fixed_direction_state,
+                target=int(swing_mode),
+                set_mode=lambda climate: climate.set_fan_direction(
+                    operation_mode, direction, FANMODE_FIXED
+                ),
+                set_position=lambda climate, position: climate.set_fixed_fan_direction(
+                    operation_mode, direction, position
+                ),
+                unavailable_key="swing_control_unavailable",
+            )
 
         if not axis.current_mode.settable:
             self._raise_service_validation_error("swing_control_unavailable")
