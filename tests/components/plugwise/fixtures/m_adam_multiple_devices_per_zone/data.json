@@ -61,10 +61,9 @@
     },
     "preset_modes": ["asleep", "no_frost", "away", "home", "vacation"],
     "select_schedule": "Badkamer Schema",
-    "sensors": {
-      "temperature": 18.9
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 18.9,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 14.0,
@@ -128,10 +127,10 @@
     "select_schedule": "off",
     "sensors": {
       "electricity_consumed": 0.0,
-      "electricity_produced": 0.0,
-      "temperature": 16.5
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 16.5,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 13.0,
@@ -204,10 +203,9 @@
     },
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
     "select_schedule": "off",
-    "sensors": {
-      "temperature": 15.6
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 15.6,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 5.5,
@@ -382,10 +380,9 @@
     },
     "preset_modes": ["home", "no_frost", "away", "vacation", "asleep"],
     "select_schedule": "CV Jessie",
-    "sensors": {
-      "temperature": 17.2
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 17.2,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 15.0,
@@ -559,10 +556,10 @@
     "select_schedule": "GF7  Woonkamer",
     "sensors": {
       "electricity_consumed": 35.6,
-      "electricity_produced": 0.0,
-      "temperature": 20.9
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 20.9,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 21.5,

@@ -55,6 +55,7 @@
       "temperature": 20.4
     },
     "thermostat": {
+      "current": 20.4,
       "lower_bound": 4.0,
       "resolution": 0.1,
       "setpoint": 20.5,

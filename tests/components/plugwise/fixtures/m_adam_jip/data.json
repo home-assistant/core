@@ -33,10 +33,9 @@
     "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
-    "sensors": {
-      "temperature": 24.2
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 24.2,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 13.0,
@@ -90,10 +89,9 @@
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
     "select_schedule": "off",
     "select_zone_profile": "active",
-    "sensors": {
-      "temperature": 27.4
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 27.4,
       "lower_bound": 4.0,
       "resolution": 0.01,
       "setpoint": 9.0,
@@ -337,10 +335,9 @@
     "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
-    "sensors": {
-      "temperature": 30.0
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 30.0,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 13.0,
@@ -418,10 +415,9 @@
     "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
-    "sensors": {
-      "temperature": 30.0
-    },
+    "sensors": {},
     "thermostat": {
+      "current": 30.0,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 13.0,
@@ -471,17 +467,17 @@
     "sensors": {
       "burner_operation_time": 5566,
       "burner_starts": 15344,
-      "heating_pump_operation_time": 6452,
-      "heating_pump_starts": 3801046,
       "dhw_burner_operation_time": 408,
       "dhw_burner_starts": 7400,
       "dhw_pump_operation_time": 23842,
       "dhw_pump_starts": 650375,
       "failed_burner_flame_ignitions": 0,
       "failed_burner_starts": 0,
+      "fault_flags": 0,
+      "heating_pump_operation_time": 6452,
+      "heating_pump_starts": 3801046,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0,
-      "fault_flags": 0,
       "oem_diagnostic_code": 0,
       "oem_fault_code": 255,
       "return_temperature": 37.1,

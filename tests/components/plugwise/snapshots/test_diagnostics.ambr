@@ -70,9 +70,9 @@
       ]),
       'select_schedule': 'Badkamer Schema',
       'sensors': dict({
-        'temperature': 18.9,
       }),
       'thermostat': dict({
+        'current': 18.9,
         'lower_bound': 0.0,
         'resolution': 0.01,
         'setpoint': 14.0,
@@ -144,9 +144,9 @@
       'sensors': dict({
         'electricity_consumed': 0.0,
         'electricity_produced': 0.0,
-        'temperature': 16.5,
       }),
       'thermostat': dict({
+        'current': 16.5,
         'lower_bound': 0.0,
         'resolution': 0.01,
         'setpoint': 13.0,
@@ -232,9 +232,9 @@
       ]),
       'select_schedule': 'off',
       'sensors': dict({
-        'temperature': 15.6,
       }),
       'thermostat': dict({
+        'current': 15.6,
         'lower_bound': 0.0,
         'resolution': 0.01,
         'setpoint': 5.5,
@@ -419,9 +419,9 @@
       ]),
       'select_schedule': 'CV Jessie',
       'sensors': dict({
-        'temperature': 17.2,
       }),
       'thermostat': dict({
+        'current': 17.2,
         'lower_bound': 0.0,
         'resolution': 0.01,
         'setpoint': 15.0,
@@ -606,9 +606,9 @@
       'sensors': dict({
         'electricity_consumed': 35.6,
         'electricity_produced': 0.0,
-        'temperature': 20.9,
       }),
       'thermostat': dict({
+        'current': 20.9,
         'lower_bound': 0.0,
         'resolution': 0.01,
         'setpoint': 21.5,

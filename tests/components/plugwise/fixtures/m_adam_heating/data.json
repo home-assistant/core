@@ -32,8 +32,8 @@
       "dhw_burner_operation_time": 913,
       "failed_burner_flame_ignitions": 34,
       "failed_burner_starts": 6,
-      "intended_boiler_temperature": 38.1,
       "fault_flags": 0,
+      "intended_boiler_temperature": 38.1,
       "oem_fault_code": 255,
       "water_temperature": 37.0
     },
@@ -255,10 +255,10 @@
     "select_zone_profile": "active",
     "sensors": {
       "electricity_consumed": 60.8,
-      "electricity_produced": 0.0,
-      "temperature": 19.1
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 19.1,
       "lower_bound": 1.0,
       "resolution": 0.01,
       "setpoint": 20.0,
@@ -324,10 +324,10 @@
     "select_zone_profile": "passive",
     "sensors": {
       "electricity_consumed": 0.0,
-      "electricity_produced": 0.0,
-      "temperature": 17.9
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 17.9,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 15.0,
