@@ -12,5 +12,8 @@
   "loggers": ["bluetti_modbus_lib", "modbus_connection", "tmodbus"],
   "quality_scale": "silver",
   "requirements": ["bluetti-modbus==0.76.0"],
-  "zeroconf": [{ "name": "bluetti hems*", "type": "_http._tcp.local." }]
+  "zeroconf": [
+    { "name": "bluetti hems*", "type": "_http._tcp.local." },
+    { "properties": { "model": "balco260" }, "type": "_bluetti._tcp.local." }
+  ]
 }
