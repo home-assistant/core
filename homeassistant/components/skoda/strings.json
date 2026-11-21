@@ -68,6 +68,11 @@
         "name": "Windows"
       }
     },
+    "climate": {
+      "air_conditioning": {
+        "name": "Air conditioning"
+      }
+    },
     "number": {
       "charge_limit": {
         "name": "Charge limit"
