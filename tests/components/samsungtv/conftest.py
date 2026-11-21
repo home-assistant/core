@@ -10,6 +10,7 @@ from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
@@ -67,6 +68,13 @@ def fake_host_fixture() -> Generator[None]:
         return_value="10.20.43.21",
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def dmr_description_fixture(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock the renderer description probe, no renderer by default."""
+    for host in ("10.10.12.34", "10.20.43.21", "fake_host"):
+        aioclient_mock.get(f"http://{host}:9197/dmr", status=404)
 
 
 @pytest.fixture(autouse=True)

@@ -5,11 +5,18 @@ from datetime import timedelta
 from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_METHOD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .bridge import SamsungTVBridge
-from .const import DOMAIN, LOGGER
+from .const import (
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
+    DOMAIN,
+    LOGGER,
+    METHOD_WEBSOCKET,
+)
+from .dmr import async_probe_rendering_control_location
 
 SCAN_INTERVAL = 10
 
@@ -58,5 +65,30 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.is_on,
             )
 
+        if self.is_on and old_state is False:
+            await self._async_probe_rendering_control_location()
+
         if self.async_extra_update:
             await self.async_extra_update()
+
+    async def _async_probe_rendering_control_location(self) -> None:
+        """Look for a renderer that wasn't found at setup, now that the TV is on."""
+        data = self.config_entry.data
+        host = data[CONF_HOST]
+        if data[CONF_METHOD] != METHOD_WEBSOCKET or data.get(
+            CONF_SSDP_RENDERING_CONTROL_LOCATION
+        ):
+            return
+        location = await async_probe_rendering_control_location(self.hass, host)
+        # The entry may have been updated (token, SSDP) while the probe was running
+        data = self.config_entry.data
+        if (
+            location
+            and data[CONF_HOST] == host
+            and not data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+        ):
+            # Saving the location reloads the entry, which sets up the renderer
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**data, CONF_SSDP_RENDERING_CONTROL_LOCATION: location},
+            )

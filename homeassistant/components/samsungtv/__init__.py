@@ -29,10 +29,12 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
+    METHOD_WEBSOCKET,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
+from .dmr import async_probe_rendering_control_location
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
@@ -104,6 +106,20 @@ async def _async_update_ssdp_locations(
             if host == entry.data[CONF_HOST]:
                 updates[key] = location
                 break
+
+    if (
+        entry.data[CONF_METHOD] == METHOD_WEBSOCKET
+        and CONF_SSDP_RENDERING_CONTROL_LOCATION not in updates
+        and not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+        and (
+            location := await async_probe_rendering_control_location(
+                hass, entry.data[CONF_HOST]
+            )
+        )
+        # SSDP may have found the renderer while the probe was running
+        and not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+    ):
+        updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = location
 
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
