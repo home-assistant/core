@@ -1439,6 +1439,107 @@ async def test_validation_water(
     }
 
 
+async def test_validation_heat(
+    hass: HomeAssistant, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+) -> None:
+    """Test validating heat with sensors for energy and cost."""
+    mock_is_entity_recorded["sensor.heat_cost_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption_1",
+                    "stat_cost": "sensor.heat_cost_1",
+                },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption_2",
+                    "entity_energy_price": "sensor.heat_price_1",
+                },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption_3",
+                    "entity_energy_price": "sensor.heat_price_bad",
+                },
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.heat_consumption_1",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_consumption_2",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_price_1",
+        "0.12",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "measurement"},
+    )
+    hass.states.async_set(
+        "sensor.heat_consumption_3",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_price_bad",
+        "0.12",
+        {"unit_of_measurement": "EUR/m³", "state_class": "measurement"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_energy",
+                    "affected_entities": {("sensor.heat_consumption_1", "beers")},
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
+                },
+                {
+                    "type": "recorder_untracked",
+                    "affected_entities": {("sensor.heat_cost_1", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "entity_not_defined",
+                    "affected_entities": {("sensor.heat_cost_1", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_unit_energy_price",
+                    "affected_entities": {("sensor.heat_price_bad", "EUR/m³")},
+                    "translation_placeholders": {
+                        "price_units": ENERGY_PRICE_UNITS_STRING
+                    },
+                },
+            ],
+        ],
+        "device_consumption": [],
+        "device_consumption_gas": [],
+        "device_consumption_water": [],
+    }
+
+
 async def test_validation_water_no_costs_tracking(
     hass: HomeAssistant, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
 ) -> None:

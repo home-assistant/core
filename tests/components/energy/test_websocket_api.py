@@ -164,6 +164,14 @@ async def test_save_preferences(
                 "number_energy_price": None,
                 "name": "My water",
             },
+            {
+                "type": "heat",
+                "stat_energy_from": "sensor.heat",
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "name": "My heat",
+            }
         ],
         "device_consumption": [
             {

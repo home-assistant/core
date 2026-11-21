@@ -11,6 +11,7 @@ from homeassistant.components.energy.data import (
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
     GAS_SOURCE_SCHEMA,
+    HEAT_SOURCE_SCHEMA,
     POWER_CONFIG_SCHEMA,
     WATER_SOURCE_SCHEMA,
     EnergyManager,
@@ -1271,6 +1272,74 @@ async def test_water_allows_price_with_stat_cost_for_external_stat() -> None:
     )
     assert result["stat_cost"] == "external:water_cost"
     assert result["number_energy_price"] == 0.005
+
+
+async def test_heat_rejects_entity_price_for_external_stat() -> None:
+    """Test that heat schema rejects entity price for external statistics."""
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
+        HEAT_SOURCE_SCHEMA(
+            {
+                "type": "heat",
+                "stat_energy_from": "external:heat_consumption",
+                "entity_energy_price": "sensor.heat_price",
+            }
+        )
+
+
+async def test_heat_rejects_number_price_for_external_stat() -> None:
+    """Test that heat schema rejects number price for external statistics."""
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
+        HEAT_SOURCE_SCHEMA(
+            {
+                "type": "heat",
+                "stat_energy_from": "external:heat_consumption",
+                "number_energy_price": 0.08,
+            }
+        )
+
+
+async def test_heat_allows_price_with_stat_cost_for_external_stat() -> None:
+    """Test that heat schema allows price when stat_cost is set for external stats."""
+    result = HEAT_SOURCE_SCHEMA(
+        {
+            "type": "heat",
+            "stat_energy_from": "external:heat_consumption",
+            "stat_cost": "external:heat_cost",
+            "entity_energy_price": "sensor.heat_price",
+        }
+    )
+    assert result["stat_cost"] == "external:heat_cost"
+    assert result["entity_energy_price"] == "sensor.heat_price"
+
+
+async def test_heat_schema_defaults_omitted_price_fields() -> None:
+    """Test that omitted heat price fields default to None."""
+    result = HEAT_SOURCE_SCHEMA(
+        {
+            "type": "heat",
+            "stat_energy_from": "sensor.heat_consumption",
+            "number_energy_price": 0.5,
+        }
+    )
+    assert result["stat_cost"] is None
+    assert result["entity_energy_price"] is None
+    assert result["number_energy_price"] == 0.5
+
+
+async def test_heat_energy_source_schema_round_trip_price_defaults() -> None:
+    """Test heat price field defaults survive ENERGY_SOURCE_SCHEMA validation."""
+    result = ENERGY_SOURCE_SCHEMA(
+        [
+            {
+                "type": "heat",
+                "stat_energy_from": "sensor.heat_consumption",
+                "number_energy_price": 0.5,
+            }
+        ]
+    )
+    assert result[0]["stat_cost"] is None
+    assert result[0]["entity_energy_price"] is None
+    assert result[0]["number_energy_price"] == 0.5
 
 
 BATTERY_DIRECTIONS_ENERGY = {

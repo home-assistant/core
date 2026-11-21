@@ -16,6 +16,7 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.energy import DOMAIN, async_get_manager, data
+from homeassistant.components.energy.data import HEAT_SOURCE_SCHEMA
 from homeassistant.components.energy.sensor import (
     EnergyCostSensor,
     EnergyPowerSensor,
@@ -1158,6 +1159,93 @@ async def test_cost_sensor_handle_gas_kwh(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "50.0"
+
+
+@pytest.mark.parametrize(
+    ("energy_unit", "factor", "number_energy_price", "entity_energy_price"),
+    [
+        pytest.param(
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1,
+            0.5,
+            None,
+            id="kwh_fixed_price",
+        ),
+        pytest.param(
+            UnitOfEnergy.GIGA_JOULE,
+            _WH_TO_J / 1e6,
+            None,
+            "sensor.heat_price",
+            id="gj_eur_per_kwh",
+        ),
+        pytest.param(
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            0.001,
+            None,
+            "sensor.heat_price",
+            id="mwh_eur_per_kwh",
+        ),
+    ],
+)
+async def test_cost_sensor_handle_heat(
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    energy_unit: str,
+    factor: float,
+    number_energy_price: float | None,
+    entity_energy_price: str | None,
+) -> None:
+    """Test heat cost with fixed or entity price across energy units."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: energy_unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    heat_source: dict[str, Any] = {
+        "type": "heat",
+        "stat_energy_from": "sensor.heat_consumption",
+        "number_energy_price": number_energy_price,
+    }
+    if entity_energy_price is not None:
+        heat_source["entity_energy_price"] = entity_energy_price
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(HEAT_SOURCE_SCHEMA(heat_source))
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    if entity_energy_price is not None:
+        hass.states.async_set(
+            entity_energy_price,
+            "0.5",
+            {
+                ATTR_UNIT_OF_MEASUREMENT: f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            },
+        )
+
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        100 * factor,
+        energy_attributes,
+    )
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.heat_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        200 * factor,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.heat_consumption_cost")
     assert state.state == "50.0"
 
 

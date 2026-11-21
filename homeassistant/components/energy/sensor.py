@@ -83,7 +83,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas", "water"]
+    source_type: Literal["grid", "gas", "water", "heat"]
     flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -111,6 +111,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "water",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "heat",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -500,6 +508,10 @@ class EnergyCostSensor(RestoreSensor):
                 default_price_unit = UnitOfVolume.CUBIC_METERS
             else:
                 default_price_unit = UnitOfVolume.GALLONS
+
+        elif self._adapter.source_type == "heat":
+            valid_units = VALID_ENERGY_UNITS
+            default_price_unit = UnitOfEnergy.KILO_WATT_HOUR
 
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
