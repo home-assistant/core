@@ -11,33 +11,26 @@
 # name: test_config_flow_preview_success[success]
   dict({
     'attributes': dict({
-      'buffer_usage_ratio': 0.1,
       'friendly_name': 'Statistical characteristic',
       'icon': 'mdi:calculator',
-      'source_value_valid': True,
-      'state_class': 'measurement',
     }),
-    'state': '16.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_options_flow_preview
   dict({
     'attributes': dict({
-      'age_coverage_ratio': 0.0,
-      'buffer_usage_ratio': 0.05,
       'friendly_name': 'Statistical characteristic',
       'icon': 'mdi:calculator',
-      'source_value_valid': True,
-      'state_class': 'measurement',
     }),
-    'state': '16.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_options_flow_preview[updated]
   dict({
     'attributes': dict({
       'age_coverage_ratio': 0.0,
-      'buffer_usage_ratio': 0.1,
+      'buffer_usage_ratio': 0.05,
       'friendly_name': 'Statistical characteristic',
       'icon': 'mdi:calculator',
       'source_value_valid': True,
