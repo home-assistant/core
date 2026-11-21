@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Generator
 import dataclasses
+from datetime import timedelta
 from typing import Any
 from unittest import mock
 
@@ -11,8 +12,9 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import attr
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.homekit_controller.connection import (
@@ -24,10 +26,11 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
+    KNOWN_DEVICES,
 )
 from homeassistant.components.thread import async_add_dataset, dataset_store
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -448,10 +451,12 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     assert config_entry.data["Connection"] == "BLE"
 
 
-async def test_poll_firmware_version_only_all_watchable_accessory_mode(
-    hass: HomeAssistant, get_next_aid: Callable[[], int]
+async def test_poll_all_watchable_accessory(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    freeze_time_in_future: FrozenDateTimeFactory,
 ) -> None:
-    """Test firmware poll only when all chars are watchable."""
+    """Test polling and availability when all entity characteristics are watchable."""
 
     def _create_accessory(accessory: Accessory) -> Service:
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
@@ -466,49 +471,50 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
 
     helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
 
+    # Finish any update queued during setup before counting periodic polls.
+    freeze_time_in_future.tick(timedelta(seconds=DEBOUNCE_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    async def poll_and_get_state() -> State:
+        freeze_time_in_future.tick(helper.pairing.poll_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        freeze_time_in_future.tick(timedelta(seconds=DEBOUNCE_COOLDOWN))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get(helper.entity_id)
+        assert state is not None
+        return state
+
     with mock.patch.object(
         helper.pairing,
         "get_characteristics",
         wraps=helper.pairing.get_characteristics,
     ) as mock_get_characteristics:
-        # Initial state is that the light is off
-        state = await helper.poll_and_get_state()
+        state = await poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 2
-        # Verify everything is polled (convert to set for comparison since batching
-        # changes the type)
-        assert set(mock_get_characteristics.call_args_list[0][0][0]) == {
-            (1, 10),
-            (1, 11),
-        }
-        assert set(mock_get_characteristics.call_args_list[1][0][0]) == {
-            (1, 10),
-            (1, 11),
-        }
+        mock_get_characteristics.assert_awaited_once()
+        assert set(mock_get_characteristics.call_args.args[0]) == {(1, 10), (1, 11)}
 
-        # Test device goes offline
         helper.pairing.available = False
         with mock.patch.object(
             FakeController,
             "async_reachable",
             return_value=False,
         ):
-            state = await helper.poll_and_get_state()
+            state = await poll_and_get_state()
             assert state.state == STATE_UNAVAILABLE
-            # Tries twice before declaring unavailable
-            assert mock_get_characteristics.call_count == 4
+            assert mock_get_characteristics.await_count == 2
 
-        # Test device comes back online
         helper.pairing.available = True
-        state = await helper.poll_and_get_state()
+        state = await poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 6
+        assert mock_get_characteristics.await_count == 3
 
-        # Next poll should not happen because its a single
-        # accessory, available, and all chars are watchable
-        state = await helper.poll_and_get_state()
+        state = await poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 8
+        assert mock_get_characteristics.await_count == 4
 
 
 async def test_manual_poll_all_chars(
@@ -770,6 +776,48 @@ async def test_async_setup_handles_unparsable_response(
     # though initial polling failed
     state = hass.states.get("light.testdevice")
     assert state is not None
+
+
+async def test_partial_characteristic_write_failure(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """A successful status must not hide another characteristic's write failure."""
+
+    def create_light_service(accessory: Accessory) -> Service:
+        service = accessory.add_service(ServicesTypes.LIGHTBULB)
+        service.add_char(CharacteristicsTypes.ON, value=False)
+        service.add_char(CharacteristicsTypes.BRIGHTNESS, value=0)
+        return service
+
+    aid = get_next_aid()
+    helper = await setup_test_component(hass, aid, create_light_service)
+    service = helper.accessory.services.first(service_type=ServicesTypes.LIGHTBULB)
+    on_char = service.characteristics.first(char_types=[CharacteristicsTypes.ON])
+    brightness = service.characteristics.first(
+        char_types=[CharacteristicsTypes.BRIGHTNESS]
+    )
+    device = hass.data[KNOWN_DEVICES][helper.config_entry.data["AccessoryPairingID"]]
+    payload = [(aid, on_char.iid, True), (aid, brightness.iid, 50)]
+    with (
+        mock.patch.object(
+            helper.pairing,
+            "put_characteristics",
+            return_value={
+                (aid, on_char.iid): {"status": 0},
+                (aid, brightness.iid): {"status": -70403},
+            },
+        ) as mock_put,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await device.put_characteristics(payload)
+
+    assert exc_info.value.translation_key == "characteristic_write_failed"
+    assert exc_info.value.translation_placeholders == {
+        "aid": str(aid),
+        "iid": str(brightness.iid),
+        "status": "-70403",
+    }
+    mock_put.assert_awaited_once_with(payload)
 
 
 async def test_device_via_device_links(
