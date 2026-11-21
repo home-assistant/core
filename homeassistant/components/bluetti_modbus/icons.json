@@ -4,8 +4,18 @@
       "battery_cycle_count": {
         "default": "mdi:battery-sync"
       },
+      "battery_pack_count": {
+        "default": "mdi:counter"
+      },
       "battery_soh": {
         "default": "mdi:battery-heart-variant"
+      },
+      "battery_status": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-minus"
+        }
       },
       "cell_count": {
         "default": "mdi:counter"
@@ -34,6 +44,9 @@
       },
       "temperature_sensor_count": {
         "default": "mdi:counter"
+      },
+      "total_battery_soh": {
+        "default": "mdi:battery-heart-variant"
       }
     }
   }

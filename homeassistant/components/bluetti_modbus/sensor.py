@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast, override
 
-from bluetti_modbus_lib import InverterStatus, PvType
+from bluetti_modbus_lib import InverterStatus, PackChargingStatus, PvType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,6 +40,12 @@ _INVERTER_STATUS: dict[InverterStatus, str] = {
     InverterStatus.GridConnectedDischarging: "grid_connected_discharging",
     InverterStatus.InverterFault: "inverter_fault",
     InverterStatus.AbnormalOffGrid: "abnormal_off_grid",
+}
+
+_BATTERY_STATUS: dict[PackChargingStatus, str] = {
+    PackChargingStatus.Idle: "idle",
+    PackChargingStatus.Charging: "charging",
+    PackChargingStatus.Discharging: "discharging",
 }
 
 _PV_TYPE: dict[PvType, str] = {
@@ -66,6 +73,9 @@ class BluettiModbusSensorEntityDescription(SensorEntityDescription):
     """Describes a BLUETTI Modbus sensor."""
 
     value_fn: Callable[[Any], StateType] = _as_is
+    # The estimate is only kept up to date in this battery status; in any
+    # other it holds a stale value.
+    only_while: PackChargingStatus | None = None
 
 
 _PV_INPUT_DESCRIPTIONS = tuple(
@@ -278,6 +288,46 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     BluettiModbusSensorEntityDescription(
+        key="d_num_battery_packs",
+        translation_key="battery_pack_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_BATTERY_STATUS.values()),
+        value_fn=_BATTERY_STATUS.get,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_soc_total",
+        translation_key="total_battery_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_soh_total",
+        translation_key="total_battery_soh",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_time_to_full_total",
+        translation_key="time_to_full",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        only_while=PackChargingStatus.Charging,
+    ),
+    BluettiModbusSensorEntityDescription(
+        key="b_time_to_empty_total",
+        translation_key="time_to_empty",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        only_while=PackChargingStatus.Discharging,
+    ),
+    BluettiModbusSensorEntityDescription(
         key="b_soc",
         translation_key="battery_soc",
         native_unit_of_measurement=PERCENTAGE,
@@ -354,4 +404,8 @@ class BluettiModbusSensor(BluettiModbusEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the field's most recently read value."""
-        return self.entity_description.value_fn(self.coordinator.data[self._field_name])
+        data = self.coordinator.data
+        only_while = self.entity_description.only_while
+        if only_while is not None and data["b_status"] is not only_while:
+            return None
+        return self.entity_description.value_fn(data[self._field_name])
