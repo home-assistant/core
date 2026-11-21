@@ -238,9 +238,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _net_input: InputSource | None = None
     _net_state: MediaPlayerState | None = None
 
-    # Cover art (local addition, not part of the upstream PR): the receiver reports an
-    # address on itself. It serves the same address for every track, so the image hash
-    # is built from the track and a counter that grows with every art report.
+    # Cover art: the receiver reports an address on itself. It serves the same
+    # address for every track, so the image hash is built from the track and a
+    # counter that grows with every art report.
     _net_art_url: str | None = None
     _net_art_serial: int = 0
 
@@ -416,11 +416,16 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         except (aiohttp.ClientError, TimeoutError):
             return None, None
         content_type = response.content_type
-        if body.startswith(b"Content-size:"):
-            header, separator, rest = body.partition(b"\n\n")
-            if not separator:
-                return None, None
-            for line in header.split(b"\n"):
+        if body[:13].lower() == b"content-size:":
+            # Read the header lines up to the empty one, with LF or CRLF endings
+            rest = body
+            while True:
+                line, found, rest = rest.partition(b"\n")
+                if not found:
+                    return None, None
+                line = line.rstrip(b"\r")
+                if not line:
+                    break
                 name, _, value = line.partition(b":")
                 if name.strip().lower() == b"content-type":
                     content_type = value.strip().decode("ascii", "replace")

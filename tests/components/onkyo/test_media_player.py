@@ -714,6 +714,32 @@ async def test_net_cover_art(
     assert ATTR_ENTITY_PICTURE not in state.attributes
 
 
+@pytest.mark.parametrize(
+    "preamble",
+    [
+        b"Content-size: 4\nContent-type: image/png\n\n",
+        b"Content-size: 4\r\nContent-type: image/png\r\n\r\n",
+        b"content-size: 4\r\nCONTENT-TYPE: image/png\r\n\r\n",
+    ],
+    ids=["lf", "crlf", "mixed_case"],
+)
+async def test_net_cover_art_preamble(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    aioclient_mock: AiohttpClientMocker,
+    preamble: bytes,
+) -> None:
+    """Test that the header lines are removed with either line ending."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, _net_jacket_art(ART_URL))
+
+    image = b"\x89PNG"
+    aioclient_mock.get(ART_URL, content=preamble + image)
+    player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert await player.async_get_media_image() == (image, "image/png")
+
+
 async def test_net_cover_art_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
