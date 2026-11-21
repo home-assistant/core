@@ -30,5 +30,13 @@
         "description": "Select connection type. Local requires heaters with Bluetooth"
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Adax did not accept the command for {room}."
+    },
+    "command_timeout": {
+      "message": "Timed out sending the command for {room} to Adax. It may still be applied."
+    }
   }
 }
