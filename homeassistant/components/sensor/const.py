@@ -527,8 +527,8 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement:
     - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes
+    expressed in USCS/imperial units are currently assumed to be US volumes)
     """
 
     WEIGHT = "weight"
@@ -757,6 +757,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.GALLONS,
         UnitOfVolume.LITERS,
         UnitOfVolume.MILLE_CUBIC_FEET,
