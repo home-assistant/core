@@ -1,7 +1,7 @@
 """Test ESPHome climates."""
 
 import math
-from unittest.mock import call
+from unittest.mock import AsyncMock, call
 
 from aioesphomeapi import (
     APIClient,
@@ -16,6 +16,7 @@ from aioesphomeapi import (
     TemperatureUnit,
 )
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -38,12 +39,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import TargetKey
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNKNOWN, TargetKey
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 async def test_climate_entity(
@@ -1056,4 +1057,277 @@ async def test_climate_entity_fahrenheit_unit_fahrenheit_system(
     )
     mock_client.climate_command.assert_called_once_with(
         key=1, target_temperature=86.0, device_id=0
+    )
+
+
+_TURN_ON_MODES = [
+    ClimateMode.OFF,
+    ClimateMode.HEAT_COOL,
+    ClimateMode.HEAT,
+    ClimateMode.COOL,
+    ClimateMode.DRY,
+]
+
+
+async def _setup_turn_on_entity(
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mode: ClimateMode | None,
+):
+    """Set up a climate entity with several modes for turn_on tests."""
+    return await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            ClimateInfo(
+                object_id="myclimate",
+                key=1,
+                name="my climate",
+                supported_modes=_TURN_ON_MODES,
+            )
+        ],
+        states=[] if mode is None else [ClimateState(key=1, mode=mode)],
+    )
+
+
+async def _turn_on(hass: HomeAssistant) -> None:
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.test_my_climate"},
+        blocking=True,
+    )
+
+
+async def test_climate_turn_on_restores_last_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test turn_on restores the last non-off mode instead of heat_cool."""
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.COOL
+    )
+    assert hass.states.get("climate.test_my_climate").state == HVACMode.COOL
+
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.test_my_climate").state == HVACMode.OFF
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.COOL, device_id=0
+    )
+    mock_client.climate_command.reset_mock()
+
+    # A mode changed on the device itself is remembered too
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.DRY))
+    await hass.async_block_till_done()
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.DRY, device_id=0
+    )
+
+
+async def test_climate_turn_on_without_last_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test turn_on falls back to the default when no mode has been seen."""
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, ClimateMode.OFF)
+    assert hass.states.get("climate.test_my_climate").state == HVACMode.OFF
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.HEAT_COOL, device_id=0
+    )
+
+
+async def test_climate_turn_on_keeps_running_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test turn_on does not change the mode when the entity is already on."""
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, ClimateMode.COOL)
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "expected_mode"),
+    [
+        pytest.param(HVACMode.COOL, ClimateMode.COOL, id="restored"),
+        pytest.param(HVACMode.OFF, ClimateMode.HEAT_COOL, id="off_ignored"),
+        pytest.param(HVACMode.FAN_ONLY, ClimateMode.HEAT_COOL, id="unsupported"),
+        pytest.param(None, ClimateMode.HEAT_COOL, id="none_stored"),
+    ],
+)
+async def test_climate_turn_on_restored_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    stored_mode: HVACMode | None,
+    expected_mode: ClimateMode,
+) -> None:
+    """Test the last running mode survives a restart, ignoring invalid values."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.test_my_climate", HVACMode.OFF),
+                {"last_hvac_mode": stored_mode},
+            )
+        ],
+    )
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, ClimateMode.OFF)
+    mock_client.climate_command.assert_not_called()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=expected_mode, device_id=0
+    )
+
+
+async def test_climate_turn_on_device_mode_overrides_restored(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a mode reported by the device wins over the restored one."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State("climate.test_my_climate", HVACMode.OFF), {"last_hvac_mode": "cool"})],
+    )
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.HEAT
+    )
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.HEAT, device_id=0
+    )
+
+
+async def test_climate_turn_on_unsupported_reported_mode_keeps_last_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a reported mode the entity does not support does not replace history."""
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.COOL
+    )
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.FAN_ONLY))
+    await hass.async_block_till_done()
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.COOL, device_id=0
+    )
+
+
+async def test_climate_turn_on_after_reload(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test reload keeps the entity off until turn_on restores its last mode."""
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.COOL
+    )
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+    # The device is still off when it reconnects
+    mock_device.states = [ClimateState(key=1, mode=ClimateMode.OFF)]
+
+    assert await hass.config_entries.async_reload(mock_device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.test_my_climate").state == HVACMode.OFF
+    mock_client.climate_command.assert_not_called()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.COOL, device_id=0
+    )
+
+
+async def test_climate_turn_on_after_supported_modes_change(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test turn_on falls back when the last mode is no longer supported."""
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.COOL
+    )
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+    mock_device.states = [ClimateState(key=1, mode=ClimateMode.OFF)]
+    entry = mock_device.entry
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supported_modes=[ClimateMode.OFF, ClimateMode.HEAT_COOL, ClimateMode.HEAT],
+        )
+    ]
+    mock_device.client.list_entities_services = AsyncMock(
+        return_value=(entity_info, [])
+    )
+    mock_device.client.device_info_and_list_entities = AsyncMock(
+        return_value=(mock_device.device_info, entity_info, [])
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.test_my_climate").state == HVACMode.OFF
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.HEAT_COOL, device_id=0
+    )
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "expected_mode"),
+    [
+        pytest.param(HVACMode.COOL, ClimateMode.COOL, id="restored"),
+        pytest.param(None, ClimateMode.HEAT_COOL, id="none_stored"),
+    ],
+)
+async def test_climate_turn_on_before_first_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    stored_mode: HVACMode | None,
+    expected_mode: ClimateMode,
+) -> None:
+    """Test turn_on is not dropped while the mode is still unknown."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.test_my_climate", HVACMode.OFF),
+                {"last_hvac_mode": stored_mode},
+            )
+        ],
+    )
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, None)
+    assert hass.states.get("climate.test_my_climate").state == STATE_UNKNOWN
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=expected_mode, device_id=0
     )

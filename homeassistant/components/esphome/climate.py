@@ -1,5 +1,6 @@
 """Support for ESPHome climate devices."""
 
+from dataclasses import dataclass
 from functools import partial
 from math import isfinite
 from typing import Any, cast, override
@@ -47,6 +48,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import DOMAIN
 from .entity import (
@@ -122,11 +124,26 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
 )
 
 
-class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
+@dataclass
+class EsphomeClimateExtraStoredData(ExtraStoredData):
+    """Store the last running mode separately from the current device state."""
+
+    last_hvac_mode: HVACMode
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"last_hvac_mode": self.last_hvac_mode}
+
+
+class EsphomeClimateEntity(
+    EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity, RestoreEntity
+):
     """A climate implementation for ESPHome."""
 
     _attr_translation_key = "climate"
     _feature_flags = ClimateFeature(0)
+    _last_hvac_mode: HVACMode | None = None
 
     @callback
     @override
@@ -182,6 +199,38 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last running mode without changing the device state."""
+        await super().async_added_to_hass()
+        if self._last_hvac_mode is not None:
+            return
+        if (extra_data := await self.async_get_last_extra_data()) is None:
+            return
+        last_hvac_mode = extra_data.as_dict().get("last_hvac_mode")
+        if last_hvac_mode in self.hvac_modes and last_hvac_mode != HVACMode.OFF:
+            self._last_hvac_mode = HVACMode(last_hvac_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> EsphomeClimateExtraStoredData | None:
+        """Return the last running mode for restoration."""
+        if self._last_hvac_mode is None:
+            return None
+        return EsphomeClimateExtraStoredData(self._last_hvac_mode)
+
+    @callback
+    @override
+    def _update_state_from_entry_data(self) -> None:
+        """Update state and remember the last running mode."""
+        super()._update_state_from_entry_data()
+        if (
+            self._has_state
+            and (mode := self.hvac_mode) not in (None, HVACMode.OFF)
+            and mode in self.hvac_modes
+        ):
+            self._last_hvac_mode = mode
 
     def _get_precision(self) -> float:
         """Return the precision of the climate device."""
@@ -374,6 +423,17 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             mode=_CLIMATE_MODES.from_hass(hvac_mode),
             device_id=self._static_info.device_id,
         )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on using the last supported running mode."""
+        # The entity is available before the device reports its first state
+        if self.hvac_mode not in (None, HVACMode.OFF):
+            return
+        if self._last_hvac_mode is not None and self._last_hvac_mode in self.hvac_modes:
+            await self.async_set_hvac_mode(self._last_hvac_mode)
+        else:
+            await super().async_turn_on()
 
     @convert_api_error_ha_error
     @override
