@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_component
 
@@ -16,6 +17,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -900,3 +906,125 @@ async def test_if_fires_on_time_change(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+def _target_automation_config(target: dict, value_template: str) -> dict:
+    """Return an automation config for a template trigger with a target."""
+    return {
+        automation.DOMAIN: {
+            "trigger": {
+                "platform": "template",
+                "target": target,
+                "value_template": value_template,
+            },
+            "action": {
+                "service": "test.automation",
+                "data_template": {"entity_id": "{{ trigger.entity_id }}"},
+            },
+        }
+    }
+
+
+async def test_target_entity_ids(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+    """Test the targeted entities are available as entity_ids."""
+    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set("light.hallway", "on")
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _target_automation_config(
+            {"entity_id": ["light.kitchen", "light.hallway"]},
+            "{{ entity_ids | select('is_state', 'on') | list"
+            " == ['light.hallway', 'light.kitchen'] }}",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.kitchen", "on")
+    await hass.async_block_till_done()
+
+    assert [call.data for call in calls] == [{"entity_id": "light.kitchen"}]
+
+
+async def test_target_entities_change(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test the template is re-rendered when the targeted entities change."""
+    area = area_registry.async_create("Living room")
+    kitchen = entity_registry.async_get_or_create("light", "test", "kitchen")
+    hallway = entity_registry.async_get_or_create("light", "test", "hallway")
+    entity_registry.async_update_entity(kitchen.entity_id, area_id=area.id)
+    hass.states.async_set(kitchen.entity_id, "on")
+    hass.states.async_set(hallway.entity_id, "on")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _target_automation_config(
+            {"area_id": area.id}, "{{ entity_ids | count == 2 }}"
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
+    await hass.async_block_till_done()
+    assert [call.data for call in calls] == [{"entity_id": None}]
+
+    # A registry update that does not change the targeted entities is ignored.
+    entity_registry.async_update_entity(hallway.entity_id, name="Hallway")
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(hallway.entity_id, area_id=None)
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_target_removed_on_unload(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test the registry listeners are removed with the trigger."""
+    area = area_registry.async_create("Living room")
+    registry_events = (
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        dr.EVENT_DEVICE_REGISTRY_UPDATED,
+        ar.EVENT_AREA_REGISTRY_UPDATED,
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _target_automation_config(
+            {"area_id": area.id}, "{{ entity_ids | count == 1 }}"
+        ),
+    )
+    await hass.async_block_till_done()
+    listeners = hass.bus.async_listeners()
+    attached = {event: listeners.get(event, 0) for event in registry_events}
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+
+    listeners = hass.bus.async_listeners()
+    assert {event: listeners.get(event, 0) for event in registry_events} == {
+        event: count - 1 for event, count in attached.items()
+    }
+
+
+def test_invalid_target() -> None:
+    """Test a target with only an exclude block is rejected."""
+    with pytest.raises(probatio.Invalid):
+        template_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "template",
+                "value_template": "{{ true }}",
+                "target": {"exclude": {"entity_id": "light.kitchen"}},
+            }
+        )
