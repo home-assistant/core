@@ -1,11 +1,14 @@
 """Tests for the SolarEdge Modbus config-entry setup."""
 
 import asyncio
+from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     IllegalDataAddressError,
+    ModbusConnectionError,
     ModbusTimeoutError,
     ModbusUnit,
     ServerDeviceFailureError,
@@ -13,7 +16,7 @@ from modbus_connection import (
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from solaredged import SolarEdge, SolarEdgeConnectionError
+from solaredged import InverterStatus, SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -24,10 +27,12 @@ from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
     CONF_SILENT_BLOCKS,
     DOMAIN,
+    LOGGER,
     READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
+from homeassistant.components.solaredge_modbus.coordinator import SLEEP_RESET_GRACE
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
@@ -70,6 +75,17 @@ POWER_CONTROL_REGISTER = 61440
 # Where the first meter's serial number lives.
 METER_SERIAL_REGISTER = 40171
 
+INVERTER_STATUS_REGISTER = 40107
+
+# Readings polls that start within the grace of the first failed one.
+POLLS_IN_A_RESET = int(SLEEP_RESET_GRACE / SCAN_INTERVAL)
+
+# How long a connection attempt the inverter does not answer can take.
+CONNECT_TIMEOUT = timedelta(seconds=20)
+
+READINGS = "SolarEdge SE10000H readings"
+SETTINGS = "SolarEdge SE10000H settings"
+
 EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
 ACTIVE_POWER_LIMIT_ENTITY = "number.solaredge_se10000h_active_power_limit"
@@ -82,6 +98,29 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _tick(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    times: int = 1,
+    interval: timedelta = SCAN_INTERVAL,
+) -> None:
+    """Let the given number of polls run."""
+    for _ in range(times):
+        freezer.tick(interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def _logged(caplog: pytest.LogCaptureFixture, level: int, coordinator: str) -> int:
+    """Count what the integration logged about one coordinator at one level."""
+    return sum(
+        record.levelno == level
+        and record.name == LOGGER.name
+        and coordinator in record.getMessage()
+        for record in caplog.records
+    )
 
 
 async def test_load_unload_entry(
@@ -525,6 +564,317 @@ async def test_dead_link_fails_the_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert attempts == 1
+
+
+@pytest.mark.parametrize(
+    ("status", "infos", "errors"),
+    [
+        pytest.param(InverterStatus.SLEEPING, 1, 0, id="sleeping"),
+        *(
+            pytest.param(status, 0, 1, id=status.name.lower())
+            for status in InverterStatus
+            if status is not InverterStatus.SLEEPING
+        ),
+    ],
+)
+async def test_dead_link_is_an_error_unless_asleep(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    status: InverterStatus,
+    infos: int,
+    errors: int,
+) -> None:
+    """A dead link is logged at info level while the inverter sleeps."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = status
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _logged(caplog, logging.INFO, READINGS) == infos
+    assert _logged(caplog, logging.ERROR, READINGS) == errors
+
+
+async def test_sleeping_inverter_comes_back_after_a_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A reset logs going and coming at info level, the next awake outage an error."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET)
+    mock_modbus_unit.fail_requests(None)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.PRODUCING
+    await _tick(hass, freezer)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert _logged(caplog, logging.INFO, READINGS) == 2
+    assert _logged(caplog, logging.ERROR, READINGS) == 0
+    assert "Fetching SolarEdge SE10000H readings data recovered" in caplog.text
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET + 1)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+
+async def test_sleeping_inverter_gone_past_a_reset_is_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A link still dead once a reset is over gets one error."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET)
+
+    assert _logged(caplog, logging.INFO, READINGS) == 1
+    assert _logged(caplog, logging.ERROR, READINGS) == 0
+
+    await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+    assert "more than a sleeping reset" in caplog.text
+
+    await _tick(hass, freezer, POLLS_IN_A_RESET)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+
+async def test_each_reset_gets_its_own_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll that answers in between ends one reset, and the next starts over."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET)
+    mock_modbus_unit.fail_requests(None)
+    await _tick(hass, freezer)
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET)
+
+    assert _logged(caplog, logging.INFO, READINGS) == 3
+    assert _logged(caplog, logging.ERROR, READINGS) == 0
+
+
+async def test_failed_poll_counts_from_its_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll that starts within the grace and times out past it is no error."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET - 1)
+
+    async def wait_out_the_timeout(address: int, count: int) -> list[int]:
+        """Hang until the connection times out."""
+        freezer.tick(SCAN_INTERVAL)
+        raise ModbusTimeoutError("timed out")
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", wait_out_the_timeout):
+        await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 0
+
+
+async def test_awake_read_during_a_reset_is_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Reading the inverter awake during a reset gets one error at once."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.INFO, READINGS) == 1
+
+    mock_modbus_unit.fail_requests(None)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.PRODUCING
+    # The inverter is read before the meters, so the poll dies after reading it.
+    mock_modbus_unit.fail_read(
+        METER_MODEL_REGISTER, ModbusConnectionError("connection lost")
+    )
+    await _tick(hass, freezer)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _tick(hass, freezer)
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET + 1)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+
+async def test_retry_that_reads_the_inverter_awake_is_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A retry that reads the inverter awake makes the outage one error."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.PRODUCING
+    mock_modbus_unit.fail_read(
+        METER_MODEL_REGISTER, ModbusConnectionError("connection lost")
+    )
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    first = True
+
+    async def refuse_once(address: int, count: int) -> list[int]:
+        """Refuse the first read, then answer up to the meters."""
+        nonlocal first
+        if first:
+            first = False
+            raise ModbusConnectionError("could not connect")
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", refuse_once):
+        await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+    assert _logged(caplog, logging.INFO, READINGS) == 0
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET + 1)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+
+async def test_outage_that_began_awake_gets_one_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A sleeping read during an outage that began awake adds no error."""
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+    mock_modbus_unit.fail_requests(None)
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    mock_modbus_unit.fail_read(
+        METER_MODEL_REGISTER, ModbusConnectionError("connection lost")
+    )
+    await _tick(hass, freezer)
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, POLLS_IN_A_RESET + 1)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+    assert _logged(caplog, logging.INFO, READINGS) == 0
+
+
+async def test_slow_first_failed_poll_counts_from_its_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The grace runs from the start of the first failed poll, not its end."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    first = True
+
+    async def time_out_once(address: int, count: int) -> list[int]:
+        """Hang until the first read times out, then refuse every one."""
+        nonlocal first
+        if first:
+            first = False
+            freezer.tick(CONNECT_TIMEOUT)
+            raise ModbusTimeoutError("timed out")
+        raise ModbusConnectionError("could not connect")
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", time_out_once):
+        await _tick(hass, freezer)
+        polls_left = int((SLEEP_RESET_GRACE - CONNECT_TIMEOUT) / SCAN_INTERVAL)
+        await _tick(hass, freezer, polls_left - 1)
+
+        assert _logged(caplog, logging.ERROR, READINGS) == 0
+
+        await _tick(hass, freezer)
+
+    assert _logged(caplog, logging.ERROR, READINGS) == 1
+
+
+async def test_settings_poll_while_asleep(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The settings poll logs a reset at info level and a second failure as error."""
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    caplog.clear()
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick(hass, freezer, interval=SETTINGS_SCAN_INTERVAL)
+
+    state = hass.states.get(ACTIVE_POWER_LIMIT_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _logged(caplog, logging.INFO, SETTINGS) == 1
+    assert _logged(caplog, logging.ERROR, SETTINGS) == 0
+
+    await _tick(hass, freezer, interval=SETTINGS_SCAN_INTERVAL)
+
+    assert _logged(caplog, logging.ERROR, SETTINGS) == 1
 
 
 async def test_another_inverter_on_the_address_fails_the_refresh(
