@@ -53,26 +53,20 @@ SENSORS: tuple[BambuLabSensorEntityDescription, ...] = (
         key="print_progress",
         translation_key="print_progress",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda state: state.progress,
     ),
     BambuLabSensorEntityDescription(
         key="current_layer",
         translation_key="current_layer",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda state: state.current_layer,
     ),
     BambuLabSensorEntityDescription(
         key="total_layers",
         translation_key="total_layers",
-        value_fn=lambda state: state.total_layers,
-    ),
-    BambuLabSensorEntityDescription(
-        key="nozzle_temperature",
-        translation_key="nozzle_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        value_fn=lambda state: state.nozzle_temperature,
+        value_fn=lambda state: state.total_layers,
     ),
     BambuLabSensorEntityDescription(
         key="bed_temperature",
@@ -137,6 +131,17 @@ class BambuLabSensor(BambuLabEntity, SensorEntity):
         return self.entity_description.value_fn(self._client.state)
 
 
+def _finish_filter() -> Callable[[int], datetime]:
+    """Return a function that keeps the moment a print finishes steady.
+
+    It remembers its last value, so every sensor needs its own.
+    """
+    return ignore_variance(
+        lambda remaining_minutes: utcnow() + timedelta(minutes=remaining_minutes),
+        PRINT_FINISH_VARIANCE,
+    )
+
+
 class BambuLabPrintFinishSensor(BambuLabEntity, SensorEntity):
     """The moment the print of a Bambu Lab printer finishes."""
 
@@ -147,11 +152,7 @@ class BambuLabPrintFinishSensor(BambuLabEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(client)
         self._attr_unique_id = f"{client.serial}_print_finish"
-        # Every printer keeps its own last value.
-        self._finish = ignore_variance(
-            lambda remaining_minutes: utcnow() + timedelta(minutes=remaining_minutes),
-            PRINT_FINISH_VARIANCE,
-        )
+        self._finish = _finish_filter()
 
     @override
     @property
@@ -161,5 +162,7 @@ class BambuLabPrintFinishSensor(BambuLabEntity, SensorEntity):
         if state.remaining_minutes is None or state.print_state not in (
             PRINT_IN_PROGRESS
         ):
+            # The next print must not start from the estimate of this one.
+            self._finish = _finish_filter()
             return None
         return self._finish(state.remaining_minutes)
