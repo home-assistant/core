@@ -12,6 +12,12 @@ from typing import Any, override
 import probatio
 from propcache.api import cached_property
 
+from homeassistant.auth.permissions import AbstractPermissions
+from homeassistant.auth.permissions.const import (
+    CAT_ENTITIES,
+    POLICY_CONTROL,
+    POLICY_READ,
+)
 from homeassistant.components.timer_list import (
     DOMAIN as TIMER_LIST_DOMAIN,
     TimerItem,
@@ -21,6 +27,7 @@ from homeassistant.components.timer_list import (
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -657,9 +664,23 @@ class _VoiceTimer:
         await self.owner.async_unpause_timer(self.item.timer_id)
 
 
-@callback
-def _async_get_voice_timers(hass: HomeAssistant, language: str) -> list[_VoiceTimer]:
-    """Return the active and paused timers of every device."""
+async def _async_get_user_permissions(
+    intent_obj: intent.Intent,
+) -> AbstractPermissions | None:
+    """Return the caller's permissions, if the intent has a user context."""
+    if not (user_id := intent_obj.context.user_id):
+        return None
+    if (user := await intent_obj.hass.auth.async_get_user(user_id)) is None:
+        raise UnknownUser(context=intent_obj.context, user_id=user_id)
+    return user.permissions
+
+
+async def _async_get_voice_timers(
+    intent_obj: intent.Intent, permission: str
+) -> list[_VoiceTimer]:
+    """Return active and paused timers accessible to the caller."""
+    hass = intent_obj.hass
+    permissions = await _async_get_user_permissions(intent_obj)
     timer_manager: TimerManager = hass.data[TIMER_DATA]
     now = dt_util.utcnow()
     monotonic_now = time.monotonic_ns()
@@ -678,8 +699,17 @@ def _async_get_voice_timers(hass: HomeAssistant, language: str) -> list[_VoiceTi
     ]
 
     for entry in er.async_get(hass).entities.values():
-        if entry.domain == TIMER_LIST_DOMAIN and not entry.disabled:
-            timers.extend(_async_get_timer_list_voice_timers(hass, entry, language))
+        if (
+            entry.domain == TIMER_LIST_DOMAIN
+            and not entry.disabled
+            and (
+                permissions is None
+                or permissions.check_entity(entry.entity_id, permission)
+            )
+        ):
+            timers.extend(
+                _async_get_timer_list_voice_timers(hass, entry, intent_obj.language)
+            )
 
     return timers
 
@@ -715,7 +745,7 @@ def _async_get_timer_list_voice_timers(
     ]
 
 
-def _find_timer(
+async def _async_find_timer(
     intent_obj: intent.Intent,
     slots: dict[str, Any],
     status: TimerStatus | None = None,
@@ -723,7 +753,7 @@ def _find_timer(
     """Match a single timer with constraints or raise an error."""
     hass = intent_obj.hass
     device_id = intent_obj.device_id
-    matching_timers = _async_get_voice_timers(hass, intent_obj.language)
+    matching_timers = await _async_get_voice_timers(intent_obj, POLICY_CONTROL)
     has_filter = False
 
     if status is not None:
@@ -826,11 +856,13 @@ def _find_timer(
     raise TimerNotFoundError
 
 
-def _find_timers(intent_obj: intent.Intent, slots: dict[str, Any]) -> list[_VoiceTimer]:
+async def _async_find_timers(
+    intent_obj: intent.Intent, slots: dict[str, Any], permission: str
+) -> list[_VoiceTimer]:
     """Match multiple timers with constraints or raise an error."""
     hass = intent_obj.hass
     device_id = intent_obj.device_id
-    matching_timers = _async_get_voice_timers(hass, intent_obj.language)
+    matching_timers = await _async_get_voice_timers(intent_obj, permission)
 
     # Filter by name first
     name: str | None = None
@@ -1043,6 +1075,16 @@ class StartTimerIntentHandler(intent.IntentHandler):
             seconds = int(slots["seconds"]["value"])
 
         if (not conversation_command) and (timer_list is not None):
+            permissions = await _async_get_user_permissions(intent_obj)
+            if permissions is not None and not permissions.check_entity(
+                timer_list.entity_id, POLICY_CONTROL
+            ):
+                raise Unauthorized(
+                    context=intent_obj.context,
+                    entity_id=timer_list.entity_id,
+                    permission=POLICY_CONTROL,
+                    perm_category=CAT_ENTITIES,
+                )
             await timer_list.async_create_timer(
                 name=name, duration=timedelta(seconds=_get_total_seconds(slots))
             )
@@ -1121,7 +1163,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(intent_obj, slots)
+        timer = await _async_find_timer(intent_obj, slots)
         await timer.async_cancel()
         return intent_obj.create_response()
 
@@ -1141,7 +1183,7 @@ class CancelAllTimersIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
         canceled = 0
 
-        for timer in _find_timers(intent_obj, slots):
+        for timer in await _async_find_timers(intent_obj, slots, POLICY_CONTROL):
             await timer.async_cancel()
             canceled += 1
 
@@ -1173,7 +1215,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(intent_obj, slots)
+        timer = await _async_find_timer(intent_obj, slots)
         await timer.async_add_time(total_seconds)
         return intent_obj.create_response()
 
@@ -1196,7 +1238,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(intent_obj, slots)
+        timer = await _async_find_timer(intent_obj, slots)
         await timer.async_add_time(-total_seconds)
         return intent_obj.create_response()
 
@@ -1217,7 +1259,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(intent_obj, slots, status=TimerStatus.ACTIVE)
+        timer = await _async_find_timer(intent_obj, slots, status=TimerStatus.ACTIVE)
         await timer.async_pause()
         return intent_obj.create_response()
 
@@ -1238,7 +1280,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timer = _find_timer(intent_obj, slots, status=TimerStatus.PAUSED)
+        timer = await _async_find_timer(intent_obj, slots, status=TimerStatus.PAUSED)
         await timer.async_unpause()
         return intent_obj.create_response()
 
@@ -1259,7 +1301,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
 
-        timers = _find_timers(intent_obj, slots)
+        timers = await _async_find_timers(intent_obj, slots, POLICY_READ)
         now = dt_util.utcnow()
         response = intent_obj.create_response()
         response.async_set_speech_slots(

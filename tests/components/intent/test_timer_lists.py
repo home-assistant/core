@@ -1,6 +1,7 @@
 """Tests for intent timers kept in timer list entities."""
 
 from collections.abc import Generator, Iterable
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -12,11 +13,13 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    MockUser,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.components.intent import (
     DOMAIN,
     TimerEventType,
@@ -38,7 +41,8 @@ from homeassistant.components.timer_list import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -167,6 +171,8 @@ async def _handle(
     hass: HomeAssistant,
     intent_type: str,
     device_id: str | None,
+    *,
+    context: Context | None = None,
     **slots: Any,
 ) -> intent.IntentResponse:
     """Handle a timer intent from a device."""
@@ -176,6 +182,7 @@ async def _handle(
         intent_type,
         {name: {"value": value} for name, value in slots.items()},
         device_id=device_id,
+        context=context,
     )
 
 
@@ -706,3 +713,211 @@ async def test_start_timer_skips_unloaded_timer_list(
 
     assert len(timer_list.timers) == 1
     assert timer_list.timers[0].created_duration == timedelta(minutes=5)
+
+
+async def test_timer_status_permissions(
+    hass: HomeAssistant, devices: dict[str, TimerDevice]
+) -> None:
+    """Only report lists the caller can read, including read-only lists."""
+    kitchen = devices[KITCHEN]
+    living_room = devices[LIVING_ROOM]
+    kitchen_id = await _create_timer(kitchen)
+    await _create_timer(living_room)
+    user = MockUser().add_to_hass(hass)
+    user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    kitchen.timer_list.entity_id: {POLICY_READ: True},
+                    living_room.timer_list.entity_id: {POLICY_CONTROL: True},
+                }
+            }
+        }
+    )
+
+    result = await _handle(
+        hass,
+        intent.INTENT_TIMER_STATUS,
+        living_room.device_id,
+        context=Context(user_id=user.id),
+    )
+
+    assert [timer["id"] for timer in result.speech_slots["timers"]] == [kitchen_id]
+
+
+@pytest.mark.parametrize("can_control", [False, True])
+@pytest.mark.parametrize(
+    ("intent_type", "slots", "expected_status", "expected_duration"),
+    [
+        (intent.INTENT_CANCEL_TIMER, {}, TimerStatus.CANCELLED, 300),
+        (intent.INTENT_PAUSE_TIMER, {}, TimerStatus.PAUSED, 300),
+        (intent.INTENT_UNPAUSE_TIMER, {}, TimerStatus.ACTIVE, 300),
+        (intent.INTENT_INCREASE_TIMER, {"seconds": 30}, TimerStatus.ACTIVE, 330),
+        (intent.INTENT_DECREASE_TIMER, {"seconds": 30}, TimerStatus.ACTIVE, 270),
+    ],
+)
+async def test_timer_mutation_permissions(
+    hass: HomeAssistant,
+    devices: dict[str, TimerDevice],
+    can_control: bool,
+    freezer: FrozenDateTimeFactory,
+    intent_type: str,
+    slots: dict[str, Any],
+    expected_status: TimerStatus,
+    expected_duration: int,
+) -> None:
+    """Mutations require control and exclude other lists before matching."""
+    kitchen = devices[KITCHEN]
+    living_room = devices[LIVING_ROOM]
+    for device in devices.values():
+        timer_id = await _create_timer(device, name="pizza")
+        if intent_type == intent.INTENT_UNPAUSE_TIMER:
+            await device.timer_list.async_pause_timer(timer_id)
+    original_kitchen = deepcopy(kitchen.timer_list.timers)
+    original_living_room = deepcopy(living_room.timer_list.timers)
+    user = MockUser().add_to_hass(hass)
+    user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    kitchen.timer_list.entity_id: {
+                        POLICY_READ: True,
+                        POLICY_CONTROL: can_control,
+                    },
+                    living_room.timer_list.entity_id: {POLICY_READ: True},
+                }
+            }
+        }
+    )
+
+    if can_control:
+        await _handle(
+            hass,
+            intent_type,
+            living_room.device_id,
+            name="pizza",
+            context=Context(user_id=user.id),
+            **slots,
+        )
+        timer = kitchen.timer_list.timers[0]
+        assert timer.status == expected_status
+        if timer.finishes_at is not None:
+            assert timer.finishes_at - timer.created_at == timedelta(
+                seconds=expected_duration
+            )
+    else:
+        with pytest.raises(TimerNotFoundError):
+            await _handle(
+                hass,
+                intent_type,
+                kitchen.device_id,
+                name="pizza",
+                context=Context(user_id=user.id),
+                **slots,
+            )
+        assert kitchen.timer_list.timers == original_kitchen
+
+    assert living_room.timer_list.timers == original_living_room
+
+
+async def test_cancel_all_timer_permissions(
+    hass: HomeAssistant, devices: dict[str, TimerDevice]
+) -> None:
+    """Cancel only the lists the caller can control."""
+    kitchen = devices[KITCHEN]
+    living_room = devices[LIVING_ROOM]
+    await _create_timer(kitchen)
+    await _create_timer(living_room)
+    user = MockUser().add_to_hass(hass)
+    user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    kitchen.timer_list.entity_id: {POLICY_CONTROL: True},
+                    living_room.timer_list.entity_id: {POLICY_READ: True},
+                }
+            }
+        }
+    )
+
+    result = await _handle(
+        hass,
+        intent.INTENT_CANCEL_ALL_TIMERS,
+        None,
+        context=Context(user_id=user.id),
+    )
+
+    assert result.speech_slots == {"canceled": 1}
+    assert _statuses(kitchen) == [TimerStatus.CANCELLED]
+    assert _statuses(living_room) == [TimerStatus.ACTIVE]
+
+
+@pytest.mark.parametrize("can_control", [False, True])
+async def test_start_timer_permissions(
+    hass: HomeAssistant, devices: dict[str, TimerDevice], can_control: bool
+) -> None:
+    """Creating a timer requires control, even if the device has a legacy handler."""
+    kitchen = devices[KITCHEN]
+    handler = Mock()
+    async_register_timer_handler(hass, kitchen.device_id, handler)
+    user = MockUser().add_to_hass(hass)
+    user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    kitchen.timer_list.entity_id: {
+                        POLICY_READ: True,
+                        POLICY_CONTROL: can_control,
+                    },
+                }
+            }
+        }
+    )
+
+    if can_control:
+        await _handle(
+            hass,
+            intent.INTENT_START_TIMER,
+            kitchen.device_id,
+            minutes=5,
+            context=Context(user_id=user.id),
+        )
+        assert _statuses(kitchen) == [TimerStatus.ACTIVE]
+    else:
+        with pytest.raises(intent.IntentUnexpectedError) as err:
+            await _handle(
+                hass,
+                intent.INTENT_START_TIMER,
+                kitchen.device_id,
+                minutes=5,
+                context=Context(user_id=user.id),
+            )
+        assert isinstance(err.value.__cause__, Unauthorized)
+        assert not kitchen.timer_list.timers
+
+    handler.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "intent_type", [intent.INTENT_START_TIMER, intent.INTENT_TIMER_STATUS]
+)
+async def test_timer_unknown_user(
+    hass: HomeAssistant, devices: dict[str, TimerDevice], intent_type: str
+) -> None:
+    """An unknown user must not gain unrestricted access."""
+    kitchen = devices[KITCHEN]
+    await _create_timer(kitchen)
+    original_timers = deepcopy(kitchen.timer_list.timers)
+    slots = {"minutes": 5} if intent_type == intent.INTENT_START_TIMER else {}
+
+    with pytest.raises(intent.IntentUnexpectedError) as err:
+        await _handle(
+            hass,
+            intent_type,
+            kitchen.device_id,
+            context=Context(user_id="unknown-user"),
+            **slots,
+        )
+
+    assert isinstance(err.value.__cause__, UnknownUser)
+    assert kitchen.timer_list.timers == original_timers
