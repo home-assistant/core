@@ -39,3 +39,5 @@ async def test_diagnostics(
     )
 
     assert result["entry"] == entry_dict | {"discovery_keys": {}}
+    assert result["device"]["name"] == "myrouter.asuswrt.com"
+    assert result["device"]["entities"]
