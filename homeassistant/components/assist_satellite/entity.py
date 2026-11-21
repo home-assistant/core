@@ -136,6 +136,7 @@ class AssistSatelliteEntity(entity.Entity):
     _conversation_id: str | None = None
 
     _run_has_tts: bool = False
+    _run_streams_tts: bool = False
     _is_announcing = False
     _extra_system_prompt: str | None = None
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
@@ -508,6 +509,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
+        self._run_streams_tts = False
 
         assert self.platform.config_entry is not None
 
@@ -593,10 +595,16 @@ class AssistSatelliteEntity(entity.Entity):
                 )
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
+        elif event.type is PipelineEventType.INTENT_PROGRESS:
+            # The response can play, and even finish, before the TTS stage
+            if event.data and event.data.get("tts_start_streaming"):
+                self._run_streams_tts = True
+                self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
-            self._set_state(AssistSatelliteState.RESPONDING)
+            if not self._run_streams_tts:
+                self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
                 self._set_state(AssistSatelliteState.IDLE)

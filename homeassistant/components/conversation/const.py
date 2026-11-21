@@ -27,6 +27,8 @@ class ConversationEntityFeature(IntFlag):
     """Supported features of the conversation entity."""
 
     CONTROL = 1
+    AUDIO_INPUT = 2
+    AUDIO_OUTPUT = 4
 
 
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"

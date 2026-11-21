@@ -27,6 +27,8 @@
   dict({
     'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
+    'supports_audio_input': False,
+    'supports_audio_output': False,
     'supports_streaming': False,
   })
 # ---
@@ -34,6 +36,8 @@
   dict({
     'id': 'mock-entry',
     'name': 'Mock Title',
+    'supports_audio_input': False,
+    'supports_audio_output': False,
     'supports_streaming': False,
   })
 # ---
@@ -41,6 +45,8 @@
   dict({
     'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
+    'supports_audio_input': False,
+    'supports_audio_output': False,
     'supports_streaming': False,
   })
 # ---
