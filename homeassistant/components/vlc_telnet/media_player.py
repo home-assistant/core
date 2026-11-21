@@ -1,5 +1,6 @@
 """Provide functionality to interact with the vlc telnet interface."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, Literal, override
@@ -14,6 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_HASSIO
@@ -109,6 +111,7 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.STOP
@@ -117,6 +120,8 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _volume_bkp = 0.0
+    _vlc_repeat: bool | None = None
+    _vlc_loop: bool | None = None
     volume_level: int
 
     def __init__(
@@ -135,6 +140,7 @@ class VlcDevice(MediaPlayerEntity):
             name=name,
         )
         self._using_addon = config_entry.source == SOURCE_HASSIO
+        self._repeat_lock = asyncio.Lock()
 
     @catch_vlc_errors(log=True)
     async def async_update(self) -> None:
@@ -157,6 +163,8 @@ class VlcDevice(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.IDLE
             self._attr_available = True
+            self._vlc_repeat = None
+            self._vlc_loop = None
             LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
@@ -315,6 +323,34 @@ class VlcDevice(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
+
+    @catch_vlc_errors()
+    @override
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        loop = repeat == RepeatMode.ALL
+        repeat_one = repeat == RepeatMode.ONE
+        async with self._repeat_lock:
+            try:
+                self._vlc_loop = None
+                await self._vlc.loop("on" if loop else "off")
+                self._vlc_loop = loop
+                self._vlc_repeat = None
+                await self._vlc.repeat("on" if repeat_one else "off")
+                self._vlc_repeat = repeat_one
+            except CommandError:
+                self.async_write_ha_state()
+                raise
+
+    @property
+    @override
+    def repeat(self) -> RepeatMode | None:
+        """Return the repeat mode VLC has confirmed, or None if it is unknown."""
+        if self._vlc_repeat:
+            return RepeatMode.ONE
+        if self._vlc_repeat is None or self._vlc_loop is None:
+            return None
+        return RepeatMode.ALL if self._vlc_loop else RepeatMode.OFF
 
     @override
     async def async_browse_media(
