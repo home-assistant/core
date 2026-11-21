@@ -1,0 +1,18 @@
+{
+  "domain": "victron_modbus",
+  "name": "Victron Modbus",
+  "categories": ["energy.meters_monitoring"],
+  "codeowners": ["@ldoes"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/victron_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["modbus_connection", "victron_modbus"],
+  "quality_scale": "bronze",
+  "requirements": ["victron-modbus==0.2.0"],
+  "zeroconf": [
+    "_victron-energy-meter._udp.local.",
+    "_victron-p1link._udp.local."
+  ]
+}
