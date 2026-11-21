@@ -32,10 +32,52 @@ async def async_setup(hass, config):
             """
 async def async_setup(hass, config):
     await hass.async_add_executor_job(call_a)
-    result = do_something()
+    async_do_something(hass)
     await hass.async_add_executor_job(call_b)
 """,
-            id="separated_by_other_statement",
+            id="separated_by_async_api_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    if condition:
+        pass
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_control_flow",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    await get_instance(hass).async_add_executor_job(call_b)
+""",
+            id="different_executors",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    await hass.async_add_import_executor_job(call_b)
+""",
+            id="default_and_import_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    result = (await hass.async_add_executor_job(call_b)) + (await other())
+""",
+            id="nested_with_other_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    await hass.loop.run_in_executor(custom_executor, call_b)
+""",
+            id="run_in_custom_executor",
         ),
         pytest.param(
             """
@@ -45,6 +87,128 @@ async def async_setup(hass, config):
     await hass.async_add_executor_job(call_b)
 """,
             id="separated_by_other_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    pending = (await hass.async_add_executor_job(fn) for fn in funcs)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="deferred_generator_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    hass.states.async_set("sensor.a", await hass.async_add_executor_job(call_a))
+    await hass.async_add_executor_job(call_b)
+""",
+            id="executor_result_passed_to_async_api",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    task = asyncio.create_task(coro())
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_create_task",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    loop = asyncio.get_running_loop()
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_get_running_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    items = [item async for item in stream]
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    items = [x async for x in stream] + await hass.async_add_executor_job(call_b)
+""",
+            id="executor_job_with_async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pool, call_a)
+    pool = another_pool
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="executor_rebound",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await self._instance.async_add_executor_job(call_a)
+    self._instance = get_instance(hass)
+    await self._instance.async_add_executor_job(call_b)
+""",
+            id="receiver_rebound",
+        ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    await hass.async_add_executor_job(call_a)
+    yield value
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_yield",
+        ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    await hass.async_add_executor_job(call_a)
+    yield await hass.async_add_executor_job(call_b)
+    await hass.async_add_executor_job(call_c)
+""",
+            id="executor_job_yielded",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    task = asyncio.current_task()
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_current_task",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    get_loop = lambda loop=asyncio.get_running_loop(): loop
+    await hass.async_add_executor_job(call_b)
+""",
+            id="loop_only_call_in_lambda_default",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pools[index], call_a)
+    index += 1
+    await loop.run_in_executor(pools[index], call_b)
+""",
+            id="executor_index_rebound",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    pool = await loop.run_in_executor(pool, make_pool)
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="executor_rebound_by_job",
         ),
     ],
 )
@@ -58,6 +222,133 @@ def test_no_warning(
 
     with assert_no_messages(linter):
         walk_checker(linter, executor_checker, root_node)
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    result = do_something()
+    _LOGGER.debug("Result: %s", result)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_sync_statements",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    data = await hass.async_add_executor_job(call_a)
+    enabled = (await hass.async_add_executor_job(call_b)) == "1"
+""",
+            id="nested_in_expression",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    items = []
+    items += await hass.async_add_executor_job(call_a)
+    items += await hass.async_add_executor_job(call_b)
+""",
+            id="augmented_assignment",
+        ),
+        pytest.param(
+            """
+class Coordinator:
+    async def _async_update_data(self):
+        await self.hass.async_add_executor_job(call_a)
+        await hass.async_add_executor_job(call_b)
+""",
+            id="hass_and_self_hass",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    await asyncio.to_thread(call_b)
+""",
+            id="to_thread",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    await hass.loop.run_in_executor(None, call_b)
+""",
+            id="run_in_default_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_import_executor_job(call_a)
+    await hass.async_add_import_executor_job(call_b)
+""",
+            id="import_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    instance = get_instance(hass)
+    await instance.async_add_executor_job(call_a)
+    await instance.async_add_executor_job(call_b)
+""",
+            id="same_custom_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    match value:
+        case 1:
+            await hass.async_add_executor_job(call_a)
+            await hass.async_add_executor_job(call_b)
+""",
+            id="inside_match",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    try:
+        await hass.async_add_executor_job(call_a)
+        await hass.async_add_executor_job(call_b)
+    except* ValueError:
+        pass
+""",
+            id="inside_try_star",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pool, call_a)
+    other = another_pool
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="unrelated_assignment_with_custom_executor",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    values = list(x for x in items)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="separated_by_sync_generator",
+        ),
+    ],
+)
+def test_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test cases that should trigger a single warning."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+    walk_checker(linter, executor_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
 
 
 def test_two_sequential_flagged(
@@ -228,6 +519,221 @@ async def async_setup(hass, config):
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-sequential-executor-jobs"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="for_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    while await hass.async_add_executor_job(has_more):
+        result = do_something()
+""",
+            id="while_test",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if item:
+            results.append(await hass.async_add_executor_job(call_a, item))
+""",
+            id="nested_in_expression",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        for sub_item in item:
+            await hass.async_add_executor_job(call_a, sub_item)
+""",
+            id="nested_loops_flag_outer_only",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        try:
+            await hass.async_add_executor_job(call_a, item)
+        except ValueError:
+            break
+""",
+            id="try_and_break",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        @callback
+        def handle(value=None):
+            pass
+        await hass.async_add_executor_job(call_a, item, handle)
+""",
+            id="nested_function_definition",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await loop.run_in_executor(pool, call_a, item)
+""",
+            id="same_custom_executor",
+        ),
+    ],
+)
+def test_executor_job_in_loop_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loops that should trigger a single warning."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+    walk_checker(linter, executor_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-executor-job-in-loop"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    async for item in items:
+        await hass.async_add_executor_job(call_a, item)
+""",
+            id="async_for",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        await fetch(item)
+""",
+            id="other_await",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        if await hass.async_add_executor_job(call_a, item):
+            return item
+""",
+            id="return",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        async_dispatcher_send(hass, "signal")
+""",
+            id="async_api_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        await get_instance(hass).async_add_executor_job(call_b, item)
+""",
+            id="different_executors",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        values = [value async for value in stream]
+""",
+            id="async_comprehension",
+        ),
+        pytest.param(
+            """
+async def async_gen(hass):
+    for item in items:
+        yield await hass.async_add_executor_job(call_a, item)
+""",
+            id="yield",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        def inner():
+            return await_me()
+        do_something(inner)
+""",
+            id="no_executor_job",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        async def work():
+            await hass.async_add_executor_job(call_a, item)
+        workers.append(work)
+""",
+            id="deferred_function_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for pool in pools:
+        await loop.run_in_executor(pool, call_a)
+""",
+            id="executor_rebound_by_target",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for entry in entries:
+        instance = get_instance(entry)
+        await instance.async_add_executor_job(call_a)
+""",
+            id="receiver_rebound_in_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for index in range(len(pools)):
+        await loop.run_in_executor(pools[index], call_a)
+""",
+            id="executor_index_rebound_by_target",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        tasks = asyncio.all_tasks()
+""",
+            id="all_tasks",
+        ),
+    ],
+)
+def test_executor_job_in_loop_not_flagged(
+    linter: UnittestLinter,
+    executor_checker: SequentialExecutorJobsChecker,
+    code: str,
+) -> None:
+    """Test loops that should not trigger a warning."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+
+    with assert_no_messages(linter):
+        walk_checker(linter, executor_checker, root_node)
 
 
 def test_not_integration_module_ignored(
