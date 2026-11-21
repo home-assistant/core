@@ -9,10 +9,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.irm_kmi.const import (
-    CONF_LANGUAGE_OVERRIDE,
-    DOMAIN,
-    SERVICE_GET_FORECASTS_RADAR,
+from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
+from homeassistant.components.irm_kmi.services import (
+    IrmKmiService,
+    IrmKmiServiceArgument,
 )
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.const import Platform, TargetKey
@@ -279,8 +279,12 @@ async def test_daily_forecast_templow(
     "fields",
     [
         pytest.param({}, id="default"),
-        pytest.param({"include_past_forecasts": False}, id="exclude_past"),
-        pytest.param({"include_past_forecasts": True}, id="include_past"),
+        pytest.param(
+            {IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: False}, id="exclude_past"
+        ),
+        pytest.param(
+            {IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: True}, id="include_past"
+        ),
     ],
 )
 @pytest.mark.freeze_time("2023-12-26T18:05:00+01:00")
@@ -295,7 +299,7 @@ async def test_get_forecasts_radar(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS_RADAR,
+        IrmKmiService.GET_FORECASTS_RADAR,
         {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID} | fields,
         blocking=True,
         return_response=True,
@@ -319,7 +323,7 @@ async def test_get_forecasts_radar_without_radar_data(
     ) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS_RADAR,
+            IrmKmiService.GET_FORECASTS_RADAR,
             {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -340,7 +344,7 @@ async def test_get_forecasts_radar_five_minute_frames(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS_RADAR,
+        IrmKmiService.GET_FORECASTS_RADAR,
         {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -366,8 +370,11 @@ async def test_get_forecasts_radar_converts_every_rate(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS_RADAR,
-        {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID, "include_past_forecasts": True},
+        IrmKmiService.GET_FORECASTS_RADAR,
+        {
+            TargetKey.ENTITY_ID: WEATHER_ENTITY_ID,
+            IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: True,
+        },
         blocking=True,
         return_response=True,
     )
