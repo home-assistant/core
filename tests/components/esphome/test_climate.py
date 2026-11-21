@@ -16,6 +16,7 @@ from aioesphomeapi import (
     TemperatureUnit,
 )
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -39,7 +40,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import TargetKey
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -1142,4 +1143,73 @@ async def test_climate_turn_on_without_last_mode(
     await _turn_on(hass)
     mock_client.climate_command.assert_called_once_with(
         key=1, mode=ClimateMode.HEAT_COOL, device_id=0
+    )
+
+
+async def test_climate_turn_on_keeps_running_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test turn_on does not change the mode when the entity is already on."""
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, ClimateMode.COOL)
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("stored_mode", "expected_mode"),
+    [
+        (HVACMode.COOL, ClimateMode.COOL),
+        (HVACMode.OFF, ClimateMode.HEAT_COOL),
+        (HVACMode.FAN_ONLY, ClimateMode.HEAT_COOL),
+        (None, ClimateMode.HEAT_COOL),
+    ],
+)
+async def test_climate_turn_on_restored_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    stored_mode: HVACMode | None,
+    expected_mode: ClimateMode,
+) -> None:
+    """Test the last running mode survives a restart, ignoring invalid values."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("climate.test_my_climate", HVACMode.OFF),
+                {"last_hvac_mode": stored_mode},
+            )
+        ],
+    )
+    await _setup_turn_on_entity(mock_client, mock_esphome_device, ClimateMode.OFF)
+    mock_client.climate_command.assert_not_called()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=expected_mode, device_id=0
+    )
+
+
+async def test_climate_turn_on_device_mode_overrides_restored(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a mode reported by the device wins over the restored one."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State("climate.test_my_climate", HVACMode.OFF), {"last_hvac_mode": "cool"})],
+    )
+    mock_device = await _setup_turn_on_entity(
+        mock_client, mock_esphome_device, ClimateMode.HEAT
+    )
+    mock_device.set_state(ClimateState(key=1, mode=ClimateMode.OFF))
+    await hass.async_block_till_done()
+
+    await _turn_on(hass)
+    mock_client.climate_command.assert_called_once_with(
+        key=1, mode=ClimateMode.HEAT, device_id=0
     )
