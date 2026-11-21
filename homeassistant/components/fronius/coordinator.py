@@ -354,6 +354,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
             values["battery_minimum_reserve"] = storage.minimum_reserve
             values["battery_grid_charging"] = storage.grid_charging
+            # WChaMax, what the charge and discharge limits are a percentage of
+            values["battery_power_limit_reference"] = storage.charge_reference_power
 
         return self._as_device_data(values)
 

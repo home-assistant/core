@@ -30,9 +30,18 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform, TargetKey
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    EntityCategory,
+    Platform,
+    TargetKey,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -57,6 +66,7 @@ POWER_LIMITING = "switch.gen24_storage_ac_power_limiting"
 DISCHARGE_LIMIT = "number.gen24_storage_battery_discharge_power_limit"
 DISCHARGE_LIMITING = "switch.gen24_storage_battery_discharge_power_limiting"
 MINIMUM_RESERVE = "number.gen24_storage_battery_minimum_reserve"
+LIMIT_REFERENCE = "sensor.gen24_storage_battery_power_limit_reference"
 
 # number, switch, value to set, model holding it, its enable register
 LIMITS = [
@@ -564,6 +574,56 @@ async def test_control_refused_creates_no_control_entities(
         )
         if entry.domain == "number"
     ]
+    # read with the settings, and of no use without the limits
+    assert hass.states.get(LIMIT_REFERENCE) is None
+
+
+async def test_battery_power_limit_reference(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the power the battery limits are a percentage of is a sensor."""
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=12800)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    await setup_fronius_integration(hass, is_logger=False, unique_id="12345678")
+
+    state = hass.states.get(LIMIT_REFERENCE)
+    assert state
+    assert state.state == "12800"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+
+    entity_entry = entity_registry.async_get(LIMIT_REFERENCE)
+    assert entity_entry
+    assert entity_entry.unique_id == "12345678-modbus-battery_power_limit_reference"
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    # on the inverter, next to the limits it belongs to
+    limit_entry = entity_registry.async_get(DISCHARGE_LIMIT)
+    assert limit_entry
+    assert entity_entry.device_id == limit_entry.device_id
+
+
+async def test_no_battery_power_limit_reference_without_storage(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test an inverter without a storage gets no reference sensor."""
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    config_entry = await setup_fronius_integration(
+        hass, is_logger=False, unique_id="12345678"
+    )
+
+    assert len(config_entry.runtime_data.modbus.settings_coordinators) == 1
+    assert hass.states.get(POWER_LIMIT)
+    assert hass.states.get(LIMIT_REFERENCE) is None
 
 
 async def _setup_with_controls(

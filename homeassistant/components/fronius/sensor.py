@@ -52,6 +52,7 @@ from .coordinator import (
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusModbusInverterUpdateCoordinator,
+    FroniusModbusSettingsUpdateCoordinator,
     FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
@@ -121,6 +122,13 @@ async def async_setup_entry(
                 async_add_entities_for_seen_keys(
                     coordinator,
                     MODBUS_INVERTER_ENTITY_DESCRIPTIONS,
+                    ModbusInverterSensor,
+                    async_add_entities,
+                )
+            case FroniusModbusSettingsUpdateCoordinator():
+                async_add_entities_for_seen_keys(
+                    coordinator,
+                    MODBUS_SETTINGS_ENTITY_DESCRIPTIONS,
                     ModbusInverterSensor,
                     async_add_entities,
                 )
@@ -515,6 +523,22 @@ MODBUS_INVERTER_ENTITY_DESCRIPTIONS: list[
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         invalid_when_falsy=True,
+    ),
+]
+
+# Read with the settings they belong to, so only where the device accepts
+# control via Modbus.
+MODBUS_SETTINGS_ENTITY_DESCRIPTIONS: list[
+    FroniusSensorEntityDescription[ModbusValues]
+] = [
+    # WChaMax: the power the battery charge and discharge limits are a
+    # percentage of. A fixed value of the storage, so no state class.
+    FroniusSensorEntityDescription(
+        key="battery_power_limit_reference",
+        value_fn=_modbus_value("battery_power_limit_reference"),
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
@@ -1152,7 +1176,10 @@ class ModbusInverterSensor(_FroniusSensorEntity):
 
     def __init__(
         self,
-        coordinator: FroniusModbusInverterUpdateCoordinator,
+        coordinator: (
+            FroniusModbusInverterUpdateCoordinator
+            | FroniusModbusSettingsUpdateCoordinator
+        ),
         description: FroniusSensorEntityDescription[ModbusValues],
         solar_net_id: str,
     ) -> None:

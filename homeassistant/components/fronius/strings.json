@@ -71,6 +71,9 @@
       }
     },
     "sensor": {
+      "battery_power_limit_reference": {
+        "name": "Battery power limit reference"
+      },
       "capacity_designed": {
         "name": "Designed capacity"
       },
