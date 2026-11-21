@@ -219,8 +219,8 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ),
 }
 
-REST_SENSORS: Final = {
-    "cloud": RestBinarySensorDescription(
+REST_SENSORS: Final = (
+    RestBinarySensorDescription(
         key="cloud",
         translation_key="cloud",
         value=lambda status, _: status["cloud"]["connected"],
@@ -228,7 +228,7 @@ REST_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-}
+)
 
 RPC_SENSORS: Final = (
     RpcBinarySensorDescription(

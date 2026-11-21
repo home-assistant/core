@@ -305,7 +305,7 @@ def async_setup_entry_rest(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    sensors: Mapping[str, RestEntityDescription],
+    sensors: Iterable[RestEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for REST sensors."""
@@ -313,8 +313,8 @@ def async_setup_entry_rest(
     assert coordinator
 
     async_add_entities(
-        sensor_class(coordinator, sensor_id, sensors[sensor_id])
-        for sensor_id in sensors
+        sensor_class(coordinator, description.key, description)
+        for description in sensors
     )
 
 

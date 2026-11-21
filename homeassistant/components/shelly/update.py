@@ -69,8 +69,8 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
     beta: bool
 
 
-REST_UPDATES: Final = {
-    "fwupdate": RestUpdateDescription(
+REST_UPDATES: Final = (
+    RestUpdateDescription(
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -78,8 +78,8 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "fwupdate_beta": RestUpdateDescription(
-        key="fwupdate",
+    RestUpdateDescription(
+        key="fwupdate_beta",
         translation_key="beta_firmware",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
@@ -87,7 +87,7 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-}
+)
 
 
 class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
