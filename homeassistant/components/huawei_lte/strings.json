@@ -167,6 +167,9 @@
       "mode": {
         "name": "Mode"
       },
+      "ncgi": {
+        "name": "NCGI"
+      },
       "nei_cellid": {
         "name": "Neighbor cell ID"
       },
@@ -181,6 +184,9 @@
       },
       "nrdlbandwidth": {
         "name": "5G downlink bandwidth"
+      },
+      "nrdlfreq": {
+        "name": "5G downlink frequency"
       },
       "nrdlmcs": {
         "name": "5G downlink MCS"
@@ -205,6 +211,9 @@
       },
       "nrulbandwidth": {
         "name": "5G uplink bandwidth"
+      },
+      "nrulfreq": {
+        "name": "5G uplink frequency"
       },
       "nrulmcs": {
         "name": "5G uplink MCS"
@@ -269,6 +278,9 @@
       },
       "sc": {
         "name": "Scrambling code"
+      },
+      "scc_pci": {
+        "name": "5G PCI"
       },
       "secondary_dns_server": {
         "name": "Secondary DNS server"
