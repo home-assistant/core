@@ -1,0 +1,8 @@
+restart:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: doorbird
+          multiple: true
