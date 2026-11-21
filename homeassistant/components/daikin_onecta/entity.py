@@ -258,7 +258,7 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
     def _characteristic_exposed_on(self, name: str, platform: Platform) -> bool:
         """Return whether a scalar characteristic is still exposed on a platform."""
         point = self._management_point
-        characteristic = point.characteristic(name) if point is not None else None
+        characteristic = self._characteristic(name)
         return (
             point is not None
             and characteristic is not None

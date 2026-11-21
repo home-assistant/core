@@ -28,6 +28,7 @@ from homeassistant.components.daikin_onecta.entity_metadata import (
     SWITCH_KEYS,
     UPDATE_KEYS,
 )
+from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -146,27 +147,33 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("name", "expected_platform"),
+    ("name", "settable", "expected_platform"),
     [
-        pytest.param("onOffMode", Platform.BINARY_SENSOR, id="power"),
-        pytest.param("powerfulMode", Platform.SENSOR, id="boost"),
+        pytest.param("onOffMode", False, Platform.BINARY_SENSOR, id="read-only-power"),
+        pytest.param("onOffMode", True, Platform.SWITCH, id="writable-power"),
+        pytest.param("powerfulMode", False, Platform.SENSOR, id="boost"),
     ],
 )
-def test_read_only_climate_control_is_exposed_without_supported_setpoint(
-    name: str, expected_platform: Platform
+def test_climate_control_without_supported_setpoint_is_exposed(
+    name: str, settable: bool, expected_platform: Platform
 ) -> None:
-    """Expose read-only controls when no climate entity can own them."""
+    """Expose controls when no climate entity can own them."""
     point = ManagementPoint(
         embedded_id="read_only_climate_control",
         management_point_type="climateControl",
         characteristics={
-            name: Characteristic(value="on", values=["on", "off"]),
+            name: Characteristic(value="on", settable=settable, values=["on", "off"]),
         },
     )
     characteristic = point.scalar_characteristic(name)
     assert characteristic is not None
 
     assert scalar_platform_for_point(point, name, characteristic) is expected_platform
+
+
+def test_settable_climate_power_without_setpoint_has_switch_description() -> None:
+    """Expose writable power as a switch when no climate entity owns it."""
+    assert SWITCH_DESCRIPTIONS["onOffMode"].translation_key == "onoffmode"
 
 
 def test_econo_mode_is_a_switch_without_a_climate_entity() -> None:

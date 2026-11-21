@@ -501,6 +501,9 @@
       "economode": {
         "name": "Econo mode"
       },
+      "onoffmode": {
+        "name": "Power"
+      },
       "streamermode": {
         "name": "Streamer mode"
       }

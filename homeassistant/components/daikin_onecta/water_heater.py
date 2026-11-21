@@ -88,7 +88,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     def update_state(self) -> None:
         """Refresh all state attributes from the device."""
-        self._attr_supported_features = self.get_supported_features()
+        operation_list = self.get_operation_list()
+        self._attr_supported_features = self.get_supported_features(operation_list)
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self.get_current_temperature()
         self._attr_native_target_temperature = self.get_target_temperature()
@@ -106,7 +107,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if dht is not None and dht.step_value is not None
             else 1.0
         )
-        self._attr_operation_list = self.get_operation_list()
+        self._attr_operation_list = operation_list
         self._attr_current_operation = self.get_current_operation()
 
     def _get_native_temperature_unit(self) -> UnitOfTemperature:
@@ -159,7 +160,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         hot_water = self._hot_water
         return hot_water.temperature if hot_water is not None else None
 
-    def get_supported_features(self) -> WaterHeaterEntityFeature:
+    def get_supported_features(
+        self, operation_list: list[str] | None = None
+    ) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         sf = WaterHeaterEntityFeature(0)
         hot_water = self._hot_water
@@ -169,7 +172,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             and hot_water.power.settable
         ):
             sf |= WaterHeaterEntityFeature.ON_OFF
-        if self.get_operation_list():
+        if operation_list is None:
+            operation_list = self.get_operation_list()
+        if operation_list:
             sf |= WaterHeaterEntityFeature.OPERATION_MODE
         dht = self.domestic_hotwater_temperature
         if dht and dht.settable:

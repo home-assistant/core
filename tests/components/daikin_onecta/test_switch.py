@@ -3,10 +3,11 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from daikin_onecta.models import Characteristic
+from daikin_onecta.models import Characteristic, ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.switch import (
     async_setup_entry as async_setup_switches,
 )
@@ -18,8 +19,13 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
-from .platform_helpers import _async_setup_fixture, _execute_typed_command
+from .platform_helpers import (
+    _async_setup_fixture,
+    _execute_typed_command,
+    _load_gateway_devices,
+)
 
 TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID = "switch.test_living_room_streamer_mode"
 
@@ -60,6 +66,61 @@ async def test_econo_mode_is_only_exposed_as_climate_preset(
     await _async_setup_fixture(hass, config_entry, "altherma")
     assert hass.states.get("climate.test_living_room_room_temperature") is not None
     assert hass.states.get("switch.test_living_room_econo_mode") is None
+
+
+async def test_settable_climate_power_without_setpoint_is_exposed_as_switch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose writable power when the climate point has no supported setpoint."""
+    gateway_devices = _load_gateway_devices("climate_floorheatingairflow")
+    gateway = gateway_devices[0]
+    gateway.management_points.append(
+        ManagementPoint(
+            embedded_id="climatePowerWithoutSetpoint",
+            management_point_type="climateControl",
+            characteristics={
+                "onOffMode": Characteristic(
+                    value="on", settable=True, values=["on", "off"]
+                )
+            },
+        )
+    )
+    await _async_setup_fixture(
+        hass,
+        config_entry,
+        "climate_floorheatingairflow",
+        gateway_devices=gateway_devices,
+    )
+    execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute_command
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_climatePowerWithoutSetpoint_onOffMode",
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SWITCH_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert hass.states.get(entity_id).state == "off"
+    config_entry.runtime_data.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        "climatePowerWithoutSetpoint",
+        "onOffMode",
+        "off",
+        path=None,
+    )
 
 
 @pytest.mark.parametrize("service", [SWITCH_SERVICE_TURN_ON, SWITCH_SERVICE_TURN_OFF])

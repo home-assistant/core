@@ -64,10 +64,15 @@ def _load_gateway_devices(fixture: str) -> list[GatewayDevice]:
 
 
 async def _async_setup_fixture(
-    hass: HomeAssistant, config_entry: MockConfigEntry, fixture: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fixture: str,
+    *,
+    gateway_devices: list[GatewayDevice] | None = None,
 ) -> None:
     """Set up the integration using an archived cloud response."""
-    gateway_devices = _load_gateway_devices(fixture)
+    if gateway_devices is None:
+        gateway_devices = _load_gateway_devices(fixture)
 
     with (
         patch(
