@@ -16,7 +16,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -85,7 +85,7 @@ async def test_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+            TargetKey.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
             NumberServiceArgument.VALUE: 70.0,
         },
         blocking=True,
@@ -111,7 +111,7 @@ async def test_number_set_value_returns_false(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                TargetKey.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
                 NumberServiceArgument.VALUE: 70,
             },
             blocking=True,
@@ -147,7 +147,7 @@ async def test_number_set_value_raises_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                TargetKey.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
                 NumberServiceArgument.VALUE: 70,
             },
             blocking=True,

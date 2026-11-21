@@ -17,6 +17,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DOMAIN,
     MAX_VIA,
@@ -47,6 +48,16 @@ MOCK_USER_DATA_STEP_MANY_VIA = {
 MOCK_USER_DATA_STEP_TOO_MANY_STATIONS = {
     **MOCK_USER_DATA_STEP,
     CONF_VIA: MOCK_USER_DATA_STEP_ONE_VIA[CONF_VIA] * (MAX_VIA + 1),
+}
+
+MOCK_USER_DATA_STEP_ONE_TRANSPORTATION = {
+    **MOCK_USER_DATA_STEP,
+    CONF_TRANSPORTATIONS: ["train"],
+}
+
+MOCK_USER_DATA_STEP_MANY_TRANSPORTATIONS = {
+    **MOCK_USER_DATA_STEP_ONE_VIA,
+    CONF_TRANSPORTATIONS: ["train", "bus"],
 }
 
 MOCK_USER_DATA_STEP_ARRIVAL = {
@@ -92,6 +103,16 @@ MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
             None,
             "test_start test_destination via"
             " via_station_1, via_station_2, via_station_3",
+        ),
+        (
+            MOCK_USER_DATA_STEP_ONE_TRANSPORTATION,
+            None,
+            "test_start test_destination by train",
+        ),
+        (
+            MOCK_USER_DATA_STEP_MANY_TRANSPORTATIONS,
+            None,
+            "test_start test_destination via via_station by bus, train",
         ),
         (MOCK_USER_DATA_STEP_ARRIVAL, None, "test_start test_destination arrival"),
         (

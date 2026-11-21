@@ -69,8 +69,8 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
     beta: bool
 
 
-REST_UPDATES: Final = {
-    "fwupdate": RestUpdateDescription(
+REST_UPDATES: Final = (
+    RestUpdateDescription(
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -78,8 +78,8 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "fwupdate_beta": RestUpdateDescription(
-        key="fwupdate",
+    RestUpdateDescription(
+        key="fwupdate_beta",
         translation_key="beta_firmware",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
@@ -87,7 +87,7 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-}
+)
 
 
 class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
@@ -315,17 +315,19 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             )
 
 
-RPC_UPDATES: Final = {
-    "fwupdate": RpcUpdateDescription(
-        key="sys",
+RPC_UPDATES: Final = (
+    RpcUpdateDescription(
+        key="fwupdate",
+        components=("sys",),
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
     ),
-    "fwupdate_beta": RpcUpdateDescription(
-        key="sys",
+    RpcUpdateDescription(
+        key="fwupdate_beta",
+        components=("sys",),
         sub_key="available_updates",
         translation_key="beta_firmware",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
@@ -334,8 +336,9 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "loraupdate": RpcUpdateDescription(
-        key="lora",
+    RpcUpdateDescription(
+        key="loraupdate",
+        components=("lora",),
         translation_key="lora_firmware",
         # Right after firmware update, lora status can be None
         latest_version=lambda status: status or {},
@@ -344,14 +347,15 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcLoraAddOnUpdateEntity,
     ),
-    "blutrv_fwupdate": RpcBluTrvUpdateDescription(
-        key="blutrv",
+    RpcBluTrvUpdateDescription(
+        key="blutrv_fwupdate",
+        components=("blutrv",),
         sub_key="fw_ver",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcBluTrvUpdateEntity,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -534,6 +538,12 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         )
 
     @callback
+    def _async_device_initialized(self) -> None:
+        """Clear OTA progress, the device can reboot before sending the final event."""
+        self._ota_in_progress = False
+        self._ota_progress_percentage = None
+
+    @callback
     def _ota_progress_callback(self, event: dict[str, Any]) -> None:
         """Handle device OTA progress."""
         if self.in_progress is not False:
@@ -613,6 +623,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         else:
             self._ota_in_progress = True
             self._ota_progress_percentage = None
+            self.async_on_remove(
+                self.coordinator.async_on_initialized(self._async_device_initialized)
+            )
             LOGGER.debug("OTA update call for %s successful", self.coordinator.name)
 
 

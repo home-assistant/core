@@ -47,6 +47,12 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - We use Syrupy for snapshot testing. Leverage `.ambr` snapshots instead of repetitive and exhaustive generation of test data within Python code itself.
 - Hardcoded `entity_id`s in tests are fine. If the same one is repeated, use a constant.
 
+## GitHub Actions workflows
+
+- `.github/workflows/actions.lock` locks the actions every workflow uses. After changing a `uses:` line or running `gh aw compile`, run `gh actions-lock --no-narrow` and commit the lockfile with the change. Without `--no-narrow` it rewrites intentional SHA pins to tags or branches. Install it with `gh extension install github/gh-actions-lock`.
+- Don't edit `actions.lock` by hand. On a merge conflict, take the version from `dev` and run `gh actions-lock --no-narrow` again.
+- `.github/aw/actions-lock.json` is gh-aw's own pin list, a different file. `gh aw compile` updates it.
+
 ## Good practices
 
 - Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.

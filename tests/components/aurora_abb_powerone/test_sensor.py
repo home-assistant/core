@@ -158,7 +158,11 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
             assert item.state == value
 
 
-async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_sensor_dark(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -215,7 +219,9 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_total_energy")
-        assert power.state == "unknown"
+        assert power.state == "unavailable"
+        assert "No response from the inverter, it may be dark" in caplog.text
+        assert "Error fetching" not in caplog.text
     # sun rose again
     with (
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
@@ -251,7 +257,7 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
-        assert power.state == "unknown"  # should this be 'available'?
+        assert power.state == "unavailable"
 
 
 async def test_sensor_unknown_error(

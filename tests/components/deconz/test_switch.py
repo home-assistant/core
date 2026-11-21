@@ -8,7 +8,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -71,7 +71,7 @@ async def test_power_plugs(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.on_off_switch"},
+        {TargetKey.ENTITY_ID: "switch.on_off_switch"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True}
@@ -81,7 +81,7 @@ async def test_power_plugs(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.on_off_switch"},
+        {TargetKey.ENTITY_ID: "switch.on_off_switch"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}

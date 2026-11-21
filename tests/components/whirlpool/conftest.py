@@ -10,6 +10,7 @@ from whirlpool import (
     appliancesmanager,
     auth,
     dryer,
+    microwave,
     oven,
     refrigerator,
     washer,
@@ -64,6 +65,7 @@ def fixture_mock_appliances_manager_api(
     mock_dryer_api,
     mock_oven_single_cavity_api,
     mock_oven_dual_cavity_api,
+    mock_microwave_api,
     mock_refrigerator_api,
     mock_unsupported_appliance_api,
 ):
@@ -89,6 +91,7 @@ def fixture_mock_appliances_manager_api(
             mock_oven_dual_cavity_api,
         ]
         mock_appliances_manager.return_value.refrigerators = [mock_refrigerator_api]
+        mock_appliances_manager.return_value.microwaves = [mock_microwave_api]
         mock_appliances_manager.return_value.unsupported_appliances = [
             mock_unsupported_appliance_api
         ]
@@ -264,6 +267,35 @@ def mock_oven_dual_cavity_api():
         },
     }
     return mock_oven
+
+
+@pytest.fixture
+def mock_microwave_api():
+    """Get a mock of a microwave."""
+    mock_microwave = Mock(spec=microwave.Microwave, said="said_microwave")
+    mock_microwave.name = "Microwave"
+    mock_microwave.appliance_info = Mock(
+        category="microwave",
+        model_number="12345",
+        raw_info={
+            "attributes": {
+                "Category": "Cooking",
+                "Name": "4d6963726f77617665",
+                "Serial": "M1",
+            },
+            "defaultClientId": "said_microwave",
+            "thingArn": "arn:aws:iot:eu-central-1:123456789012:thing/said_microwave",
+            "thingId": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
+            "thingName": "said_microwave",
+            "thingTypeName": "12345",
+            "version": 1,
+        },
+    )
+    mock_microwave.get_raw_data.return_value = {
+        "microwaveCavity": {"cavityState": "idle", "doorStatus": "closed"},
+        "temperatureUnit": "C",
+    }
+    return mock_microwave
 
 
 @pytest.fixture

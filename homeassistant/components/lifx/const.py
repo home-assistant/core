@@ -38,6 +38,7 @@ class LIFXService(StrEnum):
     EFFECT_STOP = "effect_stop"
     PAINT_THEME = "paint_theme"
     SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+    SET_MOOD = "set_mood"
     SET_STATE = "set_state"
 
 
@@ -57,6 +58,7 @@ class LIFXServiceArgument(StrEnum):
     HS_COLOR = "hs_color"
     INFRARED = "infrared"
     MODE = "mode"
+    MOOD = "mood"
     PALETTE = "palette"
     PERIOD = "period"
     POWER = "power"

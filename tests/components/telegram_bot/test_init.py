@@ -5,13 +5,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
-    CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
+    SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+    TelegramBotParseMode,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
@@ -32,7 +32,7 @@ async def test_migration_error(
             CONF_PLATFORM: PLATFORM_BROADCAST,
             CONF_API_KEY: "mock api key",
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         version=99,
     )
 
@@ -56,7 +56,7 @@ async def test_migrate_entry_from_1_1(
             CONF_PLATFORM: PLATFORM_BROADCAST,
             CONF_API_KEY: "mock api key",
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -101,18 +101,18 @@ async def test_migrate_entry_to_per_chat_devices(
             CONF_API_KEY: "mock api key",
             CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="123456",
                 data={CONF_CHAT_ID: 123456},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="chat 1",
             ),
             ConfigSubentryData(
                 unique_id="654321",
                 data={CONF_CHAT_ID: 654321},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="chat 2",
             ),
         ],

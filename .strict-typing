@@ -343,6 +343,7 @@ homeassistant.components.integration.*
 homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
+homeassistant.components.intesis_modbus.*
 homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
@@ -438,6 +439,7 @@ homeassistant.components.my.*
 homeassistant.components.my_pv.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
+homeassistant.components.nad_infrared.*
 homeassistant.components.nam.*
 homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
@@ -649,6 +651,7 @@ homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
 homeassistant.components.timer.*
+homeassistant.components.timer_list.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
@@ -690,6 +693,7 @@ homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
+homeassistant.components.voice_support.*
 homeassistant.components.volvo.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
