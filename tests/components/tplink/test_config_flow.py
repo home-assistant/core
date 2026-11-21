@@ -780,6 +780,9 @@ async def test_manual_camera(
                 "Stream was not found", error_code=stream.StreamClientError.NotFound
             ),
         ),
+        patch(
+            "homeassistant.components.ffmpeg.async_get_image", return_value=None
+        ) as mock_get_image,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -794,6 +797,7 @@ async def test_manual_camera(
     assert result["step_id"] == "camera_auth_confirm"
     assert result["errors"] == {"base": "cannot_connect_camera"}
     assert "error" in result["description_placeholders"]
+    mock_get_image.assert_called_once()
 
     # Test unknown error
     with (
