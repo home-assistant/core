@@ -31,7 +31,7 @@ def mock_projector() -> Generator[MagicMock]:
             autospec=True,
         ) as projector_class,
         patch(
-            "homeassistant.components.sony_projector.switch.pysdcp.Projector",
+            "homeassistant.components.sony_projector.pysdcp.Projector",
             new=projector_class,
         ),
     ):

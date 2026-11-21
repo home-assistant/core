@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import SonyProjectorConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,13 +99,11 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SonyProjectorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the projector switch from a config entry."""
-    async_add_entities(
-        [SonyProjector(pysdcp.Projector(entry.data[CONF_HOST]), entry)], True
-    )
+    async_add_entities([SonyProjector(entry.runtime_data, entry)], True)
 
 
 class SonyProjector(SwitchEntity):
@@ -113,7 +112,9 @@ class SonyProjector(SwitchEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, sdcp_connection: pysdcp.Projector, entry: ConfigEntry) -> None:
+    def __init__(
+        self, sdcp_connection: pysdcp.Projector, entry: SonyProjectorConfigEntry
+    ) -> None:
         """Init of the Sony projector."""
         self._sdcp = sdcp_connection
         self._attr_available = False
