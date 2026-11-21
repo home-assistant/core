@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 
 MOCK_HOST = "192.168.1.1"
+MOCK_HOST_B = "192.168.1.2"
 
 MOCK_CONFIG = {
     CONF_HOST: MOCK_HOST,
@@ -103,3 +104,41 @@ def mock_ubus() -> Generator[MagicMock]:
             }
         }
         yield mock
+
+
+@pytest.fixture
+def mock_ubus_by_host() -> Generator[tuple[MagicMock, dict[str, MagicMock]]]:
+    """Mock the Ubus client with a separate client instance per router host."""
+    instances: dict[str, MagicMock] = {}
+
+    def _create(
+        url: str, username: str, password: str, verify: bool = True
+    ) -> MagicMock:
+        host = (
+            url.removeprefix("https://").removeprefix("http://").removesuffix("/ubus")
+        )
+        if host not in instances:
+            instance = MagicMock()
+            instance.session_id = None
+
+            def _connect() -> str:
+                instance.session_id = "session-id"
+                return "session-id"
+
+            instance.connect.side_effect = _connect
+            instance.get_hostapd.return_value = {"hostapd.wlan0": {}}
+            instance.get_hostapd_clients.return_value = {"clients": {}}
+            instance.get_uci_config.return_value = {
+                "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
+            }
+            instance.file_read.return_value = {"data": ""}
+            instances[host] = instance
+        return instances[host]
+
+    with (
+        patch(
+            "homeassistant.components.ubus.coordinator.Ubus", side_effect=_create
+        ) as mock,
+        patch("homeassistant.components.ubus.config_flow.Ubus", side_effect=_create),
+    ):
+        yield mock, instances

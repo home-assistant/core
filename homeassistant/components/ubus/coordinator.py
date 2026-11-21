@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import datetime, timedelta
 import logging
-from typing import override
+from typing import NamedTuple, override
 
 from openwrt.ubus import Ubus
 
@@ -14,11 +15,18 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_DHCP_SOFTWARE, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_DHCP_SOFTWARE,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    SIGNAL_CLIENTS_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +34,42 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
+
+
+class RouterReport(NamedTuple):
+    """The latest report of a client by one router."""
+
+    hostname: str | None
+    seq: int
+
+
+class UbusSharedState:
+    """State shared between the ubus config entries.
+
+    ``reports`` maps a MAC address to the latest report of each router
+    which still sees the client; ``owners`` maps a MAC address to the
+    config entry that owns its device tracker entity; ``health`` maps a
+    router host to the success of its last update.
+    """
+
+    reports: dict[str, dict[str, RouterReport]]
+    owners: dict[str, str]
+    health: dict[str, bool]
+    seq: int
+
+    def __init__(self) -> None:
+        """Initialize the shared state."""
+        self.reports = {}
+        self.owners = {}
+        self.health = {}
+        self.seq = 0
+
+    def source(self, mac: str) -> str | None:
+        """Return the host of the router which last reported the client."""
+        seen_by = self.reports.get(mac)
+        if not seen_by:
+            return None
+        return max(seen_by, key=lambda host: seen_by[host].seq)
 
 
 class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -61,7 +105,59 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     @override
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
-        return await self.hass.async_add_executor_job(self._update)
+        clients = await self.hass.async_add_executor_job(self._update)
+        self._async_publish_clients(clients)
+        return clients
+
+    @callback
+    @override
+    def _async_refresh_finished(self) -> None:
+        """Release claimed clients and record this router's health."""
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        healthy = self.last_update_success
+        health_changed = shared.health.get(self.host, True) != healthy
+        shared.health[self.host] = healthy
+        if not healthy:
+            self.clear_clients()
+        if health_changed:
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+
+    @callback
+    def _async_publish_clients(self, clients: dict[str, str | None]) -> None:
+        """Publish which clients this router sees to the shared state.
+
+        Each router keeps its own report for the clients it sees, so a
+        client stays reported while any router still sees it, and the
+        source follows the router which reported it most recently.
+        """
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        reports = shared.reports
+
+        def visible(mac: str) -> tuple[str, str | None] | None:
+            if (source := shared.source(mac)) is None:
+                return None
+            return source, reports[mac][source].hostname
+
+        affected = set(clients)
+        affected.update(mac for mac, seen_by in reports.items() if self.host in seen_by)
+        before = {mac: visible(mac) for mac in affected}
+
+        for mac, hostname in clients.items():
+            shared.seq += 1
+            reports.setdefault(mac, {})[self.host] = RouterReport(hostname, shared.seq)
+        for mac, seen_by in list(reports.items()):
+            if self.host in seen_by and mac not in clients:
+                del seen_by[self.host]
+                if not seen_by:
+                    del reports[mac]
+
+        if any(visible(mac) != before[mac] for mac in affected):
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+
+    @callback
+    def clear_clients(self) -> None:
+        """Release every client claimed by this router."""
+        self._async_publish_clients({})
 
     def _update(self) -> dict[str, str | None]:
         """Query the router, re-authenticating once if the session expired."""

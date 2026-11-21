@@ -1,4 +1,5 @@
 """The OpenWrt (ubus) integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -6,13 +7,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator, UbusSharedState
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
     """Set up ubus from a config entry."""
+    hass.data.setdefault(DOMAIN, UbusSharedState())
     coordinator = UbusDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
@@ -21,7 +24,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None
 
 async def async_unload_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
     """Unload a config entry."""
+    # The platforms are unloaded first, so the entry's trackers are gone
+    # before their client reports are released from the shared state.
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    shared: UbusSharedState = hass.data[DOMAIN]
+    entry.runtime_data.clear_clients()
+    shared.owners = {
+        mac: owner for mac, owner in shared.owners.items() if owner != entry.entry_id
+    }
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.data.pop(DOMAIN, None)
 
 
 async def async_remove_config_entry_device(
@@ -33,7 +45,8 @@ async def async_remove_config_entry_device(
         return False
     if config_entry.state is not ConfigEntryState.LOADED:
         return True
-    connected = {dr.format_mac(mac) for mac in config_entry.runtime_data.data}
+    shared: UbusSharedState = hass.data[DOMAIN]
+    connected = {dr.format_mac(mac) for mac in shared.reports}
     return not any(
         connection in connected
         for connection_type, connection in device_entry.connections
