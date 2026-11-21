@@ -33,6 +33,11 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+DEFAULT_VERSION = "9.4.0.4"
+OLDER_VERSION = "0.0.0"
+NEWER_VERSION = "14.6.0"
+
+
 DEFAULT_CONFIG = {
     "ip": "192.168.15.10",
     "dn": "Tasmota",
@@ -46,7 +51,7 @@ DEFAULT_CONFIG = {
     "ofln": "Offline",
     "onln": "Online",
     "state": ["OFF", "ON", "TOGGLE", "HOLD"],
-    "sw": "9.4.0.4",
+    "sw": DEFAULT_VERSION,
     "swn": [None, None, None, None, None],
     "t": "tasmota_49A3BC",
     "ft": "%topic%/%prefix%/",
