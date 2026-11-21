@@ -6,7 +6,6 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import flush_store
-from python_otbr_api.tlv_parser import TLVError
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components.thread import dataset_store, discovery
@@ -16,6 +15,8 @@ from homeassistant.exceptions import HomeAssistantError
 from . import (
     DATASET_1,
     DATASET_1_LARGER_TIMESTAMP,
+    DATASET_1_NO_ACTIVETIMESTAMP,
+    DATASET_1_NO_EXTPANID,
     DATASET_2,
     DATASET_3,
     ROUTER_DISCOVERY_GOOGLE_1,
@@ -39,18 +40,6 @@ DATASET_1_BAD_CHANNEL = (
 
 DATASET_1_NO_CHANNEL = (
     "0E08000000000001000035060004001FFFE0020811111111222222250708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
-
-DATASET_1_NO_EXTPANID = (
-    "0E080000000000010000000300000F35060004001FFFE00708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
-
-DATASET_1_NO_ACTIVETIMESTAMP = (
-    "000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
     "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
@@ -82,11 +71,83 @@ DATASET_1_OTHER_SECURITY_POLICY = (
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
-    with pytest.raises(TLVError, match="expected 173 bytes for tag 222, got 2"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await dataset_store.async_add_dataset(hass, "source", "DEADBEEF")
+
+    assert exc_info.value.translation_key == "invalid_dataset_tlv"
+    assert exc_info.value.translation_placeholders == {
+        "error": "expected 173 bytes for tag 222, got 2"
+    }
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 0
+
+
+async def test_update_dataset(hass: HomeAssistant) -> None:
+    """Only a network the same source added is updated; none is added."""
+    assert (
+        await dataset_store.async_update_dataset(hass, "source", DATASET_1)
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 0
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert (
+        await dataset_store.async_update_dataset(
+            hass, "other", DATASET_1_LARGER_TIMESTAMP
+        )
+        is dataset_store.DatasetAddResult.DISCARDED
+    )
+    assert next(iter(store.datasets.values())).tlv == DATASET_1
+
+    assert (
+        await dataset_store.async_update_dataset(
+            hass,
+            "source",
+            DATASET_1_LARGER_TIMESTAMP,
+            preferred_border_agent_id="0102030405060708090a0b0c0d0e0f10",
+            preferred_extended_address="1122334455667788",
+        )
+        is dataset_store.DatasetAddResult.STORED
+    )
+    assert len(store.datasets) == 1
+    entry = next(iter(store.datasets.values()))
+    assert entry.tlv == DATASET_1_LARGER_TIMESTAMP
+    # No preferred border agent is set by an update...
+    assert entry.preferred_border_agent_id is None
+    assert entry.preferred_extended_address is None
+
+    # ...but the address of the one set follows when its ID matches.
+    store.async_set_preferred_border_agent(
+        entry.id, "0102030405060708090a0b0c0d0e0f10", "1122334455667788"
+    )
+    await dataset_store.async_update_dataset(
+        hass,
+        "source",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="0102030405060708090a0b0c0d0e0f10",
+        preferred_extended_address="8877665544332211",
+    )
+    entry = next(iter(store.datasets.values()))
+    assert entry.preferred_extended_address == "8877665544332211"
+
+
+async def test_get_dataset_source(hass: HomeAssistant) -> None:
+    """The source of a network's stored dataset is found by its extended PAN ID."""
+    assert (
+        await dataset_store.async_get_dataset_source(hass, "1111111122222222") is None
+    )
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert (
+        await dataset_store.async_get_dataset_source(hass, "1111111122222222")
+        == "source"
+    )
+    assert (
+        await dataset_store.async_get_dataset_source(hass, "1111111122222222".upper())
+        == "source"
+    )
 
 
 async def test_add_dataset_twice(hass: HomeAssistant) -> None:
@@ -226,16 +287,12 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("dataset", "error"),
-    [
-        (DATASET_1_BAD_CHANNEL, TLVError),
-        (DATASET_1_NO_EXTPANID, HomeAssistantError),
-        (DATASET_1_NO_ACTIVETIMESTAMP, HomeAssistantError),
-    ],
+    "dataset",
+    [DATASET_1_BAD_CHANNEL, DATASET_1_NO_EXTPANID, DATASET_1_NO_ACTIVETIMESTAMP],
 )
-async def test_add_bad_dataset(hass: HomeAssistant, dataset, error) -> None:
+async def test_add_bad_dataset(hass: HomeAssistant, dataset: str) -> None:
     """Test adding a bad dataset."""
-    with pytest.raises(error):
+    with pytest.raises(HomeAssistantError):
         await dataset_store.async_add_dataset(hass, "test", dataset)
 
 

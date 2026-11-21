@@ -291,8 +291,44 @@ class DatasetStore:
         the way a Thread mesh orders them itself, so a dataset that is not newer
         than the stored one for its network is discarded rather than stored.
         """
-        # Make sure the tlv is valid
-        dataset = tlv_parser.parse_tlv(tlv)
+        return self._async_add(
+            source, tlv, preferred_border_agent_id, preferred_extended_address, False
+        )
+
+    @callback
+    def async_update(
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+    ) -> DatasetAddResult:
+        """Like async_add, but only for a network the same source added.
+
+        Any other dataset is discarded. No preferred border agent is set; the
+        extended address of the one set is refreshed when its ID matches.
+        """
+        return self._async_add(
+            source, tlv, preferred_border_agent_id, preferred_extended_address, True
+        )
+
+    @callback
+    def _async_add(
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+        update_only: bool,
+    ) -> DatasetAddResult:
+        try:
+            dataset = tlv_parser.parse_tlv(tlv)
+        except tlv_parser.TLVError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_dataset_tlv",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Don't allow adding a dataset which does not have an extended pan id or
         # timestamp
@@ -313,12 +349,22 @@ class DatasetStore:
                 translation_key="preferred_extended_address_required",
             )
 
+        # An update touches only a network the same source added.
+        entries = [
+            entry
+            for entry in self.datasets.values()
+            if not update_only or entry.source == source
+        ]
+
         # Bail out if the dataset already exists
         entry: DatasetEntry | None
-        for entry in self.datasets.values():
+        for entry in entries:
             if entry.dataset == dataset:
                 self._async_maybe_update_preferred_border_agent(
-                    entry, preferred_border_agent_id, preferred_extended_address
+                    entry,
+                    preferred_border_agent_id,
+                    preferred_extended_address,
+                    refresh_only=update_only,
                 )
                 return DatasetAddResult.STORED
 
@@ -327,7 +373,7 @@ class DatasetStore:
         if entry := next(
             (
                 entry
-                for entry in self.datasets.values()
+                for entry in entries
                 if entry.dataset[MeshcopTLVType.EXTPANID]
                 == dataset[MeshcopTLVType.EXTPANID]
             ),
@@ -368,9 +414,15 @@ class DatasetStore:
             )
             self.async_schedule_save()
             self._async_maybe_update_preferred_border_agent(
-                entry, preferred_border_agent_id, preferred_extended_address
+                entry,
+                preferred_border_agent_id,
+                preferred_extended_address,
+                refresh_only=update_only,
             )
             return DatasetAddResult.STORED
+
+        if update_only:
+            return DatasetAddResult.DISCARDED
 
         entry = DatasetEntry(
             preferred_border_agent_id=preferred_border_agent_id,
@@ -415,17 +467,20 @@ class DatasetStore:
         entry: DatasetEntry,
         preferred_border_agent_id: str | None,
         preferred_extended_address: str | None,
+        *,
+        refresh_only: bool = False,
     ) -> None:
         """Update the preferred border agent of an existing dataset if appropriate.
 
-        Sets the preferred border agent if it was not set yet, or refreshes the
-        stored extended address when the border agent ID still matches but the
-        extended address changed. The latter happens e.g. after an OTBR upgrade
-        regenerates the extended address while keeping the same border agent ID.
+        Sets the preferred border agent if it was not set yet, unless
+        `refresh_only`, or refreshes the stored extended address when the border
+        agent ID still matches but the extended address changed. The latter
+        happens e.g. after an OTBR upgrade regenerates the extended address while
+        keeping the same border agent ID.
         """
         if not preferred_extended_address:
             return
-        if entry.preferred_extended_address is None or (
+        if (entry.preferred_extended_address is None and not refresh_only) or (
             preferred_border_agent_id is not None
             and preferred_border_agent_id == entry.preferred_border_agent_id
             and preferred_extended_address != entry.preferred_extended_address
@@ -599,11 +654,47 @@ async def async_add_dataset(
 
     Returns STORED when the store's dataset for the network is the one that
     was passed, DISCARDED when the store kept a same-or-newer dataset for it
-    and changed nothing.
+    and changed nothing. Raises HomeAssistantError for a dataset that cannot
+    be stored.
     """
     store = await async_get_store(hass)
     return store.async_add(
         source, tlv, preferred_border_agent_id, preferred_extended_address
+    )
+
+
+async def async_update_dataset(
+    hass: HomeAssistant,
+    source: str,
+    tlv: str,
+    *,
+    preferred_border_agent_id: str | None = None,
+    preferred_extended_address: str | None = None,
+) -> DatasetAddResult:
+    """Update the dataset of a network the same source added; see async_add_dataset.
+
+    A dataset of any other network is discarded, not added. No preferred
+    border agent is set; the extended address of the one set is refreshed
+    when its ID matches.
+    """
+    store = await async_get_store(hass)
+    return store.async_update(
+        source, tlv, preferred_border_agent_id, preferred_extended_address
+    )
+
+
+async def async_get_dataset_source(
+    hass: HomeAssistant, extended_pan_id: str
+) -> str | None:
+    """Return who added a network's stored dataset, None when none is stored."""
+    store = await async_get_store(hass)
+    return next(
+        (
+            entry.source
+            for entry in store.datasets.values()
+            if entry.extended_pan_id.lower() == extended_pan_id.lower()
+        ),
+        None,
     )
 
 
