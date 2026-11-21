@@ -34,6 +34,86 @@
       }
     }
   },
+  "exceptions": {
+    "unsupported_categories": {
+      "message": "The holiday categories {categories} of {title} are no longer supported for {country}."
+    },
+    "unsupported_country": {
+      "message": "The country {country} of {title} is no longer supported."
+    },
+    "unsupported_province": {
+      "message": "The province {province} of {title} is no longer supported for {country}."
+    }
+  },
+  "issues": {
+    "unsupported_categories": {
+      "fix_flow": {
+        "step": {
+          "options": {
+            "data": {
+              "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data_description::province%]"
+            },
+            "description": "The holiday categories {categories} configured for {title} are no longer supported for {country} by the holidays library, so the calendar can't be set up.\n\nSelect the categories again.",
+            "title": "Update {title}"
+          }
+        }
+      },
+      "title": "Holiday categories of {title} are no longer supported"
+    },
+    "unsupported_country": {
+      "fix_flow": {
+        "step": {
+          "country": {
+            "data": {
+              "country": "[%key:common::config_flow::data::country%]"
+            },
+            "data_description": {
+              "country": "[%key:component::holiday::config::step::user::data_description::country%]"
+            },
+            "description": "The country {country} configured for {title} is no longer supported by the holidays library, so the calendar can't be set up.\n\nSelect a supported country.",
+            "title": "Update {title}"
+          },
+          "options": {
+            "data": {
+              "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data_description::province%]"
+            },
+            "description": "Select the province and categories for {country}.",
+            "title": "Update {title}"
+          }
+        }
+      },
+      "title": "Country of {title} is no longer supported"
+    },
+    "unsupported_province": {
+      "fix_flow": {
+        "step": {
+          "options": {
+            "data": {
+              "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data::province%]"
+            },
+            "data_description": {
+              "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "province": "[%key:component::holiday::config::step::options::data_description::province%]"
+            },
+            "description": "The province {province} configured for {title} is no longer supported for {country} by the holidays library, so the calendar can't be set up.\n\nSelect a supported province.",
+            "title": "Update {title}"
+          }
+        }
+      },
+      "title": "Province of {title} is no longer supported"
+    }
+  },
   "options": {
     "abort": {
       "already_configured": "[%key:component::holiday::config::abort::already_configured%]",
