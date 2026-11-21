@@ -307,6 +307,30 @@ async def test_only_connection_errors_count_as_unreachable(
     assert result == (None, connect_failed)
 
 
+@pytest.mark.parametrize(
+    ("connected_first", "connect_failed"),
+    [(False, True), (True, False)],
+    ids=["before_connect", "after_connect"],
+)
+async def test_operational_error_after_connecting_is_not_unreachable(
+    hass: HomeAssistant, connected_first: bool, connect_failed: bool
+) -> None:
+    """An OperationalError once the first connect completed is not a retry."""
+    instance = _unstarted_recorder(hass)
+
+    def _fail(*args: Any) -> None:
+        # The connect hook has run when schema inspection or DDL fails
+        instance._completed_first_database_setup = connected_first
+        raise exc.OperationalError("stmt", {}, Exception("failed"))
+
+    with patch.object(instance, "_setup_connection", side_effect=_fail):
+        result = await hass.async_add_executor_job(
+            partial(instance._try_setup_recorder_once, log_exception=False)
+        )
+
+    assert result == (None, connect_failed)
+
+
 async def test_extended_retry_stops_on_a_non_connection_error(
     hass: HomeAssistant,
 ) -> None:

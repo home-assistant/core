@@ -28,5 +28,9 @@ def has_states_before(hass: HomeAssistant, run_time: dt) -> bool:
 
     Returns True if there may be such states.
     """
-    oldest_ts = get_instance(hass).states_manager.oldest_ts
+    instance = get_instance(hass)
+    # While the database is pending, oldest_ts is unknown, not absent
+    if not instance.database_ready:
+        return True
+    oldest_ts = instance.states_manager.oldest_ts
     return oldest_ts is not None and run_time.timestamp() >= oldest_ts

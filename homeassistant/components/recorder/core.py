@@ -1060,10 +1060,13 @@ class Recorder(threading.Thread):
         except UnsupportedDialect:
             return False, False
         except (exc.OperationalError, exc.InterfaceError) as err:
+            # One after the first connect completed (schema inspection, DDL)
+            # is not about the database being unreachable
+            connect_failed = not self._completed_first_database_setup
             self._log_setup_failure(
-                err, log_exception=log_exception, connect_failed=True
+                err, log_exception=log_exception, connect_failed=connect_failed
             )
-            return None, True
+            return None, connect_failed
         except Exception as err:  # noqa: BLE001
             # Bad URL, missing driver, DDL privileges: retried by the fast
             # budget as before, but waiting longer will not fix them.

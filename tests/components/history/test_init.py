@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import sentinel
+from unittest.mock import PropertyMock, patch, sentinel
 
 from freezegun import freeze_time
 import pytest
@@ -19,6 +19,8 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN
+from homeassistant.components.history.helpers import has_states_before
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -812,3 +814,21 @@ async def test_fetch_period_api_filters_unauthorized_entities(
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == []
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_has_states_before_while_the_database_is_not_ready(
+    hass: HomeAssistant,
+) -> None:
+    """A pending database means unknown history, not no history."""
+    instance = get_instance(hass)
+    instance.states_manager._oldest_ts = None
+    run_time = dt_util.utcnow()
+
+    assert has_states_before(hass, run_time) is False
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.database_ready",
+        new_callable=PropertyMock,
+        return_value=False,
+    ):
+        assert has_states_before(hass, run_time) is True
