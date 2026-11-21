@@ -15,6 +15,10 @@ class ValidationFailure(CertExpiryException):
     """Certificate validation failure has occurred."""
 
 
+class InvalidCACertificate(CertExpiryException):
+    """Additional trusted certificates are malformed."""
+
+
 class ResolveFailed(TemporaryFailure):
     """Name resolution failed."""
 
