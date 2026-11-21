@@ -188,7 +188,7 @@ async def test_late_enrollment_preserves_legacy_records(
     old_switch = entity_registry.async_get_or_create(
         "switch",
         DOMAIN,
-        f"{candidate.device_info.mac}_light",
+        f"{candidate.device_info.mac}_Panel Light",
         config_entry=source,
         device_id=old_device.id,
         disabled_by=er.RegistryEntryDisabler.USER,
@@ -253,9 +253,11 @@ async def test_late_enrollment_preserves_legacy_records(
     assert transferred_entity.options["conversation"] == {"should_expose": False}
     assert hass.states.get(old_entity.entity_id) is not None
     transferred_switch = entity_registry.async_get(old_switch.entity_id)
+    assert transferred_switch.id == old_switch.id
     assert transferred_switch.config_entry_id == entry.entry_id
     assert transferred_switch.disabled_by is er.RegistryEntryDisabler.USER
     assert transferred_switch.hidden_by is er.RegistryEntryHider.USER
+    assert hass.states.get(old_switch.entity_id) is None
     assert dr.async_entries_for_config_entry(device_registry, source.entry_id) == [
         offline_device
     ]
@@ -276,7 +278,8 @@ async def test_late_enrollment_preserves_legacy_records(
     [
         pytest.param((), id="device-only"),
         pytest.param(
-            ((Platform.CLIMATE, ""), (Platform.SWITCH, "_light")), id="with-entities"
+            ((Platform.CLIMATE, ""), (Platform.SWITCH, "_Panel Light")),
+            id="with-entities",
         ),
     ],
 )
@@ -326,6 +329,7 @@ async def test_transfer_preserves_legacy_identifier_spelling(
         assert migrated.id == old_entity.id
         assert migrated.unique_id == old_entity.unique_id
         assert migrated.config_entry_id == entry.entry_id
+        assert hass.states.get(old_entity.entity_id) is not None
 
 
 @pytest.mark.parametrize(
