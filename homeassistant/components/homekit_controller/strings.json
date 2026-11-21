@@ -107,6 +107,24 @@
       }
     },
     "number": {
+      "ecobee_away_target_cool": {
+        "name": "Away cooling target"
+      },
+      "ecobee_away_target_heat": {
+        "name": "Away heating target"
+      },
+      "ecobee_home_target_cool": {
+        "name": "Home cooling target"
+      },
+      "ecobee_home_target_heat": {
+        "name": "Home heating target"
+      },
+      "ecobee_sleep_target_cool": {
+        "name": "Sleep cooling target"
+      },
+      "ecobee_sleep_target_heat": {
+        "name": "Sleep heating target"
+      },
       "elevation": {
         "name": "Elevation"
       },
