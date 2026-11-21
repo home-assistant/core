@@ -11,6 +11,7 @@ from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import (
     RUNNING_STATUSES,
     AirFryerFeatures,
+    AirQualityLevel,
     TemperatureUnits,
     TimeUnits,
 )
@@ -93,6 +94,14 @@ END_TIME_VARIANCE_SECONDS = timedelta(seconds=5)
 END_TIME_VARIANCE_MINUTES = timedelta(seconds=90)
 
 
+def _get_air_quality(device: VeSyncBaseDevice) -> str | None:
+    """Return the air quality level, mapping unknown to None."""
+    value = device.state.air_quality_string
+    if value == str(AirQualityLevel.UNKNOWN):
+        return None
+    return value
+
+
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
@@ -106,7 +115,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
-        value_fn=lambda device: device.state.air_quality_string,
+        device_class=SensorDeviceClass.ENUM,
+        options=["excellent", "good", "moderate", "poor"],
+        value_fn=_get_air_quality,
         exists_fn=(
             lambda device: rgetattr(device, "state.air_quality_string") is not None
         ),
