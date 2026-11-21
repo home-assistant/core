@@ -73,6 +73,7 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
+        self._ensure_gateway_connected()
         _LOGGER.debug(
             "Turning on light %s with kwargs: %s", self._attr_unique_id, kwargs
         )
@@ -90,6 +91,7 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
+        self._ensure_gateway_connected()
         self._light.turn_off()
 
     @override

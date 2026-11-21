@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import trigger_availability_callback
@@ -82,6 +83,26 @@ async def test_activate_scenes(
     )
     assert mock_scenes[0].activate.call_count == 2
     mock_scenes[1].activate.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_activate_scene_gateway_disconnected(
+    hass: HomeAssistant,
+    mock_gateway: MagicMock,
+    mock_scenes: list[MagicMock],
+) -> None:
+    """Test activating a scene raises when the gateway is disconnected."""
+    mock_gateway.is_connected = False
+
+    with pytest.raises(HomeAssistantError, match="The DALI gateway is not connected"):
+        await hass.services.async_call(
+            SCENE_DOMAIN,
+            SceneService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_scenes[0].activate.assert_not_called()
 
 
 async def test_scene_availability(

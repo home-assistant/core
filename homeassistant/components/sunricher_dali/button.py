@@ -51,5 +51,6 @@ class DaliCenterIdentifyButton(DaliDeviceEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Handle button press to identify device."""
+        self._ensure_gateway_connected()
         _LOGGER.debug("Identifying device %s", self._device.dev_id)
         self._device.identify()

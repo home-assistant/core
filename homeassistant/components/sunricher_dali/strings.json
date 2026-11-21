@@ -30,6 +30,9 @@
     },
     "cannot_discover_devices": {
       "message": "Unable to discover devices and scenes from the gateway."
+    },
+    "gateway_not_connected": {
+      "message": "The DALI gateway is not connected."
     }
   }
 }
