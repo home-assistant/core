@@ -1,8 +1,9 @@
 """Timer lists for ESPHome voice satellites."""
 
+import math
 from typing import TYPE_CHECKING, override
 
-from aioesphomeapi import VoiceAssistantFeature, VoiceAssistantTimerEventType
+from aioesphomeapi import VoiceAssistantTimerEventType
 
 from homeassistant.components.timer_list import (
     InMemoryTimerListEntity,
@@ -50,11 +51,7 @@ async def async_setup_entry(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    feature_flags = device_info.voice_assistant_feature_flags_compat(
-        entry_data.api_version
-    )
-    if feature_flags & VoiceAssistantFeature.TIMERS:
-        async_add_entities([EsphomeTimerList(entry_data, device_info.mac_address)])
+    async_add_entities([EsphomeTimerList(entry_data, device_info.mac_address)])
 
 
 class EsphomeTimerList(InMemoryTimerListEntity):
@@ -100,7 +97,9 @@ class EsphomeTimerList(InMemoryTimerListEntity):
             is_active = False
         else:
             native_event_type = _TIMER_EVENT_TYPES[event.event_type]
-            seconds_left = round(item.remaining_at(dt_util.utcnow()).total_seconds())
+            seconds_left = math.ceil(
+                item.remaining_at(dt_util.utcnow()).total_seconds()
+            )
             is_active = item.status == TimerStatus.ACTIVE
 
         self._entry_data.client.send_voice_assistant_timer_event(

@@ -128,6 +128,30 @@ async def test_voice_timer_events(
     assert len(timer_ids) == 1
 
 
+async def test_pause_unpause_fractional_second(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: APIClient,
+    mock_device: MockESPHomeDevice,
+) -> None:
+    """Keep positive remaining time visible when pausing and resuming a timer."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 1})
+    timer_id = result["timer_id"]
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    freezer.tick(timedelta(milliseconds=600))
+    await _call(hass, entity_id, "pause_timer", timer_id=timer_id)
+    freezer.tick(timedelta(seconds=1))
+    await _call(hass, entity_id, "unpause_timer", timer_id=timer_id)
+
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        call(UPDATED, timer_id, None, 1, 1, False),
+        call(UPDATED, timer_id, None, 1, 1, True),
+    ]
+
+
 async def test_timer_finished(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
