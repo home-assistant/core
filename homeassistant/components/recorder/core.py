@@ -191,6 +191,8 @@ class Recorder(threading.Thread):
         # Setup may return: the database is ready, or it was not reachable and
         # the recorder has fallen back to retrying it on its own thread.
         self.async_setup_complete: asyncio.Future[bool] = hass.loop.create_future()
+        # Set once setup was released before the database was reachable
+        self._setup_released_early = False
         # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
@@ -814,6 +816,15 @@ class Recorder(threading.Thread):
             return
         self.schema_version = schema_status.current_version
 
+        if self._setup_released_early and schema_status.migration_needed:
+            # Dependents were set up while the database was unreachable and
+            # would query tables the offline migration is altering.
+            _LOGGER.error(
+                "The database became reachable after startup but needs an "
+                "offline schema migration, restart Home Assistant to run it"
+            )
+            return
+
         if not schema_status.migration_needed and not schema_status.schema_errors:
             self._setup_run()
         else:
@@ -1013,9 +1024,14 @@ class Recorder(threading.Thread):
             self._setup_connection()
         except UnsupportedDialect:
             return False, False
-        except Exception as err:  # noqa: BLE001
+        except (exc.OperationalError, exc.InterfaceError) as err:
             self._log_setup_failure(err, log_exception=log_exception)
             return None, True
+        except Exception as err:  # noqa: BLE001
+            # Bad URL, missing driver, DDL privileges: retried by the fast
+            # budget as before, but waiting longer will not fix them.
+            self._log_setup_failure(err, log_exception=log_exception)
+            return None, False
 
         try:
             return migration.initialize_database(self.get_session), False
@@ -1052,8 +1068,10 @@ class Recorder(threading.Thread):
             self._close_connection()
             if not self._sleep_unless_stopping(min(wait, remaining)):
                 return False
-            result, _ = self._try_setup_recorder_once(log_exception=False)
+            result, connect_failed = self._try_setup_recorder_once(log_exception=False)
             if result is None:
+                if not connect_failed:
+                    return False
                 wait = min(wait * 2, DB_SETUP_RETRY_WAIT_MAX)
                 continue
             if result:
@@ -1084,10 +1102,12 @@ class Recorder(threading.Thread):
         if (
             not extended_retry
             or not connect_failed
-            or self.db_url.startswith(SQLITE_URL_PREFIX)
+            or get_engine_db_url(self.db_url).get_backend_name() == "sqlite"
+            or time.monotonic() >= deadline
         ):
             return False
 
+        self._setup_released_early = True
         _LOGGER.warning(
             "Database not ready after %s attempts, retrying for up to %s seconds",
             self.db_max_retries,

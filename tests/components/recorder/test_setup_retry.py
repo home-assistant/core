@@ -2,12 +2,14 @@
 
 import asyncio
 from functools import partial
+import threading
 import time
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import exc
 
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, migration
 from homeassistant.components.recorder.const import (
     DB_SETUP_RETRY_WAIT_MAX,
     MAX_DB_SETUP_RETRIES,
@@ -15,9 +17,13 @@ from homeassistant.components.recorder.const import (
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.core import CoreState, HomeAssistant
 
-from .common import async_wait_recording_done
-
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 
 
 @pytest.fixture
@@ -113,9 +119,12 @@ async def test_setup_returns_before_the_retrying_finishes(
     instance.async_setup_complete = hass.loop.create_future()
 
     retrying = asyncio.Event()
+    release = threading.Event()
 
     def _block_until_released(wait: float) -> bool:
         hass.loop.call_soon_threadsafe(retrying.set)
+        # Hold the retry loop open until the assertion below has run
+        release.wait(10)
         return False
 
     with (
@@ -131,7 +140,10 @@ async def test_setup_returns_before_the_retrying_finishes(
         await retrying.wait()
         # The point of the change: this resolves while the recorder thread is
         # still inside the retry loop, rather than after it gives up.
+        assert not task.done()
         assert await instance.async_setup_complete is True
+        assert not task.done()
+        release.set()
         assert await task is False
 
 
@@ -174,6 +186,8 @@ async def test_corruption_recovery_does_not_extend(
 ) -> None:
     """The sqlite-corruption path keeps the original fast budget."""
     instance = await _make_instance(async_setup_recorder_instance, hass)
+    # A network URL, so only the extended_retry flag keeps this on the fast path
+    instance.db_url = "postgresql://u@db/ha"
     instance.db_max_retries = 2
     instance.db_retry_wait = 0
     caplog.clear()
@@ -188,6 +202,126 @@ async def test_corruption_recovery_does_not_extend(
 
     assert attempt.call_count == 2
     assert "retrying for up to" not in caplog.text
+
+
+async def test_expired_budget_does_not_release_setup(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fast phase that used up the window neither logs nor releases setup."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance.db_url = "postgresql://u@db/ha"
+    instance.db_max_retries = 1
+    instance.db_retry_wait = 0
+    instance.async_setup_complete = hass.loop.create_future()
+    caplog.clear()
+
+    with (
+        patch.object(instance, "_close_connection"),
+        patch("homeassistant.components.recorder.core.MAX_DB_SETUP_WAIT", -1),
+        patch.object(
+            instance, "_try_setup_recorder_once", return_value=(None, True)
+        ) as attempt,
+    ):
+        assert (
+            await hass.async_add_executor_job(
+                partial(instance._setup_recorder, extended_retry=True)
+            )
+            is False
+        )
+
+    assert attempt.call_count == 1
+    assert "retrying for up to" not in caplog.text
+    assert not instance.async_setup_complete.done()
+
+
+@pytest.mark.parametrize(
+    ("error", "connect_failed"),
+    [
+        (exc.OperationalError("stmt", {}, Exception("refused")), True),
+        (exc.InterfaceError("stmt", {}, Exception("closed")), True),
+        (exc.ProgrammingError("stmt", {}, Exception("no privilege")), False),
+        (ModuleNotFoundError("psycopg2"), False),
+    ],
+)
+async def test_only_connection_errors_count_as_unreachable(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    error: Exception,
+    connect_failed: bool,
+) -> None:
+    """URL, driver and privilege errors do not enter the extended phase."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+
+    with patch.object(instance, "_setup_connection", side_effect=error):
+        result = await hass.async_add_executor_job(
+            partial(instance._try_setup_recorder_once, log_exception=False)
+        )
+
+    assert result == (None, connect_failed)
+
+
+async def test_extended_retry_stops_on_a_non_connection_error(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """A database that came up but fails for another reason is not waited on."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+
+    with (
+        patch.object(instance, "_close_connection"),
+        patch.object(instance, "_sleep_unless_stopping", return_value=True),
+        patch.object(
+            instance, "_try_setup_recorder_once", return_value=(None, False)
+        ) as attempt,
+    ):
+        assert (
+            await hass.async_add_executor_job(
+                instance._setup_recorder_extended, time.monotonic() + 600
+            )
+            is False
+        )
+
+    assert attempt.call_count == 1
+
+
+@pytest.mark.parametrize("released_early", [True, False])
+async def test_late_database_needing_offline_migration(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+    released_early: bool,
+) -> None:
+    """A database reached after setup was released is not migrated offline."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance._setup_released_early = released_early
+    status = migration.SchemaValidationStatus(
+        current_version=1,
+        initial_version=1,
+        migration_needed=True,
+        non_live_data_migration_needed=False,
+        schema_errors=set(),
+        start_version=1,
+    )
+    caplog.clear()
+
+    with (
+        patch.object(instance, "_setup_recorder", return_value=True),
+        patch.object(migration, "validate_db_schema", return_value=status),
+        patch.object(
+            instance, "_migrate_schema_offline", return_value=(False, status)
+        ) as migrate,
+        patch.object(instance, "_notify_migration_failed"),
+        patch.object(instance, "_setup_run"),
+        # The started instance already resolved these futures
+        patch.object(instance, "async_connection_success"),
+        patch.object(instance, "_async_startup_done"),
+    ):
+        await hass.async_add_executor_job(instance._run)
+
+    assert migrate.called is (not released_early)
+    assert ("needs an offline schema migration" in caplog.text) is released_early
 
 
 async def test_sqlite_does_not_extend(

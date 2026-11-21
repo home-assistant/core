@@ -43,8 +43,8 @@ KEEPALIVE_TIME = 30
 
 # The db_max_retries budget suits a database that is already running. One that
 # boots alongside Home Assistant can need longer, so keep retrying for up to
-# this long, measured from the start of setup. Kept under setup.py's
-# SLOW_SETUP_MAX_WAIT (300) so setup is never abandoned mid-wait.
+# this long, measured from the start of setup. Setup is released when the
+# retrying starts, so this is not bounded by setup.py's SLOW_SETUP_MAX_WAIT.
 MAX_DB_SETUP_WAIT = 240
 # Bounded by attempts as well as wall clock: db_retry_wait is user config and
 # may be 0, and tests patch time.sleep out, so elapsed time alone does not
