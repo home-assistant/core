@@ -122,6 +122,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
+/tests/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambient_network/ @thomaskistler
@@ -550,6 +551,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
+/tests/components/ephember/ @ttroy50 @roberty99
 /homeassistant/components/epic_games_store/ @Quentame
 /tests/components/epic_games_store/ @Quentame
 /homeassistant/components/epion/ @lhgravendeel
@@ -966,6 +968,8 @@ AGENTS.md @home-assistant/core
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
+/homeassistant/components/intesis_modbus/ @TimoPtr
+/tests/components/intesis_modbus/ @TimoPtr
 /homeassistant/components/intesishome/ @jnimmo
 /tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
@@ -1295,6 +1299,8 @@ AGENTS.md @home-assistant/core
 /tests/components/mystrom/ @fabaff
 /homeassistant/components/myuplink/ @pajzo @astrandb
 /tests/components/myuplink/ @pajzo @astrandb
+/homeassistant/components/nad_infrared/ @rrooggiieerr
+/tests/components/nad_infrared/ @rrooggiieerr
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/namecheapdns/ @tr4nt0r
@@ -1860,6 +1866,8 @@ AGENTS.md @home-assistant/core
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @peterager @jjlawren
 /tests/components/sonos/ @peterager @jjlawren
+/homeassistant/components/sony_infrared/ @googanhiem
+/tests/components/sony_infrared/ @googanhiem
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
@@ -1980,8 +1988,8 @@ AGENTS.md @home-assistant/core
 /tests/components/tesla_wall_connector/ @einarhauks @sarabveer
 /homeassistant/components/teslemetry/ @Bre77
 /tests/components/teslemetry/ @Bre77
-/homeassistant/components/tessie/ @Bre77
-/tests/components/tessie/ @Bre77
+/homeassistant/components/tessie/ @Bre77 @stx
+/tests/components/tessie/ @Bre77 @stx
 /homeassistant/components/text/ @home-assistant/core
 /tests/components/text/ @home-assistant/core
 /homeassistant/components/theben_conexa/ @mdluhosch
@@ -2002,6 +2010,8 @@ AGENTS.md @home-assistant/core
 /tests/components/tibber/ @danielhiversen
 /homeassistant/components/tile/ @bachya
 /tests/components/tile/ @bachya
+/homeassistant/components/tile_ble/ @joostlek
+/tests/components/tile_ble/ @joostlek
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
 /homeassistant/components/tilt_pi/ @michaelheyman
@@ -2010,6 +2020,8 @@ AGENTS.md @home-assistant/core
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
+/homeassistant/components/timer_list/ @home-assistant/core @synesthesiam
+/tests/components/timer_list/ @home-assistant/core @synesthesiam
 /homeassistant/components/tmb/ @alemuro
 /homeassistant/components/todo/ @home-assistant/core
 /tests/components/todo/ @home-assistant/core
@@ -2055,6 +2067,8 @@ AGENTS.md @home-assistant/core
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
+/homeassistant/components/trimlight/ @spdevpro @bsholy
+/tests/components/trimlight/ @spdevpro @bsholy
 /homeassistant/components/trmnl/ @joostlek
 /tests/components/trmnl/ @joostlek
 /homeassistant/components/tts/ @home-assistant/core
@@ -2149,6 +2163,8 @@ AGENTS.md @home-assistant/core
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
+/homeassistant/components/voice_support/ @synesthesiam @arturpragacz
+/tests/components/voice_support/ @synesthesiam @arturpragacz
 /homeassistant/components/voip/ @home-assistant/core @jaminh
 /tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof

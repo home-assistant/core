@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+from time import monotonic
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -52,7 +53,7 @@ async def test_empty_selection_is_inactive(
 ) -> None:
     """Loading sandbox without selected domains leaves routing and providers inactive."""
     with patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set()):
-        await bootstrap._async_set_up_integrations(hass, config)
+        await bootstrap._async_set_up_integrations(hass, config, monotonic())
     assert hass.config_entries.router is None
     assert DATA_SANDBOX not in hass.data
     assert DATA_SANDBOX_TRANSLATION_PROVIDERS not in hass.data
@@ -214,7 +215,9 @@ async def test_bootstrap_installs_routing_before_selected_domain(
     entry.add_to_hass(hass)
     with patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set()):
         await bootstrap._async_set_up_integrations(
-            hass, {"sandbox": {"integrations": ["selected"]}, "selected": {}}
+            hass,
+            {"sandbox": {"integrations": ["selected"]}, "selected": {}},
+            monotonic(),
         )
     assert entry.state is ConfigEntryState.LOADED
     local_setup.assert_not_called()

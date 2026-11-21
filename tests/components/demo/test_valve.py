@@ -14,14 +14,12 @@ from pytest_homeassistant.common import (
 from homeassistant.components.demo import DOMAIN, valve as demo_valve
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
+from homeassistant.const import EVENT_STATE_CHANGED, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -61,8 +59,8 @@ async def test_closing(hass: HomeAssistant) -> None:
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: FRONT_GARDEN},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: FRONT_GARDEN},
         blocking=False,
     )
     await hass.async_block_till_done()
@@ -86,7 +84,7 @@ async def test_opening(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: ORCHARD}, blocking=False
+        VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: ORCHARD}, blocking=False
     )
     await hass.async_block_till_done()
 
@@ -108,8 +106,8 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     # close to 10%
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: BACK_GARDEN, ATTR_POSITION: 10},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: BACK_GARDEN, ValveServiceArgument.POSITION: 10},
         blocking=True,
     )
     state = hass.states.get(BACK_GARDEN)
@@ -129,8 +127,8 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     # open to 80%
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: BACK_GARDEN, ATTR_POSITION: 80},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: BACK_GARDEN, ValveServiceArgument.POSITION: 80},
         blocking=True,
     )
     state = hass.states.get(BACK_GARDEN)
@@ -151,8 +149,8 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: BACK_GARDEN, ATTR_POSITION: 80},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: BACK_GARDEN, ValveServiceArgument.POSITION: 80},
         blocking=True,
     )
     await hass.async_block_till_done()

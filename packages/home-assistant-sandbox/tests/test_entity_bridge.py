@@ -1,6 +1,7 @@
 """Tests for :class:`homeassistant_sandbox.entity_bridge.EntityBridge`."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 import logging
 import tempfile
@@ -18,7 +19,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -142,8 +143,13 @@ def test_serialise_device_info_returns_none_for_empty_input() -> None:
     assert _serialise_device_info({}) is None
 
 
+@pytest.mark.parametrize(
+    "device_info_factory", [dict, dr.DeviceInfo], ids=["dict", "dataclass"]
+)
 async def test_bridge_includes_device_info_in_register_payload(
-    channels: tuple[Channel, Channel], hass_with_demo_component
+    channels: tuple[Channel, Channel],
+    hass_with_demo_component: tuple[HomeAssistant, EntityComponent[Entity]],
+    device_info_factory: Callable[..., dict[str, Any] | dr.DeviceInfo],
 ) -> None:
     """An entity with ``device_info`` ships it in the register_entity payload."""
     main, sandbox = channels
@@ -163,11 +169,11 @@ async def test_bridge_includes_device_info_in_register_payload(
         def __init__(self) -> None:
             super().__init__()
             self.entity_id = "demo.with_device"
-            self._attr_device_info = {
-                "identifiers": {("demo", "dev-1")},
-                "name": "Demo Device",
-                "manufacturer": "Acme",
-            }
+            self._attr_device_info = device_info_factory(
+                identifiers={("demo", "dev-1")},
+                name="Demo Device",
+                manufacturer="Acme",
+            )
 
     entity = _DeviceEntity()
     component._entities[entity.entity_id] = entity  # noqa: SLF001
@@ -775,11 +781,11 @@ async def test_device_registry_update_resends_linked_entities(
         def __init__(self) -> None:
             super().__init__()
             self.entity_id = registry_entry.entity_id
-            self._attr_device_info = {
-                "identifiers": {("demo", "dev-1")},
-                "name": "Demo Device",
-                "sw_version": "1.0",
-            }
+            self._attr_device_info = dr.DeviceInfo(
+                identifiers={("demo", "dev-1")},
+                name="Demo Device",
+                sw_version="1.0",
+            )
 
     entity = _DeviceEntity()
     component._entities[entity.entity_id] = entity  # noqa: SLF001
@@ -792,7 +798,7 @@ async def test_device_registry_update_resends_linked_entities(
 
     # Firmware bump: the entity now reports a new sw_version and the device
     # registry fires its updated event.
-    entity._attr_device_info["sw_version"] = "2.0"  # noqa: SLF001
+    entity._attr_device_info.sw_version = "2.0"  # noqa: SLF001
     hass.bus.async_fire(
         dr.EVENT_DEVICE_REGISTRY_UPDATED,
         {"action": "update", "device_id": device.id, "changes": {}},

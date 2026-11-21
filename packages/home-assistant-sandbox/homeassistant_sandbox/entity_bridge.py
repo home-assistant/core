@@ -9,7 +9,10 @@ from typing import Any
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.helpers.device_registry import (
+    EVENT_DEVICE_REGISTRY_UPDATED,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -420,6 +423,8 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
 
 def _serialise_device_info(device_info: Any) -> dict[str, Any] | None:
     """Return a JSON-safe rendering of an entity's ``device_info``."""
+    if isinstance(device_info, DeviceInfo):
+        device_info = device_info.as_dict()
     if not device_info:
         return None
     if not isinstance(device_info, dict):

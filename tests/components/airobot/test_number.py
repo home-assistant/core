@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
@@ -45,7 +45,7 @@ async def test_number_set_hysteresis_band(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_thermostat_hysteresis_band",
+            TargetKey.ENTITY_ID: "number.test_thermostat_hysteresis_band",
             NumberServiceArgument.VALUE: 0.3,
         },
         blocking=True,
@@ -67,7 +67,7 @@ async def test_number_set_value_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_thermostat_hysteresis_band",
+                TargetKey.ENTITY_ID: "number.test_thermostat_hysteresis_band",
                 NumberServiceArgument.VALUE: 0.3,
             },
             blocking=True,

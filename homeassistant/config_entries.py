@@ -1686,7 +1686,7 @@ class ConfigEntriesFlowManager(
                 f"Cannot initialize a {source} flow without a link to the config entry"
             )
 
-        flow_id = ulid_util.ulid_now()
+        flow_id = ulid_util.secure_ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry

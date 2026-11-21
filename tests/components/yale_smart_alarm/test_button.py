@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient.exceptions import UnknownError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -33,7 +33,7 @@ async def test_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: "button.test_username_panic_button",
+            TargetKey.ENTITY_ID: "button.test_username_panic_button",
         },
         blocking=True,
     )
@@ -46,7 +46,7 @@ async def test_button(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.test_username_panic_button",
+                TargetKey.ENTITY_ID: "button.test_username_panic_button",
             },
             blocking=True,
         )

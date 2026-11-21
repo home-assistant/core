@@ -26,12 +26,7 @@ from homeassistant.components.update import (
     UpdateService,
     UpdateServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    CommonServiceArgument,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -311,7 +306,7 @@ async def test_update_install(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+            TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )
@@ -418,7 +413,7 @@ async def test_update_install_failure(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
                 UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
@@ -431,7 +426,7 @@ async def test_update_install_failure(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
                 UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
@@ -529,7 +524,7 @@ async def test_update_state_restore(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: "update.mock_dimmable_light_firmware",
+            TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )

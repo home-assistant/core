@@ -569,13 +569,18 @@ async def test_event_data_with_list_nested(
 
 
 @pytest.mark.parametrize(
-    "event_type", ["state_reported", ["test_event", "state_reported"]]
+    ("event_type", "expected_got"),
+    [
+        ("state_reported", "'state_reported'"),
+        (["test_event", "state_reported"], "['test_event', 'state_reported']"),
+    ],
 )
 async def test_state_reported_event(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
     event_type: str | list[str],
+    expected_got: str,
 ) -> None:
     """Test triggering on state reported event."""
     context = Context()
@@ -599,8 +604,8 @@ async def test_state_reported_event(
     assert len(service_calls) == 0
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Can't "
-        "listen to state_reported in event trigger at 'event_type'. Got None"
-        in caplog.text
+        "listen to state_reported in event trigger at 'triggers[0].event_type'. "
+        f"Got {expected_got}" in caplog.text
     )
 
 

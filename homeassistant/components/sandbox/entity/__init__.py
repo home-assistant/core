@@ -3,7 +3,7 @@
 import contextlib
 from enum import IntFlag
 import importlib
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import Context
@@ -80,7 +80,7 @@ class SandboxProxyEntity(Entity):
         )
         # Let platform registration reuse the device established by the bridge.
         self._attr_device_info = (
-            cast(DeviceInfo, description.device_info)
+            DeviceInfo(**description.device_info)
             if description.device_info is not None
             else None
         )
