@@ -149,7 +149,9 @@ QUERY_STATISTICS_SHORT_TERM = (
 )
 
 
-def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
+def query_circular_mean(
+    table: type[StatisticsBase], *, missing_weight_as_zero: bool = False
+) -> tuple[Label, Label]:
     """Return the sqlalchemy function for circular mean and the mean_weight.
 
     The result must be modulo 360 to normalize the result [0, 360].
@@ -161,7 +163,11 @@ def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
     # in Python.
     # https://en.wikipedia.org/wiki/Circular_mean
     radians = func.radians(table.mean)
-    mean_weight = func.coalesce(table.mean_weight, 0.0)
+    mean_weight = (
+        func.coalesce(table.mean_weight, 0.0)
+        if missing_weight_as_zero
+        else table.mean_weight
+    )
     weighted_sum_sin = func.sum(func.sin(radians) * mean_weight)
     weighted_sum_cos = func.sum(func.cos(radians) * mean_weight)
     weight = func.sqrt(
@@ -1573,7 +1579,7 @@ def _generate_statistics_period_stmt(
     if "mean" in aggregate_types:
         assert mean_type is not StatisticMeanType.NONE
         mean_columns = (
-            query_circular_mean(Statistics)
+            query_circular_mean(Statistics, missing_weight_as_zero=True)
             if mean_type is StatisticMeanType.CIRCULAR
             else (func.avg(Statistics.mean).label("mean"),)
         )
