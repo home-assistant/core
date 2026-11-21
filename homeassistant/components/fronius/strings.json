@@ -71,6 +71,9 @@
       }
     },
     "sensor": {
+      "ac_power_limit_reference": {
+        "name": "AC power limit reference"
+      },
       "battery_power_limit_reference": {
         "name": "Battery power limit reference"
       },

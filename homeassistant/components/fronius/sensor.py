@@ -531,8 +531,16 @@ MODBUS_INVERTER_ENTITY_DESCRIPTIONS: list[
 MODBUS_SETTINGS_ENTITY_DESCRIPTIONS: list[
     FroniusSensorEntityDescription[ModbusValues]
 ] = [
-    # WChaMax: the power the battery charge and discharge limits are a
-    # percentage of. A fixed value of the storage, so no state class.
+    # The powers the limits are a percentage of: WMax for the AC power limit,
+    # WChaMax for the battery charge and discharge limits. Fixed values of the
+    # inverter and the storage, so no state class.
+    FroniusSensorEntityDescription(
+        key="ac_power_limit_reference",
+        value_fn=_modbus_value("ac_power_limit_reference"),
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     FroniusSensorEntityDescription(
         key="battery_power_limit_reference",
         value_fn=_modbus_value("battery_power_limit_reference"),

@@ -266,6 +266,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         for component in (
             self.modbus_inverter.controls,
             self.modbus_inverter.storage,
+            self.modbus_inverter.basic_settings,
         ):
             if component is not None:
                 await component.async_update()
@@ -345,6 +346,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         if (controls := inverter.controls) is not None:
             values["ac_power_limit"] = controls.power_limit
             values["ac_power_limit_enabled"] = controls.enabled
+            if (basic_settings := inverter.basic_settings) is not None:
+                # WMax, what the power limit is a percentage of
+                values["ac_power_limit_reference"] = basic_settings.max_power
         if (storage := inverter.storage) is not None:
             values["battery_charge_power_limit"] = storage.charge_limit
             values["battery_charge_power_limit_enabled"] = storage.charge_limit_enabled
