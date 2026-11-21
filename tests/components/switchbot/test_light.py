@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    inject_bluetooth_service_info,
+)
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -36,6 +39,7 @@ from . import (
     FLOOR_LAMP_SERVICE_INFO,
     PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBIC_NEON_LIGHT_SERVICE_INFO,
+    RGBICWW_CEILING_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
     RGBICWW_LIGHT_BARS_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
@@ -818,3 +822,290 @@ async def test_circulator_fan_pro_light_state(
         assert (
             entity_registry.async_get("sensor.test_name_bluetooth_signal") is not None
         )
+
+
+RGBICWW_CEILING_MAIN_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        (SERVICE_TURN_ON, {}, "turn_on_main", ()),
+        (SERVICE_TURN_OFF, {}, "turn_off_main", ()),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 128},
+            "set_main_brightness",
+            (round(128 / 255 * 100),),
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 4000},
+            "set_main_color_temp",
+            (4000,),
+        ),
+    ],
+)
+RGBICWW_CEILING_COLOR_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        (SERVICE_TURN_ON, {}, "turn_on_color", ()),
+        (SERVICE_TURN_OFF, {}, "turn_off_color", ()),
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "halloween"},
+            "set_effect",
+            ("halloween",),
+        ),
+    ],
+)
+
+
+@pytest.mark.parametrize(*RGBICWW_CEILING_MAIN_PARAMETERS)
+async def test_rgbicww_ceiling_light_main_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test RGBICWW Ceiling Light main (warm-white) sub-light services."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_main_light"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicwwCeilingLight",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+async def test_rgbicww_ceiling_light_main_brightness_and_color_temp(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the main light applies brightness and color temp in a single turn_on."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_main_light"
+
+    mocked_color_temp = AsyncMock(return_value=True)
+    mocked_brightness = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicwwCeilingLight",
+        set_main_color_temp=mocked_color_temp,
+        set_main_brightness=mocked_brightness,
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: 128,
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+
+        # Both attributes in one call must be applied, not just color temp.
+        mocked_color_temp.assert_awaited_once_with(4000)
+        mocked_brightness.assert_awaited_once_with(round(128 / 255 * 100))
+
+
+@pytest.mark.parametrize(*RGBICWW_CEILING_COLOR_PARAMETERS)
+async def test_rgbicww_ceiling_light_color_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test RGBICWW Ceiling Light color (RGB) sub-light services."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_color_light"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicwwCeilingLight",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+async def test_rgbicww_ceiling_light_creates_three_entities(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test that RGBICWW Ceiling Light creates a master and two sub-light entities."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicwwCeilingLight",
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_name") is not None
+    assert hass.states.get("light.test_name_main_light") is not None
+    assert hass.states.get("light.test_name_color_light") is not None
+
+
+@pytest.mark.parametrize(
+    ("channel_states", "master_state", "main_state", "color_state"),
+    [
+        ("1e20", STATE_OFF, STATE_OFF, STATE_OFF),
+        ("1ea0", STATE_ON, STATE_ON, STATE_OFF),
+        ("9e20", STATE_ON, STATE_OFF, STATE_ON),
+        ("9ea0", STATE_ON, STATE_ON, STATE_ON),
+    ],
+)
+async def test_ceiling_independent_states(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    channel_states: str,
+    master_state: str,
+    main_state: str,
+    color_state: str,
+) -> None:
+    """Read both channels independently and derive the master state."""
+    channels = bytes.fromhex(channel_states)
+    manufacturer = bytearray(RGBICWW_CEILING_LIGHT_SERVICE_INFO.manufacturer_data[2409])
+    manufacturer[7] = channels[0]
+    manufacturer[13] = channels[1]
+    info = BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        RGBICWW_CEILING_LIGHT_SERVICE_INFO.device,
+        generate_advertisement_data(
+            manufacturer_data={2409: bytes(manufacturer)},
+            service_data=RGBICWW_CEILING_LIGHT_SERVICE_INFO.service_data,
+        ),
+        source="local",
+        connectable=True,
+        time=0,
+    )
+    inject_bluetooth_service_info(hass, info)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    with patch(
+        "switchbot.SwitchbotRgbicwwCeilingLight._get_multi_commands_results",
+        return_value=(
+            bytes.fromhex("01001c"),
+            bytes.fromhex("01001e285078a00fa0000200"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    master = hass.states.get("light.test_name")
+    main = hass.states.get("light.test_name_main_light")
+    color = hass.states.get("light.test_name_color_light")
+    assert master.state == master_state
+    assert master.attributes["supported_color_modes"] == ["onoff"]
+    assert main.state == main_state
+    assert color.state == color_state
+    assert main.attributes["supported_color_modes"] == ["color_temp"]
+    assert color.attributes["supported_color_modes"] == ["rgb"]
+
+
+async def test_ceiling_channel_attributes(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Expose each channel's brightness, color and color temperature."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    with patch(
+        "switchbot.SwitchbotRgbicwwCeilingLight._get_multi_commands_results",
+        return_value=(
+            bytes.fromhex("01001c"),
+            bytes.fromhex("01001e285078a00fa0000200"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    main = hass.states.get("light.test_name_main_light")
+    color = hass.states.get("light.test_name_color_light")
+    assert main.attributes[ATTR_BRIGHTNESS] == 82
+    assert main.attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
+    assert color.attributes[ATTR_BRIGHTNESS] == 76
+    assert color.attributes[ATTR_RGB_COLOR] == (40, 80, 120)
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [(SERVICE_TURN_ON, "turn_on"), (SERVICE_TURN_OFF, "turn_off")],
+)
+async def test_ceiling_master_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    method: str,
+) -> None:
+    """Use the native master command instead of forcing both channels on."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+    entry = mock_entry_encrypted_factory("rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    operations = {
+        name: AsyncMock(return_value=True)
+        for name in (
+            "turn_on",
+            "turn_off",
+            "turn_on_main",
+            "turn_off_main",
+            "turn_on_color",
+            "turn_off_color",
+        )
+    }
+    with patch.multiple(
+        "switchbot.SwitchbotRgbicwwCeilingLight", update=AsyncMock(), **operations
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.services.async_call(
+            LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: "light.test_name"}, blocking=True
+        )
+    operations[method].assert_awaited_once_with()
+    for name in operations.keys() - {method}:
+        operations[name].assert_not_awaited()
