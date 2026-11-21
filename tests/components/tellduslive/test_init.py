@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.tellduslive.const import DOMAIN
@@ -15,13 +16,23 @@ from homeassistant.util import dt as dt_util
 from .conftest import DEVICE_ID, HUB_ID
 
 
+@pytest.mark.parametrize(
+    "cached_client_id",
+    [None, "hub-2"],
+    ids=["session-hub", "cached-client-hub"],
+)
 async def test_device_via_device_links(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_tellduslive: MagicMock,
+    cached_client_id: str | None,
 ) -> None:
-    """Test that a discovered device links to its hub via via_device_id."""
+    """Test that discovery links a device to its expected hub."""
+    if cached_client_id is not None:
+        mock_tellduslive.device.return_value.device["client"] = cached_client_id
+        hubs = mock_tellduslive.get_clients.return_value
+        hubs.append({**hubs[0], "id": cached_client_id, "name": "Second hub"})
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -31,7 +42,7 @@ async def test_device_via_device_links(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     hub_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, HUB_ID), mock_config_entry.entry_id
+        (DOMAIN, cached_client_id or HUB_ID), mock_config_entry.entry_id
     )
     assert hub_device is not None
 
@@ -40,7 +51,10 @@ async def test_device_via_device_links(
     )
     assert child_device is not None
     assert child_device.via_device_id == hub_device.id
+    assert child_device.model == "Selflearning-Switch"
+    assert child_device.manufacturer == "Arctech"
     assert hass.states.async_all("switch")
+    mock_tellduslive.device.return_value.info.assert_not_called()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert all(
