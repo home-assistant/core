@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -48,7 +48,7 @@ async def test_event(hass: HomeAssistant, client: MagicMock) -> None:
 
     # check new state is what we expect
     state = hass.states.get(ENTITY_EVENT)
-    assert state.attributes[ATTR_EVENT_TYPE] == "low_flow"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "low_flow"
     assert state.attributes[FAULT_DATE] == "2025-02-15T13:00:00"
     assert state.attributes["code"] == 16
 
@@ -59,7 +59,7 @@ async def test_event(hass: HomeAssistant, client: MagicMock) -> None:
 
     # validate state remains unchanged
     state = hass.states.get(ENTITY_EVENT)
-    assert state.attributes[ATTR_EVENT_TYPE] == "low_flow"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "low_flow"
     assert state.attributes[FAULT_DATE] == "2025-02-15T13:00:00"
     assert state.attributes["code"] == 16
 
@@ -74,6 +74,6 @@ async def test_event(hass: HomeAssistant, client: MagicMock) -> None:
 
     # validate state remains unchanged
     state = hass.states.get(ENTITY_EVENT)
-    assert state.attributes[ATTR_EVENT_TYPE] == "low_flow"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "low_flow"
     assert state.attributes[FAULT_DATE] == "2025-02-15T13:00:00"
     assert state.attributes["code"] == 16

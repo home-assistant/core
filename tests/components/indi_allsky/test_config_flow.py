@@ -1,11 +1,13 @@
 """Test the INDI Allsky Config flow."""
 
 import ssl
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+import yarl
 
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
@@ -150,6 +152,53 @@ async def test_form_failures_and_recovery(
     assert result["result"].unique_id is None
     assert result["title"] == "INDI Allsky (127.0.0.1)"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "fetch_image_side_effect",
+    [
+        pytest.param(None, id="success"),
+        pytest.param(IndiAllSkyConnectionError("Cannot connect"), id="cannot_connect"),
+        pytest.param(IndiAllSkyAuthError("Invalid credentials"), id="invalid_auth"),
+        pytest.param(RuntimeError("Unexpected error"), id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_validation_session_is_detached(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    fetch_image_side_effect: Exception | None,
+) -> None:
+    """Test the temporary validation session is created without auto cleanup and detached."""
+    mock_indi_allsky_client.fetch_image.side_effect = fetch_image_side_effect
+    mock_session = MagicMock()
+
+    with patch(
+        "homeassistant.components.indi_allsky.config_flow.async_create_clientsession",
+        return_value=mock_session,
+    ) as mock_create_session:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: 443,
+                CONF_SSL: True,
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+    mock_create_session.assert_called_once()
+    kwargs = mock_create_session.call_args.kwargs
+    assert kwargs["verify_ssl"] is False
+    assert kwargs["auto_cleanup"] is False
+    cookie_jar: aiohttp.CookieJar = kwargs["cookie_jar"]
+    login_url = yarl.URL("https://127.0.0.1/indi-allsky/login")
+    cookie_jar.update_cookies({"session": "abc"}, response_url=login_url)
+    assert "session" in cookie_jar.filter_cookies(login_url)
+    mock_session.detach.assert_called_once_with()
 
 
 async def test_form_already_configured(

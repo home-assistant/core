@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import service
+from homeassistant.helpers import issue_registry as ir, service
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
@@ -33,6 +33,23 @@ IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
         msg="invalid airflow",
     ),
 }
+
+
+@callback
+def async_create_deprecated_airflow_issue(
+    hass: HomeAssistant, service_name: str
+) -> None:
+    """Point users of a deprecated airflow action at the damper number entities."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_action_{service_name}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_airflow_action",
+        translation_placeholders={"action": f"{DOMAIN}.{service_name}"},
+    )
 
 
 @callback
