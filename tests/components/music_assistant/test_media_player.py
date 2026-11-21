@@ -2042,3 +2042,105 @@ async def test_websocket_search_media_acts_as_calling_user(
         user_id=hass_admin_user.id,
         required=False,
     )
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "extra_data", "expected_user", "expected_schema"),
+    [
+        pytest.param(
+            101,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user",
+        ),
+        pytest.param(
+            101,
+            {},
+            {"provider": "homeassistant", "user_id": "ha_user_1", "required": False},
+            101,
+            id="calling_user",
+        ),
+        pytest.param(
+            100,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user_older_server",
+        ),
+        pytest.param(100, {}, None, None, id="older_server"),
+    ],
+)
+async def test_media_player_play_queue_item_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    extra_data: dict[str, Any],
+    expected_user: str | dict[str, Any] | None,
+    expected_schema: int | None,
+) -> None:
+    """Test play_queue_item runs on the active queue as a user where the server supports it."""
+    music_assistant_client.server_info.schema_version = schema_version
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    MockUser(id="ha_user_1", is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        MusicAssistantService.PLAY_QUEUE_ITEM,
+        {
+            ATTR_ENTITY_ID: "media_player.test_group_player_1",
+            MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+        }
+        | extra_data,
+        blocking=True,
+        context=Context(user_id="ha_user_1"),
+    )
+    sent = music_assistant_client.send_command.call_args
+    assert sent.args == ("player_queues/play_index",)
+    assert sent.kwargs["queue_id"] == "test_group_player_1"
+    assert sent.kwargs["index"] == "queue_item_1"
+    assert sent.kwargs.get("user") == expected_user
+    assert sent.kwargs["require_schema"] == expected_schema
+
+
+async def test_media_player_play_queue_item_action_older_server(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test play_queue_item as a given user on a server that can't act as a user."""
+    music_assistant_client.server_info.schema_version = 100
+    music_assistant_client.send_command.side_effect = InvalidServerVersion(
+        "Command requires schema 101"
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.PLAY_QUEUE_ITEM,
+            {
+                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "server_too_old"
+
+
+async def test_media_player_play_queue_item_action_no_active_queue(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test play_queue_item raises a translated error when the player has no active queue."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.player_queues._queues.pop("test_group_player_1")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.PLAY_QUEUE_ITEM,
+            {
+                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "no_active_queue"

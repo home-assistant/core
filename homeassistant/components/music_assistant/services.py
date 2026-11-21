@@ -73,6 +73,7 @@ class MusicAssistantService(StrEnum):
     GET_QUEUE = "get_queue"
     SEARCH = "search"
     GET_LIBRARY = "get_library"
+    PLAY_QUEUE_ITEM = "play_queue_item"
 
 
 class MusicAssistantServiceArgument(StrEnum):
@@ -104,6 +105,7 @@ class MusicAssistantServiceArgument(StrEnum):
     ORDER_BY = "order_by"
     ALBUM_TYPE = "album_type"
     ALBUM_ARTISTS_ONLY = "album_artists_only"
+    QUEUE_ITEM_ID = "queue_item_id"
 
 
 @callback
@@ -254,6 +256,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        MusicAssistantService.PLAY_QUEUE_ITEM,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
+        schema={
+            probatio.Required(MusicAssistantServiceArgument.QUEUE_ITEM_ID): cv.string,
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
+        func="_async_handle_play_queue_item",
     )
 
 
