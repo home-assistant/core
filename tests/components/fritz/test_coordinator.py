@@ -23,6 +23,7 @@ from homeassistant.components.fritz.const import (
     DEFAULT_SSL,
     DOMAIN,
     SCAN_INTERVAL,
+    MeshRoles,
 )
 from homeassistant.components.fritz.coordinator import (
     FRITZ_DATA_KEY,
@@ -416,6 +417,42 @@ async def test_async_scan_devices_empty_mesh_topology_raises(
     assert "ERROR" not in caplog.text
 
 
+async def test_async_scan_devices_mesh_topology_not_accessible(
+    fritz_tools: FritzBoxTools,
+) -> None:
+    """Test hosts are not fetched when the device has no access to the mesh topology."""
+
+    with (
+        patch.object(
+            type(fritz_tools.fritz_status),
+            "device_has_mesh_support",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+        patch.object(
+            fritz_tools.fritz_hosts,
+            "get_mesh_topology",
+            MagicMock(
+                side_effect=FritzActionError(
+                    "Error 404: Device has no access to topology information."
+                )
+            ),
+        ),
+        patch.object(
+            fritz_tools, "_async_update_hosts_info", AsyncMock(return_value={})
+        ) as update_hosts_info,
+        patch.object(
+            fritz_tools, "async_send_signal_device_update", AsyncMock()
+        ) as signal_update,
+    ):
+        await fritz_tools.async_scan_devices()
+
+    assert fritz_tools.mesh_role is MeshRoles.SLAVE
+    assert fritz_tools.device_discovery_enabled is False
+    update_hosts_info.assert_not_awaited()
+    signal_update.assert_not_awaited()
+
+
 async def test_async_scan_devices_mesh_guest_and_missing_host(
     fritz_tools,
 ) -> None:
@@ -707,6 +744,37 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     )
     assert fritz_device_after is not None
     assert fritz_device_after.id == fritz_device.id
+
+
+async def test_device_discovery_disabled_without_mesh_topology_access(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test hosts are never fetched when the device has no access to the mesh topology."""
+    fh_class_mock.get_mesh_topology.side_effect = FritzActionError(
+        "Error 404: Device has no access to topology information."
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    wrapper: AvmWrapper = entry.runtime_data
+    assert wrapper.mesh_role is MeshRoles.SLAVE
+    assert wrapper.device_discovery_enabled is False
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Neither scan nor cleanup fetches hosts, and the topology is not retried
+    fh_class_mock.get_hosts_attributes.assert_not_called()
+    fh_class_mock.get_mesh_topology.assert_called_once()
 
 
 async def test_old_discovery_does_not_self_reference_box(
