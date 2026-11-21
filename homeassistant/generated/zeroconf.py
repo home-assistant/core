@@ -627,6 +627,10 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "elecway",
+            "name": "ewayenergystorage-*",
+        },
+        {
             "domain": "hdfury",
             "name": "diva-*",
         },
