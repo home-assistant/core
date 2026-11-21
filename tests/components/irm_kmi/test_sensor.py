@@ -11,6 +11,7 @@ from irm_kmi_api import (
     PollenLevel,
     PollenName,
     PollenParser,
+    RadarForecast,
     WarningData,
 )
 import pytest
@@ -21,7 +22,13 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,6 +38,8 @@ from .const import (
     CURRENT_WEATHER,
     NEXT_WARNING_ENTITY_ID,
     POLLEN,
+    RADAR_FORECAST,
+    RAINFALL_ENTITY_ID,
     TEMPERATURE_ENTITY_ID,
     WARNINGS,
     WIND_DIRECTION_ENTITY_ID,
@@ -246,3 +255,143 @@ async def test_next_warning(
     state = hass.states.get(NEXT_WARNING_ENTITY_ID)
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("now", "radar_forecast", "expected_state"),
+    [
+        pytest.param(
+            "2023-12-28T15:00:00+01:00",
+            RADAR_FORECAST,
+            "0.6",
+            id="before_the_first_frame",
+        ),
+        pytest.param(
+            "2023-12-28T15:10:00+01:00",
+            RADAR_FORECAST,
+            "0.6",
+            id="on_the_first_frame",
+        ),
+        pytest.param(
+            "2023-12-28T15:19:59+01:00",
+            RADAR_FORECAST,
+            "0.6",
+            id="one_second_before_the_next_frame",
+        ),
+        pytest.param(
+            "2023-12-28T15:20:00+01:00",
+            RADAR_FORECAST,
+            "0.3",
+            id="on_a_frame",
+        ),
+        pytest.param(
+            "2023-12-28T15:35:00+01:00",
+            RADAR_FORECAST,
+            "2.4",
+            id="between_two_frames",
+        ),
+        pytest.param(
+            "2023-12-28T16:30:00+01:00",
+            RADAR_FORECAST,
+            "7.2",
+            id="after_the_last_frame",
+        ),
+        pytest.param(
+            "2023-12-28T15:30:00+01:00",
+            [],
+            STATE_UNKNOWN,
+            id="without_any_frame",
+        ),
+    ],
+)
+async def test_rainfall_frame_covering_now(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    radar_forecast: list[RadarForecast],
+    expected_state: str,
+) -> None:
+    """Test the sensor reports the last radar frame that already started."""
+    freezer.move_to(now)
+    mock_irm_kmi_api.get_radar_forecast.return_value = radar_forecast
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(RAINFALL_ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize(
+    ("forecast_fixture", "now", "expected_state"),
+    [
+        pytest.param(
+            "forecast.json",
+            "2023-12-26T18:15:00+01:00",
+            "7.2",
+            id="belgium",
+        ),
+        pytest.param(
+            "forecast_nl_with_rain_on_radar.json",
+            "2023-12-28T15:25:00+01:00",
+            "0.15",
+            id="netherlands",
+        ),
+    ],
+)
+async def test_rainfall_is_always_in_millimeters_per_hour(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    expected_state: str,
+) -> None:
+    """Test both units the provider reports are converted to mm/h."""
+    freezer.move_to(now)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(RAINFALL_ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+    assert (
+        state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+    )
+
+
+@pytest.mark.parametrize(
+    "radar_forecast",
+    [
+        pytest.param(
+            [RadarForecast(**{**RADAR_FORECAST[2], "unit": None})],
+            id="without_a_unit",
+        ),
+        pytest.param(
+            [RadarForecast(**{**RADAR_FORECAST[2], "unit": "mm/5min"})],
+            id="unknown_unit",
+        ),
+        pytest.param(
+            [RadarForecast(**{**RADAR_FORECAST[2], "native_precipitation": None})],
+            id="without_a_rate",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_rainfall_without_a_usable_frame(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    radar_forecast: list[RadarForecast],
+) -> None:
+    """Test a frame that cannot be expressed in mm/h is unknown."""
+    mock_irm_kmi_api.get_radar_forecast.return_value = radar_forecast
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(RAINFALL_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
