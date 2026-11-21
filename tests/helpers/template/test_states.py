@@ -144,6 +144,32 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
         render(hass, "{{ states.sensor.test.invalid_prop.xx }}")
 
 
+@pytest.mark.parametrize(
+    "attribute", ["last_changed_timestamp", "last_reported_timestamp"]
+)
+@pytest.mark.parametrize(
+    "expression",
+    ["states.sensor.test.%s", "states.sensor.test | attr('%s')"],
+)
+def test_timestamp_tracks_entity_on_every_render(
+    hass: HomeAssistant, attribute: str, expression: str
+) -> None:
+    """Test cached timestamps retain dependencies across renders and templates."""
+    hass.states.async_set("sensor.test", "23")
+    source = "{{ " + expression % attribute + " }}"
+    timestamp_template = template.Template(source, hass)
+    expected = getattr(hass.states.get("sensor.test"), attribute)
+
+    for current_template in (
+        timestamp_template,
+        timestamp_template,
+        template.Template(source + " ", hass),
+    ):
+        info = current_template.async_render_to_info()
+        assert info.entities == {"sensor.test"}
+        assert info.result() == expected
+
+
 async def test_unavailable_states(hass: HomeAssistant) -> None:
     """Test watching unavailable states."""
 
