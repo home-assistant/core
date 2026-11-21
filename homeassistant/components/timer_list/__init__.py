@@ -4,7 +4,8 @@ A timer list entity holds many independent countdown timers (its *items*),
 mirroring how a to-do list holds many to-do items. The entity state is the
 number of active timers. The platform provides the abstract entity, the shared
 data model, and the generic services/websocket API; storing timers and
-scheduling their completion is left to concrete implementations.
+scheduling their completion is left to concrete implementations, such as the
+reusable ``InMemoryTimerListEntity``.
 """
 
 import logging
@@ -32,6 +33,7 @@ from .const import (
     TimerStatus,
 )
 from .entity import TimerItem, TimerListEntity, TimerListEvent
+from .in_memory import InMemoryTimerListEntity
 from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_websocket_api
 
@@ -40,6 +42,7 @@ __all__ = [
     "ENTITY_ID_FORMAT",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "InMemoryTimerListEntity",
     "TimerItem",
     "TimerListEntity",
     "TimerListEntityFeature",
