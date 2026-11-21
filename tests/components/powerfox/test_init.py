@@ -63,21 +63,33 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("exception", [PowerfoxConnectionError, PowerfoxNoDataError])
+@pytest.mark.parametrize(
+    "device_list",
+    [
+        pytest.param({"side_effect": PowerfoxConnectionError}, id="connection_error"),
+        pytest.param({"side_effect": PowerfoxNoDataError}, id="no_devices"),
+        pytest.param({"return_value": []}, id="empty_device_list"),
+    ],
+)
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: type[Exception],
+    device_registry: dr.DeviceRegistry,
+    device_list: dict[str, Any],
 ) -> None:
     """Test the Powerfox configuration entry not ready."""
-    mock_powerfox_client.all_devices.side_effect = exception
-    mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Registered devices must survive a setup without a usable device list.
+    assert _get_device(device_registry, mock_config_entry, WATER_METER_ID)
 
 
 @pytest.mark.parametrize("method", ["all_devices", "device"])
@@ -153,11 +165,12 @@ async def test_stale_device_is_removed(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "device_list",
     [
-        pytest.param(None, id="unchanged"),
-        pytest.param(PowerfoxConnectionError, id="connection_error"),
-        pytest.param(PowerfoxNoDataError, id="no_devices"),
+        pytest.param({}, id="unchanged"),
+        pytest.param({"side_effect": PowerfoxConnectionError}, id="connection_error"),
+        pytest.param({"side_effect": PowerfoxNoDataError}, id="no_devices"),
+        pytest.param({"return_value": []}, id="empty_device_list"),
     ],
 )
 async def test_devices_kept_without_device_list_change(
@@ -166,13 +179,13 @@ async def test_devices_kept_without_device_list_change(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
-    side_effect: type[Exception] | None,
+    device_list: dict[str, Any],
 ) -> None:
     """Test devices are kept and no reload happens without a known list change."""
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    mock_powerfox_client.all_devices.side_effect = side_effect
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
     ) as mock_schedule_reload:

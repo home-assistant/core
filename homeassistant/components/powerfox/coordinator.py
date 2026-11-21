@@ -87,12 +87,18 @@ class PowerfoxDeviceListCoordinator(PowerfoxApiCoordinator[list[Device]]):
     async def _async_fetch_data(self) -> list[Device]:
         """Fetch the device list from the Powerfox API."""
         try:
-            return await self.client.all_devices()
+            devices = await self.client.all_devices()
         except PowerfoxNoDataError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_devices",
             ) from err
+        if not devices:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_devices",
+            )
+        return devices
 
 
 class PowerfoxDeviceDataUnavailable(UpdateFailed):
