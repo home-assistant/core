@@ -1,6 +1,7 @@
 """Tests for the Marketplace repositories."""
 
 from asyncio import CancelledError, Future, sleep
+import base64
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -33,6 +34,7 @@ from yarl import URL
 
 from homeassistant import loader
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.marketplace.base import (
     MarketplaceManager,
     RemovedRepository,
@@ -3597,6 +3599,199 @@ async def test_integration_manifest_of_a_version(
             )
             == manifest
         )
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("members", "resource"),
+    [
+        pytest.param(
+            {"card.js": "card", "card.js.map": "map", "plugin-basic.js": "other"},
+            "card.js",
+            id="named_like_the_zip",
+        ),
+        pytest.param(
+            {"plugin-basic.js": "card", "translations/en.json": "{}"},
+            "plugin-basic.js",
+            id="named_like_the_repository",
+        ),
+    ],
+)
+async def test_install_plugin_from_the_catalog_zip_release(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
+    config_dir: Path,
+    members: dict[str, str],
+    resource: str,
+) -> None:
+    """Test a dashboard resource shipping a ZIP release installs what it holds."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+
+    for url, content in (
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_PLUGIN}/1.0.0/hacs.json",
+            b'{"name": "Card", "zip_release": true, "filename": "card.zip"}',
+        ),
+        (
+            f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/card.zip",
+            _zip_bytes(members),
+        ),
+    ):
+        response_mocker.add(url, mocked_response(url, content=content))
+    aioclient_mock.mock_calls.clear()
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert not github_api_calls(aioclient_mock)
+    assert _installed_files(config_dir) == sorted(
+        f"www/community/plugin-basic/{member}" for member in members
+    )
+    assert repository.data.file_name == resource
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [f"/local/community/plugin-basic/{resource}?v=1296267-1.0.0"]
+
+
+def _serve_plugin_zip_release(
+    response_mocker: MarketplaceResponses, filename: str, members: dict[str, str]
+) -> None:
+    """Serve a hacs.json naming a ZIP release, to the catalog and the GitHub API."""
+    manifest = json.dumps({"name": "Card", "zip_release": True, "filename": filename})
+    for url, response in (
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_PLUGIN}/1.0.0/hacs.json",
+            {"content": manifest.encode()},
+        ),
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_PLUGIN}/abc1234/hacs.json",
+            {"content": manifest.encode()},
+        ),
+        (
+            f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/contents/hacs.json?ref=1.0.0",
+            {
+                "json_content": {
+                    "type": "file",
+                    "encoding": "base64",
+                    "name": "hacs.json",
+                    "path": "hacs.json",
+                    "content": base64.b64encode(manifest.encode()).decode(),
+                }
+            },
+        ),
+        (
+            str(
+                URL(
+                    f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/{filename}"
+                )
+            ),
+            {"content": _zip_bytes(members)},
+        ),
+    ):
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_plugin_zip_release_from_the_catalog_commit(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
+    config_dir: Path,
+) -> None:
+    """Test a ZIP release at a catalog commit is installed from the GitHub release."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.last_version = None
+    repository.data.last_commit = "abc1234"
+    _serve_plugin_zip_release(response_mocker, "card.zip", {"card.js": "card"})
+    url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": "1.0.0",
+                    "prerelease": False,
+                    "assets": [
+                        {"name": "plugin-basic.js", "download_count": 100},
+                        {"name": "card.js", "download_count": 200},
+                        {"name": "card.zip", "download_count": 300},
+                    ],
+                }
+            ],
+        ),
+        keep=True,
+    )
+    aioclient_mock.mock_calls.clear()
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/refresh", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+
+    assert github_api_calls(aioclient_mock)
+    # Only a release has the ZIP, the archive of the commit is not downloaded
+    assert not any(
+        str(call[1]).endswith("/archive/abc1234.zip")
+        for call in aioclient_mock.mock_calls
+    )
+    assert _installed_files(config_dir) == ["www/community/plugin-basic/card.js"]
+    assert repository.data.file_name == "card.js"
+    # Installs download the ZIP, not the resource that has the same name as an asset
+    assert repository.data.downloads == 300
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    "last_version",
+    [
+        pytest.param("1.0.0", id="catalog_release"),
+        # The catalog can not install a ZIP at a commit, the GitHub API does
+        pytest.param(None, id="catalog_commit"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("filename", "members"),
+    [
+        pytest.param("card.zip", {"dist/card.js": "card"}, id="not_in_the_root"),
+        # hacs.json is remote input, it can not name a resource outside the card
+        pytest.param("../card.zip", {"README.md": ""}, id="outside_the_card"),
+    ],
+)
+async def test_plugin_zip_release_without_a_resource_is_refused(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    last_version: str | None,
+    filename: str,
+    members: dict[str, str],
+) -> None:
+    """Test a ZIP release without a dashboard resource in its root is not installed."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.installed = True
+    repository.data.file_name = "old.js"
+    repository.data.last_version = last_version
+    repository.data.last_commit = "abc1234"
+    _serve_plugin_zip_release(response_mocker, filename, members)
+    someone_else = config_dir / "www/community/card.js"
+    someone_else.parent.mkdir(parents=True)
+    someone_else.write_text("someone else's card")
+
+    response = await _install(hass, hass_ws_client, repository.data.id)
+
+    assert not response["success"]
+    assert f"{filename} has no dashboard resource" in response["error"]["message"]
+    # The resource the dashboard uses is only replaced once the new one is written
+    assert repository.data.file_name == "old.js"
+    assert _installed_files(config_dir) == ["www/community/card.js"]
 
 
 async def test_catalog_zip_release_needs_a_domain(

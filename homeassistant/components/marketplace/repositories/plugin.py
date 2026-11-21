@@ -28,6 +28,8 @@ from ..utils.url import github_release_asset, ref_version
 from .base import FileInformation, Repository
 
 if TYPE_CHECKING:
+    from aiogithubapi.models.release import GitHubReleaseAssetModel
+
     from ..base import MarketplaceManager
 
 
@@ -69,6 +71,18 @@ class PluginRepository(Repository):
             f"{self.data.name}-bundle.js",
             f"{self.data.name}.umd.js",
         )
+
+    @override
+    def _find_target_asset(
+        self, assets: list[GitHubReleaseAssetModel] | None
+    ) -> GitHubReleaseAssetModel | None:
+        """Find the asset that is downloaded, for a ZIP release the archive."""
+        # The file name is the resource extracted from the archive, not an asset
+        if self._zip_release:
+            for asset in assets or []:
+                if asset.name == self.repository_manifest.filename:
+                    return asset
+        return super()._find_target_asset(assets)
 
     @override
     def gather_tree_files_to_download(self) -> list[FileInformation]:
@@ -117,9 +131,54 @@ class PluginRepository(Repository):
                     },
                 )
 
+    @property
+    def _zip_release(self) -> bool:
+        """Return if the content is a ZIP release asset hacs.json names."""
+        manifest = self.repository_manifest
+        return manifest.zip_release and bool(manifest.filename)
+
+    def _zip_resource_filenames(self) -> tuple[str, ...]:
+        """Return the file names the dashboard resource in a ZIP release can have."""
+        archive = self.repository_manifest.filename or ""
+        return tuple(
+            dict.fromkeys(
+                (f"{archive.removesuffix('.zip')}.js", *self._default_filenames())
+            )
+        )
+
+    def _find_extracted_resource(self) -> str | None:
+        """Return the dashboard resource the ZIP release extracted, this does I/O."""
+        local = Path(self.content.path.local)
+        for filename in self._zip_resource_filenames():
+            # hacs.json is remote input, the resource has to be in the root
+            if "/" not in filename and (local / filename).is_file():
+                return filename
+        return None
+
+    async def _async_find_extracted_resource(self) -> str:
+        """Return the dashboard resource the ZIP release extracted."""
+        if not (
+            filename := await self.marketplace.hass.async_add_executor_job(
+                self._find_extracted_resource
+            )
+        ):
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="zip_resource_missing",
+                translation_placeholders={
+                    "file": str(self.repository_manifest.filename),
+                    "names": ", ".join(self._zip_resource_filenames()),
+                },
+            )
+        return filename
+
     @override
     async def async_check_written_content(self) -> None:
         """Refuse an install without the dashboard resource it is used by."""
+        if self._zip_release:
+            await self._async_find_extracted_resource()
+            return
+
         if not self.data.file_name:
             return
 
@@ -134,6 +193,9 @@ class PluginRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
+        # Set only after a successful write, a rollback restores the files but not this
+        if self._zip_release:
+            self.data.file_name = await self._async_find_extracted_resource()
         self.data.directory = self.directory
         await self.update_dashboard_resources()
 
@@ -228,6 +290,15 @@ class PluginRepository(Repository):
         self, version: str, *, commit: bool
     ) -> Callable[[], Awaitable[None]]:
         """Resolve the dashboard resource of a catalog version."""
+        if self._zip_release:
+            if commit:
+                raise CatalogContentUnresolvedError(
+                    translation_domain=DOMAIN,
+                    translation_key="catalog_zip_release_without_release",
+                )
+            self.content.path.remote = "release"
+            return partial(self.download_zip_files, self.validate)
+
         if not commit and not self.repository_manifest.content_in_root:
             # Without the prefix to strip, the first two names are the same
             for filename in dict.fromkeys(self._valid_filenames()):
@@ -285,6 +356,10 @@ class PluginRepository(Repository):
         if specific_filename := self.repository_manifest.filename:
             return (specific_filename,)
 
+        return self._default_filenames()
+
+    def _default_filenames(self) -> tuple[str, ...]:
+        """Return the file names the dashboard resource has by its name."""
         name = self.data.name or ""
         return (
             f"{name.replace('lovelace-', '')}.js",
@@ -313,7 +388,9 @@ class PluginRepository(Repository):
     @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
-        if not self._update_filenames_from_release():
+        if self._zip_release:
+            self._update_filenames_from_zip_release()
+        elif not self._update_filenames_from_release():
             self._update_filenames_from_tree()
 
     def _update_filenames_from_release(self) -> bool:
@@ -334,6 +411,16 @@ class PluginRepository(Repository):
                 return True
 
         return False
+
+    def _update_filenames_from_zip_release(self) -> None:
+        """Target the ZIP asset hacs.json names, the resource is in it."""
+        if not self.releases.objects:
+            return
+
+        # Which file is the resource is only known once the archive is extracted
+        if not self.data.installed:
+            self.data.file_name = ""
+        self.content.path.remote = "release"
 
     def _update_filenames_from_tree(self) -> None:
         """Target a file in the root or the dist directory of the tree."""
