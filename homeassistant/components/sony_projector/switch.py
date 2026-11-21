@@ -11,7 +11,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -44,14 +44,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML platform into a config entry."""
-    # The entity ID comes from the entry title, so the namespace keeps its prefix.
-    name = " ".join(
-        filter(None, [config.get(CONF_ENTITY_NAMESPACE), config[CONF_NAME]])
-    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: config[CONF_HOST], CONF_NAME: name},
+        data={CONF_HOST: config[CONF_HOST], CONF_NAME: config[CONF_NAME]},
     )
 
     translation_placeholders = {"domain": DOMAIN, "integration_title": DEFAULT_NAME}
@@ -71,17 +67,6 @@ async def async_setup_platform(
             translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=translation_placeholders,
         )
-        # The shared warning says to remove all YAML, which would drop this one.
-        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
-        return
-
-    # Each YAML block imports on its own, so another one may already have failed.
-    if any(
-        issue.active
-        and issue.domain == DOMAIN
-        and issue.issue_id.startswith("deprecated_yaml_import_issue_")
-        for issue in ir.async_get(hass).issues.values()
-    ):
         return
 
     ir.async_create_issue(
