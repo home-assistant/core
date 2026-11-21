@@ -130,6 +130,12 @@ INITIAL_MESSAGES = [
 
 
 @pytest.fixture
+def initial_messages() -> list[Status]:
+    """Messages the receiver reports right after connecting."""
+    return INITIAL_MESSAGES
+
+
+@pytest.fixture
 def read_queue() -> asyncio.Queue[Status | None]:
     """Read messages queue."""
     return asyncio.Queue()
@@ -144,6 +150,7 @@ def writes() -> list[Instruction]:
 @pytest.fixture
 def mock_receiver(
     mock_connect: AsyncMock,
+    initial_messages: list[Status],
     read_queue: asyncio.Queue[Status | None],
     writes: list[Instruction],
 ) -> AsyncMock:
@@ -151,7 +158,7 @@ def mock_receiver(
     receiver_class = AsyncMock(Receiver, auto_spec=True)
     receiver = receiver_class.return_value
 
-    for message in INITIAL_MESSAGES:
+    for message in initial_messages:
         read_queue.put_nowait(message)
 
     async def read() -> Status:
