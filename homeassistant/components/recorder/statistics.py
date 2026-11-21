@@ -1592,26 +1592,14 @@ def _generate_statistics_period_stmt(
     }
 
     for lower, upper in period_bounds:
-        query = select(Statistics.metadata_id)
+        # The reducer derives period boundaries from the final source row.
+        query = select(
+            Statistics.metadata_id, func.max(Statistics.start_ts).label("last_start_ts")
+        )
 
-        if aggregate_types:
-            # Keep the first row timestamp so the existing reducer can still
-            # determine the correct calendar period for aggregate-only and
-            # mixed requests.
-            query = query.add_columns(
-                func.min(Statistics.start_ts).label("period_start_ts")
-            )
-
-            for key, aggregate_columns_for_type in aggregate_columns.items():
-                if key in aggregate_types:
-                    query = query.add_columns(*aggregate_columns_for_type)
-
-        if endpoint_types:
-            # Endpoint values must come from the last actual Statistics row
-            # in the period, so keep its timestamp for the join below.
-            query = query.add_columns(
-                func.max(Statistics.start_ts).label("endpoint_start_ts")
-            )
+        for key, aggregate_columns_for_type in aggregate_columns.items():
+            if key in aggregate_types:
+                query = query.add_columns(*aggregate_columns_for_type)
 
         query = query.where(
             Statistics.start_ts >= lower,
@@ -1627,20 +1615,12 @@ def _generate_statistics_period_stmt(
     reduced = union_all(*queries).subquery()
 
     if endpoint_types:
-        # Endpoint-only requests expose the timestamp of the last row.
-        # Mixed requests keep the first timestamp of the reduced period so
-        # the existing reducer sees the same period representative as before.
-        columns = select(
-            Statistics.metadata_id,
-            (
-                reduced.c.period_start_ts if aggregate_types else Statistics.start_ts
-            ).label("start_ts"),
-        )
+        columns = select(Statistics.metadata_id, Statistics.start_ts)
     else:
         # Aggregate-only requests do not need to join back to Statistics.
         columns = select(
             reduced.c.metadata_id,
-            reduced.c.period_start_ts.label("start_ts"),
+            reduced.c.last_start_ts.label("start_ts"),
         )
 
     for key, aggregate_columns_for_type in aggregate_columns.items():
@@ -1666,7 +1646,7 @@ def _generate_statistics_period_stmt(
         reduced,
         and_(
             Statistics.metadata_id == reduced.c.metadata_id,
-            Statistics.start_ts == reduced.c.endpoint_start_ts,
+            Statistics.start_ts == reduced.c.last_start_ts,
         ),
     )
 

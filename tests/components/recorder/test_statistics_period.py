@@ -596,7 +596,7 @@ async def test_arithmetic_mean_query_limits(
         )
     assert execute.call_count == queries
     assert [(r.metadata_id, r.start_ts, r.mean) for r in rows] == [
-        (metadata_id, (start + timedelta(days=day)).timestamp(), 200.0)
+        (metadata_id, (start + timedelta(days=day, hours=2)).timestamp(), 200.0)
         for metadata_id in (1, 2)
         for day in range(days)
     ]
@@ -650,7 +650,7 @@ async def test_circular_mean_query_limits(statistics_session: Session) -> None:
     assert [(row.metadata_id, row.start_ts, row.mean) for row in rows] == [
         (
             metadata_id,
-            (start + timedelta(days=day)).timestamp(),
+            (start + timedelta(days=day, hours=1)).timestamp(),
             pytest.approx(0.0, abs=1e-12),
         )
         for metadata_id in (1, 2, 3)
@@ -758,6 +758,69 @@ async def test_endpoint_statistics_return_last_row_per_period(
     )
     assert expected
     assert actual == expected
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("first_hour", "last_hour", "expected_start_hour"),
+    [
+        pytest.param(0, 1, 1, id="both-midnights"),
+        pytest.param(1, 24, 0, id="first-midnight-missing"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("types", "values"),
+    [
+        pytest.param({"mean"}, {"mean": 15.0}, id="aggregate-only"),
+        pytest.param({"mean", "sum"}, {"mean": 15.0, "sum": 200.0}, id="mixed"),
+    ],
+)
+async def test_daily_statistics_end_on_repeated_midnight(
+    hass: HomeAssistant,
+    first_hour: int,
+    last_hour: int,
+    expected_start_hour: int,
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    values: dict[str, float],
+) -> None:
+    """Derive the day boundary from the final row when local midnight repeats."""
+    await hass.config.async_set_time_zone("America/Havana")
+    first_midnight = datetime(2024, 11, 3, 4, tzinfo=dt_util.UTC)
+    first_sample = first_midnight + timedelta(hours=first_hour)
+    last_sample = first_midnight + timedelta(hours=last_hour)
+    expected_start = first_midnight + timedelta(hours=expected_start_hour)
+    next_midnight = first_midnight + timedelta(hours=25)
+    statistic_id = "test:repeated_midnight"
+
+    statistics.async_add_external_statistics(
+        hass,
+        {
+            "statistic_id": statistic_id,
+            "source": "test",
+            "name": None,
+            "unit_class": None,
+            "unit_of_measurement": None,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": True,
+        },
+        [
+            {"start": first_sample, "mean": 10.0, "sum": 100.0},
+            {"start": last_sample, "mean": 20.0, "sum": 200.0},
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    assert statistics.statistics_during_period(
+        hass, first_midnight, last_sample, {statistic_id}, "day", None, types
+    ) == {
+        statistic_id: [
+            {
+                "start": expected_start.timestamp(),
+                "end": next_midnight.timestamp(),
+                **values,
+            }
+        ]
+    }
 
 
 async def test_reducer_flushes_final_dst_fallback_period(
