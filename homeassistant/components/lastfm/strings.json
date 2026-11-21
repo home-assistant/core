@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "Configuration updated."
+    },
     "error": {
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
@@ -7,24 +10,61 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "authorize": {
+        "description": "Log in as the selected user on Last.fm, then [open the authorization page]({auth_url}), allow access and press Submit.",
+        "title": "Authorize on Last.fm"
+      },
       "friends": {
         "data": {
           "users": "Last.fm usernames"
         },
         "description": "Fill in other users you want to add."
       },
+      "scrobble_failed": {
+        "description": "Authorization did not complete. Make sure you are logged in as the correct user.",
+        "menu_options": {
+          "scrobble_menu": "Back",
+          "scrobble_user": "Try again"
+        },
+        "title": "Authorization failed"
+      },
+      "scrobble_menu": {
+        "description": "You can enable manual scrobbling for each user, one at the time. Each user has to authorize this integration on Last.fm. You can also do this later by reconfiguring the integration.\n\nAuthorized for scrobbling: {authorized_users}",
+        "menu_options": {
+          "finish": "Finish",
+          "scrobble_user": "Authorize a user for scrobbling"
+        },
+        "title": "Scrobbling (optional)"
+      },
+      "scrobble_user": {
+        "data": {
+          "api_secret": "API secret",
+          "username": "Username"
+        },
+        "description": "Choose the user to authorize. You also need the shared secret from the Last.fm [API account]({api_account_url}).",
+        "title": "Authorize a user"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "main_user": "Last.fm username"
         },
-        "description": "Request an API account at {api_account_url}."
+        "description": "Request an API account [here]({api_account_url})."
       }
     }
   },
   "exceptions": {
+    "scrobble_failed": {
+      "message": "Scrobbling to Last.fm failed. Check the Home Assistant logs for details."
+    },
+    "timestamp_out_of_range": {
+      "message": "The timestamp must be in the past 14 days and not in the future."
+    },
     "update_failed": {
       "message": "Could not retrieve data from Last.fm for any of the configured users"
+    },
+    "user_not_authorized": {
+      "message": "{username} is not authorized to scrobble. Use Reconfigure on the integration to authorize them."
     }
   },
   "options": {
@@ -41,6 +81,21 @@
         },
         "description": "[%key:component::lastfm::config::step::friends::description%]"
       }
+    }
+  },
+  "services": {
+    "scrobble": {
+      "description": "Manually scrobbles a track to the Last.fm account of the selected user.",
+      "fields": {
+        "album": { "description": "Album name.", "name": "Album" },
+        "artist": { "description": "Artist name.", "name": "Artist" },
+        "timestamp": {
+          "description": "When the track was played. Defaults to now. Must be within the past 14 days.",
+          "name": "Timestamp"
+        },
+        "title": { "description": "Track name.", "name": "Title" }
+      },
+      "name": "Scrobble"
     }
   }
 }
