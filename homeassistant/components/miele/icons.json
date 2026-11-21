@@ -26,6 +26,9 @@
       }
     },
     "sensor": {
+      "charcoal_filter_saturation": {
+        "default": "mdi:air-filter"
+      },
       "core_target_temperature": {
         "default": "mdi:thermometer-probe"
       },
@@ -49,6 +52,9 @@
       },
       "finish": {
         "default": "mdi:clock-end"
+      },
+      "grease_filter_saturation": {
+        "default": "mdi:air-filter"
       },
       "milk_cleaning_counter": {
         "default": "mdi:pipe"

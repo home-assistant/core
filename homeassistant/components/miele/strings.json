@@ -187,6 +187,9 @@
       }
     },
     "sensor": {
+      "charcoal_filter_saturation": {
+        "name": "Charcoal filter saturation"
+      },
       "core_target_temperature": {
         "name": "Core target temperature"
       },
@@ -223,6 +226,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "grease_filter_saturation": {
+        "name": "Grease filter saturation"
       },
       "milk_cleaning_counter": {
         "name": "Milk pipework cleaning cycles"
