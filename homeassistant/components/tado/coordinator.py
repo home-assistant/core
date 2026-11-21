@@ -114,6 +114,17 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
+        if "homes" not in tado_home_call:
+            # PyTado turns an empty response body into an empty dict. Tado sends
+            # one once the daily API call limit is reached, so refresh the rate
+            # limit and the update interval before giving up on this cycle.
+            self.data["rate_limit"] = self.get_rate_limit()
+            self._calculate_update_interval()
+            raise UpdateFailed(
+                "Tado returned no home information, the daily API call limit has "
+                "most likely been reached"
+            )
+
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
@@ -187,8 +198,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
-        remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", 0))
-        if remaining_calls is None or remaining_calls <= 0:
+        remaining = self.data.get("rate_limit", {}).get("remaining")
+        if remaining is None:
             # If rate limit info is unavailable, fall back to the static interval.
             self._current_interval = SCAN_INTERVAL.total_seconds()
             self.update_interval = SCAN_INTERVAL
@@ -196,6 +207,21 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug(
                 "Rate limit info unavailable;"
                 " using default update interval: %s seconds",
+                self._current_interval,
+            )
+            return
+
+        remaining_calls = int(remaining)
+        if remaining_calls <= 0:
+            # There is nothing left to spend until the limit resets. Falling back
+            # to the default interval keeps polling every five minutes, which
+            # spends the next budget as soon as it is handed out, so wait for the
+            # reset instead.
+            self._current_interval = max(min_interval, self._time_until_reset)
+            self.update_interval = timedelta(seconds=self._current_interval)
+            self._next_update = reset_time + timedelta(seconds=self._current_interval)
+            _LOGGER.debug(
+                "Rate limit reached; waiting %s seconds for it to reset",
                 self._current_interval,
             )
             return
