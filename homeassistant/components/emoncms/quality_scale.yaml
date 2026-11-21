@@ -57,7 +57,7 @@ rules:
       test the entry state in test_failure
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
