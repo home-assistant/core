@@ -8,7 +8,6 @@
   "dependencies": [
     "assist_satellite",
     "assist_pipeline",
-    "intent",
     "conversation",
     "ffmpeg"
   ],

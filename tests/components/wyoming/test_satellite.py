@@ -2,11 +2,13 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from wyoming.asr import Transcribe, Transcript
@@ -23,14 +25,22 @@ from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components import assist_pipeline, assist_satellite
+from homeassistant.components.timer_list import (
+    DOMAIN as TIMER_LIST_DOMAIN,
+    TimerItem,
+    TimerListEvent,
+    TimerListEventType,
+    TimerStatus,
+)
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er, intent as intent_helper
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
 
@@ -1110,19 +1120,16 @@ async def test_handle_timer_noop_when_client_disconnected(
 
         # Should not raise
         satellite._handle_timer(
-            intent.TimerEventType.STARTED,
-            intent.TimerInfo(
-                id="test-timer",
-                name="test",
-                seconds=30,
-                device_id=None,
-                start_hours=0,
-                start_minutes=0,
-                start_seconds=30,
-                created_at=0,
-                updated_at=0,
-                language="en",
-            ),
+            TimerListEvent(
+                event_type=TimerListEventType.CREATED,
+                item=TimerItem(
+                    timer_id="test-timer",
+                    name="test",
+                    status=TimerStatus.ACTIVE,
+                    created_duration=timedelta(seconds=30),
+                    created_at=dt_util.utcnow(),
+                ),
+            )
         )
 
 
@@ -1756,6 +1763,155 @@ async def test_timers(hass: HomeAssistant) -> None:
             timer_finished = mock_client.timer_finished
             assert timer_finished is not None
             assert timer_finished.id == timer_started.id
+
+
+@pytest.mark.parametrize(
+    ("duration", "elapsed", "expected_seconds"),
+    [
+        pytest.param(1, 0.6, 1, id="fractional_remaining"),
+        pytest.param(0.4, 0, 1, id="subsecond_duration"),
+        pytest.param(10.2, 0, 11, id="fractional_duration"),
+    ],
+)
+async def test_timer_rounding(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    duration: float,
+    elapsed: float,
+    expected_seconds: int,
+) -> None:
+    """Round durations and remaining time up in satellite events."""
+    assert await async_setup_component(hass, "intent", {})
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([]),
+        ) as mock_client,
+    ):
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = entry.runtime_data.device
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        timer_list_entity_id = device.get_timer_list_entity_id(hass)
+        assert timer_list_entity_id is not None
+        await hass.services.async_call(
+            TIMER_LIST_DOMAIN,
+            "create_timer",
+            {"duration": {"seconds": duration}},
+            target={TargetKey.ENTITY_ID: timer_list_entity_id},
+            blocking=True,
+            return_response=True,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+
+        assert mock_client.timer_started is not None
+        assert mock_client.timer_started.total_seconds == expected_seconds
+        assert mock_client.timer_started.start_hours is None
+        assert mock_client.timer_started.start_minutes is None
+        assert mock_client.timer_started.start_seconds == expected_seconds
+
+        freezer.tick(timedelta(seconds=elapsed))
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_PAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+
+        assert mock_client.timer_updated is not None
+        assert mock_client.timer_updated.total_seconds == expected_seconds
+        assert not mock_client.timer_updated.is_active
+
+        mock_client.timer_updated_event.clear()
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_UNPAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+
+        assert mock_client.timer_updated is not None
+        assert mock_client.timer_updated.total_seconds == expected_seconds
+        assert mock_client.timer_updated.is_active
+
+
+@pytest.mark.parametrize(
+    ("setup_services", "expect_cancelled"),
+    [
+        pytest.param([], True, id="active"),
+        pytest.param(["pause_timer"], True, id="paused"),
+        pytest.param(["cancel_timer"], False, id="cancelled"),
+        pytest.param(["finish_timer"], False, id="finished"),
+    ],
+)
+async def test_remove_timer(
+    hass: HomeAssistant, setup_services: list[str], expect_cancelled: bool
+) -> None:
+    """Test a timer removed before it ended is cancelled on the satellite."""
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([]),
+        ) as mock_client,
+    ):
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = entry.runtime_data.device
+        timer_list_entity_id = device.get_timer_list_entity_id(hass)
+        assert timer_list_entity_id is not None
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        async def call(service: str, **fields: Any) -> dict[str, Any] | None:
+            result = await hass.services.async_call(
+                TIMER_LIST_DOMAIN,
+                service,
+                fields,
+                target={TargetKey.ENTITY_ID: timer_list_entity_id},
+                blocking=True,
+                return_response=service == "create_timer",
+            )
+            return result[timer_list_entity_id] if result else None
+
+        created = await call("create_timer", duration={"minutes": 5})
+        assert created is not None
+        timer_id = created["timer_id"]
+        for service in setup_services:
+            await call(service, timer_id=timer_id)
+
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+        mock_client.timer_started_event.clear()
+        mock_client.timer_cancelled_event.clear()
+
+        await call("remove_timer", timer_id=timer_id)
+
+        # A cancel event would be written before this timer's start event
+        await call("create_timer", duration={"minutes": 1})
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+
+        assert mock_client.timer_cancelled_event.is_set() is expect_cancelled
 
 
 async def test_announce(
