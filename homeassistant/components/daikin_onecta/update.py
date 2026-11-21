@@ -112,11 +112,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             self._raise_service_validation_error("firmware_install_unavailable")
 
         requested_sequence = self.coordinator.cloud_update_sequence
-        self._pending_install = (
-            requested_sequence,
-            self._attr_installed_version,
-            requested_sequence + _INSTALL_CONFIRMATION_POLLS,
-        )
+        self._set_pending_install(requested_sequence)
         self._attr_supported_features |= UpdateEntityFeature.PROGRESS
         self.async_write_ha_state()
         try:
@@ -136,12 +132,16 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             self.async_write_ha_state()
             raise
         requested_sequence = self.coordinator.cloud_update_sequence
+        self._set_pending_install(requested_sequence)
+        self.coordinator.schedule_post_write_refresh()
+
+    def _set_pending_install(self, requested_sequence: int) -> None:
+        """Keep the requested update pending until cloud state confirms it."""
         self._pending_install = (
             requested_sequence,
             self._attr_installed_version,
             requested_sequence + _INSTALL_CONFIRMATION_POLLS,
         )
-        self.coordinator.schedule_post_write_refresh()
 
     @property
     @override

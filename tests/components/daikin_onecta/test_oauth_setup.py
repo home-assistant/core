@@ -15,7 +15,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -47,10 +46,6 @@ async def test_setup_rejected_cloud_token_requires_authentication(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            return_value="token",
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -172,10 +167,8 @@ async def test_setup_entry_retries_token_timeout(
     config_entry: MockConfigEntry,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Token validation connection errors retry setup."""
-    mock_onecta_client.get_gateway_devices.side_effect = (
-        OAuth2TokenRequestConnectionError(domain=DOMAIN)
-    )
+    """A bare token-refresh timeout retries the first cloud refresh."""
+    mock_onecta_client.get_gateway_devices.side_effect = TimeoutError("timeout")
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",

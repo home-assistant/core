@@ -181,6 +181,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             translation_placeholders={"seconds": str(ceil(remaining.total_seconds()))},
         )
 
+    def _manual_refresh_satisfied(self) -> bool:
+        """Return whether another poll satisfied a pending manual refresh."""
+        return any(
+            self._cloud_update_sequence > previous_sequence
+            for previous_sequence in self._manual_refresh_previous_sequences
+        )
+
     def _post_write_cooldown_remaining(self) -> timedelta | None:
         """Return the remaining post-write cooldown, if any."""
         if self._last_patch_call is None:
@@ -195,10 +202,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return None
             if self._post_write_cooldown_remaining() is not None:
                 return None
-            if any(
-                self._cloud_update_sequence > previous_sequence
-                for previous_sequence in self._manual_refresh_previous_sequences
-            ):
+            if self._manual_refresh_satisfied():
                 return None
             try:
                 devices = await self._client.get_gateway_devices()
@@ -249,6 +253,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         except (
             OAuth2TokenRequestBaseError,
             OnectaError,
+            TimeoutError,
         ) as err:
             return SiteLookupResult([], err)
         return SiteLookupResult(sites)
@@ -318,6 +323,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.path,
                     err.status,
                 )
+                return False
+            except TimeoutError:
+                _LOGGER.debug("Daikin request timed out")
                 return False
             had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None
@@ -484,10 +492,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
-                if any(
-                    self._cloud_update_sequence > previous_sequence
-                    for previous_sequence in self._manual_refresh_previous_sequences
-                ):
+                if self._manual_refresh_satisfied():
                     # A scheduled fetch completed while the manual refresh
                     # waited for the cloud lock; keep its current data and
                     # regular polling cadence.

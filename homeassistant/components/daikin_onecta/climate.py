@@ -45,7 +45,7 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import _fixed_positions, round_temperature_to_step
+from .utils import fixed_positions, round_temperature_to_step
 
 PARALLEL_UPDATES = 1
 
@@ -517,7 +517,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 and FANMODE_FIXED in fan_speed.modes
             ):
                 fixed = fan_speed.modes[FANMODE_FIXED]
-                positions = _fixed_positions(fixed) if fixed.settable else None
+                positions = fixed_positions(fixed) if fixed.settable else None
                 if positions is not None:
                     fan_modes.extend(str(position) for position in positions)
             else:
@@ -641,7 +641,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         for mode in axis.current_mode.values or []:
             if mode.lower() == FANMODE_FIXED:
                 fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
-                positions = _fixed_positions(fixed) if fixed is not None else None
+                positions = fixed_positions(fixed) if fixed is not None else None
                 if (
                     fixed is not None
                     and fixed.settable

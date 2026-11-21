@@ -26,7 +26,7 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import _fixed_positions, enum_value_to_state
+from .utils import enum_value_to_state, fixed_positions
 
 PARALLEL_UPDATES = 1
 
@@ -120,7 +120,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         fixed = self._fixed_speed_characteristic(mode)
         if fixed is None or not fixed.settable:
             return []
-        return list(_fixed_positions(fixed) or ())
+        return list(fixed_positions(fixed) or ())
 
     def _fixed_speed_characteristic(
         self, mode: str | None = None

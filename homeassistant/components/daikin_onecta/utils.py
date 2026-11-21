@@ -6,7 +6,7 @@ import re
 from daikin_onecta.models import FanDirectionMode, FanSpeedMode
 
 
-def _fixed_positions(mode: FanDirectionMode | FanSpeedMode) -> range | None:
+def fixed_positions(mode: FanDirectionMode | FanSpeedMode) -> range | None:
     """Return valid integral fixed positions from Daikin range metadata."""
     minimum = mode.min_value
     maximum = mode.max_value

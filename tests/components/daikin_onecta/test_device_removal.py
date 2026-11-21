@@ -174,6 +174,7 @@ async def test_remove_missing_gateway_rejects_site_membership(
     [
         OnectaConnectionError("failed", method="GET", path="/v1/sites"),
         OAuth2TokenRequestConnectionError(domain=DOMAIN),
+        TimeoutError(),
         OAuth2TokenRequestError(
             domain=DOMAIN,
             request_info=AsyncMock(),

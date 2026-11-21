@@ -151,6 +151,7 @@ async def test_diagnostics_redacts_serialized_product_identifiers(
             message="private token details",
         ),
         OAuth2TokenRequestConnectionError(domain="daikin_onecta"),
+        TimeoutError("private timeout details"),
     ],
 )
 async def test_diagnostics_reports_site_lookup_failures(
