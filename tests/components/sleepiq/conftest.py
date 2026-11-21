@@ -82,6 +82,10 @@ def mock_bed() -> MagicMock:
         heart_rate=60,
         respiratory_rate=14,
         hrv=68,
+        restful=24000,
+        restless=1500,
+        out_of_bed=300,
+        fall_asleep_period=600,
         start_date="2026-01-15T22:30:00",
         end_date="2026-01-16T06:45:00",
     )
@@ -99,6 +103,10 @@ def mock_bed() -> MagicMock:
         heart_rate=65,
         respiratory_rate=15,
         hrv=72,
+        restful=21000,
+        restless=2700,
+        out_of_bed=120,
+        fall_asleep_period=1200,
         start_date="2026-01-15T23:10:00",
         end_date="2026-01-16T06:50:00",
     )
