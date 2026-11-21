@@ -418,6 +418,9 @@ aiopurpleair==2025.08.1
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.4.1
 
+# homeassistant.components.pvpc_hourly_pricing
+aiopvpc-ng==5.1.2
+
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
@@ -1015,9 +1018,6 @@ epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
-
-# homeassistant.components.pvpc_hourly_pricing
-esios_api==4.4.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.4.0
