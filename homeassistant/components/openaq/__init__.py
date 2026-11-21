@@ -1,0 +1,54 @@
+"""The OpenAQ integration."""
+
+import asyncio
+
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+
+from .const import SUBENTRY_TYPE_LOCATION
+from .coordinator import (
+    OpenAQConfigEntry,
+    OpenAQDataUpdateCoordinator,
+    OpenAQRuntimeData,
+    create_openaq_client,
+)
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
+    """Set up OpenAQ from a config entry."""
+    client = create_openaq_client(entry.data[CONF_API_KEY])
+    client_lock = asyncio.Lock()
+    coordinators: dict[str, OpenAQDataUpdateCoordinator] = {}
+
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
+        coordinators[subentry.subentry_id] = OpenAQDataUpdateCoordinator(
+            hass, entry, subentry, client, client_lock
+        )
+
+    try:
+        for coordinator in coordinators.values():
+            await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryAuthFailed, ConfigEntryNotReady:
+        await hass.async_add_executor_job(client.close)
+        raise
+
+    entry.runtime_data = OpenAQRuntimeData(
+        client=client, client_lock=client_lock, coordinators=coordinators
+    )
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_update_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
+    """Update the config entry."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    async with entry.runtime_data.client_lock:
+        await hass.async_add_executor_job(entry.runtime_data.client.close)
