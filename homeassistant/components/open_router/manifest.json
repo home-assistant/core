@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@joostlek", "@ab3lson"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/open_router",
   "integration_type": "service",

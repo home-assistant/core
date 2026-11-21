@@ -1,8 +1,8 @@
 """Base entity for the system bridge integration."""
 
 from collections import Counter
-from collections.abc import Callable, Iterable
-from typing import override
+from collections.abc import Awaitable, Callable, Iterable
+from typing import TYPE_CHECKING, override
 
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -10,6 +10,7 @@ from systembridgeconnector.models.audio_control import AudioControl
 from systembridgeconnector.models.display_control import DisplayControl
 from systembridgeconnector.models.modules.audio import AudioDevice
 from systembridgeconnector.models.modules.displays import Display, DisplayPowerState
+from systembridgeconnector.models.response import Response
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -37,7 +38,8 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         system = coordinator.data.system
-        assert system is not None
+        if TYPE_CHECKING:
+            assert system is not None
 
         self._hostname = system.hostname
         self._attr_unique_id = (
@@ -48,13 +50,48 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._uuid = system.uuid
         self._version = system.version
 
+        # From DMI, which only Linux hosts report
+        manufacturer = model = hw_version = None
+        if hardware := system.device_info:
+            hw_version = hardware.version
+            if hardware.model:
+                manufacturer = hardware.manufacturer
+                model = hardware.model
+            else:
+                # Self-built computers have no model, so their motherboard stands in
+                manufacturer = hardware.board_vendor
+                model = hardware.board_name
+
         self._attr_device_info = DeviceInfo(
             configuration_url=self._configuration_url,
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
+            hw_version=hw_version,
             identifiers={(DOMAIN, self._uuid)},
+            manufacturer=manufacturer,
+            model=model,
             name=self._hostname,
             sw_version=self._version,
         )
+
+    async def _async_system_control(self, request: Awaitable[Response]) -> None:
+        """Send a system control, raising if it fails."""
+        try:
+            response = await request
+        except (ConnectionClosedException, ConnectionResetError) as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "title": self.coordinator.config_entry.title,
+                    "host": self.coordinator.config_entry.data[CONF_HOST],
+                },
+            ) from e
+        if response.type == EventType.ERROR:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="system_control_failed",
+                translation_placeholders={"error": response.message or ""},
+            )
 
 
 class SystemBridgeDisplayEntity(SystemBridgeEntity):
@@ -104,7 +141,7 @@ class SystemBridgeDisplayEntity(SystemBridgeEntity):
                     power_state=power_state,
                 )
             )
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
@@ -150,7 +187,7 @@ class SystemBridgeAudioEntity(SystemBridgeEntity):
             response = await self.coordinator.websocket_client.audio_control(
                 AudioControl(id=device.id, volume=volume, muted=muted, default=default)
             )
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",

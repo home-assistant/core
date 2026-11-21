@@ -18,6 +18,7 @@ from pytest_homeassistant.common import (
 from homeassistant.components import lovelace
 from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.marketplace.const import (
+    CONF_PROFILE,
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_REPOSITORY_ID,
@@ -405,6 +406,53 @@ async def test_duplicate_entries_removed(
     assert hass.config_entries.async_entries(DOMAIN) == [oldest]
     assert oldest.data[CONF_TOKEN] == TOKEN
     assert oldest.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("china_options", "token"),
+    [
+        pytest.param({"use_shared": True}, None, id="shared_token"),
+        pytest.param({"use_shared": False}, "own", id="own_token"),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories")
+async def test_duplicate_china_entry_keeps_the_mirrors(
+    hass: HomeAssistant, china_options: dict[str, Any], token: str | None
+) -> None:
+    """Test a China entry next to an older Marketplace one keeps its mirrors.
+
+    A token from the shared pool belongs to someone else, it is not taken over.
+    """
+    oldest = MockConfigEntry(
+        domain=DOMAIN, created_at=datetime(2024, 1, 1, tzinfo=UTC), data={}
+    )
+    china = MockConfigEntry(
+        domain=DOMAIN,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        data={CONF_TOKEN: "own"},
+        options=china_options,
+    )
+    oldest.add_to_hass(hass)
+    china.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [oldest]
+    assert oldest.data.get(CONF_TOKEN) == token
+    assert oldest.options == {CONF_PROFILE: "hasscn"}
+    assert oldest.runtime_data.configuration.profile.id == "hasscn"
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_china_option_keeps_a_chosen_profile(hass: HomeAssistant) -> None:
+    """Test a profile already chosen wins over the option of the China fork."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, options={"use_shared": False, CONF_PROFILE: "default"}
+    )
+    await setup_integration(hass, entry)
+
+    assert entry.options == {CONF_PROFILE: "default"}
 
 
 @pytest.mark.usefixtures("stored_repositories")
@@ -1208,3 +1256,66 @@ async def test_options_cleared(hass: HomeAssistant) -> None:
     configuration = entry.runtime_data.configuration
     for option in ("country", "appdaemon", "unknown"):
         assert not hasattr(configuration, option)
+
+
+@pytest.mark.usefixtures("stored_repositories")
+@pytest.mark.parametrize(
+    ("options", "data", "migrated_options", "profile"),
+    [
+        pytest.param(
+            {
+                "use_shared": True,
+                "github_api_base": "https://ghapi.hacs.vip",
+                "country": "CN",
+            },
+            {},
+            {CONF_PROFILE: "hasscn"},
+            "hasscn",
+            id="china_shared_token",
+        ),
+        pytest.param(
+            {"use_shared": False, "github_api_base": "https://ghapi.hacs.vip"},
+            {CONF_TOKEN: TOKEN},
+            {CONF_PROFILE: "hasscn"},
+            "hasscn",
+            id="china_own_token",
+        ),
+        pytest.param(
+            {"country": "NL", "appdaemon": True},
+            {CONF_TOKEN: TOKEN},
+            {},
+            "default",
+            id="upstream",
+        ),
+    ],
+)
+async def test_china_install_keeps_the_mirrors(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    data: dict[str, Any],
+    migrated_options: dict[str, Any],
+    profile: str,
+) -> None:
+    """Test an install of the China fork switches to the China mirrors.
+
+    Its users chose the mirrors, without them the Marketplace can not download.
+    A token from the shared pool belongs to someone else.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: TOKEN}, options=options)
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data == data
+    assert entry.options == migrated_options
+    # Already on the first start, without a reload
+    assert entry.runtime_data.configuration.profile.id == profile
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_profile_kept_on_the_next_start(hass: HomeAssistant) -> None:
+    """Test the profile, the one option of the Marketplace, is not cleared."""
+    entry = MockConfigEntry(domain=DOMAIN, options={CONF_PROFILE: "hasscn"})
+    await setup_integration(hass, entry)
+
+    assert entry.options == {CONF_PROFILE: "hasscn"}
+    assert entry.runtime_data.configuration.profile.id == "hasscn"

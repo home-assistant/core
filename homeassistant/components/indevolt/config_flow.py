@@ -167,8 +167,8 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_HOST: self._discovered_host,
-                CONF_MODEL: self._discovered_device_data[CONF_MODEL],
+                "host": self._discovered_host,
+                "model": self._discovered_device_data[CONF_MODEL],
             },
         )
 

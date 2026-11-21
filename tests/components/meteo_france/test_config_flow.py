@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from meteofrance_api.model import Place
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from requests import RequestException
 
 from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -172,6 +173,31 @@ async def test_search_failed(hass: HomeAssistant, client: MagicMock) -> None:
     assert result["title"] == f"{CITY_1}"
     assert result["data"][CONF_LATITUDE] == str(CITY_1_LAT)
     assert result["data"][CONF_LONGITUDE] == str(CITY_1_LON)
+
+
+async def test_search_cannot_connect(hass: HomeAssistant, client: MagicMock) -> None:
+    """Test error displayed if the search request fails."""
+    client.return_value.search_places.side_effect = RequestException
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CITY: CITY_1_POSTAL},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    client.return_value.search_places.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CITY: CITY_1_POSTAL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{CITY_1_LAT}, {CITY_1_LON}"
 
 
 @pytest.mark.usefixtures("client")

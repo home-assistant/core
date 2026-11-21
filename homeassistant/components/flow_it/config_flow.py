@@ -223,7 +223,7 @@ class AriaQConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_HOST: reauth_entry.data[CONF_HOST],
+                "username": reauth_entry.data[CONF_USERNAME],
+                "host": reauth_entry.data[CONF_HOST],
             },
         )

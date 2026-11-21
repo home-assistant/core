@@ -57,16 +57,46 @@ def valid_version(value: Any) -> str:
     return value
 
 
-# What the Marketplace reads from hacs.json, a value of another type is left out
-REPOSITORY_MANIFEST_VALUES = {
-    "content_in_root": probatio.Schema(bool),
-    "filename": probatio.Schema(str),
+def manifest_bool(value: Any) -> bool:
+    """Validate a boolean in hacs.json.
+
+    The type was never checked before, so some repositories write "true" or
+    "false" as a string. Those are read as the boolean they spell out.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and (lowered := value.strip().lower()) in (
+        "true",
+        "false",
+    ):
+        return lowered == "true"
+    raise probatio.Invalid(f"'{value}' is not a boolean")
+
+
+def manifest_optional_str(value: Any) -> str | None:
+    """Validate an optional string in hacs.json.
+
+    The type was never checked before, so some repositories write false for a
+    value they don't set. That is read as not set.
+    """
+    if value is False or value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    raise probatio.Invalid(f"'{value}' is not a string")
+
+
+# What the Marketplace reads from hacs.json, the validated value is used and a
+# value of another type is left out
+REPOSITORY_MANIFEST_VALUES: dict[str, Callable[[Any], Any]] = {
+    "content_in_root": manifest_bool,
+    "filename": manifest_optional_str,
     "hacs": probatio.Schema(str),
-    "hide_default_branch": probatio.Schema(bool),
+    "hide_default_branch": manifest_bool,
     "homeassistant": probatio.Schema(valid_version),
     "name": probatio.Schema(str),
-    "persistent_directory": probatio.Schema(str),
-    "zip_release": probatio.Schema(bool),
+    "persistent_directory": manifest_optional_str,
+    "zip_release": manifest_bool,
 }
 
 

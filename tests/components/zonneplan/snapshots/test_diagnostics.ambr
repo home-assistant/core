@@ -1177,6 +1177,130 @@
         }),
       }),
     }),
+    'electricity_quarter_prices': dict({
+      'chart': dict({
+        'range': dict({
+          'end_date': '2026-08-30T23:59:59+02:00',
+          'start_date': '2026-08-28T15:00:00+02:00',
+        }),
+        'series': dict({
+          'prices': list([
+            dict({
+              'end_date': '2026-08-29T08:15:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 351571,
+              }),
+              'price_tax_included': dict({
+                'amount': 1460052,
+              }),
+              'start_date': '2026-08-29T08:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-29T08:30:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 251571,
+              }),
+              'price_tax_included': dict({
+                'amount': 1360052,
+              }),
+              'start_date': '2026-08-29T08:15:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-29T08:45:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 151571,
+              }),
+              'price_tax_included': dict({
+                'amount': 1260052,
+              }),
+              'start_date': '2026-08-29T08:30:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-29T09:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 51571,
+              }),
+              'price_tax_included': dict({
+                'amount': 1160052,
+              }),
+              'start_date': '2026-08-29T08:45:00+00:00',
+              'sustainability_score': dict({
+                'permille': 1000,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-30T00:15:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1393382,
+              }),
+              'price_tax_included': dict({
+                'amount': 2501863,
+              }),
+              'start_date': '2026-08-30T00:00:00+00:00',
+              'sustainability_score': dict({
+                'permille': 780,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-30T00:30:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1293382,
+              }),
+              'price_tax_included': dict({
+                'amount': 2401863,
+              }),
+              'start_date': '2026-08-30T00:15:00+00:00',
+              'sustainability_score': dict({
+                'permille': 780,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-30T00:45:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1193382,
+              }),
+              'price_tax_included': dict({
+                'amount': 2301863,
+              }),
+              'start_date': '2026-08-30T00:30:00+00:00',
+              'sustainability_score': dict({
+                'permille': 780,
+              }),
+              'tariff_group': None,
+            }),
+            dict({
+              'end_date': '2026-08-30T01:00:00+00:00',
+              'price_tax_excluded': dict({
+                'amount': 1093382,
+              }),
+              'price_tax_included': dict({
+                'amount': 2201863,
+              }),
+              'start_date': '2026-08-30T00:45:00+00:00',
+              'sustainability_score': dict({
+                'permille': 780,
+              }),
+              'tariff_group': None,
+            }),
+          ]),
+        }),
+      }),
+    }),
     'electricity_usage': dict({
       'measurement_groups': list([
         dict({

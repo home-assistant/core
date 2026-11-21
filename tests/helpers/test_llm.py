@@ -518,6 +518,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=None,
+        agent_id="conversation.test_agent",
     )
     schema = {
         probatio.Optional("area"): cv.string,
@@ -584,6 +585,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=None,
+        conversation_agent_id="conversation.test_agent",
     )
     assert response.data == {
         "data": {
@@ -642,6 +644,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=device.id,
+        conversation_agent_id="conversation.test_agent",
     )
     assert response.data == {
         "data": {

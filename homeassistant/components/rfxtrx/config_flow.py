@@ -11,7 +11,6 @@ import RFXtrx as rfxtrxmod
 from homeassistant.components import usb
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -31,7 +30,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
-from . import DeviceTuple, get_device_tuple_from_device, get_rfx_object
+from . import (
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    get_device_tuple_from_device,
+    get_rfx_object,
+)
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -581,7 +585,7 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: RfxtrxConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_DEVICE: RfxtrxSubentryFlowHandler}
@@ -590,7 +594,7 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RfxtrxConfigEntry,
     ) -> RfxtrxOptionsFlow:
         """Get the options flow for this handler."""
         return RfxtrxOptionsFlow()
