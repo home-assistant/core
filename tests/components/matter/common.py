@@ -79,6 +79,7 @@ FIXTURES = [
     "mock_extractor_hood",
     "mock_fan",
     "mock_flow_sensor",
+    "mock_generic_boolean_sensor",
     "mock_generic_switch",
     "mock_generic_switch_multi",
     "mock_humidity_sensor",

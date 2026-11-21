@@ -159,6 +159,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
         device_type=(device_types.RainSensor,),
     ),
+    # Keep last among the BooleanState schemas so the device-type schemas take priority.
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="GenericBooleanState",
+            translation_key="state",
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(
+            clusters.BooleanState.Attributes.StateValue,
+            clusters.Descriptor.Attributes.ServerList,
+        ),
+        secondary_value_contains=clusters.BooleanState.id,
+    ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
