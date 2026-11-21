@@ -1,7 +1,7 @@
 """Component to embed Google Cast."""
 
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 from pychromecast import Chromecast
@@ -20,6 +20,9 @@ from homeassistant.helpers.typing import ConfigType
 from . import home_assistant_cast
 from .const import DOMAIN
 from .services import async_setup_services
+
+if TYPE_CHECKING:
+    from .media_player import CastMediaPlayerEntity
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -44,6 +47,7 @@ class CastRuntimeData:
     added_cast_devices: set[UUID] = field(default_factory=set)
     browser: CastBrowser | None = None
     multizone_manager: MultizoneManager | None = None
+    devices: dict[UUID, CastMediaPlayerEntity] = field(default_factory=dict)
 
 
 @callback

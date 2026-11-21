@@ -7,6 +7,7 @@ from functools import wraps
 import json
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, override
+from uuid import UUID
 
 import pychromecast.config
 import pychromecast.const
@@ -18,13 +19,16 @@ from pychromecast.controllers.media import (
     MEDIA_PLAYER_STATE_PLAYING,
     MEDIA_PLAYER_STATE_UNKNOWN,
 )
-from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.controllers.multizone import MultizoneManager, SessionEndpoint
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.error import PyChromecastError
+from pychromecast.models import CastInfo, HostServiceInfo
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
+    CONNECTION_STATUS_FAILED,
+    CONNECTION_STATUS_LOST,
 )
 import yarl
 
@@ -107,11 +111,16 @@ def api_error[_CastDeviceT: CastDevice, **_P, _R](
 
 @callback
 def _async_create_cast_device(
-    hass: HomeAssistant, config_entry: CastConfigEntry, info: ChromecastInfo
+    hass: HomeAssistant,
+    config_entry: CastConfigEntry,
+    info: ChromecastInfo,
+    *,
+    announced: bool = True,
 ):
     """Create a CastDevice entity or dynamic group from the chromecast object.
 
-    Returns None if the cast device has already been added.
+    announced is False for a dynamic group learned about before it's announced
+    over mDNS. Returns None if the cast device has already been added.
     """
     _LOGGER.debug("_async_create_cast_device: %s", info)
     if info.uuid is None:
@@ -129,7 +138,7 @@ def _async_create_cast_device(
 
     if info.is_dynamic_group:
         # This is a dynamic group, do not add it but connect to the service.
-        group = DynamicCastGroup(hass, config_entry, info)
+        group = DynamicCastGroup(hass, config_entry, info, announced=announced)
         group.async_setup()
         return None
 
@@ -252,6 +261,7 @@ class CastDevice:
         if runtime_data.multizone_manager is None:
             runtime_data.multizone_manager = MultizoneManager()
         self.mz_mgr = runtime_data.multizone_manager
+        self.mz_mgr.add_multizone(chromecast)
 
         self._status_listener = CastStatusListener(
             self, chromecast, self.mz_mgr, self._mz_only
@@ -272,6 +282,8 @@ class CastDevice:
 
     def _invalidate(self) -> None:
         """Invalidate some attributes."""
+        if self.mz_mgr is not None:
+            self.mz_mgr.remove_multizone(self._cast_info.uuid)
         self._chromecast = None
         self.mz_mgr = None
         if self._status_listener is not None:
@@ -352,6 +364,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
         )
+        if not self._cast_info.is_audio_group:
+            self._config_entry.runtime_data.devices[self._cast_info.uuid] = self
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -361,6 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if self._cast_view_remove_handler:
             self._cast_view_remove_handler()
             self._cast_view_remove_handler = None
+        self._config_entry.runtime_data.devices.pop(self._cast_info.uuid, None)
 
     @override
     async def _async_connect_to_chromecast(self):
@@ -514,6 +529,45 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.mz_media_status_received[group_uuid] = dt_util.utcnow()
         self.schedule_update_ha_state()
 
+    @callback
+    def async_session_moved(self, endpoint: SessionEndpoint, name: str) -> None:
+        """Connect to a dynamic group the session moved to.
+
+        The group is announced over mDNS too, but that can take a while.
+        """
+        uuid = UUID(endpoint.device_id)
+        if uuid in self._config_entry.runtime_data.devices:
+            # The session moved to a device
+            return
+        _LOGGER.debug(
+            "[%s %s] Session moved to dynamic group %s",
+            self.entity_id,
+            self._name,
+            endpoint,
+        )
+        service = HostServiceInfo(endpoint.host, endpoint.port)
+        info = ChromecastInfo(
+            cast_info=CastInfo(
+                {service},
+                uuid,
+                None,
+                name,
+                endpoint.host,
+                endpoint.port,
+                pychromecast.const.CAST_TYPE_GROUP,
+                None,
+            ),
+            is_dynamic_group=True,
+        )
+        # Does nothing if the group is already known
+        _async_create_cast_device(self.hass, self._config_entry, info, announced=False)
+
+    def multizone_membership_changed(self, group_uuid, media_status) -> None:
+        """Handle this device being added to or removed from a group."""
+        self.mz_media_status[group_uuid] = media_status
+        self.mz_media_status_received[group_uuid] = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
     # ========== Service Calls ==========
     def _media_controller(self):
         """Return media controller.
@@ -549,6 +603,41 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     def _start_app(self, app_id: str) -> None:
         """Start an app."""
         self._get_chromecast().start_app(app_id)
+
+    @api_error
+    def _update_session_devices(self, add: set[UUID], remove: set[UUID]) -> None:
+        """Change the devices playing the session this device plays."""
+        mz_mgr = self.mz_mgr
+        if mz_mgr is None:
+            raise HomeAssistantError("Chromecast is not available.")
+        endpoint = mz_mgr.get_session_endpoint(self._cast_info.uuid)
+        if endpoint is None:
+            raise HomeAssistantError("Chromecast is not playing anything.")
+        members = set(mz_mgr.get_multizone_members(endpoint))
+        if not add and members <= {str(uuid) for uuid in remove}:
+            # The device plays alone, there's no session to remove it from
+            return
+        mz_mgr.update_session_devices(endpoint, add=add, remove=remove)
+
+    @override
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Add devices to the session playing on this device."""
+        devices = {
+            device.entity_id: device
+            for device in self._config_entry.runtime_data.devices.values()
+        }
+        unknown = [member for member in group_members if member not in devices]
+        if unknown:
+            raise HomeAssistantError(f"Can't join {unknown}, not cast devices")
+        add = {devices[member]._cast_info.uuid for member in group_members}  # noqa: SLF001
+        await self.hass.async_add_executor_job(self._update_session_devices, add, set())
+
+    @override
+    async def async_unjoin_player(self) -> None:
+        """Remove this device from the session it plays."""
+        await self.hass.async_add_executor_job(
+            self._update_session_devices, set(), {self._cast_info.uuid}
+        )
 
     @override
     def turn_on(self) -> None:
@@ -1028,6 +1117,26 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     @property
     @override
+    def group_members(self) -> list[str] | None:
+        """Return the devices playing the same session as this device or group.
+
+        The leader, the device hosting the group, is listed first.
+        """
+        if self.mz_mgr is None:
+            return None
+        endpoint = self.mz_mgr.get_session_endpoint(self._cast_info.uuid)
+        if endpoint is None:
+            return [self.entity_id]
+        devices = self._config_entry.runtime_data.devices
+        members = [
+            devices[uuid].entity_id
+            for uuid in map(UUID, self.mz_mgr.get_multizone_members(endpoint))
+            if uuid in devices
+        ]
+        return members or [self.entity_id]
+
+    @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         support = (
@@ -1062,6 +1171,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         if "media_source" in self.hass.config.components:
             support |= MediaPlayerEntityFeature.BROWSE_MEDIA
+
+        support |= MediaPlayerEntityFeature.GROUPING
 
         return support
 
@@ -1132,9 +1243,46 @@ class DynamicCastGroup(CastDevice):
 
     _mz_only = True
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: CastConfigEntry,
+        cast_info: ChromecastInfo,
+        *,
+        announced: bool,
+    ) -> None:
+        """Initialize the dynamic group."""
+        super().__init__(hass, config_entry, cast_info)
+        self._announced = announced
+        self._removing = False
+
     def async_setup(self):
         """Create chromecast object."""
         self._async_setup("Dynamic group")
+
+    @override
+    @callback
+    def _async_cast_discovered(self, discover: ChromecastInfo) -> None:
+        """Handle the group being announced over mDNS."""
+        super()._async_cast_discovered(discover)
+        if self._cast_info.uuid == discover.uuid:
+            self._announced = True
+
+    def new_connection_status(self, connection_status) -> None:
+        """Remove a group which wasn't announced over mDNS if it's gone.
+
+        Groups announced over mDNS are removed when the announcement is.
+        """
+        if (
+            self._announced
+            or self._removing
+            or connection_status.status
+            not in (CONNECTION_STATUS_LOST, CONNECTION_STATUS_FAILED)
+        ):
+            return
+        _LOGGER.debug("Clean up unannounced dynamic group: %s", self._cast_info)
+        self._removing = True
+        self.hass.async_create_task(self._async_tear_down())
 
     @override
     async def _async_cast_removed(self, discover: ChromecastInfo):
