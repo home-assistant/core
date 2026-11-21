@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -29,6 +30,23 @@ async def test_load_unload_entry(
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_model_from_devver(
+    hass: HomeAssistant,
+    mock_apsystems: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the model is derived from the reported device version."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MY_SERIAL_NUMBER"), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "EZ1"
+    assert device.sw_version == "1.0.0"
 
 
 async def test_setup_failed(
