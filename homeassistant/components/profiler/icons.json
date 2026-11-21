@@ -3,6 +3,9 @@
     "dump_log_objects": {
       "service": "mdi:invoice-export-outline"
     },
+    "dump_loop_timing": {
+      "service": "mdi:timer-outline"
+    },
     "dump_sockets": {
       "service": "mdi:pipe"
     },
@@ -33,11 +36,17 @@
     "start_log_objects": {
       "service": "mdi:invoice-text-plus"
     },
+    "start_loop_timing": {
+      "service": "mdi:timer-play"
+    },
     "stop_log_object_sources": {
       "service": "mdi:stop"
     },
     "stop_log_objects": {
       "service": "mdi:invoice-text-remove"
+    },
+    "stop_loop_timing": {
+      "service": "mdi:timer-stop"
     }
   }
 }

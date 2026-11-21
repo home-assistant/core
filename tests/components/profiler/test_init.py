@@ -1,28 +1,47 @@
 """Test the Profiler config flow."""
 
-from datetime import timedelta
-from functools import lru_cache
+import asyncio
+from asyncio.events import Handle
+import binascii
+from collections.abc import Callable, Generator
+from datetime import datetime, timedelta
+from functools import lru_cache, partial
 import logging
 import os
 from pathlib import Path
 import socket
+import time
+from typing import Any
 from unittest.mock import patch
+import zlib
 
 from freezegun.api import FrozenDateTimeFactory
+from habluetooth import BluetoothManager
 from lru import LRU
 import objgraph
+import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 
 from homeassistant.components.profiler.const import DOMAIN
+from homeassistant.components.profiler.loop_timing import LoopTiming, format_report
 from homeassistant.components.profiler.services import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
+    DEFAULT_THRESHOLD_MS,
+    LOOP_TIMING_NOTIFICATION,
     ProfilerService,
     ProfilerServiceArgument,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import current_entry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 
@@ -498,3 +517,521 @@ async def test_set_asyncio_debug(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+_ORIGINAL_RUN = Handle._run
+
+
+@pytest.fixture(autouse=True)
+def restore_handle_run() -> Generator[None]:
+    """Keep a test that fails while timing from leaving Handle._run wrapped."""
+    yield
+    Handle._run = _ORIGINAL_RUN  # type: ignore[method-assign]
+
+
+def _time_loop(threshold_ms: float, *callbacks: Callable[[], Any]) -> LoopTiming:
+    """Run the callbacks on a new loop with timing on and return the timing."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, threshold_ms)
+    timing.start()
+    try:
+        for cb in callbacks:
+            loop.call_soon(cb)
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    return timing
+
+
+def _spin(seconds: float) -> None:
+    end = time.perf_counter() + seconds
+    while time.perf_counter() < end:
+        pass
+
+
+async def _setup_profiler(hass: HomeAssistant) -> MockConfigEntry:
+    entry = MockConfigEntry(domain=DOMAIN, title="Profiler")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+@pytest.mark.parametrize(
+    "service", [ProfilerService.DUMP_LOOP_TIMING, ProfilerService.STOP_LOOP_TIMING]
+)
+async def test_loop_timing_needs_a_running_timing(
+    hass: HomeAssistant, service: str
+) -> None:
+    """Dump and stop refuse while nothing is being timed."""
+    await _setup_profiler(hass)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(DOMAIN, service, {}, blocking=True)
+    assert err.value.translation_key == "loop_timing_not_running"
+
+
+@pytest.mark.parametrize("threshold", [-1, 60_001, "inf"])
+async def test_loop_timing_rejects_a_threshold_out_of_range(
+    hass: HomeAssistant, threshold: float | str
+) -> None:
+    """The threshold is validated like the UI selector, not left to overflow."""
+    await _setup_profiler(hass)
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            ProfilerService.START_LOOP_TIMING,
+            {ProfilerServiceArgument.THRESHOLD: threshold},
+            blocking=True,
+        )
+    assert Handle._run is _ORIGINAL_RUN
+
+
+async def test_loop_timing_starts_once_and_stops_on_unload(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Start installs the wrapper once; stop or unload restore the original."""
+    entry = await _setup_profiler(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        ProfilerService.START_LOOP_TIMING,
+        {ProfilerServiceArgument.THRESHOLD: 50},
+        blocking=True,
+    )
+    assert Handle._run is not _ORIGINAL_RUN
+    assert "callbacks over 50.0 ms are kept" in caplog.text
+    assert LOOP_TIMING_NOTIFICATION in async_get_persistent_notifications(hass)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+        )
+    assert err.value.translation_key == "loop_timing_running"
+
+    caplog.clear()
+    report = await hass.services.async_call(
+        DOMAIN,
+        ProfilerService.STOP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
+    )
+    assert Handle._run is _ORIGINAL_RUN
+    assert report is not None
+    assert report["threshold_ms"] == 50.0
+    assert "Event loop timing stopped" in caplog.text
+    assert LOOP_TIMING_NOTIFICATION not in async_get_persistent_notifications(hass)
+
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+    )
+    assert Handle._run is not _ORIGINAL_RUN
+    caplog.clear()
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert Handle._run is _ORIGINAL_RUN
+    assert LOOP_TIMING_NOTIFICATION not in async_get_persistent_notifications(hass)
+    # What was recorded is not lost with the entry
+    assert "Event loop timing stopped by unload" in caplog.text
+    assert "Event loop callbacks since" in caplog.text
+
+
+async def test_loop_timing_stop_without_response_logs(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Stop without response data still logs what was recorded."""
+    entry = await _setup_profiler(hass)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+    )
+    response = await hass.services.async_call(
+        DOMAIN, ProfilerService.STOP_LOOP_TIMING, {}, blocking=True
+    )
+    assert response is None
+    assert Handle._run is _ORIGINAL_RUN
+    assert "Event loop timing stopped\nEvent loop callbacks since" in caplog.text
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_loop_timing_attribution(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Callbacks count for what ran and the config entry; slow ones are listed."""
+    entry = await _setup_profiler(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        ProfilerService.START_LOOP_TIMING,
+        {ProfilerServiceArgument.THRESHOLD: 50},
+        blocking=True,
+    )
+
+    class SlowCoordinator(DataUpdateCoordinator[int]):
+        """Spin in a step after the first await, like a slow parser would."""
+
+        async def _async_update_data(self) -> int:
+            await asyncio.sleep(0)
+            _spin(0.08)
+            return 1
+
+    def quick() -> None:
+        pass
+
+    @callback
+    def later(_now: datetime) -> None:
+        _spin(0.06)
+
+    @callback
+    def at_point(_now: datetime) -> None:
+        pass
+
+    def cancel_self() -> None:
+        handle.cancel()
+
+    hass.loop.call_soon(quick)
+    hass.loop.call_soon(quick)
+    handle = hass.loop.call_soon(cancel_self)
+    token = current_entry.set(entry)
+    try:
+        async_call_later(hass, 0, later)
+        async_track_point_in_utc_time(hass, at_point, dt_util.utcnow())
+        coordinator = SlowCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            config_entry=entry,
+            name="slow",
+            update_interval=timedelta(seconds=30),
+        )
+        unsub = coordinator.async_add_listener(lambda: None)
+    finally:
+        current_entry.reset(token)
+    # No freezer: it would freeze the clocks the spin and the timing read
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+    unsub()
+
+    report = await hass.services.async_call(
+        DOMAIN,
+        ProfilerService.DUMP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
+    )
+    assert report is not None
+    assert report["errors"] == 0
+    rows = {(row["callback"], row["config_entry"]): row for row in report["callbacks"]}
+    here = f"{__name__}.test_loop_timing_attribution.<locals>"
+    # The core coroutine shows the integration's class, and the entry
+    step = rows[(f"{here}.SlowCoordinator._handle_refresh_interval", entry.entry_id)]
+    assert step["count"] == 1
+    assert 75 <= step["max_ms"] <= step["total_ms"]
+    assert step["entry"] == {"domain": DOMAIN, "title": "Profiler"}
+    # The job handed to call_later counts for its target
+    timer = rows[(f"{here}.later", entry.entry_id)]
+    assert timer["count"] == 1
+    assert timer["max_ms"] >= 55
+    # A helper scheduled as a callable instance counts for its class
+    point = rows[
+        ("homeassistant.helpers.event._TrackPointUTCTime.__call__", entry.entry_id)
+    ]
+    assert point["count"] == 1
+    quick_row = rows[(f"{here}.quick", None)]
+    assert quick_row["count"] == 2
+    assert "entry" not in quick_row
+    # A callback that cancels its own handle is still known by name
+    assert rows[(f"{here}.cancel_self", None)]["count"] == 1
+    assert all(row["count"] for row in report["callbacks"])
+    slow = {
+        (row["callback"], row["config_entry"])
+        for row in report["slow"]
+        if row["callback"].startswith(here)
+    }
+    # A subset: a loaded CI worker can stall a no-op callback past 50 ms
+    assert {
+        (f"{here}.later", entry.entry_id),
+        (f"{here}.SlowCoordinator._handle_refresh_interval", entry.entry_id),
+    } <= slow
+    assert [row["seq"] for row in report["slow"]] == list(
+        range(1, len(report["slow"]) + 1)
+    )
+
+    caplog.clear()
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.DUMP_LOOP_TIMING, {}, blocking=True
+    )
+    assert f"{here}.later [profiler: Profiler]: 1 calls" in caplog.text
+    assert "Callbacks over 50.0 ms:" in caplog.text
+    assert "  #1 " in caplog.text
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_loop_timing_keeps_other_loops_and_exceptions_alone(
+    hass: HomeAssistant,
+) -> None:
+    """Another loop is not timed, and a failing callback still reaches the handler."""
+    entry = await _setup_profiler(hass)
+    await hass.services.async_call(
+        DOMAIN, ProfilerService.START_LOOP_TIMING, {}, blocking=True
+    )
+
+    def fail() -> None:
+        raise ValueError("boom")
+
+    handled: list[dict[str, Any]] = []
+    exception_handler = hass.loop.get_exception_handler()
+    hass.loop.set_exception_handler(lambda _loop, context: handled.append(context))
+    try:
+        hass.loop.call_soon(fail)
+        await hass.async_block_till_done()
+    finally:
+        hass.loop.set_exception_handler(exception_handler)
+    assert isinstance(handled[0]["exception"], ValueError)
+
+    def run_other_loop() -> None:
+        other = asyncio.new_event_loop()
+        try:
+            other.call_soon(partial(_spin, 0.01))
+            other.call_soon(other.stop)
+            other.run_forever()
+        finally:
+            other.close()
+
+    await hass.async_add_executor_job(run_other_loop)
+
+    report = await hass.services.async_call(
+        DOMAIN,
+        ProfilerService.STOP_LOOP_TIMING,
+        {},
+        blocking=True,
+        return_response=True,
+    )
+    assert report is not None
+    labels = [row["callback"] for row in report["callbacks"]]
+    assert f"{__name__}._spin" not in labels
+    here = (
+        f"{__name__}.test_loop_timing_keeps_other_loops_and_exceptions_alone.<locals>"
+    )
+    assert f"{here}.fail" in labels
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+def test_loop_timing_tells_c_functions_apart() -> None:
+    """Two C functions with the same name but different modules get their own rows."""
+    timing = _time_loop(
+        DEFAULT_THRESHOLD_MS, partial(zlib.crc32, b"x"), partial(binascii.crc32, b"x")
+    )
+    labels = {row["callback"] for row in timing.report()["callbacks"]}
+    assert {"zlib.crc32", "binascii.crc32"} <= labels
+
+
+def test_loop_timing_numbers_slow_callbacks_past_the_limit() -> None:
+    """Sequence numbers keep counting after the slow list drops old entries."""
+    timing = _time_loop(0, *[int] * 150)
+    seqs = [row["seq"] for row in timing.report()["slow"]]
+    assert len(seqs) == 100
+    assert seqs == list(range(seqs[0], seqs[0] + 100))
+    assert seqs[-1] >= 151
+
+
+def test_loop_timing_lets_system_exit_through() -> None:
+    """SystemExit from a callback leaves the loop as it does without timing."""
+
+    def leave() -> None:
+        raise SystemExit(3)
+
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        loop.call_soon(leave)
+        with pytest.raises(SystemExit, match="3"):
+            loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    assert Handle._run is _ORIGINAL_RUN
+    assert timing.errors == 0
+
+
+def test_loop_timing_counts_a_callback_it_cannot_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A callable that breaks when looked at still runs, counted under other callbacks."""
+
+    class Prickly:
+        # Only the name breaks: asyncio's debug mode looks at other
+        # attributes when the callback is scheduled
+        def __getattr__(self, name: str) -> Any:
+            if name == "__qualname__":
+                raise RuntimeError("do not look at me")
+            raise AttributeError(name)
+
+        def __call__(self) -> None:
+            ran.append(True)
+
+    ran: list[bool] = []
+    timing = _time_loop(DEFAULT_THRESHOLD_MS, Prickly(), Prickly())
+    assert ran == [True, True]
+    assert timing.errors == 2
+    report = timing.report()
+    other = next(
+        row for row in report["callbacks"] if row["callback"] == "other callbacks"
+    )
+    assert other["count"] == 2
+    assert "Callbacks that could not be attributed: 2" in format_report(report)
+    # The cause is logged once
+    assert caplog.text.count("Could not attribute a callback") == 1
+    assert "do not look at me" in caplog.text
+
+
+def test_loop_timing_caps_the_rows(caplog: pytest.LogCaptureFixture) -> None:
+    """Past the cap, new callbacks share one row instead of growing the table."""
+    with patch("homeassistant.components.profiler.loop_timing.MAX_ROWS", 2):
+        timing = _time_loop(
+            DEFAULT_THRESHOLD_MS,
+            partial(zlib.crc32, b"x"),
+            partial(binascii.crc32, b"x"),
+            int,
+            str,
+        )
+    report = timing.report()
+    rows = {row["callback"]: row["count"] for row in report["callbacks"]}
+    assert rows["zlib.crc32"] == 1
+    assert rows["binascii.crc32"] == 1
+    # int, str and loop.stop, none of which fit any more
+    assert rows["other callbacks"] == 3
+    assert len(rows) == 3
+    assert report["overflowed"] == 3
+    assert "table full: 3" in format_report(report)
+    assert caplog.text.count("keeps 2 callbacks apart") == 1
+
+
+def test_loop_timing_keeps_alike_functions_apart() -> None:
+    """Code objects compare by value, so two alike functions must not share a row."""
+    source = "def cb():\n    return 1\n"
+    first: dict[str, Any] = {"__name__": "first"}
+    second: dict[str, Any] = {"__name__": "second"}
+    exec(compile(source, "/first.py", "exec"), first)  # noqa: S102
+    exec(compile(source, "/second.py", "exec"), second)  # noqa: S102
+    assert first["cb"].__code__ == second["cb"].__code__
+    timing = _time_loop(DEFAULT_THRESHOLD_MS, first["cb"], second["cb"])
+    rows = {row["callback"]: row["count"] for row in timing.report()["callbacks"]}
+    assert rows["first.cb"] == 1
+    assert rows["second.cb"] == 1
+
+
+def test_loop_timing_names_cython_coroutines() -> None:
+    """A Cython coroutine's frame has no globals; its own names label the row."""
+    manager = BluetoothManager
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        # A bare instance makes the coroutine fail in its first step
+        task = loop.create_task(manager.async_diagnostics(manager.__new__(manager)))
+        with pytest.raises(TypeError):
+            loop.run_until_complete(task)
+    finally:
+        timing.stop()
+        loop.close()
+    labels = {row["callback"] for row in timing.report()["callbacks"]}
+    assert "habluetooth.manager.BluetoothManager.async_diagnostics" in labels
+
+
+def test_loop_timing_names_async_generator_steps() -> None:
+    """A task over an async generator step has no code object; its type names it."""
+
+    async def numbers() -> Any:
+        yield 1
+
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        step = anext(numbers())
+        assert loop.run_until_complete(loop.create_task(step)) == 1
+    finally:
+        timing.stop()
+        loop.close()
+    labels = {row["callback"] for row in timing.report()["callbacks"]}
+    assert f"builtins.{type(step).__qualname__}" in labels
+
+
+def test_loop_timing_left_under_another_wrapper_passes_through(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Stopped under something else's wrapper, the timing records nothing more."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    ours = Handle._run
+
+    def other(handle: Handle) -> None:
+        ours(handle)
+
+    try:
+        Handle._run = other  # type: ignore[method-assign, assignment]
+        timing.stop()
+        assert "Something else patched Handle._run" in caplog.text
+        # Not ours on top: the other wrapper stays, ours only passes calls on
+        assert Handle._run is other
+        loop.call_soon(int)
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+        assert timing.report()["callbacks"] == []
+    finally:
+        loop.close()
+
+
+def test_loop_timing_log_says_when_rows_are_left_out() -> None:
+    """The log shows the busiest callbacks and says how many it left out."""
+    report = {
+        "since": "now",
+        "threshold_ms": 100.0,
+        "errors": 0,
+        "overflowed": 0,
+        "slow": [],
+        "callbacks": [
+            {
+                "callback": f"cb{i}",
+                "config_entry": None,
+                "count": 1,
+                "total_ms": 0.1,
+                "max_ms": 0.1,
+                "max_at": "now",
+            }
+            for i in range(52)
+        ],
+    }
+    text = format_report(report)
+    assert "cb49:" in text
+    assert "cb50:" not in text
+    assert "... and 2 more callbacks" in text
+
+
+def test_loop_timing_log_keeps_the_id_of_a_removed_entry() -> None:
+    """A config entry removed while timing ran still tells its rows apart."""
+    row = {
+        "callback": "cb",
+        "count": 1,
+        "total_ms": 0.1,
+        "max_ms": 0.1,
+        "max_at": "now",
+    }
+    report = {
+        "since": "now",
+        "threshold_ms": 100.0,
+        "errors": 0,
+        "overflowed": 0,
+        "slow": [],
+        "callbacks": [
+            {**row, "config_entry": "gone"},
+            {**row, "config_entry": "kept", "entry": {"domain": "hue", "title": "Hue"}},
+            {**row, "config_entry": None},
+        ],
+    }
+    lines = format_report(report).splitlines()[1:]
+    assert lines == [
+        "  cb [gone]: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+        "  cb [hue: Hue]: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+        "  cb: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+    ]
