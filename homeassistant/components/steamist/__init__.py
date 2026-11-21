@@ -5,7 +5,7 @@ from typing import Any
 
 from aiosteamist import Steamist
 
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,7 +22,7 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 
-PLATFORMS: list[str] = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -46,10 +46,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: SteamistConfigEntry) -> None:
     """Set up Steamist from a config entry."""
     host = entry.data[CONF_HOST]
+    model = entry.data.get(CONF_MODEL)
     coordinator = SteamistDataUpdateCoordinator(
         hass,
         entry,
-        Steamist(host, async_get_clientsession(hass)),
+        Steamist(host, async_get_clientsession(hass), model=model),
     )
     await coordinator.async_config_entry_first_refresh()
     if not async_get_discovery(hass, host):
