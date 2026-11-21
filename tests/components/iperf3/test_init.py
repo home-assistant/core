@@ -1,8 +1,8 @@
 """Tests for the iperf3 integration setup and test scheduling."""
 
 import asyncio
-from collections.abc import Callable
 import threading
+import time
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,7 +11,8 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.iperf3 import Iperf3Data
 from homeassistant.components.iperf3.const import DEFAULT_INTERVAL, DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 
 from . import HOST_1, HOST_2, make_result, setup_iperf3
 
@@ -148,65 +149,57 @@ async def test_client_freed_before_next_test_after_unexpected_error(
     assert "KeyError: 'end'" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "cancel",
-    [
-        # Stopping a script that waits for the action cancels the caller.
-        pytest.param(lambda hass, caller: caller.cancel(), id="caller"),
-        # Shutdown cancels the update's background task.
-        pytest.param(
-            lambda hass, caller: hass.data[DOMAIN][HOST_1]._update_task.cancel(),
-            id="update_task",
-        ),
-    ],
-)
-async def test_cancelled_update_holds_lock_until_test_ends(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    cancel: Callable[[HomeAssistant, asyncio.Task[None]], None],
-) -> None:
-    """Test that a cancelled update doesn't let another test start.
+class BlockingRun:
+    """Side effect for the client's run() that blocks until released."""
 
-    The test keeps running in the executor thread, inside libiperf.
-    """
-    lock = threading.Lock()
-    running = 0
-    max_running = 0
-    started = threading.Event()
-    second_started = threading.Event()
-    release = threading.Event()
+    def __init__(self) -> None:
+        """Initialize the side effect."""
+        self._lock = threading.Lock()
+        self._running = 0
+        self.max_running = 0
+        self.started = threading.Event()
+        self.release = threading.Event()
 
-    def run() -> MagicMock:
-        nonlocal running, max_running
-        with lock:
-            running += 1
-            max_running = max(max_running, running)
-            if mock_client.run.call_count > 1:
-                second_started.set()
-        started.set()
-        release.wait(5)
-        with lock:
-            running -= 1
+    def __call__(self) -> MagicMock:
+        """Count the running tests and block until released."""
+        with self._lock:
+            self._running += 1
+            self.max_running = max(self.max_running, self._running)
+        self.started.set()
+        self.release.wait(5)
+        with self._lock:
+            self._running -= 1
         return make_result()
 
+
+def _speedtest(hass: HomeAssistant, host: str) -> asyncio.Task[None]:
+    """Call the speedtest action for a host in a task."""
+    return hass.async_create_task(
+        hass.services.async_call(DOMAIN, "speedtest", {"host": host}, blocking=True)
+    )
+
+
+async def test_cancelled_speedtest_holds_lock_until_test_ends(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test that cancelling a speedtest caller doesn't let another test start.
+
+    Stopping a script that waits for the action cancels it, but its test keeps
+    running in the executor thread, inside libiperf.
+    """
+    run = mock_client.run.side_effect = BlockingRun()
     await setup_iperf3(hass, [HOST_1, HOST_2], manual=True)
-    mock_client.run.side_effect = run
 
-    def speedtest(host: str) -> asyncio.Task[None]:
-        return hass.async_create_task(
-            hass.services.async_call(DOMAIN, "speedtest", {"host": host}, blocking=True)
-        )
-
-    first = speedtest(HOST_1)
+    first = _speedtest(hass, HOST_1)
+    assert await hass.async_add_executor_job(run.started.wait, 5)
     try:
-        assert await hass.async_add_executor_job(started.wait, 5)
-        cancel(hass, first)
+        first.cancel()
         with pytest.raises(asyncio.CancelledError):
             await first
 
         # The first host's test still runs, so the second host has to wait.
-        second = speedtest(HOST_2)
-        assert not await hass.async_add_executor_job(second_started.wait, 0.2)
+        second = _speedtest(hass, HOST_2)
+        await hass.async_add_executor_job(time.sleep, 0.2)
         assert mock_client.run.call_count == 1
 
         # Cancelling a waiting caller doesn't cancel the queued update.
@@ -214,10 +207,48 @@ async def test_cancelled_update_holds_lock_until_test_ends(
         with pytest.raises(asyncio.CancelledError):
             await second
     finally:
-        release.set()
+        run.release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert max_running == 1
+    assert run.max_running == 1
+    # Download and upload of both hosts.
+    assert mock_client.run.call_count == 4
+
+
+async def test_shutdown_holds_lock_until_test_ends(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test that stopping Home Assistant doesn't let another test start.
+
+    Shutdown cancels the running update, but its test keeps running inside
+    libiperf, and an automation on the stop event can still start an update.
+    """
+    run = mock_client.run.side_effect = BlockingRun()
+    await setup_iperf3(hass, [HOST_1, HOST_2], manual=True)
+    stopping = asyncio.Event()
+
+    @callback
+    def update_on_stop(event: Event) -> None:
+        _speedtest(hass, HOST_2)
+        stopping.set()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, update_on_stop)
+
+    first = _speedtest(hass, HOST_1)
+    assert await hass.async_add_executor_job(run.started.wait, 5)
+    stop = asyncio.create_task(hass.async_stop())
+    try:
+        async with asyncio.timeout(5):
+            await stopping.wait()
+        await hass.async_add_executor_job(time.sleep, 0.2)
+        assert mock_client.run.call_count == 1
+    finally:
+        run.release.set()
+    await stop
+
+    with pytest.raises(asyncio.CancelledError):
+        await first
+    assert run.max_running == 1
     # Download and upload of both hosts.
     assert mock_client.run.call_count == 4
 
