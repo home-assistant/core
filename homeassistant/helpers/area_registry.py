@@ -38,7 +38,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 9
+STORAGE_VERSION_MINOR = 10
 
 
 class _AreaStoreData(TypedDict):
@@ -55,6 +55,7 @@ class _AreaStoreData(TypedDict):
     temperature_entity_id: str | None
     created_at: str
     modified_at: str
+    carbon_dioxide_entity_id: str | None
 
 
 class AreasRegistryStoreData(TypedDict):
@@ -82,6 +83,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     labels: set[str] = field(default_factory=set)
     picture: str | None
     temperature_entity_id: str | None
+    carbon_dioxide_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property
@@ -100,6 +102,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                 "temperature_entity_id": self.temperature_entity_id,
                 "created_at": self.created_at.timestamp(),
                 "modified_at": self.modified_at.timestamp(),
+                "carbon_dioxide_entity_id": self.carbon_dioxide_entity_id,
             }
         )
 
@@ -160,6 +163,11 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     old_data["areas"],
                     key=lambda area: area["name"].casefold(),
                 )
+
+            if old_minor_version < 10:
+                # Version 1.10 adds carbon_dioxide_entity_id
+                for area in old_data["areas"]:
+                    area["carbon_dioxide_entity_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -285,6 +293,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         labels: set[str] | None = None,
         picture: str | None = None,
         temperature_entity_id: str | None = None,
+        carbon_dioxide_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
 
@@ -299,6 +308,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         if temperature_entity_id is not None:
             _validate_temperature_entity(self.hass, temperature_entity_id)
 
+        if carbon_dioxide_entity_id is not None:
+            _validate_carbon_dioxide_entity(self.hass, carbon_dioxide_entity_id)
+
         area = AreaEntry(
             aliases=aliases or set(),
             floor_id=floor_id,
@@ -309,6 +321,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
+            carbon_dioxide_entity_id=carbon_dioxide_entity_id,
         )
         area_id = area.id
         self.areas[area_id] = area
@@ -353,6 +366,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         name: str | Undefined = Undefined,
         picture: str | Undefined | None = Undefined,
         temperature_entity_id: str | Undefined | None = Undefined,
+        carbon_dioxide_entity_id: str | Undefined | None = Undefined,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -365,6 +379,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
+            carbon_dioxide_entity_id=carbon_dioxide_entity_id,
         )
         # Since updated may be the old or the new and we always fire
         # an event even if nothing has changed we cannot use async_fire_internal
@@ -390,6 +405,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         name: str | Undefined = Undefined,
         picture: str | Undefined | None = Undefined,
         temperature_entity_id: str | Undefined | None = Undefined,
+        carbon_dioxide_entity_id: str | Undefined | None = Undefined,
         validate: bool = True,
     ) -> AreaEntry:
         """Update name of area."""
@@ -405,6 +421,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 ("labels", labels),
                 ("picture", picture),
                 ("temperature_entity_id", temperature_entity_id),
+                ("carbon_dioxide_entity_id", carbon_dioxide_entity_id),
             )
             if value is not Undefined and value != getattr(old, attr_name)
         }
@@ -422,6 +439,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             and temperature_entity_id is not None
         ):
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
+
+        if (
+            validate
+            and "carbon_dioxide_entity_id" in new_values
+            and carbon_dioxide_entity_id is not None
+        ):
+            _validate_carbon_dioxide_entity(
+                self.hass, new_values["carbon_dioxide_entity_id"]
+            )
 
         if name is not Undefined and name != old.name:
             new_values["name"] = name
@@ -479,6 +505,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     temperature_entity_id=area["temperature_entity_id"],
                     created_at=datetime.fromisoformat(area["created_at"]),
                     modified_at=datetime.fromisoformat(area["modified_at"]),
+                    carbon_dioxide_entity_id=area["carbon_dioxide_entity_id"],
                 )
 
         self.areas = areas
@@ -502,6 +529,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "temperature_entity_id": entry.temperature_entity_id,
                     "created_at": entry.created_at.isoformat(),
                     "modified_at": entry.modified_at.isoformat(),
+                    "carbon_dioxide_entity_id": entry.carbon_dioxide_entity_id,
                 }
                 for entry in self.areas.values()
             ]
@@ -572,7 +600,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             for area in list(self.areas.values()):
                 humidity_match = area.humidity_entity_id == old_entity_id
                 temperature_match = area.temperature_entity_id == old_entity_id
-                if not humidity_match and not temperature_match:
+                carbon_dioxide_match = area.carbon_dioxide_entity_id == old_entity_id
+                if (
+                    not humidity_match
+                    and not temperature_match
+                    and not carbon_dioxide_match
+                ):
                     continue
                 # The renamed entity's state may not exist yet under its new id
                 self._async_update(
@@ -580,6 +613,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     humidity_entity_id=new_entity_id if humidity_match else Undefined,
                     temperature_entity_id=(
                         new_entity_id if temperature_match else Undefined
+                    ),
+                    carbon_dioxide_entity_id=(
+                        new_entity_id if carbon_dioxide_match else Undefined
                     ),
                     validate=False,
                 )
@@ -648,3 +684,18 @@ def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
         != SensorDeviceClass.HUMIDITY
     ):
         raise ValueError(f"Entity {entity_id} is not a humidity sensor")
+
+
+def _validate_carbon_dioxide_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate carbon dioxide entity."""
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "sensor"
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        != SensorDeviceClass.CO2
+    ):
+        raise ValueError(f"Entity {entity_id} is not a carbon dioxide sensor")

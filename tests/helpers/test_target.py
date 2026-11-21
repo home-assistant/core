@@ -82,6 +82,7 @@ def registries_mock(hass: HomeAssistant) -> None:
         picture=None,
         temperature_entity_id=None,
         humidity_entity_id=None,
+        carbon_dioxide_entity_id=None,
     )
     area_in_floor_a = ar.AreaEntry(
         id="area-a",
@@ -92,6 +93,7 @@ def registries_mock(hass: HomeAssistant) -> None:
         picture=None,
         temperature_entity_id=None,
         humidity_entity_id=None,
+        carbon_dioxide_entity_id=None,
     )
     area_with_labels = ar.AreaEntry(
         id="area-with-labels",
@@ -103,6 +105,7 @@ def registries_mock(hass: HomeAssistant) -> None:
         picture=None,
         temperature_entity_id=None,
         humidity_entity_id=None,
+        carbon_dioxide_entity_id=None,
     )
     mock_area_registry(
         hass,
