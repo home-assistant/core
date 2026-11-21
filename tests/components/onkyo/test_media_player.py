@@ -9,6 +9,8 @@ from aioonkyo import (
     Code,
     Instruction,
     Kind,
+    NetArtPacket,
+    NetArtType,
     NetPlaybackState,
     NetRepeatMode,
     NetShuffleMode,
@@ -26,6 +28,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed_exact,
     snapshot_platform,
 )
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -49,6 +52,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaType,
 )
+from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.onkyo.media_player import (
     QUERY_AV_INFO_DELAY,
     QUERY_NET_DELAY,
@@ -60,6 +64,7 @@ from homeassistant.components.onkyo.services import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -406,6 +411,20 @@ def _net_time(position: int | None, duration: int | None) -> status.NetTime:
     )
 
 
+ART_URL = "http://192.168.1.2/album_art.cgi"
+
+
+def _net_jacket_art(url: str | None) -> status.NetJacketArt:
+    code = Code.from_kind_zone(Kind.NET_JACKET_ART, Zone.MAIN)
+    if url is None:
+        return status.NetJacketArt(
+            code, None, NetArtType.NONE, NetArtPacket.SINGLE, b""
+        )
+    return status.NetJacketArt(
+        code, None, NetArtType.URL, NetArtPacket.SINGLE, url.encode()
+    )
+
+
 NET_TRACK_MESSAGES: list[Status] = [
     _net_play_status(NetPlaybackState.PLAYING),
     status.NetTitle(Code.from_kind_zone(Kind.NET_TITLE, Zone.MAIN), None, "Title"),
@@ -441,6 +460,7 @@ async def test_net_playback(
         query.NetAlbum(),
         query.NetTrack(),
         query.NetTime(),
+        query.NetJacketArt(),
     ]
 
     await receive_messages(read_queue, *NET_TRACK_MESSAGES)
@@ -654,3 +674,56 @@ async def test_net_playback_cleared_on_disconnect(
     assert query.NetPlayStatus() in writes
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert ATTR_MEDIA_TITLE not in state.attributes
+
+
+async def test_net_cover_art(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the cover art the receiver serves on its own address."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    # No art yet, and an unrecognized report (such as "LINK") changes nothing
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+    await receive_messages(read_queue, _net_jacket_art(ART_URL))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert ATTR_ENTITY_PICTURE in state.attributes
+    first_picture = state.attributes[ATTR_ENTITY_PICTURE]
+
+    # The receiver puts header lines in front of the image, they are removed
+    image = b"\xff\xd8\xff\xd9"
+    aioclient_mock.get(
+        ART_URL,
+        content=b"Content-size: 4\nContent-type: image/jpeg\n\n" + image,
+    )
+    player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert await player.async_get_media_image() == (image, "image/jpeg")
+
+    # A new track with new art changes the picture address, so the old image is not reused
+    await receive_messages(read_queue, _net_jacket_art(ART_URL))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_ENTITY_PICTURE] != first_picture
+
+    await receive_messages(read_queue, _net_jacket_art(None))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+async def test_net_cover_art_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that no image is returned when the receiver cannot be reached."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, _net_jacket_art(ART_URL))
+
+    aioclient_mock.get(ART_URL, exc=TimeoutError)
+    player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert await player.async_get_media_image() == (None, None)
