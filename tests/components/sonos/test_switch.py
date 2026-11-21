@@ -711,6 +711,7 @@ async def test_alarms_multiple_households(
     hass: HomeAssistant,
     async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
     soco_factory: SoCoMockFactory,
+    alarm_clock: SonosMockAlarmClock,
     discover: MagicMock,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
@@ -753,20 +754,17 @@ async def test_alarms_multiple_households(
     assert hass.states.get("switch.bedroom_daily_alarm_08_00").state == STATE_OFF
 
     # When subscriptions fail, each household only polls its own speakers.
+    alarm_clock.ListAlarms.reset_mock()
     soco_b.alarmClock.ListAlarms.reset_mock()
     caplog.clear()
-    with (
-        patch("homeassistant.components.sonos.media.SonosMedia.poll_media"),
-        patch(
-            "homeassistant.components.sonos.speaker.SonosSpeaker.subscription_address"
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Let the debounced household poll run.
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    soco_b.alarmClock.ListAlarms.assert_called()
+    alarm_clock.ListAlarms.assert_called_once()
+    soco_b.alarmClock.ListAlarms.assert_called_once()
     assert "Could not refresh" not in caplog.text
 
 
