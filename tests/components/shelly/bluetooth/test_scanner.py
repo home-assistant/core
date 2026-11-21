@@ -8,7 +8,13 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.shelly.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
+from homeassistant.components.shelly.const import (
+    CONF_BLE_ALLOWED_ADDRESSES,
+    CONF_BLE_MIN_INTERVAL,
+    CONF_BLE_MIN_RSSI,
+    CONF_BLE_SCANNER_MODE,
+    BLEScannerMode,
+)
 from homeassistant.core import HomeAssistant
 
 from .. import init_integration, inject_rpc_device_event
@@ -206,3 +212,53 @@ async def test_scanner_auto_mode_starts_passive_and_binds_provider(
     assert scanner.requested_mode is BluetoothScanningMode.AUTO
     assert scanner.current_mode is BluetoothScanningMode.PASSIVE
     mock_set_provider.assert_called_once_with(scanner, mock_rpc_device)
+
+
+@pytest.mark.parametrize(
+    ("filter_options", "expected"),
+    [
+        pytest.param(
+            {},
+            {"allowed_addresses": None, "min_rssi": None, "min_interval": 0},
+            id="no_filter",
+        ),
+        pytest.param(
+            {
+                CONF_BLE_ALLOWED_ADDRESSES: ["AA:BB:CC:DD:EE:FF"],
+                CONF_BLE_MIN_RSSI: -85.0,
+                CONF_BLE_MIN_INTERVAL: 30,
+            },
+            {
+                "allowed_addresses": ["AA:BB:CC:DD:EE:FF"],
+                "min_rssi": -85,
+                "min_interval": 30,
+            },
+            id="all_filters",
+        ),
+        pytest.param(
+            {CONF_BLE_MIN_INTERVAL: 30},
+            {"allowed_addresses": None, "min_rssi": None, "min_interval": 0},
+            id="interval_ignored_without_addresses",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_scanner_advertisement_filter(
+    hass: HomeAssistant,
+    filter_options: dict[str, object],
+    expected: dict[str, object],
+) -> None:
+    """Test the advertisement filter options are passed to the BLE script."""
+    with patch(
+        "homeassistant.components.shelly.bluetooth.async_start_scanner"
+    ) as mock_start_scanner:
+        await init_integration(
+            hass,
+            2,
+            options={CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE, **filter_options},
+        )
+
+    mock_start_scanner.assert_called_once()
+    kwargs = mock_start_scanner.call_args.kwargs
+    assert {key: kwargs[key] for key in expected} == expected
+    assert kwargs["active"] is False

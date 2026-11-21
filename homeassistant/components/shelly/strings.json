@@ -1096,12 +1096,22 @@
       "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
       "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
     },
+    "error": {
+      "invalid_ble_address": "Enter Bluetooth addresses in the format AA:BB:CC:DD:EE:FF.",
+      "min_interval_requires_addresses": "A minimum interval can only be used together with a list of Bluetooth devices."
+    },
     "step": {
       "init": {
         "data": {
+          "ble_allowed_addresses": "Only forward these Bluetooth devices",
+          "ble_min_interval": "Minimum interval per device",
+          "ble_min_rssi": "Minimum signal strength",
           "ble_scanner_mode": "Bluetooth scanner mode"
         },
         "data_description": {
+          "ble_allowed_addresses": "Leave empty to forward all Bluetooth devices. When set, the Shelly drops advertisements from all other devices, which reduces network traffic.",
+          "ble_min_interval": "Forward at most one advertisement per device in this period. Leave empty or set to 0 for no limit.",
+          "ble_min_rssi": "Advertisements weaker than this are not forwarded. Leave empty for no limit.",
           "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         },
         "description": "Auto is recommended for most setups; the Shelly listens passively and only briefly switches to active when needed, saving battery on your Bluetooth devices."

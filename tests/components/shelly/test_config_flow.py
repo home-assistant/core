@@ -4,6 +4,7 @@ from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
 from ipaddress import ip_address
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
@@ -36,6 +37,9 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
+    CONF_BLE_ALLOWED_ADDRESSES,
+    CONF_BLE_MIN_INTERVAL,
+    CONF_BLE_MIN_RSSI,
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
@@ -5815,3 +5819,131 @@ async def test_user_flow_select_ble_unsupported_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_device"
     assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_options_flow_ble_filter(hass: HomeAssistant) -> None:
+    """Test setting the on-device advertisement filter for gen2 devices."""
+    entry = await init_integration(hass, 2)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+            CONF_BLE_ALLOWED_ADDRESSES: ["aa:bb:cc:dd:ee:ff", "AA:BB:CC:DD:EE:FF"],
+            CONF_BLE_MIN_RSSI: -85,
+            CONF_BLE_MIN_INTERVAL: 30,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+        CONF_BLE_ALLOWED_ADDRESSES: ["AA:BB:CC:DD:EE:FF"],
+        CONF_BLE_MIN_RSSI: -85,
+        CONF_BLE_MIN_INTERVAL: 30,
+    }
+    await hass.async_block_till_done()
+
+    # Clearing the filter removes the options again
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE}
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_options_flow_ble_filter_address_options(hass: HomeAssistant) -> None:
+    """Test the address list shows devices this Shelly hears and saved ones."""
+    entry = await init_integration(
+        hass,
+        2,
+        options={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+            CONF_BLE_ALLOWED_ADDRESSES: ["11:22:33:44:55:66"],
+        },
+    )
+    scanner = SimpleNamespace(
+        discovered_devices_and_advertisement_data={
+            "AA:BB:CC:DD:EE:FF": (
+                SimpleNamespace(name=None),
+                SimpleNamespace(local_name="Victron"),
+            ),
+            "CC:DD:EE:FF:00:11": (
+                SimpleNamespace(name="CC:DD:EE:FF:00:11"),
+                SimpleNamespace(local_name=None),
+            ),
+        }
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scanner_by_source",
+        return_value=scanner,
+    ) as mock_scanner_by_source:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    mock_scanner_by_source.assert_called_once_with(
+        hass, entry.runtime_data.rpc.bluetooth_source
+    )
+    assert result["type"] is FlowResultType.FORM
+    options = result["data_schema"].schema[CONF_BLE_ALLOWED_ADDRESSES].config["options"]
+    assert options == [
+        {"value": "11:22:33:44:55:66", "label": "11:22:33:44:55:66"},
+        {"value": "AA:BB:CC:DD:EE:FF", "label": "Victron (AA:BB:CC:DD:EE:FF)"},
+        {"value": "CC:DD:EE:FF:00:11", "label": "CC:DD:EE:FF:00:11"},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("filter_input", "errors"),
+    [
+        (
+            {CONF_BLE_ALLOWED_ADDRESSES: ["not-an-address"]},
+            {CONF_BLE_ALLOWED_ADDRESSES: "invalid_ble_address"},
+        ),
+        (
+            {CONF_BLE_MIN_INTERVAL: 30},
+            {CONF_BLE_MIN_INTERVAL: "min_interval_requires_addresses"},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_options_flow_ble_filter_errors(
+    hass: HomeAssistant,
+    filter_input: dict[str, Any],
+    errors: dict[str, str],
+) -> None:
+    """Test invalid advertisement filter input shows an error and can recover."""
+    entry = await init_integration(hass, 2)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE, **filter_input},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+            CONF_BLE_ALLOWED_ADDRESSES: ["AA:BB:CC:DD:EE:FF"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+        CONF_BLE_ALLOWED_ADDRESSES: ["AA:BB:CC:DD:EE:FF"],
+    }
+    await hass.async_block_till_done()

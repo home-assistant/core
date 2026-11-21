@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+import re
 from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.ble import get_name_from_model_id
@@ -40,6 +41,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_clear_address_from_match_history,
     async_discovered_service_info,
+    async_scanner_by_source,
 )
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
@@ -57,12 +59,17 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -80,6 +87,9 @@ from .ble_provisioning import (
     async_register_zeroconf_discovery,
 )
 from .const import (
+    CONF_BLE_ALLOWED_ADDRESSES,
+    CONF_BLE_MIN_INTERVAL,
+    CONF_BLE_MIN_RSSI,
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
@@ -113,6 +123,8 @@ CONFIG_SCHEMA: Final = probatio.Schema(
     }
 )
 
+
+BLE_ADDRESS_RE: Final = re.compile(r"^([0-9A-F]{2}:){5}[0-9A-F]{2}$")
 
 BLE_SCANNER_OPTIONS = [
     BLEScannerMode.DISABLED,
@@ -1445,24 +1457,101 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if self.config_entry.runtime_data.rpc_zigbee_firmware:
             return self.async_abort(reason="zigbee_firmware")
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            addresses: list[str] = []
+            for address in user_input.get(CONF_BLE_ALLOWED_ADDRESSES, []):
+                formatted = format_mac(address.strip()).upper()
+                if not BLE_ADDRESS_RE.match(formatted):
+                    errors[CONF_BLE_ALLOWED_ADDRESSES] = "invalid_ble_address"
+                    break
+                if formatted not in addresses:
+                    addresses.append(formatted)
+            if user_input.get(CONF_BLE_MIN_INTERVAL) and not addresses:
+                errors[CONF_BLE_MIN_INTERVAL] = "min_interval_requires_addresses"
+            if not errors:
+                options = {**user_input}
+                # Leave unset filter options out of the entry so the
+                # scanner keeps its default forward-everything behavior.
+                options.pop(CONF_BLE_ALLOWED_ADDRESSES, None)
+                if addresses:
+                    options[CONF_BLE_ALLOWED_ADDRESSES] = addresses
+                if not options.get(CONF_BLE_MIN_INTERVAL):
+                    options.pop(CONF_BLE_MIN_INTERVAL, None)
+                return self.async_create_entry(data=options)
 
+        current = user_input or self.config_entry.options
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_BLE_SCANNER_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
+                    ),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=BLE_SCANNER_OPTIONS,
+                        translation_key=CONF_BLE_SCANNER_MODE,
+                    ),
+                ),
+                probatio.Optional(CONF_BLE_ALLOWED_ADDRESSES): SelectSelector(
+                    SelectSelectorConfig(
+                        options=self._async_ble_address_options(
+                            current.get(CONF_BLE_ALLOWED_ADDRESSES, [])
+                        ),
+                        multiple=True,
+                        custom_value=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    ),
+                ),
+                probatio.Optional(CONF_BLE_MIN_RSSI): NumberSelector(
+                    NumberSelectorConfig(
+                        min=-100,
+                        max=-30,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+                    ),
+                ),
+                probatio.Optional(CONF_BLE_MIN_INTERVAL): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0,
+                        max=3600,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=UnitOfTime.SECONDS,
+                    ),
+                ),
+            }
+        )
         return self.async_show_form(
             step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_BLE_SCANNER_MODE,
-                        default=self.config_entry.options.get(
-                            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=BLE_SCANNER_OPTIONS,
-                            translation_key=CONF_BLE_SCANNER_MODE,
-                        ),
-                    ),
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(data_schema, current),
+            errors=errors or None,
         )
+
+    @callback
+    def _async_ble_address_options(self, selected: list[str]) -> list[SelectOptionDict]:
+        """Return the Bluetooth devices this Shelly currently hears.
+
+        Addresses that are already selected are always included, so a
+        device that is temporarily out of range stays in the list.
+        """
+        names: dict[str, str] = dict.fromkeys(selected, "")
+        # Use this scanner's own cache: the global discovery list keeps only
+        # one source per address and would hide devices another adapter hears.
+        if (coordinator := self.config_entry.runtime_data.rpc) is not None and (
+            scanner := async_scanner_by_source(self.hass, coordinator.bluetooth_source)
+        ):
+            for address, (
+                device,
+                advertisement,
+            ) in scanner.discovered_devices_and_advertisement_data.items():
+                names[address] = advertisement.local_name or device.name or ""
+        return [
+            SelectOptionDict(
+                value=address,
+                label=f"{name} ({address})" if name and name != address else address,
+            )
+            for address, name in sorted(names.items())
+        ]
