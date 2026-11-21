@@ -35,7 +35,12 @@ from yarl import URL
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
