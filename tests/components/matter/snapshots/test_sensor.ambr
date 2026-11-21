@@ -30975,6 +30975,218 @@
     'state': '2025-01-01T13:59:41+00:00',
   })
 # ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_serial_number-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000B5-MatterNodeDevice'), ('matter', 'serial_serial_181')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_meter_identification_meter_serial_number',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter serial number',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meter serial number',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_serial_number',
+    'unique_id': '00000000000004D2-00000000000000B5-MatterNodeDevice-1-MeterIdentificationMeterSerialNumber-2822-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_serial_number-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification Meter serial number',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_meter_identification_meter_serial_number',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'METER_001',
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'utility',
+        'private',
+        'generic',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000B5-MatterNodeDevice'), ('matter', 'serial_serial_181')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_meter_identification_meter_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meter type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Meter type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_type',
+    'unique_id': '00000000000004D2-00000000000000B5-MatterNodeDevice-1-MeterIdentificationMeterType-2822-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_meter_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification Meter type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'utility',
+        'private',
+        'generic',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_meter_identification_meter_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'utility',
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_point_of_delivery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000B5-MatterNodeDevice'), ('matter', 'serial_serial_181')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_meter_identification_point_of_delivery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Point of delivery',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Point of delivery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'point_of_delivery',
+    'unique_id': '00000000000004D2-00000000000000B5-MatterNodeDevice-1-MeterIdentificationPointOfDelivery-2822-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_point_of_delivery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification Point of delivery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_meter_identification_point_of_delivery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12345678901234',
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_protocol_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000B5-MatterNodeDevice'), ('matter', 'serial_serial_181')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_meter_identification_protocol_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Protocol version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Protocol version',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'protocol_version',
+    'unique_id': '00000000000004D2-00000000000000B5-MatterNodeDevice-1-MeterIdentificationProtocolVersion-2822-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_meter_identification][sensor.mock_meter_identification_protocol_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Meter Identification Protocol version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_meter_identification_protocol_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'IEC 62056-21',
+  })
+# ---
 # name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

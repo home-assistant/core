@@ -1353,3 +1353,98 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    "node_fixture",
+    ["mock_meter_identification"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "attribute", "initial", "new_value", "expected"),
+    [
+        pytest.param(
+            "sensor.mock_meter_identification_meter_serial_number",
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+            "METER_001",
+            "987654321",
+            "987654321",
+            id="meter_serial_number",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_serial_number",
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+            "METER_001",
+            None,
+            "unknown",
+            id="meter_serial_number_null",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_point_of_delivery",
+            clusters.MeterIdentification.Attributes.PointOfDelivery,
+            "12345678901234",
+            "12345678904321",
+            "12345678904321",
+            id="point_of_delivery",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_protocol_version",
+            clusters.MeterIdentification.Attributes.ProtocolVersion,
+            "IEC 62056-21",
+            "1",
+            "1",
+            id="protocol_version",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            1,
+            "private",
+            id="meter_type_private",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            2,
+            "generic",
+            id="meter_type_generic",
+        ),
+        pytest.param(
+            "sensor.mock_meter_identification_meter_type",
+            clusters.MeterIdentification.Attributes.MeterType,
+            "utility",
+            3,
+            "unknown",
+            id="meter_type_unknown_value",
+        ),
+    ],
+)
+async def test_meter_identification_attributes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute: ClusterAttributeDescriptor,
+    initial: str,
+    new_value: str | int | None,
+    expected: str,
+) -> None:
+    """Test meter identification attributes update their sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial
+
+    set_node_attribute(
+        matter_node,
+        1,
+        attribute.cluster_id,
+        attribute.attribute_id,
+        new_value,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected

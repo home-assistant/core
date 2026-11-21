@@ -601,6 +601,17 @@
       "hepa_filter_condition": {
         "name": "HEPA filter condition"
       },
+      "meter_serial_number": {
+        "name": "Meter serial number"
+      },
+      "meter_type": {
+        "name": "Meter type",
+        "state": {
+          "generic": "Generic",
+          "private": "Private",
+          "utility": "Utility"
+        }
+      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
@@ -645,6 +656,12 @@
       },
       "pi_heating_demand": {
         "name": "Heating demand"
+      },
+      "point_of_delivery": {
+        "name": "Point of delivery"
+      },
+      "protocol_version": {
+        "name": "Protocol version"
       },
       "pump_control_mode": {
         "name": "Control mode",
