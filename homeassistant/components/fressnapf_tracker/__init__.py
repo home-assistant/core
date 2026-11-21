@@ -15,14 +15,15 @@ from fressnapftracker import (
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_USER_ID, DOMAIN
 from .coordinator import (
     FressnapfTrackerConfigEntry,
     FressnapfTrackerDataUpdateCoordinator,
 )
+from .util import hashed_serial_number
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -33,6 +34,35 @@ PLATFORMS: list[Platform] = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def invalid_tracker_issue_id(entry_id: str, serialnumber: str) -> str:
+    """Return the repair issue ID for an invalid tracker.
+
+    The ID contains the config entry ID because a tracker can be shared
+    between accounts. The serial number is hashed because issue IDs are
+    appended to diagnostics downloads without redaction. The placeholders
+    of a non persistent issue are not part of the download.
+    """
+    return f"invalid_fressnapf_tracker_{entry_id}_{hashed_serial_number(serialnumber)}"
+
+
+def _delete_stale_invalid_tracker_issues(
+    hass: HomeAssistant, entry: FressnapfTrackerConfigEntry, current_issue_ids: set[str]
+) -> None:
+    """Delete invalid tracker issues of this entry that no longer apply.
+
+    This also removes issues created by earlier versions, which had the serial
+    number in their ID, even if the tracker has recovered or was removed since.
+    """
+    prefix = f"invalid_fressnapf_tracker_{entry.entry_id}_"
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(prefix)
+            and issue_id not in current_issue_ids
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def _get_valid_tracker(
@@ -55,16 +85,15 @@ async def _get_valid_tracker(
             "Tracker with serialnumber %s is invalid. Consider removing it via the App",
             device.serialnumber,
         )
-        async_create_issue(
+        ir.async_create_issue(
             hass,
             DOMAIN,
-            # A tracker can be shared between accounts
-            f"invalid_fressnapf_tracker_{entry.entry_id}_{device.serialnumber}",
+            invalid_tracker_issue_id(entry.entry_id, device.serialnumber),
             config_entry_id=entry.entry_id,
             issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",
             is_fixable=False,
-            severity=IssueSeverity.WARNING,
+            severity=ir.IssueSeverity.WARNING,
             translation_key="invalid_fressnapf_tracker",
             translation_placeholders={
                 "tracker_id": device.serialnumber,
@@ -92,9 +121,13 @@ async def async_setup_entry(
         ) from exception
 
     coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
+    invalid_issue_ids: set[str] = set()
     for device in devices:
         tracker = await _get_valid_tracker(hass, entry, device)
         if tracker is None:
+            invalid_issue_ids.add(
+                invalid_tracker_issue_id(entry.entry_id, device.serialnumber)
+            )
             continue
         coordinator = FressnapfTrackerDataUpdateCoordinator(
             hass,
@@ -105,6 +138,8 @@ async def async_setup_entry(
         coordinators.append(coordinator)
 
     entry.runtime_data = coordinators
+
+    _delete_stale_invalid_tracker_issues(hass, entry, invalid_issue_ids)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
