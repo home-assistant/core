@@ -101,7 +101,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
         description: AdGuardHomeSwitchEntityDescription,
     ) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=description.key)
         entry = coordinator.config_entry
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"

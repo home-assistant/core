@@ -16,9 +16,9 @@ class AdGuardHomeEntity[_CoordinatorT: AdGuardHomeCoordinator](
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: _CoordinatorT) -> None:
+    def __init__(self, coordinator: _CoordinatorT, context: str | None = None) -> None:
         """Initialize the AdGuard Home entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=context)
         entry = coordinator.config_entry
 
         host, port = entry.data[CONF_HOST], entry.data[CONF_PORT]
