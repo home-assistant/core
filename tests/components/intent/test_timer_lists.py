@@ -576,6 +576,7 @@ async def test_timer_status(
 async def test_timer_list_without_device(hass: HomeAssistant) -> None:
     """Test timers of a timer list that has no device are matched by name."""
     timer_list = InMemoryTimerListEntity()
+    timer_list._attr_unique_id = "oven"
     timer_list.entity_id = "timer_list.oven"
     await _async_setup_timer_lists(hass, [timer_list])
     await timer_list.async_create_timer(name="oven", duration=timedelta(minutes=20))
@@ -651,3 +652,57 @@ async def test_legacy_timer_status_after_changes(
     timer = result.speech_slots["timers"][0]
     assert timer["total_seconds_left"] == duration + 15
     assert timer["is_active"] is True
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_unregistered_timer_list_is_not_matched(hass: HomeAssistant) -> None:
+    """Test voice commands do not discover timer lists outside the registry."""
+    timer_list = InMemoryTimerListEntity()
+    timer_list.entity_id = "timer_list.unregistered"
+    await _async_setup_timer_lists(hass, [timer_list])
+    await timer_list.async_create_timer(name="oven", duration=timedelta(minutes=20))
+
+    with pytest.raises(TimerNotFoundError):
+        await _handle(hass, intent.INTENT_CANCEL_TIMER, None, name="oven")
+
+    assert [timer.status for timer in timer_list.timers] == [TimerStatus.ACTIVE]
+
+
+async def test_unloaded_timer_list_is_not_matched(
+    hass: HomeAssistant,
+    devices: dict[str, TimerDevice],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test registry entries without loaded entities do not prevent matching."""
+    entity_registry.async_get_or_create(
+        Platform.TIMER_LIST, TEST_DOMAIN, "unloaded", suggested_object_id="unloaded"
+    )
+    await _create_timer(devices[KITCHEN], name="oven")
+
+    await _handle(hass, intent.INTENT_CANCEL_TIMER, None, name="oven")
+
+    assert _statuses(devices[KITCHEN]) == [TimerStatus.CANCELLED]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_start_timer_skips_unloaded_timer_list(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an unloaded registry entry does not hide a device's loaded timer list."""
+    entry = MockConfigEntry(domain=TEST_DOMAIN)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(TEST_DOMAIN, KITCHEN)}
+    )
+    entity_registry.async_get_or_create(
+        Platform.TIMER_LIST, TEST_DOMAIN, "unloaded", device_id=device.id
+    )
+    timer_list = DeviceTimerList(KITCHEN)
+    await _async_setup_timer_lists(hass, [timer_list])
+
+    await _handle(hass, intent.INTENT_START_TIMER, device.id, minutes=5)
+
+    assert len(timer_list.timers) == 1
+    assert timer_list.timers[0].created_duration == timedelta(minutes=5)

@@ -13,10 +13,10 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant.components.timer_list import (
+    DOMAIN as TIMER_LIST_DOMAIN,
     TimerItem,
     TimerListEntity,
     TimerStatus,
-    async_get_timer_list_entities,
     async_get_timer_list_entity,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
@@ -547,9 +547,21 @@ def async_device_supports_timers(hass: HomeAssistant, device_id: str) -> bool:
     timer_manager: TimerManager | None = hass.data.get(TIMER_DATA)
     if timer_manager is None:
         return False
-    return timer_manager.is_timer_device(device_id) or (
-        async_get_timer_list_entity(hass, device_id) is not None
+    return timer_manager.is_timer_device(device_id) or bool(
+        _async_get_device_timer_list_entity_ids(hass, device_id)
     )
+
+
+@callback
+def _async_get_device_timer_list_entity_ids(
+    hass: HomeAssistant, device_id: str
+) -> list[str]:
+    """Find a device's enabled timer lists in the entity registry."""
+    return [
+        entry.entity_id
+        for entry in er.async_entries_for_device(er.async_get(hass), device_id)
+        if entry.domain == TIMER_LIST_DOMAIN
+    ]
 
 
 @callback
@@ -687,28 +699,19 @@ def _async_get_voice_timers(hass: HomeAssistant, language: str) -> list[_VoiceTi
         if not timer.conversation_command
     ]
 
-    for entity in async_get_timer_list_entities(hass):
-        timers.extend(_async_get_timer_list_voice_timers(hass, entity, language))
+    for entry in er.async_get(hass).entities.values():
+        if entry.domain == TIMER_LIST_DOMAIN and not entry.disabled:
+            timers.extend(_async_get_timer_list_voice_timers(hass, entry, language))
 
     return timers
 
 
 @callback
 def _async_get_timer_list_voice_timers(
-    hass: HomeAssistant, entity: TimerListEntity, language: str
+    hass: HomeAssistant, entity_entry: er.RegistryEntry, language: str
 ) -> list[_VoiceTimer]:
     """Return the active and paused timers of a timer list."""
-    device_id: str | None = None
-    area_id: str | None = None
-    if entity_entry := er.async_get(hass).async_get(entity.entity_id):
-        device_id = entity_entry.device_id
-        area_id = entity_entry.area_id
-        if (
-            area_id is None
-            and device_id is not None
-            and (device := dr.async_get(hass).async_get(device_id))
-        ):
-            area_id = dr.async_get_effective_area_id(hass, device)
+    area_id = er.async_get_effective_area_id(hass, entity_entry)
 
     area_name: str | None = None
     floor_id: str | None = None
@@ -716,11 +719,14 @@ def _async_get_timer_list_voice_timers(
         area_name = _normalize_name(area.name)
         floor_id = area.floor_id
 
+    if (entity := async_get_timer_list_entity(hass, entity_entry.entity_id)) is None:
+        return []
+
     return [
         _VoiceTimer(
             item=item,
             entity=entity,
-            device_id=device_id,
+            device_id=entity_entry.device_id,
             area_id=area_id,
             area_name=area_name,
             floor_id=floor_id,
@@ -1017,7 +1023,13 @@ class StartTimerIntentHandler(intent.IntentHandler):
 
         timer_list: TimerListEntity | None = None
         if intent_obj.device_id:
-            timer_list = async_get_timer_list_entity(hass, intent_obj.device_id)
+            for entity_id in _async_get_device_timer_list_entity_ids(
+                hass, intent_obj.device_id
+            ):
+                if (
+                    timer_list := async_get_timer_list_entity(hass, entity_id)
+                ) is not None:
+                    break
 
         if (
             (not conversation_command)
