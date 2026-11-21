@@ -139,8 +139,8 @@ async def test_source_unknown_before_any_response(
     assert "source" not in hass.states.get(ENTITY_ID).attributes
 
 
-# An SG10TY reports these alongside indices the library knows about. They sit
-# past the end of its table.
+# An SG10TY reports these alongside indices the library knows about. All but 23
+# (Sound Share) sit past the end of its table.
 UNMAPPED_EQUALISERS = [23, 24, 25, 26]
 
 AVAILABLE_EQUALISERS = [
@@ -171,19 +171,19 @@ async def test_sound_modes_beyond_the_library_table_are_offered(
     """Test that equalisers the library cannot name are still offered."""
     await setup_integration(hass, mock_config_entry)
 
-    send_eq_view_info(find_update_callback(mock_client), 23)
+    send_eq_view_info(find_update_callback(mock_client), 24)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_SOUND_MODE_LIST] == [
         "Cinema",
+        "Sound Share",
         "Standard",
-        "Unknown (23)",
         "Unknown (24)",
         "Unknown (25)",
         "Unknown (26)",
     ]
-    assert state.attributes[ATTR_SOUND_MODE] == "Unknown (23)"
+    assert state.attributes[ATTR_SOUND_MODE] == "Unknown (24)"
 
 
 async def test_selecting_a_sound_mode_beyond_the_library_table(

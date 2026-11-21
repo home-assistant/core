@@ -8,8 +8,8 @@
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
@@ -58,8 +58,8 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '127.0.0.1 Salle TV',
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
@@ -90,8 +90,8 @@
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
@@ -145,8 +145,8 @@
       <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Cinema',
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
@@ -179,8 +179,8 @@
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
@@ -234,8 +234,8 @@
       <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Cinema',
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Cinema',
+        'Sound Share',
         'Standard',
-        'Unknown (23)',
         'Unknown (24)',
         'Unknown (25)',
         'Unknown (26)',
