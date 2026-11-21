@@ -59,22 +59,31 @@ async def async_setup_entry(
     """Set up select entities based on a config entry."""
     coordinator = entry.runtime_data
 
-    known_devices: set[str] = set()
+    known_selects: set[tuple[str, str]] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
-        known_devices.intersection_update(current_devices)
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            async_add_entities(
-                [
-                    AmazonSelectEntity(coordinator, serial_num, select_desc)
-                    for select_desc in SELECTS
-                    for serial_num in new_devices
-                    if select_desc.is_available_fn(coordinator.data[serial_num])
-                ]
-            )
+        known_selects.intersection_update(
+            (serial_num, key)
+            for serial_num, key in tuple(known_selects)
+            if serial_num in current_devices
+        )
+        new_selects = [
+            (serial_num, select_desc)
+            for serial_num in current_devices
+            for select_desc in SELECTS
+            if select_desc.is_available_fn(coordinator.data[serial_num])
+            and (serial_num, select_desc.key) not in known_selects
+        ]
+        async_add_entities(
+            [
+                AmazonSelectEntity(coordinator, serial_num, select_desc)
+                for serial_num, select_desc in new_selects
+            ]
+        )
+        known_selects.update(
+            (serial_num, select_desc.key) for serial_num, select_desc in new_selects
+        )
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
