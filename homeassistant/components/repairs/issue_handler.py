@@ -1,5 +1,6 @@
 """The repairs integration."""
 
+import logging
 from typing import Any, override
 
 import probatio
@@ -10,6 +11,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
+from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.loader import Integration, async_get_integrations
 
 from .const import DATA_REPAIRS, DOMAIN
 from .models import (
@@ -19,6 +23,8 @@ from .models import (
     RepairsFlowResult,
     RepairsProtocol,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -131,6 +137,51 @@ def async_setup(hass: HomeAssistant) -> None:
         RepairsFlowManager(hass),
         LazyIntegrationPlatforms(hass, DOMAIN, _process_repairs_platform),
     )
+    async_at_started(hass, _async_delete_stale_issues)
+
+
+async def _async_delete_stale_issues(hass: HomeAssistant) -> None:
+    """Delete persistent issues of core integrations whose translation is gone.
+
+    The code which created such an issue was removed together with its strings, so
+    nothing else deletes it, and the frontend can't show it.
+    """
+    # Custom integrations overriding a built-in integration are not loaded
+    if hass.config.safe_mode:
+        return
+    issue_registry = ir.async_get(hass)
+    if not (
+        domains := {
+            issue.domain
+            for issue in issue_registry.issues.values()
+            if issue.is_persistent
+        }
+    ):
+        return
+    # Custom integrations may be missing temporarily and don't follow the core rules
+    # for strings
+    core_domains = {
+        domain
+        for domain, integration in (await async_get_integrations(hass, domains)).items()
+        if isinstance(integration, Integration) and integration.is_built_in
+    }
+    if not core_domains:
+        return
+    translations = await async_get_translations(hass, "en", "issues", core_domains)
+    for (domain, issue_id), issue in list(issue_registry.issues.items()):
+        if (
+            issue.is_persistent
+            and domain in core_domains
+            and f"component.{domain}.issues.{issue.translation_key}.title"
+            not in translations
+        ):
+            _LOGGER.debug(
+                "Deleting issue %s of %s, its translation %s no longer exists",
+                issue_id,
+                domain,
+                issue.translation_key,
+            )
+            issue_registry.async_delete(domain, issue_id)
 
 
 @callback
