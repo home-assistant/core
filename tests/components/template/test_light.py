@@ -2,7 +2,9 @@
 
 from enum import StrEnum
 from itertools import chain
+from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -12,6 +14,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import config as hass_config
 from homeassistant.components import light, template
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -29,7 +32,12 @@ from homeassistant.components.light import (
     LightEntityFeature,
     LightEntityStateAttribute,
 )
-from homeassistant.components.template.light import DEFAULT_NAME
+from homeassistant.components.template.const import TemplateService
+from homeassistant.components.template.light import (
+    DEFAULT_NAME,
+    DEPRECATED_MIREDS_OPTIONS_ISSUE_ID,
+    DEPRECATED_TEMPERATURE_ISSUE_ID,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -40,9 +48,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
@@ -347,6 +357,30 @@ async def setup_light_with_mireds(
             attribute: attribute_template,
             "temperature": "{{ 200 }}",
             **make_test_action("set_temperature", {"color_temp": "{{ color_temp }}"}),
+        },
+        "{{ 1==1 }}",
+        ON_OFF_ACTIONS,
+    )
+
+
+@pytest.fixture
+async def setup_light_with_kelvin(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+) -> None:
+    """Do setup of light that uses kelvin."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {
+            attribute: attribute_template,
+            "temperature_kelvin": "{{ 3000 }}",
+            **COLOR_TEMP_ACTION,
         },
         "{{ 1==1 }}",
         ON_OFF_ACTIONS,
@@ -809,6 +843,256 @@ async def test_temperature_template(
     assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "temperature_kelvin"),
+        (ConfigurationStyle.TRIGGER, "temperature_kelvin"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_temp", "attribute_template"),
+    [
+        (2000, "{{ 2000 }}"),
+        (6535, "{{ 6535 }}"),
+        (3000, "{{ 3000.4 }}"),
+        (None, "{{ 1999 }}"),
+        (None, "{{ 6536 }}"),
+        (None, "{{ true }}"),
+        (None, "{{ x - 12 }}"),
+        (None, "None"),
+        (None, "{{ none }}"),
+        (None, ""),
+        (None, "{{ 'one' }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_temperature_kelvin_template(
+    hass: HomeAssistant, expected_temp: int | None
+) -> None:
+    """Test the template for the temperature in kelvin."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
+    assert state.state == STATE_ON
+    assert state.attributes.get("color_mode") == ColorMode.COLOR_TEMP
+    assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "expected_temp"),
+    [
+        pytest.param(
+            {"temperature_kelvin": "{{ 1600 }}", "min_kelvin": "{{ 1500 }}"},
+            1600,
+            id="below_default_min",
+        ),
+        pytest.param(
+            {"temperature_kelvin": "{{ 9000 }}", "max_kelvin": "{{ 10000 }}"},
+            9000,
+            id="above_default_max",
+        ),
+        pytest.param(
+            {"temperature_kelvin": "{{ 2500 }}", "min_kelvin": "{{ 3000 }}"},
+            None,
+            id="below_min",
+        ),
+        pytest.param(
+            {"temperature": "{{ 500 }}", "temperature_kelvin": "{{ 3000 }}"},
+            3000,
+            id="kelvin_over_mireds",
+        ),
+    ],
+)
+async def test_temperature_kelvin_range(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    expected_temp: int | None,
+) -> None:
+    """Test the temperature in kelvin against the configured range."""
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
+
+
+@pytest.mark.parametrize("count", [0])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"min_mireds": "{{ 153 }}", "min_kelvin": "{{ 2000 }}"},
+        {"min_mireds": "{{ 153 }}", "max_kelvin": "{{ 6500 }}"},
+        {"max_mireds": "{{ 500 }}", "min_kelvin": "{{ 2000 }}"},
+        {"max_mireds": "{{ 500 }}", "max_kelvin": "{{ 6500 }}"},
+    ],
+)
+async def test_mireds_and_kelvin_range_invalid(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test the color temperature range can not mix mireds and kelvin."""
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    assert hass.states.get(TEST_LIGHT.entity_id) is None
+
+
+def get_deprecated_mireds_options_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated light mireds options issues."""
+    return [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == template.DOMAIN
+        and issue_id.startswith(f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_")
+    ]
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "options"),
+    [
+        pytest.param(
+            {"temperature": "{{ 500 }}"},
+            "- `temperature` → `temperature_kelvin`",
+            id="temperature",
+        ),
+        pytest.param(
+            {"temperature": "{{ 500 }}", "temperature_kelvin": "{{ 2000 }}"},
+            "- `temperature` → `temperature_kelvin`",
+            id="temperature_and_kelvin",
+        ),
+        pytest.param(
+            {"min_mireds": "{{ 153 }}", "max_mireds": "{{ 500 }}"},
+            "- `min_mireds` → `max_kelvin`\n- `max_mireds` → `min_kelvin`",
+            id="mireds_range",
+        ),
+    ],
+)
+async def test_deprecated_mireds_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    options: str,
+) -> None:
+    """Test a repair issue is created for options in mireds."""
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    issues = get_deprecated_mireds_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].translation_key == DEPRECATED_MIREDS_OPTIONS_ISSUE_ID
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_LIGHT.object_id}",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "temperature_kelvin": "{{ 3000 }}",
+            "min_kelvin": "{{ 2000 }}",
+            "max_kelvin": "{{ 6500 }}",
+        }
+    ],
+)
+async def test_no_deprecated_mireds_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test no repair issue is created for options in kelvin."""
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    assert get_deprecated_mireds_options_issues(issue_registry) == []
+
+
+MIREDS_YAML = """\
+template:
+  - light:
+      - name: Test
+        turn_on: []
+        turn_off: []
+        set_temperature: []
+        temperature: "{{ 500 }}"
+        max_mireds: "{{ 500 }}"
+"""
+
+KELVIN_YAML = """\
+template:
+  - light:
+      - name: Test
+        turn_on: []
+        turn_off: []
+        set_temperature: []
+        temperature_kelvin: "{{ 2000 }}"
+        min_kelvin: "{{ 2000 }}"
+"""
+
+
+async def test_deprecated_mireds_options_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, MIREDS_YAML)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, template.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    issues = get_deprecated_mireds_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": (
+            "- `configuration.yaml:7`: `temperature` → `temperature_kelvin`\n"
+            "- `configuration.yaml:8`: `max_mireds` → `min_kelvin`"
+        ),
+    }
+
+    await hass.async_add_executor_job(yaml_path.write_text, KELVIN_YAML)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(
+            template.DOMAIN, TemplateService.RELOAD, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert get_deprecated_mireds_options_issues(issue_registry) == []
 
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
@@ -1535,6 +1819,205 @@ async def test_max_mireds_template(
     assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "min_kelvin"),
+        (ConfigurationStyle.TRIGGER, "min_kelvin"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_min_kelvin", "attribute_template"),
+    [
+        (2500, "{{ 2500 }}"),
+        (2000, "{{ 0 }}"),
+        (2000, "{{ x - 12 }}"),
+        (2000, "None"),
+        (2000, "{{ none }}"),
+        (2000, ""),
+        (2000, "{{ 'a' }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light_with_kelvin")
+async def test_min_kelvin_template(
+    hass: HomeAssistant, expected_min_kelvin: int
+) -> None:
+    """Test the template for the min kelvin."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "max_kelvin"),
+        (ConfigurationStyle.TRIGGER, "max_kelvin"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_max_kelvin", "attribute_template"),
+    [
+        (5000, "{{ 5000 }}"),
+        (6535, "{{ 0 }}"),
+        (6535, "{{ x - 12 }}"),
+        (6535, "None"),
+        (6535, "{{ none }}"),
+        (6535, ""),
+        (6535, "{{ 'a' }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light_with_kelvin")
+async def test_max_kelvin_template(
+    hass: HomeAssistant, expected_max_kelvin: int
+) -> None:
+    """Test the template for the max kelvin."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.attributes.get("max_color_temp_kelvin") == expected_max_kelvin
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "option", ["min_mireds", "max_mireds", "min_kelvin", "max_kelvin"]
+)
+async def test_color_temp_range_template_error_rgbww(
+    hass: HomeAssistant, count: int, style: ConfigurationStyle, option: str
+) -> None:
+    """Test a template error in the range keeps the light working in RGBWW mode."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {
+            option: "{{ x - 12 }}",
+            "rgbww": "{{ (255, 0, 0, 10, 10) }}",
+            **RGBWW_ACTION,
+            **COLOR_TEMP_ACTION,
+        },
+        "{{ 1==1 }}",
+        ON_OFF_ACTIONS,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == ColorMode.RGBWW
+    assert state.attributes["min_color_temp_kelvin"] == 2000
+    assert state.attributes["max_color_temp_kelvin"] == 6535
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "first_bound", "second_bound"),
+    [
+        pytest.param(
+            {
+                "temperature_kelvin": "{{ 2500 }}",
+                "min_kelvin": "{{ states('sensor.bound') | int }}",
+            },
+            3000,
+            2000,
+            id="kelvin",
+        ),
+        pytest.param(
+            {
+                "temperature": "{{ 400 }}",
+                "max_mireds": "{{ states('sensor.bound') | int }}",
+            },
+            333,
+            500,
+            id="mireds",
+        ),
+    ],
+)
+async def test_temperature_revalidated_when_range_changes(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    first_bound: int,
+    second_bound: int,
+) -> None:
+    """Test the temperature is revalidated when the range widens and narrows."""
+    hass.states.async_set("sensor.bound", str(first_bound))
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] is None
+
+    # The unchanged temperature becomes valid when the range widens
+    hass.states.async_set("sensor.bound", str(second_bound))
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] == 2500
+
+    # And invalid again when the range narrows
+    hass.states.async_set("sensor.bound", str(first_bound))
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] is None
+
+
+@pytest.mark.parametrize(
+    ("hs_template", "first_mode", "expected_mode", "expected_temp"),
+    [
+        pytest.param(
+            "{{ none }}", ColorMode.UNKNOWN, ColorMode.COLOR_TEMP, 2500, id="unknown"
+        ),
+        pytest.param(
+            "{{ (360, 100) }}", ColorMode.HS, ColorMode.HS, None, id="keep_hs"
+        ),
+    ],
+)
+async def test_temperature_revalidated_color_mode(
+    hass: HomeAssistant,
+    hs_template: str,
+    first_mode: ColorMode,
+    expected_mode: ColorMode,
+    expected_temp: int | None,
+) -> None:
+    """Test the color mode when the range widens on a multi color mode light."""
+    hass.states.async_set("sensor.bound", "3000")
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "temperature_kelvin": "{{ 2500 }}",
+            "min_kelvin": "{{ states('sensor.bound') | int }}",
+            "hs": hs_template,
+            **HS_ACTION,
+        },
+        "{{ 1==1 }}",
+        ON_OFF_COLOR_TEMP_ACTIONS,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == first_mode
+    assert state.attributes.get("color_temp_kelvin") is None
+
+    hass.states.async_set("sensor.bound", "2000")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == expected_mode
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
+
+
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1889,6 +2372,87 @@ async def test_setup_config_entry(
     state = hass.states.get("light.my_template")
     assert state is not None
     assert state == snapshot
+
+
+async def _async_setup_light_config_entry(
+    hass: HomeAssistant, options: dict[str, Any]
+) -> MockConfigEntry:
+    """Set up a template light config entry."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "turn_on": [],
+            "turn_off": [],
+            "set_temperature": [],
+            "template_type": light.DOMAIN,
+            **options,
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
+
+
+async def test_deprecated_temperature_config_entry_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair issue is tied to a helper that uses the temperature option."""
+    config_entry = await _async_setup_light_config_entry(
+        hass, {"temperature": "{{ 500 }}"}
+    )
+    issue_id = f"{DEPRECATED_TEMPERATURE_ISSUE_ID}_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(template.DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_key == DEPRECATED_TEMPERATURE_ISSUE_ID
+    assert issue.translation_placeholders == {
+        "name": "My template",
+        "breaks_in_ha_version": "2027.6.0",
+    }
+
+    # Replacing the option with temperature_kelvin removes the issue
+    options = {**config_entry.options, "temperature_kelvin": "{{ 2000 }}"}
+    options.pop("temperature")
+    hass.config_entries.async_update_entry(config_entry, options=options)
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
+
+
+async def test_deprecated_temperature_config_entry_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is removed with the helper."""
+    config_entry = await _async_setup_light_config_entry(
+        hass, {"temperature": "{{ 500 }}"}
+    )
+    issue_id = f"{DEPRECATED_TEMPERATURE_ISSUE_ID}_{config_entry.entry_id}"
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
+
+
+async def test_no_deprecated_temperature_config_entry_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for a helper using kelvin."""
+    config_entry = await _async_setup_light_config_entry(
+        hass, {"temperature_kelvin": "{{ 3000 }}"}
+    )
+    assert (
+        issue_registry.async_get_issue(
+            template.DOMAIN,
+            f"{DEPRECATED_TEMPERATURE_ISSUE_ID}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 async def test_flow_preview(
