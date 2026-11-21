@@ -39,6 +39,9 @@ def validate(
         return None
 
     config_flow_file = integration.path / "config_flow.py"
+    if not config_flow_file.exists():
+        return ["Integration is missing config_flow.py"]
+
     config_flow = ast_parse_module(config_flow_file)
 
     if not (
