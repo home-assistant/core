@@ -11,15 +11,23 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_MAC, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthemavConfigEntry
-from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    DOMAIN,
+    MANUFACTURER,
+    SOUND_MODE_MODELS,
+    X10_MODELS,
+)
+from .single_command import async_single_command_connection
 
 _LOGGER = logging.getLogger(__name__)
 VOLUME_STEP = 0.01
@@ -48,6 +56,8 @@ async def async_setup_entry(
             model,
             zone_number,
             config_entry.entry_id,
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
         )
         for zone_number in avr.protocol.zones
     )
@@ -78,6 +88,8 @@ class AnthemAVR(MediaPlayerEntity):
         model: str,
         zone_number: int,
         entry_id: str,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize entity with transport."""
         super().__init__()
@@ -85,6 +97,13 @@ class AnthemAVR(MediaPlayerEntity):
         self._entry_id = entry_id
         self._zone_number = zone_number
         self._zone = avr.zones[zone_number]
+        self._host = host
+        self._port = port
+        self._is_x10 = model.strip() in X10_MODELS
+        # The listening mode (ALM) is a zone 1 setting. The library names the
+        # modes from the x20 table, which is wrong for other model series.
+        if zone_number == 1 and model.strip() in SOUND_MODE_MODELS:
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
@@ -140,11 +159,57 @@ class AnthemAVR(MediaPlayerEntity):
         self._attr_app_name = self._zone.input_format
         self._attr_source = self._zone.input_name
         self._attr_source_list = self.avr.input_list
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE:
+            self._attr_sound_mode = (
+                self.avr.audio_listening_mode_text if self._zone.power else None
+            )
+            self._attr_sound_mode_list = self.avr.audio_listening_mode_list
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Change AVR to the designated source (by name)."""
-        self._zone.input_name = source
+        if not self._is_x10:
+            self._zone.input_name = source
+            return
+        number = self.avr._input_numbers.get(source)  # noqa: SLF001
+        if not number:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_source",
+                translation_placeholders={"source": source},
+            )
+        async with async_single_command_connection(self._host, self._port) as conn:
+            await conn.send(f"Z{self._zone_number}INP{number}")
+        # The long-lived connection may not get the change pushed, so ask.
+        self._zone.query("INP")
+
+    @override
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Change the zone 1 listening mode (by name)."""
+        number = self.avr._alm_number.get(sound_mode)  # noqa: SLF001
+        if number is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
+            )
+        if not self._is_x10:
+            self.avr.audio_listening_mode = number
+            return
+        command = f"Z1ALM{number:02d}"
+        async with async_single_command_connection(self._host, self._port) as conn:
+            # An applied mode is reported back; one the current source doesn't
+            # allow gets no reply, and neither does the mode already active.
+            replies = await conn.send(command, until=command)
+            if command not in replies:
+                replies = await conn.send("Z1ALM?", until=command)
+        self.avr.query("Z1ALM")
+        if command not in replies:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sound_mode_not_applied",
+                translation_placeholders={"sound_mode": sound_mode},
+            )
 
     @override
     async def async_turn_off(self) -> None:

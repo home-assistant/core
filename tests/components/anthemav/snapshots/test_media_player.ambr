@@ -31,7 +31,7 @@
     'platform': 'anthemav',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 2444>,
+    'supported_features': <MediaPlayerEntityFeature: 67980>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:01',
     'unit_of_measurement': None,
@@ -42,7 +42,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anthem AV',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2444>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 67980>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.anthem_av',

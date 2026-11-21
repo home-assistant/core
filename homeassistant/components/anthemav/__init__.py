@@ -1,5 +1,7 @@
 """The Anthem A/V Receivers integration."""
 
+import asyncio
+from datetime import datetime
 import logging
 
 import anthemav
@@ -19,8 +21,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+    MANUFACTURER,
+    POLL_COMMAND_SPACING_SECONDS,
+    POLL_INTERVAL,
+    X10_MODELS,
+)
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
 
@@ -74,6 +85,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
     )
+
+    if entry.data[CONF_MODEL].strip() in X10_MODELS:
+
+        async def poll_zones(now: datetime) -> None:
+            # Replies arrive through the update callback like pushed changes.
+            # The receiver answers "!I" (invalid) to queries sent back to back,
+            # so space them out like the library's own refresh does.
+            for zone in avr.protocol.zones.values():
+                for command in ("POW", "VOL", "MUT", "INP"):
+                    if command != "POW" and not zone.power:
+                        break
+                    if avr.protocol.transport is None:
+                        return
+                    zone.query(command)
+                    await asyncio.sleep(POLL_COMMAND_SPACING_SECONDS)
+            if (
+                avr.protocol.zones[1].power
+                and avr.protocol.support_audio_listening_mode
+                and avr.protocol.transport is not None
+            ):
+                avr.protocol.query("Z1ALM")
+
+        entry.async_on_unload(
+            async_track_time_interval(hass, poll_zones, POLL_INTERVAL)
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> None:
