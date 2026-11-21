@@ -10,7 +10,7 @@ This is an experimental execution model for trusted code. **It does not provide 
 flowchart LR
     subgraph Host[Main Home Assistant]
         Router[Config-entry and flow router]
-        Manager[Worker supervisor]
+        Manager[Worker manager]
         Bridge[Host bridge]
         State[Registries and storage]
         Proxies[Proxy entities]
@@ -34,12 +34,12 @@ flowchart LR
 Configure sandboxed integrations through `sandbox.integrations` in YAML. Selected built-in integrations share one worker process. Selected custom integrations share another. Each worker runs its own Home Assistant instance.
 
 1. Bootstrap installs the router before integration setup. The router sends selected domains to a worker. Other domains use normal local setup.
-2. The supervisor starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
+2. The worker manager starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
 3. The host sends a config-entry snapshot. The worker sets it up after startup. Entry and subentry IDs are preserved. Supported configuration changes flow in both directions. Conflicting edits require a reload.
 4. The worker sends entity descriptions and state updates. The host registers typed proxy entities. Entity actions become service calls or entity queries to the worker. The host retains canonical entity and device identities.
 5. Worker `Store` operations use a context variable to route persistence through the host. Storage is namespaced by group.
 
-On a worker crash, its proxies become unavailable. The supervisor has a bounded restart policy. Recovery removes the old platforms before reloading entries. Graceful shutdown unloads entries, flushes stores, and returns restore-state data. The host can terminate a worker that does not stop.
+On a worker crash, its proxies become unavailable. The worker manager has a bounded restart policy. Recovery removes the old platforms before reloading entries. Graceful shutdown unloads entries, flushes stores, and returns restore-state data. The host can terminate a worker that does not stop.
 
 ## Code map
 
@@ -47,7 +47,7 @@ Paths below are relative to this package.
 
 | Area | Start here |
 | --- | --- |
-| Host routing and process supervision | [router.py](../../homeassistant/components/sandbox/router.py), [manager.py](../../homeassistant/components/sandbox/manager.py) |
+| Host routing and worker management | [router.py](../../homeassistant/components/sandbox/router.py), [manager.py](../../homeassistant/components/sandbox/manager.py) |
 | Host ownership checks and entity registration | [bridge.py](../../homeassistant/components/sandbox/bridge.py) |
 | Typed entity proxies | [entity/](../../homeassistant/components/sandbox/entity/) |
 | Worker startup and shutdown | [runtime.py](homeassistant_sandbox/runtime.py) |
