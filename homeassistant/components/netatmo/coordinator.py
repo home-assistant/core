@@ -20,6 +20,7 @@ from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -60,6 +61,7 @@ from .device import (
     async_disabled_netatmo_ids,
     async_register_parent_devices,
     async_sync_home_disabled_state,
+    legacy_climate_issue_id,
     netatmo_module_parents,
 )
 
@@ -243,6 +245,15 @@ class NetatmoDataHandler:
         async_sync_home_disabled_state(
             self.hass, self.config_entry, self.home_device_ids
         )
+        for home_id, home_name in self.account.all_home_names.items():
+            if home_id in self.account.homes:
+                ir.async_delete_issue(
+                    self.hass, DOMAIN, legacy_climate_issue_id(home_id)
+                )
+            else:
+                _LOGGER.info(
+                    "Home %s is disabled; its devices are not set up", home_name
+                )
         self.config_entry.async_on_unload(
             async_track_device_registry_updated_event(
                 self.hass, self.home_device_ids, self._handle_home_device_update

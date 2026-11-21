@@ -63,6 +63,9 @@ from homeassistant.util import dt as dt_util
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
     HOME_ID,
+    LEGACY_CLIMATE_ISSUE_ID,
+    SCHEDULE_SELECT_UNIQUE_ID,
+    add_disabled_home_with_schedule_select,
     fake_post_request,
     selected_platforms,
     simulate_webhook,
@@ -2679,3 +2682,224 @@ async def test_queue_changes_while_a_fetch_is_awaited(
     assert sorted(publisher.name for publisher in data_handler._queue) == sorted(
         data_handler.publisher
     )
+
+
+async def test_migrate_legacy_climate_device_disable(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled pre-2026.9 Climate device only hides the schedule select."""
+    device, entity = add_disabled_home_with_schedule_select(
+        device_registry, entity_registry, config_entry, "Climate"
+    )
+
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+
+    home_device = device_registry.async_get(device.id)
+    assert home_device is not None
+    assert home_device.disabled_by is None
+    assert home_device.model == "Home"
+
+    select = entity_registry.async_get(entity.id)
+    assert select is not None
+    assert select.disabled_by is er.RegistryEntryDisabler.USER
+
+    assert HOME_ID in config_entry.runtime_data.account.homes
+    assert hass.states.get("climate.livingroom_livingroom") is not None
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID) is None
+
+
+async def test_migrate_disabled_home_raises_repair(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home that carries the schedule select raises a repair."""
+    # Already renamed by 2026.9, so it is indistinguishable from a deliberate disable
+    device, entity = add_disabled_home_with_schedule_select(
+        device_registry, entity_registry, config_entry, "Home"
+    )
+
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+
+    issue = issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID)
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.is_persistent
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.data == {"device_id": device.id, "entity_id": entity.id}
+    assert issue.translation_placeholders == {"home_name": "MYHOME"}
+
+    home_device = device_registry.async_get(device.id)
+    assert home_device is not None
+    assert home_device.disabled_by is dr.DeviceEntryDisabler.USER
+    assert HOME_ID not in config_entry.runtime_data.account.homes
+
+
+async def test_migrate_disabled_home_without_schedule_select(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test a disabled home without the schedule select raises no repair.
+
+    Such a home had no device before 2026.9, so it was disabled on purpose.
+    """
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        model="Home",
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    # Any other entity of the entry must not be mistaken for the schedule select
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{HOME_ID}-schedule",
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.DEVICE,
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID) is None
+    assert HOME_ID not in config_entry.runtime_data.account.homes
+
+
+async def test_migrate_leaves_enabled_home_alone(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test the migration does not hide the schedule select of an enabled home."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        model="Climate",
+    )
+    entity = entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        SCHEDULE_SELECT_UNIQUE_ID,
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+    select = entity_registry.async_get(entity.id)
+    assert select is not None
+    assert select.disabled_by is None
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID) is None
+    assert HOME_ID in config_entry.runtime_data.account.homes
+
+
+async def test_migration_runs_only_once(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test an entry that is already migrated keeps a disabled home disabled."""
+    hass.config_entries.async_update_entry(config_entry, minor_version=2)
+    device, _ = add_disabled_home_with_schedule_select(
+        device_registry, entity_registry, config_entry, "Climate"
+    )
+
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    home_device = device_registry.async_get(device.id)
+    assert home_device is not None
+    assert home_device.disabled_by is dr.DeviceEntryDisabler.USER
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID) is None
+    assert HOME_ID not in config_entry.runtime_data.account.homes
+
+
+async def test_disabled_home_is_logged(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a disabled home is logged, so that its missing devices are explained."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    with (
+        caplog.at_level(logging.INFO, logger="homeassistant.components.netatmo"),
+        selected_platforms([Platform.CLIMATE]),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert "Home MYHOME is disabled; its devices are not set up" in caplog.text
+
+
+async def test_enabling_home_deletes_legacy_climate_issue(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test enabling the home by hand settles its repair."""
+    device, _ = add_disabled_home_with_schedule_select(
+        device_registry, entity_registry, config_entry, "Home"
+    )
+
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID)
+
+        device_registry.async_update_device(device.id, disabled_by=None)
+        await hass.async_block_till_done()
+
+    assert HOME_ID in config_entry.runtime_data.account.homes
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_CLIMATE_ISSUE_ID) is None
