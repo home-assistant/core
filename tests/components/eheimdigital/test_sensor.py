@@ -92,6 +92,27 @@ async def test_setup(
                     100,
                     str(round(100 / 24, 2)),
                 ),
+                (
+                    "sensor.mock_aquarium_mock_filter_operating_time",
+                    "filter_data",
+                    "runTime",
+                    1441,
+                    24.02,
+                ),
+                (
+                    "sensor.mock_aquarium_mock_filter_operating_time",
+                    "filter_data",
+                    "runTime",
+                    0,
+                    "0.00",
+                ),
+                (
+                    "sensor.mock_aquarium_mock_filter_operating_time",
+                    "filter_data",
+                    "runTime",
+                    1,
+                    0.02,
+                ),
             ],
         ),
     ],
@@ -102,7 +123,7 @@ async def test_state_update(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
-    entity_list: list[tuple[str, str, str, float, float]],
+    entity_list: list[tuple[str, str, str, float, float | str]],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test the sensor state update."""
