@@ -349,6 +349,12 @@
             }
           }
         }
+      },
+      "modern_ceiling_fan_color": {
+        "name": "Color light"
+      },
+      "modern_ceiling_fan_white": {
+        "name": "White light"
       }
     },
     "lock": {
