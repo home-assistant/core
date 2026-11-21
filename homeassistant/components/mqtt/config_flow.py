@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
+import os
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast, override
@@ -157,8 +158,11 @@ from .const import (
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
     CONF_BROKER,
     CONF_CERTIFICATE,
+    CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
+    CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY,
+    CONF_CLIENT_KEY_FILE,
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_CODE_FORMAT,
@@ -3994,10 +3998,13 @@ OTHER_SETTINGS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
         probatio.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
         probatio.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_CERT_FILE): TEXT_SELECTOR,
         probatio.Optional(probatio.Secret(CONF_CLIENT_KEY)): CERT_KEY_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_KEY_FILE): TEXT_SELECTOR,
         probatio.Optional(probatio.Secret(CONF_CLIENT_KEY_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
         probatio.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CERTIFICATE_FILE): TEXT_SELECTOR,
         probatio.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
         probatio.Required(
             CONF_TRANSPORT, default=DEFAULT_TRANSPORT
@@ -4303,9 +4310,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             for key in OTHER_SETTINGS_SCHEMA.schema
             if key in data
         }
-        other_settings[SET_CLIENT_CERT] = (CONF_CLIENT_CERT in other_settings) and (
-            CONF_CLIENT_KEY in other_settings
-        )
+        other_settings[SET_CLIENT_CERT] = bool(
+            {CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE} & other_settings.keys()
+        ) and bool({CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE} & other_settings.keys())
         other_settings.pop(CONF_CLIENT_CERT, None)
         other_settings.pop(CONF_CLIENT_KEY, None)
         conf_cert = other_settings.pop(CONF_CERTIFICATE, None)
@@ -4313,7 +4320,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             "auto"
             if conf_cert == "auto"
             else "custom"
-            if conf_cert is not None
+            if conf_cert is not None or CONF_CERTIFICATE_FILE in other_settings
             else "off"
         )
         if CONF_WS_HEADERS in other_settings:
@@ -5236,6 +5243,27 @@ async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
+def _validate_certificate_settings(
+    other_settings: dict[str, Any], file_paths: dict[str, str]
+) -> str | None:
+    """Validate the uploaded certificates and certificate file paths."""
+    if any(
+        other_settings.get(upload) and file_path in file_paths
+        for upload, file_path in (
+            (CONF_CERTIFICATE, CONF_CERTIFICATE_FILE),
+            (CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE),
+            (CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE),
+        )
+    ):
+        return "upload_and_file_path"
+    # The client certificate and key must both be uploaded, or both be files
+    if bool(other_settings.get(CONF_CLIENT_CERT)) != bool(
+        other_settings.get(CONF_CLIENT_KEY)
+    ) or (CONF_CLIENT_CERT_FILE in file_paths) != (CONF_CLIENT_KEY_FILE in file_paths):
+        return "invalid_inclusion"
+    return None
+
+
 async def async_validate_broker_settings(
     flow: FlowHandler,
     entry_config: MappingProxyType[str, Any] | None,
@@ -5292,14 +5320,41 @@ async def async_validate_broker_settings(
         CONF_CLIENT_CERT,
         CONF_CLIENT_KEY,
         CONF_CLIENT_KEY_PASSWORD,
+        CONF_CERTIFICATE_FILE,
+        CONF_CLIENT_CERT_FILE,
+        CONF_CLIENT_KEY_FILE,
     ):
         entry_config_update.pop(key, None)
 
-    # Get current CA certificate settings from config entry
-    if (set_ca_cert := user_input[OTHER_SETTINGS][SET_CA_CERT]) == "auto":
+    other_settings: dict[str, Any] = user_input[OTHER_SETTINGS]
+    set_ca_cert = other_settings[SET_CA_CERT]
+    set_client_cert = other_settings[SET_CLIENT_CERT]
+    # The form is pre-filled with the file paths, so ignore them when disabled
+    file_paths: dict[str, str] = {
+        key: file_path
+        for key, enabled in (
+            (CONF_CERTIFICATE_FILE, set_ca_cert == "custom"),
+            (CONF_CLIENT_CERT_FILE, set_client_cert),
+            (CONF_CLIENT_KEY_FILE, set_client_cert),
+        )
+        if enabled and (file_path := other_settings.get(key))
+    }
+    if error := _validate_certificate_settings(other_settings, file_paths):
+        errors["base"] = error
+        return False
+
+    entry_config_update |= file_paths
+    certificate_file = file_paths.get(CONF_CERTIFICATE_FILE)
+    client_cert_file = file_paths.get(CONF_CLIENT_CERT_FILE)
+    client_key_file = file_paths.get(CONF_CLIENT_KEY_FILE)
+
+    # Get current CA certificate settings from config entry,
+    # a CA certificate file takes precedence
+    if set_ca_cert == "auto":
         entry_config_update[CONF_CERTIFICATE] = "auto"
     elif (
-        entry_config is not None
+        not certificate_file
+        and entry_config is not None
         and set_ca_cert == "custom"
         and (current_cert := entry_config.get(CONF_CERTIFICATE))
     ):
@@ -5307,19 +5362,10 @@ async def async_validate_broker_settings(
 
     # Prepare entry update with uploaded certificate files
     # converted to PEM format
-    new_client_certificate: str | None = user_input[OTHER_SETTINGS].get(
-        CONF_CLIENT_CERT
-    )
-    new_client_key: str | None = user_input[OTHER_SETTINGS].get(CONF_CLIENT_KEY)
-    set_client_cert = user_input[OTHER_SETTINGS][SET_CLIENT_CERT]
+    new_client_certificate: str | None = other_settings.get(CONF_CLIENT_CERT)
+    new_client_key: str | None = other_settings.get(CONF_CLIENT_KEY)
 
-    if (new_client_certificate and not new_client_key) or (
-        not new_client_certificate and new_client_key
-    ):
-        errors["base"] = "invalid_inclusion"
-        return False
-
-    if new_certificate := user_input[OTHER_SETTINGS].get(CONF_CERTIFICATE):
+    if new_certificate := other_settings.get(CONF_CERTIFICATE):
         if not await _async_process_file_upload(
             new_certificate, CONF_CERTIFICATE, PEMType.CERTIFICATE, "bad_certificate"
         ):
@@ -5334,7 +5380,8 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_cert_file
+        and entry_config is not None
         and set_client_cert
         and (client_cert := entry_config.get(CONF_CLIENT_CERT))
     ):
@@ -5350,7 +5397,8 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_key_file
+        and entry_config is not None
         and set_client_cert
         and (client_key := entry_config.get(CONF_CLIENT_KEY))
     ):
@@ -5360,7 +5408,7 @@ async def async_validate_broker_settings(
     # and we check the certificate chain.
     await async_create_certificate_temp_files(hass, entry_config_update)
     if error := await hass.async_add_executor_job(
-        check_certicate_chain,
+        check_certicate_chain, entry_config_update
     ):
         errors["base"] = error
         return False
@@ -5395,16 +5443,31 @@ async def async_validate_broker_settings(
     return False
 
 
-def check_certicate_chain() -> str | None:
+def check_certicate_chain(config: dict[str, Any]) -> str | None:
     """Check the MQTT certificates."""
-    if client_certificate := get_file_path(CONF_CLIENT_CERT):
+    client_certificate = config.get(CONF_CLIENT_CERT_FILE) or get_file_path(
+        CONF_CLIENT_CERT
+    )
+    private_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(CONF_CLIENT_KEY)
+    ca_cert = config.get(CONF_CERTIFICATE_FILE) or get_file_path(CONF_CERTIFICATE)
+    for file_path, error in (
+        (client_certificate, "cannot_read_client_cert_file"),
+        (private_key, "cannot_read_client_key_file"),
+        (ca_cert, "cannot_read_certificate_file"),
+    ):
+        if file_path and not (
+            os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+        ):
+            return error
+
+    if client_certificate:
         try:
             with open(client_certificate, "rb") as client_certificate_file:
                 load_pem_x509_certificate(client_certificate_file.read())
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
-    if private_key := get_file_path(CONF_CLIENT_KEY):
+    if private_key:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
@@ -5418,7 +5481,7 @@ def check_certicate_chain() -> str | None:
         except SSLError:
             return "bad_client_cert_key"
     # try to load the custom CA file
-    if (ca_cert := get_file_path(CONF_CERTIFICATE)) is None:
+    if ca_cert is None:
         return None
 
     try:
