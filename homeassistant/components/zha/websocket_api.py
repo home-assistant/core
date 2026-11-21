@@ -23,6 +23,7 @@ from zha.application.const import (
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import async_is_bindable_target, get_matched_clusters
+from zha.application.platforms import ZclPlatformEntity
 from zha.exceptions import ZHAException
 from zha.zigbee.device import ZigbeeDevice
 from zha.zigbee.group import GroupMemberReference
@@ -277,7 +278,10 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if entity_ref.entity_data.entity.endpoint.id == ep_id
+                    if isinstance(
+                        entity := entity_ref.entity_data.entity, ZclPlatformEntity
+                    )
+                    and entity.endpoint.id == ep_id
                 ],
                 "device": device.zha_device_info,
             }
