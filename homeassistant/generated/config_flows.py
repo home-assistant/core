@@ -151,6 +151,7 @@ FLOWS = {
         "collection_image",
         "color_extractor",
         "comelit",
+        "comfoconnect_modbus",
         "compit",
         "control4",
         "cookidoo",

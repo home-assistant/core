@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "aerosmart",
+    "comfoconnect_modbus",
     "denon_rs232",
     "dsmr",
     "edl21",

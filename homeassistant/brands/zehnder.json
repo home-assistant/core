@@ -1,0 +1,5 @@
+{
+  "domain": "zehnder",
+  "name": "Zehnder",
+  "integrations": ["comfoconnect", "comfoconnect_modbus"]
+}
