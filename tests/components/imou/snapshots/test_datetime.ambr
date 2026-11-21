@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_datetime_entities_snapshot[plug_mock_devices-platforms0][datetime.smart_plug_turn_off_at-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('imou', 'plug1')]>,
+    'disabled_by': None,
+    'domain': 'datetime',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'datetime.smart_plug_turn_off_at',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Turn off at',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Turn off at',
+    'platform': 'imou',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'count_down_switch',
+    'unique_id': 'plug1$count_down_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_datetime_entities_snapshot[plug_mock_devices-platforms0][datetime.smart_plug_turn_off_at-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart plug Turn off at',
+    }),
+    'context': <ANY>,
+    'entity_id': 'datetime.smart_plug_turn_off_at',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
