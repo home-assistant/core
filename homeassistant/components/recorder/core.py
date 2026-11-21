@@ -14,7 +14,15 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
+from sqlalchemy import (
+    Table,
+    bindparam,
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    select,
+    update,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -1277,13 +1285,21 @@ class Recorder(threading.Thread):
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
         ):
+            # A plain executemany: a state that has been deleted in the meantime
+            # has nothing left to update. An ORM bulk update by primary key would
+            # raise StaleDataError for it and fail the whole commit, and every
+            # commit after it, since the pending timestamps are only cleared on
+            # success.
+            states_table = cast(Table, States.__table__)
             with session.no_autoflush:
                 session.execute(
-                    update(States),
+                    update(states_table)
+                    .where(states_table.c.state_id == bindparam("b_state_id"))
+                    .values(last_reported_ts=bindparam("b_last_reported_ts")),
                     [
                         {
-                            "state_id": state_id,
-                            "last_reported_ts": last_reported_timestamp,
+                            "b_state_id": state_id,
+                            "b_last_reported_ts": last_reported_timestamp,
                         }
                         for state_id, last_reported_timestamp in (
                             pending_last_reported.items()
