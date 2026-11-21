@@ -398,6 +398,27 @@ def get_display_unit(
     return state_unit
 
 
+def _resolve_statistic_display_unit(
+    unit_class: str | None,
+    statistic_unit: str | None,
+    state_unit: str | None,
+    requested_units: dict[str, str] | None,
+) -> tuple[type[BaseUnitConverter], str | None] | None:
+    """Return the converter and valid target unit for statistics."""
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
+        return None
+
+    display_unit = (
+        requested_units.get(converter.UNIT_CLASS, state_unit)
+        if requested_units
+        else state_unit
+    )
+    if display_unit not in converter.VALID_UNITS:
+        # Guard against invalid state unit in the DB
+        return None
+    return converter, display_unit
+
+
 def _get_statistic_to_display_unit_converter(
     unit_class: str | None,
     statistic_unit: str | None,
@@ -405,20 +426,13 @@ def _get_statistic_to_display_unit_converter(
     requested_units: dict[str, str] | None,
 ) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
-    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
+    resolved = _resolve_statistic_display_unit(
+        unit_class, statistic_unit, state_unit, requested_units
+    )
+    if resolved is None:
         return None
 
-    display_unit: str | None
-    unit_class = converter.UNIT_CLASS
-    if requested_units and unit_class in requested_units:
-        display_unit = requested_units[unit_class]
-    else:
-        display_unit = state_unit
-
-    if display_unit not in converter.VALID_UNITS:
-        # Guard against invalid state unit in the DB
-        return None
-
+    converter, display_unit = resolved
     if display_unit == statistic_unit:
         return None
 
@@ -436,23 +450,17 @@ def _requires_pre_aggregation_unit_conversion(
 ) -> bool:
     """Return whether unit conversion excludes SQL aggregate reduction."""
     statistic_unit = metadata["unit_of_measurement"]
-    if (
-        converter := _get_unit_converter(metadata["unit_class"], statistic_unit)
-    ) is None:
-        return False
-
     state_unit = statistic_unit
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
-    display_unit = (
-        requested_units[converter.UNIT_CLASS]
-        if requested_units and converter.UNIT_CLASS in requested_units
-        else state_unit
+    resolved = _resolve_statistic_display_unit(
+        metadata["unit_class"], statistic_unit, state_unit, requested_units
     )
-
-    if display_unit not in converter.VALID_UNITS:
+    if resolved is None:
         return False
+
+    converter, display_unit = resolved
 
     if (
         display_unit != statistic_unit
@@ -2694,12 +2702,10 @@ def _statistics_during_period_with_session(
         types & {"mean", "min", "max"},
     )
 
-    supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
     period_query_candidate = (
         bool(types)
         and period_start_end is not None
         and end_time is not None
-        and types <= supported_types
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
     )
 
