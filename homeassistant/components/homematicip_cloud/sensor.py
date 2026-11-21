@@ -6,15 +6,22 @@ from datetime import UTC, datetime
 from typing import Any, override
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
-from homematicip.base.functionalChannels import FunctionalChannel
+from homematicip.base.functionalChannels import (
+    FloorTerminalBlockMechanicChannel,
+    FunctionalChannel,
+)
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
+    FloorTerminalBlock6,
+    FloorTerminalBlock10,
+    FloorTerminalBlock12,
     RotaryHandleSensor,
     SmokeDetector,
     SoilMoistureSensorInterface,
     TiltVibrationSensor,
     WateringActuator,
+    WiredFloorTerminalBlock12,
 )
 
 from homeassistant.components.sensor import (
@@ -615,7 +622,12 @@ async def async_setup_entry(
         if channel.functionalChannelType in FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS
         and getattr(channel, "valvePosition", None) is not None
     )
-
+    floor_terminal_blocks = (
+        FloorTerminalBlock6,
+        FloorTerminalBlock10,
+        FloorTerminalBlock12,
+        WiredFloorTerminalBlock12,
+    )
     entities.extend(
         HomematicipFloorTerminalBlockMechanicChannelValveState(
             hap, device, channel=channel.index
