@@ -36,6 +36,30 @@ async def test_recorder_system_health(
     }
 
 
+@pytest.mark.parametrize("ready_result", [None, False], ids=["pending", "gave_up"])
+@pytest.mark.usefixtures("recorder_mock")
+async def test_recorder_system_health_database_not_ready(
+    hass: HomeAssistant, ready_result: bool | None
+) -> None:
+    """Test system health does not raise while the database is not ready.
+
+    Pending is the state while setup was released early and the database is
+    still being retried, gave_up the state after the retrying expired.
+    """
+    assert await async_setup_component(hass, "system_health", {})
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    instance.async_db_ready = hass.loop.create_future()
+    if ready_result is not None:
+        instance.async_db_ready.set_result(ready_result)
+
+    info = await get_system_health_info(hass, "recorder")
+
+    assert "current_recorder_run" not in info
+    assert "estimated_db_size" not in info
+    assert "database_engine" in info
+
+
 @pytest.mark.parametrize(
     "db_engine", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
 )

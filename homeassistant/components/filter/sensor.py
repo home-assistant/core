@@ -352,7 +352,11 @@ class SensorFilter(SensorEntity):
         """Register callbacks."""
         last_replayed: datetime | None = None
 
-        if "recorder" in self.hass.config.components:
+        # Skip history while the database is not ready, no waiting
+        if (
+            "recorder" in self.hass.config.components
+            and get_instance(self.hass).database_ready
+        ):
             history_list = []
             largest_window_items = 0
             largest_window_time = timedelta(0)

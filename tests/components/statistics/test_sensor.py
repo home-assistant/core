@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import statistics
 from threading import Event as ThreadingEvent
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -2545,3 +2545,50 @@ async def test_initialize_from_database_equal_timestamps(
     assert state is not None
     assert state.state == expected
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+
+
+async def test_database_not_ready_skips_history(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """The sensor sets up without history while the database is not ready.
+
+    The source's current state still seeds it, so it is not left unavailable
+    until the source changes again.
+    """
+    hass.states.async_set(
+        "sensor.test_monitored",
+        "10",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.database_ready",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.statistics.sensor.StatisticsSensor"
+            "._fetch_states_from_database"
+        ) as fetch,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "sampling_size": 5,
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    fetch.assert_not_called()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "10.0"

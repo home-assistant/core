@@ -202,8 +202,11 @@ class Plant(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """After being added to hass, load from history."""
-        if "recorder" in self.hass.config.components:
-            # only use the database if it's configured
+        if (
+            "recorder" in self.hass.config.components
+            and get_instance(self.hass).database_ready
+        ):
+            # only use the database if it's configured and ready
             await get_instance(self.hass).async_add_executor_job(
                 self._load_history_from_db
             )

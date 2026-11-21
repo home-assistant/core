@@ -1,6 +1,7 @@
 """Unit tests for platform/plant.py."""
 
 from datetime import datetime, timedelta
+from unittest.mock import PropertyMock, patch
 
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
@@ -265,3 +266,26 @@ def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     for i, value in enumerate(days):
         dh.add_measurement(values[i], value)
         assert max_values[i] == dh.max
+
+
+async def test_database_not_ready_skips_history(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """The plant sets up without history while the database is not ready."""
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.database_ready",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.plant.entity.Plant._load_history_from_db"
+        ) as load,
+    ):
+        assert await async_setup_component(
+            hass, plant.DOMAIN, {plant.DOMAIN: {"wise_plant": GOOD_CONFIG}}
+        )
+        await hass.async_block_till_done()
+
+    load.assert_not_called()
+    assert hass.states.get("plant.wise_plant") is not None

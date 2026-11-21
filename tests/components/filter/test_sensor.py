@@ -1,7 +1,7 @@
 """The test for the data filter sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -819,3 +819,32 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.filtered_realistic_humidity")
+
+
+async def test_database_not_ready_skips_history(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """The sensor sets up without history while the database is not ready."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [{"filter": "time_throttle", "window_size": "00:01"}],
+        },
+    }
+    with (
+        patch(
+            "homeassistant.components.recorder.core.Recorder.database_ready",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period"
+        ) as history_query,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    history_query.assert_not_called()
+    assert hass.states.get("sensor.test") is not None
