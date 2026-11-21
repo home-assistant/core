@@ -51,7 +51,7 @@ async def test_timer_finished_without_satellite(
 
     with (
         patch.object(voip_device, "protocol", None),
-        patch.object(VoipAssistSatellite, "async_handle_timer_event") as mock_handle,
+        patch.object(VoipAssistSatellite, "async_announce_timer") as mock_handle,
     ):
         await timer_list.async_finish_timer(timer_id)
         await hass.async_block_till_done()

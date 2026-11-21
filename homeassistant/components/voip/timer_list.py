@@ -2,7 +2,11 @@
 
 from typing import override
 
-from homeassistant.components.timer_list import InMemoryTimerListEntity, TimerListEvent
+from homeassistant.components.timer_list import (
+    InMemoryTimerListEntity,
+    TimerListEvent,
+    TimerListEventType,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,12 +49,14 @@ class VoIPTimerList(VoIPEntity, InMemoryTimerListEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Forward timer events to the device's satellite."""
+        """Subscribe to timer completion events."""
         await super().async_added_to_hass()
         self.async_on_remove(self.async_subscribe_updates(self._async_forward_event))
 
     @callback
     def _async_forward_event(self, event: TimerListEvent) -> None:
-        """Forward a timer event to the satellite, if there is one."""
+        """Announce finished timers on the satellite, if there is one."""
+        if event.event_type != TimerListEventType.FINISHED:
+            return
         if isinstance(satellite := self.voip_device.protocol, VoipAssistSatellite):
-            satellite.async_handle_timer_event(event)
+            satellite.async_announce_timer(event.item)

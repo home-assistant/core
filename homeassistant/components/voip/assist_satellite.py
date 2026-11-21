@@ -25,7 +25,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityFeature,
 )
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.timer_list import TimerListEvent, TimerListEventType
+from homeassistant.components.timer_list import TimerItem
 from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -189,12 +189,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         raise NotImplementedError
 
     @callback
-    def async_handle_timer_event(self, event: TimerListEvent) -> None:
-        """Handle an event of the device's timer list."""
-        if event.event_type != TimerListEventType.FINISHED:
-            return
-
-        timer = event.item
+    def async_announce_timer(self, timer: TimerItem) -> None:
+        """Announce a finished timer."""
         if timer.name:
             message = f"{timer.name} finished"
         else:
