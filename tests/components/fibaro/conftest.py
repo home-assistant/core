@@ -433,7 +433,7 @@ def mock_fan_device() -> Mock:
 
 @pytest.fixture
 def mock_hvac_system() -> Mock:
-    """Fixture for an HC3 fan coil thermostat with a cooling setpoint."""
+    """Fixture for an HC3 fan coil thermostat with fan modes and cooling."""
     climate = Mock()
     climate.fibaro_id = 8
     climate.endpoint_id = 1
@@ -449,11 +449,14 @@ def mock_hvac_system() -> Mock:
         "manufacturer": "",
         "coolingThermostatSetpoint": 25,
         "coolingThermostatSetpointFuture": 24,
+        "supportedThermostatFanModes": ["Low", "High", "Medium", "Auto Low"],
+        "thermostatFanMode": "Low",
     }
     climate.actions = {
         "setThermostatMode": 1,
         "setHeatingThermostatSetpoint": 1,
         "setCoolingThermostatSetpoint": 1,
+        "setThermostatFanMode": 1,
     }
     climate.supported_features = {}
     climate.has_supported_thermostat_modes = True
@@ -472,6 +475,8 @@ def mock_hvac_system() -> Mock:
     climate.cooling_thermostat_setpoint = 25.0
     climate.has_cooling_thermostat_setpoint_future = True
     climate.cooling_thermostat_setpoint_future = 24.0
+    climate.thermostat_fan_mode = "Low"
+    climate.supported_thermostat_fan_modes = ["Low", "High", "Medium", "Auto Low"]
     value_mock = Mock()
     value_mock.has_value = False
     climate.value = value_mock
