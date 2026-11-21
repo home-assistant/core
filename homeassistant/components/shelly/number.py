@@ -31,7 +31,6 @@ from .const import (
     MODEL_FRANKEVER_WATER_VALVE,
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
-    MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
     TRV_CHANNEL,
     VIRTUAL_NUMBER_MODE_MAP,
@@ -324,7 +323,6 @@ RPC_NUMBERS: Final = (
         unit=get_virtual_component_unit,
         method="number_set",
         role="current_limit",
-        models={MODEL_TOP_EV_CHARGER_EVE01},
     ),
     RpcNumberDescription(
         key="number_position",
