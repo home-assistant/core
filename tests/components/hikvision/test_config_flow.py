@@ -7,17 +7,19 @@ from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .conftest import (
     TEST_DEVICE_ID,
     TEST_DEVICE_NAME,
@@ -58,11 +60,12 @@ async def test_form(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
     }
 
-    # Verify HikCamera was called with the ssl parameter
+    # Certificate verification defaults to on; it is unused over plain HTTP
     mock_hikcamera.assert_called_once_with(
-        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
 
 
@@ -245,9 +248,411 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == TEST_DEVICE_ID
 
-    # Verify HikCamera was called with ssl=True
+    # Verify HikCamera was called over HTTPS, verifying the certificate
     mock_hikcamera.assert_called_once_with(
         f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_with_ssl_without_verification(
+    hass: HomeAssistant, mock_hikcamera: MagicMock
+) -> None:
+    """Test user flow can use HTTPS without verifying the certificate."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is False
+    assert result["result"].unique_id == TEST_DEVICE_ID
+
+    mock_hikcamera.assert_called_once_with(
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_invalid_auth(
+    hass: HomeAssistant, mock_hikcamera: MagicMock
+) -> None:
+    """Test a rejected password is reported as such, and the user can recover."""
+    mock_hikcamera.return_value.get_id = None
+    mock_hikcamera.return_value.auth_failed = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    user_input = {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_SSL: False,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.auth_failed = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_DEVICE_ID
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the stored credentials can be replaced."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"name": mock_config_entry.title}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new-user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    # The rest of the entry is unchanged.
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+    assert mock_config_entry.data[CONF_PORT] == TEST_PORT
+    # The new credentials are what the device was asked to accept.
+    assert mock_hikcamera.call_args.args[2:4] == ("new-user", "new-password")
+
+
+async def test_reauth_flow_keeps_the_certificate_setting(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication connects the way the entry was set up."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SSL: True, CONF_VERIFY_SSL: False},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_hikcamera.assert_called_with(
+        f"https://{TEST_HOST}", TEST_PORT, "new-user", "new-password", False
+    )
+
+
+@pytest.mark.parametrize(
+    ("get_id", "auth_failed", "side_effect", "error"),
+    [
+        (None, True, None, "invalid_auth"),
+        (None, False, None, "cannot_connect"),
+        (TEST_DEVICE_ID, False, requests.exceptions.ConnectionError, "cannot_connect"),
+        (TEST_DEVICE_ID, False, RuntimeError, "unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    get_id: str | None,
+    auth_failed: bool,
+    side_effect: type[Exception] | None,
+    error: str,
+) -> None:
+    """Test reauthentication reports why the credentials were not accepted."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    user_input = {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "wrong"}
+
+    mock_hikcamera.return_value.get_id = get_id
+    mock_hikcamera.return_value.auth_failed = auth_failed
+    mock_hikcamera.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    # Recover from the error
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.auth_failed = False
+    mock_hikcamera.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "right"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "right"
+
+
+async def test_reauth_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the credentials cannot be used to switch to another device."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_hikcamera.return_value.get_id = "another-device"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test where and how the device is reached can be changed."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["description_placeholders"] == {"name": mock_config_entry.title}
+    # The form starts from what the entry has now
+    assert {
+        str(key): (key.description or {}).get("suggested_value")
+        for key in result["data_schema"].schema
+    } == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: TEST_USERNAME,
+        # The password is never shown
+        CONF_PASSWORD: None,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: TEST_USERNAME,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.1.200",
+        CONF_PORT: 443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+        CONF_USERNAME: TEST_USERNAME,
+        # Left empty, the password is kept
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+    # The device was reached the new way, with the stored credentials, and the
+    # entry was loaded again with the new settings.
+    mock_hikcamera.assert_called_with(
+        "https://192.168.1.200", 443, TEST_USERNAME, TEST_PASSWORD, False
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_flow_changes_the_credentials(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the username and the password can be changed, and are checked."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "viewer",
+            CONF_PASSWORD: "new-secret",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "viewer"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-secret"
+    mock_hikcamera.assert_called_with(
+        f"http://{TEST_HOST}", TEST_PORT, "viewer", "new-secret", True
+    )
+
+
+async def test_reconfigure_flow_of_an_entry_from_before_verify_ssl(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry without the option is shown, and kept, as verifying."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != CONF_VERIFY_SSL
+        },
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert {
+        str(key): (key.description or {}).get("suggested_value")
+        for key in result["data_schema"].schema
+    }[CONF_VERIFY_SSL] is True
+
+    # Only the address changes, the form sends the option as it was shown.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: TEST_PORT,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: TEST_USERNAME,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data[CONF_VERIFY_SSL] is True
+
+
+@pytest.mark.parametrize(
+    ("get_id", "auth_failed", "side_effect", "error"),
+    [
+        (None, True, None, "invalid_auth"),
+        (None, False, None, "cannot_connect"),
+        (TEST_DEVICE_ID, False, requests.exceptions.ConnectionError, "cannot_connect"),
+        (TEST_DEVICE_ID, False, RuntimeError, "unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    get_id: str | None,
+    auth_failed: bool,
+    side_effect: type[Exception] | None,
+    error: str,
+) -> None:
+    """Test reconfiguring reports why the device could not be reached."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    user_input = {
+        CONF_HOST: "192.168.1.200",
+        CONF_PORT: TEST_PORT,
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: TEST_USERNAME,
+    }
+
+    mock_hikcamera.return_value.get_id = get_id
+    mock_hikcamera.return_value.auth_failed = auth_failed
+    mock_hikcamera.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+
+    # Recover from the error
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.auth_failed = False
+    mock_hikcamera.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
+async def test_reconfigure_flow_different_device(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry cannot be moved to another device."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_hikcamera.return_value.get_id = "another-device"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: TEST_PORT,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: TEST_USERNAME,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
