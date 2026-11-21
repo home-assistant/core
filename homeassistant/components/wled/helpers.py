@@ -51,3 +51,19 @@ def kelvin_to_255(k: int, min_k: int, max_k: int) -> int:
 def kelvin_to_255_reverse(v: int, min_k: int, max_k: int) -> int:
     """Map color temperature from 0-255 to minK-maxK K."""
     return int(v / 255 * (max_k - min_k) + min_k)
+
+
+def kelvin_to_cct(kelvin: int, warm_kelvin: int, cold_kelvin: int) -> int:
+    """Map a color temperature to WLED's 0 (warm) to 255 (cold) white mix.
+
+    Two white LEDs mix linearly in mireds, not in kelvin.
+    """
+    warm, cold = 1_000_000 / warm_kelvin, 1_000_000 / cold_kelvin
+    position = (1_000_000 / kelvin - warm) / (cold - warm)
+    return round(min(max(position, 0), 1) * 255)
+
+
+def cct_to_kelvin(cct: int, warm_kelvin: int, cold_kelvin: int) -> int:
+    """Map WLED's 0 (warm) to 255 (cold) white mix to a color temperature."""
+    warm, cold = 1_000_000 / warm_kelvin, 1_000_000 / cold_kelvin
+    return round(1_000_000 / (warm + cct / 255 * (cold - warm)))
