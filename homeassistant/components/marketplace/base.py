@@ -973,6 +973,7 @@ class MarketplaceManager:
         self.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
 
         await self.async_handle_critical_repositories()
+        await self.data.async_recover_installed_integrations()
         await self.async_process_queue()
 
         self.async_dispatch(MarketplaceSignal.STATUS, {})
