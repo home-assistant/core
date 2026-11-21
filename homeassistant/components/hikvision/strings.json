@@ -1,27 +1,44 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_restart_required": "The new credentials are saved. Restart Home Assistant to use them: the integration could not be unloaded, so it cannot be reloaded until then.",
+      "wrong_device": "The credentials belong to a different device than the one being reauthenticated."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The new password for your Hikvision device",
+          "username": "The username for your Hikvision device"
+        },
+        "description": "The credentials for {name} are no longer accepted. Enter the current username and password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Use SSL",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hikvision device",
           "password": "The password for your Hikvision device",
           "port": "The port number for the device (default is 80)",
           "ssl": "Enable if your device uses HTTPS",
-          "username": "The username for your Hikvision device"
+          "username": "The username for your Hikvision device",
+          "verify_ssl": "Disable if your device uses a self-signed certificate, which is what Hikvision devices ship with. Only applies when SSL is used"
         },
         "description": "Enter your Hikvision device connection details.",
         "title": "Set up Hikvision device"
@@ -140,6 +157,419 @@
           }
         }
       }
+    },
+    "number": {
+      "auto_iris_level": {
+        "name": "Auto iris level"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "defog_level": {
+        "name": "Defog level"
+      },
+      "event_intelligence_ir_light_brightness": {
+        "name": "Event intelligence IR light brightness"
+      },
+      "event_intelligence_white_light_brightness": {
+        "name": "Event intelligence white light brightness"
+      },
+      "gain": {
+        "name": "Gain"
+      },
+      "gain_limit": {
+        "name": "Gain limit"
+      },
+      "highlight_compensation_level": {
+        "name": "Highlight compensation level"
+      },
+      "ir_brightness_limit": {
+        "name": "IR brightness limit"
+      },
+      "ir_high_brightness": {
+        "name": "IR high brightness"
+      },
+      "ir_light_brightness": {
+        "name": "IR light brightness"
+      },
+      "ir_light_brightness_limit": {
+        "name": "IR light brightness limit"
+      },
+      "ir_low_brightness": {
+        "name": "IR low brightness"
+      },
+      "lens_distortion_correction_level": {
+        "name": "Lens distortion correction level"
+      },
+      "light_brightness": {
+        "name": "Light brightness"
+      },
+      "max_iris_level": {
+        "name": "Maximum iris level"
+      },
+      "min_iris_level": {
+        "name": "Minimum iris level"
+      },
+      "night_to_day_delay": {
+        "name": "Night-to-day delay"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction_level": {
+        "name": "Noise reduction level"
+      },
+      "p_iris_level": {
+        "name": "P-Iris level"
+      },
+      "saturation": {
+        "name": "Saturation"
+      },
+      "sharpness": {
+        "name": "Sharpness"
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_noise_reduction_level": {
+        "name": "Smart noise reduction level"
+      },
+      "smart_supplement_light_distance": {
+        "name": "Smart supplement light distance"
+      },
+      "smart_supplement_light_high_light_distance": {
+        "name": "Smart supplement light high-light distance"
+      },
+      "smart_supplement_light_low_light_distance": {
+        "name": "Smart supplement light low-light distance"
+      },
+      "spatial_noise_reduction_level": {
+        "name": "Spatial noise reduction level"
+      },
+      "temporal_noise_reduction_level": {
+        "name": "Temporal noise reduction level"
+      },
+      "wdr_level": {
+        "name": "WDR level"
+      },
+      "white_balance_blue": {
+        "name": "White balance blue"
+      },
+      "white_balance_red": {
+        "name": "White balance red"
+      },
+      "white_light_brightness_limit": {
+        "name": "White light brightness limit"
+      }
+    },
+    "select": {
+      "backlight_compensation": {
+        "name": "Backlight compensation",
+        "state": {
+          "false": "Off",
+          "ture": "On"
+        }
+      },
+      "backlight_compensation_mode": {
+        "name": "Backlight compensation mode",
+        "state": {
+          "auto": "Auto",
+          "center": "Center",
+          "close": "Off",
+          "down": "Down",
+          "left": "Left",
+          "region": "Region",
+          "right": "Right",
+          "up": "Up"
+        }
+      },
+      "capture_mode": {
+        "name": "Capture mode",
+        "state": {
+          "1920_1080_30fps": "1920×1080 @ 30 fps",
+          "close": "Off"
+        }
+      },
+      "color_mode": {
+        "name": "Color mode",
+        "state": {
+          "auto": "Auto",
+          "black_white": "Black and white",
+          "color": "Color",
+          "indoor": "Indoor",
+          "outdoor": "Outdoor"
+        }
+      },
+      "day_night_mode": {
+        "name": "Day/night mode",
+        "state": {
+          "auto": "Auto",
+          "day": "Day",
+          "eventtrigger": "Event trigger",
+          "night": "Night",
+          "schedule": "Schedule"
+        }
+      },
+      "day_night_schedule_type": {
+        "name": "Day/night schedule type",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      },
+      "defog": {
+        "name": "Defog",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "manual": "Manual",
+          "open": "On"
+        }
+      },
+      "digital_slow_shutter_level": {
+        "name": "Digital slow shutter level",
+        "state": {
+          "1_25": "×1.25",
+          "1_5": "×1.5",
+          "2": "×2",
+          "3": "×3",
+          "4": "×4",
+          "6": "×6",
+          "8": "×8",
+          "auto": "Auto"
+        }
+      },
+      "event_intelligence_brightness_mode": {
+        "name": "Event intelligence brightness mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "exposure_mode": {
+        "name": "Exposure mode",
+        "state": {
+          "auto": "Auto",
+          "irisfirst": "Iris priority",
+          "manual": "Manual",
+          "piris_general": "P-Iris",
+          "shutterfirst": "Shutter priority"
+        }
+      },
+      "flip_direction": {
+        "name": "Flip direction",
+        "state": {
+          "center": "Center",
+          "leftright": "Left-right",
+          "updown": "Up-down"
+        }
+      },
+      "focus_distance_mode": {
+        "name": "Focus distance mode",
+        "state": {
+          "compatible": "Compatible",
+          "manual": "Manual"
+        }
+      },
+      "focus_limit_mode": {
+        "name": "Focus limit mode"
+      },
+      "focus_mode": {
+        "name": "Focus mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "semiautomatic": "Semi-automatic"
+        }
+      },
+      "highlight_compensation_mode": {
+        "name": "Highlight compensation mode",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "open": "On"
+        }
+      },
+      "ir_light_mode": {
+        "name": "IR light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "iris_level": {
+        "name": "Iris level"
+      },
+      "light_brightness_mode": {
+        "name": "Light brightness mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "max_shutter_speed": {
+        "name": "Maximum shutter speed"
+      },
+      "min_shutter_speed": {
+        "name": "Minimum shutter speed"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction": {
+        "name": "Noise reduction",
+        "state": {
+          "advanced": "Advanced",
+          "close": "Off",
+          "general": "Normal"
+        }
+      },
+      "p_iris_mode": {
+        "name": "P-Iris mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "power_line_frequency": {
+        "name": "Power line frequency",
+        "state": {
+          "50hz": "50 Hz",
+          "60hz": "60 Hz"
+        }
+      },
+      "scene_mode": {
+        "name": "Scene mode",
+        "state": {
+          "indoor": "Indoor",
+          "outdoor": "Outdoor"
+        }
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_supplement_light_mode": {
+        "name": "Smart supplement light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "supplement_light": {
+        "name": "Supplement light",
+        "state": {
+          "close": "Off",
+          "colorvuwhitelight": "White light",
+          "eventintelligence": "Event intelligence",
+          "irlight": "IR"
+        }
+      },
+      "supplement_light_mode": {
+        "name": "Supplement light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "open": "On"
+        }
+      },
+      "white_balance": {
+        "name": "White balance",
+        "state": {
+          "auto": "Auto",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "autotrace": "Auto trace",
+          "daylightlamp": "Fluorescent",
+          "incandescentlight": "Incandescent",
+          "indoor": "Indoor",
+          "locked": "Locked",
+          "manual": "Manual",
+          "naturallight": "Natural light",
+          "outdoor": "Outdoor",
+          "sodiumlight": "Sodium lamp",
+          "warmlight": "Warm light"
+        }
+      },
+      "zoom_limit_ratio": {
+        "name": "Zoom limit ratio"
+      }
+    },
+    "switch": {
+      "backlight_compensation": {
+        "name": "Backlight compensation"
+      },
+      "digital_slow_shutter": {
+        "name": "Digital slow shutter"
+      },
+      "highlight_compensation": {
+        "name": "Highlight compensation"
+      },
+      "image_flip": {
+        "name": "Image flip"
+      },
+      "image_freeze": {
+        "name": "Image freeze"
+      },
+      "image_loss_detection": {
+        "name": "Image loss detection"
+      },
+      "image_stabilization": {
+        "name": "Image stabilization"
+      },
+      "lens_distortion_correction": {
+        "name": "Lens distortion correction"
+      },
+      "lens_initialization": {
+        "name": "Lens initialization"
+      },
+      "proportional_pan": {
+        "name": "Proportional pan"
+      },
+      "smart_supplement_light": {
+        "name": "Smart supplement light"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "image_setting_conflict_hlc": {
+      "message": "This setting cannot be turned on while highlight compensation is on. Turn highlight compensation off first."
+    },
+    "image_setting_conflict_wdr": {
+      "message": "Highlight compensation cannot be turned on while wide dynamic range or defog is on. Turn those off first."
+    },
+    "image_setting_error": {
+      "message": "The device did not accept the image setting."
+    },
+    "image_setting_not_allowed": {
+      "message": "This user is not allowed to change the image settings of the device."
+    },
+    "image_setting_not_whole": {
+      "message": "This setting only takes whole numbers."
+    },
+    "image_setting_refused": {
+      "message": "The device did not accept the image setting ({code})."
+    },
+    "image_settings_closed": {
+      "message": "The image settings of this camera are being reloaded or removed."
+    },
+    "image_settings_update_failed": {
+      "message": "Unable to read the image settings."
+    },
+    "invalid_auth": {
+      "message": "The device rejected the username or password."
     }
   }
 }

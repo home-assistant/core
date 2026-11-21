@@ -5,10 +5,12 @@ from typing import override
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
+from .coordinator import HikvisionImageCoordinator
 
 
 class HikvisionEntity(Entity):
@@ -83,3 +85,39 @@ class HikvisionEntity(Entity):
         schedule_update_ha_state which is thread-safe.
         """
         self.schedule_update_ha_state()
+
+
+class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
+    """Base class for the image setting entities of a camera."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HikvisionImageCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        path: str,
+    ) -> None:
+        """Initialize the entity.
+
+        The path is the camera's own spelling of the setting, used for requests.
+        """
+        super().__init__(coordinator)
+        data = entry.runtime_data
+        self.entity_description = description
+        self._path = path
+        # From the key of the description, not from the path: the firmware can spell
+        # or shape a path differently, and the entity must stay the same.
+        self._attr_unique_id = f"{data.device_id}_image_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.device_id)},
+            name=data.device_name,
+            manufacturer="Hikvision",
+            model=data.device_type,
+        )
+
+    @property
+    def _value(self) -> str | None:
+        """Return the current raw value of the setting."""
+        return self.coordinator.data.get(self._path)
