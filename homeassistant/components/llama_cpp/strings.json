@@ -43,6 +43,35 @@
     }
   },
   "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::llama_cpp::config_subentries::conversation::abort::entry_not_loaded%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data::max_tokens%]",
+            "recommended": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data::recommended%]",
+            "temperature": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data::temperature%]",
+            "top_p": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data::top_p%]"
+          },
+          "data_description": {
+            "chat_model": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data_description::chat_model%]",
+            "max_tokens": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data_description::max_tokens%]",
+            "recommended": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data_description::recommended%]",
+            "temperature": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data_description::temperature%]",
+            "top_p": "[%key:component::llama_cpp::config_subentries::conversation::step::init::data_description::top_p%]"
+          }
+        }
+      }
+    },
     "conversation": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -97,11 +126,17 @@
     "quota_exceeded": {
       "message": "Your account or API key has insufficient credits: {message}."
     },
+    "response_not_found": {
+      "message": "No response was returned by the model."
+    },
+    "structured_response_error": {
+      "message": "The model did not return valid JSON for the requested structure."
+    },
     "timeout": {
       "message": "Connection timed out: {message}."
     },
     "unsupported_file_type": {
-      "message": "Only images and PDF are supported by the OpenAI API, {file_path} is not an image file or PDF."
+      "message": "Only image attachments are supported by the OpenAI API, {file_path} is not an image."
     }
   }
 }
