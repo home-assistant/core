@@ -30,6 +30,12 @@ snapshot:
       example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
       selector:
         text:
+    timestamp:
+      filter:
+        supported_features:
+          - camera.CameraEntityFeature.PAST_IMAGE
+      selector:
+        datetime:
 
 play_stream:
   target:
