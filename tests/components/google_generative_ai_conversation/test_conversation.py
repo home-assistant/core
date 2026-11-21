@@ -270,7 +270,7 @@ async def test_function_call(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
-        == "I've called the test function with the provided parameters."
+        == "Hi there!\n\nI've called the test function with the provided parameters."
     )
     mock_tool_response_parts = mock_send_message_stream.mock_calls[1][2]["message"]
     assert len(mock_tool_response_parts) == 1
