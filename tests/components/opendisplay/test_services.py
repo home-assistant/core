@@ -12,6 +12,7 @@ from opendisplay import (
     AuthenticationRequiredError,
     BLEConnectionError,
     DitherMode,
+    Sec2KeyRequiredError,
 )
 from PIL import Image as PILImage
 import probatio
@@ -39,7 +40,7 @@ async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
 
 @pytest.fixture
 def mock_upload_device(mock_opendisplay_device: MagicMock) -> MagicMock:
-    """Return the mock OpenDisplayDevice for upload service tests."""
+    """Return the mock device for upload service tests."""
     return mock_opendisplay_device
 
 
@@ -88,8 +89,8 @@ async def test_upload_image_local_file(
         blocking=True,
     )
 
-    mock_upload_device.upload_image.assert_called_once()
-    assert mock_upload_device.upload_image.call_args.kwargs["tone"] == 0.5
+    mock_upload_device.legacy.upload_image.assert_called_once()
+    assert mock_upload_device.legacy.upload_image.call_args.kwargs["tone"] == 0.5
 
 
 async def test_upload_image_remote_url(
@@ -127,8 +128,8 @@ async def test_upload_image_remote_url(
             blocking=True,
         )
 
-    mock_upload_device.upload_image.assert_called_once()
-    assert mock_upload_device.upload_image.call_args.kwargs["tone"] == 0.0
+    mock_upload_device.legacy.upload_image.assert_called_once()
+    assert mock_upload_device.legacy.upload_image.call_args.kwargs["tone"] == 0.0
 
 
 @pytest.mark.parametrize(
@@ -174,7 +175,7 @@ async def test_upload_image_from_entity(
 
     mock_get_image.assert_awaited_once_with(hass, media_content_id)
     mock_resolve.assert_not_called()
-    mock_upload_device.upload_image.assert_called_once()
+    mock_upload_device.legacy.upload_image.assert_called_once()
 
 
 async def test_upload_image_invalid_device_id(
@@ -331,7 +332,10 @@ async def test_upload_image_dither_modes(
         blocking=True,
     )
 
-    assert mock_upload_device.upload_image.call_args.kwargs["dither_mode"] is expected
+    assert (
+        mock_upload_device.legacy.upload_image.call_args.kwargs["dither_mode"]
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -394,10 +398,10 @@ async def test_upload_image_cancels_previous_task(
 async def test_upload_image_with_encryption_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_opendisplay_device_class: MagicMock,
+    mock_connect: MagicMock,
     mock_resolve_media: MagicMock,
 ) -> None:
-    """Test that upload_image passes the encryption key to OpenDisplayDevice."""
+    """Test that upload_image passes the encryption key to connect."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
@@ -418,9 +422,9 @@ async def test_upload_image_with_encryption_key(
         blocking=True,
     )
 
-    assert mock_opendisplay_device_class.call_args.kwargs[
-        "encryption_key"
-    ] == bytes.fromhex(ENCRYPTION_KEY)
+    assert mock_connect.call_args.kwargs["encryption_key"] == bytes.fromhex(
+        ENCRYPTION_KEY
+    )
 
 
 @pytest.mark.parametrize(
@@ -428,6 +432,7 @@ async def test_upload_image_with_encryption_key(
     [
         AuthenticationFailedError("wrong key"),
         AuthenticationRequiredError("auth required"),
+        Sec2KeyRequiredError(1),
     ],
 )
 async def test_upload_image_auth_error(

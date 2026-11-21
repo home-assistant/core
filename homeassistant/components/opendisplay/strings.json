@@ -73,6 +73,9 @@
     "authentication_error": {
       "message": "Authentication failed. Please update the encryption key."
     },
+    "device_not_configured": {
+      "message": "The OpenDisplay device has no stored configuration. Configure it with the OpenDisplay website or CLI, then reload the integration."
+    },
     "device_not_found": {
       "message": "Could not find Bluetooth device with address `{address}`. Reason: {reason}"
     },
