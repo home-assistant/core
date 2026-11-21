@@ -1441,6 +1441,10 @@
       },
       "title": "Pair the virtual key for {vehicle}"
     },
+    "streaming_allowance": {
+      "description": "Teslemetry refused the streaming configuration for {vehicle} because it is over the streaming allowance of the vehicle's plan. The streaming values in that configuration will not update.\n\nDo at least one of the following, then reload the Teslemetry integration:\n\n- Disable the {vehicle} entities you do not need, so that Home Assistant stops requesting their fields.\n- On the **Fields** page for {vehicle} in the Teslemetry Console, remove fields or raise their **Minimum Interval Seconds**. Home Assistant requests a removed field again while its entity is enabled.\n- Move {vehicle} to a higher Teslemetry plan.",
+      "title": "Streaming allowance exceeded for {vehicle}"
+    },
     "streaming_toggle": {
       "fix_flow": {
         "error": {
