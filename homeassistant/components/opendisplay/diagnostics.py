@@ -20,6 +20,8 @@ TO_REDACT = {
     "custom_string_2",
     "custom_string_3",
     "encryption_key",
+    # The FindMy packet holds the tag's key material.
+    "findmy_config_raw",
     # Raw bytes of config packets the library does not recognise: unknown
     # content, so never expose it.
     "unparsed_tail",
