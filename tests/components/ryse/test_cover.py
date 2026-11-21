@@ -1,0 +1,1035 @@
+"""Test RYSE Cover entity behavior."""
+
+import asyncio
+from collections.abc import Callable
+import logging
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+
+from bleak import BleakError
+from bleak.backends.device import BLEDevice
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from ryseble.device import RyseAuthenticationFailed
+
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL,
+    CoverDeviceClass,
+    CoverEntityFeature,
+    CoverState,
+)
+from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import (
+    inject_ryse,
+    make_advertisement,
+    make_ble_device,
+    register_local_scanner,
+    register_remote_scanner,
+)
+
+DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
+ENTITY_ID = "cover.test_device"
+LOGGER_NAME = "homeassistant.components.ryse.cover"
+
+
+def _disconnect_callback(device: MagicMock) -> Callable[[MagicMock], None]:
+    """Return the disconnect callback the cover registered on the device."""
+    callback = device.disconnected_callback
+    assert callable(callback)
+    return callback
+
+
+async def async_see_shade(
+    hass: HomeAssistant, ble_device: BLEDevice, token: bytes = b"\x01"
+) -> None:
+    """Inject a local advertisement so a dropped cover can reconnect."""
+    inject_ryse(
+        hass,
+        ble_device,
+        make_advertisement(pairing=False, service_data={SERVICE_UUID: token}),
+    )
+    await hass.async_block_till_done()
+
+
+async def async_poll_device(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance time so the cover platform polls the device once."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def polled_cover(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_integration: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up the integration and let the cover complete its first poll."""
+    await async_poll_device(hass, freezer)
+
+    return setup_integration
+
+
+async def test_cover_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test the cover entity is registered against the RYSE device."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry
+    assert entity_entry.unique_id == DEVICE_ADDRESS
+    assert entity_entry.device_id
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry
+    assert device_entry.manufacturer == MANUFACTURER_NAME
+    assert device_entry.model == "SmartShade BLE"
+    assert (dr.CONNECTION_BLUETOOTH, DEVICE_ADDRESS) in device_entry.connections
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHADE
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
+
+async def test_cover_available_after_setup(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test the cover is available and requests position after pairing."""
+    assert mock_device.client is not None
+    assert mock_device.client.is_connected
+    mock_device.send_get_position.assert_awaited_once()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+async def test_cover_polls_connected_device_without_pairing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test an already connected device is not paired again."""
+    mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.pair.assert_not_awaited()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_position_notification(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a position notification from the device updates the state machine."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
+async def test_position_notification_out_of_range(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test an out of range position clears cached cover state."""
+    caplog.set_level(logging.WARNING, logger=LOGGER_NAME)
+    mock_device.is_valid_position.side_effect = lambda position: 0 <= position <= 100
+
+    await mock_device.update_callback(58)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_CURRENT_POSITION] == 42
+    assert state.state == CoverState.OPEN
+
+    await mock_device.update_callback(150)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    assert state.state == STATE_UNKNOWN
+    assert "Invalid position value detected: 150" in caplog.text
+
+
+async def test_poll_skips_get_position_when_cached(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test polling does not request position again when a valid cache exists."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+    mock_device.send_get_position.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.send_get_position.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+
+async def test_poll_refreshes_invalid_cached_position(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test polling clears a cached position that later fails validation."""
+    await mock_device.update_callback(100)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    mock_device.send_get_position.reset_mock()
+    mock_device.is_valid_position.return_value = False
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+
+
+@pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "method",
+        "device_args",
+    ),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", ()),
+        (SERVICE_CLOSE_COVER, {}, "send_close", ()),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 75},
+            "send_set_position",
+            (25,),
+        ),
+    ],
+)
+async def test_cover_services(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    device_args: tuple[int, ...],
+) -> None:
+    """Test cover actions send a command without optimistically updating state."""
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+        blocking=True,
+    )
+
+    getattr(mock_device, method).assert_awaited_once_with(*device_args)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [TimeoutError("t/o"), OSError("io err"), EOFError("eof"), BleakError("ble err")],
+    ids=["timeout", "oserror", "eof", "bleak"],
+)
+@pytest.mark.parametrize(
+    ("service", "service_data", "method", "error"),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", "Failed to open cover"),
+        (SERVICE_CLOSE_COVER, {}, "send_close", "Failed to close cover"),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "send_set_position",
+            "Failed to set cover position",
+        ),
+    ],
+)
+async def test_cover_services_ble_error(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    exception: Exception,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    error: str,
+) -> None:
+    """Test BLE errors during a cover action surface as HomeAssistantError."""
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
+    getattr(mock_device, method).side_effect = exception
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    mock_device.unpair.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "method",
+        "device_args",
+    ),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", ()),
+        (SERVICE_CLOSE_COVER, {}, "send_close", ()),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 75},
+            "send_set_position",
+            (25,),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("polled_cover")
+async def test_cover_command_reconnects_when_disconnected(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    device_args: tuple[int, ...],
+) -> None:
+    """Test a cover command pairs again when the previous poll dropped the client."""
+    mock_device.client = None
+    mock_device.pair.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+        blocking=True,
+    )
+
+    mock_device.pair.assert_awaited_once()
+    getattr(mock_device, method).assert_awaited_once_with(*device_args)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "error"),
+    [
+        (SERVICE_OPEN_COVER, {}, "Failed to open cover: failed to pair"),
+        (SERVICE_CLOSE_COVER, {}, "Failed to close cover: failed to pair"),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "Failed to set cover position: failed to pair",
+        ),
+    ],
+)
+async def test_cover_command_raises_when_reconnect_fails(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    error: str,
+) -> None:
+    """Test a cover command surfaces an error instead of no-oping without a client."""
+    mock_device.client = None
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+            blocking=True,
+        )
+
+    mock_device.send_open.assert_not_awaited()
+    mock_device.send_close.assert_not_awaited()
+    mock_device.send_set_position.assert_not_awaited()
+    mock_device.unpair.assert_awaited_once()
+    assert not list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_command_without_local_adapter_does_not_start_reauth(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a command during a local-adapter outage does not start reauthentication."""
+    local_device = make_ble_device()
+    cancel_local = register_local_scanner(hass, local_device, make_advertisement())
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_device.client = None
+    mock_device.pair.reset_mock()
+    mock_device.unpair.reset_mock()
+    cancel_local()
+
+    with pytest.raises(
+        HomeAssistantError, match="Failed to open cover: failed to pair"
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_device.pair.assert_not_awaited()
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    cancel_local = register_local_scanner(hass, local_device, make_advertisement())
+    try:
+        await async_see_shade(hass, local_device)
+        mock_device.pair.assert_awaited_once()
+        assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        state = hass.states.get(ENTITY_ID)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+        await mock_device.update_callback(50)
+        state = hass.states.get(ENTITY_ID)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+    finally:
+        cancel_local()
+
+
+async def test_pairing_failure_marks_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a failed pairing marks the cover unavailable and is logged once."""
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
+    mock_device.client = None
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(
+        HomeAssistantError, match="Failed to open cover: failed to pair"
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    unavailable = f"{ENTITY_ID} became unavailable: failed to pair"
+    assert caplog.text.count(unavailable) == 1
+    mock_device.unpair.assert_awaited_once()
+    assert not list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    caplog.clear()
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert unavailable not in caplog.text
+    mock_device.pair.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [TimeoutError("t/o"), OSError("io err"), EOFError("eof"), BleakError("ble err")],
+    ids=["timeout", "oserror", "eof", "bleak"],
+)
+async def test_ble_error_while_polling_marks_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    polled_cover: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test a BLE error while polling marks the cover unavailable."""
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
+    mock_device.send_get_position.side_effect = exception
+    mock_device.unpair.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    unavailable = f"{ENTITY_ID} became unavailable: {exception}"
+    assert caplog.text.count(unavailable) == 1
+    mock_device.unpair.assert_awaited_once()
+
+    caplog.clear()
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert unavailable not in caplog.text
+    mock_device.pair.assert_not_awaited()
+
+
+async def test_ble_error_while_polling_clears_cached_position(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a poll error drops cached position so reconnect fetches again."""
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
+
+    mock_device.is_valid_position.return_value = False
+    mock_device.send_get_position.side_effect = BleakError("ble err")
+    mock_device.unpair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    mock_device.unpair.assert_awaited_once()
+
+    mock_device.send_get_position.side_effect = None
+    mock_device.send_get_position.reset_mock()
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_device.is_valid_position.return_value = True
+    mock_device.get_real_position.return_value = 50
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_ble_error_while_polling_resets_connection(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a poll error unpairs and waits for an advertisement instead of pairing again."""
+    mock_device.send_get_position.side_effect = BleakError("ble err")
+    mock_device.unpair.reset_mock()
+    mock_device.pair.reset_mock()
+
+    await async_poll_device(hass, freezer)
+
+    mock_device.unpair.assert_awaited_once()
+    mock_device.pair.assert_not_awaited()
+
+    mock_device.send_get_position.side_effect = None
+    mock_device.send_get_position.reset_mock()
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    mock_device.pair.assert_not_awaited()
+    mock_device.send_get_position.assert_not_awaited()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_cover_reconnects_when_proxy_also_sees_shade(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a reconnect still pairs when a Bluetooth proxy also sees the shade."""
+    remote, cancel_remote = register_remote_scanner(hass)
+    try:
+        remote.inject_advertisement(
+            make_ble_device(), make_advertisement(pairing=False, rssi=-20)
+        )
+        mock_device.pair.reset_mock()
+        client = mock_device.client
+        _disconnect_callback(mock_device)(client)
+        await hass.async_block_till_done()
+
+        await async_see_shade(hass, local_ryse_scanner)
+
+        mock_device.pair.assert_awaited_once()
+    finally:
+        cancel_remote()
+
+
+async def test_reconnect_transport_error_releases_client(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a transport error from pair() during reconnect releases the client."""
+    client = mock_device.client
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    mock_device.pair.reset_mock()
+    mock_device.pair.side_effect = BleakError("link dropped")
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.unpair.assert_awaited()
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("local_ryse_scanner")
+async def test_cover_registers_disconnect_callback_on_the_device(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the cover registers its disconnect callback for the library to forward."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_device.unpair.assert_awaited_once()
+
+
+async def test_disconnect_callback_marks_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a GATT disconnect marks the cover unavailable without waiting to poll."""
+    caplog.set_level(logging.INFO, logger=LOGGER_NAME)
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.unpair.reset_mock()
+
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert f"{ENTITY_ID} became unavailable: disconnected" in caplog.text
+    mock_device.unpair.assert_awaited_once()
+    mock_device.pair.assert_not_awaited()
+
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    mock_device.pair.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_stale_disconnect_callback_does_not_unpair_new_client(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a late disconnect from an old client does not tear down a new connection."""
+    old_client = mock_device.client
+    disconnect = _disconnect_callback(mock_device)
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.unpair.reset_mock()
+
+    disconnect(old_client)
+    await hass.async_block_till_done()
+
+    mock_device.unpair.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_advertisement_reconnect_does_not_start_reauth(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a failed background reconnect does not start reauthentication."""
+    client = mock_device.client
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    mock_device.pair.reset_mock()
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
+    mock_device.send_get_position.reset_mock()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_not_awaited()
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_unload_releases_in_flight_reconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test unload waits for an in-flight reconnect and releases that client."""
+    client = mock_device.client
+    pair_started = asyncio.Event()
+    finish_pair = asyncio.Event()
+
+    async def _slow_pair() -> bool:
+        pair_started.set()
+        await finish_pair.wait()
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _slow_pair
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    inject_ryse(
+        hass,
+        local_ryse_scanner,
+        make_advertisement(pairing=False, service_data={SERVICE_UUID: b"\x01"}),
+    )
+    async with asyncio.timeout(1):
+        await pair_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(setup_integration.entry_id)
+    )
+    await asyncio.sleep(0)
+    finish_pair.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert setup_integration.state is ConfigEntryState.NOT_LOADED
+    assert mock_device.unpair.await_count >= 1
+
+
+async def test_static_advertisement_reconnects_after_disconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test an unchanged advertisement still reconnects a dropped shade."""
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    inject_ryse(hass, local_ryse_scanner, make_advertisement())
+    await hass.async_block_till_done()
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_rejected_bond_starts_reauth(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a confirmed bond rejection starts reauthentication."""
+    mock_device.client = None
+    mock_device.pair.side_effect = RyseAuthenticationFailed("rejected")
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(HomeAssistantError, match="Failed to open cover: rejected"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_command_during_reauth_does_not_pair(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a command does not start a second pairing while reauth is open."""
+    await polled_cover.start_reauth_flow(hass)
+    mock_device.pair.reset_mock()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_device.pair.assert_not_awaited()
+
+
+async def test_unexpected_reconnect_error_backs_off(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test an unexpected reconnect error lengthens the next wait."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = RuntimeError("boom")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    assert mock_device.pair.await_count == 1
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert mock_device.pair.await_count == 2
+
+    mock_device.pair.reset_mock()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    mock_device.pair.assert_not_awaited()
+
+
+async def test_reconnect_backs_off_after_repeated_failures(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test repeated reconnect failures wait longer than the initial cooldown."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = BleakError("link dropped")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    assert mock_device.pair.await_count == 1
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert mock_device.pair.await_count == 2
+
+    mock_device.pair.reset_mock()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    mock_device.pair.assert_not_awaited()
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_device.pair.assert_awaited_once()
+
+
+async def test_repeated_local_transport_failures_start_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a shade that keeps failing locally asks the user to re-pair."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = BleakError("link dropped")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    assert list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_advertisement_reconnects_after_disconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a later advertisement reconnects after the GATT link drops."""
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
+    mock_device.unpair.reset_mock()
+
+    _disconnect_callback(mock_device)(client)
+    await hass.async_block_till_done()
+    mock_device.pair.assert_not_awaited()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    await mock_device.update_callback(50)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_notification_callback_lifecycle(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test the device notification callback is registered and removed again."""
+    assert callable(mock_device.update_callback)
+
+    await hass.config_entries.async_unload(setup_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_device.update_callback is None
+
+
+async def test_notification_callback_replaced(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test unloading keeps a callback that was registered by someone else."""
+    other_callback = MagicMock()
+    mock_device.update_callback = other_callback
+
+    await hass.config_entries.async_unload(setup_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_device.update_callback is other_callback
