@@ -1,8 +1,9 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 import heapq
 import re
 from typing import TYPE_CHECKING, Any, override
@@ -12,9 +13,16 @@ import probatio
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
+from homeassistant.const import ATTR_RESTORED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, translation
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+    translation,
+)
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -786,6 +794,301 @@ class ConfigureFlowTool(Tool):
         )
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class _RegistrySettings:
+    """The settings of a registry, for the generic registry settings tools.
+
+    The functions raise HomeAssistantError with a message for the LLM.
+    """
+
+    name: str
+    id_key: str
+    settings: dict[probatio.Marker, Any]
+    remove_description: str
+    get: Callable[[HomeAssistant, str], JsonObjectType]
+    update: Callable[[HomeAssistant, str, dict[str, Any]], JsonObjectType]
+    remove: Callable[[HomeAssistant, str], None]
+
+
+class GetRegistrySettingsTool(Tool):
+    """LLM Tool to get the settings of a registry item."""
+
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    def __init__(self, registry: _RegistrySettings) -> None:
+        """Init the tool."""
+        self._registry = registry
+        self.name = f"config__get_{registry.name}_settings"
+        self.title = f"Get {registry.name} settings"
+        self.description = (
+            f"Get the settings of the {registry.name} with the given "
+            f"{registry.id_key}. Use search__search to find the {registry.id_key}."
+        )
+        self.parameters = probatio.Schema(
+            {probatio.Required(registry.id_key): _NON_EMPTY_STRING}
+        )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Get the settings."""
+        args = self.parameters(tool_input.tool_args)
+        try:
+            result = self._registry.get(hass, args[self._registry.id_key])
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": result})
+
+
+class UpdateRegistrySettingsTool(Tool):
+    """LLM Tool to update the settings of a registry item."""
+
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    def __init__(self, registry: _RegistrySettings) -> None:
+        """Init the tool."""
+        self._registry = registry
+        self.name = f"config__update_{registry.name}_settings"
+        self.title = f"Update {registry.name} settings"
+        self.description = (
+            f"Update the settings of the {registry.name} with the given "
+            f"{registry.id_key}. Only the given settings change. Returns the new "
+            "settings."
+        )
+        self.parameters = probatio.Schema(
+            {
+                probatio.Required(registry.id_key): _NON_EMPTY_STRING,
+                **registry.settings,
+            }
+        )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings."""
+        args = self.parameters(tool_input.tool_args)
+        item_id = args.pop(self._registry.id_key)
+        try:
+            result = self._registry.update(hass, item_id, args)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": result})
+
+
+class RemoveRegistryItemTool(Tool):
+    """LLM Tool to remove a registry item."""
+
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    def __init__(self, registry: _RegistrySettings) -> None:
+        """Init the tool."""
+        self._registry = registry
+        self.name = f"config__remove_{registry.name}"
+        self.title = f"Remove {registry.name}"
+        self.description = registry.remove_description
+        self.parameters = probatio.Schema(
+            {probatio.Required(registry.id_key): _NON_EMPTY_STRING}
+        )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Remove the item."""
+        args = self.parameters(tool_input.tool_args)
+        item_id = args[self._registry.id_key]
+        try:
+            self._registry.remove(hass, item_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": {self._registry.id_key: item_id}})
+
+
+def _get_entity_entry(hass: HomeAssistant, entity_id: str) -> er.RegistryEntry:
+    """Return the registry entry of an entity."""
+    if (entry := er.async_get(hass).async_get(entity_id)) is None:
+        raise HomeAssistantError(
+            f"Entity '{entity_id}' not found. Entities without a unique ID have "
+            "no settings."
+        )
+    return entry
+
+
+def _format_entity_settings(
+    hass: HomeAssistant, entry: er.RegistryEntry
+) -> JsonObjectType:
+    """Format the settings of an entity for LLM consumption."""
+    return {
+        "entity_id": entry.entity_id,
+        "full_name": er.async_get_full_entity_name(hass, entry),
+        "name": entry.name,
+        "original_name": entry.original_name,
+        "icon": entry.icon,
+        "area_id": entry.area_id,
+        "device_id": entry.device_id,
+        "device_class": entry.device_class,
+        "original_device_class": entry.original_device_class,
+        "disabled_by": entry.disabled_by,
+        "hidden_by": entry.hidden_by,
+        "aliases": [None if a is er.COMPUTED_NAME else a for a in entry.aliases],
+        "labels": list[JsonValueType](sorted(entry.labels)),
+        "platform": entry.platform,
+    }
+
+
+@callback
+def _get_entity_settings(hass: HomeAssistant, entity_id: str) -> JsonObjectType:
+    """Return the settings of an entity."""
+    return _format_entity_settings(hass, _get_entity_entry(hass, entity_id))
+
+
+@callback
+def _update_entity_settings(
+    hass: HomeAssistant, entity_id: str, settings: dict[str, Any]
+) -> JsonObjectType:
+    """Update the settings of an entity and return the new settings."""
+    entry = _get_entity_entry(hass, entity_id)
+    if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
+        area_id
+    ) is None:
+        raise HomeAssistantError(f"Area '{area_id}' not found.")
+    if "labels" in settings:
+        settings["labels"] = set(settings["labels"])
+        if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+            raise HomeAssistantError(f"Labels not found: {', '.join(sorted(missing))}")
+    if settings.get("disabled_by"):
+        settings["disabled_by"] = er.RegistryEntryDisabler.USER
+    if settings.get("hidden_by"):
+        settings["hidden_by"] = er.RegistryEntryHider.USER
+    if "aliases" in settings:
+        settings["aliases"] = [
+            er.COMPUTED_NAME if alias is None else alias
+            for alias in settings["aliases"]
+        ]
+
+    was_disabled = entry.disabled_by is not None
+    try:
+        entry = er.async_get(hass).async_update_entity(entity_id, **settings)
+    except ValueError as err:
+        raise HomeAssistantError(str(err)) from err
+
+    result = _format_entity_settings(hass, entry)
+    if was_disabled and entry.disabled_by is None:
+        # The integration adds an enabled entity only when its config entry reloads
+        if not (config_entry_id := entry.config_entry_id) or (
+            (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+            and not config_entry.supports_unload
+        ):
+            result["note"] = "Home Assistant must restart to add the entity."
+        else:
+            result["note"] = (
+                "The integration reloads in "
+                f"{config_entries.RELOAD_AFTER_UPDATE_DELAY} seconds to add the "
+                "entity."
+            )
+    return result
+
+
+@callback
+def _remove_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Remove an entity that its integration no longer provides."""
+    _get_entity_entry(hass, entity_id)
+    # Like the UI, only a restored state shows that the integration no longer
+    # provides the entity. A disabled entity has no state at all.
+    if (state := hass.states.get(entity_id)) is None or not state.attributes.get(
+        ATTR_RESTORED
+    ):
+        raise HomeAssistantError(
+            f"Entity '{entity_id}' is still provided by its integration, or is "
+            "disabled. Only entities that their integration no longer provides "
+            "can be removed."
+        )
+    er.async_get(hass).async_remove(entity_id)
+
+
+_NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
+
+_ENTITY_REGISTRY = _RegistrySettings(
+    name="entity",
+    id_key="entity_id",
+    settings={
+        probatio.Optional(
+            "name",
+            description=(
+                "The name of the entity. null uses the name from the integration."
+            ),
+        ): _NULLABLE_STRING,
+        probatio.Optional(
+            "icon",
+            description=(
+                "The icon, like 'mdi:lamp'. null uses the icon from the integration."
+            ),
+        ): probatio.Any(None, probatio.All(str, cv.icon)),
+        probatio.Optional(
+            "area_id",
+            description="The area_id. null uses the area of the device.",
+        ): _NULLABLE_STRING,
+        probatio.Optional(
+            "device_class",
+            description=(
+                "The device class, like 'outlet' for a switch. null uses the "
+                "device class from the integration."
+            ),
+        ): _NULLABLE_STRING,
+        probatio.Optional(
+            "new_entity_id",
+            description=(
+                "A new entity_id. Automations and scripts that use the old one "
+                "are not updated."
+            ),
+        ): probatio.All(str, cv.entity_id),
+        probatio.Optional(
+            "disabled_by",
+            description=(
+                "'user' disables the entity, null enables it. A disabled entity "
+                "has no state."
+            ),
+        ): probatio.Any(None, er.RegistryEntryDisabler.USER.value),
+        probatio.Optional(
+            "hidden_by",
+            description=(
+                "'user' hides the entity from auto-populated dashboards, null shows it."
+            ),
+        ): probatio.Any(None, er.RegistryEntryHider.USER.value),
+        probatio.Optional(
+            "aliases",
+            description=(
+                "The names that voice assistants know the entity by. This replaces "
+                "all aliases. null stands for the name of the entity."
+            ),
+        ): [_NULLABLE_STRING],
+        probatio.Optional(
+            "labels",
+            description="The label_ids. This replaces all labels.",
+        ): [_NON_EMPTY_STRING],
+    },
+    remove_description=(
+        "Remove an entity that its integration no longer provides, like the entity "
+        "of a removed device. To stop using an entity that is still provided, "
+        "disable it with config__update_entity_settings."
+    ),
+    get=_get_entity_settings,
+    update=_update_entity_settings,
+    remove=_remove_entity,
+)
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -801,5 +1104,8 @@ def async_get_tools(
             SearchIntegrationsTool(),
             StartFlowTool(),
             ConfigureFlowTool(),
+            GetRegistrySettingsTool(_ENTITY_REGISTRY),
+            UpdateRegistrySettingsTool(_ENTITY_REGISTRY),
+            RemoveRegistryItemTool(_ENTITY_REGISTRY),
         ]
     )

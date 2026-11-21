@@ -64,6 +64,19 @@
       }),
       'type': 'object',
     }),
+    'config__get_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
+      ]),
+      'type': 'object',
+    }),
     'config__reload_config_entry': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -75,6 +88,19 @@
       }),
       'required': list([
         'entry_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__remove_entity': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
       ]),
       'type': 'object',
     }),
@@ -121,6 +147,81 @@
       }),
       'required': list([
         'domain',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'The names that voice assistants know the entity by. This replaces all aliases. null stands for the name of the entity.',
+          'items': dict({
+            'format': 'strip',
+            'nullable': True,
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'area_id': dict({
+          'description': 'The area_id. null uses the area of the device.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'device_class': dict({
+          'description': "The device class, like 'outlet' for a switch. null uses the device class from the integration.",
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'disabled_by': dict({
+          'description': "'user' disables the entity, null enables it. A disabled entity has no state.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'hidden_by': dict({
+          'description': "'user' hides the entity from auto-populated dashboards, null shows it.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:lamp'. null uses the icon from the integration.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name': dict({
+          'description': 'The name of the entity. null uses the name from the integration.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'new_entity_id': dict({
+          'description': 'A new entity_id. Automations and scripts that use the old one are not updated.',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
       ]),
       'type': 'object',
     }),
