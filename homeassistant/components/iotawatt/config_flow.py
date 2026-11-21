@@ -43,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iotawatt."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
