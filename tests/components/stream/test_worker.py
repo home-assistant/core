@@ -21,7 +21,7 @@ import logging
 import math
 from pathlib import Path
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import av
 from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
@@ -864,6 +864,66 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
         assert stream.available
 
         # Cleanup
+        await stream.stop()
+
+
+async def test_output_added_while_stopping_is_kept(
+    hass: HomeAssistant, should_retry: Mock
+) -> None:
+    """Test that an output added while the stream stops survives the restart.
+
+    A viewer that asks for the stream while its worker is still stopping (busy
+    in a read) adds an output and waits in start() for the stop to end. The
+    stopped worker must not remove that output.
+    """
+    # Keep the replacement worker alive until the final stop(): without retries
+    # it could reach the end of its packets, exit and remove the new output.
+    should_retry.return_value = True
+    worker_open = threading.Event()
+    worker_wake = threading.Event()
+
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    output = stream.add_provider(HLS_PROVIDER)
+
+    py_av = MockPyAv()
+    py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
+
+    def blocking_open(stream_source, *args, **kwargs):
+        if not isinstance(stream_source, io.BytesIO):
+            worker_open.set()
+            worker_wake.wait()
+        return py_av.open(stream_source, args, kwargs)
+
+    with patch("av.open", new=blocking_open):
+        await stream.start()
+        assert worker_open.wait(TIMEOUT)
+        first_worker = stream._thread
+
+        # The last viewer leaves: the stream stops while its worker is still busy
+        stop = hass.async_create_task(stream.remove_provider(output))
+        await hass.async_add_executor_job(stream._thread_quit.wait, TIMEOUT)
+
+        # A new viewer arrives before the worker has ended
+        worker_open.clear()
+        new_output = stream.add_provider(HLS_PROVIDER)
+        start = hass.async_create_task(stream.start())
+        worker_wake.set()
+        await stop
+        await start
+        await hass.async_add_executor_job(first_worker.join, TIMEOUT)
+        await hass.async_block_till_done()
+
+        assert stream.outputs() == {HLS_PROVIDER: new_output}
+        assert worker_open.wait(TIMEOUT)
+        assert stream._thread is not first_worker
+        assert stream._thread.is_alive()
+
         await stream.stop()
 
 
