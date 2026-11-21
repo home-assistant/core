@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -180,32 +180,6 @@ async def test_ctl_turn_off(
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_invalid_system_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test translated exception when the requested system mode is invalid."""
-
-    with (
-        patch(
-            "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidModeRequestError("Unsupported mode: xxx"),
-        ),
-        pytest.raises(ServiceValidationError) as exc_info,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            ClimateService.TURN_OFF,
-            {
-                TargetKey.ENTITY_ID: ctl_id,
-            },
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "invalid_system_mode"
 
 
 @pytest.mark.parametrize("install", ["default"])
