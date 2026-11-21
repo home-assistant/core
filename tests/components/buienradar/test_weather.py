@@ -1,42 +1,26 @@
 """The tests for the buienradar weather component."""
 
-from http import HTTPStatus
+from datetime import timedelta
+from unittest.mock import patch
 
+from buienradar.constants import MESSAGE, SUCCESS
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     WeatherService,
     WeatherServiceArgument,
 )
-from homeassistant.const import TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 
-from . import TEST_CFG_DATA, setup_integration
+from . import setup_integration
 
 WEATHER_ENTITY = "weather.buienradar"
-
-
-async def test_smoke_test_setup_component(
-    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
-) -> None:
-    """Smoke test for successfully set-up with default config."""
-    aioclient_mock.get(
-        "https://data.buienradar.nl/2.0/feed/json", status=HTTPStatus.NOT_FOUND
-    )
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
-
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("weather.buienradar")
-    assert state.state == "unknown"
+PARSE_FAILED = {SUCCESS: False, MESSAGE: "no data"}
 
 
 @pytest.mark.usefixtures("mock_buienradar_feeds")
@@ -61,3 +45,49 @@ async def test_forecast(hass: HomeAssistant, snapshot: SnapshotAssertion) -> Non
     )
 
     assert response == snapshot
+
+
+@pytest.mark.usefixtures("mock_buienradar_feeds")
+async def test_update_failure_and_recovery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the entity is unavailable after a failed update and recovers."""
+    await setup_integration(hass)
+    assert hass.states.get(WEATHER_ENTITY).state != STATE_UNAVAILABLE
+
+    with patch(
+        "homeassistant.components.buienradar.util.parse_data",
+        return_value=PARSE_FAILED,
+    ):
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(WEATHER_ENTITY).state == STATE_UNAVAILABLE
+
+    # A failed update is retried two minutes later.
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(WEATHER_ENTITY).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_buienradar_feeds")
+async def test_failure_during_service_quiet_hour_keeps_data(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a failed update keeps the last data while the service updates."""
+    # 23:20 UTC is 00:20 CET, inside the hour buienradar.nl updates its forecast.
+    freezer.move_to("2026-01-14T23:10:00+00:00")
+    await setup_integration(hass)
+    state = hass.states.get(WEATHER_ENTITY)
+    assert state.state != STATE_UNAVAILABLE
+
+    with patch(
+        "homeassistant.components.buienradar.util.parse_data",
+        return_value=PARSE_FAILED,
+    ):
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(WEATHER_ENTITY).state == state.state

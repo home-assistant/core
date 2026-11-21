@@ -1,6 +1,5 @@
 """Support for Buienradar.nl weather service."""
 
-import logging
 from typing import override
 
 from buienradar.constants import (
@@ -46,7 +45,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    Platform,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -55,12 +53,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BuienRadarConfigEntry
-from .const import DEFAULT_TIMEFRAME
-from .util import BrData, BuienradarData
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import BuienRadarConfigEntry, BuienradarCoordinator
+from .util import BuienradarData
 
 CONF_FORECAST = "forecast"
 
@@ -100,30 +96,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the buienradar platform."""
-    config = entry.data
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
-
-    # create weather entity:
-    _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
-    entities = [BrWeather(config, coordinates)]
-
-    # create weather data:
-    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
-    entry.runtime_data[Platform.WEATHER] = data
-    await data.async_update()
-
-    async_add_entities(entities)
+    async_add_entities([BrWeather(entry.runtime_data, entry.data)])
 
 
-class BrWeather(WeatherEntity):
+class BrWeather(CoordinatorEntity[BuienradarCoordinator], WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -131,11 +107,12 @@ class BrWeather(WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-    _attr_should_poll = False
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, config, coordinates) -> None:
+    def __init__(self, coordinator: BuienradarCoordinator, config) -> None:
         """Initialize the platform with a data instance and station name."""
+        super().__init__(coordinator)
+        coordinates = coordinator.coordinates
         self._stationname = config.get(CONF_NAME, "Buienradar")
         self._attr_name = self._stationname or f"BR {'(unknown station)'}"
 
@@ -143,33 +120,35 @@ class BrWeather(WeatherEntity):
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
         )
         self._forecast: list | None = None
+        self._update_from_data()
 
     @callback
-    def data_updated(self, data: BrData) -> None:
-        """Update data."""
-        values = BuienradarData(data.data)
-        self._attr_attribution = values.attribution
-        self._attr_condition = self._calc_condition(values)
-        self._forecast = self._calc_forecast(values)
-        self._attr_humidity = values.humidity
-        self._attr_name = (
-            self._stationname or f"BR {values.stationname or '(unknown station)'}"
-        )
-        self._attr_native_pressure = values.pressure
-        self._attr_native_temperature = values.temperature
-        self._attr_native_apparent_temperature = values.feeltemperature
-        self._attr_native_visibility = values.visibility
-        self._attr_native_wind_gust_speed = values.wind_gust
-        self._attr_native_wind_speed = values.wind_speed
-        self._attr_wind_bearing = values.wind_bearing
-
-        if not self.hass:
-            return
-        self.async_write_ha_state()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_data()
+        super()._handle_coordinator_update()
+        self.coordinator.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("daily",))
         )
+
+    def _update_from_data(self) -> None:
+        """Update the attributes from the coordinator data."""
+        data = self.coordinator.data
+        self._attr_attribution = data.attribution
+        self._attr_condition = self._calc_condition(data)
+        self._forecast = self._calc_forecast(data)
+        self._attr_humidity = data.humidity
+        self._attr_name = (
+            self._stationname or f"BR {data.stationname or '(unknown station)'}"
+        )
+        self._attr_native_pressure = data.pressure
+        self._attr_native_temperature = data.temperature
+        self._attr_native_apparent_temperature = data.feeltemperature
+        self._attr_native_visibility = data.visibility
+        self._attr_native_wind_gust_speed = data.wind_gust
+        self._attr_native_wind_speed = data.wind_speed
+        self._attr_wind_bearing = data.wind_bearing
 
     def _calc_condition(self, data: BuienradarData):
         """Return the current condition."""
