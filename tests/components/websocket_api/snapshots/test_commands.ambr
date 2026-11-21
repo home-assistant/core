@@ -115,3 +115,421 @@
     }),
   })
 # ---
+# name: test_validate_config_errors[condition_shorthand]
+  dict({
+    'conditions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].or[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'or',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            1,
+            'not',
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[errors_in_two_keys]
+  dict({
+    'actions': dict({
+      'error': None,
+      'errors': list([
+      ]),
+      'valid': True,
+    }),
+    'conditions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+    'triggers': dict({
+      'error': "Invalid trigger 'non_existing' specified at '[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[home_assistant_error]
+  dict({
+    'conditions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[nested_blocks]
+  dict({
+    'actions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].if[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'if',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            0,
+            'then',
+            0,
+            'wait_for_trigger',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'else',
+            0,
+            'default',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'else',
+            0,
+            'choose',
+            0,
+            'conditions',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'else',
+            0,
+            'choose',
+            0,
+            'sequence',
+            1,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[nested_single_items]
+  dict({
+    'actions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at 'repeat.sequence'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            'repeat',
+            'sequence',
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[parallel]
+  dict({
+    'actions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].parallel[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'parallel',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'parallel',
+            1,
+            1,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            0,
+            'parallel',
+            2,
+            'sequence',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[platform_errors]
+  dict({
+    'triggers': dict({
+      'error': "required key not provided at '[1].entity_id'",
+      'errors': list([
+        dict({
+          'code': 'required',
+          'message': 'required key not provided',
+          'path': list([
+            1,
+            'entity_id',
+          ]),
+          'translation_domain': None,
+          'translation_key': 'required',
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            2,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[schema_and_platform_errors]
+  dict({
+    'actions': dict({
+      'error': "not a valid option at '[0].bogus'",
+      'errors': list([
+        dict({
+          'code': 'extra_keys_not_allowed',
+          'message': 'not a valid option',
+          'path': list([
+            0,
+            'bogus',
+          ]),
+          'translation_domain': None,
+          'translation_key': 'not_a_valid_option',
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+            1,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            2,
+            'wait_for_trigger',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[schema_errors]
+  dict({
+    'actions': dict({
+      'error': "not a valid option at '[1].bogus'",
+      'errors': list([
+        dict({
+          'code': 'extra_keys_not_allowed',
+          'message': 'not a valid option',
+          'path': list([
+            1,
+            'bogus',
+          ]),
+          'translation_domain': None,
+          'translation_key': 'not_a_valid_option',
+          'translation_placeholders': dict({
+          }),
+        }),
+        dict({
+          'code': None,
+          'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+          'path': list([
+            2,
+            'delay',
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[single_item]
+  dict({
+    'triggers': dict({
+      'error': "required key not provided at 'entity_id'",
+      'errors': list([
+        dict({
+          'code': 'required',
+          'message': 'required key not provided',
+          'path': list([
+            'entity_id',
+          ]),
+          'translation_domain': None,
+          'translation_key': 'required',
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_errors[trigger_sublist]
+  dict({
+    'triggers': dict({
+      'error': "Invalid trigger 'non_existing' specified at '[1].triggers[1]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            1,
+            'triggers',
+            1,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
