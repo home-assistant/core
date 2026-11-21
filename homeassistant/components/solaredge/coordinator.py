@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientResponseError
-from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb
 
 from homeassistant.components.recorder import get_instance
@@ -28,6 +27,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util, slugify, snakecase
 from homeassistant.util.unit_conversion import EnergyConverter
 
+from .api import SolarEdgeV2
 from .const import (
     CONF_SITE_ID,
     DETAILS_UPDATE_DELAY,
@@ -54,7 +54,7 @@ class SolarEdgeDataService(ABC):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the data object."""
@@ -136,14 +136,11 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         # reports "lifetimedata" of zero,
         # while values for last Year, Month and Day energy are still OK.
         # See https://github.com/home-assistant/core/issues/59285 .
-        if set(energy_keys).issubset(self.data.keys()):
-            for index, key in enumerate(energy_keys, start=1):
-                # All coming values in list should be larger than the current value.
-                if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
-                    LOGGER.warning(
-                        "Ignoring invalid energy value %s for %s", self.data[key], key
-                    )
-                    self.data.pop(key)
+        if self.data.get("lifeTimeData") == 0 and any(
+            (self.data.get(key) or 0) > 0 for key in energy_keys[1:]
+        ):
+            LOGGER.warning("Ignoring invalid lifetime energy value 0")
+            self.data.pop("lifeTimeData")
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
@@ -255,7 +252,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the power flow data service."""
@@ -335,7 +332,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the power flow data service."""
@@ -402,18 +399,20 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 self.attributes[key] = {"status": value["status"]}
 
             if key == "GRID":
-                export = key.lower() in power_to
-                if self.data[key]:
-                    self.data[key] *= -1 if export else 1
-                self.data["grid_flow_direction"] = "export" if export else "import"
+                if key.lower() in power_to:
+                    if self.data[key]:
+                        self.data[key] *= -1
+                    self.data["grid_flow_direction"] = "export"
+                elif key.lower() in power_from:
+                    self.data["grid_flow_direction"] = "import"
 
             if key == "STORAGE":
-                charge = key.lower() in power_to
-                if self.data[key]:
-                    self.data[key] *= -1 if charge else 1
-                self.data["storage_flow_direction"] = (
-                    "charge" if charge else "discharge"
-                )
+                if key.lower() in power_to:
+                    if self.data[key]:
+                        self.data[key] *= -1
+                    self.data["storage_flow_direction"] = "charge"
+                elif key.lower() in power_from:
+                    self.data["storage_flow_direction"] = "discharge"
                 self.data["storage_level"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)
@@ -472,8 +471,8 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             return
 
         # Aggregate totals across all batteries
-        total_charge_energy = 0.0
-        total_discharge_energy = 0.0
+        total_charge_energy: float | None = None
+        total_discharge_energy: float | None = None
 
         for battery in batteries:
             serial = battery.get("serialNumber")
@@ -495,20 +494,22 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             self.data[f"{serial}_power"] = latest.get("power")
 
             # Compute daily charge/discharge delta from lifetime counters
+            charge_energy: float | None = None
+            discharge_energy: float | None = None
             if len(telemetries) >= 2:
                 first = telemetries[0]
-                charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
-                    "lifeTimeEnergyCharged", 0.0
-                )
-                discharge_energy = latest.get(
-                    "lifeTimeEnergyDischarged", 0.0
-                ) - first.get("lifeTimeEnergyDischarged", 0.0)
-            else:
-                charge_energy = 0.0
-                discharge_energy = 0.0
-
-            total_charge_energy += charge_energy
-            total_discharge_energy += discharge_energy
+                first_charge = first.get("lifeTimeEnergyCharged")
+                latest_charge = latest.get("lifeTimeEnergyCharged")
+                if first_charge is not None and latest_charge is not None:
+                    charge_energy = latest_charge - first_charge
+                    total_charge_energy = (total_charge_energy or 0) + charge_energy
+                first_discharge = first.get("lifeTimeEnergyDischarged")
+                latest_discharge = latest.get("lifeTimeEnergyDischarged")
+                if first_discharge is not None and latest_discharge is not None:
+                    discharge_energy = latest_discharge - first_discharge
+                    total_discharge_energy = (
+                        total_discharge_energy or 0
+                    ) + discharge_energy
 
             self.data[f"{serial}_charge_energy"] = charge_energy
             self.data[f"{serial}_discharge_energy"] = discharge_energy

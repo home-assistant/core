@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import CONF_API_KEY, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_MODULES_COORDINATOR, DATA_SERVICES
@@ -85,7 +85,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     runtime_data = entry.runtime_data
     diagnostics: dict[str, Any] = {
-        "api_key_configured": CONF_API_KEY in entry.data,
+        "oauth_configured": CONF_TOKEN in entry.data,
         "web_login_configured": CONF_USERNAME in entry.data,
         "services": {
             SERVICE_NAMES[type(service)]: _service_diagnostics(service)
