@@ -78,6 +78,41 @@ async def test_charging_enabled_is_off_when_charger_is_disabled(
     assert hass.states.get("binary_sensor.nb123456_charging_enabled").state == "off"
 
 
+@pytest.mark.parametrize(
+    ("charging_state", "expected_state"),
+    [
+        pytest.param(0, "off", id="idle"),
+        pytest.param(1, "on", id="ready"),
+        pytest.param(2, "on", id="charging"),
+        pytest.param(3, "on", id="complete"),
+        pytest.param(4, "off", id="unavailable"),
+        pytest.param(5, "on", id="waiting_for_power"),
+        pytest.param(6, "on", id="schedule_waiting"),
+        pytest.param(7, "on", id="waiting_for_car"),
+    ],
+)
+async def test_vehicle_connected_follows_charging_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    charging_state: int,
+    expected_state: str,
+) -> None:
+    """Test vehicle connected is derived from the charging state."""
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS, charging_state=charging_state
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("binary_sensor.nb123456_vehicle_connected").state
+        == expected_state
+    )
+
+
 async def test_binary_sensors_unavailable_when_coordinator_update_fails(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -97,5 +132,9 @@ async def test_binary_sensors_unavailable_when_coordinator_update_fails(
     )
     assert (
         hass.states.get("binary_sensor.nb123456_charging_enabled").state
+        == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get("binary_sensor.nb123456_vehicle_connected").state
         == STATE_UNAVAILABLE
     )

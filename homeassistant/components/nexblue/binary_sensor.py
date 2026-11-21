@@ -1,6 +1,10 @@
 """Binary sensors for the NexBlue integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
+
+from nexblue_api.models import ChargerStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,17 +20,44 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
 
-BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+VEHICLE_CONNECTED_STATES = frozenset(
+    {
+        1,  # Ready to charge
+        2,  # Charging
+        3,  # Charging complete
+        5,  # Waiting for available power
+        6,  # Schedule waiting
+        7,  # Waiting for car response
+    }
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class NexBlueBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describe a NexBlue charger binary sensor."""
+
+    is_on_fn: Callable[[ChargerStatus], bool]
+
+
+BINARY_SENSOR_DESCRIPTIONS: tuple[NexBlueBinarySensorEntityDescription, ...] = (
+    NexBlueBinarySensorEntityDescription(
         key="is_lock",
         translation_key="is_lock",
         device_class=BinarySensorDeviceClass.LOCK,
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda status: not status.is_lock,
     ),
-    BinarySensorEntityDescription(
+    NexBlueBinarySensorEntityDescription(
         key="is_disable",
         translation_key="is_disable",
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda status: not status.is_disable,
+    ),
+    NexBlueBinarySensorEntityDescription(
+        key="vehicle_connected",
+        translation_key="vehicle_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        is_on_fn=lambda status: status.charging_state in VEHICLE_CONNECTED_STATES,
     ),
 )
 
@@ -51,13 +82,13 @@ class NexBlueBinarySensor(
     """Expose NexBlue charger boolean telemetry."""
 
     _attr_has_entity_name = True
-    entity_description: BinarySensorEntityDescription
+    entity_description: NexBlueBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: NexBlueDataUpdateCoordinator,
         serial_number: str,
-        description: BinarySensorEntityDescription,
+        description: NexBlueBinarySensorEntityDescription,
     ) -> None:
         """Initialize a binary sensor for one charger metric."""
         super().__init__(coordinator)
@@ -86,6 +117,4 @@ class NexBlueBinarySensor(
         """Return the binary sensor state."""
         status = self.coordinator.data[self._serial_number]
         assert status is not None
-        if self.entity_description.key == "is_disable":
-            return not status.is_disable
-        return not status.is_lock
+        return self.entity_description.is_on_fn(status)
