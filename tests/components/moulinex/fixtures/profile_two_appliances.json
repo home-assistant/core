@@ -1,0 +1,29 @@
+{
+  "profilePerimeter": "MOULINEX_FR",
+  "household": {
+    "products": [
+      {
+        "name": "Cookeo Touch Wifi",
+        "appliance": "APPLIANCE_1090",
+        "domains": ["PRO_COO"],
+        "cmmf": "1510002402",
+        "iot": {
+          "functionalId": "11111111-2222-3333-4444-555555555555",
+          "thingType": "COO001",
+          "source": "IOTHUB"
+        }
+      },
+      {
+        "name": "i-Companion Touch XL",
+        "appliance": "APPLIANCE_1091",
+        "domains": ["PRO_COM"],
+        "cmmf": "8000036990",
+        "iot": {
+          "functionalId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+          "thingType": "COM001",
+          "source": "IOTHUB"
+        }
+      }
+    ]
+  }
+}

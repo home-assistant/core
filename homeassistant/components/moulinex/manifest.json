@@ -1,0 +1,15 @@
+{
+  "domain": "moulinex",
+  "name": "Moulinex",
+  "categories": ["appliances_cleaning.cooking"],
+  "codeowners": ["@piitaya"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "dhcp": [{ "hostname": "seb_product_*" }],
+  "documentation": "https://www.home-assistant.io/integrations/moulinex",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["aiomoulinex"],
+  "quality_scale": "bronze",
+  "requirements": ["aiomoulinex==0.1.3"]
+}

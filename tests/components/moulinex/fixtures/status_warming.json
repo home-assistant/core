@@ -1,0 +1,15 @@
+{
+  "mode": "manual",
+  "currentStatus": "warming",
+  "progress": 6,
+  "currentOperation": {
+    "parameters": [],
+    "program": {
+      "key": "PROGRAM_200143",
+      "name": "Low Stir Fry Cooking"
+    }
+  },
+  "eventDate": "2026-11-20T17:41:35.000+01",
+  "version": 6,
+  "operationStart": "2026-11-20T17:41:35.000+01"
+}
