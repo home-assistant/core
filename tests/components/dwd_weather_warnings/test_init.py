@@ -1,9 +1,10 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings integration."""
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from pytest_homeassistant.common import MockConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.dwd_weather_warnings.const import (
     API_ATTR_WARNING_COLOR,
@@ -20,6 +21,7 @@ from homeassistant.components.dwd_weather_warnings.const import (
     CONF_REGION_DEVICE_TRACKER,
     CONF_REGION_IDENTIFIER,
     CURRENT_WARNING_SENSOR,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.components.dwd_weather_warnings.coordinator import (
@@ -30,6 +32,10 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
@@ -57,6 +63,7 @@ async def test_load_unload_entry(
     mock_dwdwfsapi: MagicMock,
 ) -> None:
     """Test loading and unloading the integration with a region identifier entry."""
+    mock_dwdwfsapi.data_valid = True
     entry = await init_integration(hass, mock_identifier_entry)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -103,6 +110,23 @@ async def test_removing_old_device(
     )
 
 
+async def test_load_entry_without_region_or_tracker(hass: HomeAssistant) -> None:
+    """Test setup failure when neither a region nor a tracker is configured."""
+    entry = await init_integration(hass, MockConfigEntry(domain=DOMAIN, data={}))
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_load_entry_with_invalid_api_data(
+    hass: HomeAssistant,
+    mock_identifier_entry: MockConfigEntry,
+) -> None:
+    """Test setup retry when the API returns invalid data."""
+    entry = await init_integration(hass, mock_identifier_entry)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_load_invalid_registry_entry(
     hass: HomeAssistant, mock_tracker_entry: MockConfigEntry
 ) -> None:
@@ -147,6 +171,7 @@ async def test_load_valid_device_tracker(
     mock_dwdwfsapi: MagicMock,
 ) -> None:
     """Test loading the integration with a valid device tracker based entry."""
+    mock_dwdwfsapi.data_valid = True
     mock_tracker_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         "device_tracker",
@@ -169,13 +194,140 @@ async def test_load_valid_device_tracker(
     assert isinstance(mock_tracker_entry.runtime_data, DwdWeatherWarningsCoordinator)
 
 
+async def test_failed_device_tracker_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tracker_entry: MockConfigEntry,
+    mock_dwdwfsapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an API update failure for a device tracker entry."""
+    mock_dwdwfsapi.data_valid = True
+    mock_tracker_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        mock_tracker_entry.domain,
+        "uuid",
+        suggested_object_id="test_gps",
+        config_entry=mock_tracker_entry,
+    )
+    hass.states.async_set(
+        mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
+        STATE_HOME,
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
+    )
+
+    await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def invalidate_api_data() -> None:
+        mock_dwdwfsapi.data_valid = False
+
+    mock_dwdwfsapi.update.reset_mock()
+    mock_dwdwfsapi.update.side_effect = invalidate_api_data
+    coordinator = mock_tracker_entry.runtime_data
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_dwdwfsapi.update.assert_called_once()
+    assert isinstance(coordinator.last_exception, UpdateFailedUnreachable)
+    assert coordinator.last_exception.translation_key == "cannot_connect"
+
+
+async def test_device_tracker_missing_during_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tracker_entry: MockConfigEntry,
+    mock_dwdwfsapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an update failure when the tracker state disappears."""
+    mock_dwdwfsapi.data_valid = True
+    mock_tracker_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        mock_tracker_entry.domain,
+        "uuid",
+        suggested_object_id="test_gps",
+        config_entry=mock_tracker_entry,
+    )
+    hass.states.async_set(
+        mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
+        STATE_HOME,
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
+    )
+
+    await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
+    await hass.async_block_till_done()
+    hass.states.async_remove(mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER])
+
+    coordinator = mock_tracker_entry.runtime_data
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "position_error"
+
+
+async def test_device_tracker_moved(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tracker_entry: MockConfigEntry,
+    mock_dwdwfsapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test recreating the API when the device tracker moves."""
+    mock_dwdwfsapi.data_valid = True
+    mock_tracker_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        mock_tracker_entry.domain,
+        "uuid",
+        suggested_object_id="test_gps",
+        config_entry=mock_tracker_entry,
+    )
+    tracker_id = mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER]
+    hass.states.async_set(
+        tracker_id,
+        STATE_HOME,
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
+    )
+
+    await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        tracker_id,
+        STATE_HOME,
+        {ATTR_LATITUDE: 50.19, ATTR_LONGITUDE: 7.610263},
+    )
+    new_api = MagicMock()
+    new_api.data_valid = True
+    with patch(
+        "homeassistant.components.dwd_weather_warnings.coordinator.DwdWeatherWarningsAPI",
+        return_value=new_api,
+    ) as mock_api:
+        coordinator = mock_tracker_entry.runtime_data
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_api.assert_called_once()
+    assert coordinator.api is new_api
+
+
 async def test_filter_expired_warnings(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_dwdwfsapi: MagicMock,
+    mock_identifier_entry: MockConfigEntry,
 ) -> None:
     """Test expired-warning filtering."""
     now = dt_util.utcnow()
     mock_dwdwfsapi.data_valid = True
-    mock_dwdwfsapi.warncell_id = "803000000"
+    mock_dwdwfsapi.warncell_id = mock_identifier_entry.data[CONF_REGION_IDENTIFIER]
     mock_dwdwfsapi.warncell_name = "Test region"
     mock_dwdwfsapi.current_warnings = [
         _warning(4, now - timedelta(minutes=30)),
@@ -183,15 +335,12 @@ async def test_filter_expired_warnings(
     ]
     mock_dwdwfsapi.expected_warnings = []
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_REGION_IDENTIFIER: "803000000"},
-        unique_id="803000000",
-    )
-    await init_integration(hass, entry)
+    await init_integration(hass, mock_identifier_entry)
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}-{CURRENT_WARNING_SENSOR}"
+        "sensor",
+        DOMAIN,
+        f"{mock_identifier_entry.unique_id}-{CURRENT_WARNING_SENSOR}",
     )
     assert entity_id is not None
 
@@ -200,3 +349,29 @@ async def test_filter_expired_warnings(
     assert state.state == "2"
     assert state.attributes[ATTR_WARNING_COUNT] == 1
     assert "warning_2" not in state.attributes
+
+
+async def test_no_warnings(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_dwdwfsapi: MagicMock,
+    mock_identifier_entry: MockConfigEntry,
+) -> None:
+    """Test sensors when the API returns no warning data."""
+    mock_dwdwfsapi.data_valid = True
+    mock_dwdwfsapi.current_warnings = None
+    mock_dwdwfsapi.expected_warnings = None
+
+    await init_integration(hass, mock_identifier_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{mock_identifier_entry.unique_id}-{CURRENT_WARNING_SENSOR}",
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes[ATTR_WARNING_COUNT] == 0
