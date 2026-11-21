@@ -63,7 +63,7 @@ VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
                 channel_index=channel,
                 channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
             )
-            for channel in range(1, 9)
+            for channel in range(1, 13)
         ),
     ),
 }
