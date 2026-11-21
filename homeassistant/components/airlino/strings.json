@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_api_version": "AirLino API version 19 or newer is required"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_api_version": "AirLino API version 19 or newer is required"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up the AirLino device named `{name}`?",
+        "title": "Confirm setup"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the AirLino.",
+          "port": "The port used to access the HTTP-API. 8989 is the default port."
+        },
+        "description": "Set up your AirLino device."
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "The AirLino reported an error."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the AirLino."
+    },
+    "media_type_unsupported": {
+      "message": "Media type {media_type} is not supported by AirLino; only audio URLs can be played."
+    },
+    "media_url_invalid": {
+      "message": "{media_id} is not a valid HTTP URL."
+    }
+  }
+}

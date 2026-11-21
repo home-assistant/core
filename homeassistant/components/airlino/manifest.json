@@ -1,0 +1,14 @@
+{
+  "domain": "airlino",
+  "name": "AirLino",
+  "categories": ["media_entertainment.speakers_audio"],
+  "codeowners": ["@Philipp-E"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airlino",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["airlino_api"],
+  "quality_scale": "bronze",
+  "requirements": ["airlino-api==1.0.1"],
+  "zeroconf": ["_dockset._tcp.local."]
+}

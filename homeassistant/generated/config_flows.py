@@ -41,6 +41,7 @@ FLOWS = {
         "agent_dvr",
         "aidot",
         "airgradient",
+        "airlino",
         "airly",
         "airnow",
         "airobot",
