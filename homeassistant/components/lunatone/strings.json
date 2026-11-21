@@ -46,7 +46,21 @@
   "entity": {
     "binary_sensor": {
       "scan_status": {
-        "name": "Scan status"
+        "name": "DALI scan status"
+      }
+    },
+    "button": {
+      "scan_cancel": {
+        "name": "DALI scan: Cancel"
+      },
+      "scan_start": {
+        "name": "DALI scan: Start system extension"
+      },
+      "scan_start_current": {
+        "name": "DALI scan: Read current devices"
+      },
+      "scan_start_new": {
+        "name": "DALI scan: Start new installation"
       }
     },
     "sensor": {
@@ -74,6 +88,12 @@
     }
   },
   "exceptions": {
+    "cannot_cancel_scan": {
+      "message": "Cannot cancel DALI scan if it isn't running."
+    },
+    "cannot_control_dali_scan": {
+      "message": "Unable to connect to the device and control the DALI scan of {entity}."
+    },
     "cannot_retrieve_devices_data": {
       "message": "Unable to retrieve device data from Lunatone REST API"
     },
@@ -85,6 +105,9 @@
     },
     "cannot_retrieve_sensors_data": {
       "message": "Unable to retrieve sensors data from Lunatone REST API"
+    },
+    "cannot_start_scan": {
+      "message": "Cannot start a new DALI scan if it is already running."
     },
     "cannot_turn_off_light": {
       "message": "Unable to connect to the device and turn off {entity}"

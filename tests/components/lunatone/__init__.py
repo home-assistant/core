@@ -20,7 +20,10 @@ from lunatone_rest_api_client.models.devices import DeviceStatus
 from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
+from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 BASE_IP: Final = "10.0.0.131"
 BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
@@ -192,3 +195,25 @@ def build_sensors_data() -> SensorsData:
             ),
         ]
     )
+
+
+async def enable_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_id: str,
+    entity_platform: Platform,
+) -> None:
+    """Enable all entities of a specific entity platform."""
+    disabled_entities = [
+        entry
+        for entry in er.async_get(hass).entities.values()
+        if entry.platform == DOMAIN
+        and entry.domain == entity_platform
+        and entry.disabled
+    ]
+
+    for entity in disabled_entities:
+        entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+
+    await hass.config_entries.async_reload(config_entry_id)
+    await hass.async_block_till_done()

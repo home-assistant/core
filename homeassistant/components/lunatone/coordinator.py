@@ -1,5 +1,6 @@
 """Coordinator for handling data fetching and updates."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -265,6 +266,7 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
         )
         self.dali_scan_api = dali_scan_api
         self.line_scan_status: dict[int, ScanLineData] = {}
+        self.scan_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> ScanData:
@@ -277,12 +279,12 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
                 translation_key="cannot_retrieve_scan_data",
             ) from ex
 
+        data = self.dali_scan_api.data
+
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
-        if self.dali_scan_api.data.busy:
+        if data.busy:
             update_interval = timedelta(seconds=1)
         self.update_interval = update_interval
 
-        self.line_scan_status = {
-            scan_data.line: scan_data for scan_data in self.dali_scan_api.data.lines
-        }
-        return self.dali_scan_api.data
+        self.line_scan_status = {scan_data.line: scan_data for scan_data in data.lines}
+        return data

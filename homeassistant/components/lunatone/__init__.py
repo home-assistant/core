@@ -29,6 +29,7 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.SENSOR,
 ]
