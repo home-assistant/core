@@ -1,10 +1,23 @@
 """Media player platform."""
 
+import asyncio
 from datetime import datetime
+import hashlib
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from aioonkyo import Code, Kind, NetPlaybackState, Status, Zone, command, query, status
+import aiohttp
+from aioonkyo import (
+    Code,
+    Kind,
+    NetArtType,
+    NetPlaybackState,
+    Status,
+    Zone,
+    command,
+    query,
+    status,
+)
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -15,6 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
@@ -224,6 +238,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _net_input: InputSource | None = None
     _net_state: MediaPlayerState | None = None
 
+    # Cover art (local addition, not part of the upstream PR): the receiver reports an
+    # address on itself. It serves the same address for every track, so the image hash
+    # is built from the track and a counter that grows with every art report.
+    _net_art_url: str | None = None
+    _net_art_serial: int = 0
+
     def __init__(
         self,
         manager: ReceiverManager,
@@ -350,6 +370,62 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_media_duration = None
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
+        self._net_art_url = None
+
+    @property
+    @override
+    def media_image_url(self) -> str | None:
+        """Return the cover art address while the NET/USB player reports a state."""
+        if self._attr_state is MediaPlayerState.ON and self._net_state is not None:
+            return self._net_art_url
+        return None
+
+    @property
+    @override
+    def media_image_hash(self) -> str | None:
+        """Return a hash that changes with the track, so Home Assistant reloads the art."""
+        if (url := self.media_image_url) is None:
+            return None
+        key = "|".join(
+            (
+                url,
+                str(self._net_art_serial),
+                self._attr_media_title or "",
+                self._attr_media_artist or "",
+                self._attr_media_album_name or "",
+            )
+        )
+        return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+    @override
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch the cover art from the receiver.
+
+        These receivers answer with a few header-like lines in front of the image
+        ("Content-size: 129128", "Content-type: image/jpeg", empty line), so they are
+        removed here to leave a plain image.
+        """
+        if (url := self.media_image_url) is None:
+            return None, None
+        session = async_get_clientsession(self.hass)
+        try:
+            async with asyncio.timeout(10):
+                response = await session.get(url)
+                response.raise_for_status()
+                body = await response.read()
+        except (aiohttp.ClientError, TimeoutError):
+            return None, None
+        content_type = response.content_type
+        if body.startswith(b"Content-size:"):
+            header, separator, rest = body.partition(b"\n\n")
+            if not separator:
+                return None, None
+            for line in header.split(b"\n"):
+                name, _, value = line.partition(b":")
+                if name.strip().lower() == b"content-type":
+                    content_type = value.strip().decode("ascii", "replace")
+            body = rest
+        return body, content_type
 
     @override
     async def async_turn_on(self) -> None:
@@ -585,6 +661,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 | status.NetAlbum()
                 | status.NetTrack()
                 | status.NetTime()
+                | status.NetJacketArt()
             ) if self._net_input is not None:
                 self._process_net_update(message)
 
@@ -642,9 +719,17 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         | status.NetArtist
         | status.NetAlbum
         | status.NetTrack
-        | status.NetTime,
+        | status.NetTime
+        | status.NetJacketArt,
     ) -> None:
         match message:
+            case status.NetJacketArt(image_type=image_type):
+                # Other reports of this kind (such as "LINK" after the address) are ignored
+                if (url := message.url) is not None:
+                    self._net_art_url = url
+                    self._net_art_serial += 1
+                elif image_type is NetArtType.NONE:
+                    self._net_art_url = None
             case status.NetPlayStatus(playback=playback) if playback is not None:
                 self._set_net_state(NET_PLAYBACK_STATES[playback])
             case status.NetTitle(text=text):
@@ -680,6 +765,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             await self._manager.write(query.NetAlbum())
             await self._manager.write(query.NetTrack())
             await self._manager.write(query.NetTime())
+            await self._manager.write(query.NetJacketArt())
 
         self._query_net_unsub = async_call_later(self.hass, QUERY_NET_DELAY, coro)
 
