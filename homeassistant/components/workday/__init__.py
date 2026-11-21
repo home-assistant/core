@@ -65,7 +65,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> N
     await async_validate_country_and_province(hass, entry, country, province)
 
     entry.runtime_data = await hass.async_add_executor_job(
-        get_holidays_object, country, province, year, language, categories
+        get_holidays_object,
+        country,
+        province,
+        year,
+        language,
+        categories,
+        country_settings,
     )
 
     add_remove_custom_holidays(
