@@ -1402,6 +1402,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "baby_tracker": {
+      "name": "Baby Tracker (Nighp)",
+      "integration_type": "hub",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "backblaze_b2": {
       "name": "Backblaze B2",
       "integration_type": "service",

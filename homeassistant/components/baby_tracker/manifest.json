@@ -1,0 +1,13 @@
+{
+  "domain": "baby_tracker",
+  "name": "Baby Tracker (Nighp)",
+  "categories": ["health_wellbeing"],
+  "codeowners": ["@wtadler"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/baby_tracker",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pybabytracker"],
+  "quality_scale": "bronze",
+  "requirements": ["pybabytracker==0.2.1"]
+}

@@ -114,6 +114,7 @@ homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.axle_energy.*
 homeassistant.components.azure_storage.*
+homeassistant.components.baby_tracker.*
 homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*

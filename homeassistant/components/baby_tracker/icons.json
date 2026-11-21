@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "last_diaper": {
+        "default": "mdi:baby"
+      },
+      "last_feed": {
+        "default": "mdi:baby-bottle"
+      },
+      "last_sleep": {
+        "default": "mdi:sleep"
+      }
+    }
+  }
+}
