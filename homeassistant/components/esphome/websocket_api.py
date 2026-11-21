@@ -2,7 +2,13 @@
 
 from typing import Any, cast
 
-from aioesphomeapi import APIConnectionError, WizardEntityField, build_device_unique_id
+from aioesphomeapi import (
+    COMPONENT_TYPE_TO_INFO,
+    APIConnectionError,
+    WizardEntityField,
+    WizardPage,
+    build_device_unique_id,
+)
 from aioesphomeapi.model import SendspinPairingTokenStatus
 import probatio
 
@@ -27,6 +33,14 @@ CLIENT_ID = "client_id"
 CLIENT_IDS = "client_ids"
 
 ZWAVE_JS_DOMAIN = "zwave_js"
+
+# Backwards compatibility: firmware built with ESPHome before 2026.11.0 names
+# no platform or role. On pages with these titles the first entities are
+# switches, which have these roles in order.
+_LEGACY_WIZARD_PAGE_ROLES: dict[str, tuple[str, ...]] = {
+    "bluetooth": ("template.bluetooth_enabled",),
+    "sendspin": ("sendspin.enabled", "sendspin.unpaired_access"),
+}
 
 _UNAVAILABLE_CAPABILITIES: dict[str, Any] = {
     "bluetooth_proxy": {"supported": False},
@@ -171,8 +185,9 @@ def get_device_wizard(
                         {
                             "entity_id": _wizard_entity_id(ent_reg, entry_data, entity),
                             "description": entity.description,
+                            "role": entity.role,
                         }
-                        for entity in page.entities
+                        for entity in _wizard_page_entities(page)
                     ],
                 }
                 for page in wizard.pages
@@ -216,6 +231,21 @@ def _async_get_main_device_entry(
     return cast(ESPHomeConfigEntry, candidate)
 
 
+def _wizard_page_entities(page: WizardPage) -> list[WizardEntityField]:
+    """Return the entities of a wizard page, with what legacy firmware leaves out."""
+    roles = _LEGACY_WIZARD_PAGE_ROLES.get(page.title.strip().lower())
+    if roles is None:
+        return page.entities
+    return [
+        entity
+        if entity.platform or index >= len(roles)
+        else WizardEntityField.from_dict(
+            entity.to_dict() | {"platform": "switch", "role": roles[index]}
+        )
+        for index, entity in enumerate(page.entities)
+    ]
+
+
 def _wizard_entity_id(
     ent_reg: er.EntityRegistry,
     entry_data: RuntimeEntryData,
@@ -223,16 +253,11 @@ def _wizard_entity_id(
 ) -> str | None:
     """Return the entity id of an entity the wizard lists, if it has one."""
     assert entry_data.device_info is not None
-    key = (entity.device_id, entity.key)
-    # Keys are only unique per platform and the wizard does not name the platform
-    matches = [
-        (info_type, infos[key])
-        for info_type, infos in entry_data.info.items()
-        if key in infos
-    ]
-    if len(matches) != 1:
+    if (info_type := COMPONENT_TYPE_TO_INFO.get(entity.platform)) is None:
         return None
-    info_type, info = matches[0]
+    key = (entity.device_id, entity.key)
+    if (info := entry_data.info.get(info_type, {}).get(key)) is None:
+        return None
     return ent_reg.async_get_entity_id(
         INFO_TYPE_TO_PLATFORM[info_type],
         DOMAIN,

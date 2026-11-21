@@ -516,16 +516,57 @@ WIZARD = {
         {
             "title": "Bluetooth",
             "description": "Choose whether this device offers Bluetooth.",
-            "entities": [{"key": 3, "description": "Proxies Bluetooth devices."}],
+            "entities": [
+                {
+                    "key": 3,
+                    "platform": "switch",
+                    "description": "Proxies Bluetooth devices.",
+                    "role": "template.bluetooth_enabled",
+                }
+            ],
         },
         {
             "title": "Sendspin",
             "description": "Choose how this device works with Sendspin.",
             "entities": [
-                {"key": 2, "description": "Lets Sendspin servers play audio."},
-                {"key": 99, "description": "Not exposed by the device."},
+                {
+                    "key": 2,
+                    "platform": "switch",
+                    "description": "Lets Sendspin servers play audio.",
+                    "role": "sendspin.enabled",
+                },
+                {
+                    "key": 99,
+                    "platform": "switch",
+                    "description": "Not exposed by the device.",
+                    "role": "sendspin.unpaired_access",
+                },
             ],
         },
+    ]
+}
+# Legacy firmware does not name the platform or role of an entity
+WIZARD_LEGACY = {
+    "pages": [
+        {
+            **page,
+            "entities": [
+                {k: v for k, v in entity.items() if k in ("key", "description")}
+                for entity in page["entities"]
+            ],
+        }
+        for page in WIZARD["pages"]
+    ]
+}
+WIZARD_UNKNOWN_PLATFORMS = {
+    "pages": [
+        {
+            "title": "Audio",
+            "entities": [
+                {"key": 2, "description": "Names no platform."},
+                {"key": 3, "platform": "new", "description": "Platform is new."},
+            ],
+        }
     ]
 }
 WIZARD_SWITCHES = [
@@ -540,6 +581,7 @@ WIZARD_PAGES = [
             {
                 "entity_id": "switch.test_bluetooth",
                 "description": "Proxies Bluetooth devices.",
+                "role": "template.bluetooth_enabled",
             }
         ],
     },
@@ -550,10 +592,19 @@ WIZARD_PAGES = [
             {
                 "entity_id": "switch.test_sendspin",
                 "description": "Lets Sendspin servers play audio.",
+                "role": "sendspin.enabled",
             },
-            {"entity_id": None, "description": "Not exposed by the device."},
+            {
+                "entity_id": None,
+                "description": "Not exposed by the device.",
+                "role": "sendspin.unpaired_access",
+            },
         ],
     },
+]
+WIZARD_KEY_ON_TWO_PLATFORMS = [
+    *WIZARD_SWITCHES,
+    BinarySensorInfo(object_id="bluetooth", key=3, name="Bluetooth"),
 ]
 
 
@@ -569,21 +620,41 @@ WIZARD_PAGES = [
         ),
         pytest.param(
             {"return_value": DeviceWizard.from_dict(WIZARD)},
-            [
-                *WIZARD_SWITCHES,
-                BinarySensorInfo(object_id="bluetooth", key=3, name="Bluetooth"),
-            ],
-            [
-                {
-                    **WIZARD_PAGES[0],
-                    "entities": [
-                        {"entity_id": None, "description": "Proxies Bluetooth devices."}
-                    ],
-                },
-                WIZARD_PAGES[1],
-            ],
+            WIZARD_KEY_ON_TWO_PLATFORMS,
+            WIZARD_PAGES,
             True,
             id="key_on_two_platforms",
+        ),
+        pytest.param(
+            {"return_value": DeviceWizard.from_dict(WIZARD_LEGACY)},
+            WIZARD_KEY_ON_TWO_PLATFORMS,
+            WIZARD_PAGES,
+            True,
+            id="legacy_switch_pages",
+        ),
+        pytest.param(
+            {"return_value": DeviceWizard.from_dict(WIZARD_UNKNOWN_PLATFORMS)},
+            WIZARD_SWITCHES,
+            [
+                {
+                    "title": "Audio",
+                    "description": "",
+                    "entities": [
+                        {
+                            "entity_id": None,
+                            "description": "Names no platform.",
+                            "role": "",
+                        },
+                        {
+                            "entity_id": None,
+                            "description": "Platform is new.",
+                            "role": "",
+                        },
+                    ],
+                }
+            ],
+            True,
+            id="unknown_platforms",
         ),
         pytest.param(
             {"side_effect": UnsupportedWizardVersionError(2)},
