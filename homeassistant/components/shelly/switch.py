@@ -37,6 +37,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
+    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_block,
     async_setup_entry_rpc,
@@ -51,6 +52,7 @@ from .utils import (
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
     is_rpc_ledstrip_control_available,
+    is_rpc_wall_display_brightness_supported,
     is_view_for_platform,
 )
 
@@ -241,6 +243,47 @@ class RpcLedStripSwitch(RpcSwitch):
             self.status,
             self.entity_description.sub_key,
         )
+
+
+class RpcWallDisplayAutoBrightnessSwitch(ShellyRpcEntity, SwitchEntity):
+    """Represent a RPC Wall Display auto brightness switch."""
+
+    def __init__(
+        self, coordinator: ShellyRpcCoordinator, description: SwitchEntityDescription
+    ) -> None:
+        """Initialize Wall Display auto brightness switch."""
+        super().__init__(coordinator, "ui")
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.mac}-ui-{description.key}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if auto brightness is on."""
+        return cast(bool, self.coordinator.device.config["ui"]["brightness"]["auto"])
+
+    @rpc_call
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on auto brightness."""
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": True}}
+        )
+
+    @rpc_call
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off auto brightness."""
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": False}}
+        )
+
+
+WALL_DISPLAY_AUTO_BRIGHTNESS_SWITCH = SwitchEntityDescription(
+    key="auto",
+    translation_key="auto_brightness",
+    entity_category=EntityCategory.CONFIG,
+)
 
 
 RPC_SWITCHES = (
@@ -600,6 +643,16 @@ def _async_setup_rpc_entry(
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
     )
+
+    # The Wall Display does not report the ui component in the status
+    if is_rpc_wall_display_brightness_supported(coordinator):
+        async_add_entities(
+            [
+                RpcWallDisplayAutoBrightnessSwitch(
+                    coordinator, WALL_DISPLAY_AUTO_BRIGHTNESS_SWITCH
+                )
+            ]
+        )
 
     # the user can remove virtual components from the device configuration, so we need
     # to remove orphaned entities
