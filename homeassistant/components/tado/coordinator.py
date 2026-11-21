@@ -32,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
+DEVICE_REFRESH_INTERVAL = timedelta(hours=6)
+RATE_LIMITED_INTERVAL = timedelta(hours=1)
 
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
@@ -83,6 +85,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._current_interval: float = 0
         self._next_update: datetime | None = None
         self._time_until_reset: float = 0
+        self._devices_updated: datetime | None = None
+        self._devices_missing_offset: set[str] = set()
 
     @property
     def fallback(self) -> str:
@@ -99,13 +103,19 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
-        def _load_tado_data() -> tuple[dict, list, list]:
+        def _load_tado_data() -> tuple[dict, list, list, bool]:
             """Load Tado data in one call."""
             _LOGGER.debug("Preloading Tado data")
+            devices = self.devices
+            devices_refreshed = False
+            if self._devices_stale():
+                devices = self._tado.get_devices()
+                devices_refreshed = True
             return (
                 self._tado.get_me(),
                 self._tado.get_zones(),
-                self._tado.get_devices(),
+                devices,
+                devices_refreshed,
             )
 
         try:
@@ -113,16 +123,19 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 tado_home_call,
                 self.zones,
                 self.devices,
+                devices_refreshed,
             ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
-            _LOGGER.debug("Checking rate limit")
-            ratelimit = self.get_rate_limit()
-            if ratelimit.get("remaining") == "0":
+            if self._rate_limit_exhausted():
+                self.update_interval = RATE_LIMITED_INTERVAL
                 raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
         self.zones = self._normalize_zones(self.zones)
         self.devices = self._normalize_devices(self.devices)
+
+        if devices_refreshed:
+            self._devices_updated = dt_util.now()
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -194,11 +207,28 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # When any zone is actively heating, we use a shorter minimum
         # To prevent overshooting in temperature,
         # check if there's heating/cooling activity
-        # Accept five minutes to "overshoot", else reset back to 30 minutes
-        min_interval = 300 if self._is_any_zone_active else 1800
+        # Accept ten minutes to "overshoot", else reset back to 30 minutes
+        min_interval = 600 if self._is_any_zone_active else 1800
 
-        remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", 0))
-        if remaining_calls is None or remaining_calls <= 0:
+        try:
+            remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", ""))
+        except TypeError, ValueError:
+            remaining_calls = None
+
+        if remaining_calls == 0:
+            # Quota exhausted: back off until the daily reset.
+            self._current_interval = max(
+                RATE_LIMITED_INTERVAL.total_seconds(), self._time_until_reset
+            )
+            self.update_interval = timedelta(seconds=self._current_interval)
+            self._next_update = reset_time + timedelta(seconds=self._current_interval)
+            _LOGGER.debug(
+                "Tado daily quota exhausted; backing off for %s seconds",
+                self._current_interval,
+            )
+            return
+
+        if remaining_calls is None:
             # If rate limit info is unavailable, fall back to the static interval.
             self._current_interval = SCAN_INTERVAL.total_seconds()
             self.update_interval = SCAN_INTERVAL
@@ -210,11 +240,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return
 
-        # Each refresh cycle costs 9 + len(zones) calls
+        # Each refresh cycle costs 6 + len(zones) calls
         # Also take 10% of the remaining calls as buffer
         self._current_interval = max(
             min_interval,
-            (self._time_until_reset * (9 + len(self.zones))) / (remaining_calls * 0.9),
+            (self._time_until_reset * (6 + len(self.zones))) / (remaining_calls * 0.9),
         )
 
         self._next_update = reset_time + timedelta(seconds=self._current_interval)
@@ -273,19 +303,22 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             normalized.append(zone)
         return normalized
 
+    def _devices_stale(self) -> bool:
+        """Return True if the cached device list needs a fresh fetch."""
+        return (
+            not self.devices
+            or self._devices_updated is None
+            or dt_util.now() - self._devices_updated > DEVICE_REFRESH_INTERVAL
+        )
+
     async def _async_update_devices(self) -> dict[str, dict]:
-        """Update the device data from Tado."""
+        """Update the device data from the fetched device list."""
 
-        try:
-            devices = await self.hass.async_add_executor_job(self._tado.get_devices)
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado devices: {err}") from err
-
-        if not devices:
+        if not self.devices:
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
         return await self.hass.async_add_executor_job(
-            self._update_device_info, self._normalize_devices(devices)
+            self._update_device_info, self.devices
         )
 
     def _update_device_info(self, devices: list[dict[str, Any]]) -> dict[str, dict]:
@@ -295,9 +328,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
             try:
-                if INSIDE_TEMPERATURE_MEASUREMENT in device.get(
-                    "characteristics", {}
-                ).get("capabilities", []):
+                if (
+                    TEMP_OFFSET not in device
+                    and device_short_serial_no not in self._devices_missing_offset
+                    and INSIDE_TEMPERATURE_MEASUREMENT
+                    in (device.get("characteristics", {}).get("capabilities", []))
+                ):
                     _LOGGER.debug(
                         "Updating temperature offset for device %s",
                         device_short_serial_no,
@@ -306,6 +342,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         device_short_serial_no, TEMP_OFFSET
                     )
             except RequestException as err:
+                if self._rate_limit_exhausted():
+                    self.update_interval = RATE_LIMITED_INTERVAL
+                    raise UpdateFailed(
+                        f"Error updating device {device_short_serial_no}: {err}"
+                    ) from err
+                self._devices_missing_offset.add(device_short_serial_no)
                 _LOGGER.error(
                     "Error updating device %s: %s", device_short_serial_no, err
                 )
@@ -330,6 +372,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 else zone_states_call
             )
         except RequestException as err:
+            if self._rate_limit_exhausted():
+                self.update_interval = RATE_LIMITED_INTERVAL
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
         mapped_zones: dict[int, TadoZone] = {}
@@ -356,6 +400,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Zone %s: overlay defaults unsupported on this API", zone_id)
             overlay_default = {}
         except RequestException as err:
+            if self._rate_limit_exhausted():
+                self.update_interval = RATE_LIMITED_INTERVAL
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
         zone_cls = TadoXZone if self.is_tadox else TadoZone
@@ -386,6 +432,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
         except RequestException as err:
+            if self._rate_limit_exhausted():
+                self.update_interval = RATE_LIMITED_INTERVAL
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
 
         _LOGGER.debug(
@@ -570,6 +618,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             circuits, controls = await self.hass.async_add_executor_job(_load_circuits)
         except RequestException as err:
+            if self._rate_limit_exhausted():
+                self.update_interval = RATE_LIMITED_INTERVAL
             raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
 
         self.heating_circuits = {
@@ -595,3 +645,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""
         return self._tado.rate_limit_info()
+
+    def _rate_limit_exhausted(self) -> bool:
+        """Return True when the daily Tado API quota is exhausted."""
+        return self.get_rate_limit().get("remaining") == "0"
