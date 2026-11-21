@@ -145,7 +145,7 @@ def add_simple_sensors(
     for value, _characteristic in scalar_characteristics_for_platform(
         management_point,
         Platform.SENSOR,
-        gateway_online=device.device.cloud_connection.value is True,
+        gateway_online=getattr(device.device, "available", True),
     ):
         unique_id = _value_sensor_unique_id(
             device.id, management_point.embedded_id, None, value

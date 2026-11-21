@@ -326,6 +326,67 @@ async def _async_fire_coordinator_update(
     await hass.async_block_till_done()
 
 
+async def test_offline_air_purifier_does_not_create_power_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Avoid a permanent scalar power entity during a purifier outage."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    power_unique_id = f"{device.id}_{point.embedded_id}_onOffMode"
+    fan_entity_id = entity_registry.async_get_entity_id(
+        Platform.FAN.value,
+        DOMAIN,
+        f"{device.id}_{point.embedded_id}_air_purifier",
+    )
+    assert fan_entity_id is not None
+
+    offline_devices = deepcopy(_load_gateway_devices("mc80z"))
+    offline_devices[0].cloud_connection.value = False
+    offline_point = offline_devices[0].management_points_by_type("climateControl")[0]
+    assert offline_point.air_purification is not None
+    assert offline_point.air_purification.power is not None
+    offline_point.air_purification.power.settable = False
+    mock_onecta_client.get_gateway_devices.return_value = offline_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR.value, DOMAIN, power_unique_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH.value, DOMAIN, power_unique_id
+        )
+        is None
+    )
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("mc80z")
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR.value, DOMAIN, power_unique_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH.value, DOMAIN, power_unique_id
+        )
+        is None
+    )
+    assert (fan_state := hass.states.get(fan_entity_id)) is not None
+    assert fan_state.state != STATE_UNAVAILABLE
+
+
 async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -27,7 +27,7 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import round_temperature_to_step
+from .utils import round_temperature_to_step, temperature_unit_or_celsius
 
 PARALLEL_UPDATES = 1
 
@@ -122,12 +122,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 else None
             )
             unit = tank_temperature.unit if tank_temperature is not None else None
-        if unit is None:
-            return UnitOfTemperature.CELSIUS
-        try:
-            return UnitOfTemperature(unit)
-        except ValueError:
-            return UnitOfTemperature.CELSIUS
+        return temperature_unit_or_celsius(unit)
 
     @property
     def _hot_water(self) -> DomesticHotWater | None:

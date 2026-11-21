@@ -47,7 +47,11 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import fixed_positions, round_temperature_to_step
+from .utils import (
+    fixed_positions,
+    round_temperature_to_step,
+    temperature_unit_or_celsius,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -318,14 +322,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
             sensory_data = cc.sensory_data(sensory_target) if cc is not None else None
             unit = sensory_data.unit if sensory_data is not None else None
-        try:
-            return (
-                UnitOfTemperature(unit)
-                if unit is not None
-                else UnitOfTemperature.CELSIUS
-            )
-        except ValueError:
-            return UnitOfTemperature.CELSIUS
+        return temperature_unit_or_celsius(unit)
 
     def _get_max_temp(self) -> float:
         """Return the maximum configurable temperature."""

@@ -66,6 +66,15 @@ def scalar_platform_for_point(
         characteristic = point.scalar_characteristic(name)
     if characteristic is None:
         return None
+    # An offline climate-control point can report onOffMode as read-only. Wait
+    # for fresh connectivity data before classifying it to avoid an orphaned
+    # entity on a scalar platform.
+    if (
+        name == "onOffMode"
+        and point.management_point_type == "climateControl"
+        and not gateway_online
+    ):
+        return None
     if (
         name == "airPurificationMode"
         and point.management_point_type == "climateControl"

@@ -17,6 +17,7 @@ from daikin_onecta.exceptions import (
     OnectaConnectionError,
     OnectaError,
     OnectaRateLimitError,
+    OnectaRequestError,
     OnectaResponseError,
 )
 from daikin_onecta.models import GatewayDevice
@@ -276,12 +277,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         async with self._cloud_lock:
             try:
                 await command(self._client)
-            except OAuth2TokenRequestBaseError as err:
-                _LOGGER.debug(
-                    "Daikin OAuth token request failed with %s",
-                    type(err).__name__,
-                )
-                return False
             except OnectaAuthenticationError as err:
                 if err.status == 401:
                     _LOGGER.debug(
@@ -308,24 +303,32 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.retry_after,
                 )
                 return False
-            except OnectaConnectionError as err:
-                _LOGGER.debug(
-                    "Daikin request %s %s failed to connect: %s",
-                    err.method,
-                    err.path,
-                    err,
-                )
-                return False
-            except OnectaApiError as err:
-                _LOGGER.debug(
-                    "Daikin request %s %s failed with HTTP %s",
-                    err.method,
-                    err.path,
-                    err.status,
-                )
-                return False
-            except TimeoutError:
-                _LOGGER.debug("Daikin request timed out")
+            except (
+                OAuth2TokenRequestBaseError,
+                OnectaRequestError,
+                TimeoutError,
+            ) as err:
+                if isinstance(err, OnectaApiError):
+                    _LOGGER.debug(
+                        "Daikin request %s %s failed with HTTP %s",
+                        err.method,
+                        err.path,
+                        err.status,
+                    )
+                elif isinstance(err, OnectaConnectionError):
+                    _LOGGER.debug(
+                        "Daikin request %s %s failed to connect: %s",
+                        err.method,
+                        err.path,
+                        err,
+                    )
+                elif isinstance(err, TimeoutError):
+                    _LOGGER.debug("Daikin request timed out")
+                else:
+                    _LOGGER.debug(
+                        "Daikin OAuth token request failed with %s",
+                        type(err).__name__,
+                    )
                 return False
             had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None

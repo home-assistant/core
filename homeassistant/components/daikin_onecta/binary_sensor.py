@@ -67,7 +67,9 @@ def _create_binary_sensors(
     for device in present_devices(coordinator):
         for management_point in device.device.management_points:
             for value, _characteristic in scalar_characteristics_for_platform(
-                management_point, Platform.BINARY_SENSOR
+                management_point,
+                Platform.BINARY_SENSOR,
+                gateway_online=getattr(device.device, "available", True),
             ):
                 unique_id = management_point_unique_id(
                     device.id, management_point.embedded_id, value

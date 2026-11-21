@@ -153,7 +153,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         firmware = management_point.firmware if management_point is not None else None
         if firmware is not None and firmware.has_update_status:
             return firmware.in_progress
-        return super().in_progress
+        return False
 
     def _update_from_management_point(self, management_point: ManagementPoint) -> None:
         """Pull the latest values out of a typed management point."""
@@ -165,7 +165,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             self._attr_release_url = None
             self._attr_release_summary = None
             self._firmware_id = None
-            self._attr_in_progress = False
             self._is_update_supported = False
             self._attr_supported_features = UpdateEntityFeature(0)
             self._attr_extra_state_attributes = {}
@@ -176,7 +175,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         self._attr_release_url = None
         self._attr_release_summary = None
         self._firmware_id = None
-        self._attr_in_progress = False
         self._attr_supported_features = (
             UpdateEntityFeature.INSTALL
             if self._is_update_supported
@@ -196,7 +194,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
                 )
 
         if firmware.has_update_status:
-            self._attr_in_progress = firmware.in_progress
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
         if self._pending_install is not None:

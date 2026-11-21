@@ -5,6 +5,18 @@ import re
 
 from daikin_onecta.models import FanDirectionMode, FanSpeedMode
 
+from homeassistant.const import UnitOfTemperature
+
+
+def temperature_unit_or_celsius(unit: str | None) -> UnitOfTemperature:
+    """Return Daikin's temperature unit, defaulting invalid or missing values to Celsius."""
+    try:
+        return (
+            UnitOfTemperature(unit) if unit is not None else UnitOfTemperature.CELSIUS
+        )
+    except ValueError:
+        return UnitOfTemperature.CELSIUS
+
 
 def fixed_positions(mode: FanDirectionMode | FanSpeedMode) -> range | None:
     """Return valid fixed positions from Daikin range metadata."""
