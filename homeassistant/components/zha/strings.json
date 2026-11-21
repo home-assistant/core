@@ -2388,8 +2388,17 @@
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "Device {ieee} was not found."
+    },
+    "group_not_found": {
+      "message": "Group {group_id} was not found."
+    },
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "no_warning_device": {
+      "message": "Device {ieee} is not an IAS warning device, so this action cannot be performed."
     },
     "not_zigbee_device": {
       "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."
