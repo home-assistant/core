@@ -1093,6 +1093,12 @@ class Recorder(threading.Thread):
 
     def _process_one_event(self, event: Event[Any]) -> None:
         if not self.enabled:
+            if event.event_type == EVENT_STATE_CHANGED and not event.data["new_state"]:
+                # Let the purge remove the last state of an entity removed
+                # while recording was disabled
+                entity_id = event.data["entity_id"]
+                self.states_manager.pop_pending(entity_id)
+                self.states_manager.pop_committed(entity_id)
             return
         if event.event_type == EVENT_STATE_CHANGED:
             self._process_state_changed_event_into_session(event)

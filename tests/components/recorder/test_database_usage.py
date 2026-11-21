@@ -401,9 +401,12 @@ async def test_database_usage_after_purge(
     await async_wait_purge_done(hass)
     result = await _async_usage(client, refresh=True)
 
-    assert [(row["entity_id"], row["states"]) for row in result["entities"]] == [
-        ("sensor.busy", 1)
-    ]
+    # The purge keeps the latest state of each entity and the old state of
+    # the oldest state in the retention window
+    assert {(row["entity_id"], row["states"]) for row in result["entities"]} == {
+        ("sensor.busy", 2),
+        ("sensor.quiet", 1),
+    }
     assert {
         (row["statistic_id"], row["statistics"], row["statistics_short_term"])
         for row in result["statistics"]
