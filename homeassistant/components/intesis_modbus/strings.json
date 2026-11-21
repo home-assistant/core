@@ -20,6 +20,19 @@
         },
         "description": "Confirm what the indoor unit behind the gateway can do."
       },
+      "reconfigure": {
+        "data": {
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::intesis_modbus::config::step::user::data_description::baudrate%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data_description::unit_id%]"
+        },
+        "description": "Update how this gateway is reached, for example after it moved to another serial port or its DIP switches changed."
+      },
       "user": {
         "data": {
           "baudrate": "[%key:component::modbus::common::baud_rate%]",
