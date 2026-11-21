@@ -133,6 +133,36 @@ async def test_async_setup_entry_custom_port_used(hass: HomeAssistant) -> None:
     assert args[0] == ("1.2.3.4", 1161)
 
 
+@pytest.mark.parametrize(
+    ("version", "extra_data", "expected_calls"),
+    [
+        pytest.param("1", {}, (True, False), id="v1_getnext"),
+        pytest.param("2c", {}, (False, True), id="v2c_getbulk"),
+        pytest.param("3", {"username": "user"}, (False, True), id="v3_getbulk"),
+    ],
+)
+async def test_setup_walks_with_the_command_of_the_version(
+    hass: HomeAssistant,
+    version: str,
+    extra_data: dict[str, str],
+    expected_calls: tuple[bool, bool],
+) -> None:
+    """Test that SNMPv1 is walked with GETNEXT and newer versions with GETBULK."""
+    entry = mock_entry(version=version, **extra_data)
+    entry.add_to_hass(hass)
+
+    getnext = Mock(side_effect=_async_mock_walk_with_mac)
+    getbulk = Mock(side_effect=_async_mock_walk_with_mac)
+    with (
+        patch("homeassistant.components.snmp.client.walk_cmd", getnext),
+        patch("homeassistant.components.snmp.client.bulk_walk_cmd", getbulk),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (getnext.called, getbulk.called) == expected_calls
+
+
 async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
     """Test async_setup_entry with SNMP v3 and no auth/priv keys."""
     entry = mock_entry(host="1.2.3.4", version="3", username="test-user", baseoid=None)
@@ -204,7 +234,7 @@ async def test_async_setup_entry_without_subentries(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that an entry without capabilities sets up without a device."""
+    """Test that an entry without trackers sets up with only the SNMP device."""
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
 
@@ -213,7 +243,11 @@ async def test_async_setup_entry_without_subentries(
 
     assert entry.state is ConfigEntryState.LOADED
     assert not entry.runtime_data.coordinators
-    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.name == entry.title
 
 
 async def test_walk_error_makes_entry_not_ready(hass: HomeAssistant) -> None:

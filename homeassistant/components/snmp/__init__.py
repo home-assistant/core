@@ -41,20 +41,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None
 
     entry.runtime_data = SnmpRuntimeData(client=client, coordinators=coordinators)
 
+    # The tracker devices link to the SNMP device through via_device_id, which can
+    # only resolve a device which already exists. The name follows the entry, so a
+    # reconfigure which renames the host renames the device too.
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id,
+        device_info=DeviceInfo(
+            name=entry.title, identifiers={(DOMAIN, entry.entry_id)}
+        ),
+    )
+
     if not coordinators:
         return
 
-    # The tracker devices link to the SNMP device through via_device_id, which can
-    # only resolve a device which already exists.
-    dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id,
-        device_info=DeviceInfo(identifiers={(DOMAIN, entry.entry_id)}),
-    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnmpConfigEntry) -> None:
-    """Reload the entry when its subentries change."""
+    """Reload the entry when its title, credentials or subentries change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 

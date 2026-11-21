@@ -464,6 +464,11 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             if error:
                 errors[CONF_BASEOID if error == "invalid_oid" else "base"] = error
             else:
+                # Another flow can pass the check above while this one probes
+                if self._get_entry().get_subentries_of_type(
+                    SUBENTRY_TYPE_DEVICE_TRACKER
+                ):
+                    return self.async_abort(reason="single_instance_allowed")
                 return self.async_create_entry(
                     title=baseoid,
                     data={CONF_BASEOID: baseoid},
