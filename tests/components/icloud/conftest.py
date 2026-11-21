@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import patch
 
+from pyicloud.services.account import AccountStorage
 from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsset
 import pytest
 from pytest_homeassistant.common import AsyncMock, MockConfigEntry
@@ -17,7 +18,7 @@ from homeassistant.components.icloud.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import USER_INFO
+from .const import STORAGE, USER_INFO
 
 
 @pytest.fixture(autouse=True)
@@ -43,6 +44,7 @@ def mock_icloud_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.api = MagicMock()
+        client.api.account.refresh_storage.return_value = AccountStorage(STORAGE)
         client.photo_cache = None
 
         albums = [
@@ -244,6 +246,7 @@ def mock_icloud_service() -> Generator[MagicMock]:
         "homeassistant.components.icloud.account.PyiCloudService"
     ) as service_mock:
         service = service_mock.return_value
+        service.account.refresh_storage.return_value = AccountStorage(STORAGE)
         service.requires_2fa = False
         service.devices = MockDevicesContainer()
         yield service

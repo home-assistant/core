@@ -144,6 +144,36 @@
       },
       "owner": {
         "name": "Owner"
+      },
+      "storage_backup": {
+        "name": "Backup storage"
+      },
+      "storage_docs": {
+        "name": "Documents storage"
+      },
+      "storage_free": {
+        "name": "Available storage"
+      },
+      "storage_mail": {
+        "name": "Mail storage"
+      },
+      "storage_media": {
+        "name": "{name} storage"
+      },
+      "storage_messages": {
+        "name": "Messages storage"
+      },
+      "storage_percentage": {
+        "name": "Storage usage"
+      },
+      "storage_photos": {
+        "name": "Photos storage"
+      },
+      "storage_total": {
+        "name": "Total storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
       }
     }
   },
