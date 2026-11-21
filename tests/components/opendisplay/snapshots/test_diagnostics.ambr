@@ -44,9 +44,12 @@
           'transmission_modes': 1,
         }),
       ]),
+      'findmy_config_raw': '**REDACTED**',
       'flash_configs': list([
       ]),
       'leds': list([
+      ]),
+      'length_prefixed_packets': list([
       ]),
       'loaded': False,
       'manufacturer': dict({

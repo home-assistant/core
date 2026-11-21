@@ -100,6 +100,7 @@ DEVICE_CONFIG = GlobalConfig(
         reset_pin=0xFF,
         reserved=b"\x00" * 43,
     ),
+    findmy_config_raw=b"\x00\x2d" + b"\x11" * 128,
     data_extended=DataExtended.from_strings(
         manufacturer_name="Seeed Studio",
         model_name="XIAO EN04(NRF52840)",
