@@ -6,24 +6,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import ZoneMinderConfigEntry
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ZoneMinderConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZoneMinder binary sensor platform."""
-    sensors = []
-    for host_name, zm_client in hass.data[DOMAIN].items():
-        sensors.append(ZMAvailabilitySensor(host_name, zm_client))
-    add_entities(sensors)
+    async_add_entities(
+        [
+            ZMAvailabilitySensor(
+                entry.data[CONF_HOST], entry.entry_id, entry.runtime_data.client
+            )
+        ]
+    )
 
 
 class ZMAvailabilitySensor(BinarySensorEntity):
@@ -31,9 +33,10 @@ class ZMAvailabilitySensor(BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, host_name: str, client: ZoneMinder) -> None:
+    def __init__(self, host_name: str, entry_id: str, client: ZoneMinder) -> None:
         """Initialize availability sensor."""
         self._attr_name = host_name
+        self._attr_unique_id = f"{entry_id}_availability"
         self._client = client
 
     def update(self) -> None:

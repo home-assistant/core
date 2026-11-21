@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_entities[switch.back_yard_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.back_yard_state',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Back Yard State',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:record-rec',
+    'original_name': 'Back Yard State',
+    'platform': 'zoneminder',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01JZONEMINDER0000000000001_2_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.back_yard_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Yard State',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:record-rec',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.back_yard_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[switch.front_door_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.front_door_state',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front Door State',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:record-rec',
+    'original_name': 'Front Door State',
+    'platform': 'zoneminder',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01JZONEMINDER0000000000001_1_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.front_door_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door State',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:record-rec',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.front_door_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
