@@ -21,6 +21,7 @@ APPLICATION_CREDENTIALS = [
     "google_photos",
     "google_sheets",
     "google_tasks",
+    "heiman_home",
     "home_connect",
     "husqvarna_automower",
     "iotty",
