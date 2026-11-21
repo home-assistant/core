@@ -7,18 +7,23 @@ import os
 import shutil
 
 from velbusaio.controller import Velbus
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    PlatformNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -143,13 +148,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Establish connection with velbus."""
+    port = entry.data[CONF_PORT]
+    session = async_get_clientsession(hass) if port.startswith("manager://") else None
     controller = Velbus(
-        dsn=entry.data[CONF_PORT],
+        dsn=port,
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
         vlp_file=entry.data.get(CONF_VLP_FILE),
+        session=session,
+        access_token=entry.data.get(CONF_ACCESS_TOKEN),
     )
     try:
         await controller.connect()
+    except VelbusAuthenticationFailed as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_access_token",
+        ) from error
     except VelbusConnectionFailed as error:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
