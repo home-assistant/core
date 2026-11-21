@@ -121,6 +121,7 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
 
 
 DEVICE_ID = "switch.ecobee2_auxiliary_heat_only"
+SECOND_THERMOSTAT_ID = "switch.ecobee_auxiliary_heat_only"
 
 
 async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
@@ -137,24 +138,58 @@ async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
         mock_turn_on.assert_called_once_with(1, "auxHeatOnly")
 
 
+async def test_aux_heat_only_turn_on_refresh_turn_off(hass: HomeAssistant) -> None:
+    """Test the prior mode survives the refresh following turn on."""
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_set_hvac_mode,
+    ):
+        await setup_platform(hass, SWITCH_DOMAIN)
+        entity = hass.data[SWITCH_DOMAIN].get_entity(SECOND_THERMOSTAT_ID)
+        assert entity is not None
+        # Call directly to inspect the synchronous command's saved mode before polling.
+        entity.turn_on()
+        assert entity.update_without_throttle is True
+
+        with patch.object(
+            entity.data, "update", wraps=entity.data.update
+        ) as mock_update:
+            thermostat["settings"]["hvacMode"] = "auxHeatOnly"
+            await entity.async_update()
+
+        assert mock.call(no_throttle=True) in mock_update.call_args_list
+        assert entity.update_without_throttle is False
+        assert entity._last_hvac_mode_before_aux_heat == "auto"
+        entity.turn_off()
+        mock_set_hvac_mode.assert_has_calls(
+            [mock.call(1, "auxHeatOnly"), mock.call(1, "auto")]
+        )
+
+
 async def test_aux_heat_only_turn_on_when_on(hass: HomeAssistant) -> None:
     """Test turning on the switch again doesn't overwrite the saved HVAC mode."""
     mock_restore_cache_with_extra_data(
         hass,
         [
             (
-                State(DEVICE_ID, "on"),
+                State(SECOND_THERMOSTAT_ID, "on"),
                 {"hvac_mode_before_aux_heat": "heat"},
             )
         ],
     )
-    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_on:
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    thermostat["settings"]["hvacMode"] = "auxHeatOnly"
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_on,
+    ):
         await setup_platform(hass, SWITCH_DOMAIN)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {TargetKey.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: SECOND_THERMOSTAT_ID},
             blocking=True,
         )
         mock_turn_on.assert_not_called()
@@ -176,25 +211,72 @@ async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
 
 async def test_aux_heat_only_turn_off_after_restart(hass: HomeAssistant) -> None:
     """Test the switch restores the prior mode after a Home Assistant restart."""
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    thermostat["settings"]["hvacMode"] = "auxHeatOnly"
     mock_restore_cache_with_extra_data(
         hass,
         [
             (
-                State(DEVICE_ID, "on"),
+                State(SECOND_THERMOSTAT_ID, "on"),
                 {"hvac_mode_before_aux_heat": "heat"},
             )
         ],
     )
-    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off:
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off,
+    ):
         await setup_platform(hass, SWITCH_DOMAIN)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {TargetKey.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: SECOND_THERMOSTAT_ID},
             blocking=True,
         )
         mock_turn_off.assert_called_once_with(1, "heat")
+
+
+@pytest.mark.parametrize(
+    ("stored_state", "live_mode", "expected_restore"),
+    [
+        pytest.param("on", "heat", None, id="stale-on-live-heat"),
+        pytest.param("off", "auxHeatOnly", "heat", id="stale-off-live-aux"),
+        pytest.param("unavailable", "auxHeatOnly", "heat", id="unavailable-live-aux"),
+    ],
+)
+async def test_aux_heat_only_restores_from_live_mode(
+    hass: HomeAssistant,
+    stored_state: str,
+    live_mode: str,
+    expected_restore: str | None,
+) -> None:
+    """Test restoration uses live thermostat mode instead of the saved state."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(SECOND_THERMOSTAT_ID, stored_state),
+                {"hvac_mode_before_aux_heat": "heat"},
+            )
+        ],
+    )
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    thermostat["settings"]["hvacMode"] = live_mode
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_set_hvac_mode,
+    ):
+        await setup_platform(hass, SWITCH_DOMAIN)
+        entity = hass.data[SWITCH_DOMAIN].get_entity(SECOND_THERMOSTAT_ID)
+        assert entity is not None
+        assert entity.is_on is (live_mode == "auxHeatOnly")
+        assert mock_set_hvac_mode.call_count == 0
+        assert (
+            entity.extra_restore_state_data.hvac_mode
+            if entity.extra_restore_state_data is not None
+            else None
+        ) == expected_restore
 
 
 async def test_aux_heat_only_turn_off_when_off(hass: HomeAssistant) -> None:
@@ -233,7 +315,12 @@ async def test_aux_heat_only_turn_off_with_invalid_restore_mode(
             )
         ],
     )
-    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off:
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    thermostat["settings"]["hvacMode"] = "auxHeatOnly"
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off,
+    ):
         await setup_platform(hass, SWITCH_DOMAIN)
 
         await hass.services.async_call(
@@ -249,19 +336,28 @@ async def test_aux_heat_only_clears_previous_mode_when_changed_remotely(
     hass: HomeAssistant,
 ) -> None:
     """Test an external HVAC mode change clears the saved auxiliary heat mode."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(SECOND_THERMOSTAT_ID, "on"),
+                {"hvac_mode_before_aux_heat": "heat"},
+            )
+        ],
+    )
     thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
     thermostat["settings"]["hvacMode"] = "auxHeatOnly"
-    get_thermostat = mock.Mock(return_value=thermostat)
     with (
-        patch("pyecobee.Ecobee.get_thermostat", get_thermostat),
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
         patch("pyecobee.Ecobee.set_hvac_mode") as mock_set_hvac_mode,
     ):
         await setup_platform(hass, SWITCH_DOMAIN)
-        get_thermostat.reset_mock()
-        get_thermostat.return_value["settings"]["hvacMode"] = "heat"
-
-        hass.states.async_set("sensor.force_update", "1")
-        await hass.async_block_till_done()
+        entity = hass.data[SWITCH_DOMAIN].get_entity(SECOND_THERMOSTAT_ID)
+        assert entity is not None
+        assert entity.extra_restore_state_data.hvac_mode == "heat"
+        thermostat["settings"]["hvacMode"] = "heat"
+        await entity.async_update()
+        assert entity.extra_restore_state_data is None
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
@@ -270,3 +366,30 @@ async def test_aux_heat_only_clears_previous_mode_when_changed_remotely(
         )
 
         mock_set_hvac_mode.assert_not_called()
+
+
+async def test_aux_heat_only_turn_on_after_rapid_turn_off(hass: HomeAssistant) -> None:
+    """Test a rapid re-enable keeps the original mode as the restore target."""
+    thermostat = copy.deepcopy(GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP)
+    with (
+        patch("pyecobee.Ecobee.get_thermostat", return_value=thermostat),
+        patch("pyecobee.Ecobee.set_hvac_mode") as mock_set_hvac_mode,
+    ):
+        await setup_platform(hass, SWITCH_DOMAIN)
+        entity = hass.data[SWITCH_DOMAIN].get_entity(SECOND_THERMOSTAT_ID)
+        assert entity is not None
+        entity.turn_on()
+        thermostat["settings"]["hvacMode"] = "auxHeatOnly"
+        await entity.async_update()
+        entity.turn_off()
+        entity.turn_on()
+        entity.turn_off()
+
+        mock_set_hvac_mode.assert_has_calls(
+            [
+                mock.call(1, "auxHeatOnly"),
+                mock.call(1, "auto"),
+                mock.call(1, "auxHeatOnly"),
+                mock.call(1, "auto"),
+            ]
+        )
