@@ -1,6 +1,6 @@
 """Constant values for pvpc_hourly_pricing."""
 
-from esios_api.const import TARIFFS
+from aiopvpc.const import TARIFFS
 import probatio
 
 DOMAIN = "pvpc_hourly_pricing"

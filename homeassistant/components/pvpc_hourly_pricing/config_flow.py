@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from esios_api import DEFAULT_POWER_KW, PVPCData
+from aiopvpc import DEFAULT_POWER_KW, PVPCData
 import probatio
 
 from homeassistant.config_entries import (
