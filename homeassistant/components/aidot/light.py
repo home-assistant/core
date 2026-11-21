@@ -77,6 +77,11 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
 
     def _update_status(self) -> None:
         """Update light status from coordinator data."""
+        self._attr_effect_list = self.coordinator.device_client.info.preset_names
+        if self._attr_effect_list:
+            self._attr_supported_features = LightEntityFeature.EFFECT
+        else:
+            self._attr_supported_features = LightEntityFeature(0)
         self._attr_is_on = self.coordinator.data.on
         self._attr_brightness = self.coordinator.data.dimming
         self._attr_color_temp_kelvin = self.coordinator.data.cct
