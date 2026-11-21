@@ -5,9 +5,13 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.components.mobile_app.const import DATA_PENDING_UPDATES, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_WEBHOOK_ID, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .const import REGISTER_CLEARTEXT
 
 
 async def test_pending_update_applied_when_entity_enabled(
@@ -78,6 +82,65 @@ async def test_pending_update_applied_when_entity_enabled(
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
     assert entity.state == "50"
+
+
+async def test_pending_update_kept_when_app_registers_again(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test an update sent while disabled is kept when the app registers again."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+    sensor = {
+        "name": "Battery State",
+        "type": "sensor",
+        "unique_id": "battery_state",
+        "unit_of_measurement": PERCENTAGE,
+    }
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={"type": "register_sensor", "data": {**sensor, "state": 100}},
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "sensor.test_1_battery_state", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={"type": "register_sensor", "data": {**sensor, "state": 50}},
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    reg_resp = await webhook_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert reg_resp.status == HTTPStatus.CREATED
+    new_webhook_id = (await reg_resp.json())[CONF_WEBHOOK_ID]
+
+    pending_updates = hass.data[DOMAIN][DATA_PENDING_UPDATES][SENSOR_DOMAIN]
+    assert pending_updates.keys() == {f"{new_webhook_id}_battery_state"}
+    assert (
+        pending_updates[f"{new_webhook_id}_battery_state"][CONF_WEBHOOK_ID]
+        == new_webhook_id
+    )
+
+    entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
+    config_entry = hass.config_entries.async_entries(DOMAIN)[1]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "50"
+    assert not pending_updates
 
 
 async def test_pending_update_with_attributes(

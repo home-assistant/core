@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@alexyao2015", "@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/html5",
   "integration_type": "service",

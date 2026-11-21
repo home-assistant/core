@@ -5,6 +5,7 @@
   "categories": ["media_entertainment", "computers_network.nas_servers"],
   "codeowners": ["@chishm"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
   "integration_type": "service",

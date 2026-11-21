@@ -1,0 +1,19 @@
+{
+  "domain": "voice_support",
+  "name": "Voice support",
+  "after_dependencies": ["hassio"],
+  "categories": ["ai_voice.voice_assistants"],
+  "codeowners": ["@synesthesiam", "@arturpragacz"],
+  "config_flow": true,
+  "connectivity": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/voice_support",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "preview_features": {
+    "next_generation_voice": {
+      "learn_more_url": "https://www.home-assistant.io/integrations/voice_support"
+    }
+  },
+  "quality_scale": "internal",
+  "zeroconf": ["_voice-support._tcp.local."]
+}

@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/llama_cpp",
   "integration_type": "service",

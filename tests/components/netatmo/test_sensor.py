@@ -1,9 +1,12 @@
 """The tests for the Netatmo sensor platform."""
 
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
@@ -11,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, snapshot_platform_entities
+from .common import fake_post_request, selected_platforms, snapshot_platform_entities
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -254,3 +257,63 @@ async def test_climate_battery_sensor(
     prefix = "sensor.livingroom_livingroom_"
 
     assert hass.states.get(f"{prefix}battery").state == "75"
+
+
+@pytest.mark.parametrize(
+    "cleared_end_time",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(None, id="null"),
+    ],
+)
+async def test_setpoint_end_time_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    cleared_end_time: int | None,
+) -> None:
+    """Test the setpoint end time sensor shows and then clears the end time."""
+    livingroom_end_time: int | None = 1612749189
+
+    def set_livingroom_end_time(payload: dict[str, Any]) -> None:
+        """Set the livingroom setpoint end time in the backend response."""
+        if not isinstance(payload.get("body"), dict):
+            return
+
+        for room in payload["body"].get("home", {}).get("rooms", []):
+            if room["id"] == "2746182631":
+                room["therm_setpoint_end_time"] = livingroom_end_time
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the livingroom setpoint end time."""
+        kwargs["msg_callback"] = set_livingroom_end_time
+        return await fake_post_request(hass, *args, **kwargs)
+
+    entity_id = "sensor.livingroom_livingroom_setpoint_end_time"
+
+    with (
+        selected_platforms([Platform.CLIMATE, Platform.SENSOR]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "2021-02-08T01:53:09+00:00"
+    assert state.attributes["device_class"] == "timestamp"
+
+    livingroom_end_time = cleared_end_time
+    # Poll several times so the coordinator's API throttling does not hide the update
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "unknown"

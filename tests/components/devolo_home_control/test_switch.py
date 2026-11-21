@@ -7,14 +7,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -56,8 +50,8 @@ async def test_switch(
     ) as set_value:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(state=True)
@@ -65,8 +59,8 @@ async def test_switch(
         set_value.reset_mock()
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(state=False)
@@ -80,8 +74,8 @@ async def test_switch(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )
     assert error.value.translation_key == "set_failed"
@@ -96,8 +90,8 @@ async def test_switch(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{SWITCH_DOMAIN}.test_test"},
             blocking=True,
         )
     assert error.value.translation_key == "switch_protected"

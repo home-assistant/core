@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientConnectionError
 from freebox_api.exceptions import (
     AuthorizationError,
     HttpRequestError,
@@ -187,6 +188,8 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     [
         (AuthorizationError, "register_failed"),
         (HttpRequestError, "cannot_connect"),
+        (ClientConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (InvalidTokenError, "unknown"),
     ],
 )

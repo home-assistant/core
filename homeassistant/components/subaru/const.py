@@ -54,9 +54,6 @@ PLATFORMS = [
 
 SERVICE_REMOTE_START = "remote_start"
 SERVICE_REMOTE_STOP = "remote_stop"
-SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
-
-ATTR_DOOR = "door"
 
 UNLOCK_DOOR_ALL = "all"
 UNLOCK_DOOR_DRIVERS = "driver"

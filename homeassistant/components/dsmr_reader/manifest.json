@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@sorted-bits", "@glodenox", "@erwindouna"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/dsmr_reader",
   "integration_type": "device",

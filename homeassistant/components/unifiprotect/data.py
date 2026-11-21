@@ -25,7 +25,7 @@ from uiprotect.data import (
     WSAction,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicCamera, PublicLight
+from uiprotect.data.public_devices import PublicCamera, PublicChime, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -48,6 +48,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_CHIMES,
     DISPATCH_PUBLIC_ADD,
     DISPATCH_RELAYS,
     DOMAIN,
@@ -162,6 +163,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.chime_signal = _async_dispatch_id(entry, DISPATCH_CHIMES)
         self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
@@ -309,13 +311,16 @@ class ProtectData:
         # arriving while update_public() primes are buffered and replayed by
         # the library, so the subscribe/prime order is not load-bearing.
         self._unsubs = [
-            api.subscribe_devices_websocket(
-                self._async_process_public_devices_ws_message
-            ),
+            # State callbacks first: unsubscribing the last message callback
+            # stops the websocket, and its disconnect would mark the entities
+            # unavailable at shutdown.
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
             api.subscribe_public_resync(self._async_public_resync_done),
         ]
         if api.is_public_only:
@@ -446,6 +451,24 @@ class ProtectData:
                 and new_obj.id in self.api.public_bootstrap.relays
             ):
                 async_dispatcher_send(self._hass, self.relay_signal, new_obj)
+            # Only an added chime or a pairing change can add ring volumes.
+            if isinstance(new_obj, PublicChime) and (
+                message.action is WSAction.ADD
+                or "ringSettings" in message.changed_data
+                or "cameraIds" in message.changed_data
+            ):
+                async_dispatcher_send(self._hass, self.chime_signal, new_obj)
+            # Ring volumes skip a paired camera until it is known.
+            if new_obj.model is ModelType.CAMERA and message.action is WSAction.ADD:
+                self._async_offer_chimes()
+
+    @callback
+    def _async_offer_chimes(self) -> None:
+        """Offer every public chime so its missing ring volumes are added."""
+        if not self.api.has_public_bootstrap:
+            return
+        for chime in list(self.api.public_bootstrap.chimes.values()):
+            async_dispatcher_send(self._hass, self.chime_signal, chime)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -530,7 +553,8 @@ class ProtectData:
         """Re-signal public entities once the library's reconnect resync has finished.
 
         Added and removed devices arrive as frames, field changes apply silently.
-        Re-offer cameras and relays because their entity sets derive from fields.
+        Re-offer cameras, relays and chimes because their entity sets derive from
+        fields.
         """
         self._async_process_public_updates()
         public_bootstrap = self.api.public_bootstrap
@@ -538,6 +562,7 @@ class ProtectData:
             async_dispatcher_send(self._hass, self.channels_signal, public)
         for relay in list(public_bootstrap.relays.values()):
             async_dispatcher_send(self._hass, self.relay_signal, relay)
+        self._async_offer_chimes()
 
     @callback
     def _async_signal_public_doorbell_settings(self) -> None:
@@ -636,6 +661,8 @@ class ProtectData:
                 return
             self._auth_failures = 0
             self._async_process_public_updates()
+            # The refresh replaces cached objects without device frames.
+            self._async_offer_chimes()
             return
         try:
             await self.api.update()
@@ -645,6 +672,9 @@ class ProtectData:
                 self._auth_failures += 1
             else:
                 await self.async_stop()
+                # The stopped public websockets no longer report their state.
+                self.last_public_update_success = False
+                self._async_process_public_updates()
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
             self._async_update_change(False, exception=ex)

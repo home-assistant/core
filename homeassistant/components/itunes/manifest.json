@@ -6,6 +6,7 @@
     "media_entertainment.speakers_audio"
   ],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/itunes",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

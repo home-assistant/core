@@ -21,9 +21,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-type SMHIConfigEntry = ConfigEntry[
-    tuple[SMHIDataUpdateCoordinator, SMHIFireDataUpdateCoordinator]
-]
+type SMHIConfigEntry = ConfigEntry[SMHIRuntimeData]
+
+
+@dataclass
+class SMHIRuntimeData:
+    """Runtime data for the SMHI integration."""
+
+    coordinator: SMHIDataUpdateCoordinator
+    fire_coordinator: SMHIFireDataUpdateCoordinator
 
 
 @dataclass

@@ -72,10 +72,12 @@ rules:
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: Desired devices are selected in Libre Hardware Monitor.
   entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

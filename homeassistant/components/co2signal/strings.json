@@ -8,8 +8,7 @@
     "step": {
       "coordinates": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       },
       "country": {
@@ -20,6 +19,11 @@
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
         }
       },
       "user": {
@@ -49,6 +53,11 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving data from Electricity Maps: {error}"
     }
   },
   "selector": {
