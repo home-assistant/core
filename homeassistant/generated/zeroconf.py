@@ -619,6 +619,10 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
+            "domain": "busybar",
+            "name": "busybar-*",
+        },
+        {
             "domain": "duco",
             "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
         },
