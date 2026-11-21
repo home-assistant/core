@@ -224,6 +224,7 @@ class ContentDetails:
 
 def _convert_content(  # noqa: C901
     chat_content: Iterable[conversation.Content],
+    thinking_start: int = 0,
 ) -> tuple[list[MessageParam], str | None]:
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
@@ -354,7 +355,7 @@ def _convert_content(  # noqa: C901
                 ]
 
             if isinstance(content.native, ContentDetails):
-                if content.native.thinking_signature:
+                if index >= thinking_start and content.native.thinking_signature:
                     messages[-1]["content"].append(  # type: ignore[union-attr]
                         ThinkingBlockParam(
                             type="thinking",
@@ -362,7 +363,7 @@ def _convert_content(  # noqa: C901
                             signature=content.native.thinking_signature,
                         )
                     )
-                if content.native.redacted_thinking:
+                if index >= thinking_start and content.native.redacted_thinking:
                     messages[-1]["content"].append(  # type: ignore[union-attr]
                         RedactedThinkingBlockParam(
                             type="redacted_thinking",
@@ -954,7 +955,13 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 translation_domain=DOMAIN, translation_key="system_message_not_found"
             )
 
-        messages, container_id = _convert_content(chat_log.content[1:])
+        # Without an LLM API the prompt changes every turn and breaks old thinking
+        messages, container_id = _convert_content(
+            chat_log.content[1:],
+            thinking_start=0
+            if chat_log.llm_api
+            else chat_log.llm_input_provided_index - 1,
+        )
 
         model = options[CONF_CHAT_MODEL]
 
