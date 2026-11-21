@@ -69,6 +69,14 @@
       "name": "Zone occupancy is not detected"
     }
   },
+  "preview_features": {
+    "improved_presence_detection": {
+      "description": "Use a stricter method to decide if a person or device tracker is in a zone.\n\nBy default, a device counts as inside a zone as soon as its GPS accuracy circle touches the zone. With this feature enabled, a device only counts as inside a zone when its whole GPS accuracy circle fits inside the zone, and only counts as outside when its GPS accuracy circle no longer touches the zone. While the GPS accuracy circle only partly overlaps the zone, the device keeps its previous zone state.\n\nThis reduces false arrivals from devices near a zone that report poor GPS accuracy. A device that reports poor GPS accuracy may never be counted as inside a small zone, so make sure your zones are large enough.\n\nDevices that report the zones they are in themselves, such as the Home Assistant Companion app, are not affected.",
+      "disable_confirmation": "Persons and device trackers will again count as inside a zone as soon as their GPS accuracy circle touches the zone. Zone states are updated right away, which may run automations triggered by entering or leaving zones.",
+      "enable_confirmation": "This feature is still in development and may change. Persons and device trackers that report poor GPS accuracy may no longer be detected in small zones. Zone states are updated right away, which may run automations triggered by entering or leaving zones.",
+      "name": "Improved zone presence detection"
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads zones from the YAML-configuration.",
