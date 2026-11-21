@@ -3,8 +3,10 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
+from pyhik.image import ImageWriteResult, parse_image_capabilities, parse_image_values
+from pyhik.isapi import ISAPINotSupportedError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
@@ -14,8 +16,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 80
@@ -36,6 +40,44 @@ async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None
     """Fixture to set up platforms for tests."""
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_isapi_client() -> Generator[MagicMock]:
+    """Return a mocked ISAPIClient that offers no image settings by default."""
+    with patch("homeassistant.components.hikvision.ISAPIClient") as isapi_mock:
+        client = isapi_mock.return_value
+        client.get_image_settings.side_effect = ISAPINotSupportedError("not supported")
+        client.get_image_channels.side_effect = ISAPINotSupportedError("not supported")
+        yield isapi_mock
+
+
+@pytest.fixture
+async def image_values(hass: HomeAssistant) -> dict[str, str]:
+    """Return the current image setting values of the test camera."""
+    return parse_image_values(
+        await async_load_fixture(hass, "image_values.xml", DOMAIN)
+    )
+
+
+@pytest.fixture
+async def mock_image_settings(
+    hass: HomeAssistant,
+    mock_isapi_client: MagicMock,
+    image_values: dict[str, str],
+) -> MagicMock:
+    """Make the mocked camera offer the image settings of a real camera."""
+    capabilities = await async_load_fixture(hass, "image_capabilities.xml", DOMAIN)
+    values = await async_load_fixture(hass, "image_values.xml", DOMAIN)
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = None
+    client.get_image_settings.return_value = parse_image_capabilities(
+        capabilities, values
+    )
+    client.get_image_values.return_value = image_values
+    client.set_image_setting.return_value = ImageWriteResult(True, 200, "ok")
+    client.set_image_linked_setting.return_value = ImageWriteResult(True, 200, "ok")
+    return client
 
 
 @pytest.fixture
@@ -61,6 +103,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
         unique_id=TEST_DEVICE_ID,
     )
@@ -111,6 +154,8 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
         camera.get_id = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
+        camera.auth_failed = False
+        camera.stream_auth_failed = False
         camera.current_event_states = {
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],
