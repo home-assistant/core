@@ -1,0 +1,74 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "buffer_size": "[%key:component::tcp::config::step::user::data::buffer_size%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "payload": "[%key:component::tcp::config::step::user::data::payload%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "timeout": "[%key:component::tcp::config::step::user::data::timeout%]",
+          "title": "[%key:common::config_flow::data::name%]",
+          "unit_of_measurement": "[%key:component::tcp::config::step::user::data::unit_of_measurement%]",
+          "value_on": "[%key:component::tcp::config::step::user::data::value_on%]",
+          "value_template": "[%key:component::tcp::config::step::user::data::value_template%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "buffer_size": "[%key:component::tcp::config::step::user::data_description::buffer_size%]",
+          "host": "[%key:component::tcp::config::step::user::data_description::host%]",
+          "payload": "[%key:component::tcp::config::step::user::data_description::payload%]",
+          "port": "[%key:component::tcp::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::tcp::config::step::user::data_description::ssl%]",
+          "timeout": "[%key:component::tcp::config::step::user::data_description::timeout%]",
+          "title": "[%key:component::tcp::config::step::user::data_description::title%]",
+          "unit_of_measurement": "[%key:component::tcp::config::step::user::data_description::unit_of_measurement%]",
+          "value_on": "[%key:component::tcp::config::step::user::data_description::value_on%]",
+          "value_template": "[%key:component::tcp::config::step::user::data_description::value_template%]",
+          "verify_ssl": "[%key:component::tcp::config::step::user::data_description::verify_ssl%]"
+        }
+      },
+      "user": {
+        "data": {
+          "buffer_size": "Buffer size",
+          "host": "[%key:common::config_flow::data::host%]",
+          "payload": "Payload",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "timeout": "Timeout",
+          "title": "[%key:common::config_flow::data::name%]",
+          "unit_of_measurement": "Unit of measurement",
+          "value_on": "Value for on",
+          "value_template": "Value template",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "buffer_size": "The maximum number of bytes read from the response.",
+          "host": "The hostname or IP address of the TCP server.",
+          "payload": "The text sent to the server after connecting.",
+          "port": "The port of the TCP server.",
+          "ssl": "Use an SSL/TLS connection.",
+          "timeout": "Seconds to wait for the connection and the response.",
+          "title": "The name of the entry.",
+          "unit_of_measurement": "The unit of measurement of the sensor.",
+          "value_on": "If set, a binary sensor that is on when the response equals this value is created in addition to the sensor.",
+          "value_template": "A template that extracts the value from the response, available as `value`.",
+          "verify_ssl": "Verify the server certificate."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring TCP using YAML is being removed, but the connection failed while importing your configuration.\n\nCheck that the server is reachable and restart Home Assistant to try again, or remove the TCP YAML configuration and set it up from the UI.",
+      "title": "The TCP YAML configuration could not be imported"
+    }
+  }
+}

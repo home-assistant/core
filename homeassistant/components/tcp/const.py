@@ -2,8 +2,11 @@
 
 from typing import Final
 
+DOMAIN: Final = "tcp"
+
 CONF_BUFFER_SIZE: Final = "buffer_size"
 CONF_VALUE_ON: Final = "value_on"
+CONF_TITLE = "title"
 
 DEFAULT_BUFFER_SIZE: Final = 1024
 DEFAULT_NAME: Final = "TCP Sensor"

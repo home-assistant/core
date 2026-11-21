@@ -1966,6 +1966,8 @@ AGENTS.md @home-assistant/core
 /tests/components/tasmota/ @emontnemery
 /homeassistant/components/tautulli/ @ludeeus @tkdrob
 /tests/components/tautulli/ @ludeeus @tkdrob
+/homeassistant/components/tcp/ @Jump-333
+/tests/components/tcp/ @Jump-333
 /homeassistant/components/technove/ @Moustachauve
 /tests/components/technove/ @Moustachauve
 /homeassistant/components/tedee/ @patrickhilker @zweckj
