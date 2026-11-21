@@ -66,6 +66,50 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
 }
 
+# Currency codes (ISO 4217 numeric -> alphabetic)
+COMMODITY_PRICE_CURRENCY_MAP = {
+    978: "EUR",
+    840: "USD",
+    826: "GBP",
+    124: "CAD",
+    36: "AUD",
+    392: "JPY",
+    756: "CHF",
+    752: "SEK",
+    578: "NOK",
+    208: "DKK",
+    985: "PLN",
+    203: "CZK",
+    554: "NZD",
+    348: "HUF",
+    946: "RON",
+    975: "BGN",
+    352: "ISK",
+    156: "CNY",
+    410: "KRW",
+    356: "INR",
+    986: "BRL",
+    484: "MXN",
+    710: "ZAR",  # codespell:ignore zar
+    949: "TRY",
+    643: "RUB",
+    702: "SGD",
+    344: "HKD",
+    376: "ILS",
+    784: "AED",
+    682: "SAR",
+    764: "THB",
+    360: "IDR",
+    458: "MYR",
+    608: "PHP",
+}
+
+COMMODITY_PRICE_TARIFF_UNIT_MAP = {
+    clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kVAh",
+    clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
+    clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: None,
+}
+
 CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
@@ -348,6 +392,53 @@ class MatterSensor(MatterEntity, SensorEntity):
         elif value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterCommodityPriceSensor(MatterSensor):
+    """Representation of a Matter Commodity Price sensor."""
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update commodity price from device."""
+        current_price = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.CurrentPrice
+        )
+        currency = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.Currency
+        )
+        tariff_unit = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.TariffUnit
+        )
+
+        # A missing price must not overwrite the last valid value.
+        if current_price in (None, NullValue) or current_price.price is None:
+            return
+
+        # Currency contains the decimal scaling information.
+        # Without it, the price cannot be converted reliably.
+        if currency in (None, NullValue):
+            self._attr_native_value = None
+            self._attr_native_unit_of_measurement = None
+            return
+
+        decimal_points = currency.decimalPoints
+        currency_code = currency.currency
+
+        raw_price = current_price.price
+
+        # Always expose the price, even if its currency is unknown.
+        self._attr_native_value = raw_price / (10**decimal_points)
+
+        currency_name = COMMODITY_PRICE_CURRENCY_MAP.get(currency_code)
+        tariff_name = COMMODITY_PRICE_TARIFF_UNIT_MAP.get(tariff_unit)
+
+        # Only expose a unit when both mappings are known.
+        self._attr_native_unit_of_measurement = (
+            f"{currency_name}/{tariff_name}"
+            if currency_name is not None and tariff_name is not None
+            else None
+        )
 
 
 class MatterConcentrationSensor(MatterSensor):
@@ -1913,5 +2004,21 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
+    ),
+    # CommodityPrice cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="CommodityPriceCurrentPrice",
+            translation_key="commodity_price",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterCommodityPriceSensor,
+        required_attributes=(
+            clusters.CommodityPrice.Attributes.CurrentPrice,
+            clusters.CommodityPrice.Attributes.Currency,
+            clusters.CommodityPrice.Attributes.TariffUnit,
+        ),
+        allow_none_value=True,
     ),
 ]

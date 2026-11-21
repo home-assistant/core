@@ -28135,6 +28135,60 @@
     'state': '2025-01-01T13:57:07+00:00',
   })
 # ---
+# name: test_sensors[mock_electrical_utility_meter][sensor.mock_commodity_price_current_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000004B1-MatterNodeDevice'), ('matter', 'serial_serial_1201')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_commodity_price_current_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current price',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current price',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'commodity_price',
+    'unique_id': '00000000000004D2-00000000000004B1-MatterNodeDevice-3-CommodityPriceCurrentPrice-149-2',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensors[mock_electrical_utility_meter][sensor.mock_commodity_price_current_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Commodity Price Current price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_commodity_price_current_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.25',
+  })
+# ---
 # name: test_sensors[mock_cooktop][sensor.mock_cooktop_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -498,6 +498,9 @@
           "unspecified": "Unspecified"
         }
       },
+      "commodity_price": {
+        "name": "Current price"
+      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
