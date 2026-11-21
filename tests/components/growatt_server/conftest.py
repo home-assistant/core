@@ -1,6 +1,7 @@
 """Common fixtures for the Growatt server tests."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -292,7 +293,7 @@ def mock_growatt_v1_api():
 
 
 @pytest.fixture
-def mock_growatt_classic_api():
+def mock_growatt_classic_api() -> Generator[MagicMock]:
     """Return a mocked Growatt Classic API.
 
     This fixture provides the happy path for Classic API integration setup.
