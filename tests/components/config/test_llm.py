@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any, override
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import probatio
 import pytest
@@ -22,9 +22,11 @@ from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
     GetConfigEntriesTool,
+    GetCoreConfigTool,
     ReloadConfigEntryTool,
     SearchIntegrationsTool,
     StartFlowTool,
+    UpdateCoreConfigTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -67,6 +69,8 @@ async def test_async_get_tools(
         "config__search_integrations",
         "config__start_flow",
         "config__configure_flow",
+        "config__get_core_config",
+        "config__update_core_config",
     ]
     assert ha_tools.prompt is None
 
@@ -79,6 +83,7 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         SearchIntegrationsTool(),
         StartFlowTool(),
         ConfigureFlowTool(),
+        UpdateCoreConfigTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -1489,5 +1494,164 @@ async def test_flow_tools_invalid_parameters(
     tool_args: dict[str, Any],
 ) -> None:
     """Test invalid arguments are rejected by StartFlowTool and ConfigureFlowTool."""
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+
+
+async def test_get_core_config(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting the core config."""
+    tool = GetCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    assert res.error is False
+    assert res.data == {
+        "result": {
+            "location_name": "test home",
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
+            "elevation": 0,
+            "radius": 100,
+            "time_zone": "US/Pacific",
+            "country": None,
+            "currency": "EUR",
+            "language": "en",
+            "unit_system": "metric",
+            "internal_url": None,
+            "internal_url_in_use": None,
+            "external_url": None,
+            "external_url_in_use": None,
+        }
+    }
+
+
+async def test_get_core_config_urls_in_use(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the URLs in use are the detected ones until a URL is set."""
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.1.10")
+    tool = GetCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] is None
+    assert result["internal_url_in_use"] == "http://192.168.1.10:8123"
+    assert result["external_url"] is None
+    assert result["external_url_in_use"] is None
+
+    await hass.config.async_update(
+        internal_url="http://homeassistant.local:8123",
+        external_url="https://example.com",
+    )
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] == "http://homeassistant.local:8123"
+    assert result["internal_url_in_use"] == "http://homeassistant.local:8123"
+    assert result["external_url"] == "https://example.com"
+    assert result["external_url_in_use"] == "https://example.com"
+
+
+async def test_update_core_config(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test updating the core config."""
+    tool = UpdateCoreConfigTool()
+    res = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "location_name": "Home",
+                "latitude": 52.37,
+                "longitude": 4.89,
+                "country": "NL",
+                "time_zone": "Europe/Amsterdam",
+                "unit_system": "us_customary",
+                "external_url": "https://example.com",
+            },
+        ),
+        llm_context,
+    )
+    assert res.error is False
+    result = res.data["result"]
+    assert result["location_name"] == "Home"
+    assert result["latitude"] == 52.37
+    assert result["longitude"] == 4.89
+    assert result["country"] == "NL"
+    assert result["time_zone"] == "Europe/Amsterdam"
+    assert result["unit_system"] == "us_customary"
+    assert result["external_url"] == "https://example.com"
+    assert hass.config.country == "NL"
+    assert hass.config.time_zone == "Europe/Amsterdam"
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "updates_units"),
+    [("us_customary", True), ("metric", False), (None, False)],
+)
+async def test_update_core_config_updates_units(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    unit_system: str | None,
+    updates_units: bool,
+) -> None:
+    """Test that only a new unit system changes the units of the sensors."""
+    tool_args: dict[str, Any] = {"location_name": "Home"}
+    if unit_system:
+        tool_args["unit_system"] = unit_system
+    tool = UpdateCoreConfigTool()
+    with patch(
+        "homeassistant.components.config.core.async_update_suggested_units"
+    ) as mock_update_units:
+        res = await tool.async_call(
+            hass, llm.ToolInput(tool.name, tool_args), llm_context
+        )
+    assert res.error is False
+    assert mock_update_units.called is updates_units
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param({"country": "XX"}, "Invalid input", id="country"),
+        pytest.param({"currency": "XXX"}, "Invalid input", id="currency"),
+        pytest.param({"latitude": 100}, "Invalid input", id="latitude"),
+        pytest.param({"radius": -1}, "Invalid input", id="radius"),
+        pytest.param(
+            {"external_url": "https://example.com/path"},
+            "Invalid input",
+            id="url_with_path",
+        ),
+        pytest.param({"time_zone": "Mars/Base"}, "Received invalid time zone", id="tz"),
+    ],
+)
+async def test_update_core_config_invalid(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test that invalid values return an error and change nothing."""
+    tool = UpdateCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert res.error is True
+    assert res.data["error"].startswith(error)
+    assert hass.config.country is None
+    assert hass.config.time_zone == "US/Pacific"
+
+
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param({"location": "home"}, id="location"),
+        pytest.param({"unit_system": "imperial"}, id="unit_system"),
+    ],
+)
+async def test_update_core_config_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by UpdateCoreConfigTool."""
+    tool = UpdateCoreConfigTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
