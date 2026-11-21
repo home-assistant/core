@@ -63,6 +63,9 @@ CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 
 CONF_OPEN_AND_CLOSE = "open_or_close"
 
+# Options that will require an action, mapped to that action
+DEPRECATED_MISSING_ACTIONS: dict[str, str] = {CONF_TILT: TILT_ACTION}
+
 SCRIPT_FIELDS = (
     CLOSE_ACTION,
     OPEN_ACTION,

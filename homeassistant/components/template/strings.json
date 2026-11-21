@@ -768,6 +768,14 @@
     "config_format_triggers": {
       "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
+    },
+    "deprecated_light_helper_missing_actions": {
+      "description": "The template light helper {name} has options without the action that changes them. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nOpen the options of the template light helper and add the missing actions or remove the options:\n\n{options}",
+      "title": "Template light helper {name} has options without their action"
+    },
+    "deprecated_missing_actions": {
+      "description": "The template {platform} with `{identifier}` has options without the action that changes them. This is deprecated and will be a configuration error in Home Assistant Core {breaks_in_ha_version}.\n\nUpdate your YAML configuration by adding the missing actions or removing the options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template {platform} has options without their action ({identifier})"
     }
   },
   "options": {

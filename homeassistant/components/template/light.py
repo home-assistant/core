@@ -40,7 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -89,6 +89,19 @@ CONF_SUPPORTS_TRANSITION = "supports_transition"
 CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
 CONF_XY_ACTION = "set_xy"
+
+# Options that will require an action, mapped to that action
+DEPRECATED_MISSING_ACTIONS: dict[str, str] = {
+    CONF_HS: CONF_HS_ACTION,
+    CONF_LEVEL: CONF_LEVEL_ACTION,
+    CONF_RGB: CONF_RGB_ACTION,
+    CONF_RGBW: CONF_RGBW_ACTION,
+    CONF_RGBWW: CONF_RGBWW_ACTION,
+    CONF_TEMPERATURE: CONF_TEMPERATURE_ACTION,
+    CONF_XY: CONF_XY_ACTION,
+}
+DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID = "deprecated_light_helper_missing_actions"
+DEPRECATED_MISSING_ACTIONS_BREAKS_IN = "2027.6.0"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
@@ -184,6 +197,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    issue_id = f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}"
+    if missing := [
+        f"- `{option}` requires `{action}`"
+        for option, action in DEPRECATED_MISSING_ACTIONS.items()
+        if option in config_entry.options and action not in config_entry.options
+    ]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
+                "options": "\n".join(missing),
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await async_setup_template_entry(
         hass,
         config_entry,

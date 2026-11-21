@@ -2,8 +2,10 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import hashlib
 import itertools
 import logging
+import os
 from typing import Any
 
 import probatio
@@ -49,7 +51,7 @@ from homeassistant.const import (
     CONF_VARIABLES,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -87,6 +89,13 @@ from .validators import entity_config_identifier
 _LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
+
+DEPRECATED_MISSING_ACTIONS_ISSUE_ID = "deprecated_missing_actions"
+DEPRECATED_MISSING_ACTIONS_BREAKS_IN = "2027.6.0"
+DEPRECATED_MISSING_ACTIONS: dict[Platform, dict[str, str]] = {
+    Platform.COVER: cover_platform.DEPRECATED_MISSING_ACTIONS,
+    Platform.LIGHT: light_platform.DEPRECATED_MISSING_ACTIONS,
+}
 
 
 def _identify_entity_config_requires_trigger(
@@ -443,6 +452,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
+        async_update_deprecated_missing_actions_issues(hass, [])
         return config
 
     config_sections = []
@@ -465,9 +475,88 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
         config_sections.append(template_config)
 
+    async_update_deprecated_missing_actions_issues(hass, config_sections)
+
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.
     config = config_without_domain(config, DOMAIN)
     config[DOMAIN] = config_sections
 
     return config
+
+
+@callback
+def async_update_deprecated_missing_actions_issues(
+    hass: HomeAssistant, config_sections: list[TemplateConfig]
+) -> None:
+    """Create an issue per entity that sets an option without its action."""
+    issue_ids: set[str] = set()
+    for platform, missing_actions in DEPRECATED_MISSING_ACTIONS.items():
+        for section in config_sections:
+            for entity_config in section.get(platform, []):
+                if not (
+                    missing := [
+                        key
+                        for key in entity_config
+                        if key in missing_actions
+                        and missing_actions[key] not in entity_config
+                    ]
+                ):
+                    continue
+
+                identifier = entity_config_identifier(platform, entity_config)
+                # The id only changes with the configuration, so a dismissed issue
+                # stays dismissed until the configuration changes
+                fingerprint = "\n".join(
+                    [
+                        platform,
+                        identifier,
+                        *(
+                            f"{key}={entity_config[key].template}"
+                            for key in sorted(missing)
+                        ),
+                    ]
+                )
+                issue_id = (
+                    f"{DEPRECATED_MISSING_ACTIONS_ISSUE_ID}_"
+                    f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
+                )
+                issue_ids.add(issue_id)
+
+                changes: list[str] = []
+                for key in missing:
+                    change = f"`{key}` requires `{missing_actions[key]}`"
+                    # Keys loaded from YAML carry the file and line they were defined on
+                    if (
+                        config_file := getattr(key, "__config_file__", None)
+                    ) is not None:
+                        path = os.path.relpath(config_file, hass.config.config_dir)
+                        change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
+                    changes.append(f"- {change}")
+
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    breaks_in_ha_version=DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=DEPRECATED_MISSING_ACTIONS_ISSUE_ID,
+                    translation_placeholders={
+                        "platform": platform,
+                        "identifier": identifier,
+                        "breaks_in_ha_version": DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
+                        "options": "\n".join(changes),
+                    },
+                    learn_more_url=(
+                        f"https://www.home-assistant.io/integrations/template/#{platform}"
+                    ),
+                )
+
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(f"{DEPRECATED_MISSING_ACTIONS_ISSUE_ID}_")
+            and issue_id not in issue_ids
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)

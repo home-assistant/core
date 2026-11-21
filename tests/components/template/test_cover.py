@@ -39,7 +39,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
@@ -47,12 +47,14 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_attributes_template,
+    assert_deprecated_missing_actions_issue,
     assert_extra_template_attributes,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_deprecated_missing_actions_issues,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -1749,3 +1751,40 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_COVER.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_deprecated_missing_actions_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+) -> None:
+    """Test a repair is created for tilt without its action."""
+    await setup_entity(
+        hass, TEST_COVER, style, 1, COVER_ACTIONS, extra_config={"tilt": "{{ 50 }}"}
+    )
+    assert_deprecated_missing_actions_issue(
+        issue_registry, TEST_COVER, "- `tilt` requires `set_cover_tilt_position`"
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_no_deprecated_missing_actions_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+) -> None:
+    """Test no repair is created when tilt has its action."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        1,
+        {**COVER_ACTIONS, **SET_COVER_TILT_POSITION},
+        extra_config={"tilt": "{{ 50 }}"},
+    )
+    assert get_deprecated_missing_actions_issues(issue_registry) == []
