@@ -1,0 +1,143 @@
+{
+  "mqtt_connected": true,
+  "name": "HPS Illuminance Sensor",
+  "category": "hps",
+  "product_id": "rhgsbacq",
+  "product_name": "Motion Sensor&TH",
+  "online": true,
+  "sub": true,
+  "function": {
+    "sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 19,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "presence_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 5,
+        "max": 28800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "indicator": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "presence_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["none", "presence"]
+      }
+    },
+    "sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 19,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "presence_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 5,
+        "max": 28800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "illuminance_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 10000,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": "un_known"
+    },
+    "indicator": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "presence_state": "none",
+    "sensitivity": 10,
+    "presence_time": 5,
+    "illuminance_value": 34,
+    "indicator": false
+  },
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "presence_state",
+      "config_item": {
+        "statusFormat": "{\"presence_state\":\"$\"}",
+        "valueDesc": "{\"range\":[\"none\",\"presence\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "rhgsbacq"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "sensitivity",
+      "config_item": {
+        "statusFormat": "{\"sensitivity\":\"$\"}",
+        "valueDesc": "{\"unit\":\"x\",\"min\":0,\"max\":19,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "rhgsbacq"
+      }
+    },
+    "102": {
+      "value_convert": "default",
+      "status_code": "presence_time",
+      "config_item": {
+        "statusFormat": "{\"presence_time\":\"$\"}",
+        "valueDesc": "{\"unit\":\"s\",\"min\":5,\"max\":28800,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "rhgsbacq"
+      }
+    },
+    "106": {
+      "value_convert": "default",
+      "status_code": "illuminance_value",
+      "config_item": {
+        "statusFormat": "{\"illuminance_value\":\"$\"}",
+        "valueDesc": "{\"unit\":\"x\",\"min\":0,\"max\":10000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "rhgsbacq"
+      }
+    },
+    "108": {
+      "value_convert": "default",
+      "status_code": "indicator",
+      "config_item": {
+        "statusFormat": "{\"indicator\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "rhgsbacq"
+      }
+    }
+  },
+  "support_local": true
+}
