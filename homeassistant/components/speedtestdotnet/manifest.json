@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["speedtest-ng==3.0.0"]
+  "requirements": ["speedtest-ng==3.0.1"]
 }

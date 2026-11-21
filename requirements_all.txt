@@ -3234,7 +3234,7 @@ speak2mary==1.4.0
 specialized-turbo[cloud]==0.8.4
 
 # homeassistant.components.speedtestdotnet
-speedtest-ng==3.0.0
+speedtest-ng==3.0.1
 
 # homeassistant.components.exicom_spin_ble
 spinev-ble[bleak]==0.7.0
