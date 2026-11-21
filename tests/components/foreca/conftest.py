@@ -3,7 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
+from pyforeca import (
+    CurrentWeather,
+    DailyForecast,
+    HourlyForecast,
+    Location,
+    MinutelyForecast,
+    MinutelyForecastList,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
@@ -113,6 +120,16 @@ DAILY = [
     ),
 ]
 
+MINUTELY = MinutelyForecastList(
+    [
+        MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
+        MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.4),
+        MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.27),
+        MinutelyForecast(time="2026-09-01T17:04+03:00", precip_rate=None),
+    ],
+    resolution=1,
+)
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -158,6 +175,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
                 ]
             ]
         )
+        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
         yield client
 
 
