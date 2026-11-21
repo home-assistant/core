@@ -93,6 +93,11 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
 
+    async def _async_unsubscribe() -> None:
+        await hass.async_add_executor_job(api.unsubscribe)
+
+    config_entry.async_on_unload(_async_unsubscribe)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> None:
     """Unload a EcoNet config entry."""

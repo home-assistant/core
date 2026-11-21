@@ -113,6 +113,24 @@ async def test_resubscribe_runs_in_executor(
     ]
 
 
+@pytest.mark.parametrize("platform", [Platform.WATER_HEATER])
+async def test_unload_unsubscribes(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setup_integration: Callable[[], Awaitable[None]],
+) -> None:
+    """Stop the MQTT client when the config entry unloads."""
+    await setup_integration()
+    mock_api.unsubscribe.assert_not_called()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_api.unsubscribe.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "exception",
     [
