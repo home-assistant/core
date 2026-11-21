@@ -678,10 +678,20 @@ async def test_position_jump_updates_state(
 @pytest.mark.usefixtures("receiver_without_optional_features", "init_integration")
 async def test_sound_mode_feature_absent_without_selector(
     hass: HomeAssistant,
+    mock_receiver: MagicMock,
 ) -> None:
     """Test a model without sound modes does not advertise selecting one."""
-    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
-    assert not features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    mock_receiver.power.value = True
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MAIN_ZONE)
+    assert state.state == MediaPlayerState.ON
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & (
+        MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+    assert ATTR_SOUND_MODE not in state.attributes
+    assert ATTR_SOUND_MODE_LIST not in state.attributes
 
 
 @pytest.mark.usefixtures("init_integration")
