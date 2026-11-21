@@ -490,12 +490,12 @@ async def test_unreachable_indoor_unit_is_logged_once(
     unit.holding[11] = 65535
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
-    assert "data recovered" not in caplog.text
+    assert caplog.text.count("cannot reach the air conditioner") == 1
+    assert "reaches the air conditioner again" not in caplog.text
     unit.holding[11] = 0
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("Fetching INMBSMHI001R000 data recovered") == 1
+    assert caplog.text.count("reaches the air conditioner again") == 1
 
 
 async def test_temperature_format_follows_the_dip_switches(

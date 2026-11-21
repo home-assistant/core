@@ -55,6 +55,32 @@
           }
         }
       }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state": {
+          "communication_error": "Communication error with the unit",
+          "initialising": "Initialising",
+          "none": "No error",
+          "unit_error": "Unit error"
+        }
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "operation_hours": {
+        "name": "Operation time"
+      },
+      "outdoor_intake_temperature": {
+        "name": "Outdoor intake temperature"
+      },
+      "return_path_temperature": {
+        "name": "Return path temperature"
+      },
+      "undervoltage_hours": {
+        "name": "Undervoltage time"
+      }
     }
   },
   "exceptions": {
@@ -63,9 +89,6 @@
     },
     "no_component_answered": {
       "message": "The gateway answered none of the register blocks."
-    },
-    "unit_unreachable": {
-      "message": "The gateway cannot reach the air conditioner."
     },
     "write_failed": {
       "message": "The gateway did not accept the command."
