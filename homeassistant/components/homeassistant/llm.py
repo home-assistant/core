@@ -209,22 +209,20 @@ def async_get_exposed_entities(
 def _search_name_matches(
     hass: HomeAssistant, name_filter: str, states: list[State]
 ) -> list[State]:
-    """Return the states that best match the filter, ranked like search__search."""
+    """Return the states whose name, alias or entity ID contains the filter."""
     if not (query := name_filter.strip().casefold()):
         return []
     entity_registry = er.async_get(hass)
-    ranks: dict[str, int] = {}
+    found = []
     for state in states:
         entry = entity_registry.async_get(state.entity_id)
         aliases = er.async_get_entity_aliases(hass, entry) if entry else ()
         if (
-            rank := rank_name_match(query, (state.name,), aliases, (state.entity_id,))
-        ) is not None:
-            ranks[state.entity_id] = rank
-    if not ranks:
-        return []
-    best = min(ranks.values())
-    return [state for state in states if ranks.get(state.entity_id) == best]
+            rank_name_match(query, (state.name,), aliases, (state.entity_id,))
+            is not None
+        ):
+            found.append(state)
+    return found
 
 
 def _live_context_match_error(
@@ -349,33 +347,28 @@ class GetLiveContextTool(Tool):
                 states=exposed_states,
             )
 
-            if (
-                name_filter
-                and match_result.no_match_reason is intent.MatchFailedReason.NAME
+            if name_filter and match_result.no_match_reason in (
+                intent.MatchFailedReason.NAME,
+                intent.MatchFailedReason.AREA,
+                intent.MatchFailedReason.DOMAIN,
             ):
-                # No exact name match: fall back to the entities whose names
-                # contain the filter. Only the entities the other filters
-                # allow are searched.
+                # No exact name match, or only outside the area or domain
+                # filters: fall back to the entities whose names contain the
+                # filter. Only the entities the other filters allow are
+                # searched, and without a hit the original error is kept.
+                candidates = exposed_states
                 if area_filter or domain_filter:
-                    match_result = intent.async_match_targets(
+                    candidates = intent.async_match_targets(
                         hass,
                         intent.MatchTargetsConstraints(
                             area_name=area_filter,
                             domains=domain_filter,
                         ),
                         states=exposed_states,
-                    )
-                    candidates = match_result.states
-                else:
-                    candidates = exposed_states
-                if candidates:
-                    found = _search_name_matches(hass, name_filter, candidates)
+                    ).states
+                if found := _search_name_matches(hass, name_filter, candidates):
                     match_result = intent.MatchTargetsResult(
-                        is_match=bool(found),
-                        no_match_reason=(
-                            None if found else intent.MatchFailedReason.NAME
-                        ),
-                        states=found,
+                        is_match=True, states=found
                     )
 
             if not match_result.is_match:

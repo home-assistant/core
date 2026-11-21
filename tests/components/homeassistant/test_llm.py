@@ -659,6 +659,13 @@ async def test_get_live_context_tool_filter(
         device_id=kitchen_device.id,
         suggested_object_id="kitchen_ac",
     )
+    ac_booster = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "ac_booster",
+        original_name="AC Booster",
+        suggested_object_id="ac_booster",
+    )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
     )
@@ -670,6 +677,7 @@ async def test_get_live_context_tool_filter(
         front_door.entity_id,
         office_ac.entity_id,
         kitchen_ac.entity_id,
+        ac_booster.entity_id,
     ):
         async_expose_entity(hass, "conversation", entity_id, True)
 
@@ -679,6 +687,7 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(front_door.entity_id, "locked")
     hass.states.async_set(office_ac.entity_id, "cool")
     hass.states.async_set(kitchen_ac.entity_id, "heat")
+    hass.states.async_set(ac_booster.entity_id, "off")
 
     await hass.async_block_till_done()
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
@@ -758,11 +767,17 @@ async def test_get_live_context_tool_filter(
     assert "Office Switch" not in result.data["result"]
     assert "Front Door" not in result.data["result"]
 
-    # Aliases and entity IDs are searched too
+    # Aliases and entity IDs are searched too, alongside names
     result = await _get_live_context({"name": "lamp"})
     assert result.error is False
     assert "Cooking Lamp" in result.data["result"]
     assert "Office Light" not in result.data["result"]
+
+    result = await _get_live_context({"name": "office"})
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "state: cool" in result.data["result"]
+    assert "state: heat" not in result.data["result"]
 
     result = await _get_live_context({"name": "office_ac"})
     assert result.error is False
@@ -779,6 +794,12 @@ async def test_get_live_context_tool_filter(
     assert result.error is False
     assert "Kitchen Light" in result.data["result"]
     assert "Office Light" not in result.data["result"]
+
+    # An exact match outside the area or domain filters doesn't stop the search
+    result = await _get_live_context({"name": "AC", "domain": "switch"})
+    assert result.error is False
+    assert "AC Booster" in result.data["result"]
+    assert "climate" not in result.data["result"]
 
     result = await _get_live_context({"name": "door", "domain": "light"})
     assert result == llm.ToolResult(
