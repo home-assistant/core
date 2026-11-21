@@ -2553,6 +2553,37 @@ def test_rgb_color_selector_schema(
     [
         (
             {},
+            (
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [0.0, 0.0, 0.0, 0.0],
+                [255.0, 255.0, 255.0, 255.0],
+            ),
+            (
+                None,
+                "abc",
+                [0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 256],
+                [0, 0, 0, "nil"],
+                (255, 255, 255, 255),
+            ),
+        ),
+    ],
+)
+def test_rgbw_color_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test color_rgbw selector."""
+
+    _test_selector("color_rgbw", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
             (100, 100.0),
             (None, "abc", [100]),
         ),

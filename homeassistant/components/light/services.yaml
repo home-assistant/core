@@ -199,6 +199,14 @@ turn_on:
       example: "[255, 100, 100]"
       selector:
         color_rgb:
+    rgbw_color: &rgbw_color
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.RGBW
+      example: "[255, 100, 100, 50]"
+      selector:
+        color_rgbw:
     color_temp_kelvin: &color_temp_kelvin
       filter: *color_temp_support
       selector:
@@ -230,11 +238,6 @@ turn_on:
     additional_fields:
       collapsed: true
       fields:
-        rgbw_color: &rgbw_color
-          filter: *color_support
-          example: "[255, 100, 100, 50]"
-          selector:
-            object:
         rgbww_color: &rgbww_color
           filter: *color_support
           example: "[255, 100, 100, 50, 70]"
@@ -310,13 +313,13 @@ toggle:
   fields:
     transition: *transition
     rgb_color: *rgb_color
+    rgbw_color: *rgbw_color
     color_temp_kelvin: *color_temp_kelvin
     brightness_pct: *brightness_pct
     effect: *effect
     additional_fields:
       collapsed: true
       fields:
-        rgbw_color: *rgbw_color
         rgbww_color: *rgbww_color
         color_name: *color_name
         hs_color: *hs_color
