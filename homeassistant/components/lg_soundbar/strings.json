@@ -20,7 +20,7 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "Could not send the command to the soundbar: {error}"
+      "message": "Could not send the command to the soundbar."
     }
   }
 }
