@@ -2426,6 +2426,38 @@ async def test_mysql_missing_utf8mb4(
             assert connect_args[key] == value
 
 
+@pytest.mark.parametrize(
+    ("config_url", "expected_connect_timeout"),
+    [
+        ("mysql://user:password@SERVER_IP/DB_NAME", 30),
+        ("mysql+pymysql://user:password@SERVER_IP/DB_NAME", 30),
+        ("mariadb://user:password@SERVER_IP/DB_NAME", 30),
+        ("mysql://user:password@SERVER_IP/DB_NAME?connect_timeout=5", None),
+    ],
+)
+async def test_mysql_connect_timeout(
+    hass: HomeAssistant, config_url: str, expected_connect_timeout: int | None
+) -> None:
+    """Test MySQL connections time out instead of blocking forever."""
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", MockEvent()),
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
+        create_engine_mock.assert_called_once()
+
+    connect_args = create_engine_mock.mock_calls[0][2]["connect_args"]
+    assert connect_args.get("connect_timeout") == expected_connect_timeout
+
+
 async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
     """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
     recorder_helper.async_initialize_recorder(hass)

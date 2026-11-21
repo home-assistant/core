@@ -118,6 +118,10 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# mysqlclient has no connect timeout by default, so a handshake stalled by a
+# network partition would otherwise block startup indefinitely
+MYSQL_CONNECT_TIMEOUT = 30
+
 # Controls how often we clean up
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
@@ -1493,6 +1497,8 @@ class Recorder(threading.Thread):
             "pymysql",
         ):
             kwargs["connect_args"] = {"charset": "utf8mb4"}
+            if "connect_timeout" not in engine_url.query:
+                kwargs["connect_args"]["connect_timeout"] = MYSQL_CONNECT_TIMEOUT
             if driver_name == "mysqldb":
                 # If they have configured MySQLDB but don't have
                 # the MySQLDB module installed this will throw
