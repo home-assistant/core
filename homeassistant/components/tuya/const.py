@@ -147,7 +147,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/categorycwysj?id=Kaiuz2dfro0nd
     """
     CZ = "cz"
-    """Socket"""
+    """Socket
+
+    https://developer.tuya.com/en/docs/iot/categorykgczpc?id=Kaiuz08zj1l4y
+    """
     DBL = "dbl"
     """Electric fireplace
 
