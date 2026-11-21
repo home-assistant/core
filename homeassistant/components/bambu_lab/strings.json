@@ -36,9 +36,6 @@
       "current_layer": {
         "name": "Current layer"
       },
-      "nozzle_temperature": {
-        "name": "Nozzle temperature"
-      },
       "print_finish": {
         "name": "Print finish"
       },
