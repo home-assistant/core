@@ -1,21 +1,28 @@
 """Tests for the Samsung Infrared config flow."""
 
+from infrared_protocols.codes.samsung.tv import SamsungTVCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
     EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID,
 )
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
     SamsungDeviceType,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+
+SECOND_EMITTER_ENTITY_ID = "infrared.second_ir_emitter"
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -150,6 +157,48 @@ async def test_reconfigure_flow(
     assert (
         mock_config_entry.unique_id == f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}"
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_reconfigure_flow_different_emitter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test reconfiguring to another emitter routes commands to it after reload."""
+    second_emitter = MockInfraredEmitterEntity(
+        "second_ir_emitter", name="Second IR emitter"
+    )
+    await hass.data[DATA_COMPONENT].async_add_entities([second_emitter])
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_EMITTER_ENTITY_ID: SECOND_EMITTER_ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.title == "Samsung TV via Second IR emitter"
+    assert mock_config_entry.data == {
+        CONF_DEVICE_TYPE: SamsungDeviceType.TV,
+        CONF_INFRARED_EMITTER_ENTITY_ID: SECOND_EMITTER_ENTITY_ID,
+    }
+    assert (
+        mock_config_entry.unique_id == f"samsung_infrared_tv_{SECOND_EMITTER_ENTITY_ID}"
+    )
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.samsung_tv_power"},
+        blocking=True,
+    )
+
+    assert second_emitter.send_command_calls == [SamsungTVCode.POWER.to_command()]
+    assert mock_infrared_emitter_entity.send_command_calls == []
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
