@@ -38,10 +38,14 @@ CALIBRATION_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     on_value=False,
 )
 
+# The cloud camel cases doorState when polled and upper cases it over the
+# webhook, so compare the lower cased value.
 DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="doorState",
     device_class=BinarySensorDeviceClass.DOOR,
-    on_value="opened",
+    value_fn=lambda data: (
+        isinstance(data.get("doorState"), str) and data["doorState"].lower() == "opened"
+    ),
 )
 
 MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(

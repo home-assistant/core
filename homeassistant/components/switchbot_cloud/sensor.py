@@ -167,6 +167,12 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 )
 
 
+# The cloud camel cases these when polled and upper cases them over the
+# webhook, so look them up by their lower cased value.
+_LOCK_STATE_OPTIONS_BY_VALUE = {
+    state.value.lower(): state.name.lower() for state in SwitchbotCloudDeviceLockState
+}
+
 LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=LOCK_SENSOR_TYPE_LOCK_STATE,
     device_class=SensorDeviceClass.ENUM,
@@ -175,8 +181,8 @@ LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
         value.name.lower() for value in SwitchbotCloudDeviceLockState.get_states()
     ],
     value_fn=lambda value: (
-        SwitchbotCloudDeviceLockState(value).name.lower()
-        if value in SwitchbotCloudDeviceLockState.get_values()
+        _LOCK_STATE_OPTIONS_BY_VALUE.get(value.lower())
+        if isinstance(value, str)
         else None
     ),
 )
