@@ -1273,6 +1273,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
+        self._cancel_cancellable_timers()
         self.set_state(CoreState.not_running)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -1305,6 +1306,8 @@ class HomeAssistant:
             except Exception:
                 _LOGGER.exception("Task %s error during final shutdown stage", task)
 
+        self._cancel_cancellable_timers()
+
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
         # it returns will never run after the final `self.async_block_till_done`
@@ -1322,6 +1325,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks("close")
 
+        self._cancel_cancellable_timers()
         self.set_state(CoreState.stopped)
         self.import_executor.shutdown()
 

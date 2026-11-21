@@ -3154,6 +3154,51 @@ async def test_cancellable_hassjob(hass: HomeAssistant, eager_start: bool) -> No
     timer2.cancel()
 
 
+@pytest.mark.parametrize(
+    ("event_type", "cancelled_at_close"),
+    [
+        pytest.param(EVENT_HOMEASSISTANT_STOP, [True, False], id="stop"),
+        pytest.param(EVENT_HOMEASSISTANT_FINAL_WRITE, [True, False], id="final_write"),
+        pytest.param(EVENT_HOMEASSISTANT_CLOSE, [], id="close"),
+    ],
+)
+async def test_cancellable_hassjob_created_while_stopping(
+    hass: HomeAssistant, event_type: str, cancelled_at_close: list[bool]
+) -> None:
+    """Test cancellable jobs created in the stop stages are cancelled as well."""
+    job = ha.callback(MagicMock())
+    timers: list[asyncio.TimerHandle] = []
+    timers_at_close: list[bool] = []
+
+    async def create_timers(_: ha.Event) -> None:
+        """Create timers after yielding, so they're created late in the stage."""
+        await asyncio.sleep(0)
+        timers.extend(
+            hass.loop.call_later(
+                60,
+                hass.async_run_hass_job,
+                HassJob(job, cancel_on_shutdown=cancel_on_shutdown),
+            )
+            for cancel_on_shutdown in (True, False)
+        )
+
+    @ha.callback
+    def check_timers(_: ha.Event) -> None:
+        """Record which timers were cancelled when the close event fired."""
+        timers_at_close.extend(timer.cancelled() for timer in timers)
+
+    hass.bus.async_listen_once(event_type, create_timers)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, check_timers)
+
+    await hass.async_stop()
+
+    assert timers_at_close == cancelled_at_close
+    cancellable, other = timers
+    assert cancellable.cancelled()
+    assert not other.cancelled()
+    other.cancel()
+
+
 async def test_validate_state(hass: HomeAssistant) -> None:
     """Test validate_state."""
     assert ha.validate_state("test") == "test"
