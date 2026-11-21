@@ -35,6 +35,8 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     RepeatMode,
 )
@@ -46,11 +48,10 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -215,8 +216,11 @@ async def test_volume_set(
     """Test setting and clamping volume on both zones."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: level},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: level,
+        },
         blocking=True,
     )
     attrgetter(method)(mock_receiver).assert_awaited_once_with(
@@ -241,8 +245,11 @@ async def test_mute(
     """Test muting both zones."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     attrgetter(attr)(mock_receiver).assert_awaited_once_with(True)
@@ -265,8 +272,8 @@ async def test_select_source(
     """Test selecting source on both zones."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "HDMI"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.SOURCE: "HDMI"},
         blocking=True,
     )
     attrgetter(attr)(mock_receiver).assert_awaited_once_with("HDMI")
@@ -332,8 +339,11 @@ async def test_select_sound_mode(
     """Test selecting sound mode on the main zone."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_SOUND_MODE: "Movie"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: MAIN_ZONE,
+            MediaPlayerServiceArgument.SOUND_MODE: "Movie",
+        },
         blocking=True,
     )
     mock_receiver.sound_mode_selector.select.assert_awaited_once_with("Movie")
@@ -486,8 +496,11 @@ async def test_seek_converts_to_milliseconds(
     """Test seek converts the position Home Assistant gives in seconds."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_SEEK_POSITION: 42.5},
+        MediaPlayerService.MEDIA_SEEK,
+        {
+            TargetKey.ENTITY_ID: MAIN_ZONE,
+            MediaPlayerServiceArgument.SEEK_POSITION: 42.5,
+        },
         blocking=True,
     )
     playing_receiver.player.seek.assert_awaited_once_with(42500)

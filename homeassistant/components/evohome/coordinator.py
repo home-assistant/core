@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable
 from datetime import datetime, timedelta
-from http import HTTPStatus
 import logging
 from typing import Any, Final, override
 
@@ -27,10 +26,13 @@ from evohomeasync2.typedefs import (
     EvoZonScheduleDayOfWeekT,
 )
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
@@ -38,10 +40,28 @@ from .const import DOMAIN, SCHEDULE_MAX_AGE
 # any other reason gets "api_request_failed"
 _API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
     ec2.ApiCallErrorReason.CONNECTION_FAILED: "api_connection_failed",
+    ec2.ApiCallErrorReason.CREDENTIALS_INVALID: "api_credentials_invalid",
     ec2.ApiCallErrorReason.RATE_LIMITED: "api_rate_limited",
     ec2.ApiCallErrorReason.REQUEST_REJECTED: "api_request_rejected",
     ec2.ApiCallErrorReason.SERVER_ERROR: "api_server_error",
 }
+
+
+def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
+    """Return the translation key of a failed API call, by its reason."""
+    return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
+
+
+def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
+    """Log (as debug) what the translated error of a failed API call leaves out."""
+    logger.debug(
+        "The request to the vendor's API failed: %s (reason=%s, status=%s, errors=%s)",
+        err,
+        err.reason,
+        err.status,
+        list(err.errors),
+    )
+
 
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
@@ -251,22 +271,18 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     ) -> _T:
         """Call a client API and update the Coordinator state if required.
 
-        If the call fails, raise HomeAssistantError.
+        If the call fails, raise HomeAssistantError. The client's error is chained to
+        it, and logged only as debug, as HA reports the error.
         """
 
         try:
             result = await client_api
 
-        except ec2.AuthenticationFailedError:
-            raise
-
-        except ec2.ApiCallFailedError as err:
-            self.logger.debug("The request to the vendor's API failed: %s", err)
+        except ec2.ApiCallFailedError as err:  # incl. AuthenticationFailedError
+            _log_api_call_failure(self.logger, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=_API_CALL_ERROR_TRANSLATION_KEYS.get(
-                    err.reason, "api_request_failed"
-                ),
+                translation_key=_api_call_error_key(err),
             ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -280,15 +296,19 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         try:
             status = await self.loc.get_status()
 
-        except ec2.ApiCallFailedError as err:
-            if err.status != HTTPStatus.TOO_MANY_REQUESTS:
-                raise UpdateFailed(err) from err
+        except ec2.ApiConnectionFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+            ) from err
 
+        except ec2.ApiCallFailedError as err:
+            _log_api_call_failure(self.logger, err)
             raise UpdateFailed(
-                f"""
-                    The vendor's API rate limit has been exceeded.
-                    Consider increasing the {CONF_SCAN_INTERVAL}
-                """
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
             ) from err
 
         except ec2.EvohomeError as err:

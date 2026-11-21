@@ -14,19 +14,16 @@ from homeassistant.components.media_player import (
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CHANNEL,
-    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.roku.const import (
@@ -40,18 +37,7 @@ from homeassistant.components.roku.services import RokuService, RokuServiceArgum
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_NAME,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_UP,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -350,14 +336,20 @@ async def test_services(
 ) -> None:
     """Test the different media player services."""
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
+        blocking=True,
     )
 
     assert mock_roku.remote.call_count == 1
     mock_roku.remote.assert_called_with("poweroff")
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
+        blocking=True,
     )
 
     assert mock_roku.remote.call_count == 2
@@ -365,8 +357,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
 
@@ -375,8 +367,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
 
@@ -385,8 +377,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
 
@@ -395,8 +387,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
 
@@ -405,8 +397,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
 
@@ -415,8 +407,11 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Home"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Home",
+        },
         blocking=True,
     )
 
@@ -425,11 +420,11 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
-            ATTR_MEDIA_CONTENT_ID: "11",
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.APP,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "11",
         },
         blocking=True,
     )
@@ -439,12 +434,12 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
-            ATTR_MEDIA_CONTENT_ID: "291097",
-            ATTR_MEDIA_EXTRA: {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.APP,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "291097",
+            MediaPlayerServiceArgument.EXTRA: {
                 ATTR_MEDIA_TYPE: "movie",
                 ATTR_CONTENT_ID: "8e06a8b7-d667-4e31-939d-f40a6dd78a88",
             },
@@ -463,8 +458,11 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Netflix"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Netflix",
+        },
         blocking=True,
     )
 
@@ -473,8 +471,8 @@ async def test_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: 12},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID, MediaPlayerServiceArgument.SOURCE: 12},
         blocking=True,
     )
 
@@ -490,12 +488,12 @@ async def test_services_play_media(
     """Test the media player services related to playing media."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "blah",
-            ATTR_MEDIA_CONTENT_ID: "https://localhost/media.m4a",
-            ATTR_MEDIA_EXTRA: {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "blah",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "https://localhost/media.m4a",
+            MediaPlayerServiceArgument.EXTRA: {
                 ATTR_NAME: "Test",
             },
         },
@@ -506,12 +504,12 @@ async def test_services_play_media(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: "https://localhost/media.m4a",
-            ATTR_MEDIA_EXTRA: {ATTR_FORMAT: "blah"},
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "https://localhost/media.m4a",
+            MediaPlayerServiceArgument.EXTRA: {ATTR_FORMAT: "blah"},
         },
         blocking=True,
     )
@@ -545,11 +543,11 @@ async def test_services_play_media_audio(
     """Test the media player services related to playing media."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: content_type,
-            ATTR_MEDIA_CONTENT_ID: content_id,
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: content_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
         },
         blocking=True,
     )
@@ -591,11 +589,11 @@ async def test_services_play_media_video(
     """Test the media player services related to playing media."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: content_type,
-            ATTR_MEDIA_CONTENT_ID: content_id,
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: content_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
         },
         blocking=True,
     )
@@ -618,11 +616,13 @@ async def test_services_camera_play_stream(
     """Test the media player services related to playing camera stream."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[HLS_PROVIDER],
-            ATTR_MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[
+                HLS_PROVIDER
+            ],
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "https://awesome.tld/api/hls/api_token/master_playlist.m3u8",
         },
         blocking=True,
     )
@@ -656,11 +656,11 @@ async def test_services_play_media_local_source(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            ATTR_MEDIA_CONTENT_ID: (
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "video/mp4",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                 "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
             ),
         },
@@ -692,7 +692,10 @@ async def test_tv_services(
 ) -> None:
     """Test the media player services related to Roku TV."""
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: TV_ENTITY_ID},
+        blocking=True,
     )
 
     assert mock_roku.remote.call_count == 1
@@ -700,8 +703,8 @@ async def test_tv_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: TV_ENTITY_ID},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: TV_ENTITY_ID},
         blocking=True,
     )
 
@@ -710,8 +713,11 @@ async def test_tv_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: TV_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: TV_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -720,11 +726,11 @@ async def test_tv_services(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TV_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-            ATTR_MEDIA_CONTENT_ID: "55",
+            TargetKey.ENTITY_ID: TV_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "55",
         },
         blocking=True,
     )
