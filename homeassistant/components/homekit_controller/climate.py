@@ -346,7 +346,9 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum target temp."""
         if threshold := self._active_threshold():
-            return threshold.minValue or DEFAULT_MIN_TEMP
+            if threshold.minValue is not None:
+                return threshold.minValue
+            return DEFAULT_MIN_TEMP
         return super().min_temp
 
     @property
@@ -354,7 +356,9 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum target temp."""
         if threshold := self._active_threshold():
-            return threshold.maxValue or DEFAULT_MAX_TEMP
+            if threshold.maxValue is not None:
+                return threshold.maxValue
+            return DEFAULT_MAX_TEMP
         return super().max_temp
 
     @property
