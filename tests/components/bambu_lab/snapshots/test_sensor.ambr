@@ -151,7 +151,7 @@
     'supported_features': 0,
     'translation_key': 'current_layer',
     'unique_id': '01P00A000000001_current_layer',
-    'unit_of_measurement': 'layers',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_current_layer-state]
@@ -159,7 +159,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Current layer',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'layers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.x1_carbon_current_layer',
