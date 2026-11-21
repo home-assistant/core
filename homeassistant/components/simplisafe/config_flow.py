@@ -15,10 +15,10 @@ from simplipy.util.auth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv, selector
 
 from . import SimpliSafeConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import CONF_EXCLUDE_SYSTEMS, CONF_INCLUDE_SYSTEMS, DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
 DOCUMENTATION_URL = (
@@ -168,6 +168,23 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
+        runtime_data = getattr(self.config_entry, "runtime_data", None)
+        systems = getattr(runtime_data, "all_systems", None) or getattr(
+            runtime_data, "systems", {}
+        )
+        system_options: list[selector.SelectOptionDict] = [
+            {"label": f"{system.address} ({system_id})", "value": str(system_id)}
+            for system_id, system in systems.items()
+        ]
+
+        for system_id in (
+            *self.config_entry.options.get(CONF_INCLUDE_SYSTEMS, []),
+            *self.config_entry.options.get(CONF_EXCLUDE_SYSTEMS, []),
+        ):
+            system_id = str(system_id)
+            if all(option["value"] != system_id for option in system_options):
+                system_options.append({"label": system_id, "value": system_id})
+
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(
@@ -177,7 +194,35 @@ class SimpliSafeOptionsFlowHandler(OptionsFlow):
                         description={
                             "suggested_value": self.config_entry.options.get(CONF_CODE)
                         },
-                    ): str
+                    ): str,
+                    probatio.Optional(
+                        CONF_INCLUDE_SYSTEMS,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_INCLUDE_SYSTEMS, []
+                            )
+                        },
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=system_options,
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_EXCLUDE_SYSTEMS,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_EXCLUDE_SYSTEMS, []
+                            )
+                        },
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=system_options,
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )

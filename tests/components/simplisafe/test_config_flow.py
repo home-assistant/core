@@ -11,6 +11,10 @@ from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
+from homeassistant.components.simplisafe.const import (
+    CONF_EXCLUDE_SYSTEMS,
+    CONF_INCLUDE_SYSTEMS,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -99,23 +103,35 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_options_flow(config_entry, hass: HomeAssistant) -> None:
+async def test_options_flow(
+    config_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    patch_simplisafe_api: None,
+) -> None:
     """Test config flow options."""
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=None
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_CODE: "4321"}
+            result["flow_id"],
+            user_input={
+                CONF_CODE: "4321",
+                CONF_INCLUDE_SYSTEMS: ["12345"],
+                CONF_EXCLUDE_SYSTEMS: [],
+            },
         )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_CODE: "4321"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_CODE: "4321",
+        CONF_INCLUDE_SYSTEMS: ["12345"],
+        CONF_EXCLUDE_SYSTEMS: [],
+    }
 
 
 async def test_step_reauth(

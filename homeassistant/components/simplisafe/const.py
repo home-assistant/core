@@ -21,4 +21,7 @@ ATTR_LIGHT = "light"
 ATTR_SYSTEM_ID = "system_id"
 ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 
+CONF_EXCLUDE_SYSTEMS = "exclude_systems"
+CONF_INCLUDE_SYSTEMS = "include_systems"
+
 DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
