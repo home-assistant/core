@@ -32,10 +32,8 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
@@ -44,15 +42,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
+    DATA_COMPONENT,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
-from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.onkyo.media_player import (
     QUERY_AV_INFO_DELAY,
     QUERY_NET_DELAY,
@@ -66,11 +62,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -83,6 +74,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -193,8 +185,8 @@ async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> 
     """Test select source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "TV"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "TV"},
         blocking=True,
     )
     assert writes[0] == command.InputSource(Zone.MAIN, command.InputSource.Param("12"))
@@ -203,8 +195,11 @@ async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "InvalidSource"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "InvalidSource",
+            },
             blocking=True,
         )
     assert not writes
@@ -216,8 +211,8 @@ async def test_select_sound_mode(
     """Test select sound mode."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "THX"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOUND_MODE: "THX"},
         blocking=True,
     )
     assert writes[0] == command.ListeningMode(
@@ -228,8 +223,11 @@ async def test_select_sound_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "InvalidMode"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "InvalidMode",
+            },
             blocking=True,
         )
     assert not writes
@@ -239,11 +237,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     """Test play media (radio preset)."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -252,11 +250,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -265,11 +263,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_2,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_2,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -278,11 +276,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_3,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_3,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -526,11 +524,11 @@ async def test_net_position(
 @pytest.mark.parametrize(
     ("action", "param"),
     [
-        (SERVICE_MEDIA_PLAY, command.NetOperation.Param.PLAY),
-        (SERVICE_MEDIA_PAUSE, command.NetOperation.Param.PAUSE),
-        (SERVICE_MEDIA_STOP, command.NetOperation.Param.STOP),
-        (SERVICE_MEDIA_NEXT_TRACK, command.NetOperation.Param.NEXT),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, command.NetOperation.Param.PREVIOUS),
+        (MediaPlayerService.MEDIA_PLAY, command.NetOperation.Param.PLAY),
+        (MediaPlayerService.MEDIA_PAUSE, command.NetOperation.Param.PAUSE),
+        (MediaPlayerService.MEDIA_STOP, command.NetOperation.Param.STOP),
+        (MediaPlayerService.MEDIA_NEXT_TRACK, command.NetOperation.Param.NEXT),
+        (MediaPlayerService.MEDIA_PREVIOUS_TRACK, command.NetOperation.Param.PREVIOUS),
     ],
 )
 async def test_net_actions(
@@ -538,7 +536,7 @@ async def test_net_actions(
     freezer: FrozenDateTimeFactory,
     read_queue: asyncio.Queue,
     writes: list[Instruction],
-    action: str,
+    action: MediaPlayerService,
     param: command.NetOperation.Param,
 ) -> None:
     """Test the transport actions."""
@@ -547,7 +545,10 @@ async def test_net_actions(
     writes.clear()
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, action, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        MEDIA_PLAYER_DOMAIN,
+        action,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert writes == [command.NetOperation(param)]
 

@@ -7,15 +7,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightServiceArgument
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -58,8 +55,8 @@ async def test_light_without_binary_sensor(
     ) as set_value:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(100)
@@ -67,8 +64,8 @@ async def test_light_without_binary_sensor(
         set_value.reset_mock()
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(0)
@@ -76,9 +73,9 @@ async def test_light_without_binary_sensor(
         set_value.reset_mock()
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
+                TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
                 LightServiceArgument.BRIGHTNESS: 50,
             },
             blocking=True,
@@ -94,9 +91,9 @@ async def test_light_without_binary_sensor(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
+                TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test",
                 LightServiceArgument.BRIGHTNESS: 50,
             },
             blocking=True,
@@ -148,8 +145,8 @@ async def test_light_with_binary_sensor(
     ) as set_value:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(True)
@@ -157,8 +154,8 @@ async def test_light_with_binary_sensor(
         set_value.reset_mock()
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(False)
@@ -172,8 +169,8 @@ async def test_light_with_binary_sensor(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )
     assert error.value.translation_key == "set_failed"
@@ -188,8 +185,8 @@ async def test_light_with_binary_sensor(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"{LIGHT_DOMAIN}.test_test"},
             blocking=True,
         )
     assert error.value.translation_key == "switch_protected"

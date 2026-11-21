@@ -429,7 +429,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 response = await session.get(url)
                 response.raise_for_status()
                 body = await response.read()
-        except (aiohttp.ClientError, TimeoutError):
+        except aiohttp.ClientError, TimeoutError:
             return None, None
         content_type = response.content_type
         if body[:13].lower() == b"content-size:":

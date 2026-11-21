@@ -50,7 +50,7 @@ def _with_templow(forecast: Forecast, templow: float | None) -> Forecast:
 
 
 class IrmKmiWeather(
-    IrmKmiBaseEntity,  # WeatherEntity
+    IrmKmiBaseEntity[IrmKmiCoordinator],  # WeatherEntity
     SingleCoordinatorWeatherEntity[IrmKmiCoordinator],
 ):
     """Weather entity for IRM KMI weather."""
@@ -68,8 +68,9 @@ class IrmKmiWeather(
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        IrmKmiBaseEntity.__init__(self, entry)
-        SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
+        coordinator = entry.runtime_data.weather
+        IrmKmiBaseEntity.__init__(self, entry, coordinator)
+        SingleCoordinatorWeatherEntity.__init__(self, coordinator)
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
