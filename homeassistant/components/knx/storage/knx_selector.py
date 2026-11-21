@@ -9,7 +9,7 @@ import probatio
 from xknx.telegram.address import DeviceAddressableType
 
 from homeassistant.const import CONF_PAYLOAD
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 
 from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE, SelectConf
 from ..dpt import HaDptClass, get_supported_dpts
@@ -190,6 +190,35 @@ class GroupSelect(KNXSelectorBase):
             "type": self.selector_type,
             "collapsible": self.collapsible,
         }
+
+
+class KnxDurationSelector(KNXSelectorBase):
+    """HA duration selector whose stored value is a number of seconds.
+
+    Serializes as a plain `ha_selector` so the frontend renders the standard
+    duration input. Accepts every `cv.time_period` form on write (seconds,
+    `HH:MM:SS` string or duration dict) and yields seconds. Negative durations
+    are rejected; the selector has no negative mode.
+    """
+
+    selector_type = "ha_selector"
+
+    def __init__(self, config: selector.DurationSelectorConfig) -> None:
+        """Initialize with the HA duration selector config to serialize."""
+        self._duration_selector = selector.DurationSelector(config)
+
+    @override
+    def __call__(self, data: Any) -> float:
+        """Validate the passed data and return seconds."""
+        try:
+            return cv.positive_time_period(data).total_seconds()
+        except OverflowError as err:
+            raise probatio.Invalid(f"duration {data} is out of range") from err
+
+    @override
+    def serialize(self) -> dict[str, Any]:
+        """Serialize as the wrapped HA duration selector."""
+        return self._duration_selector.serialize() | {"type": self.selector_type}
 
 
 def _require_group_address(config: dict[str, Any]) -> dict[str, Any]:
