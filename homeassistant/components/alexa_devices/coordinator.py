@@ -13,6 +13,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
     CannotSetFeature,
+    InvalidInputError,
     NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
@@ -35,6 +36,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    ServiceValidationError,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
@@ -76,6 +78,12 @@ async def alexa_api_call(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except InvalidInputError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_user_input",
             translation_placeholders={"error": repr(err)},
         ) from err
     except CannotSetFeature as err:
