@@ -15,16 +15,10 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -77,7 +71,10 @@ async def test_strip_light_turn_off(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called_once()
     state = hass.states.get(entity_id)
@@ -110,7 +107,10 @@ async def test_rgbww_light_turn_off(
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
     ):
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called_once()
     state = hass.states.get(entity_id)
@@ -166,8 +166,8 @@ async def test_strip_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "brightness": 99},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -177,8 +177,8 @@ async def test_strip_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -188,8 +188,8 @@ async def test_strip_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "color_temp_kelvin": 3333},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "color_temp_kelvin": 3333},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -199,8 +199,8 @@ async def test_strip_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -269,8 +269,8 @@ async def test_rgbww_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "color_temp_kelvin": 2800},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "color_temp_kelvin": 2800},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -280,8 +280,8 @@ async def test_rgbww_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "brightness": 99},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -291,8 +291,8 @@ async def test_rgbww_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -302,8 +302,8 @@ async def test_rgbww_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -342,8 +342,8 @@ async def test_ceiling_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "brightness": 99},
             blocking=True,
         )
         mock_send_command.assert_called_with(
@@ -360,8 +360,8 @@ async def test_ceiling_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "color_temp_kelvin": 3333},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "color_temp_kelvin": 3333},
             blocking=True,
         )
         mock_send_command.assert_called_with(
@@ -377,8 +377,8 @@ async def test_ceiling_light_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called_with(
@@ -418,7 +418,10 @@ async def test_ceiling_light_turn_off(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called_with(
             "light-id-1",
@@ -469,8 +472,8 @@ async def test_rgbic_neon_rope_light(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "brightness": 99},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -480,8 +483,8 @@ async def test_rgbic_neon_rope_light(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -491,8 +494,8 @@ async def test_rgbic_neon_rope_light(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -536,8 +539,8 @@ async def test_candle_warmer_lamp(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, "brightness": 99},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -547,8 +550,8 @@ async def test_candle_warmer_lamp(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -580,9 +583,9 @@ async def test_rgbww_light_brightness_and_color_temp(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 "brightness": 99,
                 "color_temp_kelvin": 3000,
             },
@@ -634,9 +637,9 @@ async def test_rgbww_light_brightness_and_rgb_color(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 "brightness": 99,
                 "rgb_color": (255, 246, 158),
             },
@@ -684,9 +687,9 @@ async def test_ceiling_light_brightness_and_color_temp(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 "brightness": 99,
                 "color_temp_kelvin": 3000,
             },

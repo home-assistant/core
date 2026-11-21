@@ -219,9 +219,10 @@ BLOCK_NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
 }
 
 
-RPC_NUMBERS: Final = {
-    "external_temperature": RpcNumberDescription(
-        key="blutrv",
+RPC_NUMBERS: Final = (
+    RpcNumberDescription(
+        key="external_temperature",
+        components=("blutrv",),
         sub_key="current_C",
         translation_key="external_temperature",
         native_min_value=-50,
@@ -234,8 +235,9 @@ RPC_NUMBERS: Final = {
         method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
     ),
-    "number_generic": RpcNumberDescription(
-        key="number",
+    RpcNumberDescription(
+        key="number_generic",
+        components=("number",),
         sub_key="value",
         removal_condition=lambda config, _, key: (
             not is_view_for_platform(config, key, NUMBER_DOMAIN)
@@ -250,8 +252,9 @@ RPC_NUMBERS: Final = {
         method="number_set",
         role=ROLE_GENERIC,
     ),
-    "number_current_limit": RpcNumberDescription(
-        key="number",
+    RpcNumberDescription(
+        key="number_current_limit",
+        components=("number",),
         sub_key="value",
         translation_key="current_limit",
         device_class=NumberDeviceClass.CURRENT,
@@ -264,8 +267,9 @@ RPC_NUMBERS: Final = {
         role="current_limit",
         models={MODEL_TOP_EV_CHARGER_EVE01},
     ),
-    "number_position": RpcNumberDescription(
-        key="number",
+    RpcNumberDescription(
+        key="number_position",
+        components=("number",),
         sub_key="value",
         translation_key="valve_position",
         entity_registry_enabled_default=False,
@@ -278,8 +282,9 @@ RPC_NUMBERS: Final = {
         role="position",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "number_target_humidity": RpcNumberDescription(
-        key="number",
+    RpcNumberDescription(
+        key="number_target_humidity",
+        components=("number",),
         sub_key="value",
         translation_key="target_humidity",
         device_class=NumberDeviceClass.HUMIDITY,
@@ -293,8 +298,9 @@ RPC_NUMBERS: Final = {
         role="target_humidity",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "number_target_temperature": RpcNumberDescription(
-        key="number",
+    RpcNumberDescription(
+        key="number_target_temperature",
+        components=("number",),
         sub_key="value",
         translation_key="target_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -308,8 +314,9 @@ RPC_NUMBERS: Final = {
         role="target_temperature",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "valve_position": RpcNumberDescription(
-        key="blutrv",
+    RpcNumberDescription(
+        key="valve_position",
+        components=("blutrv",),
         sub_key="pos",
         translation_key="valve_position",
         native_min_value=0,
@@ -323,8 +330,9 @@ RPC_NUMBERS: Final = {
         ),
         entity_class=RpcBluTrvNumber,
     ),
-    "left_slot_intensity": RpcNumberDescription(
-        key="cury",
+    RpcNumberDescription(
+        key="left_slot_intensity",
+        components=("cury",),
         sub_key="slots",
         translation_key="left_slot_intensity",
         value=lambda status, _: status["left"]["intensity"],
@@ -341,8 +349,9 @@ RPC_NUMBERS: Final = {
         ),
         entity_class=RpcCuryIntensityNumber,
     ),
-    "right_slot_intensity": RpcNumberDescription(
-        key="cury",
+    RpcNumberDescription(
+        key="right_slot_intensity",
+        components=("cury",),
         sub_key="slots",
         translation_key="right_slot_intensity",
         value=lambda status, _: status["right"]["intensity"],
@@ -359,8 +368,9 @@ RPC_NUMBERS: Final = {
         ),
         entity_class=RpcCuryIntensityNumber,
     ),
-    "ledstrip_speed": RpcNumberDescription(
-        key="ledstrip",
+    RpcNumberDescription(
+        key="ledstrip_speed",
+        components=("ledstrip",),
         sub_key="speed",
         translation_key="effect_speed",
         native_min_value=0,
@@ -372,8 +382,9 @@ RPC_NUMBERS: Final = {
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),
-    "ledstrip_intensity": RpcNumberDescription(
-        key="ledstrip",
+    RpcNumberDescription(
+        key="ledstrip_intensity",
+        components=("ledstrip",),
         sub_key="intensity",
         translation_key="effect_intensity",
         native_min_value=0,
@@ -385,7 +396,7 @@ RPC_NUMBERS: Final = {
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),
-}
+)
 
 
 async def async_setup_entry(
