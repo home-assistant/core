@@ -144,6 +144,7 @@
           "too_tight": "Too tight",
           "wait_for_adaption": "Waiting for adaptation"
         }
+      },
       "water_flow": {
         "name": "Water flow"
       },
