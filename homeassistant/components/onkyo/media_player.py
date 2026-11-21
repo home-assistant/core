@@ -420,7 +420,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
         These receivers answer with a few header-like lines in front of the image
         ("Content-size: 129128", "Content-type: image/jpeg", empty line), so they are
-        removed here to leave a plain image.
+        removed here to leave a plain image. An image shorter than the stated size
+        is treated as a failed fetch.
         """
         session = async_get_clientsession(self.hass)
         try:
@@ -434,6 +435,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         if body[:13].lower() == b"content-size:":
             # Read the header lines up to the empty one, with LF or CRLF endings
             rest = body
+            size: int | None = None
             while True:
                 line, found, rest = rest.partition(b"\n")
                 if not found:
@@ -442,8 +444,16 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 if not line:
                     break
                 name, _, value = line.partition(b":")
-                if name.strip().lower() == b"content-type":
-                    content_type = value.strip().decode("ascii", "replace")
+                name = name.strip().lower()
+                value = value.strip()
+                if name == b"content-size":
+                    if not value.isdigit():
+                        return None, None
+                    size = int(value)
+                elif name == b"content-type":
+                    content_type = value.decode("ascii", "replace")
+            if size is None or len(rest) < size:
+                return None, None
             body = rest
         return body, content_type
 

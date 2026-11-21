@@ -755,6 +755,35 @@ async def test_net_cover_art_unavailable(
     assert await player.async_get_media_image() == (None, None)
 
 
+@pytest.mark.parametrize(
+    "content",
+    [
+        b"Content-size: 4\nContent-type: image/jpeg\n\n\xff\xd8",
+        b"Content-size: many\nContent-type: image/jpeg\n\n\xff\xd8\xff\xd9",
+    ],
+    ids=["short", "invalid_size"],
+)
+async def test_net_cover_art_truncated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    aioclient_mock: AiohttpClientMocker,
+    content: bytes,
+) -> None:
+    """Test that an image shorter than its stated size is rejected and not kept."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, _net_jacket_art(ART_URL))
+
+    aioclient_mock.get(ART_URL, content=content)
+    player = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert await player.async_get_media_image() == (None, None)
+    assert aioclient_mock.call_count == 1
+
+    # The next request tries the receiver again
+    assert await player.async_get_media_image() == (None, None)
+    assert aioclient_mock.call_count == 2
+
+
 async def test_net_cover_art_cached(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
