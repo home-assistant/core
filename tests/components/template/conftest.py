@@ -708,7 +708,7 @@ async def assert_attributes_template(
     assert "level" not in state.attributes
     assert "happiness" not in state.attributes
 
-    error = "Error validating template result"
+    error = "Received invalid"
     assert error not in caplog.text
 
     await async_trigger(
