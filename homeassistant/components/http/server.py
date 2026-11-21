@@ -81,6 +81,7 @@ class StaticPathConfig:
     url_path: str
     path: str
     cache_headers: bool = True
+    follow_symlinks: bool = False
 
 
 _STATIC_CLASSES = {
@@ -424,7 +425,7 @@ class HomeAssistantHTTP:
         """Create a list of static resources."""
         return {
             config.url_path: _STATIC_CLASSES[config.cache_headers](
-                config.url_path, config.path
+                config.url_path, config.path, follow_symlinks=config.follow_symlinks
             )
             if os.path.isdir(config.path)
             else None
