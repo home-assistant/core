@@ -181,6 +181,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
+| `W7465` | [`home-assistant-tests-setup-component-config-entry`](#w7465-home-assistant-tests-setup-component-config-entry) | Tests should set up the config entry of an integration that is only set up through config entries |
 
 ## `home_assistant_logger` checker
 
@@ -823,6 +824,35 @@ skipped too: they make a mock raise an exception through `side_effect` or
 expect non-empty `errors`. Resetting a `side_effect` to `None`, replacing a
 method with a function or a mock, or returning a list of values doesn't count
 as an error.
+
+
+## `home_assistant_tests_setup_component_config_entry` checker
+
+Detects tests that set up an integration with `async_setup_component` when
+the integration is only set up through config entries.
+
+### `W7465`: `home-assistant-tests-setup-component-config-entry`
+
+When an integration has a config flow and doesn't accept YAML configuration,
+`async_setup_component` only sets up its config entries. Tests should set up
+the config entry directly instead, so it's clear which entry the test sets up:
+
+```python
+# Bad
+entry.add_to_hass(hass)
+await async_setup_component(hass, DOMAIN, {})
+
+# Good
+entry.add_to_hass(hass)
+await hass.config_entries.async_setup(entry.entry_id)
+```
+
+Only modules in `tests/components/<domain>/` are checked, and only calls that
+set up `<domain>` itself, so setting up other integrations, such as
+`homeassistant` or `automation`, is fine. An integration doesn't accept YAML
+when its `manifest.json` sets `config_flow` and its `__init__.py` has no
+`async_setup`, or sets `CONFIG_SCHEMA` with
+`cv.config_entry_only_config_schema` or `cv.empty_config_schema`.
 
 
 ## `home_assistant_tests_config_flow_error_recovery` checker
