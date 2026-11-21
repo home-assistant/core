@@ -1,0 +1,130 @@
+"""Fixtures for the National Grid US integration tests."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+MOCK_USERNAME = "testuser@example.com"
+MOCK_PASSWORD = "testpassword123"
+MOCK_ACCOUNT_ID = "1234567890"
+MOCK_ACCOUNT_ID_2 = "0987654321"
+MOCK_SERVICE_POINT = "SP001"
+MOCK_SERVICE_POINT_2 = "SP002"
+
+# Device names embed "<account_id>-<service_point>" so entity_ids carry both.
+ENTITY_ELECTRIC_USAGE = "sensor.electric_meter_1234567890_sp001_latest_daily_usage"
+ENTITY_ELECTRIC_COST = "sensor.electric_meter_1234567890_sp001_last_billing_cost"
+ENTITY_GAS_USAGE = "sensor.gas_meter_1234567890_sp002_latest_daily_usage"
+ENTITY_GAS_COST = "sensor.gas_meter_1234567890_sp002_last_billing_cost"
+
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a mock config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_ACCOUNT_ID,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
+        },
+        unique_id=MOCK_ACCOUNT_ID,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+def mock_billing_account(account_id: str = MOCK_ACCOUNT_ID) -> dict:
+    """Return a mock billing account."""
+    return {
+        "billingAccountId": account_id,
+        "region": "KEDNY",
+        "premiseNumber": "PREM001",
+        "serviceAddress": {"serviceAddressCompressed": "123 Main St, NY"},
+        "meter": {
+            "nodes": [
+                {
+                    "servicePointNumber": MOCK_SERVICE_POINT,
+                    "meterNumber": "MTR001",
+                    "meterPointNumber": "MPT001",
+                    "fuelType": "Electric",
+                    "hasAmiSmartMeter": True,
+                    "isSmartMeter": True,
+                },
+                {
+                    "servicePointNumber": MOCK_SERVICE_POINT_2,
+                    "meterNumber": "MTR002",
+                    "meterPointNumber": "MPT002",
+                    "fuelType": "Gas",
+                    "hasAmiSmartMeter": True,
+                    "isSmartMeter": True,
+                },
+            ],
+        },
+    }
+
+
+def mock_ami_usages(fuel_type: str) -> list[dict]:
+    """Return mock per-meter AMI daily usages for a fuel type.
+
+    The coordinator uses the latest day's quantity, so two days are returned
+    to exercise the max-by-date selection.
+    """
+    quantity = 500.0 if fuel_type == "ELECTRIC" else 30.0
+    return [
+        {"date": "2025-01-14", "fuelType": fuel_type, "quantity": quantity - 10},
+        {"date": "2025-01-15", "fuelType": fuel_type, "quantity": quantity},
+    ]
+
+
+def mock_costs() -> list[dict]:
+    """Return mock energy costs.
+
+    The API returns "month" as 1-12 (not year-aware) and "date" as the
+    year-aware YYYY-MM-DD billing date.
+    """
+    return [
+        {"fuelType": "ELECTRIC", "month": 1, "date": "2025-01-01", "amount": 120.50},
+        {"fuelType": "GAS", "month": 1, "date": "2025-01-01", "amount": 45.00},
+    ]
+
+
+def mock_linked_accounts() -> list[dict]:
+    """Return mock linked billing accounts for the config flow."""
+    return [{"billingAccountId": MOCK_ACCOUNT_ID}]
+
+
+@pytest.fixture
+def mock_national_grid_api() -> Generator[AsyncMock]:
+    """Mock the NationalGridClient across the coordinator and config flow.
+
+    autospec keeps the mock's surface in step with the real client, so a
+    renamed or removed library method fails the tests instead of silently
+    passing.
+    """
+    with (
+        patch(
+            "homeassistant.components.national_grid_us.coordinator.NationalGridClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.national_grid_us.config_flow.NationalGridClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.__aenter__.return_value = client
+        client.get_billing_account.return_value = mock_billing_account()
+        client.get_ami_energy_usages.side_effect = lambda **kwargs: mock_ami_usages(
+            kwargs["fuel_type"]
+        )
+        client.get_energy_usage_costs.return_value = mock_costs()
+        client.get_linked_accounts.return_value = mock_linked_accounts()
+        yield client
