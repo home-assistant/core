@@ -1,13 +1,18 @@
 """Test Onkyo component setup process."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioonkyo import ReceiverInfo, Status
+from aioonkyo import Instruction, Receiver, ReceiverInfo, Status, Zone, command, query
+from aioonkyo.protocol import OnkyoConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -103,3 +108,47 @@ async def test_reconnect(
     await receive_messages(read_queue, DISCONNECT)
 
     assert mock_connect.call_count == 1
+
+
+async def test_reconnect_after_failed_power_query(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_receiver: AsyncMock,
+    writes: list[Instruction],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Recover when the receiver disconnects during the initial zone query."""
+    disconnected_receiver = AsyncMock(spec=Receiver)
+    disconnected_receiver.write.side_effect = OnkyoConnectionError("Connection reset")
+    mock_connect.side_effect = [
+        disconnected_receiver,
+        disconnected_receiver,
+        mock_receiver,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+    disconnected_receiver.write.assert_awaited_once_with(query.Power(Zone.MAIN))
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Consecutive failed queries back off for one second, then two.
+    for attempts in (2, 2, 3):
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_connect.await_count == attempts
+
+    # Failed retries log one outage, not one per attempt.
+    assert caplog.text.count("Disconnected:") == 1
+    assert caplog.text.count("Reconnected:") == 1
+
+    entity_id = "media_player.tx_nr7100"
+    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert writes[-1] == command.Power(Zone.MAIN, command.Power.Param.STANDBY)

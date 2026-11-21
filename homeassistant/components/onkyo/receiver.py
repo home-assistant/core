@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import aioonkyo
 from aioonkyo import Instruction, Receiver, ReceiverInfo, Status, connect, query
+from aioonkyo.protocol import OnkyoConnectionError
 
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
@@ -83,26 +84,39 @@ class ReceiverManager:
     async def _run(self) -> None:
         """Run the connection to the receiver."""
         reconnect = False
+        retry_delay = 0
+        unavailable_logged = False
         while True:
             try:
                 async with connect(self.info, retry=reconnect) as self.receiver:
                     self.connected = True
                     if not reconnect:
                         self._started.set()
+
+                    try:
+                        await self.on_connect(reconnect=reconnect)
+                        while message := await self.receiver.read():
+                            retry_delay = 0
+                            if unavailable_logged:
+                                # Only a status proves the receiver is back.
+                                _LOGGER.info("Reconnected: %s", self.info)
+                                unavailable_logged = False
+                            await self.on_update(message)
+                    except OnkyoConnectionError:
+                        # A receiver can repeatedly accept TCP and drop the first query.
+                        retry_delay = min(max(1, retry_delay * 2), 30)
                     else:
-                        _LOGGER.info("Reconnected: %s", self.info)
-
-                    await self.on_connect(reconnect=reconnect)
-
-                    while message := await self.receiver.read():
-                        await self.on_update(message)
-
-                reconnect = True
-
+                        retry_delay = 0
             finally:
                 self.connected = False
-                _LOGGER.info("Disconnected: %s", self.info)
+                if not unavailable_logged:
+                    _LOGGER.info("Disconnected: %s", self.info)
+                    unavailable_logged = True
                 await self.on_disconnect()
+
+            reconnect = True
+            if retry_delay:
+                await asyncio.sleep(retry_delay)
 
     async def on_connect(self, reconnect: bool) -> None:
         """Receiver (re)connected."""
