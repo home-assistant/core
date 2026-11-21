@@ -10,14 +10,13 @@ from aiokoito import (
     Summary,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.koito.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.translation import async_get_translations
-
-from tests.common import MockConfigEntry
 
 INPUT = {"url": "https://koito.example", "api_key": "key"}
 
@@ -142,11 +141,7 @@ async def test_reauth_recovery(
 ) -> None:
     """Replace credentials on the existing entry after an error."""
     mock_config_entry.add_to_hass(hass)
-    form = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    form = await mock_config_entry.start_reauth_flow(hass)
     mock_client.async_get_summary.side_effect = failure
     result = await hass.config_entries.flow.async_configure(
         form["flow_id"], {"api_key": "new-key"}

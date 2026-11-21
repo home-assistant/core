@@ -7807,6 +7807,9 @@
     "koito": {
       "name": "Koito",
       "integration_type": "service",
+      "categories": [
+        "media_entertainment.music_radio_services"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },

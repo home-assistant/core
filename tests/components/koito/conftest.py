@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from aiokoito import KoitoData, MusicItem, NowPlaying, RankedItem, SimpleArtist, Summary
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.koito.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
-
-from tests.common import MockConfigEntry
 
 SUMMARY = Summary(
     plays=42,
@@ -74,7 +73,7 @@ def mock_client() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Keep flow tests focused on configuration."""
     with patch(
-        "homeassistant.components.koito.async_setup_entry", return_value=True
+        "homeassistant.components.koito.async_setup_entry", return_value=None
     ) as setup:
         yield setup
 

@@ -1,6 +1,7 @@
 {
   "domain": "koito",
   "name": "Koito",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@ryanep"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/koito",
