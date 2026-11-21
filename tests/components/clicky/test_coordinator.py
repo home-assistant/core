@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
-from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
+from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError, Report
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .common import _make_report
+from .common import _make_empty_report, _make_report
 from .const import TEST_SITE_ID, TEST_SITEKEY
 
 
@@ -211,6 +211,47 @@ async def test_async_update_data_success(hass: HomeAssistant) -> None:
 
     assert client.visitors_online.await_count == 1
     assert client.time_total.await_count == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("visitors_online_report", "time_total_report", "expected"),
+    [
+        (
+            _make_empty_report(),
+            _make_report(345),
+            {"visitorsOnline": 0, "timeTotal": 345},
+        ),
+        (
+            _make_report(12),
+            _make_empty_report(),
+            {"visitorsOnline": 12, "timeTotal": 0},
+        ),
+    ],
+    ids=["visitors_online_empty", "time_total_empty"],
+)
+async def test_async_update_data_empty_report(
+    hass: HomeAssistant,
+    visitors_online_report: Report,
+    time_total_report: Report,
+    expected: dict[str, int],
+) -> None:
+    """Test that a report without a value falls back to zero."""
+
+    client = AsyncMock()
+    client.__aenter__.return_value = client
+    client.__aexit__.return_value = None
+
+    client.visitors_online.return_value = visitors_online_report
+    client.time_total.return_value = time_total_report
+
+    coordinator = ClickyCoordinator(
+        hass=hass,
+        config_entry=Mock(),
+        client=client,
+    )
+
+    assert await coordinator._async_update_data() == expected
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyclicky import Report
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -10,18 +11,32 @@ from homeassistant.components.clicky.sensor import SENSOR_TYPES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import _make_report
+from .common import _make_empty_report, _make_report
 
 
 @pytest.fixture
-async def client() -> AsyncMock:
+def visitors_online_report() -> Report:
+    """The report returned for visitors online."""
+    return _make_report(12)
+
+
+@pytest.fixture
+def time_total_report() -> Report:
+    """The report returned for total time spent."""
+    return _make_report(345)
+
+
+@pytest.fixture
+async def client(
+    visitors_online_report: Report, time_total_report: Report
+) -> AsyncMock:
     """A ClickyClient mock returning fixed report values."""
     client = AsyncMock()
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
 
-    client.visitors_online.return_value = _make_report(12)
-    client.time_total.return_value = _make_report(345)
+    client.visitors_online.return_value = visitors_online_report
+    client.time_total.return_value = time_total_report
 
     return client
 
@@ -85,6 +100,35 @@ async def test_sensor_native_value(
 
     assert hass.states.get(visitors_id).state == "12"
     assert hass.states.get(time_total_id).state == "345"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("visitors_online_report", "time_total_report", "visitors_state", "time_state"),
+    [
+        (_make_empty_report(), _make_report(345), "0", "345"),
+        (_make_report(12), _make_empty_report(), "12", "0"),
+    ],
+    ids=["visitors_online_empty", "time_total_empty"],
+)
+async def test_sensor_empty_report(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: MockConfigEntry,
+    visitors_state: str,
+    time_state: str,
+) -> None:
+    """Test that a report without a value is published as zero, not unknown."""
+
+    visitors_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "12345_visitorsOnline"
+    )
+    time_total_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "12345_timeTotal"
+    )
+
+    assert hass.states.get(visitors_id).state == visitors_state
+    assert hass.states.get(time_total_id).state == time_state
 
 
 @pytest.mark.asyncio

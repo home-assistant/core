@@ -18,3 +18,8 @@ def _make_report(value: Any, report_type: str = "dummy") -> Report:
             )
         ],
     )
+
+
+def _make_empty_report(report_type: str = "dummy") -> Report:
+    """Build a Report without any dates, whose value is None."""
+    return Report(type=report_type, dates=[])
