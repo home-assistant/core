@@ -126,7 +126,7 @@ class SandboxFlowRouter:
             self._data is not None
             and (bridge := self._data.bridges.get(group)) is not None
         ):
-            bridge.entry_sync.track(entry)
+            await bridge.entry_sync.async_prepare_setup(entry, payload)
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
         except ChannelClosedError as err:

@@ -35,7 +35,7 @@ Configure sandboxed integrations through `sandbox.integrations` in YAML. Selecte
 
 1. Bootstrap installs the router before integration setup. The router sends selected domains to a worker. Other domains use normal local setup.
 2. The worker manager starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
-3. The host sends a config-entry snapshot. The worker sets it up after startup. Entry and subentry IDs are preserved. Supported configuration changes flow in both directions. Conflicting edits require a reload.
+3. The host sends a config-entry snapshot. The worker sets it up after startup. The host assigns entry and subentry IDs. Worker-created subentries use local aliases mapped to host IDs. The host persists this mapping so worker-local references survive restarts. Supported configuration changes flow in both directions. Conflicting edits require a reload.
 4. The worker sends entity descriptions and state updates. The host registers typed proxy entities. Entity actions become service calls or entity queries to the worker. The host retains canonical entity and device identities.
 5. Worker `Store` operations use a context variable to route persistence through the host. Storage is namespaced by group.
 

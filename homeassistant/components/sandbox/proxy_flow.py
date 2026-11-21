@@ -144,6 +144,7 @@ class _SandboxFlowProxyMixin:
                 ) is not None and (
                     entry := self.hass.config_entries.async_get_entry(entry_id)
                 ) is not None:
+                    request.entry.CopyFrom(entry_to_setup_proto(entry))
                     sandbox_data = self.hass.data.get(DATA_SANDBOX)
                     if (
                         sandbox_data is not None
@@ -151,8 +152,18 @@ class _SandboxFlowProxyMixin:
                         is not None
                     ):
                         await bridge.entry_sync.flush(entry.entry_id)
-                        bridge.entry_sync.track(entry)
-                    request.entry.CopyFrom(entry_to_setup_proto(entry))
+                        await bridge.entry_sync.async_prepare_setup(
+                            entry, request.entry
+                        )
+                        if (subentry_id := self.context.get("subentry_id")) is not None:
+                            request.context = encode_json(
+                                _to_jsonable(dict(self.context))
+                                | {
+                                    "subentry_id": bridge.entry_sync.remote_subentry_id(
+                                        entry.entry_id, subentry_id
+                                    )
+                                }
+                            )
                 result = await channel.call(MSG_FLOW_INIT, request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None

@@ -113,7 +113,12 @@ class SandboxBridge:
         self.hass = hass
         self.group = group
         self.channel = channel
-        self.entry_sync = EntrySync(hass, channel, lambda entry: entry.sandbox == group)
+        self.entry_sync = EntrySync(
+            hass,
+            channel,
+            lambda entry: entry.sandbox == group,
+            assign_subentry_ids=True,
+        )
         # Map sandbox-side entity_id → live proxy. Used for state-push
         # routing and unregister calls.
         self._entities: dict[str, Any] = {}
@@ -289,11 +294,12 @@ class SandboxBridge:
                 f"register_entity: entry {description.entry_id!r} not owned by "
                 f"group {self.group!r}"
             )
-        if (
-            description.config_subentry_id is not None
-            and description.config_subentry_id not in entry.subentries
-        ):
-            raise HomeAssistantError("register_entity: unknown config subentry")
+        if description.config_subentry_id is not None:
+            description.config_subentry_id = self.entry_sync.local_subentry_id(
+                entry.entry_id, description.config_subentry_id
+            )
+            if description.config_subentry_id not in entry.subentries:
+                raise HomeAssistantError("register_entity: unknown config subentry")
         # Namespace IDs because all proxies share the sandbox platform.
         if description.unique_id is not None:
             description.unique_id = (
