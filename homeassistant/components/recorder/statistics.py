@@ -22,6 +22,7 @@ from sqlalchemy import (
     case,
     func,
     lambda_stmt,
+    literal_column,
     select,
     text,
     union_all,
@@ -1661,6 +1662,8 @@ def _generate_statistics_period_stmt(
 
 def _generate_statistics_start_end_stmt(
     metadata_ids: list[int] | None,
+    *,
+    use_indexed_group_by: bool = False,
 ) -> StatementLambdaElement:
     """Find the first and last timestamp for the requested statistics."""
     if metadata_ids is None:
@@ -1671,20 +1674,42 @@ def _generate_statistics_start_end_stmt(
             )
         )
 
-    range_per_id = (
-        select(
-            func.min(Statistics.start_ts).label("first_ts"),
-            func.max(Statistics.start_ts).label("last_ts"),
+    if use_indexed_group_by:
+        range_per_id = (
+            select(
+                func.min(Statistics.start_ts).label("first_ts"),
+                func.max(Statistics.start_ts).label("last_ts"),
+            )
+            .where(Statistics.metadata_id.in_(metadata_ids))
+            .group_by(Statistics.metadata_id)
+            .subquery()
         )
-        .where(Statistics.metadata_id.in_(metadata_ids))
-        .group_by(Statistics.metadata_id)
-        .subquery()
+        return lambda_stmt(
+            lambda: select(
+                func.min(range_per_id.c.first_ts),
+                func.max(range_per_id.c.last_ts),
+            )
+        )
+
+    # Fixed LIMIT/OFFSET leave the bind budget available for the metadata IDs.
+    endpoint = (
+        select(Statistics.start_ts)
+        .where(
+            Statistics.metadata_id == StatisticsMeta.id,
+            Statistics.start_ts.is_not(None),
+        )
+        .correlate(StatisticsMeta)
+        .limit(literal_column("1"))
+        .offset(literal_column("0"))
     )
+    first_ts = endpoint.order_by(Statistics.start_ts).scalar_subquery()
+    last_ts = endpoint.order_by(Statistics.start_ts.desc()).scalar_subquery()
 
     return lambda_stmt(
-        lambda: select(
-            func.min(range_per_id.c.first_ts),
-            func.max(range_per_id.c.last_ts),
+        lambda: (
+            select(func.min(first_ts), func.max(last_ts))
+            .select_from(StatisticsMeta)
+            .where(StatisticsMeta.id.in_(metadata_ids))
         )
     )
 
@@ -1758,13 +1783,17 @@ def _clip_bounded_statistics_range(
         if metadata_ids
         else (None,)
     )
+    # MySQL and MariaDB can find grouped MIN/MAX through a loose index scan.
+    use_indexed_group_by = session.get_bind().dialect.name == SupportedDialect.MYSQL
 
     for ids in id_chunks:
         available_range = cast(
             Sequence[Row],
             execute_stmt_lambda_element(
                 session,
-                _generate_statistics_start_end_stmt(ids),
+                _generate_statistics_start_end_stmt(
+                    ids, use_indexed_group_by=use_indexed_group_by
+                ),
                 orm_rows=False,
             ),
         )

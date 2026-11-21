@@ -226,20 +226,21 @@ def test_mean_period_statement_requires_mean_type() -> None:
 
 
 @pytest.mark.parametrize(
-    ("metadata_ids", "same_key"),
+    ("metadata_ids", "use_indexed_group_by", "same_key"),
     [
-        pytest.param([2, 3], True, id="different-sensors"),
-        pytest.param(None, False, id="all-sensors"),
+        pytest.param([2, 3], False, True, id="different-sensors"),
+        pytest.param(None, False, False, id="all-sensors"),
+        pytest.param([1], True, False, id="indexed-group-by"),
     ],
 )
 def test_start_end_statement_cache_key(
-    metadata_ids: list[int] | None, same_key: bool
+    metadata_ids: list[int] | None, use_indexed_group_by: bool, same_key: bool
 ) -> None:
-    """The range query must track the presence of the sensor filter."""
+    """Cache range queries by sensor filter and lookup strategy."""
     baseline = statistics._generate_statistics_start_end_stmt([1])._generate_cache_key()
 
     actual = statistics._generate_statistics_start_end_stmt(
-        metadata_ids
+        metadata_ids, use_indexed_group_by=use_indexed_group_by
     )._generate_cache_key()
 
     assert baseline is not None
@@ -273,6 +274,48 @@ async def test_endpoint_cached_statement_parameters(
     )
     assert [tuple(row) for row in first] == [(1, 0.0, 10.0)]
     assert [tuple(row) for row in second] == [(2, 86400.0, 20.0)]
+
+
+@pytest.mark.parametrize(
+    "use_indexed_group_by",
+    [
+        pytest.param(False, id="indexed-endpoints"),
+        pytest.param(True, id="indexed-group-by"),
+    ],
+)
+async def test_start_end_cached_statement_parameters(
+    statistics_session: Session, use_indexed_group_by: bool
+) -> None:
+    """Select non-null endpoints for each cached selection."""
+    statistics_session.add_all(
+        [
+            Statistics(metadata_id=1, start_ts=None),
+            Statistics(metadata_id=1, start_ts=10.0),
+            Statistics(metadata_id=1, start_ts=40.0),
+            Statistics(metadata_id=2, start_ts=20.0),
+            Statistics(metadata_id=2, start_ts=60.0),
+            Statistics(metadata_id=3, start_ts=None),
+        ]
+    )
+    statistics_session.commit()
+
+    for metadata_ids, expected in (
+        ([1, 3], (10.0, 40.0)),
+        ([2], (20.0, 60.0)),
+        ([1, 2], (10.0, 60.0)),
+        ([3, 4], (None, None)),
+    ):
+        stmt = statistics._generate_statistics_start_end_stmt(
+            metadata_ids, use_indexed_group_by=use_indexed_group_by
+        )
+        rows = execute_stmt_lambda_element(statistics_session, stmt, orm_rows=False)
+        assert [tuple(row) for row in rows] == [expected]
+
+        compiled = stmt.compile(
+            dialect=statistics_session.get_bind().dialect,
+            compile_kwargs={"render_postcompile": True},
+        )
+        assert len(compiled.positiontup or compiled.params) == len(metadata_ids)
 
 
 async def test_aggregate_cached_parameters(statistics_session: Session) -> None:
