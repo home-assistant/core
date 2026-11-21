@@ -1,11 +1,19 @@
 """The Hikvision integration."""
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 import logging
 from xml.etree.ElementTree import ParseError
 
 from pyhik.constants import SENSOR_MAP
 from pyhik.hikvision import HikCamera, VideoChannel, get_video_channels
+from pyhik.isapi import (
+    ISAPIAuthError,
+    ISAPIClient,
+    ISAPIConnectionError,
+    ISAPIError,
+    ISAPINotSupportedError,
+)
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,18 +23,35 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
+from .coordinator import HikvisionImageCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
+# How long to wait before trying the image settings again after a failed read
+IMAGE_SETTINGS_RETRY_INTERVAL = timedelta(minutes=5)
+
+# What the event stream feeds. These are set up before the image settings are
+# read: a camera that is slow to answer must not hold back the events of its stream.
+EVENT_PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.EVENT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 @dataclass
@@ -41,6 +66,7 @@ class HikvisionData:
     username: str
     password: str
     channels: dict[int, VideoChannel] = field(default_factory=dict)
+    image_coordinator: HikvisionImageCoordinator | None = None
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -53,19 +79,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     ssl = entry.data[CONF_SSL]
+    # Entries created before the option existed always verified the certificate
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
 
     protocol = "https" if ssl else "http"
     url = f"{protocol}://{host}"
 
     try:
         camera = await hass.async_add_executor_job(
-            HikCamera, url, port, username, password, ssl
+            HikCamera, url, port, username, password, verify_ssl
         )
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
 
     device_id = camera.get_id
     if device_id is None:
+        if camera.auth_failed:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            )
         raise ConfigEntryNotReady(f"Unable to get device ID from {host}")
 
     device_name = camera.get_name or host
@@ -75,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     channels: dict[int, VideoChannel] = {}
     if device_type == "NVR":
         channel_list = await hass.async_add_executor_job(
-            get_video_channels, host, port, username, password, ssl
+            get_video_channels, host, port, username, password, ssl, verify_ssl
         )
         channels = {ch.id: ch for ch in channel_list}
         _LOGGER.debug("Found %d video channels", len(channels))
@@ -168,7 +200,161 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         model=device_type,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Without waiting for the image settings: the stream is already running, and
+    # an event that arrives before its entities exist would be lost.
+    event_platforms = [p for p in PLATFORMS if p in EVENT_PLATFORMS]
+    image_platforms = [p for p in PLATFORMS if p not in EVENT_PLATFORMS]
+    await hass.config_entries.async_forward_entry_setups(entry, event_platforms)
+
+    try:
+        # Image settings are only read from standalone cameras.
+        if device_type != "NVR":
+            entry.runtime_data.image_coordinator = await _async_setup_image_settings(
+                hass, entry, host, port, username, password, ssl, verify_ssl
+            )
+
+        if image_platforms:
+            await hass.config_entries.async_forward_entry_setups(entry, image_platforms)
+    except BaseException as err:
+        # A setup that fails, or is cancelled, does not call async_unload_entry, so
+        # what it started is stopped here: the platforms it forwarded...
+        await hass.config_entries.async_unload_platforms(entry, event_platforms)
+        # ...the image settings client, if the image platforms failed after it...
+        if coordinator := entry.runtime_data.image_coordinator:
+            await coordinator.async_shutdown()
+            await hass.async_add_executor_job(coordinator.client.close)
+        # ...and the thread of the stream, which would keep the process from
+        # ending. A rejected password stopped it before this was raised.
+        if not isinstance(err, ConfigEntryAuthFailed):
+            await hass.async_add_executor_job(camera.disconnect)
+        raise
+
+
+def _close_client_and_stream(client: ISAPIClient, camera: HikCamera) -> None:
+    """Close the image settings client and stop the event stream."""
+    client.close()
+    camera.disconnect()
+
+
+async def _async_setup_image_settings(
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    host: str,
+    port: int,
+    username: str,
+    password: str,
+    ssl: bool,
+    verify_ssl: bool,
+) -> HikvisionImageCoordinator | None:
+    """Discover the image settings of a camera.
+
+    Image settings are an optional extra: a camera that does not offer them, or
+    does not allow reading them, simply gets no image entities.
+    """
+    client = await hass.async_add_executor_job(
+        ISAPIClient, host, port, username, password, ssl, verify_ssl
+    )
+    try:
+        return await _async_discover_image_settings(hass, entry, host, client)
+    except ConfigEntryAuthFailed:
+        # The client was closed before this was raised.
+        raise
+    except BaseException:
+        # Anything unexpected, or a cancelled setup, must not leave it open.
+        await hass.async_add_executor_job(client.close)
+        raise
+
+
+async def _async_discover_image_settings(
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    host: str,
+    client: ISAPIClient,
+) -> HikvisionImageCoordinator | None:
+    """Read the image settings with the client, and close it if there are none."""
+    try:
+        settings = await hass.async_add_executor_job(client.get_image_settings)
+    except ISAPINotSupportedError:
+        _LOGGER.debug("%s does not support image settings", host)
+    except ISAPIAuthError as err:
+        if err.status_code == 401:
+            # The device rejects the credentials, not just this request. The event
+            # stream would keep using them, so stop it before asking for new ones.
+            await hass.async_add_executor_job(
+                _close_client_and_stream, client, entry.runtime_data.camera
+            )
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        _LOGGER.warning("Not allowed to read the image settings of %s: %s", host, err)
+    except ISAPIConnectionError as err:
+        _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
+        _async_retry_image_settings_later(hass, entry)
+    except ISAPIError as err:
+        _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
+        if _is_server_busy(err):
+            _async_retry_image_settings_later(hass, entry)
+    else:
+        coordinator = HikvisionImageCoordinator(hass, entry, client, settings)
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            # The events work without the image settings, so do not hold them back.
+            _LOGGER.warning("Unable to read the image values of %s: %s", host, err)
+            if _may_work_later(err):
+                _async_retry_image_settings_later(hass, entry)
+        except ConfigEntryAuthFailed:
+            await hass.async_add_executor_job(client.close)
+            raise
+        else:
+            return coordinator
+    await hass.async_add_executor_job(client.close)
+    return None
+
+
+def _may_work_later(err: BaseException) -> bool:
+    """Return whether a failed read may work if it is tried again later.
+
+    The first refresh wraps the error of the camera. A camera that does not allow
+    the read, or does not have the endpoint, will not change its mind.
+    """
+    cause: BaseException | None = err
+    while cause is not None:
+        if isinstance(cause, (ISAPIAuthError, ISAPINotSupportedError)):
+            return False
+        cause = cause.__cause__
+    return True
+
+
+def _is_server_busy(err: ISAPIError) -> bool:
+    """Return whether the device answered that it cannot serve the request now.
+
+    A server error such as an HTTP 500 or 503 is how a busy camera answers. Any
+    other error that is not a connection error is not expected to go away.
+    """
+    return (
+        not isinstance(err, ISAPINotSupportedError)
+        and err.status_code is not None
+        and err.status_code >= 500
+    )
+
+
+def _async_retry_image_settings_later(
+    hass: HomeAssistant, entry: HikvisionConfigEntry
+) -> None:
+    """Try the image settings again later, by reloading the entry.
+
+    The camera may only have been busy or restarting, and without this its image
+    entities would be missing until the integration is reloaded by hand.
+    """
+
+    @callback
+    def _reload(_now: datetime) -> None:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_call_later(hass, IMAGE_SETTINGS_RETRY_INTERVAL, _reload)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
@@ -176,3 +362,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     # Stop the event stream
     await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
+    if coordinator := entry.runtime_data.image_coordinator:
+        # Stop the polling, then wait for a request that is still running before the
+        # client is closed under it.
+        await coordinator.async_shutdown()
+        async with coordinator.lock:
+            await hass.async_add_executor_job(coordinator.client.close)

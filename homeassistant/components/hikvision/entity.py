@@ -2,13 +2,15 @@
 
 from typing import override
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
+from .coordinator import HikvisionImageCoordinator
 
 
 class HikvisionEntity(Entity):
@@ -83,3 +85,49 @@ class HikvisionEntity(Entity):
         schedule_update_ha_state which is thread-safe.
         """
         self.schedule_update_ha_state()
+
+
+class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
+    """Base class for the image setting entities of a camera."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HikvisionImageCoordinator,
+        entry: HikvisionConfigEntry,
+        path: str,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        data = entry.runtime_data
+        self._path = path
+        # The camera's spelling of a path can change with the firmware, the unique ID must not
+        self._attr_unique_id = f"{data.device_id}_image_{path.lower()}"
+        coordinator.entity_paths.add(path.lower())
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.device_id)},
+            name=data.device_name,
+            manufacturer="Hikvision",
+            model=data.device_type,
+        )
+
+    @property
+    def _value(self) -> str | None:
+        """Return the current raw value of the setting."""
+        return self.coordinator.data.get(self._path)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Tell the coordinator which platform has the entity of the setting."""
+        await super().async_added_to_hass()
+        path = self._path.lower()
+        domain = self.platform.domain
+        self.coordinator.entity_platforms[path] = domain
+
+        @callback
+        def _forget() -> None:
+            if self.coordinator.entity_platforms.get(path) == domain:
+                del self.coordinator.entity_platforms[path]
+
+        self.async_on_remove(_forget)
