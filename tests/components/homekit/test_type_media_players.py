@@ -3,7 +3,7 @@
 import pytest
 from pytest_homeassistant.common import async_mock_service
 
-from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.accessories import HomeDriver, get_accessory
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -17,12 +17,18 @@ from homeassistant.components.homekit.const import (
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
     SERV_SWITCH,
+    TYPE_SET_TOP_BOX,
+    TYPE_STREAMING_STICK,
+    TYPE_TELEVISION,
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     ReceiverMediaPlayer,
+    SetTopBoxMediaPlayer,
+    StreamingStickMediaPlayer,
     TelevisionMediaPlayer,
 )
+from homeassistant.components.homekit.util import validate_entity_config
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -35,6 +41,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     STATE_IDLE,
     STATE_OFF,
@@ -688,3 +695,71 @@ async def test_media_player_receiver(
 
     assert acc.aid == 2
     assert acc.category == 34  # Receiver
+
+
+@pytest.mark.parametrize(
+    ("device_class", "entity_config", "accessory_type", "category"),
+    [
+        (MediaPlayerDeviceClass.TV, {}, TelevisionMediaPlayer, 31),
+        (
+            MediaPlayerDeviceClass.TV,
+            {CONF_TYPE: TYPE_TELEVISION},
+            TelevisionMediaPlayer,
+            31,
+        ),
+        (
+            MediaPlayerDeviceClass.TV,
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+            SetTopBoxMediaPlayer,
+            35,  # TV Set-Top Box
+        ),
+        (
+            MediaPlayerDeviceClass.PROJECTOR,
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+            SetTopBoxMediaPlayer,
+            35,
+        ),
+        (
+            MediaPlayerDeviceClass.TV,
+            {CONF_TYPE: TYPE_STREAMING_STICK},
+            StreamingStickMediaPlayer,
+            36,  # TV Streaming Stick
+        ),
+        (
+            MediaPlayerDeviceClass.RECEIVER,
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+            ReceiverMediaPlayer,
+            34,  # Receiver, the type is ignored
+        ),
+    ],
+)
+async def test_media_player_type_sets_category(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    device_class: MediaPlayerDeviceClass,
+    entity_config: dict[str, str],
+    accessory_type: type[TelevisionMediaPlayer],
+    category: int,
+) -> None:
+    """Test the type option sets the category of a television accessory."""
+    entity_id = "media_player.living_room"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_DEVICE_CLASS: device_class,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_INPUT_SOURCE: "HDMI 2",
+            ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2"],
+        },
+    )
+    await hass.async_block_till_done()
+    config = validate_entity_config({entity_id: entity_config})[entity_id]
+    acc = get_accessory(hass, hk_driver, hass.states.get(entity_id), 2, config)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert type(acc) is accessory_type
+    assert acc.category == category
+    assert acc.char_active.value == 1
+    assert acc.char_input_source.value == 1
