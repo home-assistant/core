@@ -31,7 +31,7 @@ flowchart LR
     Bridge --> Proxies
 ```
 
-The default placement uses one group for built-in integrations and one for custom integrations. A group shares one process and one private Home Assistant instance. It is not one process per config entry.
+Configure sandboxed integrations through `sandbox.integrations` in YAML. Selected built-in integrations share one worker process. Selected custom integrations share another. Each worker runs its own Home Assistant instance.
 
 1. Bootstrap installs the router before integration setup. The router sends selected domains to a worker. Other domains use normal local setup.
 2. The supervisor starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
