@@ -12,7 +12,7 @@ from homeassistant.components.radio_frequency import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_CHANNEL,
@@ -87,13 +87,14 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors={CONF_CHANNEL: "invalid_channel"},
                 )
 
-            registry = er.async_get(self.hass)
-            entity_entry = registry.async_get(transmitter)
-            assert entity_entry is not None
-            await self.async_set_unique_id(
-                f"{entity_entry.id}_{housecode}_{group}_{channel}"
+            self._async_abort_entries_match(
+                {
+                    CONF_TRANSMITTER: transmitter,
+                    CONF_HOUSECODE: housecode,
+                    CONF_GROUP: group,
+                    CONF_CHANNEL: channel,
+                }
             )
-            self._abort_if_unique_id_configured()
             self._device_data = {
                 CONF_TRANSMITTER: transmitter,
                 CONF_HOUSECODE: housecode,

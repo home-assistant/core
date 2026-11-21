@@ -172,11 +172,11 @@ async def test_invalid_channel(
     hass.config_entries.flow.async_abort(result["flow_id"])
 
 
-async def test_unique_id_already_configured(
+async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test aborting when same transmitter/id/channel/group is configured."""
+    """Test aborting when same transmitter/housecode/channel/group is configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await _start_user_flow(hass)

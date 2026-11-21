@@ -10,7 +10,6 @@ from homeassistant.components.intertechno_tristate.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyEntity
@@ -20,14 +19,9 @@ TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
 @pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> MockConfigEntry:
     """Return a mock config entry for Intertechno TriState setup."""
-    entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
-    assert entity_entry is not None
-
     return MockConfigEntry(
         domain=DOMAIN,
         title="Intertechno TriState HC A G 1 CH 1",
@@ -37,7 +31,6 @@ def mock_config_entry(
             CONF_GROUP: 1,
             CONF_CHANNEL: 1,
         },
-        unique_id=f"{entity_entry.id}_A_1_1",
     )
 
 
