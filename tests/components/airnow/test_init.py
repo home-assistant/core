@@ -51,3 +51,32 @@ async def test_update_auth_failed(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        [
+            {
+                "dateObserved": "2020-12-20",
+                "hourObserved": "15:00",
+                "localTimeZone": "PST",
+                "parameterName": "OZONE",
+                "nowcastAQI": 0,
+                "aqiCategoryName": "Good",
+            }
+        ]
+    ],
+)
+async def test_zero_aqi(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api_get: AsyncMock
+) -> None:
+    """Test an AQI of 0 keeps its category."""
+    with patch("pyairnow.WebServiceAPI._get", mock_api_get):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.airnow_air_quality_index")
+    assert state.state == "0"
+    assert state.attributes["description"] == "Good"
+    assert state.attributes["level"] == 1
