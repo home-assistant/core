@@ -4,7 +4,7 @@ from typing import Any, override
 
 from denon_rs232 import DenonReceiver
 from denon_rs232.models import MODELS
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_MODEL
@@ -94,9 +94,9 @@ class DenonRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_MODEL): SelectSelector(
+                        probatio.Required(CONF_MODEL): SelectSelector(
                             SelectSelectorConfig(
                                 options=[
                                     SelectOptionDict(
@@ -109,7 +109,7 @@ class DenonRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
                                 translation_key="model",
                             )
                         ),
-                        vol.Required(CONF_DEVICE): SerialPortSelector(),
+                        probatio.Required(CONF_DEVICE): SerialPortSelector(),
                     }
                 ),
                 user_input or {},

@@ -4,7 +4,7 @@ from base64 import b64decode
 import logging
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera, CameraEntityStateAttribute
@@ -42,17 +42,17 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Required(CONF_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): "b64",
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Required(CONF_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_IMAGE_ENCODING): "b64",
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     PLATFORM_SCHEMA_BASE.schema,
 )
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -93,7 +93,7 @@ class MqttCamera(MqttEntity, Camera):
 
     @staticmethod
     @override
-    def config_schema() -> vol.Schema:
+    def config_schema() -> probatio.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

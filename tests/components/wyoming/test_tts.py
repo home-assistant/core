@@ -6,12 +6,15 @@ from unittest.mock import patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.error import Error
 from wyoming.tts import SynthesizeStopped
 
-from homeassistant.components import tts, wyoming
+from homeassistant.components import tts
+from homeassistant.components.tts import TextToSpeechCommonOption
+from homeassistant.components.wyoming import WyomingTextToSpeechOption
 from homeassistant.components.wyoming.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,8 +23,6 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.util import dt as dt_util
 
 from . import TTS_INFO_LANGUAGE_REPLACED, TTS_INFO_NEW_VOICE, MockAsyncTcpClient
-
-from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
@@ -34,9 +35,9 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
 
     assert entity.supported_languages == ["en-US"]
     assert entity.supported_options == [
-        tts.ATTR_AUDIO_OUTPUT,
-        tts.ATTR_VOICE,
-        wyoming.ATTR_SPEAKER,
+        TextToSpeechCommonOption.AUDIO_OUTPUT,
+        TextToSpeechCommonOption.VOICE,
+        WyomingTextToSpeechOption.SPEAKER,
     ]
     voices = entity.async_get_supported_voices("en-US")
     assert len(voices) == 1
@@ -132,18 +133,16 @@ async def test_get_tts_audio(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        stream = tts.async_create_stream(
             hass,
-            tts.generate_media_source_id(
-                hass,
-                "Hello world",
-                "tts.test_tts",
-                "en-US",
-                options={tts.ATTR_PREFERRED_FORMAT: "wav"},
-            ),
+            "tts.test_tts",
+            "en-US",
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
+        stream.async_set_message("Hello world")
+        data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
-    assert extension == "wav"
+    assert stream.extension == "wav"
     assert data is not None
     with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
         assert wav_file.getframerate() == 16000
@@ -173,22 +172,20 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        stream = tts.async_create_stream(
             hass,
-            tts.generate_media_source_id(
-                hass,
-                "Hello world",
-                "tts.test_tts",
-                "en-US",
-                options={
-                    tts.ATTR_PREFERRED_FORMAT: "wav",
-                    tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
-                    tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
-                },
-            ),
+            "tts.test_tts",
+            "en-US",
+            options={
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 48000,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 2,
+            },
         )
+        stream.async_set_message("Hello world")
+        data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
-    assert extension == "wav"
+    assert stream.extension == "wav"
     assert data is not None
     with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
         assert wav_file.getframerate() == 48000
@@ -208,17 +205,11 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass,
-                "Hello world",
-                "tts.test_tts",
-                "en-US",
-            ),
-        )
+        stream = tts.async_create_stream(hass, "tts.test_tts", "en-US")
+        stream.async_set_message("Hello world")
+        data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
-    assert extension == "mp3"
+    assert stream.extension == "mp3"
     assert b"ID3" in data
     assert mock_client.written == snapshot
 
@@ -251,22 +242,18 @@ async def test_get_tts_audio_audio_oserror(
 
     mock_client = MockAsyncTcpClient(audio_events)
 
+    stream = tts.async_create_stream(hass, "tts.test_tts", "en-US")
     with (
         patch(
             "homeassistant.components.wyoming.tts.AsyncTcpClient",
             mock_client,
         ),
         patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
-        pytest.raises(
-            HomeAssistantError,
-        ),
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.test_tts", hass.config.language
-            ),
-        )
+        stream.async_set_message("Hello world")
+        with pytest.raises(HomeAssistantError):
+            async for _chunk in stream.async_stream_result():
+                pass
 
 
 @pytest.mark.usefixtures("init_wyoming_tts")
@@ -285,17 +272,15 @@ async def test_get_tts_audio_error_event(
     hass: HomeAssistant, error_code: str | None, expected_message: str
 ) -> None:
     """Test that an error event from the service is reported."""
-    with (
-        patch(
-            "homeassistant.components.wyoming.tts.AsyncTcpClient",
-            MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
-        ),
-        pytest.raises(HomeAssistantError, match=re.escape(expected_message)),
+    stream = tts.async_create_stream(hass, "tts.test_tts", "en-US")
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
-        )
+        stream.async_set_message("Hello world")
+        with pytest.raises(HomeAssistantError, match=re.escape(expected_message)):
+            async for _chunk in stream.async_stream_result():
+                pass
 
 
 @pytest.mark.usefixtures("init_wyoming_streaming_tts")
@@ -313,7 +298,7 @@ async def test_get_tts_audio_streaming_error_event(hass: HomeAssistant) -> None:
             hass,
             "tts.test_streaming_tts",
             "en-US",
-            options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
         stream.async_set_message_stream(message_gen())
 
@@ -339,16 +324,19 @@ async def test_voice_speaker(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        await tts.async_get_media_source_audio(
+        stream = tts.async_create_stream(
             hass,
-            tts.generate_media_source_id(
-                hass,
-                "Hello world",
-                "tts.test_tts",
-                "en-US",
-                options={tts.ATTR_VOICE: "voice1", wyoming.ATTR_SPEAKER: "speaker1"},
-            ),
+            "tts.test_tts",
+            "en-US",
+            options={
+                TextToSpeechCommonOption.VOICE: "voice1",
+                WyomingTextToSpeechOption.SPEAKER: "speaker1",
+            },
         )
+        stream.async_set_message("Hello world")
+        async for _chunk in stream.async_stream_result():
+            pass
+
         assert mock_client.written == snapshot
 
 
@@ -382,7 +370,7 @@ async def test_get_tts_audio_streaming(
             hass,
             "tts.test_streaming_tts",
             "en-US",
-            options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
         stream.async_set_message_stream(message_gen())
         data = b"".join([chunk async for chunk in stream.async_stream_result()])

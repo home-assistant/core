@@ -1,8 +1,13 @@
 {
   "domain": "elkm1",
   "name": "Elk-M1 Control",
+  "categories": [
+    "security_safety.alarm_systems",
+    "hubs_protocols.smart_home_hubs"
+  ],
   "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["network"],
   "dhcp": [
     {
@@ -16,5 +21,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["elkm1_lib"],
-  "requirements": ["elkm1-lib==2.2.15"]
+  "requirements": ["elkm1-lib==2.2.17"]
 }

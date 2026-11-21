@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -47,11 +46,43 @@
       }
     },
     "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "Silent",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
+            }
+          }
+        }
+      },
       "dual_roller_shutter_lower": {
-        "name": "Lower shutter"
+        "name": "Lower shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
+            }
+          }
+        }
       },
       "dual_roller_shutter_upper": {
-        "name": "Upper shutter"
+        "name": "Upper shutter",
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::default%]",
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "silent": "[%key:component::velux::entity::cover::cover::state_attributes::speed::state::silent%]",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
+            }
+          }
+        }
       }
     },
     "number": {
@@ -69,6 +100,16 @@
     },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
+    }
+  },
+  "issues": {
+    "deprecated_speed_default": {
+      "description": "The `default` speed of Velux covers is deprecated and will be removed. It was last used with `{entity_id}`.\n\nRemove the `speed` option from the open, close and set position actions in your automations and scripts to move the cover at its default speed.",
+      "title": "Velux cover speed `default` is deprecated"
+    },
+    "deprecated_speed_silent": {
+      "description": "The `silent` speed of Velux covers is deprecated and will be removed. It was last used with `{entity_id}`.\n\nUse `speed: slow` in the open, close and set position actions in your automations and scripts instead.",
+      "title": "Velux cover speed `silent` is deprecated"
     }
   }
 }

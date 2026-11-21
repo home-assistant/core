@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
-from aiohomeconnect.model import HomeAppliance, SettingKey, StatusKey
+from aiohomeconnect.model import ApplianceType, HomeAppliance, SettingKey, StatusKey
 from aiohomeconnect.model.error import (
     HomeConnectError,
     TooManyRequestsError,
@@ -13,6 +13,8 @@ from aiohomeconnect.model.error import (
 )
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.home_connect.const import DOMAIN
@@ -37,9 +39,6 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_entry_setup(
@@ -243,7 +242,7 @@ async def test_client_rate_limit_error(
     asyncio_sleep_mock.assert_called_once_with(retry_after)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_required_program_or_at_least_an_option(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -276,7 +275,7 @@ async def test_required_program_or_at_least_an_option(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_entity_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -340,7 +339,7 @@ async def test_entity_migration(
         patch("homeassistant.components.home_connect.PLATFORMS", platforms),
         patch(
             "homeassistant.components.home_connect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
@@ -372,7 +371,7 @@ async def test_config_entry_unique_id_migration(
 
     with patch(
         "homeassistant.components.home_connect.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
         await hass.async_block_till_done()

@@ -70,6 +70,9 @@
   "exceptions": {
     "service_minute_forecast_mode": {
       "message": "Minute forecast is available only when {name} mode is set to v3.0"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from OpenWeatherMap"
     }
   },
   "issues": {

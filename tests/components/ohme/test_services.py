@@ -5,20 +5,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 from ohme import ChargeSlot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ohme.const import DOMAIN
-from homeassistant.components.ohme.services import (
-    ATTR_CONFIG_ENTRY,
-    ATTR_PRICE_CAP,
-    SERVICE_LIST_CHARGE_SLOTS,
-)
+from homeassistant.components.ohme.services import OhmeService, OhmeServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_list_charge_slots(
@@ -43,7 +38,7 @@ async def test_list_charge_slots(
         DOMAIN,
         "list_charge_slots",
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+            OhmeServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
         },
         blocking=True,
         return_response=True,
@@ -65,8 +60,8 @@ async def test_set_price_cap(
         DOMAIN,
         "set_price_cap",
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
-            ATTR_PRICE_CAP: 10.0,
+            OhmeServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
+            OhmeServiceArgument.PRICE_CAP: 10.0,
         },
         blocking=True,
     )
@@ -88,8 +83,8 @@ async def test_list_charge_slots_exception(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_CHARGE_SLOTS,
-            {ATTR_CONFIG_ENTRY: "invalid"},
+            OhmeService.LIST_CHARGE_SLOTS,
+            {OhmeServiceArgument.CONFIG_ENTRY: "invalid"},
             blocking=True,
             return_response=True,
         )

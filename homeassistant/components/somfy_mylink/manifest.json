@@ -1,8 +1,10 @@
 {
   "domain": "somfy_mylink",
   "name": "Somfy MyLink",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@sslivins"],
   "config_flow": true,
+  "connectivity": ["network", "rf"],
   "dhcp": [
     {
       "hostname": "somfy_*",

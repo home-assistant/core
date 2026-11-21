@@ -1,8 +1,10 @@
 {
   "domain": "bosch_alarm",
   "name": "Bosch Alarm",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@mag1024", "@sanjay900"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "000463*"
@@ -12,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "platinum",
-  "requirements": ["bosch-alarm-mode2==0.4.10"]
+  "requirements": ["bosch-alarm-mode2==0.4.11"]
 }

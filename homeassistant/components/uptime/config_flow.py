@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -25,4 +25,4 @@ class UptimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={},
             )
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="user", data_schema=probatio.Schema({}))

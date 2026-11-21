@@ -1,18 +1,30 @@
 """Services for the Blink integration."""
 
-import voluptuous as vol
+from enum import StrEnum
+
+import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_RECORD = "record"
-SERVICE_TRIGGER = "trigger_camera"
-SERVICE_SAVE_VIDEO = "save_video"
-SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
+
+class BlinkService(StrEnum):
+    """Store keys for Blink services."""
+
+    RECORD = "record"
+    TRIGGER_CAMERA = "trigger_camera"
+    SAVE_VIDEO = "save_video"
+    SAVE_RECENT_CLIPS = "save_recent_clips"
+
+
+class BlinkServiceArgument(StrEnum):
+    """Store keys for Blink service arguments."""
+
+    FILENAME = "filename"
+    FILE_PATH = "file_path"
 
 
 @callback
@@ -22,7 +34,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_RECORD,
+        BlinkService.RECORD,
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="record",
@@ -30,7 +42,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_TRIGGER,
+        BlinkService.TRIGGER_CAMERA,
         entity_domain=CAMERA_DOMAIN,
         schema=None,
         func="trigger_camera",
@@ -38,16 +50,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
+        BlinkService.SAVE_RECENT_CLIPS,
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(CONF_FILE_PATH): cv.string},
+        schema={probatio.Required(BlinkServiceArgument.FILE_PATH): cv.string},
         func="save_recent_clips",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SAVE_VIDEO,
+        BlinkService.SAVE_VIDEO,
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(CONF_FILENAME): cv.string},
+        schema={probatio.Required(BlinkServiceArgument.FILENAME): cv.string},
         func="save_video",
     )

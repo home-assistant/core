@@ -24,8 +24,6 @@ VACUUM_FAN_SPEED_MAX = "max"
 
 CLIMATE_PRESET_SCHEDULE = "schedule"
 
-AI_ART_FRAME_UPLOAD_IMAGE_SERVICE = "upload_art_frame_image"
-
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH = 30
@@ -77,6 +75,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
+    "Hub 4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
+    ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
@@ -92,6 +93,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK)
     ),
     "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Ultra Max": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
     "Smart Lock Vision": SwitchbotCloudDeviceConfig(
@@ -164,6 +168,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Curtain3": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
+    "Curtain4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
     "Roller Shade": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
     ),
@@ -172,5 +179,15 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Garage Door Opener": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
+    "Plug Mini (US)": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
     ),
 }

@@ -2,10 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import IRRIGATION, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
@@ -20,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "switch.switch0"
 
@@ -96,7 +99,7 @@ async def test_switch_dynamic(
     assert hass.states.get(entity_id)
 
     mock_serial_bridge.get_all_devices.return_value[IRRIGATION] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Switch0",
             status=0,
@@ -108,7 +111,7 @@ async def test_switch_dynamic(
             power=0.0,
             power_unit=WATT,
         ),
-        1: ComelitSerialBridgeObject(
+        1: ComelitDeviceObject(
             index=1,
             name="Switch1",
             status=0,

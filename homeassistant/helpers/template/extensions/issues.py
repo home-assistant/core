@@ -36,12 +36,12 @@ class IssuesExtension(BaseTemplateExtension):
 
     def issues(self) -> dict[tuple[str, str], dict[str, Any]]:
         """Return all open issues."""
-        current_issues = ir.async_get(self.hass).issues
+        issue_registry = ir.async_get(self.hass)
         # Use JSON for safe representation
         return {
             key: issue_entry.to_json()
-            for (key, issue_entry) in current_issues.items()
-            if issue_entry.active
+            for (key, issue_entry) in issue_registry.issues.items()
+            if issue_entry.active and not issue_registry.async_is_hidden(issue_entry)
         }
 
     def issue(self, domain: str, issue_id: str) -> dict[str, Any] | None:

@@ -6,6 +6,7 @@ from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.connection import RussoundSerialConnectionHandler
 from aiorussound.rio.models import CallbackType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.russound_rio.const import CONF_BAUDRATE, DOMAIN, TYPE_TCP
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import mock_state_update, setup_integration
 from .const import HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_not_ready(

@@ -1,17 +1,19 @@
 """Provides the coordinator for a LOQED lock."""
 
 import asyncio
+from http import HTTPStatus
 import logging
 from typing import TypedDict, override
 
 import aiohttp
-from aiohttp.web import Request
+from aiohttp.web import Request, Response
 from loqedAPI import loqed
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
@@ -19,6 +21,14 @@ from .const import CONF_CLOUDHOOK_URL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type LoqedConfigEntry = ConfigEntry[LoqedDataCoordinator]
+
+
+def is_auth_error(err: TimeoutError | aiohttp.ClientError) -> bool:
+    """Return whether the client error is an authentication rejection."""
+    return isinstance(err, aiohttp.ClientResponseError) and err.status in (
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.FORBIDDEN,
+    )
 
 
 class BatteryMessage(TypedDict):
@@ -53,7 +63,7 @@ class TransitionMessage(TypedDict):
 
 
 class StatusMessage(TypedDict):
-    """Properties returned by the status endpoint of the bridhge."""
+    """Properties returned by the status endpoint of the bridge."""
 
     battery_percentage: int
     battery_type: str
@@ -92,14 +102,24 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     @override
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
-        async with asyncio.timeout(10):
-            return await self._api.async_get_lock_details()
+        try:
+            async with asyncio.timeout(10):
+                return await self._api.async_get_lock_details()
+        except aiohttp.ClientResponseError as err:
+            if is_auth_error(err):
+                raise ConfigEntryAuthFailed(
+                    "The LOQED bridge rejected the credentials"
+                ) from err
+            raise
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
-    ) -> None:
+    ) -> Response | None:
         """Handle incoming Loqed messages."""
         _LOGGER.debug("Callback received: %s", request.headers)
+        if "TIMESTAMP" not in request.headers or "HASH" not in request.headers:
+            _LOGGER.warning("Callback without TIMESTAMP or HASH header rejected")
+            return Response(status=HTTPStatus.BAD_REQUEST)
         received_ts = request.headers["TIMESTAMP"]
         received_hash = request.headers["HASH"]
         body = await request.text()
@@ -109,9 +129,10 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         event_data = await self.lock.receiveWebhook(body, received_hash, received_ts)
         if "error" in event_data:
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
-            return
+            return None
 
         self.async_update_listeners()
+        return None
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""

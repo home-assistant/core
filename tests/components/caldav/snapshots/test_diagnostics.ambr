@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'calendars': list([
+      dict({
+        'has_name': True,
+        'supported_components': list([
+          'VEVENT',
+          'VTODO',
+        ]),
+      }),
+      dict({
+        'has_name': False,
+        'supported_components': list([
+          'VTODO',
+        ]),
+      }),
+    ]),
+    'data': dict({
+      'password': '**REDACTED**',
+      'url': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'now': '2023-06-04T17:00:00-07:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'US/Pacific',
+  })
+# ---
+# name: test_entry_diagnostics_server_error[connection_error]
+  dict({
+    'calendars_error': 'ConnectionError',
+    'data': dict({
+      'password': '**REDACTED**',
+      'url': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'now': '2023-06-04T17:00:00-07:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'US/Pacific',
+  })
+# ---
+# name: test_entry_diagnostics_server_error[dav_error]
+  dict({
+    'calendars_error': 'DAVError',
+    'data': dict({
+      'password': '**REDACTED**',
+      'url': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'now': '2023-06-04T17:00:00-07:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'US/Pacific',
+  })
+# ---
+# name: test_entry_diagnostics_server_error[timeout]
+  dict({
+    'calendars_error': 'Timeout',
+    'data': dict({
+      'password': '**REDACTED**',
+      'url': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'now': '2023-06-04T17:00:00-07:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'US/Pacific',
+  })
+# ---
+# name: test_entry_diagnostics_setup_failed
+  dict({
+    'data': dict({
+      'password': '**REDACTED**',
+      'url': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'now': '2023-06-04T17:00:00-07:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'US/Pacific',
+  })
+# ---

@@ -460,7 +460,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         "set_speed",
-        {vol.Required("speed"): cv.string},
+        {probatio.Required("speed"): cv.string},
         "async_set_speed",
     )
 
@@ -491,7 +491,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         "set_speed",
-        {vol.Required("speed"): cv.string},
+        {probatio.Required("speed"): cv.string},
         "async_set_speed",
     )
 

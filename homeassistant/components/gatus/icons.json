@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "dns_rcode": {
+        "default": "mdi:dns"
+      },
+      "last_event": {
+        "default": "mdi:history",
+        "state": {
+          "healthy": "mdi:check-circle-outline",
+          "resolved": "mdi:check-circle-outline",
+          "start": "mdi:play-circle-outline",
+          "unhealthy": "mdi:alert-circle-outline"
+        }
+      },
+      "status_code": {
+        "default": "mdi:list-status"
+      }
+    }
+  }
+}

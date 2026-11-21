@@ -3,14 +3,9 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.cover import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
-    CoverEntity,
-    CoverState,
-)
+from homeassistant.components.cover import CoverEntity, CoverState
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +24,6 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import RflinkCommand
-from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,35 +33,32 @@ TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): probatio.Schema(
         {
             cv.string: {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
+                    TYPE_STANDARD, TYPE_INVERTED
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
+                probatio.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         }
     ),
 }
-
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -128,10 +119,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink cover platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):

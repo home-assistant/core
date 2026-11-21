@@ -1,11 +1,13 @@
 """ViCare helpers functions."""
 
 from collections.abc import Callable, Mapping
+from datetime import UTC, timedelta
 import logging
 from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -21,8 +23,11 @@ import requests
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_CACHE_DURATION, VICARE_TOKEN_FILENAME
+
+MAX_RATE_LIMIT_BACKOFF = 86400  # the quota window is a day
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +47,16 @@ def login(
         hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
     )
     return vicare_api
+
+
+def get_device_identifier(
+    device_config: PyViCareDeviceConfig, device_serial: str | None
+) -> str:
+    """Return the device registry identifier of a device."""
+    gateway_serial = device_config.getConfig().serial
+    if device_serial is not None:
+        return f"{gateway_serial}_{device_serial.replace('-', '_')}"
+    return f"{gateway_serial}_{device_config.getId()}"
 
 
 def get_device_serial(device: PyViCareDevice) -> str | None:
@@ -116,6 +131,17 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
+def get_rooms(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of rooms."""
+    try:
+        return device.rooms
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No rooms found")
+    except AttributeError as error:
+        _LOGGER.debug("No rooms found: %s", error)
+    return []
+
+
 def get_condensers(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
     """Return the list of condensers."""
     try:
@@ -157,3 +183,13 @@ def filter_state(state: str) -> str | None:
 def normalize_state(state: str) -> str:
     """Return the state with underscores instead of hyphens."""
     return state.replace("-", "_")
+
+
+def retry_after_from(error: PyViCareRateLimitError, floor: timedelta) -> float:
+    """Return seconds to wait after a rate limit, clamped to [floor, one day].
+
+    limitResetDate is naive UTC and can be in the past.
+    """
+    reset = error.limitResetDate.replace(tzinfo=UTC)
+    delay = (reset - dt_util.utcnow()).total_seconds()
+    return min(max(delay, floor.total_seconds()), MAX_RATE_LIMIT_BACKOFF)

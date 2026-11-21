@@ -2,18 +2,20 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final, override
+from typing import Any, override
 
 import jwt
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
-
-INPUT_IMAGES_SCOPE: Final = "images_scope"
 
 
 class OAuth2FlowHandler(
@@ -25,48 +27,11 @@ class OAuth2FlowHandler(
 
     MINOR_VERSION = 3
 
-    images_scope: bool | None = None
-
     @property
     @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
-
-    @property
-    @override
-    def extra_authorize_data(self) -> dict[str, str]:
-        return {
-            "scope": (
-                "Control Monitor Settings"
-                f" IdentifyAppliance{' Images' if self.images_scope else ''}"
-            ),
-        }
-
-    @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow start."""
-        return await self.async_step_scopes(user_input)
-
-    async def async_step_scopes(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for the scopes to use."""
-        if user_input is not None:
-            self.images_scope = user_input[INPUT_IMAGES_SCOPE]
-        if self.images_scope is not None:
-            return await self.async_step_pick_implementation(None)
-
-        return self.async_show_form(
-            step_id="scopes",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(INPUT_IMAGES_SCOPE): bool,
-                }
-            ),
-        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -81,8 +46,14 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
         return await self.async_step_user()
 
     @override
@@ -97,6 +68,11 @@ class OAuth2FlowHandler(
             self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=data
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data
             )
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)

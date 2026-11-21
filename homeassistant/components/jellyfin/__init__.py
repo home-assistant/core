@@ -4,7 +4,11 @@ from typing import Any
 
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -18,11 +22,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jellyfin component."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Set up Jellyfin from a config entry."""
     if CONF_CLIENT_DEVICE_ID not in entry.data:
         entry_data = entry.data.copy()
@@ -63,21 +67,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.version == 1 and entry.minor_version < 2:
         new_data = {**entry.data, CONF_URL: entry.data[CONF_URL].rstrip("/")}
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -87,10 +87,18 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data
+    identifiers = device_entry.identifiers
 
-    return not device_entry.identifiers.intersection(
-        (
-            (DOMAIN, coordinator.server_id),
-            *((DOMAIN, device_id) for device_id in coordinator.device_ids),
+    if (DOMAIN, coordinator.server_id) in identifiers:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_remove_server_device",
         )
-    )
+
+    if any((DOMAIN, device_id) in identifiers for device_id in coordinator.device_ids):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_remove_active_device",
+        )
+
+    return True

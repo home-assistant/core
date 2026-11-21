@@ -10,7 +10,7 @@ from laundrify_aio.exceptions import (
     InvalidFormat,
     UnknownAuthCode,
 )
-from voluptuous import Required, Schema
+from probatio import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE

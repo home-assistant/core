@@ -13,7 +13,7 @@ from nibe.exceptions import (
     WriteException,
 )
 from nibe.heatpump import HeatPump, Model
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -35,37 +35,37 @@ from .const import (
     LOGGER,
 )
 
-PORT_SELECTOR = vol.All(
+PORT_SELECTOR = probatio.All(
     selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1, step=1, max=65535, mode=selector.NumberSelectorMode.BOX
         )
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 
-STEP_NIBEGW_DATA_SCHEMA = vol.Schema(
+STEP_NIBEGW_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
-        vol.Required(CONF_IP_ADDRESS): selector.TextSelector(),
-        vol.Required(CONF_LISTENING_PORT, default=9999): PORT_SELECTOR,
-        vol.Required(CONF_REMOTE_READ_PORT, default=9999): PORT_SELECTOR,
-        vol.Required(CONF_REMOTE_WRITE_PORT, default=10000): PORT_SELECTOR,
+        probatio.Required(CONF_MODEL): probatio.In(list(Model.__members__)),
+        probatio.Required(CONF_IP_ADDRESS): selector.TextSelector(),
+        probatio.Required(CONF_LISTENING_PORT, default=9999): PORT_SELECTOR,
+        probatio.Required(CONF_REMOTE_READ_PORT, default=9999): PORT_SELECTOR,
+        probatio.Required(CONF_REMOTE_WRITE_PORT, default=10000): PORT_SELECTOR,
     }
 )
 
 
-STEP_MODBUS_DATA_SCHEMA = vol.Schema(
+STEP_MODBUS_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
-        vol.Required(CONF_MODBUS_URL): selector.TextSelector(),
-        vol.Required(CONF_MODBUS_UNIT, default=0): vol.All(
+        probatio.Required(CONF_MODEL): probatio.In(list(Model.__members__)),
+        probatio.Required(CONF_MODBUS_URL): selector.TextSelector(),
+        probatio.Required(CONF_MODBUS_UNIT, default=0): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, step=1, mode=selector.NumberSelectorMode.BOX
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )

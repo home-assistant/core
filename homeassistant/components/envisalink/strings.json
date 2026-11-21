@@ -3,10 +3,6 @@
     "alarm_keypress": {
       "description": "Sends custom keypresses to the alarm.",
       "fields": {
-        "entity_id": {
-          "description": "Name of the alarm control panel to trigger.",
-          "name": "Entity"
-        },
         "keypress": {
           "description": "String to send to the alarm panel (1-6 characters).",
           "name": "Keypress"

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboConnectionError, nobo as pynobo_nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
@@ -24,8 +25,6 @@ from . import (
     fire_hub_update,
 )
 from .conftest import SERIAL, STORED_IP
-
-from tests.common import MockConfigEntry
 
 NEW_IP = "192.168.1.55"
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"
@@ -225,7 +224,7 @@ async def test_setup_registers_hub_device(
         (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.config_entries == {mock_config_entry.entry_id}
+    assert device.config_entry_id == mock_config_entry.entry_id
     assert device.name == "My Eco Hub"
     assert device.manufacturer == "Glen Dimplex Nordic AS"
     assert device.model == "Nobø Ecohub"
@@ -443,7 +442,7 @@ async def test_disconnected_hub_does_not_remove_devices(
 
 @pytest.mark.parametrize(
     "platforms",
-    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]],
+    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]],
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")

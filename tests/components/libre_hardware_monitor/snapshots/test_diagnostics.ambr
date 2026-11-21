@@ -213,7 +213,7 @@
           'device_name': 'NVIDIA GeForce RTX 4080 SUPER',
           'device_type': 'NVIDIA',
           'max': '374999000.0',
-          'min': '0.0',
+          'min': '1000.0',
           'name': 'GPU PCIe Tx Throughput',
           'sensor_id': 'gpu-nvidia-0-throughput-1',
           'type': 'Throughput',

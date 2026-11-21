@@ -1,6 +1,6 @@
 """Base entity for Comelit."""
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit import ComelitDeviceObject
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,7 +15,7 @@ class ComelitBridgeBaseEntity(CoordinatorEntity[ComelitSerialBridge]):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""

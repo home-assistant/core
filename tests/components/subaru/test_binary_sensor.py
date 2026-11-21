@@ -4,6 +4,7 @@ import copy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -37,8 +38,6 @@ from .api_responses import (
     VEHICLE_STATUS_G3,
 )
 from .conftest import setup_subaru_config_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -4,6 +4,13 @@ from dataclasses import asdict
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.vacuum import (
     DOMAIN,
@@ -20,6 +27,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.vacuum.services import _async_clean_area
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -29,14 +37,6 @@ from . import (
     MockVacuumWithCleanArea,
     help_async_setup_entry_init,
     help_async_unload_entry,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    setup_test_component_platform,
 )
 
 
@@ -449,7 +449,7 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
         RuntimeError,
         match="Cannot perform area clean, registry entry is not set",
     ):
-        await StateVacuumEntity.async_internal_clean_area([mock_vacuum], call)
+        await _async_clean_area([mock_vacuum], call)
 
     with pytest.raises(
         RuntimeError,
@@ -496,7 +496,9 @@ async def test_last_seen_segments(
 
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_segments_changed_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test segments changed issue."""
     mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
@@ -531,7 +533,7 @@ async def test_segments_changed_issue(
     mock_vacuum.async_create_segments_issue()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
@@ -549,4 +551,4 @@ async def test_segments_changed_issue(
     )
     await hass.async_block_till_done()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None  # pylint: disable=home-assistant-tests-registry-fixtures
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

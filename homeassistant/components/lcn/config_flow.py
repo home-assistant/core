@@ -3,8 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 import pypck
-import voluptuous as vol
+from pypck.connection import PchkConnectionManager
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -20,25 +21,24 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import PchkConnectionManager
 from .const import CONF_ACKNOWLEDGE, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_DATA = {
-    vol.Required(CONF_IP_ADDRESS, default=""): str,
-    vol.Required(CONF_PORT, default=4114): cv.positive_int,
-    vol.Required(CONF_USERNAME, default=""): str,
-    vol.Required(CONF_PASSWORD, default=""): str,
-    vol.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
-    vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
-    vol.Required(CONF_ACKNOWLEDGE, default=False): cv.boolean,
+    probatio.Required(CONF_IP_ADDRESS, default=""): str,
+    probatio.Required(CONF_PORT, default=4114): cv.positive_int,
+    probatio.Required(CONF_USERNAME, default=""): str,
+    probatio.Required(probatio.Secret(CONF_PASSWORD), default=""): str,
+    probatio.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
+    probatio.Required(CONF_DIM_MODE, default="STEPS200"): probatio.In(DIM_MODES),
+    probatio.Required(CONF_ACKNOWLEDGE, default=False): cv.boolean,
 }
 
-USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
+USER_DATA = {probatio.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
 
-CONFIG_SCHEMA = vol.Schema(CONFIG_DATA)
-USER_SCHEMA = vol.Schema(USER_DATA)
+CONFIG_SCHEMA = probatio.Schema(CONFIG_DATA)
+USER_SCHEMA = probatio.Schema(USER_DATA)
 
 
 async def validate_connection(data: ConfigType) -> str | None:

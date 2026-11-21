@@ -2,10 +2,12 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
@@ -101,7 +103,9 @@ class MelnorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(addresses)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(addresses)}
+            ),
         )
 
     @override

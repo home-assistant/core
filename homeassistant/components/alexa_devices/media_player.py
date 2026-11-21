@@ -50,6 +50,7 @@ async def async_setup_entry(
         """Add entities for newly discovered devices."""
         new_entities: list[AlexaDevicesMediaPlayer] = []
 
+        known_devices.intersection_update(coordinator.data)
         for serial_num, device in coordinator.data.items():
             if serial_num in known_devices or not device.media_player_supported:
                 continue
@@ -89,15 +90,11 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_state(self) -> AmazonMediaState | None:
         """Return the media state relating to device."""
-        if not self.coordinator or not self.coordinator.media_states:
-            return None
         return self.coordinator.media_states.get(self._serial_num)
 
     @property
     def volume_state(self) -> AmazonVolumeState | None:
         """Volume settings for device."""
-        if not self.coordinator or not self.coordinator.volume_states:
-            return None
         return self.coordinator.volume_states.get(self._serial_num)
 
     @property

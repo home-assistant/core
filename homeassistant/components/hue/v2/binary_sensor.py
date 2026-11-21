@@ -41,6 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from ..bridge import HueBridge, HueConfigEntry
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+from .helpers import get_motion_area_device_info
 
 type SensorType = (
     CameraMotion
@@ -196,6 +197,22 @@ class HueMotionAwareSensor(HueMotionSensor):
         key="motion_sensor", device_class=BinarySensorDeviceClass.MOTION
     )
 
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: SecurityAreaMotionController,
+        resource: SecurityAreaMotion,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(bridge, controller, resource)
+        self._motion_area_configuration = self.controller.get_motion_area_configuration(
+            resource.id
+        )
+        # link the MotionAware sensor to the room or zone it is associated with
+        self._attr_device_info = get_motion_area_device_info(
+            self.bridge.api, self._motion_area_configuration
+        )
+
     @property
     @override
     def name(self) -> str:
@@ -221,24 +238,6 @@ class HueMotionAwareSensor(HueMotionSensor):
             if (value := source.motion.value) is not None:
                 return value
         return None
-
-    def __init__(
-        self,
-        bridge: HueBridge,
-        controller: SecurityAreaMotionController,
-        resource: SecurityAreaMotion,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(bridge, controller, resource)
-        # link the MotionAware sensor to the group the sensor is associated with
-        self._motion_area_configuration = self.controller.get_motion_area_configuration(
-            resource.id
-        )
-        group_id = self._motion_area_configuration.group.rid
-        self.hue_group = self.bridge.api.groups[group_id]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.hue_group.id)},
-        )
 
     @override
     async def async_added_to_hass(self) -> None:

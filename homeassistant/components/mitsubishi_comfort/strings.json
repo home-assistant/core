@@ -7,6 +7,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices were found on this account",
+      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. Wait a few minutes and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -43,6 +44,27 @@
     },
     "update_failed": {
       "message": "{device_name} returned no data"
+    }
+  },
+  "issues": {
+    "missing_address": {
+      "fix_flow": {
+        "error": {
+          "cannot_connect": "One or more devices did not respond at the entered address.",
+          "invalid_ip": "One or more entries are not valid IPv4 addresses."
+        },
+        "step": {
+          "addresses": {
+            "description": "These devices have no known local IP address, so they have no entities yet. Enter the local IPv4 address for each device below; each field is labeled with the device's MAC address. Leave a field blank to keep waiting for DHCP discovery (which only works when the device is on the same network as Home Assistant). After you submit, the integration reloads and sets up every device that has an address. Devices: {devices}",
+            "title": "Device IP addresses"
+          },
+          "confirm": {
+            "description": "The account this issue was created for no longer exists, so there is nothing left to fix. Confirm to dismiss the issue.",
+            "title": "Issue is no longer relevant"
+          }
+        }
+      },
+      "title": "Mitsubishi Comfort devices have no local IP address"
     }
   }
 }

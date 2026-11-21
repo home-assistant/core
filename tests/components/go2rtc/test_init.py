@@ -2,14 +2,18 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
+from http import HTTPStatus
 import logging
 from pathlib import Path
+import re
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from aiohttp import BasicAuth, UnixConnector
+from aiohttp import UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
+from freezegun.api import FrozenDateTimeFactory
 from go2rtc_client import Stream
 from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.models import Producer
@@ -21,11 +25,20 @@ from go2rtc_client.ws import (
     WsError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture_bytes,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     DATA_CAMERA_PREFS,
+    DOMAIN as CAMERA_DOMAIN,
     CameraPreferences,
+    CameraService,
+    CameraServiceArgument,
     DynamicStreamSettings,
     StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
@@ -49,7 +62,7 @@ from homeassistant.components.go2rtc.util import (
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, TargetKey
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -57,8 +70,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import MockCamera
-
-from tests.common import MockConfigEntry, load_fixture_bytes
 
 # The go2rtc provider does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -686,12 +697,10 @@ ERR_AUTH_REQUIRED_WITH_DEBUG_UI = (
     _INVALID_CONFIG + "Username and password must be set when debug_ui is true"
 )
 ERR_USERNAME_EMPTY = (
-    _INVALID_CONFIG
-    + "length of value must be at least 1 for dictionary value 'go2rtc->username'"
+    _INVALID_CONFIG + "value must not be empty for dictionary value 'go2rtc->username'"
 )
 ERR_PASSWORD_EMPTY = (
-    _INVALID_CONFIG
-    + "length of value must be at least 1 for dictionary value 'go2rtc->password'"
+    _INVALID_CONFIG + "value must not be empty for dictionary value 'go2rtc->password'"
 )
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
@@ -799,8 +808,11 @@ async def test_setup_with_setup_error(
     caplog: pytest.LogCaptureFixture,
     has_go2rtc_entry: bool,
     expected_log_message: str,
+    rest_client: AsyncMock,
 ) -> None:
     """Test setup integration fails."""
+    # The cases that get as far as starting the server expect it to fail
+    rest_client.validate_server_version.side_effect = Go2RtcClientError()
 
     assert not await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -963,8 +975,10 @@ async def test_setup_with_recommended_version_repair(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the issue is created
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     issue = issue_registry.async_get_issue(DOMAIN, "recommended_version")
     assert issue
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable is False
     assert issue.is_persistent is False
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -974,6 +988,52 @@ async def test_setup_with_recommended_version_repair(
         "recommended_version": RECOMMENDED_VERSION,
         "current_version": "1.9.5",
     }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
+@pytest.mark.usefixtures("server")
+async def test_setup_with_unsupported_version_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    rest_client: AsyncMock,
+    config: ConfigType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a repair issue is shown while the server version is unsupported."""
+    rest_client.validate_server_version.side_effect = Go2RtcVersionError(
+        "1.9.2", "1.9.13", "2.0.0"
+    )
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_version")
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_key == "unsupported_version"
+    assert issue.translation_placeholders == {
+        "error": "server version '1.9.2' not >= 1.9.13 and < 2.0.0",
+    }
+
+    # The retry after the server is updated clears the issue
+    rest_client.validate_server_version.side_effect = None
+    rest_client.validate_server_version.return_value = AwesomeVersion(
+        RECOMMENDED_VERSION
+    )
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_version") is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1000,6 +1060,104 @@ async def test_async_get_image(
         HomeAssistantError, match="Stream source is not supported by go2rtc"
     ):
         await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stream_with_credentials_not_added_again(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a stream with credentials is only added again when its source changes."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        # go2rtc 1.9.15+ masks the userinfo of producer URLs in API responses
+        server_streams[name] = Stream(
+            [Producer(re.sub(r"://[^/@]+@", "://***@", source)) for source in sources]
+        )
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    camera.set_stream_source("rtsp://user:pass@192.168.1.124:554/stream1")
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 1
+
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 1
+
+    camera.set_stream_source("rtsp://user:new_pass@192.168.1.124:554/stream1")
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 2
+    assert rest_client.streams.add.call_args[0] == (
+        identifier,
+        [
+            "rtsp://user:new_pass@192.168.1.124:554/stream1",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+    # A restarted go2rtc server has no streams, so the stream is added again
+    server_streams.clear()
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 3
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_get_image_go2rtc_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_test_integration: MockCamera,
+    snapshot_error: Go2RtcClientError,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test go2rtc snapshot failures are handled as Home Assistant errors."""
+    with pytest.raises(
+        HomeAssistantError, match="Unable to get image from go2rtc"
+    ) as exc_info:
+        await async_get_image(hass, init_test_integration.entity_id)
+
+    assert exc_info.value.__cause__ is snapshot_error
+
+    client = await hass_client()
+    response = await client.get(f"/api/camera_proxy/{init_test_integration.entity_id}")
+
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert await response.text() == "500: Internal Server Error"
+    assert "Error handling request" not in caplog.text
+    assert init_test_integration.stream is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_snapshot_service_go2rtc_error(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    snapshot_error: Go2RtcClientError,
+    tmp_path: Path,
+) -> None:
+    """Test snapshot actions propagate go2rtc failures without writing a file."""
+    hass.config.allowlist_external_dirs.add(str(tmp_path))
+    snapshot_file = tmp_path / "snapshot.jpg"
+
+    with pytest.raises(
+        HomeAssistantError, match="Unable to get image from go2rtc"
+    ) as exc_info:
+        await hass.services.async_call(
+            CAMERA_DOMAIN,
+            CameraService.SNAPSHOT,
+            {
+                TargetKey.ENTITY_ID: init_test_integration.entity_id,
+                CameraServiceArgument.FILENAME: str(snapshot_file),
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.__cause__ is snapshot_error
+    assert not snapshot_file.exists()
+    assert init_test_integration.stream is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1267,12 +1425,11 @@ async def test_unix_socket_connection(hass: HomeAssistant, server_dir: Path) -> 
         assert isinstance(connector, UnixConnector)
         assert connector.path == get_go2rtc_unix_socket_path(server_dir)
         # Auth should be auto-generated when credentials are not explicitly configured
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        # Verify auto-generated credentials match our mocked values
-        assert auth.login == "mock_username_token"
-        assert auth.password == "mock_password_token"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth(
+                "mock_username_token", "mock_password_token"
+            )
+        }
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -1300,7 +1457,7 @@ async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("rest_client", "server")
 async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
-    """Test BasicAuth session is created with username/password and URL."""
+    """Test an auth header session is created with username/password and URL."""
     config = {
         DOMAIN: {
             CONF_URL: "http://localhost:1984/",
@@ -1318,19 +1475,17 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Verify async_create_clientsession was called with BasicAuth
+        # Verify async_create_clientsession was called with an auth header
         mock_create_session.assert_called_once()
         call_kwargs = mock_create_session.call_args[1]
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        assert auth.login == "test_user"
-        assert auth.password == "test_pass"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth("test_user", "test_pass")
+        }
 
 
 @pytest.mark.usefixtures("rest_client")
 async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
-    """Test BasicAuth session created with username/password and debug_ui."""
+    """Test an auth header session is created with username/password and debug_ui."""
     config = {
         DOMAIN: {
             CONF_DEBUG_UI: True,
@@ -1361,18 +1516,16 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Verify ClientSession was created with BasicAuth and UnixConnector
+        # Verify ClientSession was created with an auth header and UnixConnector
         mock_session_cls.assert_called_once()
         call_kwargs = mock_session_cls.call_args[1]
         assert "connector" in call_kwargs
         connector = call_kwargs["connector"]
         assert isinstance(connector, UnixConnector)
         assert connector.path == get_go2rtc_unix_socket_path(server_dir)
-        assert "auth" in call_kwargs
-        auth = call_kwargs["auth"]
-        assert isinstance(auth, BasicAuth)
-        assert auth.login == "test_user"
-        assert auth.password == "test_pass"
+        assert call_kwargs["headers"] == {
+            "Authorization": encode_basic_auth("test_user", "test_pass")
+        }
 
         # Verify Server was called with username and password
         mock_server_cls.assert_called_once()

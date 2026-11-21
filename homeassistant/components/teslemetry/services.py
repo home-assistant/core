@@ -1,102 +1,91 @@
 """Service calls for the Teslemetry integration."""
 
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING
 
-import voluptuous as vol
-from voluptuous import All, Range
+import probatio
 
-from homeassistant.const import (
-    ATTR_ID,
-    ATTR_LOCATION,
-    ATTR_NAME,
-    ATTR_TIME,
-    CONF_DEVICE_ID,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .helpers import handle_command, handle_energy_site_command, handle_vehicle_command
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
-if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
+
+class TeslemetryService(StrEnum):
+    """Store keys for Teslemetry services."""
+
+    NAVIGATION_GPS_REQUEST = "navigation_gps_request"
+    TIME_OF_USE = "time_of_use"
+    SET_SCHEDULED_CHARGING = "set_scheduled_charging"
+    SET_SCHEDULED_DEPARTURE = "set_scheduled_departure"
+    VALET_MODE = "valet_mode"
+    SPEED_LIMIT = "speed_limit"
+    ADD_CHARGE_SCHEDULE = "add_charge_schedule"
+    REMOVE_CHARGE_SCHEDULE = "remove_charge_schedule"
+    ADD_PRECONDITION_SCHEDULE = "add_precondition_schedule"
+    REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
+    DISPATCH_BATTERY_POWER = "dispatch_battery_power"
+    RESUME_BATTERY_OPERATION = "resume_battery_operation"
+
+
+class TeslemetryServiceArgument(StrEnum):
+    """Store keys for Teslemetry service arguments."""
+
+    GPS = "gps"
+    ORDER = "order"
+    TOU_SETTINGS = "tou_settings"
+    ENABLE = "enable"
+    TIME = "time"
+    PRECONDITIONING_ENABLED = "preconditioning_enabled"
+    PRECONDITIONING_WEEKDAYS_ONLY = "preconditioning_weekdays_only"
+    DEPARTURE_TIME = "departure_time"
+    OFF_PEAK_CHARGING_ENABLED = "off_peak_charging_enabled"
+    OFF_PEAK_CHARGING_WEEKDAYS_ONLY = "off_peak_charging_weekdays_only"
+    END_OFF_PEAK_TIME = "end_off_peak_time"
+    PIN = "pin"
+    DAYS_OF_WEEK = "days_of_week"
+    LOCATION = "location"
+    START_TIME = "start_time"
+    END_TIME = "end_time"
+    ONE_TIME = "one_time"
+    ID = "id"
+    NAME = "name"
+    PRECONDITION_TIME = "precondition_time"
+    POWER = "power"
+    DURATION = "duration"
+
 
 _LOGGER = logging.getLogger(__name__)
 
 # Attributes
-ATTR_GPS = "gps"
-ATTR_TYPE = "type"
-ATTR_VALUE = "value"
-ATTR_LOCALE = "locale"
-ATTR_ORDER = "order"
-ATTR_TIMESTAMP = "timestamp"
-ATTR_FIELDS = "fields"
-ATTR_ENABLE = "enable"
-ATTR_PIN = "pin"
-ATTR_TOU_SETTINGS = "tou_settings"
-ATTR_PRECONDITIONING_ENABLED = "preconditioning_enabled"
-ATTR_PRECONDITIONING_WEEKDAYS = "preconditioning_weekdays_only"
-ATTR_DEPARTURE_TIME = "departure_time"
-ATTR_OFF_PEAK_CHARGING_ENABLED = "off_peak_charging_enabled"
-ATTR_OFF_PEAK_CHARGING_WEEKDAYS = "off_peak_charging_weekdays_only"
-ATTR_END_OFF_PEAK_TIME = "end_off_peak_time"
-ATTR_DAYS_OF_WEEK = "days_of_week"
-ATTR_START_TIME = "start_time"
-ATTR_END_TIME = "end_time"
-ATTR_ONE_TIME = "one_time"
-ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
-SERVICE_NAVIGATE_ATTR_GPS_REQUEST = "navigation_gps_request"
-SERVICE_SET_SCHEDULED_CHARGING = "set_scheduled_charging"
-SERVICE_SET_SCHEDULED_DEPARTURE = "set_scheduled_departure"
-SERVICE_VALET_MODE = "valet_mode"
-SERVICE_SPEED_LIMIT = "speed_limit"
-SERVICE_TIME_OF_USE = "time_of_use"
-SERVICE_ADD_CHARGE_SCHEDULE = "add_charge_schedule"
-SERVICE_REMOVE_CHARGE_SCHEDULE = "remove_charge_schedule"
-SERVICE_ADD_PRECONDITION_SCHEDULE = "add_precondition_schedule"
-SERVICE_REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
+
+MAX_DISPATCH_POWER = 100000
+MAX_DISPATCH_DURATION = 86400
 
 
-def async_get_device_for_service_call(
+def async_get_device_and_config_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> dr.DeviceEntry:
-    """Get the device entry related to a service call."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-    if (
-        device_entry := device_registry.async_get(
-            device_id, include_child_devices=False
-        )
-    ) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    return device_entry
-
-
-def async_get_config_for_device(
-    hass: HomeAssistant, device_entry: dr.DeviceEntry
-) -> TeslemetryConfigEntry:
-    """Get the config entry related to a device entry."""
-    for entry_id in device_entry.config_entries:
-        if entry := hass.config_entries.async_get_entry(entry_id):
-            if entry.domain == DOMAIN:
-                return entry
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_config_entry_for_device",
-        translation_placeholders={"device_id": device_entry.id},
+) -> tuple[dr.DeviceEntry, TeslemetryConfigEntry]:
+    """Get the device entry and config entry related to a service call."""
+    config_entry: TeslemetryConfigEntry
+    # Callers match the device's serial number, which only a main device has
+    device_entry, config_entry = service.async_get_device_and_config_entry(
+        hass,
+        DOMAIN,
+        call.data[CommonServiceArgument.DEVICE_ID],
+        include_child_devices=False,
     )
+    return device_entry, config_entry
 
 
 def async_get_vehicle_for_entry(
@@ -129,52 +118,73 @@ def async_get_energy_site_for_entry(
     )
 
 
+async def async_dispatch_battery_power(call: ServiceCall) -> None:
+    """Charge or discharge the battery at a set power for a set time."""
+    device, config = async_get_device_and_config_for_service_call(call.hass, call)
+    site = async_get_energy_site_for_entry(call.hass, device, config)
+
+    await handle_energy_site_command(
+        site.api.dispatch_battery_power(
+            call.data[TeslemetryServiceArgument.POWER],
+            call.data[TeslemetryServiceArgument.DURATION],
+        )
+    )
+
+
+async def async_resume_battery_operation(call: ServiceCall) -> None:
+    """Return the battery to its configured operating mode."""
+    device, config = async_get_device_and_config_for_service_call(call.hass, call)
+    site = async_get_energy_site_for_entry(call.hass, device, config)
+
+    await handle_energy_site_command(site.api.resume_battery_operation())
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Teslemetry services."""
 
     async def navigate_gps_request(call: ServiceCall) -> None:
         """Send lat,lon,order with a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
             vehicle.api.navigation_gps_request(
-                lat=call.data[ATTR_GPS][CONF_LATITUDE],
-                lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER, 0),
+                lat=call.data[TeslemetryServiceArgument.GPS][CONF_LATITUDE],
+                lon=call.data[TeslemetryServiceArgument.GPS][CONF_LONGITUDE],
+                order=call.data.get(TeslemetryServiceArgument.ORDER, 0),
             )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+        TeslemetryService.NAVIGATION_GPS_REQUEST,
         navigate_gps_request,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_GPS): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.GPS): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_ORDER): cv.positive_int,
+                probatio.Optional(TeslemetryServiceArgument.ORDER): cv.positive_int,
             }
         ),
     )
 
     async def set_scheduled_charging(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         time: int
         # Convert time to minutes since minute
-        if "time" in call.data:
-            (hours, minutes, *_seconds) = call.data["time"].split(":")
+        if TeslemetryServiceArgument.TIME in call.data:
+            (hours, minutes, *_seconds) = call.data[
+                TeslemetryServiceArgument.TIME
+            ].split(":")
             time = int(hours) * 60 + int(minutes)
-        elif call.data["enable"]:
+        elif call.data[TeslemetryServiceArgument.ENABLE]:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
@@ -182,38 +192,43 @@ def async_setup_services(hass: HomeAssistant) -> None:
             time = 0
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
+            vehicle.api.set_scheduled_charging(
+                enable=call.data[TeslemetryServiceArgument.ENABLE], time=time
+            )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_SCHEDULED_CHARGING,
+        TeslemetryService.SET_SCHEDULED_CHARGING,
         set_scheduled_charging,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_TIME): str,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.ENABLE): bool,
+                probatio.Optional(TeslemetryServiceArgument.TIME): str,
             }
         ),
     )
 
     async def set_scheduled_departure(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get("enable", True)
+        enable = call.data.get(TeslemetryServiceArgument.ENABLE, True)
 
         # Preconditioning
-        preconditioning_enabled = call.data.get(ATTR_PRECONDITIONING_ENABLED, False)
+        preconditioning_enabled = call.data.get(
+            TeslemetryServiceArgument.PRECONDITIONING_ENABLED, False
+        )
         preconditioning_weekdays_only = call.data.get(
-            ATTR_PRECONDITIONING_WEEKDAYS, False
+            TeslemetryServiceArgument.PRECONDITIONING_WEEKDAYS_ONLY, False
         )
         departure_time: int | None = None
-        if ATTR_DEPARTURE_TIME in call.data:
-            (hours, minutes, *_seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
+        if TeslemetryServiceArgument.DEPARTURE_TIME in call.data:
+            (hours, minutes, *_seconds) = call.data[
+                TeslemetryServiceArgument.DEPARTURE_TIME
+            ].split(":")
             departure_time = int(hours) * 60 + int(minutes)
         elif preconditioning_enabled:
             raise ServiceValidationError(
@@ -224,14 +239,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
             departure_time = 0
 
         # Off peak charging
-        off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
+        off_peak_charging_enabled = call.data.get(
+            TeslemetryServiceArgument.OFF_PEAK_CHARGING_ENABLED, False
+        )
         off_peak_charging_weekdays_only = call.data.get(
-            ATTR_OFF_PEAK_CHARGING_WEEKDAYS, False
+            TeslemetryServiceArgument.OFF_PEAK_CHARGING_WEEKDAYS_ONLY, False
         )
         end_off_peak_time: int | None = None
 
-        if ATTR_END_OFF_PEAK_TIME in call.data:
-            (hours, minutes, *_seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
+        if TeslemetryServiceArgument.END_OFF_PEAK_TIME in call.data:
+            (hours, minutes, *_seconds) = call.data[
+                TeslemetryServiceArgument.END_OFF_PEAK_TIME
+            ].split(":")
             end_off_peak_time = int(hours) * 60 + int(minutes)
         elif off_peak_charging_enabled:
             raise ServiceValidationError(
@@ -255,81 +274,97 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_SCHEDULED_DEPARTURE,
+        TeslemetryService.SET_SCHEDULED_DEPARTURE,
         set_scheduled_departure,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Optional(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
-                vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
-                vol.Optional(ATTR_DEPARTURE_TIME): str,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
-                vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
-                vol.Optional(ATTR_END_OFF_PEAK_TIME): str,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Optional(TeslemetryServiceArgument.ENABLE): bool,
+                probatio.Optional(
+                    TeslemetryServiceArgument.PRECONDITIONING_ENABLED
+                ): bool,
+                probatio.Optional(
+                    TeslemetryServiceArgument.PRECONDITIONING_WEEKDAYS_ONLY
+                ): bool,
+                probatio.Optional(TeslemetryServiceArgument.DEPARTURE_TIME): str,
+                probatio.Optional(
+                    TeslemetryServiceArgument.OFF_PEAK_CHARGING_ENABLED
+                ): bool,
+                probatio.Optional(
+                    TeslemetryServiceArgument.OFF_PEAK_CHARGING_WEEKDAYS_ONLY
+                ): bool,
+                probatio.Optional(TeslemetryServiceArgument.END_OFF_PEAK_TIME): str,
             }
         ),
     )
 
     async def valet_mode(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
-            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"])
+            vehicle.api.set_valet_mode(
+                call.data[TeslemetryServiceArgument.ENABLE],
+                call.data[TeslemetryServiceArgument.PIN],
+            )
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_VALET_MODE,
+        TeslemetryService.VALET_MODE,
         valet_mode,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.ENABLE): cv.boolean,
+                probatio.Required(TeslemetryServiceArgument.PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
 
     async def speed_limit(call: ServiceCall) -> None:
         """Configure fleet telemetry."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data["enable"]
+        enable = call.data[TeslemetryServiceArgument.ENABLE]
         if enable is True:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_activate(call.data["pin"])
+                vehicle.api.speed_limit_activate(
+                    call.data[TeslemetryServiceArgument.PIN]
+                )
             )
         elif enable is False:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_deactivate(call.data["pin"])
+                vehicle.api.speed_limit_deactivate(
+                    call.data[TeslemetryServiceArgument.PIN]
+                )
             )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SPEED_LIMIT,
+        TeslemetryService.SPEED_LIMIT,
         speed_limit,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Required(ATTR_PIN): All(cv.positive_int, Range(min=1000, max=9999)),
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.ENABLE): cv.boolean,
+                probatio.Required(TeslemetryServiceArgument.PIN): probatio.All(
+                    cv.positive_int, probatio.Range(min=1000, max=9999)
+                ),
             }
         ),
     )
 
     async def time_of_use(call: ServiceCall) -> None:
         """Configure time of use settings."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         site = async_get_energy_site_for_entry(hass, device, config)
 
-        tou_settings = call.data[ATTR_TOU_SETTINGS]
+        tou_settings = call.data[TeslemetryServiceArgument.TOU_SETTINGS]
         # Unwrap tariff_content_v2 if user included it, since the SDK adds this wrapper
         if "tariff_content_v2" in tou_settings:
             tou_settings = tou_settings["tariff_content_v2"]
@@ -344,12 +379,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_TIME_OF_USE,
+        TeslemetryService.TIME_OF_USE,
         time_of_use,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_TOU_SETTINGS): dict,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.TOU_SETTINGS): dict,
             }
         ),
         description_placeholders={
@@ -359,21 +394,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def add_charge_schedule(call: ServiceCall) -> None:
         """Configure charging schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
-        days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        days_of_week = call.data[TeslemetryServiceArgument.DAYS_OF_WEEK]
         # If days_of_week is a list (from select with
         # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
-        enabled = call.data[ATTR_ENABLE]
+        enabled = call.data[TeslemetryServiceArgument.ENABLE]
 
         # Optional parameters
         location = call.data.get(
-            ATTR_LOCATION,
+            TeslemetryServiceArgument.LOCATION,
             {
                 CONF_LATITUDE: hass.config.latitude,
                 CONF_LONGITUDE: hass.config.longitude,
@@ -382,18 +416,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Handle time inputs
         start_time = None
-        if start_time_obj := call.data.get(ATTR_START_TIME):
+        if start_time_obj := call.data.get(TeslemetryServiceArgument.START_TIME):
             # Convert time object to minutes since midnight
             start_time = start_time_obj.hour * 60 + start_time_obj.minute
 
         end_time = None
-        if end_time_obj := call.data.get(ATTR_END_TIME):
+        if end_time_obj := call.data.get(TeslemetryServiceArgument.END_TIME):
             # Convert time object to minutes since midnight
             end_time = end_time_obj.hour * 60 + end_time_obj.minute
 
-        one_time = call.data.get(ATTR_ONE_TIME)
-        schedule_id = call.data.get(ATTR_ID)
-        name = call.data.get(ATTR_NAME)
+        one_time = call.data.get(TeslemetryServiceArgument.ONE_TIME)
+        schedule_id = call.data.get(TeslemetryServiceArgument.ID)
+        name = call.data.get(TeslemetryServiceArgument.NAME)
 
         await handle_vehicle_command(
             vehicle.api.add_charge_schedule(
@@ -411,34 +445,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_CHARGE_SCHEDULE,
+        TeslemetryService.ADD_CHARGE_SCHEDULE,
         add_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(
+                    TeslemetryServiceArgument.DAYS_OF_WEEK
+                ): probatio.EnsureList(),
+                probatio.Required(TeslemetryServiceArgument.ENABLE): cv.boolean,
+                probatio.Optional(TeslemetryServiceArgument.LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_START_TIME): cv.time,
-                vol.Optional(ATTR_END_TIME): cv.time,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Optional(TeslemetryServiceArgument.START_TIME): cv.time,
+                probatio.Optional(TeslemetryServiceArgument.END_TIME): cv.time,
+                probatio.Optional(TeslemetryServiceArgument.ONE_TIME): cv.boolean,
+                probatio.Optional(TeslemetryServiceArgument.ID): cv.positive_int,
+                probatio.Optional(TeslemetryServiceArgument.NAME): cv.string,
             }
         ),
     )
 
     async def remove_charge_schedule(call: ServiceCall) -> None:
         """Remove a charging schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
-        schedule_id = call.data[ATTR_ID]
+        schedule_id = call.data[TeslemetryServiceArgument.ID]
 
         await handle_vehicle_command(
             vehicle.api.remove_charge_schedule(
@@ -448,31 +483,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REMOVE_CHARGE_SCHEDULE,
+        TeslemetryService.REMOVE_CHARGE_SCHEDULE,
         remove_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.ID): cv.positive_int,
             }
         ),
     )
 
     async def add_precondition_schedule(call: ServiceCall) -> None:
         """Add or modify a precondition schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
-        days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        days_of_week = call.data[TeslemetryServiceArgument.DAYS_OF_WEEK]
         # If days_of_week is a list (from select with
         # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
-        enabled = call.data[ATTR_ENABLE]
+        enabled = call.data[TeslemetryServiceArgument.ENABLE]
         location = call.data.get(
-            ATTR_LOCATION,
+            TeslemetryServiceArgument.LOCATION,
             {
                 CONF_LATITUDE: hass.config.latitude,
                 CONF_LONGITUDE: hass.config.longitude,
@@ -481,14 +515,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Convert time object to minutes since midnight
         precondition_time = (
-            call.data[ATTR_PRECONDITION_TIME].hour * 60
-            + call.data[ATTR_PRECONDITION_TIME].minute
+            call.data[TeslemetryServiceArgument.PRECONDITION_TIME].hour * 60
+            + call.data[TeslemetryServiceArgument.PRECONDITION_TIME].minute
         )
 
         # Optional parameters
-        schedule_id = call.data.get(ATTR_ID)
-        one_time = call.data.get(ATTR_ONE_TIME)
-        name = call.data.get(ATTR_NAME)
+        schedule_id = call.data.get(TeslemetryServiceArgument.ID)
+        one_time = call.data.get(TeslemetryServiceArgument.ONE_TIME)
+        name = call.data.get(TeslemetryServiceArgument.NAME)
 
         await handle_vehicle_command(
             vehicle.api.add_precondition_schedule(
@@ -505,33 +539,34 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_PRECONDITION_SCHEDULE,
+        TeslemetryService.ADD_PRECONDITION_SCHEDULE,
         add_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(
+                    TeslemetryServiceArgument.DAYS_OF_WEEK
+                ): probatio.EnsureList(),
+                probatio.Required(TeslemetryServiceArgument.ENABLE): cv.boolean,
+                probatio.Optional(TeslemetryServiceArgument.LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Required(ATTR_PRECONDITION_TIME): cv.time,
-                vol.Optional(ATTR_ID): cv.positive_int,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Required(TeslemetryServiceArgument.PRECONDITION_TIME): cv.time,
+                probatio.Optional(TeslemetryServiceArgument.ID): cv.positive_int,
+                probatio.Optional(TeslemetryServiceArgument.ONE_TIME): cv.boolean,
+                probatio.Optional(TeslemetryServiceArgument.NAME): cv.string,
             }
         ),
     )
 
     async def remove_precondition_schedule(call: ServiceCall) -> None:
         """Remove a preconditioning schedule for a vehicle."""
-        device = async_get_device_for_service_call(hass, call)
-        config = async_get_config_for_device(hass, device)
+        device, config = async_get_device_and_config_for_service_call(hass, call)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         # Extract parameters from the service call
-        schedule_id = call.data[ATTR_ID]
+        schedule_id = call.data[TeslemetryServiceArgument.ID]
 
         await handle_vehicle_command(
             vehicle.api.remove_precondition_schedule(
@@ -541,12 +576,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REMOVE_PRECONDITION_SCHEDULE,
+        TeslemetryService.REMOVE_PRECONDITION_SCHEDULE,
         remove_precondition_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): cv.positive_int,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.ID): cv.positive_int,
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        TeslemetryService.DISPATCH_BATTERY_POWER,
+        async_dispatch_battery_power,
+        schema=probatio.Schema(
+            {
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(TeslemetryServiceArgument.POWER): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=-MAX_DISPATCH_POWER, max=MAX_DISPATCH_POWER),
+                ),
+                probatio.Required(TeslemetryServiceArgument.DURATION): probatio.All(
+                    cv.positive_int, probatio.Range(min=1, max=MAX_DISPATCH_DURATION)
+                ),
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        TeslemetryService.RESUME_BATTERY_OPERATION,
+        async_resume_battery_operation,
+        schema=probatio.Schema(
+            {
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
             }
         ),
     )

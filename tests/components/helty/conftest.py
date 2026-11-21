@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from pyhelty import FanMode, HeltyData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.helty.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 DEVICE_NAME = "VMC Soggiorno"
 HOST = "192.168.20.232"
@@ -37,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.helty.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from compit_inext_api import CannotConnect, CompitApiConnector, InvalidAuth
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -15,16 +15,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -107,6 +107,6 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_SCHEMA,
-            description_placeholders={CONF_EMAIL: reauth_entry_data[CONF_EMAIL]},
+            description_placeholders={"email": reauth_entry_data[CONF_EMAIL]},
             errors=errors,
         )

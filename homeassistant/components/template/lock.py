@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -14,7 +14,7 @@ from homeassistant.components.lock import (
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import validators as template_validators
-from .const import DOMAIN
+from . import validators as tcv
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -47,7 +47,7 @@ CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 CONF_OPEN = "open"
 
-DEFAULT_NAME = "Template Lock"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.LOCK]
 DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (
@@ -57,19 +57,21 @@ SCRIPT_FIELDS = (
 )
 
 
-LOCK_COMMON_SCHEMA = vol.Schema(
+LOCK_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CODE_FORMAT): cv.template,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_CODE_FORMAT): cv.template,
+        probatio.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(attributes=LockEntityStateAttribute)
+
 LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
     make_template_entity_common_schema(
-        LOCK_DOMAIN, DEFAULT_NAME, LockEntityStateAttribute
+        LOCK_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -169,6 +171,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = LockExtraStoredData
     _restore_state_properties = ("_attr_is_locked",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -181,7 +184,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
 
         self.setup_state_template(
             "_lock_state",
-            template_validators.strenum(
+            tcv.strenum(
                 self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
             ),
             self._set_state,

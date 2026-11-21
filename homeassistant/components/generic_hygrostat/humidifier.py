@@ -54,7 +54,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import HYGROSTAT_SCHEMA
+from .const import (
     CONF_AWAY_FIXED,
     CONF_AWAY_HUMIDITY,
     CONF_DRY_TOLERANCE,
@@ -68,12 +69,10 @@ from . import (
     CONF_STALE_DURATION,
     CONF_TARGET_HUMIDITY,
     CONF_WET_TOLERANCE,
-    HYGROSTAT_SCHEMA,
+    GenericHygrostatEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
@@ -276,9 +275,13 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._target_humidity = int(
                     old_state.attributes[HumidifierEntityStateAttribute.HUMIDITY]
                 )
-            if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
+            if old_state.attributes.get(
+                GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY
+            ):
                 self._saved_target_humidity = int(
-                    old_state.attributes[ATTR_SAVED_HUMIDITY]
+                    old_state.attributes[
+                        GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY
+                    ]
                 )
             if old_state.state:
                 self._state = old_state.state == STATE_ON
@@ -313,7 +316,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         if self._saved_target_humidity:
-            return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
+            return {
+                GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY: self._saved_target_humidity
+            }
         return None
 
     @property
@@ -514,25 +519,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             if not self._active or not self._state:
                 return
 
-            if not force and time is None:
-                # If the `force` argument is True, we
-                # ignore `min_cycle_duration`.
-                # If the `time` argument is not none, we were invoked for
-                # keep-alive purposes, and `min_cycle_duration` is irrelevant.
-                if self._min_cycle_duration:
-                    if self._is_device_active:
-                        current_state = STATE_ON
-                    else:
-                        current_state = STATE_OFF
-                    long_enough = condition.state(
-                        self.hass,
-                        self._switch_entity_id,
-                        current_state,
-                        self._min_cycle_duration,
-                    )
-                    if not long_enough:
-                        return
-
             if force:
                 # Ignore the tolerance when switched on manually
                 dry_tolerance: float = 0
@@ -552,19 +538,35 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 ) or (
                     self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_dry
                 ):
-                    _LOGGER.debug("Turning off humidifier %s", self._switch_entity_id)
-                    await self._async_device_turn_off()
+                    if self._min_cycle_duration_elapsed(force):
+                        _LOGGER.debug(
+                            "Turning off humidifier %s", self._switch_entity_id
+                        )
+                        await self._async_device_turn_off()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
                     await self._async_device_turn_on()
             elif (
                 self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
             ) or (self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet):
-                _LOGGER.debug("Turning on humidifier %s", self._switch_entity_id)
-                await self._async_device_turn_on()
+                if self._min_cycle_duration_elapsed(force):
+                    _LOGGER.debug("Turning on humidifier %s", self._switch_entity_id)
+                    await self._async_device_turn_on()
             elif time is not None:
                 # The time argument is passed only in keep-alive case
                 await self._async_device_turn_off()
+
+    def _min_cycle_duration_elapsed(self, force: bool) -> bool:
+        """Return if the device has held its state long enough to toggle."""
+        if force or not self._min_cycle_duration:
+            return True
+
+        return condition.state(
+            self.hass,
+            self._switch_entity_id,
+            STATE_ON if self._is_device_active else STATE_OFF,
+            self._min_cycle_duration,
+        )
 
     @property
     def _is_device_active(self) -> bool:

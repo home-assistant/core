@@ -7,6 +7,11 @@ from unittest.mock import MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import OpenRGBDisconnected, RGBColor
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -19,6 +24,8 @@ from homeassistant.components.light import (
     EFFECT_OFF,
     ColorMode,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.openrgb.const import (
     DEFAULT_COLOR,
@@ -30,20 +37,16 @@ from homeassistant.components.openrgb.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -231,8 +234,8 @@ async def test_turn_on_light(
     # Turn on without parameters
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -269,10 +272,10 @@ async def test_turn_on_light_with_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_RGB_COLOR: (0, 255, 0),  # Green
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.RGB_COLOR: (0, 255, 0),  # Green
         },
         blocking=True,
     )
@@ -306,10 +309,10 @@ async def test_turn_on_light_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_BRIGHTNESS: 128,
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -326,10 +329,10 @@ async def test_turn_on_light_with_effect(
     """Test turning on the light with effect."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: "rainbow",
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.EFFECT: "rainbow",
         },
         blocking=True,
     )
@@ -345,10 +348,10 @@ async def test_turn_on_light_with_effect_off(
     """Test turning on the light with effect Off."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: EFFECT_OFF,
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.EFFECT: EFFECT_OFF,
         },
         blocking=True,
     )
@@ -394,8 +397,8 @@ async def test_turn_on_restores_previous_values(
     # Turn on without parameters - should restore previous mode and values
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -462,8 +465,8 @@ async def test_previous_values_updated_on_refresh(
     # state (green, 50%, Breathing)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -509,8 +512,8 @@ async def test_turn_on_restores_rainbow_after_off(
     # Turn on without parameters - should restore Rainbow mode
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -559,8 +562,8 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
     # Turn on without parameters - should restore Rainbow mode, not Direct
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -578,8 +581,8 @@ async def test_turn_off_light(
     """Test turning off the light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -615,8 +618,8 @@ async def test_turn_off_light_without_off_mode(
     # Turn off the light
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -666,8 +669,8 @@ async def test_turn_off_light_without_off_mode_in_non_color_mode(
     # Turn off the light
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -702,10 +705,10 @@ async def test_turn_on_light_with_color_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_RGB_COLOR: (0, 255, 0),
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.RGB_COLOR: (0, 255, 0),
             },
             blocking=True,
         )
@@ -727,10 +730,10 @@ async def test_turn_on_light_with_mode_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
             },
             blocking=True,
         )
@@ -747,10 +750,10 @@ async def test_turn_on_light_with_unsupported_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "InvalidEffect",
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "InvalidEffect",
             },
             blocking=True,
         )
@@ -767,11 +770,11 @@ async def test_turn_on_light_with_color_and_non_color_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
-                ATTR_RGB_COLOR: (255, 0, 0),
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
+                LightServiceArgument.RGB_COLOR: (255, 0, 0),
             },
             blocking=True,
         )
@@ -788,11 +791,11 @@ async def test_turn_on_light_with_brightness_and_non_color_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
-                ATTR_BRIGHTNESS: 128,
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
+                LightServiceArgument.BRIGHTNESS: 128,
             },
             blocking=True,
         )

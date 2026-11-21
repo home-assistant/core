@@ -3,10 +3,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -300,8 +301,8 @@ async def async_validate_trigger_config(
     if model_data := _async_trigger_model_data(hass, device_id):
         schema = DEVICE_TRIGGER_BASE_SCHEMA.extend(
             {
-                vol.Required(CONF_TYPE): vol.In(model_data.event_types),
-                vol.Required(CONF_SUBTYPE): vol.In(model_data.triggers),
+                probatio.Required(CONF_TYPE): probatio.In(model_data.event_types),
+                probatio.Required(CONF_SUBTYPE): probatio.In(model_data.triggers),
             }
         )
         return schema(config)  # type: ignore[no-any-return]
@@ -345,9 +346,9 @@ async def async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
             {
-                event_trigger.CONF_PLATFORM: CONF_EVENT,
-                event_trigger.CONF_EVENT_TYPE: XIAOMI_BLE_EVENT,
-                event_trigger.CONF_EVENT_DATA: {
+                EventTriggerArgument.PLATFORM: CONF_EVENT,
+                EventTriggerArgument.EVENT_TYPE: XIAOMI_BLE_EVENT,
+                EventTriggerArgument.EVENT_DATA: {
                     CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                     EVENT_CLASS: config[CONF_TYPE],
                     EVENT_TYPE: config[CONF_SUBTYPE],

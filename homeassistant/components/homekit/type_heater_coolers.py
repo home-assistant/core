@@ -10,26 +10,18 @@ from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
-    ATTR_HVAC_MODES,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_ON,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
 
@@ -138,7 +130,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # The thresholds double as the setpoints, so only expose them when the
         # entity accepts a target temperature; a fan/dry-only entity otherwise
@@ -151,7 +143,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             )
         )
 
-        hvac_modes = attributes.get(ATTR_HVAC_MODES, [])
+        hvac_modes = attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES, [])
         current_mode = try_parse_enum(HVACMode, state.state)
 
         self._supports_off = HVACMode.OFF in hvac_modes
@@ -212,6 +204,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             CHAR_CURRENT_HEATER_COOLER_STATE,
             CHAR_TARGET_HEATER_COOLER_STATE,
             CHAR_CURRENT_TEMPERATURE,
+            CHAR_NAME,
         ]
         if self._has_cool_threshold:
             chars.append(CHAR_COOLING_THRESHOLD_TEMPERATURE)
@@ -229,7 +222,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             self.fan_chars.append(CHAR_TARGET_FAN_STATE)
             if self.ordered_fan_speeds:
                 self.fan_chars.append(CHAR_ROTATION_SPEED)
-            if attributes.get(ATTR_HVAC_ACTION) is not None:
+            if attributes.get(ClimateEntityStateAttribute.HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
 
         # Fan/swing modes are detected in the base class; only advertise the
@@ -241,6 +234,8 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         serv = self.add_preload_service(SERV_HEATER_COOLER, chars)
 
+        # Without a Name, iOS Control Center toggles Swing Mode instead of Active.
+        serv.configure_char(CHAR_NAME, value=self.display_name)
         self.char_active = serv.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = serv.configure_char(
             CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE
@@ -304,7 +299,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Thermostat, this is decided once at setup and not a reload attribute:
         # current humidity changes on every update, so reloading on it would
         # thrash the accessory.
-        self._has_humidity = ATTR_CURRENT_HUMIDITY in attributes
+        self._has_humidity = ClimateEntityStateAttribute.CURRENT_HUMIDITY in attributes
         if self._has_humidity:
             humidity_serv = self.add_preload_service(SERV_HUMIDITY_SENSOR, CHAR_NAME)
             serv.add_linked_service(humidity_serv)
@@ -438,13 +433,17 @@ class HeaterCooler(HomeKitClimateAccessory):
             and (params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED]))
             is not None
         ):
-            service_calls.append(ClimateServiceCall(SERVICE_SET_FAN_MODE, params))
+            service_calls.append(
+                ClimateServiceCall(ClimateService.SET_FAN_MODE, params)
+            )
         if (
             CHAR_SWING_MODE in char_values
             and (params := self._swing_mode_params(char_values[CHAR_SWING_MODE]))
             is not None
         ):
-            service_calls.append(ClimateServiceCall(SERVICE_SET_SWING_MODE, params))
+            service_calls.append(
+                ClimateServiceCall(ClimateService.SET_SWING_MODE, params)
+            )
 
     def _handle_active_mode_changes(
         self,
@@ -474,8 +473,8 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # and restored by the next Active on.
                 service_calls.append(
                     ClimateServiceCall(
-                        SERVICE_SET_HVAC_MODE,
-                        {ATTR_HVAC_MODE: HVACMode.OFF},
+                        ClimateService.SET_HVAC_MODE,
+                        {ClimateServiceArgument.HVAC_MODE: HVACMode.OFF},
                         commit_mode=requested_mode,
                         pending_mode=HVACMode.OFF,
                     )
@@ -500,8 +499,8 @@ class HeaterCooler(HomeKitClimateAccessory):
             # a pending off write means it is about to stop running.
             service_calls.append(
                 ClimateServiceCall(
-                    SERVICE_SET_HVAC_MODE,
-                    {ATTR_HVAC_MODE: requested_mode},
+                    ClimateService.SET_HVAC_MODE,
+                    {ClimateServiceArgument.HVAC_MODE: requested_mode},
                     commit_mode=requested_mode,
                     pending_mode=requested_mode,
                 )
@@ -534,16 +533,19 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._has_cool_threshold
             and self._has_heat_threshold
             and (
-                ATTR_TARGET_TEMP_HIGH in attributes
-                or ATTR_TARGET_TEMP_LOW in attributes
+                ClimateEntityStateAttribute.TARGET_TEMP_HIGH in attributes
+                or ClimateEntityStateAttribute.TARGET_TEMP_LOW in attributes
             )
-            and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
+            and (
+                effective_mode in RANGE_MODES
+                or ClimateEntityStateAttribute.TARGET_TEMPERATURE not in attributes
+            )
         )
 
         if use_range:
             service_calls.append(
                 ClimateServiceCall(
-                    SERVICE_SET_TEMPERATURE,
+                    ClimateService.SET_TEMPERATURE,
                     self._dual_setpoint_params(
                         self.char_cool, self.char_heat, cooling_temp, heating_temp
                     ),
@@ -584,7 +586,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             # Pick whichever threshold moved further from the entity's existing
             # target setpoint. The thresholds are in HomeKit units, so convert
             # the target setpoint before comparing.
-            target_temp = current_state.attributes.get(ATTR_TEMPERATURE)
+            target_temp = current_state.attributes.get(
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            )
             if target_temp is None:
                 selected_temp = heating_temp
             else:
@@ -603,7 +607,10 @@ class HeaterCooler(HomeKitClimateAccessory):
         if selected_temp is not None:
             ha_temp = self._temperature_to_states(selected_temp)
             service_calls.append(
-                ClimateServiceCall(SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: ha_temp})
+                ClimateServiceCall(
+                    ClimateService.SET_TEMPERATURE,
+                    {ClimateServiceArgument.TEMPERATURE: ha_temp},
+                )
             )
 
     def _hk_target_mode(self, mode: HVACMode) -> int | None:
@@ -643,9 +650,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             self.char_current_state.set_value(HC_INACTIVE)
         else:
             self.char_active.set_value(1)
-            action = attributes.get(ATTR_HVAC_ACTION) or self._derive_action(
-                new_state, current_mode
-            )
+            action = attributes.get(
+                ClimateEntityStateAttribute.HVAC_ACTION
+            ) or self._derive_action(new_state, current_mode)
             self.char_current_state.set_value(
                 HC_HASS_TO_HOMEKIT_ACTION.get(action, HC_INACTIVE)
             )
@@ -653,7 +660,8 @@ class HeaterCooler(HomeKitClimateAccessory):
         self._update_current_temperature_char(new_state)
         self._update_temperature_thresholds(new_state)
         if self._has_humidity and isinstance(
-            (humidity := attributes.get(ATTR_CURRENT_HUMIDITY)), (int, float)
+            (humidity := attributes.get(ClimateEntityStateAttribute.CURRENT_HUMIDITY)),
+            (int, float),
         ):
             self.char_current_humidity.set_value(humidity)
         if self.fan_chars:
@@ -671,22 +679,22 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Dual capable entities publish the range keys even in single
         # setpoint modes, so only values decide what is displayed.
         supports_dual_temp = (
-            attributes.get(ATTR_TARGET_TEMP_HIGH) is not None
-            or attributes.get(ATTR_TARGET_TEMP_LOW) is not None
+            attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH) is not None
+            or attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW) is not None
         )
 
         if supports_dual_temp:
             if self._has_cool_threshold:
                 self._update_temperature_char(
-                    self.char_cool, state, ATTR_TARGET_TEMP_HIGH
+                    self.char_cool, state, ClimateEntityStateAttribute.TARGET_TEMP_HIGH
                 )
             if self._has_heat_threshold:
                 self._update_temperature_char(
-                    self.char_heat, state, ATTR_TARGET_TEMP_LOW
+                    self.char_heat, state, ClimateEntityStateAttribute.TARGET_TEMP_LOW
                 )
         elif (
             target_temp := temperature_attribute_to_homekit(
-                state, ATTR_TEMPERATURE, self._unit
+                state, ClimateEntityStateAttribute.TARGET_TEMPERATURE, self._unit
             )
         ) is not None:
             if self._has_cool_threshold:
@@ -697,7 +705,7 @@ class HeaterCooler(HomeKitClimateAccessory):
     def _derive_action(self, state: State, mode: HVACMode | None) -> HVACAction:
         """Infer heating / cooling when integration omits hvac_action."""
         attributes = state.attributes
-        cur = attributes.get(ATTR_CURRENT_TEMPERATURE)
+        cur = attributes.get(ClimateEntityStateAttribute.CURRENT_TEMPERATURE)
         if cur is None or mode is None:
             return HVACAction.IDLE
 
@@ -705,17 +713,19 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Range modes have independent thresholds; single-target modes only
         # drive one side. Any other mode (e.g. dry, fan_only) stays idle.
         if mode in RANGE_MODES:
-            cool_above = attributes.get(ATTR_TARGET_TEMP_HIGH)
-            heat_below = attributes.get(ATTR_TARGET_TEMP_LOW)
+            cool_above = attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH)
+            heat_below = attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW)
             if cool_above is None and heat_below is None:
                 # Some integrations run auto from a single setpoint.
-                cool_above = heat_below = attributes.get(ATTR_TEMPERATURE)
+                cool_above = heat_below = attributes.get(
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                )
         elif mode == HVACMode.COOL:
-            cool_above = attributes.get(ATTR_TEMPERATURE)
+            cool_above = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
             heat_below = None
         elif mode == HVACMode.HEAT:
             cool_above = None
-            heat_below = attributes.get(ATTR_TEMPERATURE)
+            heat_below = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
         else:
             return HVACAction.IDLE
 

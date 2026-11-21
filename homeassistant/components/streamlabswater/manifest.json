@@ -1,8 +1,10 @@
 {
   "domain": "streamlabswater",
   "name": "StreamLabs",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/streamlabswater",
   "integration_type": "service",
   "iot_class": "cloud_polling",

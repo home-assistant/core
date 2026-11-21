@@ -4,7 +4,7 @@ import logging
 from typing import Any, Self, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
@@ -165,7 +165,6 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         placeholders = {
             "id": async_format_id(self.unique_id),
             "model": async_format_model(self._discovered_model),
@@ -205,8 +204,45 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_HOST, default=user_input.get(CONF_HOST, "")
+                    ): str
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the bulb host."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await self._async_try_connect(
+                    user_input[CONF_HOST], raise_on_progress=False
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                # The ID is unknown for bulbs that don't answer discovery, such
+                # as when given a hostname, and for entries created that way
+                if self.unique_id and reconfigure_entry.unique_id:
+                    self._abort_if_unique_id_mismatch()
+                elif self.unique_id:
+                    self._abort_if_unique_id_configured()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
             ),
             errors=errors,
         )
@@ -255,7 +291,9 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -328,19 +366,23 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if is_unknown_model or model != detected_model:
             schema_dict.update(
                 {
-                    vol.Optional(CONF_MODEL, default=model): vol.In(known_models),
+                    probatio.Optional(CONF_MODEL, default=model): probatio.In(
+                        known_models
+                    ),
                 }
             )
         schema_dict.update(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_TRANSITION, default=options[CONF_TRANSITION]
                 ): cv.positive_int,
-                vol.Required(CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]): bool,
-                vol.Required(
+                probatio.Required(
+                    CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
+                ): bool,
+                probatio.Required(
                     CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
                 ): bool,
             }
@@ -348,7 +390,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema_dict),
+            data_schema=probatio.Schema(schema_dict),
         )
 
 

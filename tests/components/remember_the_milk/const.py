@@ -1,6 +1,7 @@
 """Constants for remember_the_milk tests."""
 
 import json
+from typing import TypedDict
 
 PROFILE = "myprofile"
 CREATE_ENTRY_DATA = {
@@ -9,7 +10,25 @@ CREATE_ENTRY_DATA = {
     "token": "test-token",
     "username": PROFILE,
 }
-TOKEN_RESPONSE = {
+
+
+class UserResponse(TypedDict):
+    """User data in a Remember The Milk token response."""
+
+    id: str
+    username: str
+    fullname: str
+
+
+class TokenResponse(TypedDict):
+    """Token response from the Remember The Milk API."""
+
+    token: str
+    perms: str
+    user: UserResponse
+
+
+TOKEN_RESPONSE: TokenResponse = {
     "token": "test-token",
     "perms": "delete",
     "user": {"id": "1234567", "username": PROFILE, "fullname": "John Smith"},

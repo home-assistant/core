@@ -1,4 +1,9 @@
 {
+  "exceptions": {
+    "scene_not_found": {
+      "message": "Scene {scene} does not exist."
+    }
+  },
   "services": {
     "enable_output": {
       "description": "Enables or disables an output port.",

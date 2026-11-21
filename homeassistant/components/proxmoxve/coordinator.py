@@ -24,7 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .common import sanitize_config_entry
 from .const import (
@@ -35,7 +39,9 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
+    ProxmoxPermission,
 )
+from .helpers import is_granted
 
 type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 
@@ -52,6 +58,8 @@ class NodeResources:
     containers: list[dict[str, Any]]
     storages: list[dict[str, Any]]
     backups: list[dict[str, Any]]
+    version: dict[str, Any]
+    update: list[dict[str, Any]] | bool
 
 
 @dataclass(slots=True, kw_only=True)
@@ -63,6 +71,8 @@ class ProxmoxNodeData:
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
     storages: dict[str, dict[str, Any]] = field(default_factory=dict)
     backups: list[dict[str, Any]] = field(default_factory=list)
+    version: dict[str, Any] = field(default_factory=dict)
+    update: list[dict[str, Any]] | bool = False
 
 
 def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
@@ -75,6 +85,11 @@ def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
     )
 
 
+def proxmox_node_url(coordinator: ProxmoxCoordinator, node: str) -> URL:
+    """Return the URL of a Proxmox VE node."""
+    return proxmox_base_url(coordinator).with_fragment(f"v1:0:=node/{node}")
+
+
 def node_device_info(
     coordinator: ProxmoxCoordinator, node_data: ProxmoxNodeData
 ) -> dr.DeviceInfo:
@@ -85,9 +100,7 @@ def node_device_info(
         },
         name=node_data.node.get("node", str(node_data.node["id"])),
         model="Node",
-        configuration_url=proxmox_base_url(coordinator).with_fragment(
-            f"v1:0:=node/{node_data.node['node']}"
-        ),
+        configuration_url=proxmox_node_url(coordinator, node_data.node["node"]),
     )
 
 
@@ -144,7 +157,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -164,7 +177,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise ConfigEntryError(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -186,7 +199,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="ssl_error",
             ) from err
         except ConnectTimeout as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -196,7 +209,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="no_nodes_found",
             ) from err
         except requests.exceptions.ConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -212,6 +225,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 },
                 storages={s["storage"]: s for s in resources.storages},
                 backups=resources.backups,
+                version=resources.version,
+                update=resources.update,
             )
 
         self._async_add_remove_nodes(data)
@@ -258,32 +273,64 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ProxmoxServerError from err
 
     def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
-        """Fetch all nodes with their VMs, containers, storages, and backups."""
+        """Fetch all nodes with their VMs, containers, storages, etc."""
         nodes = self.proxmox.nodes.get() or []
-        return [(node, self._get_node_data(node)) for node in nodes]
+        # The node VM list reports host memory; cluster resources carry the
+        # guest memory that pvestatd reads from the balloon driver.
+        guest_memory = {
+            int(resource["vmid"]): resource["mem"]
+            for resource in self.proxmox.cluster.resources.get(type="vm") or []
+            if resource.get("type") == "qemu" and "mem" in resource
+        }
+        return [(node, self._get_node_data(node, guest_memory)) for node in nodes]
 
     def _get_node_data(
         self,
         node: dict[str, Any],
+        guest_memory: dict[int, int],
     ) -> NodeResources:
-        """Get vms, containers, storages, and backups for a node."""
+        """Get vms, containers, storages, etc. for a node."""
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
                 "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return NodeResources(vms=[], containers=[], storages=[], backups=[])
+            return NodeResources(
+                vms=[],
+                containers=[],
+                storages=[],
+                backups=[],
+                version={},
+                update=False,
+            )
 
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        vms = [
+            {**vm, "mem": guest_memory.get(int(vm["vmid"]), vm.get("mem"))}
+            for vm in self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        ]
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (
             self.proxmox.nodes(node[CONF_NODE]).tasks.get(typefilter="vzdump", limit=1)
             or []
         )
+        version = self.proxmox.nodes(node[CONF_NODE]).version.get() or {}
+        update: list | bool = False
+        if is_granted(
+            self.permissions,
+            p_type="nodes",
+            p_id=node[CONF_NODE],
+            permission=ProxmoxPermission.SYSMOD,
+        ):
+            update = self.proxmox.nodes(node[CONF_NODE]).apt.update.get() or []
 
         return NodeResources(
-            vms=vms, containers=containers, storages=storages, backups=backups
+            vms=vms,
+            containers=containers,
+            storages=storages,
+            backups=backups,
+            version=version,
+            update=update,
         )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
@@ -297,9 +344,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             new_node_data = [data[node_name] for node_name in new_nodes]
             device_registry = dr.async_get(self.hass)
             for node_data in new_node_data:
-                device_registry.async_get_or_create(
+                device_registry.async_get_or_create_from_info(
                     config_entry_id=self.config_entry.entry_id,
-                    **node_device_info(self, node_data),
+                    device_info=node_device_info(self, node_data),
                 )
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)
