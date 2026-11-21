@@ -163,7 +163,11 @@ def test_speech_reset() -> None:
     """Test that silence resets start of voice command detection."""
 
     segmenter = VoiceCommandSegmenter(
-        silence_seconds=1.0, reset_seconds=0.5, speech_seconds=1.0
+        silence_seconds=1.0,
+        reset_seconds=0.5,
+        speech_seconds=1.0,
+        # Speech shorter than this is forgotten instead of ending a short command
+        short_command_seconds=0.75,
     )
 
     # silence
@@ -185,6 +189,24 @@ def test_speech_reset() -> None:
     # exactly enough speech now
     assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
     assert segmenter.in_command
+
+
+def test_short_command() -> None:
+    """Test that speech too short to start a command still ends it after silence."""
+    segmenter = VoiceCommandSegmenter(
+        speech_seconds=0.3, reset_seconds=1.0, short_command_seconds=0.03
+    )
+
+    assert segmenter.process(_ONE_SECOND, 0.0)
+
+    # A short word like "no" that never starts a command
+    assert segmenter.process(0.1, 0.3)
+    assert not segmenter.in_command
+
+    assert segmenter.process(0.9, 0.0)
+    assert not segmenter.process(0.1, 0.0)
+    assert not segmenter.in_command
+    assert not segmenter.timed_out
 
 
 def test_timeout() -> None:
