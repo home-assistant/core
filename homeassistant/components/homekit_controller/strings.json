@@ -75,6 +75,9 @@
       "clear_hold": {
         "name": "Clear hold"
       },
+      "mute_alarm": {
+        "name": "Mute alarm"
+      },
       "provision_preferred_thread_credentials": {
         "name": "Provision preferred Thread credentials"
       },

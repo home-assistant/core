@@ -10,6 +10,7 @@ import logging
 from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -34,7 +35,16 @@ class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
     probe: Callable[[Characteristic], bool] | None = None
-    write_value: int | str | None = None
+    write_value: bytes | int | str | None = None
+
+
+def _is_eve_water_guard(char: Characteristic) -> bool:
+    """Return True if the Eve config characteristic belongs to a leak sensor."""
+    # Other Eve devices share this characteristic but use different TLV commands.
+    return any(
+        service.type == ServicesTypes.LEAK_SENSOR
+        for service in char.service.accessory.services
+    )
 
 
 BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
@@ -49,6 +59,13 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",  # codespell:ignore haa
+    ),
+    CharacteristicsTypes.VENDOR_EVE_CONFIG_WRITE: HomeKitButtonEntityDescription(
+        key=CharacteristicsTypes.VENDOR_EVE_CONFIG_WRITE,
+        translation_key="mute_alarm",
+        probe=_is_eve_water_guard,
+        # TLV8 tag 0x4E (alarm muted) = 1; the device clears it when the leak ends.
+        write_value=bytes.fromhex("4e0101"),
     ),
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
@@ -73,7 +90,9 @@ async def async_setup_entry(
         entities: list[CharacteristicEntity] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
-        if description := BUTTON_ENTITIES.get(char.type):
+        if (description := BUTTON_ENTITIES.get(char.type)) and (
+            description.probe is None or description.probe(char)
+        ):
             entities.append(HomeKitButton(conn, info, char, description))
         elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
             entities.append(entity_type(conn, info, char))
