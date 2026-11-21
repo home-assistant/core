@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator
 import contextlib
 import io
 import logging
+import math
 import time
 from typing import Any, Final, override
 import wave
@@ -944,7 +945,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             event = TimerUpdated(
                 id=timer.timer_id,
                 is_active=timer.status == TimerStatus.ACTIVE,
-                total_seconds=round(
+                total_seconds=math.ceil(
                     timer.remaining_at(dt_util.utcnow()).total_seconds()
                 ),
             ).event()

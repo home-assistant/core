@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from wyoming.asr import Transcribe, Transcript
@@ -1762,6 +1763,70 @@ async def test_timers(hass: HomeAssistant) -> None:
             timer_finished = mock_client.timer_finished
             assert timer_finished is not None
             assert timer_finished.id == timer_started.id
+
+
+async def test_timer_update_rounding(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Keep positive remaining time above zero in pause and resume events."""
+    assert await async_setup_component(hass, "intent", {})
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([]),
+        ) as mock_client,
+    ):
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = entry.runtime_data.device
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_START_TIMER,
+            {"seconds": {"value": 1}},
+            device_id=device.device_id,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+
+        freezer.tick(timedelta(seconds=0.6))
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_PAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+
+        assert mock_client.timer_updated is not None
+        assert mock_client.timer_updated.total_seconds == 1
+        assert not mock_client.timer_updated.is_active
+
+        mock_client.timer_updated_event.clear()
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_UNPAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+
+        assert mock_client.timer_updated is not None
+        assert mock_client.timer_updated.total_seconds == 1
+        assert mock_client.timer_updated.is_active
 
 
 @pytest.mark.parametrize(
