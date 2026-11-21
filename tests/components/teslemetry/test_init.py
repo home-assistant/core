@@ -183,6 +183,7 @@ CONNECTION_ERRORS = [
 VEHICLE_ERRORS = [
     *ERRORS,
     (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
+    (Forbidden, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -1257,6 +1258,39 @@ async def test_insufficient_credits_backs_off_polling(
     coordinator = entry.runtime_data.vehicles[0].coordinator
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+
+
+async def test_vehicle_data_missing_scopes_repair(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Missing scopes raise a repair that clears once vehicle data is readable."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    issue_id = f"missing_scopes_{entry.entry_id}"
+
+    mock_vehicle_data.side_effect = Forbidden
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_battery_level").state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert (
+        issue.learn_more_url == "https://teslemetry.com/login?prompt_missing_scopes=1"
+    )
+
+    mock_vehicle_data.side_effect = None
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
