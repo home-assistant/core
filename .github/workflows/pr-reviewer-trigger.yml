@@ -1,0 +1,62 @@
+name: PR reviewer (trigger)
+run-name: "#${{ github.event.pull_request.number || github.event.issue.number }}"
+
+# Stage 1 of the PR reviewer pipeline.
+#
+# This workflow exists only to trigger stage 2 (the agentic workflow defined in
+# `pr-reviewer.md`) through `workflow_run`: a `pull_request` or
+# `pull_request_review_comment` run from a fork gets no secrets. For those
+# events it runs the pull request's own copy of this file with no permissions,
+# so nothing it does is trusted: stage 2 checks the pull request number in the
+# run name against the run's head commit.
+#
+# Comments wait 5 minutes before triggering stage 2, so several comments get
+# one answer: a newer event for the same pull request cancels the waiting run.
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    branches:
+      - dev
+  pull_request_review_comment:
+    types: [created]
+  # No permissions, secrets or checkout, and the event is only passed on.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
+    types: [created]
+
+permissions: {}
+
+jobs:
+  trigger:
+    name: Trigger the PR review
+    # Pull request updates; replies in review threads; and comments by the pull
+    # request author in its conversation. Stage 2 drops comments that don't answer
+    # one of its reviews.
+    if: >-
+      (github.event_name == 'pull_request' && !github.event.pull_request.draft)
+      || (github.event_name == 'pull_request_review_comment'
+        && !github.event.pull_request.draft
+        && github.event.pull_request.base.ref == 'dev'
+        && github.event.comment.in_reply_to_id
+        && github.event.comment.user.type != 'Bot')
+      || (github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && github.event.issue.state == 'open'
+        && github.event.comment.user.login == github.event.issue.user.login
+        && github.event.comment.user.type != 'Bot')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Job-level, so events the filter above drops don't cancel a waiting run.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Wait for more comments
+        if: github.event_name != 'pull_request'
+        run: sleep 300
+      - name: Report the pull request
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: echo "Triggering the review of pull request ${PR_NUMBER} for ${EVENT_NAME}"

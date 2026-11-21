@@ -61,6 +61,14 @@ workflows:
         - 'pnpm/action-setup@v6.1.1'
     '.github/workflows/lock.yml':
         - 'dessant/lock-threads@v6.0.2'
+    '.github/workflows/pr-reviewer-trigger.yml': []
+    '.github/workflows/pr-reviewer.lock.yml':
+        - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
+        - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+        - 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c'
+        - 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3'
+        - 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+        - 'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489'
     '.github/workflows/quality-scale-reviewer-trigger.yml': []
     '.github/workflows/quality-scale-reviewer.lock.yml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
@@ -138,6 +146,11 @@ dependencies:
         commit: 'sha1-a1d282b36b6f3519aa1f3fc636f609c47dddb294'
         owner_id: 44036562
         repo_id: 476372928
+    'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c':
+        ref: 'v8.0.1'
+        commit: 'sha1-3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c'
+        owner_id: 44036562
+        repo_id: 192626254
     'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333':
         ref: 'v8.0.2'
         commit: 'sha1-9000827ccba6bdab643e8b6fd33ac0654aef8333'
@@ -188,6 +201,11 @@ dependencies:
         commit: 'sha1-4391f3da665fdf50b6810c1a66712fb9ba21aa93'
         owner_id: 44036562
         repo_id: 200437066
+    'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a':
+        ref: 'v7.0.1'
+        commit: 'sha1-043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+        owner_id: 44036562
+        repo_id: 192625955
     'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f':
         ref: 'v7.0.0'
         commit: 'sha1-bbbca2ddaa5d8feaa63e36b76fdaad77386f024f'
