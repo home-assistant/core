@@ -53,6 +53,7 @@ from .const import REPOSITORY_PLUGIN, TOKEN
 INTEGRATION_PATH = Path(marketplace_integration.__file__).parent
 
 MIRROR_HOSTS = {
+    "hamrelay.hasscn.top",
     "ghapi.hacs.vip",
     "ghrp2.hacs.vip",
     "ghrp.hacs.vip",
@@ -62,8 +63,11 @@ MIRROR_HOSTS = {
 }
 
 FILE = github_raw_file(repository="owner/repository", ref="main", path="file.txt")
-FIRST_MIRROR = f"https://ghrp2.hacs.vip/raw/{FILE.path}"
-SECOND_MIRROR = f"https://ghrp.hacs.vip/raw/{FILE.path}"
+FIRST_MIRROR = (
+    f"https://hamrelay.hasscn.top/https://raw.githubusercontent.com/{FILE.path}"
+)
+SECOND_MIRROR = f"https://ghrp2.hacs.vip/raw/{FILE.path}"
+THIRD_MIRROR = f"https://ghrp.hacs.vip/raw/{FILE.path}"
 
 OTHER_FILE = github_raw_file(repository="owner/repository", ref="main", path="other")
 
@@ -174,7 +178,7 @@ async def test_china_profile_fetches_the_catalog_from_the_mirror(
     ("download_profile", "host", "authorization"),
     [
         pytest.param(None, "api.github.com", f"token {TOKEN}", id="github"),
-        pytest.param("hasscn", "ghapi.hacs.vip", None, id="mirror"),
+        pytest.param("hasscn", "hamrelay.hasscn.top", None, id="mirror"),
     ],
 )
 async def test_github_token_only_goes_to_github(
@@ -232,10 +236,11 @@ async def test_release_assets_through_the_mirrors(
     """Test release assets come from the mirror, not the URL the API names."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     asset_path = f"{REPOSITORY_PLUGIN}/releases/download/1.0.0/plugin-basic.js"
-    asset_url = f"https://ghrp2.hacs.vip/{asset_path}"
+    asset_url = f"https://hamrelay.hasscn.top/https://github.com/{asset_path}"
     map_url = f"{asset_url}.map"
     release_url = (
-        f"https://ghapi.hacs.vip/repos/{REPOSITORY_PLUGIN}/releases/tags/1.0.0"
+        "https://hamrelay.hasscn.top/https://api.github.com"
+        f"/repos/{REPOSITORY_PLUGIN}/releases/tags/1.0.0"
     )
     response_mocker.add(asset_url, mocked_response(asset_url, content=b"asset"))
     response_mocker.add(map_url, mocked_response(map_url, content=b"map"))
@@ -309,7 +314,7 @@ async def test_download_falls_back_to_the_next_mirror(
     response_mocker.add(
         SECOND_MIRROR, mocked_response(SECOND_MIRROR, content=b"mirrored")
     )
-    other_url = f"https://ghrp.hacs.vip/raw/{OTHER_FILE.path}"
+    other_url = f"https://ghrp2.hacs.vip/raw/{OTHER_FILE.path}"
     response_mocker.add(other_url, mocked_response(other_url, content=b"other"))
     aioclient_mock.mock_calls.clear()
 
@@ -324,7 +329,7 @@ async def test_download_falls_back_to_the_next_mirror(
         URL(SECOND_MIRROR),
         URL(other_url),
     ]
-    assert caplog.text.count("the Marketplace uses https://ghrp.hacs.vip/raw") == 1
+    assert caplog.text.count("the Marketplace uses https://ghrp2.hacs.vip/raw") == 1
 
 
 @pytest.mark.parametrize("download_profile", ["hasscn"])
@@ -332,7 +337,7 @@ async def test_download_falls_back_to_the_proxy(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test the public proxy is the last resort, it gets the full original URL."""
-    for url in (FIRST_MIRROR, SECOND_MIRROR):
+    for url in (FIRST_MIRROR, SECOND_MIRROR, THIRD_MIRROR):
         response_mocker.add(url, mocked_response(url, status=HTTPStatus.BAD_GATEWAY))
     proxied = f"https://gh-proxy.org/https://raw.githubusercontent.com/{FILE.path}"
     response_mocker.add(proxied, mocked_response(proxied, content=b"proxied"))
@@ -346,7 +351,7 @@ async def test_download_fails_when_every_mirror_fails(
 ) -> None:
     """Test a file no mirror has gives nothing, the same as without mirrors."""
     proxied = f"https://gh-proxy.org/https://raw.githubusercontent.com/{FILE.path}"
-    for url in (FIRST_MIRROR, SECOND_MIRROR, proxied):
+    for url in (FIRST_MIRROR, SECOND_MIRROR, THIRD_MIRROR, proxied):
         response_mocker.add(
             url, mocked_response(url, status=HTTPStatus.NOT_FOUND), keep=True
         )
@@ -685,8 +690,9 @@ async def test_system_health_checks_the_mirrors(
 
     assert info["download_profile"] == "hasscn"
     assert [call.args[1] for call in check.call_args_list] == [
-        "https://ghapi.hacs.vip",
-        "https://ghrp2.hacs.vip/raw/hacs/default/main/integration",
-        "https://ghrp2.hacs.vip/",
+        "https://hamrelay.hasscn.top/https://api.github.com",
+        "https://hamrelay.hasscn.top/https://raw.githubusercontent.com/hacs/default"
+        "/main/integration",
+        "https://hamrelay.hasscn.top/https://github.com/",
         "https://data-v2.hasscn.top/data.json",
     ]
