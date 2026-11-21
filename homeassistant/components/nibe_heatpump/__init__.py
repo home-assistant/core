@@ -3,6 +3,7 @@
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW, ProductInfo
+from nibe.exceptions import AddressInUseException, ModbusUrlException
 from nibe.heatpump import HeatPump, Model
 
 from homeassistant.const import (
@@ -12,7 +13,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -63,13 +68,29 @@ async def async_setup_entry(
             listening_port=entry.data[CONF_LISTENING_PORT],
         )
     elif connection_type == CONF_CONNECTION_TYPE_MODBUS:
-        connection = Modbus(
-            heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
-        )
+        try:
+            connection = Modbus(
+                heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
+            )
+        except ModbusUrlException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_url_invalid",
+                translation_placeholders={"url": entry.data[CONF_MODBUS_URL]},
+            ) from err
     else:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
-    await connection.start()
+    try:
+        await connection.start()
+    except AddressInUseException as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="address_in_use",
+            translation_placeholders={
+                "port": str(entry.data.get(CONF_LISTENING_PORT, ""))
+            },
+        ) from err
 
     assert heatpump.model
 
