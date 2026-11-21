@@ -1,5 +1,6 @@
 """Tests for TP-Link Omada update entities."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -728,3 +729,115 @@ async def test_controller_release_notes_content(
     assert update.release_notes == original_notes
     assert update.release_url == original_url
     assert update.raw_data == original_data
+
+
+@pytest.mark.parametrize(
+    ("update_data", "latest_version", "expected_state"),
+    [
+        pytest.param(
+            {"software": {"upgrade": False, "latestVersion": "6.2.10.17 Build 123"}},
+            "6.2.10.17 Build 123",
+            STATE_OFF,
+            id="same_release_build_suffix",
+        ),
+        pytest.param(
+            {"software": {"upgrade": True, "latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_ON,
+            id="explicit_upgrade",
+        ),
+        pytest.param(
+            {"software": {"upgrade": False, "latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_OFF,
+            id="explicit_no_upgrade_preserves_versions",
+        ),
+        pytest.param(
+            {"software": {"upgrade": True, "latestVersion": "6.2.10.17 Build 456"}},
+            "6.2.10.17 Build 456",
+            STATE_ON,
+            id="new_build",
+        ),
+        pytest.param(
+            {"software": {"latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_ON,
+            id="missing_flag_fallback",
+        ),
+        pytest.param(
+            {"software": {"upgrade": None, "latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_ON,
+            id="null_flag_fallback",
+        ),
+        pytest.param(
+            {"software": {"upgrade": "false", "latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_ON,
+            id="string_flag_fallback",
+        ),
+        pytest.param(
+            {"software": {"upgrade": 0, "latestVersion": "6.2.10.18"}},
+            "6.2.10.18",
+            STATE_ON,
+            id="numeric_flag_fallback",
+        ),
+        pytest.param(
+            {"software": {"latestVersion": "6.2.10.9"}},
+            "6.2.10.9",
+            STATE_OFF,
+            id="older_version_numeric_fallback",
+        ),
+        pytest.param(
+            {
+                "hardware": {
+                    "upgrade": False,
+                    "currentVersion": "6.2.10.17",
+                    "latestVersion": "6.2.10.18",
+                }
+            },
+            "6.2.10.18",
+            STATE_ON,
+            id="hardware_unchanged",
+        ),
+        pytest.param(
+            {
+                "hardware": {
+                    "upgrade": True,
+                    "currentVersion": "6.2.10.17",
+                    "latestVersion": "6.2.10.18",
+                },
+                "software": {"upgrade": False, "latestVersion": "6.2.10.19"},
+            },
+            "6.2.10.18",
+            STATE_ON,
+            id="hardware_precedence",
+        ),
+    ],
+)
+async def test_controller_update_availability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_data: dict[str, dict[str, str | bool | int | None]],
+    latest_version: str,
+    expected_state: str,
+) -> None:
+    """Respect explicit software availability without changing displayed versions."""
+    original_data = deepcopy(update_data)
+    update_info = OmadaControllerUpdateInfo(update_data)
+    mock_omada_client.check_firmware_updates.return_value = update_info
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("update.oc200_test_omada_controller_firmware")
+    assert entity is not None
+    assert entity.state == expected_state
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == "6.2.10.17"
+    assert entity.attributes[ATTR_LATEST_VERSION] == latest_version
+    assert update_info.raw_data == original_data
+    device_entity = hass.states.get("update.test_poe_switch_firmware")
+    assert device_entity is not None
+    assert device_entity.state == STATE_ON

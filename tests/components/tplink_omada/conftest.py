@@ -68,6 +68,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     """Mock Omada site client."""
     site_client = MagicMock()
+    site_client.get_lan_networks = AsyncMock(return_value=[])
 
     gateway_data = await async_load_json_object_fixture(
         hass, "gateway-TL-ER7212PC.json", DOMAIN
@@ -130,6 +131,7 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
 def mock_omada_clients_only_site_client(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock Omada site client containing only client connection data."""
     site_client = MagicMock()
+    site_client.get_lan_networks = AsyncMock(return_value=[])
 
     site_client.get_switches = AsyncMock(return_value=[])
     site_client.get_devices = AsyncMock(return_value=[])

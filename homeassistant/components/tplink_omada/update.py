@@ -131,6 +131,18 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @override
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Use explicit software update availability without changing versions."""
+        if (
+            (update := self._update_data) is not None
+            and update.hardware is None
+            and (software := update.software) is not None
+            and isinstance(upgrade := software.raw_data.get("upgrade"), bool)
+        ):
+            return upgrade
+        return super().version_is_newer(latest_version, installed_version)
+
+    @override
     def release_notes(self) -> str | None:
         """Return the release notes for the latest controller update."""
         if (update := self._update_data) is None:
