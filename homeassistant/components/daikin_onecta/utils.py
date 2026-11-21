@@ -7,19 +7,13 @@ from daikin_onecta.models import FanDirectionMode, FanSpeedMode
 
 
 def fixed_positions(mode: FanDirectionMode | FanSpeedMode) -> range | None:
-    """Return valid integral fixed positions from Daikin range metadata."""
+    """Return valid fixed positions from Daikin range metadata."""
     minimum = mode.min_value
     maximum = mode.max_value
     step = mode.step_value
-    if (
-        minimum is None
-        or maximum is None
-        or step is None
-        or step <= 0
-        or not all(float(value).is_integer() for value in (minimum, maximum, step))
-    ):
+    if minimum is None or maximum is None or step is None or step <= 0:
         return None
-    return range(int(minimum), int(maximum) + 1, int(step))
+    return range(minimum, maximum + 1, step)
 
 
 def enum_value_to_state(value: str) -> str:

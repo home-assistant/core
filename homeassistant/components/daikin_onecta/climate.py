@@ -614,8 +614,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 else self._attr_swing_horizontal_modes
             ) or []
             fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
-            if fixed is not None and float(fixed.value).is_integer():
-                position = str(int(fixed.value))
+            if fixed is not None:
+                position = str(fixed.value)
                 if position in swing_modes:
                     return position
             return mode if mode in swing_modes else None

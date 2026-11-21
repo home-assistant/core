@@ -191,12 +191,10 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         if is_on and mode is not None and mode.value == "manualFan" and fixed_speeds:
             fixed = self._fixed_speed_characteristic()
             fixed_speed = fixed.value if fixed is not None else None
-            if fixed_speed is not None and float(fixed_speed).is_integer():
-                speed = int(fixed_speed)
-                if speed in fixed_speeds:
-                    self._attr_percentage = ordered_list_item_to_percentage(
-                        fixed_speeds, speed
-                    )
+            if fixed_speed is not None and fixed_speed in fixed_speeds:
+                self._attr_percentage = ordered_list_item_to_percentage(
+                    fixed_speeds, fixed_speed
+                )
         self._attr_supported_features = features
 
     @override
