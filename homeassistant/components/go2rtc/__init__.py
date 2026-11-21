@@ -1,5 +1,6 @@
 """The go2rtc component."""
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import re
@@ -418,8 +419,11 @@ class WebRTCProvider(CameraWebRTCProvider):
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
-            await self._close_camera_sessions(camera)
-            raise HomeAssistantError("Stream source is not supported by go2rtc")
+            with suppress(Go2RtcClientError):
+                await self.initialize()
+            if not self.async_is_supported(stream_source):
+                await self._close_camera_sessions(camera)
+                raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
