@@ -135,6 +135,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         cache: bool,
         language: str | None = None,
         options: dict | None = None,
+        pregenerate: bool = False,
     ) -> None:
         """Speak via a Media Player."""
         await self.hass.services.async_call(
@@ -149,6 +150,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
                     language=language,
                     options=options,
                     cache=cache,
+                    pregenerate=pregenerate,
                 ),
                 MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 MediaPlayerServiceArgument.ANNOUNCE: True,
