@@ -15,7 +15,7 @@
           "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
         },
         "description": "Select the infrared transmitter entity to use for controlling your device.",
-        "title": "Reconfigure Infrared Remote"
+        "title": "Reconfigure infrared remote"
       },
       "user": {
         "data": {
