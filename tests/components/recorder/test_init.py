@@ -101,7 +101,6 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -1122,23 +1121,15 @@ async def test_recorder_setup_failure_without_event_listener(
     hass.stop()
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_defaults_set(hass: HomeAssistant) -> None:
-    """Test the config defaults are set."""
-    recorder_config = None
-
-    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-        """Mock setup."""
-        nonlocal recorder_config
-        recorder_config = config["recorder"]
-        return True
-
-    with patch("homeassistant.components.recorder.async_setup", side_effect=mock_setup):
-        assert await async_setup_component(hass, "history", {})
-
-    assert recorder_config is not None
-    assert recorder_config["auto_purge"]
-    assert recorder_config["auto_repack"]
-    assert recorder_config["purge_keep_days"] == 10
+    """Test the default settings are used when nothing is configured."""
+    instance = get_instance(hass)
+    assert instance.auto_purge is True
+    assert instance.auto_repack is True
+    assert instance.keep_days == 10
+    assert instance.db_max_retries == 10
+    assert instance.db_retry_wait == 3
 
 
 async def run_tasks_at_time(hass: HomeAssistant, test_time: datetime) -> None:

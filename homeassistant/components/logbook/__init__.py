@@ -6,12 +6,12 @@ from typing import Any
 import probatio
 
 from homeassistant.components import frontend
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.filters import (
     extract_include_exclude_filter_conf,
     merge_include_exclude_filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
+from homeassistant.components.recorder.settings import async_get_entity_filter_conf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -68,9 +68,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, "logbook", "logbook", "mdi:format-list-bulleted-type"
     )
 
-    recorder_conf = config.get(RECORDER_DOMAIN, {})
     logbook_conf = config.get(DOMAIN, {})
-    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
+    recorder_filter = extract_include_exclude_filter_conf(
+        async_get_entity_filter_conf(hass)
+    )
     logbook_filter = extract_include_exclude_filter_conf(logbook_conf)
     merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
 
