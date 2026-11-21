@@ -5,6 +5,7 @@
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "connectivity": ["cloud"],
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "trmnl-*"
@@ -14,5 +15,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["trmnl==0.2.0"]
+  "requirements": ["trmnl==0.3.0"]
 }
