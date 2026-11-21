@@ -1,5 +1,7 @@
 """The SNMP integration."""
 
+from typing import TYPE_CHECKING
+
 from pysnmp.error import PySnmpError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -75,8 +77,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing a tracker whose MAC the watched table does not report."""
-    if not isinstance(device_entry, dr.DeviceEntry):
-        return False
+    if TYPE_CHECKING:
+        # Only integrations which register child devices receive a ChildDeviceEntry
+        assert isinstance(device_entry, dr.DeviceEntry)
     if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:
         # The SNMP device is the entry itself, not one of its trackers
         return False
