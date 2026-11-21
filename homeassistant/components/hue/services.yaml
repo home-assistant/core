@@ -11,6 +11,12 @@ hue_activate_scene:
       example: "Energize"
       selector:
         text:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
     dynamic:
       selector:
         boolean:

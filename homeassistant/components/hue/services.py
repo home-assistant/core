@@ -138,6 +138,8 @@ async def hue_activate_scene_v1(
         )
         return False
 
+    if transition:
+        transition = transition * 10  # transitiontime is in tenths of a second
     await bridge.async_request_call(
         group.set_action, scene=scene.id, transitiontime=transition
     )
