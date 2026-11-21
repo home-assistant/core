@@ -6,7 +6,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import NAME
+from .const import DOMAIN, NAME
 from .coordinator import BesenCoordinator
 
 
@@ -29,7 +29,11 @@ class BesenEntity(CoordinatorEntity[BesenCoordinator]):
         info = data.info
         name = data.config.device_name or info.advertised_name or info.model or NAME
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_BLUETOOTH, info.address)},
+            connections=(
+                {(dr.CONNECTION_BLUETOOTH, info.address)}
+                if not info.address.startswith("lan:")
+                else set()
+            ),
             name=name,
             manufacturer=info.manufacturer or "Besen",
             model=info.model,
@@ -37,6 +41,8 @@ class BesenEntity(CoordinatorEntity[BesenCoordinator]):
             hw_version=info.hardware_version,
             sw_version=info.software_version,
         )
+        if info.serial:
+            self._attr_device_info["identifiers"] = {(DOMAIN, info.serial)}
 
     @property
     @override

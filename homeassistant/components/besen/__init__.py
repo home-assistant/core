@@ -4,19 +4,21 @@ import logging
 
 from besen.client import BesenClient
 from besen.exceptions import CannotConnect, InvalidAuth
+from besen.udp import BesenUdpClient
 from bleak.backends.device import BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_SERIAL, CONF_TRANSPORT, DOMAIN, PLATFORMS, TRANSPORT_LAN
 from .coordinator import BesenCoordinator
+from .lan import async_acquire_udp_hub
 from .services import async_setup_services
 
 type BesenConfigEntry = ConfigEntry[BesenCoordinator]
@@ -49,7 +51,8 @@ async def async_setup_entry(
             connectable=True,
         )
 
-    if _ble_device_provider() is None:
+    use_lan = entry.data.get(CONF_TRANSPORT) == TRANSPORT_LAN
+    if not use_lan and _ble_device_provider() is None:
         reason = bluetooth.async_address_reachability_diagnostics(
             hass,
             address,
@@ -61,14 +64,34 @@ async def async_setup_entry(
             translation_placeholders={"reason": reason},
         )
 
-    client = BesenClient(
-        address=address,
-        pin=pin,
-        ble_device_provider=_ble_device_provider,
-        logger=_LOGGER,
-        advertised_name=entry.data[CONF_NAME],
-    )
-    coordinator = BesenCoordinator(hass, entry, client)
+    client: BesenClient
+    if use_lan:
+        try:
+            hub = await async_acquire_udp_hub(hass)
+        except CannotConnect as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        client = BesenUdpClient(
+            address=address,
+            pin=pin,
+            hub=hub,
+            logger=_LOGGER,
+            advertised_name=entry.data[CONF_NAME],
+            host=entry.data[CONF_HOST],
+            serial=entry.data[CONF_SERIAL],
+        )
+    else:
+        client = BesenClient(
+            address=address,
+            pin=pin,
+            ble_device_provider=_ble_device_provider,
+            logger=_LOGGER,
+            advertised_name=entry.data[CONF_NAME],
+        )
+    coordinator = BesenCoordinator(hass, entry, client, uses_lan=use_lan)
 
     try:
         await coordinator.async_start()

@@ -118,6 +118,7 @@ def _configure_client_mock(client: Mock) -> None:
     """Configure a mocked Besen client instance."""
 
     client.address = FIXTURE_ADDRESS
+    client.is_connected = False
     client.state = charger_state()
     client.async_start = AsyncMock()
     client.async_stop = AsyncMock()
