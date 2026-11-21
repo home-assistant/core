@@ -153,6 +153,11 @@ async def test_numeric_switch(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "on"
+    # any non-zero lockout level should be reported as locked, not unknown
+    set_node_attribute(matter_node, 1, 516, 1, 3)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
+    assert state.state == "on"
     set_node_attribute(matter_node, 1, 516, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
