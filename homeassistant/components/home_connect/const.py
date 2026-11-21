@@ -1,6 +1,13 @@
 """Constants for the Home Connect integration."""
 
-from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
+from aiohomeconnect.model import (
+    ApplianceType,
+    EventKey,
+    OptionKey,
+    ProgramKey,
+    SettingKey,
+    StatusKey,
+)
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 
@@ -11,17 +18,17 @@ DOMAIN = "home_connect"
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
-    "AirConditioner",
-    "CleaningRobot",
-    "CoffeeMaker",
-    "Dishwasher",
-    "Dryer",
-    "Hood",
-    "Microwave",
-    "Oven",
-    "WarmingDrawer",
-    "Washer",
-    "WasherDryer",
+    ApplianceType.AIR_CONDITIONER,
+    ApplianceType.CLEANING_ROBOT,
+    ApplianceType.COFFEE_MAKER,
+    ApplianceType.DISHWASHER,
+    ApplianceType.DRYER,
+    ApplianceType.HOOD,
+    ApplianceType.MICROWAVE,
+    ApplianceType.OVEN,
+    ApplianceType.WARMING_DRAWER,
+    ApplianceType.WASHER,
+    ApplianceType.WASHER_DRYER,
 )
 
 UNIT_MAP = {

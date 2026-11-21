@@ -383,7 +383,6 @@ async def websocket_browse_media(
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
-        assert player.platform
         _LOGGER.error(
             "%s allows media browsing but its integration (%s) does not",
             player.entity_id,

@@ -989,9 +989,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         Repair-in-place only, never create: presence in the store means
         "HA generated this key" and gates the device-side key wipe on
         entry removal, so dashboard/user keys must not be enrolled.
+
+        Only called once the device info has been fetched, which sets the MAC.
         """
-        if (mac_address := self._async_get_storage_mac()) is None:
-            return
+        mac_address = self._device_mac
+        assert mac_address is not None
         storage = await async_get_encryption_key_storage(self.hass)
         if (stored := await storage.async_get_key(mac_address)) and stored != key:
             await storage.async_store_key(mac_address, key)

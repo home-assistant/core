@@ -62,7 +62,7 @@
     'state': 'ocean',
   })
 # ---
-# name: test_rpc_ui_led_mode_select[plugs_ui-update_plugs_ui_config-plugs_ui_setconfig][select.test_name_led_mode-entry]
+# name: test_rpc_ui_led_mode_select[plugs_ui-plugs_ui_setconfig][select.test_name_led_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -105,7 +105,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_ui_led_mode_select[plugs_ui-update_plugs_ui_config-plugs_ui_setconfig][select.test_name_led_mode-state]
+# name: test_rpc_ui_led_mode_select[plugs_ui-plugs_ui_setconfig][select.test_name_led_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name LED mode',
@@ -123,7 +123,7 @@
     'state': 'off',
   })
 # ---
-# name: test_rpc_ui_led_mode_select[powerstrip_ui-update_powerstrip_ui_config-powerstrip_ui_setconfig][select.test_name_led_mode-entry]
+# name: test_rpc_ui_led_mode_select[powerstrip_ui-powerstrip_ui_setconfig][select.test_name_led_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_ui_led_mode_select[powerstrip_ui-update_powerstrip_ui_config-powerstrip_ui_setconfig][select.test_name_led_mode-state]
+# name: test_rpc_ui_led_mode_select[powerstrip_ui-powerstrip_ui_setconfig][select.test_name_led_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name LED mode',

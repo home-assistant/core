@@ -9,7 +9,6 @@ from typing import Any, Concatenate, override
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -230,7 +229,7 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSwitchDescription,
     ) -> None:
@@ -272,7 +271,7 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSwitchDescription,
     ) -> None:
@@ -335,7 +334,7 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSwitchDescription,
     ) -> None:

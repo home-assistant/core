@@ -10,5 +10,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aiotractive"],
   "quality_scale": "silver",
-  "requirements": ["aiotractive==2.0.0"]
+  "requirements": ["aiotractive==2.1.0"]
 }

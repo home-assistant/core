@@ -10,27 +10,15 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -210,8 +198,11 @@ async def test_selecting_a_sound_mode_beyond_the_library_table(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Unknown (25)"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: "Unknown (25)",
+        },
         blocking=True,
     )
 
@@ -231,8 +222,11 @@ async def test_selecting_a_named_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Cinema"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: "Cinema",
+        },
         blocking=True,
     )
 
@@ -254,8 +248,8 @@ async def test_selecting_a_source_the_device_does_not_offer(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "E-ARC"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "E-ARC"},
         blocking=True,
     )
 
@@ -371,8 +365,11 @@ async def test_action_while_connection_is_lost(
     with pytest.raises(HomeAssistantError, match="gone") as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+            },
             blocking=True,
         )
 
@@ -382,24 +379,32 @@ async def test_action_while_connection_is_lost(
 @pytest.mark.parametrize(
     ("service", "data", "command", "args"),
     [
-        pytest.param(SERVICE_TURN_ON, {}, "set_power", (True,), id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, {}, "set_power", (False,), id="turn_off"),
         pytest.param(
-            SERVICE_VOLUME_MUTE,
-            {ATTR_MEDIA_VOLUME_MUTED: True},
+            MediaPlayerService.TURN_ON, {}, "set_power", (True,), id="turn_on"
+        ),
+        pytest.param(
+            MediaPlayerService.TURN_OFF, {}, "set_power", (False,), id="turn_off"
+        ),
+        pytest.param(
+            MediaPlayerService.VOLUME_MUTE,
+            {MediaPlayerServiceArgument.IS_VOLUME_MUTED: True},
             "set_mute",
             (True,),
             id="mute",
         ),
         pytest.param(
-            SERVICE_VOLUME_SET,
-            {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            MediaPlayerService.VOLUME_SET,
+            {MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
             "set_volume",
             (20,),
             id="volume",
         ),
-        pytest.param(SERVICE_MEDIA_PLAY, {}, "set_play_ctrl", (True,), id="play"),
-        pytest.param(SERVICE_MEDIA_PAUSE, {}, "set_play_ctrl", (False,), id="pause"),
+        pytest.param(
+            MediaPlayerService.MEDIA_PLAY, {}, "set_play_ctrl", (True,), id="play"
+        ),
+        pytest.param(
+            MediaPlayerService.MEDIA_PAUSE, {}, "set_play_ctrl", (False,), id="pause"
+        ),
     ],
 )
 async def test_actions(
@@ -421,7 +426,7 @@ async def test_actions(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID, **data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **data},
         blocking=True,
     )
 

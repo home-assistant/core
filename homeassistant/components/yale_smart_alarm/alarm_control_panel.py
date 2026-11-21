@@ -1,6 +1,6 @@
 """Support for Yale Alarm."""
 
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from yalesmartalarmclient.const import (
     YALE_STATE_ARM_FULL,
@@ -65,9 +65,6 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
 
     async def async_set_alarm(self, command: str, code: str | None = None) -> None:
         """Set alarm."""
-        if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"
-
         try:
             if command == YALE_STATE_ARM_FULL:
                 alarm_state = await self.hass.async_add_executor_job(

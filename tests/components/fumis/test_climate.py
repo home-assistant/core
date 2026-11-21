@@ -15,17 +15,13 @@ from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.fumis.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -58,8 +54,11 @@ async def test_set_hvac_mode_heat(
     """Test setting HVAC mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.clou_duo", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.clou_duo",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -73,8 +72,11 @@ async def test_set_hvac_mode_off(
     """Test setting HVAC mode to off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.clou_duo", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.clou_duo",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -88,8 +90,11 @@ async def test_set_temperature(
     """Test setting the target temperature."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.clou_duo", ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.clou_duo",
+            ClimateServiceArgument.TEMPERATURE: 22.5,
+        },
         blocking=True,
     )
 
@@ -103,8 +108,8 @@ async def test_turn_on(
     """Test turning on the stove."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "climate.clou_duo"},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.clou_duo"},
         blocking=True,
     )
 
@@ -118,8 +123,8 @@ async def test_turn_off(
     """Test turning off the stove."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "climate.clou_duo"},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "climate.clou_duo"},
         blocking=True,
     )
 
@@ -147,8 +152,8 @@ async def test_climate_error_handling(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "climate.clou_duo"},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: "climate.clou_duo"},
             blocking=True,
         )
 
