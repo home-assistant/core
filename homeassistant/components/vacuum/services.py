@@ -53,6 +53,16 @@ async def _async_clean_area(
                 translation_placeholders={"entity_id": entity.entity_id},
             )
 
+        if (
+            VacuumServiceArgument.PASSES in data
+            and VacuumEntityFeature.CLEAN_AREA_PASSES not in entity.supported_features
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="passes_not_supported",
+                translation_placeholders={"entity_id": entity.entity_id},
+            )
+
         # We use a dict to preserve the order of segments.
         segment_ids: dict[str, None] = {}
         for area_id in cleaning_area_id:
@@ -120,6 +130,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         {
             probatio.Required(VacuumServiceArgument.CLEANING_AREA_ID): probatio.All(
                 probatio.EnsureList(), [str]
+            ),
+            probatio.Optional(VacuumServiceArgument.PASSES): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1)
             ),
         },
         _async_clean_area,

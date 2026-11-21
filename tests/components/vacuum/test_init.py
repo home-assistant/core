@@ -273,6 +273,90 @@ async def test_clean_area_service(
     assert mock_vacuum.clean_segments_calls[0][0] == targeted_segments
 
 
+async def _setup_clean_area_vacuum(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    supported_features: VacuumEntityFeature,
+) -> MockVacuumWithCleanArea:
+    """Set up a clean area vacuum with area_1 mapped to seg_1."""
+    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
+    mock_vacuum._attr_supported_features = supported_features
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity_options(
+        mock_vacuum.entity_id,
+        DOMAIN,
+        {
+            "area_mapping": {"area_1": ["seg_1"]},
+            "last_seen_segments": [asdict(segment) for segment in mock_vacuum.segments],
+        },
+    )
+    return mock_vacuum
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_clean_area_passes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test clean_area forwards passes to async_clean_segments."""
+    mock_vacuum = await _setup_clean_area_vacuum(
+        hass,
+        entity_registry,
+        VacuumEntityFeature.STATE
+        | VacuumEntityFeature.CLEAN_AREA
+        | VacuumEntityFeature.CLEAN_AREA_PASSES,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": "area_1", "passes": 2},
+        blocking=True,
+    )
+
+    assert mock_vacuum.clean_segments_calls == [(["seg_1"], {"passes": 2})]
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_clean_area_passes_not_supported(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test clean_area raises when passes is set on a vacuum without support."""
+    mock_vacuum = await _setup_clean_area_vacuum(
+        hass,
+        entity_registry,
+        VacuumEntityFeature.STATE | VacuumEntityFeature.CLEAN_AREA,
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {
+                "entity_id": mock_vacuum.entity_id,
+                "cleaning_area_id": "area_1",
+                "passes": 2,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "passes_not_supported"
+    assert mock_vacuum.clean_segments_calls == []
+
+
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_clean_area_not_configured(hass: HomeAssistant) -> None:
     """Test clean_area raises when area mapping is not configured."""

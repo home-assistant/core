@@ -105,6 +105,9 @@
     },
     "areas_not_mapped": {
       "message": "The following areas are not mapped to any segments of targeted vacuums: {areas}"
+    },
+    "passes_not_supported": {
+      "message": "`{entity_id}` does not support setting the number of passes."
     }
   },
   "issues": {
@@ -119,6 +122,10 @@
         "cleaning_area_id": {
           "description": "Areas to clean.",
           "name": "Areas"
+        },
+        "passes": {
+          "description": "How many times each area is cleaned.",
+          "name": "Passes"
         }
       },
       "name": "Clean area with vacuum cleaner"
