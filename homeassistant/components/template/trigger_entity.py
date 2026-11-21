@@ -86,6 +86,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             await self.async_restore_last_state()
 
     @override
+    async def async_update(self) -> None:
+        """Run the trigger block with a manual trigger."""
+        if not self.enabled:
+            return
+        await self.coordinator.async_manual_trigger()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up conditions when removing from Home Assistant."""
         await super().async_will_remove_from_hass()
@@ -361,7 +368,9 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._rendered_entity_variables = coordinator_variables
         variables = self._template_variables(self._rendered_entity_variables)
 
-        if not check_conditions(self._cond_func, variables):
+        if not self.coordinator.data["skip_condition"] and not check_conditions(
+            self._cond_func, variables
+        ):
             return
 
         if (context := self.coordinator.data["context"]) is None:
