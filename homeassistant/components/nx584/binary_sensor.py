@@ -85,18 +85,22 @@ async def async_setup_entry(
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return
 
-    zone_sensors = {
-        zone["number"]: NX584ZoneSensor(
-            zone,
-            BinarySensorDeviceClass(
-                zone_types.get(str(zone["number"]), BinarySensorDeviceClass.OPENING)
-            ),
+    if data.zones:
+        # Sensors register themselves once added, so disabled zones stay out.
+        zone_sensors: dict[int, NX584ZoneSensor] = {}
+        async_add_entities(
+            NX584ZoneSensor(
+                zone,
+                BinarySensorDeviceClass(
+                    zone_types.get(str(zone["number"]), BinarySensorDeviceClass.OPENING)
+                ),
+                entry.entry_id,
+                zone_sensors,
+                zone["number"] not in exclude,
+            )
+            # Excluded zones go last, so they don't take the entity ID of a used zone.
+            for zone in sorted(data.zones, key=lambda zone: zone["number"] in exclude)
         )
-        for zone in data.zones
-        if zone["number"] not in exclude
-    }
-    if zone_sensors:
-        async_add_entities(zone_sensors.values())
         watcher = NX584Watcher(
             create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),
             zone_sensors,
@@ -113,11 +117,29 @@ class NX584ZoneSensor(BinarySensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, zone: dict[str, Any], zone_type: BinarySensorDeviceClass
+        self,
+        zone: dict[str, Any],
+        zone_type: BinarySensorDeviceClass,
+        entry_id: str,
+        zone_sensors: dict[int, NX584ZoneSensor],
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
+        self._zone_sensors = zone_sensors
         self._attr_device_class = zone_type
+        self._attr_unique_id = f"{entry_id}_{zone['number']}"
+        self._attr_entity_registry_enabled_default = enabled_default
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Start receiving zone events."""
+        self._zone_sensors[self._zone["number"]] = self
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop receiving zone events."""
+        self._zone_sensors.pop(self._zone["number"], None)
 
     @property
     @override
