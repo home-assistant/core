@@ -127,6 +127,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_translation_key = "climate"
     _feature_flags = ClimateFeature(0)
+    _last_active_hvac_mode: HVACMode | None = None
 
     @callback
     @override
@@ -182,6 +183,15 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
+
+    @callback
+    @override
+    def _on_state_update(self) -> None:
+        """Remember the last non-off HVAC mode, then write the state."""
+        self._update_state_from_entry_data()
+        if self._has_state and (mode := self.hvac_mode) not in (None, HVACMode.OFF):
+            self._last_active_hvac_mode = mode
+        self.async_write_ha_state()
 
     def _get_precision(self) -> float:
         """Return the precision of the climate device."""
@@ -374,6 +384,16 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             mode=_CLIMATE_MODES.from_hass(hvac_mode),
             device_id=self._static_info.device_id,
         )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on, restoring the last active HVAC mode when known."""
+        if (
+            mode := self._last_active_hvac_mode
+        ) is not None and mode in self.hvac_modes:
+            await self.async_set_hvac_mode(mode)
+            return
+        await super().async_turn_on()
 
     @convert_api_error_ha_error
     @override
