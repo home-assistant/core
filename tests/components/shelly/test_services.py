@@ -459,6 +459,33 @@ async def test_service_command_no_response(
             "Settings",
             id="block_factory_reset",
         ),
+        pytest.param(
+            1,
+            {
+                ShellyServiceArgument.COMMAND: "./settings",
+                ShellyServiceArgument.PARAMS: {"reset": 1},
+            },
+            "settings",
+            id="block_factory_reset_dot_segment",
+        ),
+        pytest.param(
+            1,
+            {
+                ShellyServiceArgument.COMMAND: "relay/../settings/.",
+                ShellyServiceArgument.PARAMS: {"reset": 1},
+            },
+            "settings",
+            id="block_factory_reset_parent_segment",
+        ),
+        pytest.param(
+            1,
+            {
+                ShellyServiceArgument.COMMAND: "../settings",
+                ShellyServiceArgument.PARAMS: {"reset": 1},
+            },
+            "settings",
+            id="block_factory_reset_above_root",
+        ),
     ],
 )
 async def test_service_command_not_allowed(

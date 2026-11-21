@@ -1,5 +1,6 @@
 """Support for services."""
 
+import posixpath
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
@@ -161,7 +162,8 @@ async def async_command(call: ServiceCall) -> ServiceResponse:
     if is_rpc:
         blocked = command.casefold() in BLOCKED_RPC_METHODS
     else:
-        command = command.strip("/")
+        # The HTTP client resolves dot segments, so match what the device receives
+        command = posixpath.normpath(f"/{command.strip('/')}").lstrip("/")
         blocked = BLOCKED_BLOCK_PARAMS.get(command.casefold()) in (params or {})
         if params is not None:
             if not all(isinstance(v, (str, int, float)) for v in params.values()):
