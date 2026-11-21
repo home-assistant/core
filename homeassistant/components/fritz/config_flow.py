@@ -40,8 +40,10 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import (
+    CONF_ALLOW_MESH_INFO_NON_ADMIN,
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
@@ -169,6 +171,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
                 CONF_FEATURE_DEVICE_TRACKING: self._feature_device_discovery,
+                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
         )
 
@@ -317,7 +320,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
         self._feature_device_discovery = user_input[CONF_FEATURE_DEVICE_TRACKING]
-
         self._port = self._determine_port(user_input)
 
         if not (error := await self.async_fritz_tools_init()):
@@ -493,6 +495,13 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithReload):
                     default=options.get(
                         CONF_FEATURE_DEVICE_TRACKING,
                         DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+                    ),
+                ): bool,
+                probatio.Optional(
+                    CONF_ALLOW_MESH_INFO_NON_ADMIN,
+                    default=options.get(
+                        CONF_ALLOW_MESH_INFO_NON_ADMIN,
+                        DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
                     ),
                 ): bool,
             }
