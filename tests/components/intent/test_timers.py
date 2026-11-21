@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -1002,19 +1003,19 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
     timer_manager = TimerManager(hass)
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.cancel_timer("does-not-exist")
+        await timer_manager.async_cancel_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.add_time("does-not-exist", 1)
+        await timer_manager.async_add_time("does-not-exist", timedelta(seconds=1))
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.remove_time("does-not-exist", 1)
+        await timer_manager.async_add_time("does-not-exist", timedelta(seconds=-1))
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.pause_timer("does-not-exist")
+        await timer_manager.async_pause_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.unpause_timer("does-not-exist")
+        await timer_manager.async_unpause_timer("does-not-exist")
 
 
 async def test_timer_manager_pause_unpause(hass: HomeAssistant) -> None:
@@ -1040,22 +1041,22 @@ async def test_timer_manager_pause_unpause(hass: HomeAssistant) -> None:
 
     # Pause
     handle_timer.reset_mock()
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
     handle_timer.assert_called_once()
 
     # Pausing again does not call handler
     handle_timer.reset_mock()
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
     handle_timer.assert_not_called()
 
     # Unpause
     handle_timer.reset_mock()
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
     handle_timer.assert_called_once()
 
     # Unpausing again does not call handler
     handle_timer.reset_mock()
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
     handle_timer.assert_not_called()
 
 
@@ -1092,15 +1093,15 @@ async def test_timers_not_supported(hass: HomeAssistant) -> None:
     unregister()
 
     # All operations on the timer should not crash
-    timer_manager.add_time(timer_id, 1)
+    await timer_manager.async_add_time(timer_id, timedelta(seconds=1))
 
-    timer_manager.remove_time(timer_id, 1)
+    await timer_manager.async_add_time(timer_id, timedelta(seconds=-1))
 
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
 
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
 
-    timer_manager.cancel_timer(timer_id)
+    await timer_manager.async_cancel_timer(timer_id)
 
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:

@@ -371,7 +371,7 @@ class TimerManager:
         except asyncio.CancelledError:
             pass  # expected when timer is updated
 
-    def cancel_timer(self, timer_id: str) -> None:
+    async def async_cancel_timer(self, timer_id: str) -> None:
         """Cancel a timer."""
         timer = self.timers.pop(timer_id, None)
         if timer is None:
@@ -393,12 +393,13 @@ class TimerManager:
             timer.device_id,
         )
 
-    def add_time(self, timer_id: str, seconds: int) -> None:
-        """Add time to a timer."""
+    async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
+        """Add time to a timer, or remove it if duration is negative."""
         timer = self.timers.get(timer_id)
         if timer is None:
             raise TimerNotFoundError
 
+        seconds = round(duration.total_seconds())
         if seconds == 0:
             # Don't bother cancelling and recreating the timer task
             return
@@ -432,11 +433,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    def remove_time(self, timer_id: str, seconds: int) -> None:
-        """Remove time from a timer."""
-        self.add_time(timer_id, -seconds)
-
-    def pause_timer(self, timer_id: str) -> None:
+    async def async_pause_timer(self, timer_id: str) -> None:
         """Pauses a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -460,7 +457,7 @@ class TimerManager:
             timer.device_id,
         )
 
-    def unpause_timer(self, timer_id: str) -> None:
+    async def async_unpause_timer(self, timer_id: str) -> None:
         """Unpause a timer."""
         timer = self.timers.get(timer_id)
         if timer is None:
@@ -645,33 +642,19 @@ class _VoiceTimer:
 
     async def async_cancel(self) -> None:
         """Cancel the timer."""
-        if isinstance(self.owner, TimerManager):
-            self.owner.cancel_timer(self.item.timer_id)
-        else:
-            await self.owner.async_cancel_timer(self.item.timer_id)
+        await self.owner.async_cancel_timer(self.item.timer_id)
 
     async def async_add_time(self, seconds: int) -> None:
         """Add time to a timer, or remove it if seconds is negative."""
-        if isinstance(self.owner, TimerManager):
-            self.owner.add_time(self.item.timer_id, seconds)
-        else:
-            await self.owner.async_add_time(
-                self.item.timer_id, timedelta(seconds=seconds)
-            )
+        await self.owner.async_add_time(self.item.timer_id, timedelta(seconds=seconds))
 
     async def async_pause(self) -> None:
         """Pause the timer."""
-        if isinstance(self.owner, TimerManager):
-            self.owner.pause_timer(self.item.timer_id)
-        else:
-            await self.owner.async_pause_timer(self.item.timer_id)
+        await self.owner.async_pause_timer(self.item.timer_id)
 
     async def async_unpause(self) -> None:
         """Unpause the timer."""
-        if isinstance(self.owner, TimerManager):
-            self.owner.unpause_timer(self.item.timer_id)
-        else:
-            await self.owner.async_unpause_timer(self.item.timer_id)
+        await self.owner.async_unpause_timer(self.item.timer_id)
 
 
 @callback
