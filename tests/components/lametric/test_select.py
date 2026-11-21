@@ -303,3 +303,82 @@ async def test_no_screensaver_mode_on_sky(hass: HomeAssistant) -> None:
     """Test the SKY gets no screensaver mode select, even when reporting modes."""
     assert hass.states.get("select.spyfly_s_lametric_sky_brightness_mode")
     assert hass.states.get("select.spyfly_s_lametric_sky_screensaver_mode") is None
+
+
+async def test_app(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the LaMetric app select."""
+    state = hass.states.get("select.frenck_s_lametric_app")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric App"
+    # The widgets are listed in their order on the device.
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "Clock",
+        "Weather",
+        "Message Board",
+        "Radio",
+        "Stopwatch",
+        "Timer",
+    ]
+    assert state.state == "Clock"
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry.entity_category is None
+    assert entry.unique_id == "SA110405124500W00BS9-app"
+
+    # Simulate the device switching to the selected widget.
+    apps = mock_lametric.apps.return_value
+    for app in apps.values():
+        for widget in app.widgets.values():
+            widget.visible = False
+    weather = next(iter(apps["com.lametric.weather"].widgets.values()))
+    weather.visible = True
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.frenck_s_lametric_app",
+            ATTR_OPTION: "Weather",
+        },
+        blocking=True,
+    )
+    mock_lametric.activate_widget.assert_called_once_with(
+        package="com.lametric.weather", widget_id="2_com.lametric.weather"
+    )
+    state = hass.states.get("select.frenck_s_lametric_app")
+    assert state
+    assert state.state == "Weather"
+
+
+async def test_app_connection_error(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test connection error handling of the LaMetric app select."""
+    mock_lametric.activate_widget.side_effect = LaMetricConnectionError
+
+    state = hass.states.get("select.frenck_s_lametric_app")
+    assert state
+    assert state.state == "Clock"
+
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with the LaMetric device"
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.frenck_s_lametric_app",
+                ATTR_OPTION: "Weather",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("select.frenck_s_lametric_app")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

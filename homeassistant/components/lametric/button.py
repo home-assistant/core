@@ -59,7 +59,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric button based on a config entry."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
+    coordinator = runtime_data.device
     async_add_entities(
         LaMetricButtonEntity(
             coordinator=coordinator,

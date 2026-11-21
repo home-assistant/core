@@ -68,7 +68,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric notify entity based on a config entry."""
-    async_add_entities([LaMetricNotifyEntity(entry.runtime_data)])
+    async_add_entities([LaMetricNotifyEntity(entry.runtime_data.device)])
 
 
 class LaMetricNotifyEntity(LaMetricEntity, NotifyEntity):
@@ -107,7 +107,7 @@ async def async_get_service(
     )
     if TYPE_CHECKING:
         assert entry is not None
-    return LaMetricNotificationService(entry.runtime_data)
+    return LaMetricNotificationService(entry.runtime_data.device)
 
 
 class LaMetricNotificationService(BaseNotificationService):

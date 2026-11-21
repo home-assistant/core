@@ -108,6 +108,9 @@
       }
     },
     "select": {
+      "app": {
+        "name": "App"
+      },
       "brightness_mode": {
         "name": "Brightness mode",
         "state": {
@@ -125,6 +128,9 @@
       }
     },
     "sensor": {
+      "current_app": {
+        "name": "Current app"
+      },
       "rssi": {
         "name": "Wi-Fi signal"
       }
