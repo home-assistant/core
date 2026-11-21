@@ -7,7 +7,7 @@ from homematicip.connection.rest_connection import RestResult
 import pytest
 
 from homeassistant.components.lock import LockEntityFeature, LockState
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -70,6 +70,37 @@ async def test_hmip_doorlockdrive(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == LockState.UNLOCKING
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "motorState", MotorState.STOPPED
+    )
+    await async_manipulate_test_data(hass, hmip_device, "lockState", None)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", HomematicLockState.NONE
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", "FUTURE_UNKNOWN_STATE"
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", HomematicLockState.OPEN
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == LockState.OPEN
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", HomematicLockState.UNLOCKED
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == LockState.UNLOCKED
 
 
 async def test_hmip_doorlockdrive_handle_errors(
