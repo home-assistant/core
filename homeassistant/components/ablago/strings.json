@@ -1,0 +1,85 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Enter the full address including http or https, for example {example_url}.",
+      "not_ablago": "No Ablago answers at this address, or it is too old. Use the address you open Ablago with in the browser.",
+      "redirect": "The address redirects elsewhere. Use the address Ablago ends up at, usually one starting with https.",
+      "ssl_error": "The certificate of Ablago is not trusted (expired, self-signed or for another name). Fix the certificate or turn off the certificate check.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::ablago::config::step::user::data_description::api_key%]"
+        },
+        "description": "Ablago at {url} no longer accepts the key. Create a new key of the level \"counters only\" under My account → Security → API keys and enter it here.",
+        "title": "New key for Ablago"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::ablago::config::step::user::data_description::api_key%]",
+          "url": "[%key:component::ablago::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
+        },
+        "title": "Change Ablago connection"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "Key of the level \"counters only\" from My account → Security → API keys. It can only read the counters.",
+          "url": "The address you open Ablago with in the browser, for example {example_url}.",
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
+        },
+        "description": "Every person adds their own entry. Create a key of the level \"counters only\" in Ablago under My account → Security → API keys. Afterwards, rename the device after the person, for example \"Ablago · Lena\".",
+        "title": "Connect Ablago"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_change": {
+        "name": "Last change"
+      },
+      "new_mail": {
+        "name": "New mail"
+      },
+      "overdue": {
+        "name": "Overdue"
+      },
+      "to_do": {
+        "name": "To do"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Ablago is not reachable."
+    },
+    "invalid_auth": {
+      "message": "Ablago does not accept the API key."
+    },
+    "ssl_error": {
+      "message": "The certificate of Ablago is not trusted."
+    },
+    "unexpected_response": {
+      "message": "Ablago sent an unexpected response."
+    }
+  }
+}

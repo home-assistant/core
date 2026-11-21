@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "last_change": {
+        "default": "mdi:clock-outline"
+      },
+      "new_mail": {
+        "default": "mdi:email-outline"
+      },
+      "overdue": {
+        "default": "mdi:calendar-alert"
+      },
+      "to_do": {
+        "default": "mdi:clipboard-check-outline"
+      }
+    }
+  }
+}

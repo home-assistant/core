@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling:
+    status: done
+    comment: Once a minute; Ablago answers unchanged counters with 304 and no body.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: |
+      A key of the level "counters only" cannot read who it belongs to, so there is no unique id.
+      Entries with the same address and key are rejected instead.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Ablago does not announce itself in the network.
+  discovery:
+    status: exempt
+    comment: Ablago does not announce itself in the network.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: Service integration, no devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Service integration with one device per entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Every entity is useful by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: Every problem is solved by reauthentication or reconfiguration.
+  stale-devices:
+    status: exempt
+    comment: Service integration with one device per entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

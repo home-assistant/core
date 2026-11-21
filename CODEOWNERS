@@ -46,6 +46,8 @@ AGENTS.md @home-assistant/core
 /.gemini/ @home-assistant/core
 
 # Integrations
+/homeassistant/components/ablago/ @motom001
+/tests/components/ablago/ @motom001
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
 /homeassistant/components/abrp/ @mtandersson
