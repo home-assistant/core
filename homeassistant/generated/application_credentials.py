@@ -12,6 +12,7 @@ APPLICATION_CREDENTIALS = [
     "ekeybionyx",
     "electric_kiwi",
     "gentex_homelink",
+    "gentex_place",
     "geocaching",
     "google",
     "google_assistant_sdk",
