@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -146,6 +146,7 @@ class Iperf3Data:
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
         self._test_lock = test_lock
         self._update_task = None
+        self._skip_logged = False
 
     def create_client(self):
         """Create a new iperf3 client to use for measurement."""
@@ -176,16 +177,20 @@ class Iperf3Data:
     async def async_scheduled_update(self, now):
         """Update on the scan interval, unless the last update hasn't finished."""
         if self._update_task is not None:
-            _LOGGER.warning(
-                "Skipping scheduled update of %s, its previous update hasn't finished",
-                self.host,
-            )
+            if not self._skip_logged:
+                self._skip_logged = True
+                _LOGGER.warning(
+                    "Skipping scheduled updates of %s until its previous update "
+                    "has finished",
+                    self.host,
+                )
             return
         await self.async_update()
 
     async def async_update(self):
         """Get the latest data from iperf3, joining an update already underway."""
         if self._update_task is None:
+            self._skip_logged = False
             self._update_task = self._hass.async_create_background_task(
                 self._async_run_update(),
                 f"iperf3 update of {self.host}",
@@ -198,10 +203,22 @@ class Iperf3Data:
         """Run the tests once no other host's test is running."""
         try:
             # Waiting here instead of in the executor keeps threads free
-            async with self._test_lock:
-                await self._hass.async_add_executor_job(self.update)
+            await self._test_lock.acquire()
+            try:
+                future = self._hass.async_add_executor_job(self.update)
+            except BaseException:
+                self._test_lock.release()
+                raise
+            # Shutdown cancels this task while the test can still be in libiperf
+            future.add_done_callback(self._async_release_test_lock)
+            await asyncio.shield(future)
         finally:
             self._update_task = None
+
+    @callback
+    def _async_release_test_lock(self, _future):
+        """Let the next test start once this one has left libiperf."""
+        self._test_lock.release()
 
     def update(self):
         """Run the download and upload tests and store the results."""

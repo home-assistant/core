@@ -1,6 +1,7 @@
 """Tests for the iperf3 integration setup and test scheduling."""
 
 import asyncio
+from collections.abc import Callable
 import threading
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +14,8 @@ from homeassistant.components.iperf3.const import DEFAULT_INTERVAL, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import HOST_1, HOST_2, make_result, setup_iperf3
+
+DOWNLOAD_ENTITY_ID_1 = "sensor.download_192_168_1_10"
 
 
 async def test_scheduled_tests_do_not_overlap(
@@ -145,13 +148,26 @@ async def test_client_freed_before_next_test_after_unexpected_error(
     assert "KeyError: 'end'" in caplog.text
 
 
-async def test_cancelled_speedtest_holds_lock_until_test_ends(
-    hass: HomeAssistant, mock_client: MagicMock
+@pytest.mark.parametrize(
+    "cancel",
+    [
+        # Stopping a script that waits for the action cancels the caller.
+        pytest.param(lambda hass, caller: caller.cancel(), id="caller"),
+        # Shutdown cancels the update's background task.
+        pytest.param(
+            lambda hass, caller: hass.data[DOMAIN][HOST_1]._update_task.cancel(),
+            id="update_task",
+        ),
+    ],
+)
+async def test_cancelled_update_holds_lock_until_test_ends(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    cancel: Callable[[HomeAssistant, asyncio.Task[None]], None],
 ) -> None:
-    """Test that cancelling a speedtest caller doesn't let another test start.
+    """Test that a cancelled update doesn't let another test start.
 
-    Stopping a script that waits for iperf3.speedtest cancels the action, but
-    its test keeps running in the executor thread.
+    The test keeps running in the executor thread, inside libiperf.
     """
     lock = threading.Lock()
     running = 0
@@ -184,7 +200,7 @@ async def test_cancelled_speedtest_holds_lock_until_test_ends(
     first = speedtest(HOST_1)
     try:
         assert await hass.async_add_executor_job(started.wait, 5)
-        first.cancel()
+        cancel(hass, first)
         with pytest.raises(asyncio.CancelledError):
             await first
 
@@ -244,7 +260,7 @@ async def test_known_error_logged(
 
     assert "Iperf3 error: Connection refused" in caplog.text
     assert "Traceback" not in caplog.text
-    assert hass.states.get("sensor.download_192_168_1_10").state == "unknown"
+    assert hass.states.get(DOWNLOAD_ENTITY_ID_1).state == "unknown"
 
 
 async def test_scheduled_update_skipped_while_previous_update_runs(
@@ -256,10 +272,11 @@ async def test_scheduled_update_skipped_while_previous_update_runs(
     """Test that the scan interval doesn't queue a host whose update still runs.
 
     A test can hang inside libiperf, so queuing another update on every interval
-    would only pile them up.
+    would only pile them up. The skip is logged once per unfinished update.
     """
     started = threading.Event()
     release = threading.Event()
+    warning = f"Skipping scheduled updates of {HOST_1} until its previous update"
 
     def run() -> MagicMock:
         started.set()
@@ -269,24 +286,31 @@ async def test_scheduled_update_skipped_while_previous_update_runs(
     await setup_iperf3(hass, [HOST_1], manual=False)
     mock_client.run.side_effect = run
 
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
-    try:
-        assert await hass.async_add_executor_job(started.wait, 5)
-
+    async def stall_and_skip() -> None:
+        """Start an update that blocks, then fire two more intervals."""
         freezer.tick(DEFAULT_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert (
-            f"Skipping scheduled update of {HOST_1}, its previous update hasn't"
-            in caplog.text
-        )
-        assert mock_client.run.call_count == 1
-    finally:
-        release.set()
-    await hass.async_block_till_done(wait_background_tasks=True)
+        try:
+            assert await hass.async_add_executor_job(started.wait, 5)
+            for _ in range(2):
+                freezer.tick(DEFAULT_INTERVAL)
+                async_fire_time_changed(hass)
+                await hass.async_block_till_done()
+        finally:
+            release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        started.clear()
+        release.clear()
+
+    await stall_and_skip()
+    assert caplog.text.count(warning) == 1
     # Download and upload of the first update only.
     assert mock_client.run.call_count == 2
+
+    # A later stall is reported again.
+    await stall_and_skip()
+    assert caplog.text.count(warning) == 2
+    assert mock_client.run.call_count == 4
 
 
 async def test_speedtest_waits_for_update_underway(
@@ -320,7 +344,9 @@ async def test_speedtest_waits_for_update_underway(
     finally:
         release.set()
     await asyncio.gather(first, second)
+    # The sensors refresh in their own executor jobs after the update.
+    await hass.async_block_till_done()
 
     # Both callers waited for the same update.
     assert mock_client.run.call_count == 2
-    assert hass.states.get("sensor.download_192_168_1_10").state == "200.0"
+    assert hass.states.get(DOWNLOAD_ENTITY_ID_1).state == "200.0"
