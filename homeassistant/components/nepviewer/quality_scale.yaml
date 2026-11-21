@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any actions.
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: TODO
+  common-modules:
+    status: exempt
+    comment: Single platform integration, no shared modules needed.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: TODO
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  docs-conditions:
+    status: exempt
+    comment: TODO
+  docs-high-level-description:
+    status: exempt
+    comment: TODO
+  docs-installation-instructions:
+    status: exempt
+    comment: TODO
+  docs-removal-instructions:
+    status: exempt
+    comment: TODO
+  docs-triggers:
+    status: exempt
+    comment: TODO
+  entity-event-setup:
+    status: exempt
+    comment: This integration uses polling via DataUpdateCoordinator, not push.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo
