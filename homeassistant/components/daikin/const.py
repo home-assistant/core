@@ -21,6 +21,14 @@ ATTR_TOTAL_ENERGY_TODAY = "total_energy_today"
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
+MODE_MANUAL = "manual"
+MODE_AUTO = "auto"
+
+DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
+    MODE_MANUAL: 0,
+    MODE_AUTO: 2,
+}
+
 KEY_MAC = "mac"
 KEY_IP = "ip"
 

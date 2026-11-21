@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN
+from .const import DAIKIN_DEMAND_CONTROL_MODES, DOMAIN, MODE_MANUAL
 from .coordinator import DaikinConfigEntry
 
 
@@ -27,14 +27,6 @@ class DaikinServiceArgument(StrEnum):
     MAX_POW = "max_pow"
     MODE = "mode"
 
-
-MODE_MANUAL = "manual"
-MODE_AUTO = "auto"
-
-DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
-    MODE_MANUAL: 0,
-    MODE_AUTO: 2,
-}
 
 SET_DEMAND_CONTROL_SCHEMA = probatio.Schema(
     {
