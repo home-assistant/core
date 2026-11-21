@@ -58,14 +58,14 @@ async def test_bypass_locked_switch_state(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("service", "value"),
+    ("service", "on"),
     [
-        pytest.param(SERVICE_TURN_ON, 1, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, 0, id="turn_off"),
+        pytest.param(SERVICE_TURN_ON, True, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, False, id="turn_off"),
     ],
 )
 async def test_bypass_locked_switch_set(
-    hass: HomeAssistant, mock_vallox_client: AsyncMock, service: str, value: int
+    hass: HomeAssistant, mock_vallox_client: AsyncMock, service: str, on: bool
 ) -> None:
     """Test setting the bypass locked switch."""
     await hass.services.async_call(
@@ -75,8 +75,6 @@ async def test_bypass_locked_switch_set(
         blocking=True,
     )
 
-    mock_vallox_client.set_values.assert_called_once_with(
-        {"A_CYC_BYPASS_LOCKED": value}
-    )
+    mock_vallox_client.set_bypass_locked.assert_called_once_with(on)
     # One fetch at setup, and one refresh after the change.
     assert mock_vallox_client.fetch_metric_data.call_count == 2
