@@ -1,5 +1,6 @@
 """Config flow for Rainforest Eagle integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,6 +8,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .const import (
     CONF_CLOUD_ID,
@@ -21,7 +23,7 @@ from .data import CannotConnect, InvalidAuth, async_get_type
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
+def create_schema(user_input: Mapping[str, Any] | None) -> probatio.Schema:
     """Create user schema with passed in defaults if available."""
     if user_input is None:
         user_input = {}
@@ -54,6 +56,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
+        self._abort_if_unique_id_configured()
         errors = {}
 
         try:
@@ -106,4 +109,65 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+        cloud_id = entry.data[CONF_CLOUD_ID]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                eagle_type, hardware_address = await async_get_type(
+                    self.hass,
+                    cloud_id,
+                    user_input[CONF_INSTALL_CODE],
+                    user_input[CONF_HOST],
+                    entry.data[CONF_HARDWARE_ADDRESS],
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if not eagle_type:
+                    errors["base"] = "unknown_device_type"
+                elif eagle_type not in (TYPE_EAGLE_100, TYPE_EAGLE_200):
+                    errors["base"] = "unsupported_device_type"
+                elif eagle_type == TYPE_EAGLE_200 and not hardware_address:
+                    errors["base"] = "no_meters_connected"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_INSTALL_CODE: user_input[CONF_INSTALL_CODE],
+                            CONF_TYPE: eagle_type,
+                            CONF_HARDWARE_ADDRESS: hardware_address
+                            if eagle_type == TYPE_EAGLE_200
+                            else None,
+                        },
+                    )
+
+        form_data = user_input if user_input is not None else entry.data
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_HOST, default=form_data[CONF_HOST]): str,
+                    probatio.Required(CONF_CLOUD_ID, default=cloud_id): TextSelector(
+                        TextSelectorConfig(read_only=True)
+                    ),
+                    probatio.Required(
+                        CONF_INSTALL_CODE, default=form_data[CONF_INSTALL_CODE]
+                    ): str,
+                }
+            ),
+            errors=errors,
         )

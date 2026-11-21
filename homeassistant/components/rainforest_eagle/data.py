@@ -30,7 +30,9 @@ class InvalidAuth(RainforestError):
     """Error to indicate bad auth."""
 
 
-async def async_get_type(hass, cloud_id, install_code, host):
+async def async_get_type(
+    hass, cloud_id, install_code, host, preferred_hardware_address=None
+):
     """Try API call 'get_network_info' to see if target is Eagle-100 or Eagle-200."""
     hub = aioeagle.EagleHub(
         aiohttp_client.async_get_clientsession(hass), cloud_id, install_code, host=host
@@ -47,16 +49,25 @@ async def async_get_type(hass, cloud_id, install_code, host):
 
     if meters is not None:
         if meters:
-            # If there is at least one meter, use the first
-            # one with a connection status of "Connected"
+            connected = [
+                meter
+                for meter in meters
+                if getattr(meter, "connection_status", None) == "Connected"
+            ]
+            # Keep the already configured meter, so a reconfigure cannot switch
+            # to another meter that happened to reconnect first
             hardware_address = next(
                 (
-                    m.hardware_address
-                    for m in meters
-                    if getattr(m, "connection_status", None) == "Connected"
+                    meter.hardware_address
+                    for meter in connected
+                    if meter.hardware_address == preferred_hardware_address
                 ),
                 None,
             )
+            if hardware_address is None:
+                hardware_address = next(
+                    (meter.hardware_address for meter in connected), None
+                )
         else:
             # If there are no meters (empty list, since None
             # was already checked for), set the hardware
