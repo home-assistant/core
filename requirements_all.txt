@@ -2185,7 +2185,7 @@ pyblu==2.2.0
 pybotvac==0.0.29
 
 # homeassistant.components.fuelprices_dk
-pybraendstofpriser==2.3.1
+pybraendstofpriser==2.4.0
 
 # homeassistant.components.braviatv
 pybravia==0.5.3
