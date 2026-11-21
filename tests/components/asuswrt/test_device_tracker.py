@@ -1,8 +1,14 @@
 """Tests for the AsusWrt device tracker."""
 
+from datetime import timedelta
+import logging
+
 from aioasuswrt.asuswrt import Device as LegacyDevice
+from asyncssh.constants import OPEN_ADMINISTRATIVELY_PROHIBITED, OPEN_CONNECT_FAILED
+from asyncssh.misc import ChannelOpenError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import device_tracker
 from homeassistant.components.asuswrt.const import CONF_TRACK_UNKNOWN, DOMAIN
@@ -10,7 +16,14 @@ from homeassistant.const import CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import CONFIG_DATA_TELNET, MOCK_MACS, ROUTER_MAC_ADDR, new_device
+from .common import (
+    CONFIG_DATA_SSH,
+    CONFIG_DATA_TELNET,
+    MOCK_MACS,
+    PROTOCOL_SSH,
+    ROUTER_MAC_ADDR,
+    new_device,
+)
 
 
 @pytest.mark.usefixtures("connect_legacy")
@@ -106,3 +119,95 @@ async def test_connected_unnamed_client_device_name(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.original_name == new_mac.replace(":", "_")
+
+
+def _closed_session() -> ChannelOpenError:
+    """Return the error aioasuswrt raises after the router drops SSH."""
+    return ChannelOpenError(OPEN_CONNECT_FAILED, "SSH connection closed")
+
+
+@pytest.mark.parametrize(
+    ("closed_attempts", "expected_ip", "logs_error"),
+    [
+        pytest.param(1, "10.0.0.9", False, id="reconnect_once"),
+        pytest.param(2, "192.168.1.2", True, id="second_attempt_keeps_state"),
+    ],
+)
+async def test_closed_ssh_session_retries_query_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    connect_legacy,
+    mock_devices_legacy: dict[str, LegacyDevice],
+    caplog: pytest.LogCaptureFixture,
+    closed_attempts: int,
+    expected_ip: str,
+    logs_error: bool,
+) -> None:
+    """Reopen a closed SSH session once and keep device state if that fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_SSH, unique_id=ROUTER_MAC_ADDR
+    )
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        DOMAIN,
+        MOCK_MACS[0],
+        suggested_object_id="test",
+        config_entry=config_entry,
+        disabled_by=None,
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.test").attributes["ip"] == "192.168.1.2"
+
+    updated = dict(mock_devices_legacy)
+    updated[MOCK_MACS[0]] = new_device(PROTOCOL_SSH, MOCK_MACS[0], "10.0.0.9", "Test")
+    failures = [_closed_session() for _ in range(closed_attempts)]
+    connect_legacy.return_value.async_get_connected_devices.side_effect = [
+        *failures,
+        updated,
+    ]
+
+    with caplog.at_level(logging.ERROR):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.test").attributes["ip"] == expected_ip
+    assert connect_legacy.return_value.async_disconnect.await_count == 1
+    assert connect_legacy.return_value.connection.async_connect.await_count == 2
+    assert connect_legacy.return_value.async_get_connected_devices.await_count == 3
+    assert ("Error connecting to ASUS router" in caplog.text) is logs_error
+
+
+async def test_other_ssh_channel_error_does_not_reconnect(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    connect_legacy,
+) -> None:
+    """Leave the SSH session alone when the channel fails for another reason."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_SSH, unique_id=ROUTER_MAC_ADDR
+    )
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        DOMAIN,
+        MOCK_MACS[0],
+        suggested_object_id="test",
+        config_entry=config_entry,
+        disabled_by=None,
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    connect_legacy.return_value.async_get_connected_devices.side_effect = (
+        ChannelOpenError(OPEN_ADMINISTRATIVELY_PROHIBITED, "Session refused")
+    )
+    with pytest.raises(ChannelOpenError):
+        await config_entry.runtime_data.update_devices()
+
+    assert hass.states.get("device_tracker.test").attributes["ip"] == "192.168.1.2"
+    assert connect_legacy.return_value.async_disconnect.await_count == 0
+    assert connect_legacy.return_value.connection.async_connect.await_count == 1

@@ -1,6 +1,7 @@
 """aioasuswrt and pyasuswrt bridge classes."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -15,6 +16,7 @@ from asusrouter.modules.connection import ConnectionState
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
 from asusrouter.tools.connection import get_cookie_jar
+from asyncssh.misc import ChannelOpenError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -69,6 +71,13 @@ class WrtDevice(NamedTuple):
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def ssh_session_closed(exc: ChannelOpenError) -> bool:
+    """Return True when the SSH transport itself is gone."""
+    reason = exc.reason or str(exc)
+    return "connection closed" in str(reason).casefold()
+
 
 type _FuncType[_T] = Callable[
     [_T],
@@ -211,6 +220,21 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         super().__init__(conf[CONF_HOST])
         self._protocol: str = conf[CONF_PROTOCOL]
         self._api: AsusWrtLegacy = self._get_api(conf, options)
+        self._reconnect_lock = asyncio.Lock()
+
+    async def _async_call[_T](self, method: Callable[[], Awaitable[_T]]) -> _T:
+        """Run one legacy query, reopening a closed SSH session a single time."""
+        try:
+            return await method()
+        except ChannelOpenError as exc:
+            if not ssh_session_closed(exc):
+                raise
+
+        async with self._reconnect_lock:
+            _LOGGER.debug("SSH session to %s is closed; reconnecting", self.host)
+            await self.async_disconnect()
+            await self._api.connection.async_connect()
+            return await method()
 
     @staticmethod
     def _get_api(
@@ -259,7 +283,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     @override
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        api_devices = await self._api.async_get_connected_devices()
+        api_devices = await self._async_call(self._api.async_get_connected_devices)
         return {
             format_mac(mac): WrtDevice(dev.ip, dev.name, None)
             for mac, dev in api_devices.items()
@@ -323,28 +347,28 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
-        availability = await self._api.async_find_temperature_commands()
+        availability = await self._async_call(self._api.async_find_temperature_commands)
         return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
     async def _get_bytes(self) -> tuple[float | None, float | None]:
         """Fetch byte information from the router."""
-        return await self._api.async_get_bytes_total()
+        return await self._async_call(self._api.async_get_bytes_total)
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
     async def _get_rates(self) -> tuple[float, float]:
         """Fetch rates information from the router."""
-        return await self._api.async_get_current_transfer_rates()
+        return await self._async_call(self._api.async_get_current_transfer_rates)
 
     @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_LOAD_AVG)
     async def _get_load_avg(self) -> list[float]:
         """Fetch load average information from the router."""
-        return await self._api.async_get_loadavg()
+        return await self._async_call(self._api.async_get_loadavg)
 
     @handle_errors_and_zip((OSError, ValueError), None)
     async def _get_temperatures(self) -> dict[str, float]:
         """Fetch temperatures information from the router."""
-        return await self._api.async_get_temperature()
+        return await self._async_call(self._api.async_get_temperature)
 
 
 class AsusWrtHttpBridge(AsusWrtBridge):

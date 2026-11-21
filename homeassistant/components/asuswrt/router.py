@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from asusrouter import AsusRouterError
+from asyncssh.misc import ChannelOpenError
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -25,7 +26,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
 
-from .bridge import AsusWrtBridge, WrtDevice
+from .bridge import AsusWrtBridge, WrtDevice, ssh_session_closed
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -300,7 +301,9 @@ class AsusWrtRouter:
         _LOGGER.debug("Checking devices for ASUS router %s", self.host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
-        except (OSError, AsusRouterError) as exc:
+        except (OSError, AsusRouterError, ChannelOpenError) as exc:
+            if isinstance(exc, ChannelOpenError) and not ssh_session_closed(exc):
+                raise
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.error(
