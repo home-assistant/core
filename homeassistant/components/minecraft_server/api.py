@@ -130,7 +130,7 @@ class MinecraftServer:
 
         try:
             status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
-        except OSError as error:
+        except Exception as error:
             raise MinecraftServerConnectionError(
                 f"Status request to '{self._address}' failed: "
                 f"{self._get_error_message(error)}"
