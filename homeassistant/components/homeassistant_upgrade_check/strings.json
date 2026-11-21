@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "update": {
+      "core": {
+        "name": "Home Assistant Core (mock)"
+      }
+    }
+  },
+  "exceptions": {
+    "mock_install": {
+      "message": "This is a mock update for the upgrade check; there is nothing to install."
+    }
+  }
+}

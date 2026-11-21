@@ -1,0 +1,76 @@
+---
+title: "2026.8: First release in range"
+---
+
+## Integrations
+
+### New integrations
+
+- **[Fresh Thing]**, a brand new integration. Thanks, [@alice]!
+
+### Noteworthy improvements to existing integrations
+
+- **[MQTT]** can now publish to {% term devices %} behind a [Philips Hue] bridge. Thanks, [@bob]!
+- **[Shelly]** devices are found faster. Thanks, [@carol]!
+
+### Integration quality scale achievements
+
+- **1 integration reached silver** 🥈
+  - [Philips Hue], thanks to [@dave]
+
+### Farewell to the following
+
+- **Old Thing** has been removed. Use the [RESTful sensor](/integrations/sensor.rest/) instead.
+
+## Backward-incompatible changes
+
+{% details "MQTT" %}
+
+The `mqtt.publish` action now requires an <abbr title="administrator">admin</abbr> account.
+
+([@frenck] - [#182045]) ([MQTT documentation])
+
+[#182045]: https://github.com/home-assistant/core/pull/182045
+[MQTT documentation]: /integrations/mqtt/
+
+{% enddetails %}
+
+{% details "Robot vacuums" %}
+
+Every {% term "vacuum" "robot vacuum" %} now reports its battery separately. Check {% my integrations title="Settings > Devices & services" %}.
+
+([@erik] - [frontend#4567])
+
+[frontend#4567]: https://github.com/home-assistant/frontend/pull/4567
+
+{% enddetails %}
+
+{% details "Zigbee Home Automation" %}
+
+Groups that include a [Philips Hue] light are now created differently.
+
+([@grace] - [#2000]) ([zha docs])
+
+[#2000]: https://github.com/home-assistant/core/pull/2000
+
+{% enddetails %}
+
+{% details "Old Thing" %}
+
+Old Thing is gone; see the farewell section.
+
+([@frank] - [#1000])
+
+[#1000]: https://github.com/home-assistant/core/pull/1000
+
+{% enddetails %}
+
+[Fresh Thing]: /integrations/fresh_thing
+[MQTT]: /integrations/mqtt
+[Philips Hue]: /integrations/hue
+[Shelly]: /integrations/shelly
+[zha docs]: /integrations/zha/
+[@alice]: https://github.com/alice
+[@bob]: https://github.com/bob
+[@carol]: https://github.com/carol
+[@dave]: https://github.com/dave

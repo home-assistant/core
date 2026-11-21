@@ -1,0 +1,11 @@
+{
+  "domain": "homeassistant_upgrade_check",
+  "name": "Home Assistant Upgrade Check",
+  "after_dependencies": ["hassio"],
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["update", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_upgrade_check",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

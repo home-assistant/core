@@ -1,0 +1,16 @@
+---
+title: "2026.7: Already installed"
+---
+
+## Backward-incompatible changes
+
+{% details "MQTT" %}
+
+Already running this release, so this is never shown.
+
+([@frenck] - [#100]) ([MQTT documentation])
+
+[#100]: https://github.com/home-assistant/core/pull/100
+[MQTT documentation]: /integrations/mqtt/
+
+{% enddetails %}
