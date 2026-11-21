@@ -9,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["fastdotcom"],
-  "requirements": ["fastdotcom==0.0.6"],
+  "requirements": ["fastdotcom-ng==1.0.1"],
   "single_config_entry": true
 }
