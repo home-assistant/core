@@ -23,7 +23,7 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import ChatAction, ChatType, InputMediaType
+from telegram.constants import ChatAction, ChatType, InputMediaType, ParseMode
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -2042,6 +2042,58 @@ async def test_notify_entity_send_message(
             }
         ]
     }
+
+
+@pytest.mark.parametrize(
+    ("service_input", "expected_thread_id"),
+    [
+        pytest.param({}, 987, id="thread from notify entity subentry"),
+        pytest.param(
+            {TelegramBotServiceArgument.MESSAGE_THREAD_ID: 555},
+            555,
+            id="explicit thread id wins",
+        ),
+    ],
+)
+async def test_send_message_to_notify_entity_with_message_thread(
+    hass: HomeAssistant,
+    webhook_bot_with_message_thread: None,
+    service_input: dict[str, Any],
+    expected_thread_id: int,
+) -> None:
+    """Test send message to a thread notify entity applies its thread id."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=12345678, type=ChatType.SUPERGROUP),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            DOMAIN,
+            TelegramBotService.SEND_MESSAGE,
+            {
+                CommonServiceArgument.ENTITY_ID: "notify.mock_chat_987",
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                **service_input,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_send_message.assert_called_once_with(
+            12345678,
+            "test_message",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=None,
+            disable_notification=False,
+            reply_to_message_id=None,
+            reply_markup=None,
+            message_thread_id=expected_thread_id,
+        )
 
 
 async def test_notify_entity_not_found(
