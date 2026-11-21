@@ -1501,6 +1501,9 @@ kaco-serial==1.0.3
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
 
+# homeassistant.components.karaca_connect
+karaca-connect-client==0.1.0a1
+
 # homeassistant.components.keba
 keba-kecontact==1.3.0
 

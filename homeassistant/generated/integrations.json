@@ -7604,6 +7604,18 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "karaca_connect": {
+      "name": "Karaca Connect",
+      "integration_type": "device",
+      "categories": [
+        "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "karakeep": {
       "name": "Karakeep",
       "integration_type": "service",

@@ -429,6 +429,7 @@ FLOWS = {
         "kaco_modbus",
         "kaco_rs485",
         "kaleidescape",
+        "karaca_connect",
         "karakeep",
         "keenetic_ndms2",
         "kegtron",
