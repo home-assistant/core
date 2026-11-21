@@ -30,6 +30,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -456,6 +457,18 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             CONF_FIELDS: self.fields,
         }
         async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
+
+        for (issue_domain, issue_id), issue in tuple(
+            ir.async_get(self.hass).issues.items()
+        ):
+            if (
+                issue_domain == DOMAIN
+                and issue_id.startswith(f"{self.entity_id}_entity_renamed_")
+                and issue.translation_placeholders
+                and issue.translation_placeholders["old_entity_id"]
+                not in self.referenced_entities
+            ):
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
         if (state := await self.async_get_last_state()) and (
             last_triggered := state.attributes.get(

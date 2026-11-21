@@ -1,11 +1,17 @@
 """Support for scripts."""
 
+from functools import partial
 from typing import Any
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_MODE, STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_registry import (
+    EVENT_ENTITY_REGISTRY_UPDATED,
+    EventEntityRegistryUpdatedData,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .config import ScriptConfig
@@ -162,6 +168,50 @@ def blueprint_in_script(hass: HomeAssistant, entity_id: str) -> str | None:
     return script_entity.referenced_blueprint
 
 
+@callback
+def _async_entity_renamed_issues(
+    hass: HomeAssistant, event: Event[EventEntityRegistryUpdatedData]
+) -> None:
+    """Create fixable issues for scripts referencing a renamed entity."""
+    if event.data["action"] != "update" or not (
+        old_entity_id := event.data.get("old_entity_id")
+    ):
+        return
+    if DOMAIN not in hass.data:
+        return
+    for script_entity in hass.data[DOMAIN].entities:
+        if (
+            old_entity_id not in script_entity.referenced_entities
+            or script_entity.unique_id is None
+        ):
+            continue
+        new_entity_id = event.data["entity_id"]
+        if not isinstance(name := script_entity.name, str):
+            name = script_entity.entity_id
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"{script_entity.entity_id}_entity_renamed_{old_entity_id}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="entity_renamed",
+            translation_placeholders={
+                "edit": f"/config/script/edit/{script_entity.unique_id}",
+                "entity_id": script_entity.entity_id,
+                "name": name,
+                "old_entity_id": old_entity_id,
+                "new_entity_id": new_entity_id,
+            },
+            data={
+                "type": "entity_renamed",
+                "config_id": script_entity.unique_id,
+                "old_entity_id": old_entity_id,
+                "new_entity_id": new_entity_id,
+            },
+        )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent[BaseScriptEntity](
@@ -185,6 +235,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
+
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        partial(_async_entity_renamed_issues, hass),
+    )
 
     return True
 

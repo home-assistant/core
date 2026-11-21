@@ -36,6 +36,20 @@
     }
   },
   "issues": {
+    "entity_renamed": {
+      "fix_flow": {
+        "abort": {
+          "cannot_update": "Could not update the configuration automatically. To fix this error, [edit the automation]({edit}) manually and replace `{old_entity_id}` with `{new_entity_id}`."
+        },
+        "step": {
+          "confirm": {
+            "description": "The automation \"{name}\" (`{entity_id}`) still refers to `{old_entity_id}`, which was renamed to `{new_entity_id}`.\n\nSelect **Submit** to replace all references to `{old_entity_id}` in the stored automation configuration and reload it. To make the change yourself instead, [edit the automation]({edit}).",
+            "title": "[%key:component::automation::issues::entity_renamed::title%]"
+          }
+        }
+      },
+      "title": "{name} still refers to a renamed entity"
+    },
     "service_not_found": {
       "fix_flow": {
         "step": {
