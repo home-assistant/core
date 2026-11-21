@@ -1,0 +1,20 @@
+{
+  "registrationNumber": "AB12CDE",
+  "co2Emissions": 150,
+  "engineCapacity": 1998,
+  "euroStatus": "EURO6",
+  "markedForExport": false,
+  "fuelType": "PETROL",
+  "motStatus": "Valid",
+  "revenueWeight": 1500,
+  "colour": "SILVER",
+  "make": "FORD",
+  "typeApproval": "M1",
+  "yearOfManufacture": 2020,
+  "taxDueDate": "2026-03-01",
+  "taxStatus": "Taxed",
+  "dateOfLastV5CIssued": "2024-05-18",
+  "motExpiryDate": "2026-11-30",
+  "wheelplan": "2 AXLE RIGID BODY",
+  "monthOfFirstRegistration": "2024-05"
+}

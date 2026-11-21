@@ -1,0 +1,102 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "auth_failed": "The DVLA service rejected the integration's API key",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_registration": "Invalid or unknown vehicle registration number",
+      "rate_limited": "The DVLA service is receiving too many requests. Try again later",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "reg_number": "Registration number"
+        },
+        "data_description": {
+          "reg_number": "The vehicle registration number to look up, for example AB12CDE."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "additional_rate_of_tax_end_date": {
+        "name": "Additional rate of tax end date"
+      },
+      "co2_emissions": {
+        "name": "CO2 emissions"
+      },
+      "color": {
+        "name": "Color"
+      },
+      "date_of_last_v5c_issued": {
+        "name": "Date of last V5C issued"
+      },
+      "engine_capacity": {
+        "name": "Engine capacity"
+      },
+      "euro_status": {
+        "name": "Euro status"
+      },
+      "fuel_type": {
+        "name": "Fuel type"
+      },
+      "month_of_first_registration": {
+        "name": "First registration month"
+      },
+      "mot_expiry_date": {
+        "name": "MOT expiry date"
+      },
+      "mot_status": {
+        "name": "MOT status",
+        "state": {
+          "no_details_held_by_dvla": "No details held by DVLA",
+          "no_results_returned": "No results returned",
+          "not_valid": "Not valid",
+          "valid": "Valid"
+        }
+      },
+      "revenue_weight": {
+        "name": "Revenue weight"
+      },
+      "tax_due_date": {
+        "name": "Tax due date"
+      },
+      "tax_status": {
+        "name": "Tax status",
+        "state": {
+          "not_taxed_for_on_road_use": "Not taxed for on-road use",
+          "sorn": "SORN",
+          "taxed": "Taxed",
+          "untaxed": "Untaxed"
+        }
+      },
+      "type_approval": {
+        "name": "Type approval"
+      },
+      "wheelplan": {
+        "name": "Wheelplan"
+      },
+      "year_of_manufacture": {
+        "name": "Year of manufacture"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "[%key:component::dvla::config::error::auth_failed%]"
+    },
+    "rate_limited": {
+      "message": "[%key:component::dvla::config::error::rate_limited%]"
+    },
+    "update_failed": {
+      "message": "Unable to update vehicle information from the DVLA service"
+    },
+    "vehicle_not_found": {
+      "message": "The DVLA service could not find a vehicle with registration {reg_number}"
+    }
+  }
+}
