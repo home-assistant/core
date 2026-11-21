@@ -1,7 +1,7 @@
 """Test Adax climate entity."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -292,17 +292,29 @@ async def test_climate_cloud_stale_data(
         assert hass.states.get(entity_id).state == HVACMode.HEAT
 
         # Commands go to the new client.
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            ClimateService.SET_TEMPERATURE,
-            {
-                TargetKey.ENTITY_ID: entity_id,
-                ClimateServiceArgument.TEMPERATURE: 23,
-            },
-            blocking=True,
-        )
+        for service, data in (
+            (ClimateService.SET_TEMPERATURE, {ClimateServiceArgument.TEMPERATURE: 23}),
+            (
+                ClimateService.SET_HVAC_MODE,
+                {ClimateServiceArgument.HVAC_MODE: HVACMode.OFF},
+            ),
+            (
+                ClimateService.SET_HVAC_MODE,
+                {ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT},
+            ),
+        ):
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                service,
+                {TargetKey.ENTITY_ID: entity_id, **data},
+                blocking=True,
+            )
         clients[0].set_room_target_temperature.assert_not_called()
-        clients[1].set_room_target_temperature.assert_called_once_with("1", 23, True)
+        assert clients[1].set_room_target_temperature.call_args_list == [
+            call("1", 23, True),
+            call("1", 5, False),
+            call("1", 20, True),
+        ]
 
 
 async def test_climate_cloud_errors_new_client(
