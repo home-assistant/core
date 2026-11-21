@@ -161,6 +161,11 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
+        # Restore before registering so a failure can't leave stale references
+        # that break device removal for an entity that was never added.
+        if (state := await self.async_get_last_state()) is not None:
+            self.restore_external_state_attributes(state)
+
         self.remove_future = self.hass.loop.create_future()
         remove_signal = (
             f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
@@ -190,9 +195,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self.entity_data,
             self.remove_future,
         )
-
-        if (state := await self.async_get_last_state()) is not None:
-            self.restore_external_state_attributes(state)
 
         # The subscription synchronously delivers the full current state as its
         # first event, establishing a baseline coherent with subsequent diffs.
