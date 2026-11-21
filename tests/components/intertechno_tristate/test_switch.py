@@ -1,5 +1,9 @@
 """Tests for the Intertechno TriState switch platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.commands.pt2262 import PT2262Command
 
 from homeassistant.components.switch import (
@@ -9,9 +13,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 def _switch_entity_id(hass: HomeAssistant) -> str:

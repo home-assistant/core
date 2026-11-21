@@ -1,5 +1,13 @@
 """Test the Intertechno TriState config flow."""
 
+from typing import Any
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
+
 from homeassistant.components.intertechno_tristate.const import (
     CONF_CHANNEL,
     CONF_GROUP,
@@ -14,9 +22,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
@@ -106,70 +111,61 @@ async def test_user_flow_retry_learn(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_invalid_housecode(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+@pytest.mark.parametrize(
+    ("invalid_field", "invalid_value", "expected_error"),
+    [
+        pytest.param(CONF_HOUSECODE, "Q", "invalid_housecode", id="invalid_housecode"),
+        pytest.param(CONF_GROUP, MAX_GROUP + 1, "invalid_group", id="invalid_group"),
+        pytest.param(
+            CONF_CHANNEL, MAX_CHANNEL + 1, "invalid_channel", id="invalid_channel"
+        ),
+    ],
+)
+async def test_invalid_user_input(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    invalid_field: str,
+    invalid_value: str | int,
+    expected_error: str,
 ) -> None:
-    """Test validation for invalid housecode."""
+    """Test validation errors on user input and recovery to completion."""
     result = await _start_user_flow(hass)
+
+    valid_input: dict[str, Any] = {
+        CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
+        CONF_HOUSECODE: "A",
+        CONF_GROUP: 1,
+        CONF_CHANNEL: 1,
+    }
+    invalid_input = {**valid_input, invalid_field: invalid_value}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_HOUSECODE: "Q",
-            CONF_GROUP: 1,
-            CONF_CHANNEL: 1,
-        },
+        user_input=invalid_input,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOUSECODE: "invalid_housecode"}
-    hass.config_entries.flow.async_abort(result["flow_id"])
-
-
-async def test_invalid_group(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
-) -> None:
-    """Test validation for invalid group."""
-    result = await _start_user_flow(hass)
+    assert result["errors"] == {invalid_field: expected_error}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_HOUSECODE: "A",
-            CONF_GROUP: MAX_GROUP + 1,
-            CONF_CHANNEL: 1,
-        },
+        user_input=valid_input,
     )
-
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_GROUP: "invalid_group"}
-    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert result["step_id"] == "pairing_mode"
 
-
-async def test_invalid_channel(
-    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
-) -> None:
-    """Test validation for invalid channel."""
-    result = await _start_user_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert len(mock_rf_entity.send_command_calls) == 1
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_result"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_HOUSECODE: "A",
-            CONF_GROUP: 1,
-            CONF_CHANNEL: MAX_CHANNEL + 1,
-        },
+        result["flow_id"], user_input={"device_responded": True}
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_CHANNEL: "invalid_channel"}
-    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Intertechno TriState HC A G 1 CH 1"
+    assert result["data"] == valid_input
 
 
 async def test_already_configured(

@@ -1,6 +1,10 @@
 """Common fixtures for Intertechno TriState tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 
 from homeassistant.components.intertechno_tristate.const import (
     CONF_CHANNEL,
@@ -10,9 +14,6 @@ from homeassistant.components.intertechno_tristate.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
