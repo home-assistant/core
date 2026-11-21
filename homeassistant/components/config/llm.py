@@ -5,13 +5,19 @@ from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
 import re
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, translation
@@ -23,7 +29,11 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
-from homeassistant.loader import async_get_integration_descriptions
+from homeassistant.loader import (
+    IntegrationNotFound,
+    async_get_integration,
+    async_get_integration_descriptions,
+)
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
@@ -49,6 +59,8 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
+type _FlowCategory = Literal["config", "options"]
+_FLOW_TYPES = ["config", "options", "reconfigure"]
 
 
 def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
@@ -129,6 +141,14 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
         result["source"] = entry.source
     if (reason := _resolve_entry_reason(entry)) is not None:
         result["reason"] = reason
+    if entry.state is ConfigEntryState.LOADED and entry.supports_options:
+        result["supports_options"] = True
+    if (
+        entry.disabled_by is None
+        and entry.source != config_entries.SOURCE_IGNORE
+        and entry.supports_reconfigure
+    ):
+        result["supports_reconfigure"] = True
     return result
 
 
@@ -194,7 +214,9 @@ class GetConfigEntriesTool(Tool):
     description = (
         "Retrieve installed Home Assistant config entries (configured integrations "
         "and helpers). Use this to inspect which integrations are set up, check their "
-        "status ('loaded', 'error', 'not_loaded'), and see translated error reasons."
+        "status ('loaded', 'error', 'not_loaded'), see translated error reasons, and "
+        "find entry_ids and supported flow capabilities (supports_options, "
+        "supports_reconfigure)."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -405,18 +427,27 @@ def _interpolate_placeholders(
 
 def _resolve_short_flow_id(
     hass: HomeAssistant, flow_id: str
-) -> data_entry_flow.FlowHandler[Any, Any, Any]:
-    """Resolve an active config flow from a '<domain>:<suffix>' short ID."""
+) -> ConfigFlow | OptionsFlow:
+    """Resolve an active config or options flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
     if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
-    matches = [
-        flow_mgr._progress[flw["flow_id"]]  # noqa: SLF001
+    matches: list[ConfigFlow | OptionsFlow] = [
+        cast(ConfigFlow, flow_mgr._progress[flw["flow_id"]])  # noqa: SLF001
         for flw in flow_mgr.async_progress_by_handler(domain)
         if flw["flow_id"].endswith(suffix)
     ]
+
+    options_mgr = hass.config_entries.options
+    for entry in hass.config_entries.async_entries(domain):
+        matches.extend(
+            cast(OptionsFlow, options_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+            for flw in options_mgr.async_progress_by_handler(entry.entry_id)
+            if flw["flow_id"].endswith(suffix)
+        )
+
     if len(matches) != 1:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
@@ -456,9 +487,13 @@ def _enrich_schema_fields(
     return fields  # type: ignore[return-value]
 
 
-def _build_external_step_error(domain: str) -> ToolResult:
+def _build_external_step_error(domain: str, *, is_new_entry: bool = True) -> ToolResult:
     """Return an error ToolResult directing the user to complete OAuth/external setup in the UI."""
-    frontend_url = f"/config/integrations/dashboard/add?domain={domain}"
+    frontend_url = (
+        f"/config/integrations/dashboard/add?domain={domain}"
+        if is_new_entry
+        else f"/config/integrations/integration/{domain}"
+    )
     return ToolResult(
         data={
             "error": (
@@ -473,9 +508,13 @@ def _build_external_step_error(domain: str) -> ToolResult:
 
 async def _async_finalize_flow_step(
     hass: HomeAssistant,
+    flow_mgr: data_entry_flow.FlowManager[Any, Any, Any],
     result: ConfigFlowResult,
     domain: str,
     language: str | None,
+    *,
+    flow_category: _FlowCategory = "config",
+    is_new_entry: bool = True,
 ) -> ToolResult:
     """Handle external/OAuth steps or format a DataEntryFlow result with translations."""
     flow_type = result["type"]
@@ -484,23 +523,26 @@ async def _async_finalize_flow_step(
         or result.get("step_id") == "pick_implementation"
     ):
         with suppress(data_entry_flow.UnknownFlow):
-            hass.config_entries.flow.async_abort(result["flow_id"])
-        return _build_external_step_error(domain)
+            flow_mgr.async_abort(result["flow_id"])
+        return _build_external_step_error(domain, is_new_entry=is_new_entry)
     if (
         flow_type is data_entry_flow.FlowResultType.ABORT
         and result.get("reason") == "missing_credentials"
     ):
-        return _build_external_step_error(domain)
+        return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
     lang = _resolve_language(hass, language)
     trans_domain: str = result.get("translation_domain") or domain
+    trans_domains = {domain, trans_domain}
+    if flow_category == "config":
+        trans_domains.add("homeassistant")
     trans = await translation.async_get_translations(
-        hass, lang, "config", {domain, trans_domain, "homeassistant"}
+        hass, lang, flow_category, trans_domains
     )
     title_trans = await translation.async_get_translations(
         hass, lang, "title", {domain}
     )
-    base_prefix = f"component.{trans_domain}.config"
+    base_prefix = f"component.{trans_domain}.{flow_category}"
     placeholders: Mapping[str, Any] | None = result.get("description_placeholders")
     formatted: JsonObjectType = {
         "flow_id": f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}",
@@ -583,26 +625,34 @@ async def _async_finalize_flow_step(
     elif flow_type is data_entry_flow.FlowResultType.ABORT:
         reason = result["reason"]
         formatted["reason"] = reason
-        abort_msg = trans.get(f"{base_prefix}.abort.{reason}") or trans.get(
-            f"component.homeassistant.config.abort.{reason}"
-        )
+        abort_msg = trans.get(f"{base_prefix}.abort.{reason}")
+        if not abort_msg:
+            if flow_category != "config":
+                trans = await translation.async_get_translations(
+                    hass, lang, "config", {"homeassistant"}
+                )
+            abort_msg = trans.get(f"component.homeassistant.config.abort.{reason}")
         if abort_text := _interpolate_placeholders(abort_msg, placeholders):
             formatted["description"] = abort_text
 
     return ToolResult(data={"result": formatted})
 
 
-# Only user-initiated config flows are exposed here for now. Listing background
-# discovery/reauth flows in progress, as well as starting options, reconfigure,
-# and subentry flows on existing entries, are omitted for now.
+# Listing background discovery/reauth flows in progress and starting subentry
+# flows on existing entries are omitted here for now.
 class StartFlowTool(Tool):
-    """LLM Tool to start a new configuration flow."""
+    """LLM Tool to start a configuration, options, or reconfigure flow."""
 
     name = "config__start_flow"
     title = "Start configuration flow"
     description = (
-        "Start a configuration flow to set up a new integration or helper instance "
-        "in Home Assistant and return its initial step."
+        "Start a configuration, options, or reconfigure flow in Home Assistant and "
+        "return its initial step.\n"
+        "- 'config' (default): set up a new integration or helper instance by 'domain'.\n"
+        "- 'options': update runtime options on a loaded config entry by 'entry_id' "
+        "(requires supports_options).\n"
+        "- 'reconfigure': update connection or authentication settings on an existing "
+        "config entry by 'entry_id' (requires supports_reconfigure)."
     )
     annotations = ToolAnnotations(
         read_only=False, destructive=False, idempotent=False, open_world=True
@@ -610,10 +660,28 @@ class StartFlowTool(Tool):
     integration = DOMAIN
     parameters = probatio.Schema(
         {
-            probatio.Required(
+            probatio.Optional(
+                "flow_type",
+                description=(
+                    "Type of flow to start: 'config' (new entry, default), "
+                    "'options', or 'reconfigure'."
+                ),
+                default="config",
+            ): probatio.All(str, probatio.Lower, probatio.In(_FLOW_TYPES)),
+            probatio.Optional(
                 "domain",
-                description="Integration domain to set up (e.g. 'local_todo', 'template').",
+                description=(
+                    "Integration domain to set up when flow_type is 'config' "
+                    "(e.g. 'local_todo', 'template')."
+                ),
             ): _DOMAIN_STRING,
+            probatio.Optional(
+                "entry_id",
+                description=(
+                    "The entry_id of the config entry when flow_type is 'options' "
+                    "or 'reconfigure' (e.g. 'hue:8K2M')."
+                ),
+            ): _NON_EMPTY_STRING,
         }
     )
 
@@ -621,19 +689,78 @@ class StartFlowTool(Tool):
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> ToolResult:
-        """Start the requested config flow and return its formatted initial step."""
+        """Start the requested flow and return its formatted initial step."""
         args = self.parameters(tool_input.tool_args)
-        domain: str = args["domain"]
-        flow_mgr = hass.config_entries.flow
-        context: config_entries.ConfigFlowContext = {
-            "source": config_entries.SOURCE_USER
-        }
+        flow_type: str = args["flow_type"]
+        domain: str | None = args.get("domain")
+        entry_id: str | None = args.get("entry_id")
+
+        if domain is not None and entry_id is not None:
+            return _error_result("Cannot specify both 'domain' and 'entry_id'.")
+
+        flow_mgr: data_entry_flow.FlowManager[Any, Any, Any]
+        if flow_type == "config":
+            if entry_id is not None:
+                return _error_result(
+                    "Specify 'flow_type' ('options' or 'reconfigure') when passing "
+                    "'entry_id'."
+                )
+            if domain is None:
+                return _error_result("'domain' is required when flow_type is 'config'.")
+            flow_mgr = hass.config_entries.flow
+            handler = domain
+            target_domain = domain
+            context: config_entries.ConfigFlowContext = {
+                "source": config_entries.SOURCE_USER
+            }
+            unsupported_msg = f"Integration '{domain}' does not exist or does not support config flows."
+        else:
+            if entry_id is None:
+                return _error_result(
+                    f"'entry_id' is required when flow_type is '{flow_type}'."
+                )
+            try:
+                entry = _resolve_short_entry_id(hass, entry_id)
+            except HomeAssistantError as err:
+                return _error_result(str(err))
+            if entry.disabled_by is not None:
+                return _error_result(
+                    f"Config entry '{entry_id}' cannot be configured because it is disabled."
+                )
+            if entry.source == config_entries.SOURCE_IGNORE:
+                return _error_result(
+                    f"Config entry '{entry_id}' cannot be configured because it is ignored."
+                )
+            target_domain = entry.domain
+            unsupported_msg = f"Config entry '{entry_id}' does not support {flow_type}."
+            if flow_type == "options":
+                if entry.state is not ConfigEntryState.LOADED:
+                    return _error_result(
+                        f"Config entry '{entry_id}' must be loaded to configure "
+                        f"options (current state: '{entry.state.value}')."
+                    )
+                if entry.domain not in config_entries.HANDLERS:
+                    with suppress(IntegrationNotFound, ImportError):
+                        integration = await async_get_integration(hass, entry.domain)
+                        await integration.async_get_platform("config_flow")
+                if not entry.supports_options:
+                    return _error_result(unsupported_msg)
+                flow_mgr = hass.config_entries.options
+                handler = entry.entry_id
+                context = {}
+            else:
+                flow_mgr = hass.config_entries.flow
+                handler = entry.domain
+                context = {
+                    "source": config_entries.SOURCE_RECONFIGURE,
+                    "entry_id": entry.entry_id,
+                }
+
+        is_new_entry = flow_type == "config"
         try:
-            result = await flow_mgr.async_init(domain, context=context)
-        except data_entry_flow.UnknownHandler:
-            return _error_result(
-                f"Integration '{domain}' does not exist or does not support config flows."
-            )
+            result = await flow_mgr.async_init(handler, context=context)
+        except data_entry_flow.UnknownHandler, data_entry_flow.UnknownStep:
+            return _error_result(unsupported_msg)
         except DependencyError as err:
             return _error_result(
                 f"Failed dependencies: {', '.join(err.failed_dependencies)}"
@@ -642,24 +769,31 @@ class StartFlowTool(Tool):
             if str(err) not in _OAUTH_RUNTIME_ERRORS:
                 raise
             for flw in flow_mgr.async_progress_by_handler(
-                domain, include_uninitialized=True
+                handler, include_uninitialized=True
             ):
                 if flw["context"] is context:
                     flow_mgr.async_abort(flw["flow_id"])
-            return _build_external_step_error(domain)
+            return _build_external_step_error(target_domain, is_new_entry=is_new_entry)
 
         return await _async_finalize_flow_step(
-            hass, result, domain, llm_context.language
+            hass,
+            flow_mgr,
+            result,
+            target_domain,
+            llm_context.language,
+            flow_category="options" if flow_type == "options" else "config",
+            is_new_entry=is_new_entry,
         )
 
 
 class ConfigureFlowTool(Tool):
-    """LLM Tool to inspect, advance, or abort an in-progress config flow."""
+    """LLM Tool to inspect, advance, or abort an in-progress flow."""
 
     name = "config__configure_flow"
     title = "Configure flow step"
     description = (
-        "Inspect, submit input to, or abort an in-progress configuration flow by flow_id.\n"
+        "Inspect, submit input to, or abort an in-progress configuration, options, "
+        "or reconfigure flow by flow_id.\n"
         "- To inspect the current step without submitting, omit both 'user_input' and 'next_step_id'.\n"
         "- To submit a 'form' step, pass field values in 'user_input' (pass {} for "
         "a confirmation form with no fields).\n"
@@ -721,12 +855,25 @@ class ConfigureFlowTool(Tool):
         except HomeAssistantError as err:
             return _error_result(str(err))
 
-        flow_mgr = hass.config_entries.flow
+        if isinstance(flow_handler, OptionsFlow):
+            flow_mgr: data_entry_flow.FlowManager[Any, Any] = (
+                hass.config_entries.options
+            )
+            domain = flow_handler.config_entry.domain
+            flow_category: _FlowCategory = "options"
+            is_new_entry = False
+        else:
+            flow_mgr = hass.config_entries.flow
+            domain = flow_handler.handler
+            flow_category = "config"
+            is_new_entry = (
+                flow_handler.context.get("source") == config_entries.SOURCE_USER
+            )
+
         flow_id = flow_handler.flow_id
         cur_step = flow_handler.cur_step
         if TYPE_CHECKING:
             assert cur_step is not None
-        domain = str(flow_handler.handler)
 
         if abort:
             flow_mgr.async_abort(flow_id)
@@ -779,10 +926,16 @@ class ConfigureFlowTool(Tool):
                 if str(err) not in _OAUTH_RUNTIME_ERRORS:
                     raise
                 flow_mgr.async_abort(flow_id)
-                return _build_external_step_error(domain)
+                return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
         return await _async_finalize_flow_step(
-            hass, result, domain, llm_context.language
+            hass,
+            flow_mgr,
+            result,
+            domain,
+            llm_context.language,
+            flow_category=flow_category,
+            is_new_entry=is_new_entry,
         )
 
 
