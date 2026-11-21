@@ -5,14 +5,7 @@
   "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
-  "dependencies": [
-    "http",
-    "person",
-    "tag",
-    "timer_list",
-    "webhook",
-    "websocket_api"
-  ],
+  "dependencies": ["http", "person", "tag", "webhook", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/mobile_app",
   "integration_type": "device",
   "iot_class": "local_push",
