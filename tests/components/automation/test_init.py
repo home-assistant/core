@@ -3520,6 +3520,92 @@ async def test_automation_stored_variables_restore(
     }
 
 
+async def test_automation_stored_variables_reset_and_read(
+    hass: HomeAssistant, calls: list[ServiceCall], hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test reading and resetting the stored variables of an automation."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "alias": "hello",
+                    "stored_variables": {"count": 0, "last": "{{ 'none' }}"},
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": [
+                        {"variables": {"count": "{{ count + 1 }}", "last": "run"}},
+                        {"action": "test.automation", "data": {"count": "{{ count }}"}},
+                    ],
+                },
+                {
+                    "alias": "plain",
+                    "triggers": {"trigger": "event", "event_type": "test_event_2"},
+                    "actions": [],
+                },
+            ]
+        },
+    )
+    client = await hass_ws_client(hass)
+
+    async def read(entity_id: str) -> dict[str, Any]:
+        await client.send_json_auto_id(
+            {"type": "automation/stored_variables", "entity_id": entity_id}
+        )
+        return await client.receive_json()
+
+    msg = await read("automation.hello")
+    assert msg["result"] == {
+        "defaults": {"count": 0, "last": "{{ 'none' }}"},
+        "values": {},
+    }
+
+    hass.bus.async_fire("test_event")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert [call.data["count"] for call in calls] == [1, 2]
+    assert (await read("automation.hello"))["result"]["values"] == {
+        "count": 2,
+        "last": "run",
+    }
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        "reset_stored_variables",
+        {ATTR_ENTITY_ID: "automation.hello", "variables": "count"},
+        blocking=True,
+    )
+    assert (await read("automation.hello"))["result"]["values"] == {
+        "count": 0,
+        "last": "run",
+    }
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        "reset_stored_variables",
+        {ATTR_ENTITY_ID: "automation.hello"},
+        blocking=True,
+    )
+    assert (await read("automation.hello"))["result"]["values"] == {"count": 0}
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert calls[-1].data["count"] == 1
+
+    with pytest.raises(ServiceValidationError, match="named: unknown"):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            "reset_stored_variables",
+            {ATTR_ENTITY_ID: "automation.hello", "variables": ["unknown"]},
+            blocking=True,
+        )
+
+    assert (await read("automation.plain"))["result"] == {"defaults": {}, "values": {}}
+    msg = await read("automation.not_exist")
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
 async def test_automation_stored_variables_reload(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:

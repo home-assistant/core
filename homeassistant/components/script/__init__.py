@@ -6,6 +6,7 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_MODE, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.script import async_stored_variables_as_dict
 from homeassistant.helpers.typing import ConfigType
 
 from .config import ScriptConfig
@@ -185,6 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
+    websocket_api.async_register_command(hass, websocket_stored_variables)
 
     return True
 
@@ -212,4 +214,27 @@ def websocket_config(
         {
             "config": script.raw_config,
         },
+    )
+
+
+@websocket_api.websocket_command({"type": "script/stored_variables", "entity_id": str})
+@websocket_api.require_admin
+def websocket_stored_variables(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the stored variables of a script."""
+    component: EntityComponent[BaseScriptEntity] = hass.data[DOMAIN]
+
+    script = component.get_entity(msg["entity_id"])
+
+    if script is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"], async_stored_variables_as_dict(script.stored_variables)
     )

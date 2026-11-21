@@ -61,6 +61,7 @@ _MINIMAL_SCRIPT_ENTITY_SCHEMA = probatio.Schema(
 
 _INVALID_OBJECT_IDS = {
     ScriptService.RELOAD,
+    ScriptService.RESET_STORED_VARIABLES,
     ScriptService.TURN_OFF,
     ScriptService.TURN_ON,
     ScriptService.TOGGLE,

@@ -44,6 +44,7 @@ from homeassistant.helpers.script import (
     Script,
     ScriptRunResult,
     StoredVariablesExtraStoredData,
+    async_reset_stored_variables,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import StoredVariables
@@ -80,6 +81,17 @@ class BaseScriptEntity(ToggleEntity, ABC):
     )
 
     raw_config: ConfigType | None
+    _stored_variables: StoredVariables | None = None
+
+    @property
+    def stored_variables(self) -> StoredVariables | None:
+        """Return the stored variables of the script."""
+        return self._stored_variables
+
+    @callback
+    def async_reset_stored_variables(self, variables: list[str] | None = None) -> None:
+        """Reset stored variables to their defaults."""
+        async_reset_stored_variables(self.entity_id, self._stored_variables, variables)
 
     @cached_property
     @abstractmethod
@@ -257,7 +269,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_unique_id = key
 
         self.entity_id = ENTITY_ID_FORMAT.format(key)
-        self._stored_variables: StoredVariables | None = None
         if CONF_STORED_VARIABLES in cfg:
             self._stored_variables = StoredVariables(cfg[CONF_STORED_VARIABLES])
         self.script = Script(

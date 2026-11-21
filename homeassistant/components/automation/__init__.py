@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.script import async_stored_variables_as_dict
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -205,6 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
+    websocket_api.async_register_command(hass, websocket_stored_variables)
 
     return True
 
@@ -230,4 +232,27 @@ def websocket_config(
         {
             "config": automation.raw_config,
         },
+    )
+
+
+@websocket_api.websocket_command(
+    {"type": "automation/stored_variables", "entity_id": str}
+)
+@websocket_api.require_admin
+def websocket_stored_variables(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the stored variables of an automation."""
+    automation = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
+
+    if automation is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"], async_stored_variables_as_dict(automation.stored_variables)
     )

@@ -53,6 +53,16 @@
       "description": "Reloads all the available scripts.",
       "name": "Reload scripts"
     },
+    "reset_stored_variables": {
+      "description": "Resets the stored variables of a script to their default values.",
+      "fields": {
+        "variables": {
+          "description": "The stored variables to reset. All stored variables are reset if omitted.",
+          "name": "Variables"
+        }
+      },
+      "name": "Reset stored variables"
+    },
     "toggle": {
       "description": "Starts a script if it isn't running, stops it otherwise.",
       "name": "Toggle script"

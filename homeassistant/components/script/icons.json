@@ -11,6 +11,9 @@
     "reload": {
       "service": "mdi:reload"
     },
+    "reset_stored_variables": {
+      "service": "mdi:restore"
+    },
     "toggle": {
       "service": "mdi:script-text"
     },

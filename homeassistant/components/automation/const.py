@@ -26,6 +26,7 @@ class AutomationService(StrEnum):
     """Store keys for automation services."""
 
     RELOAD = "reload"
+    RESET_STORED_VARIABLES = "reset_stored_variables"
     TOGGLE = "toggle"
     TRIGGER = "trigger"
     TURN_OFF = "turn_off"

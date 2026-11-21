@@ -114,7 +114,7 @@ async def test_invalid_object_id(
     assert result == {
         "message": (
             "Message malformed: A script's object_id must not be one of "
-            "reload, toggle, turn_off, turn_on"
+            "reload, reset_stored_variables, toggle, turn_off, turn_on"
         )
     }
 

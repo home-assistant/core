@@ -35,6 +35,7 @@ class ScriptService(StrEnum):
     """Store keys for script services."""
 
     RELOAD = "reload"
+    RESET_STORED_VARIABLES = "reset_stored_variables"
     TOGGLE = "toggle"
     TURN_OFF = "turn_off"
     TURN_ON = "turn_on"

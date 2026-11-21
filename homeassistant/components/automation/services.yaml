@@ -30,3 +30,14 @@ trigger:
         boolean:
 
 reload:
+
+reset_stored_variables:
+  target:
+    entity:
+      domain: automation
+  fields:
+    variables:
+      example: '["count"]'
+      selector:
+        text:
+          multiple: true

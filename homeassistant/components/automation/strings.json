@@ -78,6 +78,16 @@
       "description": "Reloads the automation configuration.",
       "name": "Reload automations"
     },
+    "reset_stored_variables": {
+      "description": "Resets the stored variables of an automation to their default values.",
+      "fields": {
+        "variables": {
+          "description": "The stored variables to reset. All stored variables are reset if omitted.",
+          "name": "Variables"
+        }
+      },
+      "name": "Reset stored variables"
+    },
     "toggle": {
       "description": "Toggles (enable / disable) an automation.",
       "name": "Toggle automation"

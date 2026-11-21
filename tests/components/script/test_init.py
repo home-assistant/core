@@ -234,7 +234,8 @@ async def test_setup_with_invalid_configs(
             "has invalid object id",
             (
                 "A script's object_id must not be one of "
-                "reload, toggle, turn_off, turn_on. Got 'turn_on'"
+                "reload, reset_stored_variables, toggle, turn_off, turn_on. "
+                "Got 'turn_on'"
             ),
         ),
     ],
@@ -1592,6 +1593,51 @@ async def test_script_stored_variables(
     assert state
     assert "count" not in state.attributes
     assert "seen" not in state.attributes
+
+
+async def test_script_stored_variables_reset_and_read(
+    hass: HomeAssistant, calls: list[ServiceCall], hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test reading and resetting the stored variables of a script."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test": {
+                    "stored_variables": {"count": 0},
+                    "sequence": [
+                        {"variables": {"count": "{{ count + 1 }}"}},
+                        {"action": "test.script", "data": {"count": "{{ count }}"}},
+                    ],
+                }
+            }
+        },
+    )
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(DOMAIN, "test", blocking=True)
+    await hass.services.async_call(DOMAIN, "test", blocking=True)
+    assert [call.data["count"] for call in calls] == [1, 2]
+
+    await client.send_json_auto_id(
+        {"type": "script/stored_variables", "entity_id": ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {"defaults": {"count": 0}, "values": {"count": 2}}
+
+    await hass.services.async_call(
+        DOMAIN, "reset_stored_variables", {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    await hass.services.async_call(DOMAIN, "test", blocking=True)
+    assert calls[-1].data["count"] == 1
+
+    await client.send_json_auto_id(
+        {"type": "script/stored_variables", "entity_id": "script.not_exist"}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
 
 
 async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:

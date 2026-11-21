@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.script import RESET_STORED_VARIABLES_SCHEMA
 from homeassistant.util.async_ import create_eager_task
 
 from .const import ATTR_VARIABLES, DOMAIN, ScriptService
@@ -85,4 +86,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, ScriptService.TOGGLE, _toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
+    )
+    component: EntityComponent[BaseScriptEntity] = hass.data[DOMAIN]
+    component.async_register_entity_service(
+        ScriptService.RESET_STORED_VARIABLES,
+        RESET_STORED_VARIABLES_SCHEMA,
+        "async_reset_stored_variables",
     )

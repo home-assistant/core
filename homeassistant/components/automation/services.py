@@ -7,6 +7,7 @@ import probatio
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.script import RESET_STORED_VARIABLES_SCHEMA
 from homeassistant.helpers.service import (
     ReloadServiceHelper,
     async_register_admin_service,
@@ -91,6 +92,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ): cv.boolean
         },
         "async_turn_off",
+    )
+    component.async_register_entity_service(
+        AutomationService.RESET_STORED_VARIABLES,
+        RESET_STORED_VARIABLES_SCHEMA,
+        "async_reset_stored_variables",
     )
 
     reload_helper = ReloadServiceHelper(_async_reload_service_handler, _reload_targets)
