@@ -83,6 +83,7 @@ from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
+    AccessMethod,
     log_invalid_auth,
     process_success_login,
     process_wrong_login,
@@ -289,7 +290,7 @@ class LoginFlowBaseView(HomeAssistantView):
                     "invalid_code",
                 )
             ):
-                await process_wrong_login(request)
+                await process_wrong_login(request, AccessMethod.LOGIN)
             return self.json(_prepare_result_json(result))
 
         hass = request.app[KEY_HASS]

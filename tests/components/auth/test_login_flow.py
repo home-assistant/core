@@ -13,6 +13,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth import AuthManagerFlowManager
 from homeassistant.components.auth import indieauth
+from homeassistant.components.http.ban import AccessMethod
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -625,7 +626,9 @@ async def test_flow_stays_busy_until_a_failed_login_is_processed(
     held = asyncio.Event()
     release = asyncio.Event()
 
-    async def held_process_wrong_login(_request: web.Request) -> None:
+    async def held_process_wrong_login(
+        _request: web.Request, _access_method: AccessMethod
+    ) -> None:
         held.set()
         await release.wait()
 
