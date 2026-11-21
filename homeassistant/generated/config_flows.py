@@ -13,6 +13,7 @@ FLOWS = {
         "group",
         "history_stats",
         "integration",
+        "manual",
         "min_max",
         "mold_indicator",
         "otp",

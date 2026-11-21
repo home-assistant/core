@@ -17843,13 +17843,12 @@
       "iot_class": "local_push"
     },
     "manual": {
-      "name": "Manual alarm control panel",
       "integration_type": "helper",
       "categories": [
         "helpers",
         "security_safety.alarm_systems"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "calculated"
     },
     "min_max": {
@@ -17994,6 +17993,7 @@
     "local_calendar",
     "local_ip",
     "local_todo",
+    "manual",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
