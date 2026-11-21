@@ -29,7 +29,11 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
+from homeassistant.helpers.device_registry import (
+    AnyDeviceEntry,
+    ChildDeviceEntry,
+    DeviceEntry,
+)
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -286,76 +290,196 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         )
 
     if entry.minor_version < 2:
-        device_registry = dr.async_get(hass)
-        entity_registry = er.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-        devices_by_endpoint_id: dict[str, list[DeviceEntry]] = defaultdict(list)
-        for device in devices:
-            for domain, identifier in device.identifiers:
-                if domain != DOMAIN:
-                    continue
-                candidate = (
-                    identifier.removeprefix(f"{entry.entry_id}_")
-                    .removeprefix("endpoint_")
-                    .split("_", 1)[0]
-                )
-                if candidate.isdigit():
-                    devices_by_endpoint_id[candidate].append(device)
-                    break
-
-        for endpoint_id, endpoint_devices in devices_by_endpoint_id.items():
-            endpoint_device = next(
-                device for device in endpoint_devices if device.via_device_id is None
-            )
-            subentry = ConfigSubentry(
-                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
-                title=endpoint_device.name or f"Endpoint {endpoint_id}",
-                unique_id=endpoint_id,
-                data=MappingProxyType({}),
-            )
-            hass.config_entries.async_add_subentry(entry, subentry)
-
-            for device in endpoint_devices:
-                # Re-point entities before moving the device: the entity registry
-                # deletes any entity whose stored config_subentry_id doesn't
-                # already match the device's new one when it's re-parented
-                for reg_entry in er.async_entries_for_device(
-                    entity_registry, device.id, include_disabled_entities=True
-                ):
-                    endpoint_prefix = f"{entry.entry_id}_{endpoint_id}_"
-                    if device.model == "Container" and not (
-                        reg_entry.unique_id.startswith(endpoint_prefix)
-                    ):
-                        # Older container unique IDs didn't include the endpoint
-                        # ID, so identically named containers on different
-                        # environments collided on the same entity. Entities
-                        # already migrated by the v3->v4 step are endpoint-scoped
-                        # and must be left as-is to avoid double-prefixing.
-                        entity_registry.async_update_entity(
-                            reg_entry.entity_id,
-                            config_subentry_id=subentry.subentry_id,
-                            new_unique_id=(
-                                f"{endpoint_prefix}{reg_entry.unique_id.removeprefix(f'{entry.entry_id}_')}"
-                            ),
-                        )
-                    else:
-                        entity_registry.async_update_entity(
-                            reg_entry.entity_id,
-                            config_subentry_id=subentry.subentry_id,
-                        )
-                device_registry.async_update_device(
-                    device.id,
-                    new_config_entry_id=entry.entry_id,
-                    new_config_subentry_id=subentry.subentry_id,
-                )
-
+        _async_migrate_config_subentries(hass, entry)
         hass.config_entries.async_update_entry(entry=entry, minor_version=2)
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
     if entry.minor_version < 3:
         _async_disable_disk_space_sensors(hass, entry)
         hass.config_entries.async_update_entry(entry=entry, minor_version=3)
+
+    if entry.minor_version < 4:
+        _async_migrate_container_entity_registry(hass, entry)
+        hass.config_entries.async_update_entry(entry=entry, minor_version=4)
+
+
+@callback
+def _async_migrate_container_entity_registry(
+    hass: HomeAssistant, entry: PortainerConfigEntry
+) -> None:
+    """Migrate container entity IDs to include their endpoint ID."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    entry_id_prefix = f"{entry.entry_id}_"
+    entity_migrations: list[tuple[er.RegistryEntry, str, str]] = []
+
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.model != "Container":
+            continue
+
+        endpoint_device: AnyDeviceEntry = device
+        while True:
+            parent_device_id = (
+                endpoint_device.parent_device_id
+                if isinstance(endpoint_device, ChildDeviceEntry)
+                else endpoint_device.via_device_id
+            )
+            if parent_device_id is None:
+                break
+            parent_device = device_registry.async_get(parent_device_id)
+            if parent_device is None:
+                break
+            endpoint_device = parent_device
+
+        endpoint_id = None
+        for domain, identifier in endpoint_device.identifiers:
+            if domain != DOMAIN or not identifier.startswith(entry_id_prefix):
+                continue
+            suffix = identifier.removeprefix(entry_id_prefix)
+            suffix = suffix.removeprefix("endpoint_")
+            if suffix.isdigit():
+                endpoint_id = suffix
+                break
+        if endpoint_id is None and device.config_subentry_id is not None:
+            subentry = entry.subentries.get(device.config_subentry_id)
+            if subentry is not None and (
+                subentry.subentry_type == SUBENTRY_TYPE_ENVIRONMENT
+                and subentry.unique_id is not None
+                and subentry.unique_id.isdigit()
+            ):
+                endpoint_id = subentry.unique_id
+        if endpoint_id is None:
+            raise ValueError(
+                f"Could not determine the endpoint for container device {device.id}"
+            )
+
+        # Retained legacy identifiers can look like IDs from another endpoint.
+        container_prefix = f"{entry_id_prefix}{endpoint_id}_"
+        container_names = [
+            identifier.removeprefix(container_prefix)
+            for domain, identifier in device.identifiers
+            if domain == DOMAIN
+            and identifier.startswith(container_prefix)
+            and identifier.removeprefix(container_prefix)
+        ]
+        if not container_names:
+            raise ValueError(
+                f"Could not determine the name for container device {device.id}"
+            )
+
+        container_name = max(container_names, key=len)
+        canonical_prefix = f"{container_prefix}{container_name}_"
+        legacy_prefix = f"{entry_id_prefix}{container_name}_"
+        for entity in er.async_entries_for_device(
+            entity_registry,
+            device.id,
+            include_disabled_entities=True,
+        ):
+            if entity.unique_id.startswith(canonical_prefix):
+                continue
+            if not entity.unique_id.startswith(legacy_prefix):
+                continue
+            entity_migrations.append(
+                (
+                    entity,
+                    device.id,
+                    f"{canonical_prefix}{entity.unique_id.removeprefix(legacy_prefix)}",
+                )
+            )
+
+    # A target can be another container's legacy ID when its name starts with an
+    # endpoint ID. Migrate those longer IDs first to free the targets.
+    for entity, device_id, new_unique_id in sorted(
+        entity_migrations,
+        key=lambda migration: len(migration[0].unique_id),
+        reverse=True,
+    ):
+        if existing_entity_id := entity_registry.async_get_entity_id(
+            entity.domain, DOMAIN, new_unique_id
+        ):
+            existing_entity = entity_registry.async_get(existing_entity_id)
+            if (
+                existing_entity_id != entity.entity_id
+                and existing_entity
+                and existing_entity.device_id == device_id
+            ):
+                entity_registry.async_remove(entity.entity_id)
+                continue
+
+        entity_registry.async_update_entity(
+            entity_id=entity.entity_id,
+            new_unique_id=new_unique_id,
+        )
+
+
+@callback
+def _async_migrate_config_subentries(
+    hass: HomeAssistant, entry: PortainerConfigEntry
+) -> None:
+    """Create subentries for the entry's environments."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    devices_by_endpoint_id: dict[str, list[DeviceEntry]] = defaultdict(list)
+    for device in devices:
+        for domain, identifier in device.identifiers:
+            if domain != DOMAIN:
+                continue
+            candidate = (
+                identifier.removeprefix(f"{entry.entry_id}_")
+                .removeprefix("endpoint_")
+                .split("_", 1)[0]
+            )
+            if candidate.isdigit():
+                devices_by_endpoint_id[candidate].append(device)
+                break
+
+    for endpoint_id, endpoint_devices in devices_by_endpoint_id.items():
+        endpoint_device = next(
+            device for device in endpoint_devices if device.via_device_id is None
+        )
+        subentry = ConfigSubentry(
+            subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+            title=endpoint_device.name or f"Endpoint {endpoint_id}",
+            unique_id=endpoint_id,
+            data=MappingProxyType({}),
+        )
+        hass.config_entries.async_add_subentry(entry, subentry)
+
+        for device in endpoint_devices:
+            # Re-point entities before moving the device: the entity registry
+            # deletes any entity whose stored config_subentry_id doesn't
+            # already match the device's new one when it's re-parented
+            for reg_entry in er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            ):
+                endpoint_prefix = f"{entry.entry_id}_{endpoint_id}_"
+                if device.model == "Container" and not (
+                    reg_entry.unique_id.startswith(endpoint_prefix)
+                ):
+                    # Older container unique IDs didn't include the endpoint
+                    # ID, so identically named containers on different
+                    # environments collided on the same entity. Entities
+                    # already migrated by the v3->v4 step are endpoint-scoped
+                    # and must be left as-is to avoid double-prefixing.
+                    entity_registry.async_update_entity(
+                        reg_entry.entity_id,
+                        config_subentry_id=subentry.subentry_id,
+                        new_unique_id=(
+                            f"{endpoint_prefix}{reg_entry.unique_id.removeprefix(f'{entry.entry_id}_')}"
+                        ),
+                    )
+                else:
+                    entity_registry.async_update_entity(
+                        reg_entry.entity_id,
+                        config_subentry_id=subentry.subentry_id,
+                    )
+            device_registry.async_update_device(
+                device.id,
+                new_config_entry_id=entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
+            )
 
 
 # Fixed at the sensors that existed when they became opt-in.
@@ -402,8 +526,8 @@ async def async_remove_config_entry_device(
     )
 
     valid_identifiers.update(
-        (DOMAIN, f"{entry.entry_id}_{container_name}")
-        for endpoint in coordinator.data.values()
+        (DOMAIN, f"{entry.entry_id}_{endpoint_id}_{container_name}")
+        for endpoint_id, endpoint in coordinator.data.items()
         for container_name in endpoint.containers
     )
 

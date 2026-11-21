@@ -24,7 +24,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_TOKEN,
@@ -34,6 +34,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -41,6 +42,69 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
+
+
+async def _mock_duplicate_container_names(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    container_names: tuple[str, str] = ("alloy", "frost-eventlog"),
+) -> None:
+    """Mock two endpoints that contain containers with the same names."""
+    endpoint_fixtures = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
+    )
+    endpoints = []
+    for endpoint_id, endpoint_name in ((1, "Unraid"), (3, "synology")):
+        endpoint = dict(endpoint_fixtures[0])
+        endpoint["Id"] = endpoint_id
+        endpoint["Name"] = endpoint_name
+        endpoint["Status"] = EndpointStatus.UP
+        endpoints.append(Endpoint.from_dict(endpoint))
+    mock_portainer_client.get_endpoints.return_value = endpoints
+
+    container_fixtures = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
+    )
+    containers = []
+    for fixture, container_name in zip(
+        container_fixtures[:2], container_names, strict=True
+    ):
+        container = dict(fixture)
+        container["Names"] = [f"/{container_name}"]
+        containers.append(DockerContainer.from_dict(container))
+    mock_portainer_client.get_containers.return_value = containers
+
+
+def _create_v5_config_entry() -> MockConfigEntry:
+    """Create a v5 entry with subentries for both mocked endpoints."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Portainer test",
+        data=MOCK_TEST_CONFIG,
+        unique_id=TEST_INSTANCE_ID,
+        version=5,
+        minor_version=3,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title=endpoint_name,
+                unique_id=endpoint_id,
+            )
+            for endpoint_id, endpoint_name in (("1", "Unraid"), ("3", "synology"))
+        ],
+    )
+
+
+def _subentry_id(entry: MockConfigEntry, endpoint_id: str) -> str:
+    """Return the subentry ID for a mocked endpoint."""
+    return next(
+        subentry_id
+        for subentry_id, subentry in entry.subentries.items()
+        if subentry.unique_id == endpoint_id
+    )
 
 
 @pytest.mark.parametrize(
@@ -91,13 +155,18 @@ async def test_migrations(
     assert entry.data[CONF_VERIFY_SSL] is True
     # Confirm we went through all current migrations
     assert entry.version == 5
+    assert entry.minor_version == 4
     assert entry.unique_id == TEST_INSTANCE_ID
 
 
 @pytest.mark.parametrize(
-    ("container_id", "expected_result"),
-    [("1", False), ("5", True)],
-    ids=("Present container", "Stale container"),
+    ("identifier", "expected_result"),
+    [
+        pytest.param("1", False, id="present_endpoint"),
+        pytest.param("1_practical_morse", False, id="present_container"),
+        pytest.param("1_missing", True, id="stale_container"),
+        pytest.param("5", True, id="stale_endpoint"),
+    ],
 )
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
@@ -105,7 +174,7 @@ async def test_remove_config_entry_device(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
-    container_id: str,
+    identifier: str,
     expected_result: bool,
 ) -> None:
     """Test manually removing a stale device."""
@@ -116,7 +185,7 @@ async def test_remove_config_entry_device(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{container_id}")},
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{identifier}")},
     )
 
     ws_client = await hass_ws_client(hass)
@@ -176,6 +245,7 @@ async def test_migration_v3_to_v5(
     await hass.async_block_till_done()
 
     assert entry.version == 5
+    assert entry.minor_version == 4
 
     # Fetch again, to assert the new identifiers
     container_after = device_registry.async_get(container_device.id)
@@ -248,7 +318,7 @@ async def test_migration_v5_1_to_v5_2(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert len(entry.subentries) == 1
     subentry = next(iter(entry.subentries.values()))
     assert subentry.subentry_type == SUBENTRY_TYPE_ENVIRONMENT
@@ -329,7 +399,7 @@ async def test_migration_v5_2_to_v5_3(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert (entity_after := entity_registry.async_get(entity.entity_id))
     assert entity_after.disabled_by is expected_disabled_by
 
@@ -393,7 +463,411 @@ async def test_migration_v4_to_v5(
     await hass.async_block_till_done()
 
     assert entry.version == 5
+    assert entry.minor_version == 4
     assert entry.unique_id == TEST_INSTANCE_ID
+
+
+async def test_migration_v5_preserves_legacy_entity_owner(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the existing entity remains assigned to its original endpoint."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3")},
+        name="synology",
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3_alloy")},
+        via_device_id=endpoint_device.id,
+        model="Container",
+        name="alloy",
+    )
+    endpoint_aware_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_3_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Migrated container",
+    )
+    legacy_duplicate = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+    entity_registry.async_update_entity(
+        endpoint_aware_entity.entity_id,
+        name="Canonical custom name",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 5
+    assert entry.minor_version == 4
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH,
+            DOMAIN,
+            f"{entry.entry_id}_3_alloy_container",
+        )
+        == endpoint_aware_entity.entity_id
+    )
+    canonical_entity = entity_registry.async_get(endpoint_aware_entity.entity_id)
+    assert canonical_entity is not None
+    assert canonical_entity.name == "Canonical custom name"
+    assert entity_registry.async_get(legacy_duplicate.entity_id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH,
+            DOMAIN,
+            f"{entry.entry_id}_1_alloy_container",
+        )
+        is not None
+    )
+
+
+async def test_migration_v5_uses_subentry_when_endpoint_ancestor_is_missing(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test endpoint ownership falls back to the container's subentry."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3")},
+        name="synology",
+    )
+    stack_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3_stack")},
+        via_device_id=endpoint_device.id,
+        model="Stack",
+        name="Stack",
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3_alloy")},
+        via_device_id=stack_device.id,
+        model="Container",
+        name="alloy",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+    device_registry.async_update_device(stack_device.id, via_device_id=None)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(legacy_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{entry.entry_id}_3_alloy_container"
+    assert migrated_entity.device_id == container_device.id
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [None, er.RegistryEntryDisabler.USER],
+    ids=("enabled", "disabled"),
+)
+async def test_migration_v5_preserves_legacy_entity(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test a legacy entity is migrated in place, including disabled entities."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3")},
+        name="synology",
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3_alloy")},
+        via_device_id=endpoint_device.id,
+        model="Container",
+        name="alloy",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+    entity_registry.async_update_entity(
+        legacy_entity.entity_id,
+        name="Custom container name",
+        disabled_by=disabled_by,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(legacy_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{entry.entry_id}_3_alloy_container"
+    assert migrated_entity.device_id == container_device.id
+    assert migrated_entity.name == "Custom container name"
+    assert migrated_entity.disabled_by is disabled_by
+
+    other_endpoint_entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{entry.entry_id}_1_alloy_container",
+    )
+    assert other_endpoint_entity_id is not None
+    assert other_endpoint_entity_id != legacy_entity.entity_id
+
+
+async def test_migration_v5_uses_parent_endpoint_for_numeric_container_name(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a legacy device identifier cannot be mistaken for its endpoint."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3")},
+        name="synology",
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={
+            (DOMAIN, f"{entry.entry_id}_1_1"),
+            (DOMAIN, f"{entry.entry_id}_3_1_1"),
+        },
+        via_device_id=endpoint_device.id,
+        model="Container",
+        name="1_1",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_1_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(legacy_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{entry.entry_id}_3_1_1_container"
+    assert migrated_entity.device_id == container_device.id
+
+
+async def test_migration_v5_skips_endpoint_aware_numeric_container_name(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test endpoint-aware IDs are not mistaken for legacy IDs."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "1"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_1")},
+        name="Unraid",
+    )
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "1"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_1_1")},
+        via_device_id=endpoint_device.id,
+        model="Container",
+        name="1",
+    )
+    endpoint_aware_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_1_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "1"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(endpoint_aware_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{entry.entry_id}_1_1_container"
+    assert migrated_entity.device_id == container_device.id
+
+
+async def test_migration_v5_avoids_cross_device_unique_id_conflicts(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test colliding legacy IDs are migrated without losing either entity."""
+    await _mock_duplicate_container_names(
+        hass,
+        mock_portainer_client,
+        container_names=("alloy", "1_alloy"),
+    )
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    endpoint_1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "1"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_1")},
+        name="Unraid",
+    )
+    endpoint_3 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3")},
+        name="synology",
+    )
+    container_1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "1"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_1_alloy")},
+        via_device_id=endpoint_1.id,
+        model="Container",
+        name="alloy",
+    )
+    container_3 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={(DOMAIN, f"{entry.entry_id}_3_1_alloy")},
+        via_device_id=endpoint_3.id,
+        model="Container",
+        name="1_alloy",
+    )
+    entity_1 = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "1"),
+        device_id=container_1.id,
+        original_name="Container 1",
+    )
+    entity_3 = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_alloy_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_3.id,
+        original_name="Container 3",
+    )
+    entity_registry.async_update_entity(entity_1.entity_id, name="Custom 1")
+    entity_registry.async_update_entity(entity_3.entity_id, name="Custom 3")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity_1 = entity_registry.async_get(entity_1.entity_id)
+    migrated_entity_3 = entity_registry.async_get(entity_3.entity_id)
+    assert migrated_entity_1 is not None
+    assert migrated_entity_3 is not None
+    assert migrated_entity_1.unique_id == f"{entry.entry_id}_1_alloy_container"
+    assert migrated_entity_3.unique_id == f"{entry.entry_id}_3_1_alloy_container"
+    assert migrated_entity_1.device_id == container_1.id
+    assert migrated_entity_3.device_id == container_3.id
+    assert migrated_entity_1.name == "Custom 1"
+    assert migrated_entity_3.name == "Custom 3"
+
+
+async def test_duplicate_container_names_across_endpoints(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test same-named containers on separate endpoints have distinct entities."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+
+    await setup_integration(hass, entry)
+
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entities_by_endpoint = {
+        endpoint_id: {
+            (
+                entity.domain,
+                entity.unique_id.removeprefix(f"{entry.entry_id}_{endpoint_id}_"),
+            )
+            for entity in entries
+            if entity.unique_id.startswith(
+                (
+                    f"{entry.entry_id}_{endpoint_id}_alloy_",
+                    f"{entry.entry_id}_{endpoint_id}_frost-eventlog_",
+                )
+            )
+        }
+        for endpoint_id in (1, 3)
+    }
+
+    assert entities_by_endpoint[1] == entities_by_endpoint[3]
+    assert {domain for domain, _ in entities_by_endpoint[1]} == {
+        Platform.BINARY_SENSOR,
+        Platform.BUTTON,
+        Platform.EVENT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.UPDATE,
+    }
 
 
 @pytest.mark.parametrize(
