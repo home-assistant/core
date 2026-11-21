@@ -5,9 +5,7 @@ rules:
     comment: The integration does not register actions.
   appropriate-polling: done
   async-dependency: done
-  brands:
-    status: done
-    comment: The Xiaomi brand assets are reused through an alias in the brands repository.
+  brands: done
   common-modules: done
   config-entry-unloading: todo
   config-flow: done
