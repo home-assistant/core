@@ -38,6 +38,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> Non
     """Set up fritzboxtools from config entry."""
     LOGGER.debug("Setting up FRITZ!Box Tools component")
 
+    if entry.data.get(CONF_SSL) is None:
+        LOGGER.debug("Set missing ssl option to config entry %s", entry.title)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SSL: DEFAULT_SSL}
+        )
+
     avm_wrapper = AvmWrapper(
         hass=hass,
         config_entry=entry,
@@ -45,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> Non
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        use_tls=entry.data.get(CONF_SSL, DEFAULT_SSL),
+        use_tls=entry.data[CONF_SSL],
         device_discovery_enabled=entry.options.get(
             CONF_FEATURE_DEVICE_TRACKING, DEFAULT_CONF_FEATURE_DEVICE_TRACKING
         ),
