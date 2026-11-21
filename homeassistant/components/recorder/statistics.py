@@ -442,19 +442,32 @@ def _get_statistic_to_display_unit_converter(
     )
 
 
-def _requires_pre_aggregation_unit_conversion(
+def _get_statistic_state_unit(
     hass: HomeAssistant,
     statistic_id: str,
+    statistic_unit: str | None,
+    state_units: dict[str, str | None] | None,
+) -> str | None:
+    """Use the same state unit for query selection and result conversion."""
+    if state_units is not None and statistic_id in state_units:
+        return state_units[statistic_id]
+
+    state_unit = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    if state_units is not None:
+        state_units[statistic_id] = state_unit
+    return state_unit
+
+
+def _requires_pre_aggregation_unit_conversion(
     metadata: StatisticMetaData,
+    state_unit: str | None,
     requested_units: dict[str, str] | None,
     aggregations: set[AggregationType],
 ) -> bool:
     """Return whether unit conversion excludes SQL aggregate reduction."""
     statistic_unit = metadata["unit_of_measurement"]
-    state_unit = statistic_unit
-    if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
-
     resolved = _resolve_statistic_display_unit(
         metadata["unit_class"], statistic_unit, state_unit, requested_units
     )
@@ -2493,15 +2506,15 @@ def _augment_result_with_change(
     table: type[Statistics | StatisticsShortTerm],
     metadata: dict[str, tuple[int, StatisticMetaData]],
     result: dict[str, list[StatisticsRow]],
+    state_units: dict[str, str | None] | None,
 ) -> None:
     """Add change to the result."""
     drop_sum = "sum" not in _types
     converters: dict[str, Callable[[float | None], float | None] | None] = {}
     for statistic_id in result:
         metadata_by_id = metadata[statistic_id][1]
-        state_unit = unit = metadata_by_id["unit_of_measurement"]
-        if state := hass.states.get(statistic_id):
-            state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        unit = metadata_by_id["unit_of_measurement"]
+        state_unit = _get_statistic_state_unit(hass, statistic_id, unit, state_units)
         converters[statistic_id] = _get_statistic_to_display_unit_converter(
             metadata_by_id["unit_class"], unit, state_unit, units
         )
@@ -2553,6 +2566,7 @@ def _get_mixed_mean_statistics_period_result(
     table: type[StatisticsBase],
     units: dict[str, str] | None,
     reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None,
+    state_units: dict[str, str | None] | None,
 ) -> dict[str, list[StatisticsRow]]:
     """Fetch reduced statistics for mixed mean types."""
     result: dict[str, list[StatisticsRow]] = {}
@@ -2608,6 +2622,7 @@ def _get_mixed_mean_statistics_period_result(
                 units,
                 types,
                 reducer=reducer,
+                state_units=state_units,
             )
         )
 
@@ -2738,19 +2753,19 @@ def _statistics_during_period_with_session(
         and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
     )
 
-    requires_pre_aggregation_conversion = (
-        period_query_candidate
-        and bool(aggregations)
-        and any(
-            _requires_pre_aggregation_unit_conversion(
-                hass,
-                statistic_id,
-                meta,
-                units,
-                aggregations,
-            )
-            for statistic_id, (_, meta) in metadata.items()
+    state_units: dict[str, str | None] | None = (
+        {} if period_query_candidate and aggregations else None
+    )
+    requires_pre_aggregation_conversion = state_units is not None and any(
+        _requires_pre_aggregation_unit_conversion(
+            meta,
+            _get_statistic_state_unit(
+                hass, statistic_id, meta["unit_of_measurement"], state_units
+            ),
+            units,
+            aggregations,
         )
+        for statistic_id, (_, meta) in metadata.items()
     )
 
     if (
@@ -2772,6 +2787,7 @@ def _statistics_during_period_with_session(
                 table,
                 units,
                 reducer,
+                state_units,
             )
         else:
             stats = _get_statistics_period_rows(
@@ -2798,6 +2814,7 @@ def _statistics_during_period_with_session(
                 units,
                 types,
                 reducer=reducer,
+                state_units=state_units,
             )
     else:
         stmt = _generate_statistics_during_period_stmt(
@@ -2813,6 +2830,7 @@ def _statistics_during_period_with_session(
             units=units,
             types=types,
             reducer=reducer,
+            state_units=state_units,
         )
         result = execute_stmt_lambda_element_streamed(
             session, stmt, lambda rows, fields: to_dict(rows, fields=fields)
@@ -2822,7 +2840,15 @@ def _statistics_during_period_with_session(
 
     if "change" in _types:
         _augment_result_with_change(
-            hass, session, start_time, units, _types, table, metadata, result
+            hass,
+            session,
+            start_time,
+            units,
+            _types,
+            table,
+            metadata,
+            result,
+            state_units,
         )
 
     # filter out mean_weight as it is only needed to reduce statistics
@@ -3267,6 +3293,7 @@ def _sorted_statistics_to_dict(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     fields: Iterable[str] | None = None,
     reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None,
+    state_units: dict[str, str | None] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -3301,11 +3328,10 @@ def _sorted_statistics_to_dict(
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
             unit_class = metadata_by_id["unit_class"]
-            state_unit = unit = metadata_by_id["unit_of_measurement"]
-            if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(
-                    EntityStateAttribute.UNIT_OF_MEASUREMENT
-                )
+            unit = metadata_by_id["unit_of_measurement"]
+            state_unit = _get_statistic_state_unit(
+                hass, statistic_id, unit, state_units
+            )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units
             )

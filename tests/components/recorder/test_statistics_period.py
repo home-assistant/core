@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Callable, Sequence
 from datetime import datetime, timedelta
 from typing import Literal
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
@@ -21,7 +21,7 @@ from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
     session_scope,
 )
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PowerConverter
@@ -1613,6 +1613,85 @@ async def test_state_unit_converted_aggregate_uses_fast_path(
 
     optimized.assert_called_once()
     assert result[statistic_id][0]["mean"] == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize(
+    ("other_mean_type", "period_queries"),
+    [
+        pytest.param(StatisticMeanType.NONE, 1, id="arithmetic"),
+        pytest.param(StatisticMeanType.CIRCULAR, 2, id="mixed"),
+    ],
+)
+async def test_state_unit_change_during_period_query(
+    statistics_session: Session,
+    hass: HomeAssistant,
+    other_mean_type: StatisticMeanType,
+    period_queries: int,
+) -> None:
+    """Keep the unit used to choose the SQL aggregation path."""
+    statistic_id = "sensor.wind_speed"
+    wind_metadata = statistics_session.get_one(StatisticsMeta, 1)
+    wind_metadata.statistic_id = statistic_id
+    wind_metadata.mean_type = StatisticMeanType.ARITHMETIC
+    wind_metadata.unit_class = "speed"
+    wind_metadata.unit_of_measurement = UnitOfSpeed.METERS_PER_SECOND
+    other_metadata = statistics_session.get_one(StatisticsMeta, 2)
+    other_metadata.mean_type = other_mean_type
+    other_metadata.unit_class = "angle"
+    other_metadata.unit_of_measurement = "°"
+
+    start = datetime(2024, 1, 1, tzinfo=dt_util.UTC)
+    statistics_session.add_all(
+        [
+            Statistics(metadata_id=1, start_ts=start.timestamp(), mean=0.0),
+            Statistics(
+                metadata_id=1,
+                start_ts=(start + timedelta(hours=1)).timestamp(),
+                mean=20.0,
+            ),
+            Statistics(
+                metadata_id=2, start_ts=start.timestamp(), mean=90.0, mean_weight=1.0
+            ),
+        ]
+    )
+    statistics_session.commit()
+    hass.states.async_set(
+        statistic_id,
+        "0",
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfSpeed.METERS_PER_SECOND},
+    )
+
+    def switch_unit_before_query(*_args: object) -> object:
+        hass.states.async_set(
+            statistic_id,
+            "0",
+            {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfSpeed.BEAUFORT},
+        )
+        return DEFAULT
+
+    def wind_mean() -> float | None:
+        return statistics._statistics_during_period_with_session(
+            hass,
+            statistics_session,
+            start,
+            start,
+            {statistic_id, other_metadata.statistic_id},
+            "day",
+            None,
+            {"mean"},
+        )[statistic_id][0]["mean"]
+
+    with patch.object(
+        statistics,
+        "_get_statistics_period_rows",
+        wraps=statistics._get_statistics_period_rows,
+        side_effect=switch_unit_before_query,
+    ) as optimized:
+        assert wind_mean() == 10.0
+        assert optimized.call_count == period_queries
+        optimized.reset_mock()
+        assert wind_mean() == 4.0
+        optimized.assert_not_called()
 
 
 @pytest.mark.parametrize(
