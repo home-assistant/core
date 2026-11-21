@@ -90,3 +90,30 @@ async def test_oldest_ts_preserved_after_sqlalchemy_recovery(
     stable_start_state = hist[stable_entity_id][0]
     assert isinstance(stable_start_state, State)
     assert stable_start_state.state == "on"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_last_reported_cleared_after_sqlalchemy_recovery(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a stale last_reported update does not block commits after recovery."""
+    entity_id = "sensor.last_reported_recovery"
+
+    hass.states.async_set(entity_id, "before")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        session.query(States).delete()
+
+    hass.states.async_set(entity_id, "lost")
+    await async_wait_recording_done(hass)
+
+    assert "SQLAlchemyError error processing task" in caplog.text
+
+    hass.states.async_set(entity_id, "after")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        recorded_states = {row.state for row in session.query(States)}
+    assert recorded_states == {"after"}
