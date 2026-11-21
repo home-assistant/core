@@ -181,6 +181,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
+| `W7464` | [`home-assistant-use-typed-config-entry`](#w7464-home-assistant-use-typed-config-entry) | Use the integration's typed config entry instead of `ConfigEntry` |
 
 ## `home_assistant_logger` checker
 
@@ -497,6 +498,28 @@ type MyConfigEntry = ConfigEntry[MyData]
 async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
     entry.runtime_data = MyData(...)
 ```
+
+
+## `home_assistant_typed_config_entry` checker
+
+Checks that integrations with a typed config entry use it.
+
+### `W7464`: `home-assistant-use-typed-config-entry`
+
+When an integration defines a typed config entry, such as
+`type MyConfigEntry = ConfigEntry[MyData]`, it should use it everywhere it
+handles its own config entry, so `entry.runtime_data` stays typed. Argument,
+return and variable annotations that use a plain `ConfigEntry`, including
+nested ones such as `ConfigEntry | None` or `list[ConfigEntry]`, are flagged:
+
+```python
+def get_device_info(entry: MyConfigEntry) -> DeviceInfo:
+    return entry.runtime_data.device_info
+```
+
+When importing the typed config entry would create a circular import, import
+it under `if TYPE_CHECKING:`, or define it next to the class that holds the
+`runtime_data` instead.
 
 
 ## `home_assistant_coordinator_entity_available` checker

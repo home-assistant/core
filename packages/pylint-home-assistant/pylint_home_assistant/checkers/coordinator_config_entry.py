@@ -12,15 +12,17 @@ given, so assigning ``self.config_entry`` again in the subclass is redundant.
 ``W7448`` (``home-assistant-coordinator-redundant-config-entry``)
 """
 
-from functools import cache
 from pathlib import Path
 
-import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.ast_utils import extended_ancestors
+from pylint_home_assistant.helpers.config_entry import (
+    is_config_entry,
+    typed_config_entries,
+)
 from pylint_home_assistant.helpers.integration import get_integration_dir
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
@@ -30,47 +32,10 @@ _COORDINATOR_QNAME = "homeassistant.helpers.update_coordinator.DataUpdateCoordin
 def _is_plain_config_entry(node: nodes.NodeNG | None) -> bool:
     """Return True for ``ConfigEntry`` without type arguments."""
     match node:
-        case nodes.Name(name="ConfigEntry") | nodes.Attribute(attrname="ConfigEntry"):
-            return True
         # ConfigEntry | None
         case nodes.BinOp(op="|", left=left, right=right):
             return _is_plain_config_entry(left) or _is_plain_config_entry(right)
-    return False
-
-
-def _is_typed_config_entry(node: nodes.NodeNG) -> bool:
-    """Return True for ``ConfigEntry[...]``."""
-    match node:
-        case nodes.Subscript(
-            value=nodes.Name(name="ConfigEntry")
-            | nodes.Attribute(attrname="ConfigEntry")
-        ):
-            return True
-    return False
-
-
-@cache
-def _typed_config_entries(integration_dir: Path) -> tuple[str, ...]:
-    """Return the names of the typed config entries an integration defines."""
-    names: set[str] = set()
-    for source in integration_dir.rglob("*.py"):
-        try:
-            module = astroid.parse(source.read_text())
-        except astroid.exceptions.AstroidSyntaxError, OSError:
-            continue
-        for node in module.body:
-            match node:
-                # type MyConfigEntry = ConfigEntry[MyCoordinator]
-                case nodes.TypeAlias(name=nodes.AssignName(name=name), value=value) if (
-                    _is_typed_config_entry(value)
-                ):
-                    names.add(name)
-                # MyConfigEntry = ConfigEntry[MyCoordinator]
-                case nodes.Assign(
-                    targets=[nodes.AssignName(name=name)], value=value
-                ) if _is_typed_config_entry(value):
-                    names.add(name)
-    return tuple(sorted(names))
+    return is_config_entry(node)
 
 
 def _is_coordinator(class_node: nodes.ClassDef) -> bool:
@@ -139,7 +104,7 @@ class CoordinatorConfigEntryChecker(BaseChecker):
         if self._integration_dir is None or not _is_coordinator(node):
             return
 
-        if typed_entries := _typed_config_entries(self._integration_dir):
+        if typed_entries := typed_config_entries(self._integration_dir):
             self._check_untyped(node, typed_entries)
 
         if isinstance(
