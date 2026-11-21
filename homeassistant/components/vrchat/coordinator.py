@@ -1,0 +1,171 @@
+"""Adapt library account updates to Home Assistant entities and devices."""
+
+from collections.abc import Awaitable, Callable
+import logging
+
+from vrchatapi.exceptions import UnauthorizedException
+from vrchatapi.highlevel import AccountIdMismatch, VRChatAccount, VRChatAPI, VRChatUser
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN, USER_AGENT, VRCHAT_USER_PAGE_BASE_URL
+from .store import InitialCurrentUserData, get_vrchat_auth_cookie_store
+
+_LOGGER = logging.getLogger(__name__)
+type VRChatConfigEntry = ConfigEntry[VRChatAccountDataCoordinator]
+
+
+class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]]):
+    """Own the HA lifecycle and translate library notifications."""
+
+    config_entry: VRChatConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: VRChatConfigEntry) -> None:
+        """Initialize the integration adapter."""
+        super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
+        self.data = {}
+        self.device_registry = dr.async_get(hass)
+        assert entry.unique_id is not None
+        self.cookie_store = get_vrchat_auth_cookie_store(hass, entry.unique_id)
+        self.client: VRChatAccount | None = None
+        self._prepare_user_removal: Callable[[str], Awaitable[None]] | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return the library connection state."""
+        return self.client is not None and self.client.available
+
+    async def async_start(self) -> None:
+        """Load credentials and start the account subscription."""
+        entry = self.config_entry
+        assert entry.unique_id is not None
+        api = VRChatAPI(
+            entry.data, await self.cookie_store.async_load(), user_agent=USER_AGENT
+        )
+        self.client = VRChatAccount(
+            api,
+            entry.unique_id,
+            on_user=self._user_updated,
+            on_remove=self._user_removed,
+            before_user_remove=self._async_user_removing,
+            on_available=self._availability_updated,
+            on_auth_error=self._auth_error,
+            on_authenticated=self._save_cookie,
+        )
+        self.data = self.client.users
+        try:
+            await self.client.start(InitialCurrentUserData.pop(entry.unique_id, None))
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"config_entry_title": entry.title},
+            ) from err
+        except AccountIdMismatch as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unique_id_mismatch",
+                translation_placeholders={
+                    "expected_id": err.expected,
+                    "got_id": err.actual,
+                },
+            ) from err
+        except Exception as err:
+            raise VRChatAccountSetupFailed(entry) from err
+
+    async def _save_cookie(self, api: VRChatAPI) -> None:
+        await self.cookie_store.async_save(api.cookie)
+
+    @callback
+    def _user_updated(self, data: VRChatUser, world_update: bool) -> None:
+        if not world_update:
+            self.async_update_device_name(data.id)
+        self.async_set_updated_data(self.data)
+
+    @callback
+    def async_register_user_removal_callback(
+        self, prepare: Callable[[str], Awaitable[None]]
+    ) -> Callable[[], None]:
+        """Register platform cleanup before committing SDK user removal."""
+        self._prepare_user_removal = prepare
+
+        @callback
+        def unsubscribe() -> None:
+            self._prepare_user_removal = None
+
+        return unsubscribe
+
+    async def _async_user_removing(self, user_id: str) -> None:
+        """Remove the device while entity access to the SDK user remains valid."""
+        if self._prepare_user_removal is not None:
+            await self._prepare_user_removal(user_id)
+        if (device := self._device_entry(user_id)) is not None:
+            self.device_registry.async_remove_device(device.id)
+
+    @callback
+    def _user_removed(self, user_id: str) -> None:
+        self.async_set_updated_data(self.data)
+
+    @callback
+    def _availability_updated(self, available: bool) -> None:
+        self.async_update_listeners()
+
+    @callback
+    def async_register_account_device(self) -> None:
+        """Register the parent needed by friend entity constructors."""
+        account_id = self.config_entry.unique_id
+        assert account_id is not None
+        self.device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, f"{account_id}:{account_id}")},
+            configuration_url=VRCHAT_USER_PAGE_BASE_URL + account_id,
+        )
+        self.async_update_device_name(account_id)
+
+    @callback
+    def async_update_device_name(self, user_id: str) -> None:
+        """Apply the latest display name without changing user customizations."""
+        if (
+            (device := self._device_entry(user_id)) is not None
+            and (name := self.data[user_id].data.get("displayName")) is not None
+            and name != device.name
+        ):
+            self.device_registry.async_update_device(device.id, name=name)
+
+    @callback
+    def _device_entry(self, user_id: str) -> dr.DeviceEntry | None:
+        return self.device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{self.config_entry.unique_id}:{user_id}"),
+            self.config_entry.entry_id,
+        )
+
+    def _auth_error(self, error: Exception) -> None:
+        _LOGGER.error(
+            "VRChat authentication expired; reload the entry to sign in again: %s",
+            error,
+        )
+
+    async def close(self) -> None:
+        """Close account connections and background work."""
+        if self.client is not None:
+            await self.client.close()
+
+
+class VRChatAccountSetupFailed(ConfigEntryNotReady):
+    """Translate account setup failures."""
+
+    def __init__(self, entry: VRChatConfigEntry) -> None:
+        """Build the translated setup error."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"config_entry_title": entry.title},
+        )

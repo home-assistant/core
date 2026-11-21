@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This VRChat account is already added."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to VRChat.",
+      "invalid_auth": "Invalid VRChat credentials or two-factor authentication code."
+    },
+    "step": {
+      "2fa": {
+        "data": {
+          "2fa_code": "Two-factor authentication code"
+        },
+        "data_description": {
+          "2fa_code": "Enter the code from your authenticator app."
+        },
+        "title": "Enter two-factor authentication code"
+      },
+      "email_2fa": {
+        "data": {
+          "email_2fa_code": "Two-factor authentication code"
+        },
+        "data_description": {
+          "email_2fa_code": "Enter the code sent to your email address."
+        },
+        "title": "Enter email two-factor authentication code"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username or email"
+        },
+        "data_description": {
+          "password": "Your VRChat account password.",
+          "username": "Your VRChat account username or email address."
+        },
+        "description": "Sign in with a VRChat account. Third-party platform accounts are not supported.",
+        "title": "Connect to VRChat"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "location": {
+        "name": "Location",
+        "state": {
+          "active_on_web_or_mobile": "📱 Web/Mobile",
+          "offline": "Offline",
+          "private": "Private",
+          "traveling": "Traveling"
+        }
+      },
+      "state": {
+        "state": {
+          "active": "🟢 Online",
+          "active_on_web_or_mobile": "📱 Web/Mobile",
+          "ask_me": "🟠 Ask me",
+          "busy": "🔴 Busy",
+          "join_me": "🔵 Join me",
+          "offline": "Offline"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "active": "🟢 Online",
+          "ask_me": "🟠 Ask me",
+          "busy": "🔴 Busy",
+          "join_me": "🔵 Join me",
+          "offline": "Offline"
+        }
+      },
+      "status_description": {
+        "name": "Status description"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for VRChat account {config_entry_title}."
+    },
+    "setup_failed": {
+      "message": "Unable to set up VRChat account {config_entry_title}."
+    },
+    "unique_id_mismatch": {
+      "message": "The VRChat account ID does not match the configured account. Remove the integration and add the correct account again. Expected ID: {expected_id}; received ID: {got_id}."
+    }
+  }
+}
