@@ -1,8 +1,18 @@
 {
   "config": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "data": {
+          "hosts": "Device IP addresses"
+        },
+        "data_description": {
+          "hosts": "IPv4 addresses of Govee lights that discovery can't reach, such as lights on another VLAN or subnet. Give these lights fixed IP addresses."
+        },
+        "description": "Govee lights on this network are discovered automatically. To add lights on other networks, enter their IP addresses."
       }
     }
   },
@@ -169,6 +179,21 @@
     },
     "port_in_use": {
       "message": "Port {port} is already in use"
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "hosts": "[%key:component::govee_light_local::config::step::user::data::hosts%]"
+        },
+        "data_description": {
+          "hosts": "[%key:component::govee_light_local::config::step::user::data_description::hosts%]"
+        }
+      }
     }
   }
 }

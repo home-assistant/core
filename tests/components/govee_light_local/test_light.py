@@ -16,6 +16,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
+    CONF_HOSTS,
     DEVICE_TIMEOUT,
     DOMAIN,
     REBIND_INTERVAL,
@@ -129,6 +130,36 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
     assert await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+
+
+async def test_light_manual_hosts(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test configured addresses are queued for unicast discovery before start."""
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="10.0.0.74",
+            fingerprint="asdawdqwdqwd1",
+            sku="H615A",
+            capabilities=DEFAULT_CAPABILITIES,
+        )
+    ]
+    queued_before_start: list[call] = []
+    mock_govee_api.start.side_effect = lambda **_: queued_before_start.extend(
+        mock_govee_api.add_device_to_discovery_queue.call_args_list
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, options={CONF_HOSTS: ["10.0.0.74", "10.0.0.92"]}
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert queued_before_start == [call("10.0.0.74"), call("10.0.0.92")]
+    assert hass.states.get("light.H615A") is not None
 
 
 async def test_light_setup_retry(
