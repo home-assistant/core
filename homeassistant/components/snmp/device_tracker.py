@@ -92,6 +92,7 @@ class SnmpScanner(DeviceScanner):
         self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
         self.success_init = False
+        self._last_scan: list[str] = []
 
     @classmethod
     async def create(cls, config):
@@ -131,9 +132,11 @@ class SnmpScanner(DeviceScanner):
     @override
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        if not (data := await self.async_get_snmp_data()):
-            return []
-        return [client["mac"] for client in data]
+        if (data := await self.async_get_snmp_data()) is None:
+            # A failed walk says nothing about the devices, keep the last scan
+            return self._last_scan
+        self._last_scan = [client["mac"] for client in data]
+        return self._last_scan
 
     @override
     async def async_get_device_name(self, device: str) -> str | None:
@@ -224,6 +227,22 @@ async def async_setup_entry(
     _async_setup_subentry(entry, coordinator, er.async_get(hass), async_add_entities)
 
 
+def _registered_macs(
+    ent_reg: er.EntityRegistry, entry_id: str, subentry_id: str
+) -> set[str]:
+    """Return the MACs of the tracker entities the registry holds."""
+    unique_id_prefix = f"{subentry_id}_"
+    return {
+        reg_entry.unique_id.removeprefix(unique_id_prefix)
+        for reg_entry in er.async_entries_for_config_entry(ent_reg, entry_id)
+        if reg_entry.unique_id
+        and reg_entry.unique_id.startswith(unique_id_prefix)
+        and reg_entry.config_subentry_id == subentry_id
+        and reg_entry.domain == DEVICE_TRACKER_DOMAIN
+        and reg_entry.platform == DOMAIN
+    }
+
+
 @callback
 def _async_setup_subentry(
     entry: SnmpConfigEntry,
@@ -236,16 +255,7 @@ def _async_setup_subentry(
 
     # Ensure previously known MACs show up as 'not_home' instead of disappearing
     # if missing from the current poll.
-    unique_id_prefix = f"{subentry_id}_"
-    initial_macs = {
-        reg_entry.unique_id.removeprefix(unique_id_prefix)
-        for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-        if reg_entry.unique_id
-        and reg_entry.unique_id.startswith(unique_id_prefix)
-        and reg_entry.config_subentry_id == subentry_id
-        and reg_entry.domain == DEVICE_TRACKER_DOMAIN
-        and reg_entry.platform == DOMAIN
-    }
+    initial_macs = _registered_macs(ent_reg, entry.entry_id, subentry_id)
 
     if initial_macs:
         async_add_entities(
@@ -253,7 +263,7 @@ def _async_setup_subentry(
             config_subentry_id=subentry_id,
         )
 
-    tracked_macs = set(initial_macs)
+    tracked_macs = initial_macs
 
     @callback
     def _handle_coordinator_update() -> None:
@@ -261,12 +271,17 @@ def _async_setup_subentry(
         if not coordinator.data:
             return
 
-        new_entities: list[SnmpTrackerEntity] = []
-        for mac in coordinator.data:
-            if mac in tracked_macs:
-                continue
-            tracked_macs.add(mac)
-            new_entities.append(SnmpTrackerEntity(coordinator, mac))
+        # A removed tracker must not keep a MAC which is reported again from
+        # being added back.
+        tracked_macs.intersection_update(
+            _registered_macs(ent_reg, entry.entry_id, subentry_id)
+        )
+        new_entities = [
+            SnmpTrackerEntity(coordinator, mac)
+            for mac in coordinator.data
+            if mac not in tracked_macs
+        ]
+        tracked_macs.update(coordinator.data)
 
         if new_entities:
             async_add_entities(new_entities, config_subentry_id=subentry_id)

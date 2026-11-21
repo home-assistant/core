@@ -625,6 +625,45 @@ async def test_remove_config_entry_device_of_a_departed_mac(
         assert await snmp.async_remove_config_entry_device(hass, entry, device)
 
 
+async def test_removed_tracker_is_added_again(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a MAC reported again after its device was removed is tracked."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+    macs = [MAC_BYTES]
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Yield the MACs of the table which is currently being walked."""
+        oid = Mock()
+        oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
+        for mac in macs:
+            yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
+
+    with patch_walk(mock_walk):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        device = _mac_device(hass, entry.entry_id)
+        assert device is not None
+        assert _async_mac_entity_id(hass, subentry_id) is not None
+
+        # The device leaves the table, the user removes it and it comes back
+        macs = []
+        await _async_advance_poll(hass, freezer)
+        assert await snmp.async_remove_config_entry_device(hass, entry, device)
+        device_registry.async_remove_device(device.id)
+        await hass.async_block_till_done()
+        assert _async_mac_entity_id(hass, subentry_id) is None
+
+        macs = [MAC_BYTES]
+        await _async_advance_poll(hass, freezer)
+
+    assert _async_mac_entity_id(hass, subentry_id) is not None
+
+
 async def test_remove_config_entry_device_of_the_snmp_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

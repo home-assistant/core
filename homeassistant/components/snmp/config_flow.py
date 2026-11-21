@@ -173,7 +173,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         )
 
 
-def _entry_title(data: dict[str, Any]) -> str:
+def _entry_title(data: Mapping[str, Any]) -> str:
     """Return the entry title, qualified by the context name when there is one.
 
     Two SNMPv3 devices on the same host can only be told apart by their context.
@@ -412,6 +412,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry = self._get_reauth_entry()
             else:
                 return self.async_create_entry(title=title, data=data)
+            if entry.title != _entry_title(entry.data):
+                # Keep the title the user gave the entry
+                title = entry.title
             if entry.update_listeners:
                 # The listener only reloads when the update changed the entry, and
                 # polling stopped on the failure, so an unchanged reauth reloads here

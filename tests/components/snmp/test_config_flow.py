@@ -1085,6 +1085,34 @@ async def test_reconfigure_flow_updates_credentials(
     assert mock_setup_entry.called
 
 
+async def test_reconfigure_flow_keeps_the_custom_title(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
+    """Test that a reconfigure keeps a title the user gave the entry."""
+    entry = mock_entry(baseoid=None, host="192.168.1.1", version="1")
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, title="Attic")
+    await hass.async_block_till_done()
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "1"}
+    )
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COMMUNITY: "private"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.title == "Attic"
+    assert mock_setup_entry.called
+
+
 async def test_reconfigure_flow_uses_update_listener(hass: HomeAssistant) -> None:
     """Test that a loaded entry is reloaded through its update listener."""
     entry = mock_entry()

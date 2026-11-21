@@ -221,10 +221,13 @@ def _error_status() -> Mock:
 
 
 @pytest.mark.parametrize(
-    "walk_result",
+    ("walk_result", "expected_state"),
     [
-        pytest.param((errind.requestTimedOut, None, None), id="errindication"),
-        pytest.param((None, _error_status(), 0), id="errstatus"),
+        pytest.param(
+            (errind.requestTimedOut, None, None), STATE_HOME, id="errindication"
+        ),
+        pytest.param((None, _error_status(), 0), STATE_HOME, id="errstatus"),
+        pytest.param((None, None, None), STATE_NOT_HOME, id="empty_table"),
     ],
 )
 async def test_yaml_device_tracker_failed_poll(
@@ -233,8 +236,9 @@ async def test_yaml_device_tracker_failed_poll(
     tmp_path: Path,
     freezer: FrozenDateTimeFactory,
     walk_result: tuple[Any, Any, Any],
+    expected_state: str,
 ) -> None:
-    """Test that a poll which fails drops the devices of the table."""
+    """Test that a failed poll keeps the devices and an empty table drops them."""
     hass.config.config_dir = str(tmp_path)
     mac_bytes = binascii.unhexlify("001122334455")
 
@@ -260,7 +264,7 @@ async def test_yaml_device_tracker_failed_poll(
 
     state = hass.states.get("device_tracker.00_11_22_33_44_55")
     assert state is not None
-    assert state.state == STATE_NOT_HOME
+    assert state.state == expected_state
     assert (
         issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
         is not None
