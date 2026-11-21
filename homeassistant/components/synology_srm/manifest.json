@@ -6,10 +6,11 @@
     "presence_location.network_presence"
   ],
   "codeowners": ["@aerialls"],
+  "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/synology_srm",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["synology_srm"],
-  "quality_scale": "legacy",
   "requirements": ["synology-srm==0.2.0"]
 }
