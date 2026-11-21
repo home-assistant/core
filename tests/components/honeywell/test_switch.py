@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from aiohttp import ClientConnectionError
 from aiosomecomfort.exceptions import SomeComfortError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -65,3 +66,37 @@ async def test_emheat_switch(
             blocking=True,
         )
     device.set_system_mode.assert_called_once_with("off")
+
+
+@pytest.mark.parametrize("error", [TimeoutError, ClientConnectionError])
+@pytest.mark.parametrize(
+    ("system_mode", "service", "translation_key"),
+    [
+        ("heat", SwitchService.TURN_ON, "switch_failed_on"),
+        ("emheat", SwitchService.TURN_OFF, "switch_failed_off"),
+    ],
+)
+async def test_emheat_switch_connection_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device: MagicMock,
+    system_mode: str,
+    service: SwitchService,
+    translation_key: str,
+    error: type[Exception],
+) -> None:
+    """Test timeouts and connection errors raise HomeAssistantError."""
+    await init_integration(hass, config_entry)
+    entity_id = f"switch.{device.name}_emergency_heat"
+    device.system_mode = system_mode
+    device.set_system_mode.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+    assert isinstance(exc_info.value.__cause__, error)
