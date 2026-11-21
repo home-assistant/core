@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
     Event,
@@ -39,7 +40,7 @@ from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import DOMAIN, TEMPERATURE_OPTIONS
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
@@ -997,6 +998,215 @@ async def test_options_functionality(
     }
     assert hass.states.is_state(
         entity_id, "laundry_care_washer_enum_type_temperature_ul_warm"
+    )
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+@pytest.mark.parametrize(
+    "active_selected",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_options_entities_available_non_writable(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    active_selected: EventKey,
+) -> None:
+    """Test that option enters in read-only mode when is not listed in available program.
+
+    The entity is still available because is listed as selected/active program option,
+    but because is not listed in available program options, it cannot be set.
+    """
+    entity_id = "select.washer_temperature"
+    client.get_active_program_options = client.get_selected_program_options = AsyncMock(
+        return_value=ArrayOfOptions(
+            [
+                Option(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+                    "LaundryCare.Washer.EnumType.Temperature.UlCold",
+                )
+            ]
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.LAUNDRY_CARE_WASHER_AUTO_40,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+                    "Enumeration",
+                    constraints=ProgramDefinitionConstraints(
+                        allowed_values=[
+                            "LaundryCare.Washer.EnumType.Temperature.UlCold",
+                            "LaundryCare.Washer.EnumType.Temperature.UlWarm",
+                        ]
+                    ),
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert set(state.attributes[ATTR_OPTIONS]) == {
+        "laundry_care_washer_enum_type_temperature_ul_cold",
+        "laundry_care_washer_enum_type_temperature_ul_warm",
+    }
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+        },
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+        value="LaundryCare.Washer.EnumType.Temperature.UlWarm",
+    )
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            active_selected,
+                            active_selected.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "laundry_care_washer_enum_type_temperature_ul_cold"
+    # Options are kept because we keep track of the constraints
+    assert set(state.attributes[ATTR_OPTIONS]) == {
+        "laundry_care_washer_enum_type_temperature_ul_cold",
+        "laundry_care_washer_enum_type_temperature_ul_warm",
+    }
+
+    client.set_active_program_option.reset_mock()
+    with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+            },
+            blocking=True,
+        )
+
+    client.set_active_program_option.assert_not_awaited()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+                            raw_key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="LaundryCare.Washer.EnumType.Temperature.UlCold",
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "laundry_care_washer_enum_type_temperature_ul_cold"
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_options_entities_error_obtaining_available_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test exposed options in option entities when cannot get options constraints.
+
+    The entity should expose all the options possible by default.
+    Setting the option should be also possible.
+    """
+    entity_id = "select.washer_temperature"
+    client.get_available_program.side_effect = HomeConnectError("error.key")
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [],
+            Program(
+                key=ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+                options=[
+                    Option(
+                        OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+                        "LaundryCare.Washer.EnumType.Temperature.UlCold",
+                    )
+                ],
+            ),
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert set(state.attributes[ATTR_OPTIONS]) == set(TEMPERATURE_OPTIONS.keys())
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+        },
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+        value="LaundryCare.Washer.EnumType.Temperature.UlWarm",
     )
 
 
