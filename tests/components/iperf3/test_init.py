@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 import time
 from unittest.mock import MagicMock, patch
 
@@ -62,56 +63,91 @@ async def test_waiting_hosts_do_not_hold_executor_threads(
     A test can hang inside libiperf. The hosts queued behind it must wait in the
     event loop, not in executor threads, or enough of them exhaust the executor.
     """
-    entered: list[str] = []
-    # The executor job itself, before it waits for the libiperf lock.
-    update_exclusively = Iperf3Data._update_exclusively
+    await setup_iperf3(hass, [HOST_1, HOST_2], manual=False)
 
-    def spy(self: Iperf3Data) -> None:
-        entered.append(self.host)
-        update_exclusively(self)
-
-    with patch.object(Iperf3Data, "_update_exclusively", spy):
-        await setup_iperf3(hass, [HOST_1, HOST_2], manual=False)
-
+    with patch.object(
+        hass, "async_add_executor_job", wraps=hass.async_add_executor_job
+    ) as add_executor_job:
         freezer.tick(DEFAULT_INTERVAL)
         async_fire_time_changed(hass)
         await blocking_run.async_wait_started(hass)
         # Give the other host the chance to enter an executor thread.
         await hass.async_add_executor_job(time.sleep, 0.2)
-        assert len(entered) == 1
+        assert _iperf3_jobs(add_executor_job) == [HOST_1]
 
         blocking_run.release.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert sorted(entered) == [HOST_1, HOST_2]
+    assert sorted(_iperf3_jobs(add_executor_job)) == [HOST_1, HOST_2]
+
+
+def _iperf3_jobs(add_executor_job: MagicMock) -> list[str]:
+    """Return the hosts whose iperf3 jobs were submitted to the executor."""
+    return [
+        call.args[0].__self__.host
+        for call in add_executor_job.call_args_list
+        if isinstance(getattr(call.args[0], "__self__", None), Iperf3Data)
+    ]
+
+
+def _fail_known(client: object) -> None:
+    """Fail the test with an error the integration expects."""
+    raise OSError("Connection refused")
+
+
+def _fail_unexpected(client: object) -> None:
+    """Fail the test with an error the integration doesn't expect."""
+    raise KeyError("end")
+
+
+def _parse_result(client: object) -> None:
+    """Fail to parse the result while holding the client in this frame."""
+    raise ValueError("Extra data")
+
+
+def _fail_chained(client: object) -> None:
+    """Fail the test with an unexpected error chained to another one."""
+    try:
+        _parse_result(client)
+    except ValueError as err:
+        raise KeyError("end") from err
 
 
 @pytest.mark.parametrize(
-    ("error", "logged"),
+    ("fail", "expectation", "logged"),
     [
         pytest.param(
-            lambda: OSError("Connection refused"),
+            _fail_known,
+            nullcontext,
             ["Iperf3 error: Connection refused"],
             id="known_error",
         ),
         pytest.param(
-            lambda: KeyError("end"),
-            [f"Unexpected error in the iperf3 test of {HOST_1}", "KeyError: 'end'"],
+            _fail_unexpected,
+            lambda: pytest.raises(KeyError),
+            [],
             id="unexpected_error",
+        ),
+        pytest.param(
+            _fail_chained,
+            lambda: pytest.raises(KeyError),
+            [],
+            id="chained_error",
         ),
     ],
 )
 async def test_client_freed_before_next_test_after_error(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
-    error: Callable[[], Exception],
+    fail: Callable[[object], None],
+    expectation: Callable[[], AbstractContextManager[object]],
     logged: list[str],
 ) -> None:
     """Test that a client is freed before the next test starts after an error.
 
     Deleting an iperf3 client calls into libiperf. A client kept alive by a
-    logged traceback would be deleted later, while another host's test runs.
+    traceback, logged or raised to the caller, would be deleted later, while
+    another host's test runs. Unexpected errors still fail the action.
     """
     alive = 0
     max_alive = 0
@@ -129,14 +165,13 @@ async def test_client_freed_before_next_test_after_error(
             alive -= 1
 
         def run(self) -> None:
-            raise error()
+            fail(self)
 
     with patch("homeassistant.components.iperf3.iperf3.Client", FakeClient):
-        await setup_iperf3(hass, [HOST_1, HOST_2], manual=False)
-
-        freezer.tick(DEFAULT_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await setup_iperf3(hass, [HOST_1, HOST_2], manual=True)
+        for host in (HOST_1, HOST_2):
+            with expectation():
+                await _speedtest(hass, host)
 
     assert max_alive == 1
     assert alive == 0

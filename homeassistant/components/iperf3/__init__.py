@@ -113,6 +113,18 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
+def _clear_frames(error: BaseException) -> None:
+    """Clear the traceback frames of an exception and of its whole chain."""
+    seen: set[int] = set()
+    pending: list[BaseException | None] = [error]
+    while pending:
+        if (exc := pending.pop()) is None or id(exc) in seen:
+            continue
+        seen.add(id(exc))
+        traceback.clear_frames(exc.__traceback__)
+        pending += (exc.__cause__, exc.__context__)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iperf3 component."""
     hass.data[DOMAIN] = {}
@@ -250,17 +262,16 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
-        # A log handler can keep the traceback, and with it the client
+        # A log record or a caller can keep the traceback, and with it the client
         try:
             result = self._run_client(test_type)
         except (AttributeError, OSError, ValueError) as error:
-            traceback.clear_frames(error.__traceback__)
+            _clear_frames(error)
             _LOGGER.error("Iperf3 error: %s", error)
             return None
         except Exception as error:
-            traceback.clear_frames(error.__traceback__)
-            _LOGGER.exception("Unexpected error in the iperf3 test of %s", self.host)
-            return None
+            _clear_frames(error)
+            raise
 
         if result is not None and hasattr(result, "error") and result.error is not None:
             _LOGGER.error("Iperf3 error: %s", result.error)
