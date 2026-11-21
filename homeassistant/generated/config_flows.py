@@ -105,6 +105,7 @@ FLOWS = {
         "backblaze_b2",
         "baf",
         "balboa",
+        "bambu_lab",
         "bang_olufsen",
         "bayesian",
         "besen",

@@ -235,6 +235,8 @@ AGENTS.md @home-assistant/core
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
 /tests/components/balboa/ @garbled1 @natekspencer
+/homeassistant/components/bambu_lab/ @joostlek @piitaya
+/tests/components/bambu_lab/ @joostlek @piitaya
 /homeassistant/components/bang_olufsen/ @mj23000
 /tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/battery/ @home-assistant/core
