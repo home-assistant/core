@@ -207,6 +207,10 @@ async def async_setup_entry(
     @callback
     def _add_new_sensors() -> None:
         """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
+        if garage := runtime.garage_coordinator.data:
+            # A vehicle that left took its entities along with its device.
+            current = {raw.vehicle_id for raw in garage}
+            added.difference_update([key for key in added if key[0] not in current])
         entities: list[SensorEntity] = []
         for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
@@ -227,6 +231,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     entry.async_on_unload(telemetry_coordinator.async_add_listener(_add_new_sensors))
+    entry.async_on_unload(
+        runtime.garage_coordinator.async_add_listener(_add_new_sensors)
+    )
     _add_new_sensors()
 
 

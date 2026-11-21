@@ -62,19 +62,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
     )
 
     device_registry = dr.async_get(hass)
-    known: set[int] = set()
 
     @callback
-    def _async_add_new_vehicles() -> None:
-        """Create a device per garage vehicle, then subscribe the stream to new ones."""
+    def _async_sync_vehicles() -> None:
+        """Mirror the garage into the device registry and the stream."""
+        identifiers: set[tuple[str, str]] = set()
         for raw in garage_coordinator.data:
-            scope = f"{entry.unique_id}_{raw.vehicle_id}"
+            identifier = (DOMAIN, f"{entry.unique_id}_{raw.vehicle_id}")
+            identifiers.add(identifier)
             manufacturer: str | Undefined | None = Undefined
             model: str | Undefined | None = Undefined
             if (display := raw.display) is not None:
                 manufacturer, model = display.manufacturer, display.model_name
-            elif raw.vehicle_id not in known:
-                # A known vehicle keeps what an earlier poll resolved.
+            elif (
+                device := device_registry.async_get_device_by_identifier(
+                    identifier, entry.entry_id
+                )
+            ) is None or (
+                device.manufacturer is None and device.model != raw.vehicle_model
+            ):
+                # A model resolved by an earlier poll is kept, also across reloads.
                 model = raw.vehicle_model
                 _LOGGER.info(
                     "No display metadata for vehicle %d (typecode %s); the device "
@@ -84,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
                 )
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, scope)},
+                identifiers={identifier},
                 manufacturer=manufacturer,
                 model=model,
                 name=raw.name or raw.vehicle_model,
@@ -92,11 +99,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
                     f"https://abetterrouteplanner.com/?vehicle_id={raw.vehicle_id}"
                 ),
             )
-        # Add-only: vehicles that leave the garage stay until the entry reloads.
-        known.update(raw.vehicle_id for raw in garage_coordinator.data)
-        stream.set_vehicle_ids(known)
+        stale = [
+            device.id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            )
+            if garage_coordinator.data and device.identifiers.isdisjoint(identifiers)
+        ]
+        for device_id in stale:
+            device_registry.async_remove_device(device_id)
+        stream.set_vehicle_ids({raw.vehicle_id for raw in garage_coordinator.data})
 
-    _async_add_new_vehicles()
+    _async_sync_vehicles()
     await stream.start()
     entry.async_on_unload(stream.stop)
 
@@ -112,9 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
         garage_coordinator=garage_coordinator,
         telemetry_coordinator=telemetry_coordinator,
     )
-    entry.async_on_unload(
-        garage_coordinator.async_add_listener(_async_add_new_vehicles)
-    )
+    entry.async_on_unload(garage_coordinator.async_add_listener(_async_sync_vehicles))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
