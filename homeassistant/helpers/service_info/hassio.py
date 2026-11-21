@@ -14,3 +14,5 @@ class HassioServiceInfo(BaseServiceInfo):
     name: str
     slug: str
     uuid: str
+    panel_admin: bool = True
+    """If the app's panel is limited to admin users, or its access is unknown."""

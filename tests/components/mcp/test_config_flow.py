@@ -18,6 +18,7 @@ from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
+    CONF_REQUIRES_ADMIN,
     CONF_SCOPE,
     CONF_SLUG,
     CONF_TOKEN_URL,
@@ -85,6 +86,13 @@ ADDON_DISCOVERY_INFO_WITH_TOKEN = HassioServiceInfo(
     name=ADDON_NAME,
     slug="example_mcp_server",
     uuid="1234",
+)
+ADDON_DISCOVERY_INFO_PANEL_FOR_ALL_USERS = HassioServiceInfo(
+    config={"addon": ADDON_NAME, CONF_URL: MCP_SERVER_URL},
+    name=ADDON_NAME,
+    slug="example_mcp_server",
+    uuid="1234",
+    panel_admin=False,
 )
 OAUTH_TOKEN_PAYLOAD = {
     "refresh_token": "mock-refresh-token",
@@ -1136,14 +1144,29 @@ async def test_reauth_flow_missing_implementation(
     [
         pytest.param(
             ADDON_DISCOVERY_INFO,
-            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: True,
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
             None,
             id="no_token",
+        ),
+        pytest.param(
+            ADDON_DISCOVERY_INFO_PANEL_FOR_ALL_USERS,
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: False,
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            None,
+            id="panel_for_all_users",
         ),
         pytest.param(
             ADDON_DISCOVERY_INFO_WITH_TOKEN,
             {
                 CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: True,
                 CONF_API_TOKEN: ADDON_TOKEN,
                 CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
             },
@@ -1222,27 +1245,51 @@ async def test_hassio_discovery_invalid_url(
     ("entry_data", "discovery_info", "expected_data"),
     [
         pytest.param(
-            {CONF_URL: "http://1.1.1.1:9999/mcp"},
+            {CONF_URL: "http://1.1.1.1:9999/mcp", CONF_REQUIRES_ADMIN: True},
             ADDON_DISCOVERY_INFO,
-            {CONF_URL: MCP_SERVER_URL},
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: True},
             id="app_moved",
         ),
         pytest.param(
-            {CONF_URL: MCP_SERVER_URL},
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: True},
             ADDON_DISCOVERY_INFO,
-            {CONF_URL: MCP_SERVER_URL},
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: True},
             id="app_restarted",
         ),
         pytest.param(
             {CONF_URL: MCP_SERVER_URL},
+            ADDON_DISCOVERY_INFO_PANEL_FOR_ALL_USERS,
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: False},
+            id="panel_access_added",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: False},
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: True},
+            id="panel_access_changed",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL, CONF_REQUIRES_ADMIN: True},
             ADDON_DISCOVERY_INFO_WITH_TOKEN,
-            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: ADDON_TOKEN},
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: True,
+                CONF_API_TOKEN: ADDON_TOKEN,
+            },
             id="token_added",
         ),
         pytest.param(
-            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "old-token"},
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: True,
+                CONF_API_TOKEN: "old-token",
+            },
             ADDON_DISCOVERY_INFO_WITH_TOKEN,
-            {CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: ADDON_TOKEN},
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_REQUIRES_ADMIN: True,
+                CONF_API_TOKEN: ADDON_TOKEN,
+            },
             id="token_changed",
         ),
     ],

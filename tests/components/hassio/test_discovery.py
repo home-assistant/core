@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
-from aiohasupervisor.models import Discovery
+from aiohasupervisor.models import Discovery, IngressPanel
 from aiohttp.test_utils import TestClient
 import pytest
 from pytest_homeassistant.common import (
@@ -486,3 +486,56 @@ async def test_hassio_rediscover_no_match(
         await hass.async_block_till_done()
 
         assert len(mock_init.mock_calls) == 0
+
+
+_PANEL_FOR_ADMINS = IngressPanel(title="App", icon=None, admin=True, enable=True)
+_PANEL_FOR_ALL_USERS = IngressPanel(title="App", icon=None, admin=False, enable=True)
+
+
+@pytest.mark.parametrize(
+    ("panels", "side_effect", "panel_admin"),
+    [
+        pytest.param({"mosquitto": _PANEL_FOR_ADMINS}, None, True, id="admin_panel"),
+        pytest.param(
+            {"mosquitto": _PANEL_FOR_ALL_USERS}, None, False, id="panel_for_all_users"
+        ),
+        pytest.param({"other": _PANEL_FOR_ALL_USERS}, None, True, id="no_panel"),
+        pytest.param({}, SupervisorError("boom"), True, id="panels_unavailable"),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client")
+async def test_hassio_discovery_panel_admin(
+    hass: HomeAssistant,
+    mock_mqtt: type[config_entries.ConfigFlow],
+    addon_installed: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+    ingress_panels: AsyncMock,
+    panels: dict[str, IngressPanel],
+    side_effect: Exception | None,
+    panel_admin: bool,
+) -> None:
+    """Test discovery passes if the app's panel is limited to admin users."""
+    get_addon_discovery_info.return_value = [
+        Discovery(
+            addon="mosquitto",
+            service="mqtt",
+            uuid=(uuid := uuid4()),
+            config={"broker": "mock-broker"},
+        )
+    ]
+    addon_installed.return_value.name = "Mosquitto Test"
+    ingress_panels.return_value = panels
+    ingress_panels.side_effect = side_effect
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    mock_mqtt.async_step_hassio.assert_called_once_with(
+        HassioServiceInfo(
+            config={"broker": "mock-broker", "addon": "Mosquitto Test"},
+            name="Mosquitto Test",
+            slug="mosquitto",
+            uuid=uuid.hex,
+            panel_admin=panel_admin,
+        )
+    )

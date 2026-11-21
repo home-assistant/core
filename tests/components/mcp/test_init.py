@@ -23,10 +23,10 @@ from mcp.types import (
 )
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 import respx
 
-from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
+from homeassistant.components.mcp.const import CONF_REQUIRES_ADMIN, CONF_SLUG, DOMAIN
 from homeassistant.components.mcp.coordinator import (
     META_USER_ID,
     create_mcp_httpx_client,
@@ -40,6 +40,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
+    Unauthorized,
 )
 from homeassistant.helpers import llm
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -1156,3 +1157,72 @@ async def test_llm_api_id(hass: HomeAssistant) -> None:
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
     assert api.id == "mcp-a0d7b954_mcp"
+
+
+async def _async_setup_server(
+    hass: HomeAssistant, source: str, data: dict[str, Any]
+) -> llm.API:
+    """Set up a server and return its LLM API."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        data={CONF_URL: MCP_SERVER_URL, CONF_SLUG: "app", **data},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    return next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+
+
+@pytest.mark.usefixtures("fake_mcp_server")
+@pytest.mark.parametrize(
+    ("source", "data", "expected"),
+    [
+        pytest.param(SOURCE_USER, {}, False, id="remote_server"),
+        pytest.param(
+            SOURCE_HASSIO, {CONF_REQUIRES_ADMIN: True}, True, id="app_admin_panel"
+        ),
+        pytest.param(
+            SOURCE_HASSIO,
+            {CONF_REQUIRES_ADMIN: False},
+            False,
+            id="app_panel_for_all_users",
+        ),
+        pytest.param(SOURCE_HASSIO, {}, True, id="app_not_rediscovered"),
+    ],
+)
+async def test_requires_admin(
+    hass: HomeAssistant, source: str, data: dict[str, Any], expected: bool
+) -> None:
+    """Test a server from an app is limited to admin users like the app's panel."""
+    api = await _async_setup_server(hass, source, data)
+
+    assert api.requires_admin is expected
+
+
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_app_admin_panel_denies_non_admin_users(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test only admin users get the tools of an app with an admin panel."""
+    api = await _async_setup_server(hass, SOURCE_HASSIO, {CONF_REQUIRES_ADMIN: True})
+
+    def llm_context(user: MockUser) -> llm.LLMContext:
+        return llm.LLMContext(
+            platform="test_platform",
+            context=Context(user_id=user.id),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        )
+
+    api_instance = await llm.async_get_api(hass, api.id, llm_context(hass_admin_user))
+    assert api_instance.tools
+
+    with pytest.raises(Unauthorized):
+        await llm.async_get_api(hass, api.id, llm_context(hass_read_only_user))
