@@ -50,6 +50,8 @@ UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
 # fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
 UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
 RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
+# The cloud sometimes rejects valid credentials; retry for this long before reauth
+AUTH_RETRY_WINDOW: Final = timedelta(minutes=15)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
