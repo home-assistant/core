@@ -4,6 +4,7 @@ from collections.abc import Generator, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
+from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -588,3 +589,63 @@ async def test_device_supports_timers(
     """Test a device with a timer list supports timers."""
     assert async_device_supports_timers(hass, devices[KITCHEN].device_id)
     assert not async_device_supports_timers(hass, "other_device")
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    ("slots", "start_time", "duration"),
+    [
+        pytest.param({"minutes": 5}, (0, 5, 0), 300, id="minutes"),
+        pytest.param({"minutes": 90}, (0, 90, 0), 5400, id="over-60-minutes"),
+        pytest.param({"seconds": 90}, (0, 0, 90), 90, id="over-60-seconds"),
+    ],
+)
+async def test_legacy_timer_status_after_changes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    slots: dict[str, int],
+    start_time: tuple[int, int, int],
+    duration: int,
+) -> None:
+    """Test legacy timer snapshots preserve remaining time and original units."""
+    device_id = "legacy_device"
+    async_register_timer_handler(hass, device_id, Mock())
+    await _handle(hass, intent.INTENT_START_TIMER, device_id, **slots)
+    freezer.tick(timedelta(seconds=30))
+
+    result = await _handle(hass, intent.INTENT_TIMER_STATUS, device_id)
+    timer = result.speech_slots["timers"][0]
+    assert timer["total_seconds_left"] == duration - 30
+    assert timer["is_active"] is True
+
+    await _handle(
+        hass,
+        intent.INTENT_INCREASE_TIMER,
+        device_id,
+        start_seconds=duration,
+        minutes=1,
+    )
+    result = await _handle(
+        hass, intent.INTENT_TIMER_STATUS, device_id, start_seconds=duration
+    )
+    timer = result.speech_slots["timers"][0]
+    assert (
+        timer["start_hours"],
+        timer["start_minutes"],
+        timer["start_seconds"],
+    ) == start_time
+    assert timer["total_seconds_left"] == duration + 30
+
+    await _handle(hass, intent.INTENT_PAUSE_TIMER, device_id)
+    freezer.tick(timedelta(minutes=10))
+    result = await _handle(hass, intent.INTENT_TIMER_STATUS, device_id)
+    timer = result.speech_slots["timers"][0]
+    assert timer["total_seconds_left"] == duration + 30
+    assert timer["is_active"] is False
+
+    await _handle(hass, intent.INTENT_UNPAUSE_TIMER, device_id)
+    freezer.tick(timedelta(seconds=15))
+    result = await _handle(hass, intent.INTENT_TIMER_STATUS, device_id)
+    timer = result.speech_slots["timers"][0]
+    assert timer["total_seconds_left"] == duration + 15
+    assert timer["is_active"] is True
