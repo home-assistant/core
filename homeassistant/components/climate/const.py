@@ -84,6 +84,8 @@ FAN_TOP = "top"
 FAN_MIDDLE = "middle"
 FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
+FAN_QUIET = "quiet"
+FAN_TURBO = "turbo"
 
 
 # Possible swing state

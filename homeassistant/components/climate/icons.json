@@ -40,7 +40,9 @@
             "medium": "mdi:speedometer-medium",
             "middle": "mdi:speedometer-medium",
             "off": "mdi:fan-off",
-            "on": "mdi:fan"
+            "on": "mdi:fan",
+            "quiet": "mdi:ear-hearing-off",
+            "turbo": "mdi:fan-plus"
           }
         },
         "hvac_action": {
