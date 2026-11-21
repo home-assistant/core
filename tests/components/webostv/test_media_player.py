@@ -926,6 +926,12 @@ SUPPORT_WEBOSTV_VOLUME_SET = (
             id="webos_24_tv_and_optical_not_syncable",
         ),
         pytest.param(
+            "tv_speaker",
+            WEBOS_24_ARC_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="webos_22_not_syncable_stale_sound_output",
+        ),
+        pytest.param(
             "external_arc",
             WEBOS_4_ARC_NO_SUPPORT_VOLUME,
             SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
