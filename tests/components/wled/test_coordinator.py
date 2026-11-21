@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 
 async def test_not_supporting_websocket(
@@ -237,6 +237,46 @@ async def test_websocket_disconnect_on_home_assistant_stop(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mock_wled.disconnect.call_count == 2
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_websocket_not_reconnected_when_home_assistant_stops(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure the WebSocket closed on stop is not reconnected by the next poll.
+
+    A reconnected WebSocket has no stop listener, so it outlives the stop and
+    gets closed with the shared client session, after which its poll fails.
+    """
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def listen(callback: Callable[[WLEDDevice], None]) -> None:
+        connection_connected.set_result(None)
+        await connection_finished
+
+    async def disconnect() -> None:
+        if not connection_finished.done():
+            connection_finished.set_exception(WLEDConnectionClosedError)
+
+    mock_wled.listen.side_effect = listen
+    mock_wled.disconnect.side_effect = disconnect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+    assert mock_wled.connect.call_count == 2
+    update_count = mock_wled.update.call_count
+
+    hass.set_state(CoreState.stopping)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Polling took over once the WebSocket closed, without reconnecting it
+    assert mock_wled.update.call_count == update_count + 1
+    assert mock_wled.connect.call_count == 2
 
 
 async def test_fail_when_other_device(
