@@ -144,10 +144,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         _LOGGER.debug("SNMP target creation failed: %s", err)
         raise CannotConnect from err
 
-    try:
-        auth_data = create_auth_data(data, version)
-    except PySnmpError as err:
-        raise InvalidAuth from err
+    # The coherence check of the v3 step keeps pysnmp from refusing the credentials
+    auth_data = create_auth_data(data, version)
 
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.

@@ -2,7 +2,7 @@
 
 import binascii
 from collections.abc import AsyncIterator, Callable
-from itertools import cycle
+from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysnmp.error import PySnmpError
 from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
+from pysnmp.proto.rfc1905 import EndOfMibView
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -22,10 +23,18 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
-from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.snmp.const import (
+    CONF_AUTH_KEY,
+    CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
-from homeassistant.components.snmp.device_tracker import SnmpScanner, async_get_scanner
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PLATFORM,
     STATE_HOME,
     STATE_NOT_HOME,
@@ -110,35 +119,152 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_yaml_device_tracker_repair(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that the YAML platform still works and raises the removal repair."""
-    config = {
+def _yaml_config(**overrides: Any) -> dict[str, Any]:
+    """Return a legacy YAML device tracker config for the ARP table."""
+    return {
         DEVICE_TRACKER_DOMAIN: {
             CONF_PLATFORM: "snmp",
-            "host": "192.168.1.1",
-            "community": "public",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
+            CONF_HOST: "192.168.1.1",
+            CONF_COMMUNITY: "public",
+            CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2",
+            **overrides,
         }
     }
 
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param({}, id="community"),
+        pytest.param({CONF_AUTH_KEY: "auth", CONF_PRIV_KEY: "priv"}, id="keys"),
+    ],
+)
+async def test_yaml_device_tracker_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+    credentials: dict[str, str],
+) -> None:
+    """Test that the YAML platform tracks a device and raises the removal repair."""
+    # The legacy platform stores the devices it tracks in known_devices.yaml
+    hass.config.config_dir = str(tmp_path)
+    mac_bytes = binascii.unhexlify("001122334455")
+    not_an_address = Mock()
+    not_an_address.asOctets.side_effect = AttributeError
+
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield None, None, None, []
+        yield (
+            None,
+            None,
+            None,
+            [
+                (Mock(), OctetString(mac_bytes)),
+                (Mock(), not_an_address),
+            ],
+        )
 
     with patch(
         "homeassistant.components.snmp.device_tracker.bulk_walk_cmd",
         side_effect=mock_walk,
     ):
-        assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, config)
+        assert await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, _yaml_config(**credentials)
+        )
         await hass.async_block_till_done()
+
+    # The row which is not an address is skipped, so the table holds one device
+    assert len(hass.states.async_all(DEVICE_TRACKER_DOMAIN)) == 1
+    state = hass.states.get("device_tracker.00_11_22_33_44_55")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["mac"] == MAC
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
     assert issue is not None
     assert issue.translation_key == "deprecated_yaml_device_tracker"
     assert issue.breaks_in_ha_version == "2027.5.0"
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_yaml_device_tracker_unreachable_host(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test that a host which is neither IPv4 nor IPv6 still raises the repair."""
+    hass.config.config_dir = str(tmp_path)
+    with (
+        patch(
+            "homeassistant.components.snmp.device_tracker.UdpTransportTarget.create",
+            side_effect=PySnmpError("no ipv4"),
+        ),
+        patch(
+            "homeassistant.components.snmp.device_tracker.Udp6TransportTarget",
+            side_effect=PySnmpError("no ipv6"),
+        ),
+    ):
+        await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, _yaml_config())
+        await hass.async_block_till_done()
+
+    assert hass.states.async_all(DEVICE_TRACKER_DOMAIN) == []
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
+        is not None
+    )
+
+
+def _error_status() -> Mock:
+    """Return an SNMP error status."""
+    errstatus = Mock()
+    errstatus.prettyPrint.return_value = "authorizationError"
+    return errstatus
+
+
+@pytest.mark.parametrize(
+    "walk_result",
+    [
+        pytest.param((errind.requestTimedOut, None, None), id="errindication"),
+        pytest.param((None, _error_status(), 0), id="errstatus"),
+    ],
+)
+async def test_yaml_device_tracker_failed_poll(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+    freezer: FrozenDateTimeFactory,
+    walk_result: tuple[Any, Any, Any],
+) -> None:
+    """Test that a poll which fails drops the devices of the table."""
+    hass.config.config_dir = str(tmp_path)
+    mac_bytes = binascii.unhexlify("001122334455")
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        yield None, None, None, [(Mock(), OctetString(mac_bytes))]
+
+    async def mock_failed_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        yield (*walk_result, [])
+
+    # The scanner walks once to validate the target and once per poll
+    with patch(
+        "homeassistant.components.snmp.device_tracker.bulk_walk_cmd",
+        side_effect=[mock_walk(), mock_walk(), mock_failed_walk()],
+    ):
+        assert await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, _yaml_config(**{CONF_CONSIDER_HOME: 0})
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("device_tracker.00_11_22_33_44_55")
+        assert state is not None and state.state == STATE_HOME
+
+        await _async_advance_poll(hass, freezer)
+
+    state = hass.states.get("device_tracker.00_11_22_33_44_55")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("mock_walk")
@@ -615,211 +741,28 @@ async def test_walk_end_of_mib(
     enable_tracker: Callable[[str], None],
 ) -> None:
     """Test that walk stops when end of MIB is reached."""
-    mac1_bytes = binascii.unhexlify("001122334455")
-    mac2_bytes = binascii.unhexlify("aabbccddeeff")
-    oid1 = Mock()
-    oid1.asTuple.return_value = (1, 192, 168, 1, 1)
-    oid2 = Mock()
-    oid2.asTuple.return_value = (1, 192, 168, 1, 2)
+    mac_bytes = binascii.unhexlify("001122334455")
+    oid = Mock()
+    oid.asTuple.return_value = (1, 192, 168, 1, 1)
 
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield None, None, None, [(oid1, OctetString(mac1_bytes))]
-        yield None, None, None, [(oid2, OctetString(mac2_bytes))]
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
+        yield None, None, None, [(oid, EndOfMibView())]
 
     enable_tracker(MAC)
 
-    with (
-        patch_walk(mock_walk),
-        patch(
-            "homeassistant.components.snmp.client.is_end_of_mib",
-            side_effect=cycle((False, True)),
-        ),
-    ):
+    with patch_walk(mock_walk):
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    # First MAC should have been processed (is_end_of_mib returned False)
-    entity_id_1 = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
-    assert entity_id_1 is not None
-    state = hass.states.get(entity_id_1)
+    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
 
-    # Second MAC should NOT have been processed (is_end_of_mib returned True)
-    entity_id_2 = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC2)
-    assert entity_id_2 is None
-
-
-def _scanner_config(**overrides: str) -> dict:
-    """Return a YAML device tracker config for the scanner."""
-    return {
-        DEVICE_TRACKER_DOMAIN: {
-            CONF_PLATFORM: "snmp",
-            "host": "192.168.1.1",
-            "community": "public",
-            "baseoid": "1.3.6.1.2.1.4.22.1.2",
-            **overrides,
-        }
-    }
-
-
-@pytest.mark.parametrize(
-    "overrides",
-    [
-        pytest.param({}, id="community"),
-        pytest.param({"auth_key": "auth"}, id="auth_only"),
-        pytest.param({"auth_key": "auth", "priv_key": "priv"}, id="auth_and_priv"),
-    ],
-)
-def test_scanner_auth_data(overrides: dict[str, str]) -> None:
-    """Test scanner creation for the supported credential combinations."""
-    config = _scanner_config(**overrides)[DEVICE_TRACKER_DOMAIN]
-    scanner = SnmpScanner(config)
-    assert scanner.baseoid == "1.3.6.1.2.1.4.22.1.2"
-    assert scanner.success_init is False
-
-
-def test_scanner_privacy_without_auth_raises() -> None:
-    """Test that a privacy key without an authentication key is rejected."""
-    config = _scanner_config(priv_key="priv")[DEVICE_TRACKER_DOMAIN]
-    with pytest.raises(PySnmpError):
-        SnmpScanner(config)
-
-
-async def test_scanner_create_ipv6_fallback() -> None:
-    """Test that an IPv4 failure falls back to IPv6."""
-    config = _scanner_config()[DEVICE_TRACKER_DOMAIN]
-    with (
-        patch(
-            "homeassistant.components.snmp.device_tracker.UdpTransportTarget.create",
-            side_effect=PySnmpError("no ipv4"),
-        ),
-        patch(
-            "homeassistant.components.snmp.device_tracker.Udp6TransportTarget",
-            return_value=Mock(),
-        ),
-    ):
-        scanner = await SnmpScanner.create(config)
-
-    assert scanner is not None
-
-
-async def test_scanner_create_invalid_host() -> None:
-    """Test that an unreachable host yields no scanner."""
-    config = _scanner_config()[DEVICE_TRACKER_DOMAIN]
-    with (
-        patch(
-            "homeassistant.components.snmp.device_tracker.UdpTransportTarget.create",
-            side_effect=PySnmpError("no ipv4"),
-        ),
-        patch(
-            "homeassistant.components.snmp.device_tracker.Udp6TransportTarget",
-            side_effect=PySnmpError("no ipv6"),
-        ),
-    ):
-        assert await SnmpScanner.create(config) is None
-
-
-async def test_scanner_scan_devices() -> None:
-    """Test the DeviceScanner interface of the legacy scanner."""
-    scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
-    scanner.success_init = True
-    scanner.last_results = [{"mac": MAC}, {}]
-
-    with patch.object(scanner, "async_get_snmp_data", return_value=[{"mac": MAC}]):
-        assert await scanner.async_scan_devices() == [MAC]
-
-    assert await scanner.async_get_device_name(MAC) is None
-    assert await scanner.async_get_extra_attributes(MAC) == {"mac": MAC}
-    assert await scanner.async_get_extra_attributes("other") == {}
-
-
-async def test_scanner_update_not_initialized() -> None:
-    """Test that an uninitialized scanner reports no devices."""
-    scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
-    assert await scanner.async_scan_devices() == []
-
-
-async def test_scanner_walk_errindication() -> None:
-    """Test that a walk error indication yields no data."""
-    scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
-    scanner.request_args = (Mock(), Mock(), Mock(), Mock(), Mock())
-
-    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield errind.requestTimedOut, None, None, []
-
-    with patch(
-        "homeassistant.components.snmp.device_tracker.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
-        assert await scanner.async_get_snmp_data() is None
-
-
-async def test_scanner_walk_errstatus() -> None:
-    """Test that an SNMP error status yields no data."""
-    scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
-    scanner.request_args = (Mock(), Mock(), Mock(), Mock(), Mock())
-    errstatus = Mock()
-    errstatus.prettyPrint.return_value = "authorizationError"
-
-    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield None, errstatus, 0, []
-
-    with patch(
-        "homeassistant.components.snmp.device_tracker.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
-        assert await scanner.async_get_snmp_data() is None
-
-
-async def test_scanner_walk_mac() -> None:
-    """Test parsing MACs from the walk and skipping unusable values."""
-    scanner = SnmpScanner(_scanner_config()[DEVICE_TRACKER_DOMAIN])
-    scanner.request_args = (Mock(), Mock(), Mock(), Mock(), Mock())
-    bad_value = Mock()
-    bad_value.asOctets.side_effect = AttributeError
-
-    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        yield (
-            None,
-            None,
-            None,
-            [
-                (Mock(), OctetString(binascii.unhexlify("001122334455"))),
-                (Mock(), bad_value),
-            ],
-        )
-
-    with (
-        patch(
-            "homeassistant.components.snmp.device_tracker.bulk_walk_cmd",
-            side_effect=mock_walk,
-        ),
-        patch(
-            "homeassistant.components.snmp.device_tracker.is_end_of_mib",
-            return_value=False,
-        ),
-    ):
-        assert await scanner.async_get_snmp_data() == [{"mac": MAC}]
-
-
-async def test_async_get_scanner_invalid_host(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that an invalid host returns no scanner but still raises the repair."""
-    config = _scanner_config()
-
-    with patch(
-        "homeassistant.components.snmp.device_tracker.SnmpScanner.create",
-        return_value=None,
-    ):
-        assert await async_get_scanner(hass, config) is None
-
-    assert (
-        issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
-        is not None
-    )
+    # The end of MIB stops the walk, it is not a row of the table
+    assert len(hass.states.async_all(DEVICE_TRACKER_DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("mock_walk")

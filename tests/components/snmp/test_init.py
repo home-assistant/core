@@ -372,23 +372,20 @@ async def test_walk_auth_indication_triggers_reauth(
     assert _async_reauth_flow(hass)
 
 
-async def test_auth_data_auth_error(hass: HomeAssistant) -> None:
-    """Test that credentials which cannot be built fail the setup."""
+async def test_setup_with_a_privacy_key_without_an_authentication_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test that stored credentials which pysnmp refuses fail the setup."""
     entry = mock_entry(
         host="1.2.3.4",
         version="3",
         username="test-user",
-        auth_key="auth-key",
-        auth_protocol="hmac-sha",
+        priv_key="priv-key",
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.util.UsmUserData",
-        side_effect=WrongValueError,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 

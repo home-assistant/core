@@ -73,22 +73,15 @@ class SnmpScanner(DeviceScanner):
         community = config[CONF_COMMUNITY]
         baseoid = config[CONF_BASEOID]
         authkey = config.get(CONF_AUTH_KEY)
-        authproto = DEFAULT_AUTH_PROTOCOL
         privkey = config.get(CONF_PRIV_KEY)
-        privproto = DEFAULT_PRIV_PROTOCOL
 
         if authkey is not None or privkey is not None:
-            if not authkey:
-                authproto = "none"
-            if not privkey:
-                privproto = "none"
-
             self._auth_data = UsmUserData(
                 community,
                 authKey=authkey or None,
                 privKey=privkey or None,
-                authProtocol=authproto,
-                privProtocol=privproto,
+                authProtocol=DEFAULT_AUTH_PROTOCOL,
+                privProtocol=DEFAULT_PRIV_PROTOCOL,
             )
         else:
             self._auth_data = CommunityData(
@@ -98,7 +91,6 @@ class SnmpScanner(DeviceScanner):
         self._target: UdpTransportTarget | Udp6TransportTarget
         self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
-        self.last_results: list[dict[str, str]] = []
         self.success_init = False
 
     @classmethod
@@ -139,8 +131,9 @@ class SnmpScanner(DeviceScanner):
     @override
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        await self._async_update_info()
-        return [client["mac"] for client in self.last_results if client.get("mac")]
+        if not (data := await self.async_get_snmp_data()):
+            return []
+        return [client["mac"] for client in data]
 
     @override
     async def async_get_device_name(self, device: str) -> str | None:
@@ -151,24 +144,7 @@ class SnmpScanner(DeviceScanner):
     @override
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Return extra attributes of the given device."""
-        for client in self.last_results:
-            if client.get("mac") and device == client["mac"]:
-                return {"mac": client["mac"]}
-        return {}
-
-    async def _async_update_info(self):
-        """Ensure the information from the device is up to date.
-
-        Return boolean if scanning successful.
-        """
-        if not self.success_init:
-            return False
-
-        if not (data := await self.async_get_snmp_data()):
-            return False
-
-        self.last_results = data
-        return True
+        return {"mac": device}
 
     async def async_get_snmp_data(self):
         """Fetch MAC addresses from access point via SNMP."""

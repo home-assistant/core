@@ -777,19 +777,6 @@ def _transport_failures() -> list[tuple[str, dict[str, Any]]]:
             id="wrong_value_error",
         ),
         pytest.param(
-            "3",
-            [
-                (
-                    "homeassistant.components.snmp.util.UsmUserData",
-                    {"side_effect": PySnmpError},
-                )
-            ],
-            {CONF_USERNAME: "test-user"},
-            {CONF_USERNAME: "test-user"},
-            {"base": "invalid_auth"},
-            id="auth_creation_error",
-        ),
-        pytest.param(
             "1",
             _transport_failures(),
             {CONF_COMMUNITY: "public"},

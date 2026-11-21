@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ContextData,
@@ -17,7 +18,6 @@ from pysnmp.hlapi.v3arch.asyncio import (
     is_end_of_mib,
     walk_cmd,
 )
-from pysnmp.smi.error import WrongValueError
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -76,7 +76,8 @@ class SnmpClient:
 
         try:
             auth_data = create_auth_data(data, version)
-        except WrongValueError as err:
+        except PySnmpError as err:
+            # pysnmp refuses keys and protocols which do not pair up
             raise ConfigEntryAuthFailed(
                 f"Invalid authentication credentials or protocols: {err}"
             ) from err
