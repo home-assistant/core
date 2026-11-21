@@ -153,19 +153,35 @@ async def async_setup_entry(
 ) -> None:
     """Set up Actron Air sensor entities."""
     system_coordinators = entry.runtime_data.system_coordinators
-    entities: list[SensorEntity] = []
 
     for coordinator in system_coordinators.values():
-        entities.extend(
+        async_add_entities(
             ActronAirSensor(coordinator, description) for description in SENSORS
         )
-        entities.extend(
-            ActronAirPeripheralSensor(coordinator, peripheral, description)
-            for peripheral in coordinator.data.peripherals
-            for description in PERIPHERAL_SENSORS
-        )
 
-    async_add_entities(entities)
+        def _create_peripheral_listener(
+            coordinator: ActronAirSystemCoordinator,
+        ) -> Callable[[], None]:
+            added_peripheral_serials: set[str] = set()
+
+            def _async_add_new_peripherals() -> None:
+                new_serials, peripherals = coordinator.get_new_peripherals(
+                    added_peripheral_serials
+                )
+                added_peripheral_serials.update(peripherals)
+                async_add_entities(
+                    ActronAirPeripheralSensor(
+                        coordinator, peripherals[serial], description
+                    )
+                    for serial in new_serials
+                    for description in PERIPHERAL_SENSORS
+                )
+
+            return _async_add_new_peripherals
+
+        add_new_peripherals = _create_peripheral_listener(coordinator)
+        entry.async_on_unload(coordinator.async_add_listener(add_new_peripherals))
+        add_new_peripherals()
 
 
 class ActronAirSensor(ActronAirAcEntity, SensorEntity):
