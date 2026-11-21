@@ -228,6 +228,7 @@ async def _async_validate_config_item(  # noqa: C901
 
     try:
         validated_config = PLATFORM_SCHEMA(config)
+        script.async_validate_stored_variables_config(hass, validated_config)
     except probatio.Invalid as err:
         _log_invalid_automation(err, automation_name, "could not be validated", config)
         if raise_on_errors:

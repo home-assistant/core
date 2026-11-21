@@ -348,6 +348,17 @@ async def test_bad_config_validation_critical(
             "Stored variables must not also be defined in fields: count",
             "validation_failed_schema",
         ),
+        (
+            "bad_script",
+            {
+                "stored_variables": {"value": "{{ states('sensor.test') }}"},
+                "sequence": [],
+            },
+            "could not be validated",
+            "Invalid default of a stored variable: TemplateError: Use of 'states'"
+            " is not supported in limited templates",
+            "validation_failed_schema",
+        ),
     ],
 )
 async def test_bad_config_validation(

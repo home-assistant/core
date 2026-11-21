@@ -31,6 +31,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     async_validate_actions_config,
+    async_validate_stored_variables_config,
     make_script_schema,
 )
 from homeassistant.helpers.selector import validate_selector
@@ -245,6 +246,7 @@ async def _async_validate_config_item(
         raise
     try:
         validated_config = SCRIPT_ENTITY_SCHEMA(config)
+        async_validate_stored_variables_config(hass, validated_config)
     except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:

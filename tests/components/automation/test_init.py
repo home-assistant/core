@@ -1929,6 +1929,18 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             "Stored variables require the automation to have an id",
             "validation_failed_schema",
         ),
+        (
+            {
+                "id": "bad_automation_id",
+                "stored_variables": {"value": "{{ states('sensor.test') }}"},
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            "could not be validated",
+            "Invalid default of a stored variable: TemplateError: Use of 'states'"
+            " is not supported in limited templates",
+            "validation_failed_schema",
+        ),
     ],
 )
 async def test_automation_bad_config_validation(
@@ -1970,7 +1982,7 @@ async def test_automation_bad_config_validation(
     assert issues[0]["issue_id"] == f"automation.bad_automation_{issue}"
     assert issues[0]["translation_key"] == issue
     assert issues[0]["translation_placeholders"] == {
-        "edit": "/config/automation/edit/None",
+        "edit": f"/config/automation/edit/{broken_config.get('id')}",
         "entity_id": "automation.bad_automation",
         "error": ANY,
         "name": "bad_automation",
@@ -3621,34 +3633,6 @@ async def test_automation_stored_variables_reset_and_read(
     msg = await read("automation.not_exist")
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
-
-
-async def test_automation_stored_variables_default_error(
-    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a default which is not a limited template stops the automation."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "id": "hello_id",
-                "alias": "hello",
-                "stored_variables": {"value": "{{ states('sensor.test') }}"},
-                "triggers": {"trigger": "event", "event_type": "test_event"},
-                "actions": {"action": "test.automation"},
-            }
-        },
-    )
-    assert (
-        "Error rendering defaults of stored variables of automation.hello"
-    ) in caplog.text
-
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
-
-    assert len(calls) == 0
-    assert "Error rendering variables" in caplog.text
 
 
 async def test_automation_stored_variables_reload(

@@ -1578,6 +1578,25 @@ RESET_STORED_VARIABLES_SCHEMA: VolDictType = {
 
 
 @callback
+def async_validate_stored_variables_config(
+    hass: HomeAssistant, config: ConfigType
+) -> None:
+    """Validate the defaults of stored variables can be rendered and stored.
+
+    Defaults are limited templates, which is only checked when rendering.
+    """
+    if CONF_STORED_VARIABLES not in config:
+        return
+    try:
+        StoredVariables(config[CONF_STORED_VARIABLES]).async_set_missing_defaults(hass)
+    except exceptions.HomeAssistantError as err:
+        raise probatio.Invalid(
+            f"Invalid default of a stored variable: {err}",
+            path=[CONF_STORED_VARIABLES],
+        ) from err
+
+
+@callback
 def async_reset_stored_variables(
     hass: HomeAssistant,
     entity_id: str,
