@@ -231,6 +231,12 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
                 raise
 
         async with self._reconnect_lock:
+            try:
+                return await method()
+            except ChannelOpenError as exc:
+                if not ssh_session_closed(exc):
+                    raise
+
             _LOGGER.debug("SSH session to %s is closed; reconnecting", self.host)
             await self.async_disconnect()
             await self._api.connection.async_connect()

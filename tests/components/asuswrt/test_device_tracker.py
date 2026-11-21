@@ -1,5 +1,6 @@
 """Tests for the AsusWrt device tracker."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -163,7 +164,7 @@ async def test_closed_ssh_session_retries_query_once(
 
     updated = dict(mock_devices_legacy)
     updated[MOCK_MACS[0]] = new_device(PROTOCOL_SSH, MOCK_MACS[0], "10.0.0.9", "Test")
-    failures = [_closed_session() for _ in range(closed_attempts)]
+    failures = [_closed_session() for _ in range(closed_attempts + 1)]
     connect_legacy.return_value.async_get_connected_devices.side_effect = [
         *failures,
         updated,
@@ -177,8 +178,64 @@ async def test_closed_ssh_session_retries_query_once(
     assert hass.states.get("device_tracker.test").attributes["ip"] == expected_ip
     assert connect_legacy.return_value.async_disconnect.await_count == 1
     assert connect_legacy.return_value.connection.async_connect.await_count == 2
-    assert connect_legacy.return_value.async_get_connected_devices.await_count == 3
+    assert connect_legacy.return_value.async_get_connected_devices.await_count == 4
     assert ("Error connecting to ASUS router" in caplog.text) is logs_error
+
+
+async def test_concurrent_closed_sessions_reconnect_once(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    connect_legacy,
+    mock_devices_legacy: dict[str, LegacyDevice],
+) -> None:
+    """Reconnect once when several callers observe the same closed session."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_SSH, unique_id=ROUTER_MAC_ADDR
+    )
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        DOMAIN,
+        MOCK_MACS[0],
+        suggested_object_id="test",
+        config_entry=config_entry,
+        disabled_by=None,
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated = dict(mock_devices_legacy)
+    updated[MOCK_MACS[0]] = new_device(PROTOCOL_SSH, MOCK_MACS[0], "10.0.0.9", "Test")
+    session_closed = True
+    failed_outside = 0
+    both_failed = asyncio.Event()
+
+    async def get_devices() -> dict[str, LegacyDevice]:
+        nonlocal failed_outside
+        if not session_closed:
+            return updated
+        failed_outside += 1
+        if failed_outside == 2:
+            both_failed.set()
+        elif failed_outside < 2:
+            await both_failed.wait()
+        raise _closed_session()
+
+    def restore_session() -> None:
+        nonlocal session_closed
+        session_closed = False
+
+    connect_legacy.return_value.async_get_connected_devices.side_effect = get_devices
+    connect_legacy.return_value.connection.async_connect.side_effect = restore_session
+
+    await asyncio.gather(
+        config_entry.runtime_data.update_devices(),
+        config_entry.runtime_data.update_devices(),
+    )
+
+    assert hass.states.get("device_tracker.test").attributes["ip"] == "10.0.0.9"
+    assert connect_legacy.return_value.async_disconnect.await_count == 1
+    assert connect_legacy.return_value.connection.async_connect.await_count == 2
 
 
 async def test_other_ssh_channel_error_does_not_reconnect(
