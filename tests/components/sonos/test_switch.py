@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from copy import copy
-from datetime import time, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -768,25 +768,31 @@ async def test_alarms_multiple_households(
     soco_b.alarmClock.ListAlarms.assert_called_once()
     assert "Could not refresh" not in caplog.text
 
-    # update_alarm works for each household and updates that household's alarm.
-    for entity_id, alarm_clock_mock in (
-        ("media_player.zone_a", alarm_clock),
-        ("media_player.bedroom", soco_b.alarmClock),
+    # update_alarm works for each household, and toggling that household's
+    # alarm switch keeps the updated time.
+    for media_player, switch, alarm_clock_mock in (
+        ("media_player.zone_a", "switch.zone_a_daily_alarm_07_00", alarm_clock),
+        ("media_player.bedroom", "switch.bedroom_daily_alarm_08_00", soco_b.alarmClock),
     ):
         await hass.services.async_call(
             DOMAIN,
             SonosService.UPDATE_ALARM,
             {
-                TargetKey.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: media_player,
                 SonosServiceArgument.ALARM_ID: 14,
                 SonosServiceArgument.TIME: "09:30:00",
             },
             blocking=True,
         )
-        alarm_clock_mock.UpdateAlarm.assert_called_once()
-    data = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
-    assert data.alarms["test_household_id"].get("14").start_time == time(9, 30)
-    assert data.alarms["household_b"].get("14").start_time == time(9, 30)
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TOGGLE,
+            {ATTR_ENTITY_ID: switch},
+            blocking=True,
+        )
+        assert alarm_clock_mock.UpdateAlarm.call_count == 2
+        sent = dict(alarm_clock_mock.UpdateAlarm.call_args.args[0])
+        assert sent["StartLocalTime"] == "09:30:00"
 
 
 async def test_alarm_setup_for_undiscovered_speaker(
