@@ -1,0 +1,133 @@
+"""Tests for the Homey Energy Dongle integration."""
+
+from dsmr_parser.objects import Telegram
+from homey_energy_dongle_ws import parse_telegram
+from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
+
+DONGLE_ID = "37e4"
+EQUIPMENT_IDENTIFIER = "4B384547303034303436333935353037"
+GAS_METER_IDENTIFIER = "3232323241424344313233343536373839"
+EON_HU_IDENTIFIER = "53414733303832323030303032313630"
+EON_HU_SERIAL_NUMBER = "383930303832323030303032313630"
+
+
+def parse(telegram: str, dsmr_version: str = "5") -> Telegram:
+    """Parse a test telegram, which may have been edited without a new CRC."""
+    return parse_telegram(
+        telegram,
+        telegram_specification=TELEGRAM_SPECIFICATIONS[dsmr_version],
+        apply_checksum_validation=False,
+    )
+
+
+# DSMR 5 telegram from a Dutch meter with an M-Bus gas meter on channel 1.
+TELEGRAM_V5 = (
+    "/ISk5\\2MT382-1000\r\n"
+    "\r\n"
+    "1-3:0.2.8(50)\r\n"
+    "0-0:1.0.0(170102192002W)\r\n"
+    f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})\r\n"
+    "1-0:1.8.1(000004.426*kWh)\r\n"
+    "1-0:1.8.2(000002.399*kWh)\r\n"
+    "1-0:2.8.1(000002.444*kWh)\r\n"
+    "1-0:2.8.2(000000.000*kWh)\r\n"
+    "0-0:96.14.0(0002)\r\n"
+    "1-0:1.7.0(00.244*kW)\r\n"
+    "1-0:2.7.0(00.000*kW)\r\n"
+    "0-0:96.7.21(00013)\r\n"
+    "0-0:96.7.9(00000)\r\n"
+    "1-0:32.32.0(00000)\r\n"
+    "1-0:52.32.0(00000)\r\n"
+    "1-0:72.32.0(00000)\r\n"
+    "1-0:32.36.0(00000)\r\n"
+    "1-0:52.36.0(00000)\r\n"
+    "1-0:72.36.0(00000)\r\n"
+    "1-0:32.7.0(0230.0*V)\r\n"
+    "1-0:52.7.0(0230.0*V)\r\n"
+    "1-0:72.7.0(0229.0*V)\r\n"
+    "1-0:31.7.0(0.48*A)\r\n"
+    "1-0:51.7.0(0.44*A)\r\n"
+    "1-0:71.7.0(0.86*A)\r\n"
+    "1-0:21.7.0(00.070*kW)\r\n"
+    "1-0:41.7.0(00.032*kW)\r\n"
+    "1-0:61.7.0(00.142*kW)\r\n"
+    "1-0:22.7.0(00.000*kW)\r\n"
+    "1-0:42.7.0(00.000*kW)\r\n"
+    "1-0:62.7.0(00.000*kW)\r\n"
+    "0-1:24.1.0(003)\r\n"
+    f"0-1:96.1.0({GAS_METER_IDENTIFIER})\r\n"
+    "0-1:24.2.1(170102161005W)(00000.107*m3)\r\n"
+    "!EFF0\r\n"
+)
+
+# The same dongle address now reads another electricity meter.
+TELEGRAM_OTHER_METER = TELEGRAM_V5.replace(EQUIPMENT_IDENTIFIER, "1" * 32)
+
+# E.ON Hungary telegram, which names the meter's identifiers differently.
+TELEGRAM_EON_HU = (
+    "/SAG5SAG-METER\r\n"
+    "\r\n"
+    "0-0:1.0.0(230724150730S)\r\n"
+    f"0-0:42.0.0({EON_HU_IDENTIFIER})\r\n"
+    f"0-0:96.1.0({EON_HU_SERIAL_NUMBER})\r\n"
+    "1-0:1.8.0(000173.640*kWh)\r\n"
+    "1-0:1.7.0(00.000*kW)\r\n"
+    "1-0:2.7.0(02.601*kW)\r\n"
+    "!0000\r\n"
+)
+
+# DSMR 2.2 telegram, which reports the gas meter in the older profile format.
+TELEGRAM_V2_2 = (
+    "/ISk5\\2MT382-1004\r\n"
+    "\r\n"
+    f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})\r\n"
+    "1-0:1.8.1(00001.001*kWh)\r\n"
+    "1-0:1.8.2(00001.001*kWh)\r\n"
+    "1-0:2.8.1(00001.001*kWh)\r\n"
+    "1-0:2.8.2(00001.001*kWh)\r\n"
+    "0-0:96.14.0(0001)\r\n"
+    "1-0:1.7.0(0001.01*kW)\r\n"
+    "1-0:2.7.0(0000.00*kW)\r\n"
+    "0-1:24.1.0(3)\r\n"
+    f"0-1:96.1.0({GAS_METER_IDENTIFIER})\r\n"
+    "0-1:24.3.0(161107190000)(00)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00001.001)\r\n"
+    "0-1:24.4.0(1)\r\n"
+    "!\r\n"
+)
+
+# EasyMeter Q3D telegram, which reports power in W instead of kW.
+TELEGRAM_Q3D = (
+    "/ESY5Q3DB1024 V3.04\r\n"
+    "\r\n"
+    "1-0:0.0.0*255(0272031312565)\r\n"
+    "1-0:1.8.0*255(00052185.7825309*kWh)\r\n"
+    "1-0:2.8.0*255(00019949.3221493*kWh)\r\n"
+    "1-0:21.7.0*255(000747.85*W)\r\n"
+    "1-0:41.7.0*255(000737.28*W)\r\n"
+    "1-0:61.7.0*255(000639.73*W)\r\n"
+    "1-0:1.7.0*255(002124.86*W)\r\n"
+    "1-0:96.5.5*255(80)\r\n"
+    "0-0:96.1.255*255(1ESY1313002565)\r\n"
+    "!\r\n"
+)
+
+# Meter total register instead of tariffs, no power registers, a gas meter
+# reporting energy, an unsupported heat/cool meter, a water meter without
+# identifier and a heat meter without reading.
+TELEGRAM_MBUS = (
+    "/ISk5\\2MT382-1000\r\n"
+    "\r\n"
+    "1-3:0.2.8(50)\r\n"
+    f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})\r\n"
+    "1-0:1.8.0(000010.000*kWh)\r\n"
+    "0-1:24.1.0(003)\r\n"
+    "0-1:96.1.0(3131313131)\r\n"
+    "0-1:24.2.1(170102161005W)(00012.345*kWh)\r\n"
+    "0-2:24.1.0(012)\r\n"
+    "0-2:24.2.1(170102161005W)(00001.000*GJ)\r\n"
+    "0-3:24.1.0(007)\r\n"
+    "0-3:24.2.1(170102161005W)(00003.000*m3)\r\n"
+    "0-4:24.1.0(004)\r\n"
+    "!0000\r\n"
+)
