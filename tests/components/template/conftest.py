@@ -19,10 +19,18 @@ from pytest_homeassistant.plugins import WebSocketGenerator
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.template.config import (
+    DEPRECATED_ATTRIBUTES_BREAKS_IN,
+    DEPRECATED_ATTRIBUTES_ISSUE_ID,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -723,3 +731,35 @@ async def assert_attributes_template(
     assert error in caplog.text
     state = hass.states.get(platform_setup.entity_id)
     assert "run" not in state.attributes
+
+
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == template.DOMAIN
+        and issue_id.startswith(f"{DEPRECATED_ATTRIBUTES_ISSUE_ID}_")
+    ]
+
+
+def assert_deprecated_attributes_issue(
+    issue_registry: ir.IssueRegistry,
+    platform: str,
+    identifier: str,
+    options: str,
+) -> None:
+    """Assert a single deprecated attributes issue exists."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == DEPRECATED_ATTRIBUTES_BREAKS_IN
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].translation_key == DEPRECATED_ATTRIBUTES_ISSUE_ID
+    assert issues[0].translation_placeholders == {
+        "platform": platform,
+        "identifier": identifier,
+        "breaks_in_ha_version": DEPRECATED_ATTRIBUTES_BREAKS_IN,
+        "options": options,
+    }

@@ -33,7 +33,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.template import Template
 
 from .conftest import (
@@ -42,6 +46,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_attributes_template,
+    assert_deprecated_attributes_issue,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -867,3 +872,37 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_EVENT.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {
+                    "event_type": TEST_EVENT_TYPE_TEMPLATE,
+                    "event_types": TEST_EVENT_TYPES_TEMPLATE,
+                },
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_base_event")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair is created for attributes that have a dedicated option."""
+    assert_deprecated_attributes_issue(
+        issue_registry,
+        "event",
+        f"name: {TEST_EVENT.object_id}",
+        (
+            "- `attributes: event_type` → `event_type`\n"
+            "- `attributes: event_types` → `event_types`"
+        ),
+    )

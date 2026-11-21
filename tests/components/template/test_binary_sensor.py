@@ -30,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
@@ -42,6 +46,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_attributes_template,
+    assert_deprecated_attributes_issue,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1770,3 +1775,23 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_BINARY_SENSOR.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ True }}", {"attributes": {"device_class": "door"}})],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair is created for attributes that have a dedicated option."""
+    assert_deprecated_attributes_issue(
+        issue_registry,
+        "binary sensor",
+        f"name: {TEST_BINARY_SENSOR.object_id}",
+        "- `attributes: device_class` → `device_class`",
+    )

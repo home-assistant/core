@@ -42,6 +42,7 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_attributes_template,
+    assert_deprecated_attributes_issue,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
@@ -1600,3 +1601,37 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_VACUUM.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                **START_ACTION,
+                "attributes": {
+                    "fan_speed": "{{ 'low' }}",
+                    "fan_speed_list": "{{ ['low'] }}",
+                },
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair is created for attributes that have a dedicated option."""
+    assert_deprecated_attributes_issue(
+        issue_registry,
+        "vacuum",
+        f"name: {TEST_VACUUM.object_id}",
+        (
+            "- `attributes: fan_speed` → `fan_speed`\n"
+            "- `attributes: fan_speed_list` → `fan_speeds`"
+        ),
+    )

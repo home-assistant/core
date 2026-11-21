@@ -1,5 +1,8 @@
 """Test Template config."""
 
+from pathlib import Path
+from unittest.mock import patch
+
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -7,12 +10,13 @@ from pytest_homeassistant.common import (
     assert_setup_component,
 )
 
+from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
-from homeassistant.components.template.const import PLATFORMS
+from homeassistant.components.template.const import PLATFORMS, TemplateService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -24,12 +28,15 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_deprecated_attributes_issue,
     async_trigger,
+    get_deprecated_attributes_issues,
     make_mock_device_actions,
     make_test_trigger,
     setup_entity,
@@ -1437,3 +1444,182 @@ async def test_multiple_configuration_keys(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == expected
+
+
+async def async_setup_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and set up the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def async_reload_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and reload the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def yaml_config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Use a temporary configuration directory."""
+    hass.config.config_dir = str(tmp_path)
+    return tmp_path
+
+
+DEPRECATED_ATTRIBUTES_SENSOR_YAML = """\
+template:
+  - sensor:
+      - name: Test
+        state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+          other: "{{ 2 }}"
+"""
+
+
+async def test_deprecated_attributes_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair lists the file and line of each attribute."""
+    await async_setup_yaml_config(
+        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+
+    assert_deprecated_attributes_issue(
+        issue_registry,
+        "sensor",
+        "name: Test",
+        "- `configuration.yaml:6`: `attributes: device_class` → `device_class`",
+    )
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(
+            {
+                "sensor": {
+                    "state": "{{ 1 }}",
+                    "attributes": {"options": "{{ ['a'] }}", "other": "{{ 2 }}"},
+                }
+            },
+            id="allowed_attributes",
+        ),
+        pytest.param(
+            {
+                "sensor": {
+                    "state": "{{ 1 }}",
+                    "attributes": "{{ {'device_class': 'energy'} }}",
+                }
+            },
+            id="attributes_template",
+        ),
+        pytest.param(
+            {
+                "switch": {
+                    "state": "{{ True }}",
+                    "turn_on": [],
+                    "turn_off": [],
+                    "attributes": {"fan_speed": "{{ 'low' }}"},
+                }
+            },
+            id="other_platform",
+        ),
+    ],
+)
+async def test_no_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, config: ConfigType
+) -> None:
+    """Test no repair is created when attributes do not set an option."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: [config]})
+    await hass.async_block_till_done()
+
+    assert get_deprecated_attributes_issues(issue_registry) == []
+
+
+async def test_deprecated_attributes_issue_per_entity(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a repair is created for each entity that sets options in attributes."""
+    await async_setup_yaml_config(
+        hass,
+        yaml_config_dir,
+        DEPRECATED_ATTRIBUTES_SENSOR_YAML
+        + """\
+  - binary_sensor:
+      - name: Test
+        state: "{{ True }}"
+        attributes:
+          device_class: energy
+""",
+    )
+
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert sorted(
+        issue.translation_placeholders["platform"]  # type: ignore[index]
+        for issue in issues
+    ) == ["binary sensor", "sensor"]
+
+
+async def test_deprecated_attributes_issue_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair is removed after the configuration is fixed."""
+    await async_setup_yaml_config(
+        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+    assert len(get_deprecated_attributes_issues(issue_registry)) == 1
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        DEPRECATED_ATTRIBUTES_SENSOR_YAML.replace(
+            "        attributes:\n          device_class: energy\n",
+            "        device_class: energy\n        attributes:\n",
+        ),
+    )
+
+    assert get_deprecated_attributes_issues(issue_registry) == []
+
+
+async def test_deprecated_attributes_issue_dismissed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a dismissed repair stays dismissed until the configuration changes."""
+    await async_setup_yaml_config(
+        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    dismissed_issue_id = issues[0].issue_id
+    issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
+
+    # Moving the options to other lines is not a configuration change
+    await async_reload_yaml_config(
+        hass, yaml_config_dir, "\n" + DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id == dismissed_issue_id
+    assert issues[0].dismissed_version is not None
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        DEPRECATED_ATTRIBUTES_SENSOR_YAML.replace("energy", "power"),
+    )
+
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id != dismissed_issue_id
+    assert issues[0].dismissed_version is None
