@@ -1,10 +1,14 @@
 """Test camera WebRTC."""
 
+import asyncio
 from collections.abc import AsyncGenerator
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
@@ -761,3 +765,475 @@ async def test_camera_unregisters_from_webrtc_provider_on_removal(
         await camera.async_remove()
         mock_unregister.assert_called_once_with(camera)
         assert camera.webrtc_provider is None
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_camera_added_when_stream_source_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a camera is added and finds its provider later when the stream source fails."""
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ) as mock_stream_source:
+        # The provider is registered already, so the cameras look it up when added
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+
+        assert hass.states.get("camera.demo_camera") is not None
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        assert camera.webrtc_provider is None
+        assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
+        assert (
+            "Error getting the stream source of camera.demo_camera, "
+            "trying again in 30 seconds: camera not ready"
+        ) in caplog.text
+        calls = mock_stream_source.call_count
+
+        # Still failing: tried again after 30 seconds, without another warning
+        caplog.clear()
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 2 * calls
+        assert camera.webrtc_provider is None
+        assert not [
+            r
+            for r in caplog.records
+            if r.name == "homeassistant.components.camera.entity"
+            and r.levelno >= logging.WARNING
+        ]
+
+        # Next attempt after 60 seconds succeeds
+        camera_ready = True
+        freezer.tick(59)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 2 * calls
+        freezer.tick(1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 3 * calls
+
+        assert camera.webrtc_provider is not None
+        assert camera.camera_capabilities.frontend_stream_types == {
+            StreamType.HLS,
+            StreamType.WEB_RTC,
+        }
+
+        # No further attempts once the provider was found
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_stream_source.call_count == 3 * calls
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_stream_source_retry_cancelled_on_removal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending provider lookup is cancelled when the camera is removed."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=TimeoutError,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        calls = mock_stream_source.call_count
+
+        await camera.async_remove()
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Only the remaining camera looked again
+        assert mock_stream_source.call_count == calls + calls // 2
+
+
+@pytest.mark.parametrize("lookup_fails", [True, False])
+@pytest.mark.parametrize("trigger", ["retry", "provider_registered"])
+async def test_lookup_ignored_when_camera_removed_meanwhile(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    trigger: str,
+    lookup_fails: bool,
+) -> None:
+    """Test a lookup that ends after the camera was removed changes nothing."""
+    attempts = 0
+    lookup_waiting = asyncio.Event()
+    release_lookup = asyncio.Event()
+
+    async def stream_source() -> str:
+        nonlocal attempts
+        attempts += 1
+        if trigger == "retry" and attempts <= 2:  # First lookup of each demo camera
+            raise TimeoutError("camera not ready")
+        lookup_waiting.set()
+        await release_lookup.wait()
+        if lookup_fails:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch.object(provider, "async_register_camera", autospec=True) as mock_register,
+    ):
+        if trigger == "retry":
+            async_register_webrtc_provider(hass, provider)
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        if trigger == "retry":
+            freezer.tick(30)
+            async_fire_time_changed(hass)
+        else:
+            # Registering a provider looks it up for every camera
+            async_register_webrtc_provider(hass, provider)
+        await lookup_waiting.wait()
+        calls = attempts
+
+        await camera.async_remove()
+        release_lookup.set()
+        await hass.async_block_till_done()
+
+        assert camera.webrtc_provider is None
+        mock_register.assert_not_called()
+
+        # Nothing is looked up for the removed camera afterwards
+        freezer.tick(600)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert attempts == calls
+
+
+@pytest.mark.usefixtures("mock_stream_source")
+async def test_stale_lookup_failure_does_not_schedule_retry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test a lookup that fails after a newer one succeeded changes nothing."""
+    slow_lookup_waiting = asyncio.Event()
+    release_slow_lookup = asyncio.Event()
+    calls = 0
+
+    async def stream_source() -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            slow_lookup_waiting.set()
+            await release_slow_lookup.wait()
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    assert await async_setup_component(hass, "demo", {})
+    await hass.async_block_till_done()
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera.webrtc_provider is register_test_provider
+
+    with patch.object(camera, "stream_source", side_effect=stream_source):
+        slow = hass.async_create_task(camera.async_refresh_providers())
+        await slow_lookup_waiting.wait()
+        await camera.async_refresh_providers()
+        release_slow_lookup.set()
+        await slow
+
+        freezer.tick(600)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert calls == 2
+    assert camera.webrtc_provider is register_test_provider
+
+
+async def test_camera_removed_while_registering_with_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test removal waits for a registration that is in progress and undoes it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    registering = asyncio.Event()
+    release_registration = asyncio.Event()
+    order: list[str] = []
+
+    async def register_camera(camera: Camera) -> None:
+        order.append("register")
+        registering.set()
+        await release_registration.wait()
+
+    async def unregister_camera(camera: Camera) -> None:
+        order.append("unregister")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            return_value=STREAM_SOURCE,
+        ),
+        patch.object(provider, "async_register_camera", side_effect=register_camera),
+        patch.object(
+            provider, "async_unregister_camera", side_effect=unregister_camera
+        ),
+    ):
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        async_register_webrtc_provider(hass, provider)
+        await registering.wait()
+        removal = hass.async_create_task(camera.async_remove())
+        await asyncio.sleep(0)
+        assert not removal.done()  # Waits for the registration
+
+        release_registration.set()
+        await removal
+        await hass.async_block_till_done()
+
+    assert order == ["register", "unregister"]
+    assert camera.webrtc_provider is None
+    assert hass.states.get("camera.demo_camera") is None
+
+
+@pytest.mark.usefixtures("register_test_provider")
+async def test_stream_source_retry_backoff(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the lookup is retried after 30, 60, 120 and then every 300 seconds."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=TimeoutError,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        cameras = mock_stream_source.call_count  # One lookup per demo camera
+
+        for attempt, delay in enumerate((30, 60, 120, 300, 300), start=2):
+            freezer.tick(delay - 1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_stream_source.call_count == (attempt - 1) * cameras
+
+            freezer.tick(1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_stream_source.call_count == attempt * cameras
+
+
+async def test_pending_retry_cancelled_when_refresh_succeeds(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a scheduled retry is dropped once another refresh found the provider."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ) as mock_stream_source:
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        assert camera.webrtc_provider is None
+
+        # Before the retry is due, a refresh succeeds
+        camera_ready = True
+        await camera.async_refresh_providers()
+        assert camera.webrtc_provider is provider
+        calls = mock_stream_source.call_count
+
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Only the other demo camera still had a retry pending
+        assert mock_stream_source.call_count == calls + 1
+        assert camera.webrtc_provider is provider
+
+
+async def test_retry_lookup_cancelled_before_integration_cleanup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test removal stops a retried lookup before the integration's own cleanup."""
+    order: list[str] = []
+    lookup_waiting = asyncio.Event()
+    attempts = 0
+
+    async def stream_source() -> str:
+        nonlocal attempts
+        attempts += 1
+        if attempts <= 2:  # First lookup of each demo camera
+            raise TimeoutError("camera not ready")
+        lookup_waiting.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            order.append("lookup cancelled")
+            raise
+        return STREAM_SOURCE
+
+    async def will_remove(self: Camera) -> None:
+        order.append("integration cleanup")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.async_will_remove_from_hass",
+            will_remove,
+        ),
+    ):
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+        order.clear()
+
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await lookup_waiting.wait()
+        await camera.async_remove()
+
+    assert order == ["lookup cancelled", "integration cleanup"]
+
+
+async def test_camera_removed_while_retry_registers_with_provider(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removal lets a retry finish registering and then unregisters."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    provider = SomeTestProvider()
+    registering = asyncio.Event()
+    release_registration = asyncio.Event()
+    order: list[str] = []
+    camera_ready = False
+
+    async def stream_source() -> str:
+        if not camera_ready:
+            raise TimeoutError("camera not ready")
+        return STREAM_SOURCE
+
+    async def register_camera(camera: Camera) -> None:
+        order.append("register")
+        registering.set()
+        await release_registration.wait()
+
+    async def unregister_camera(camera: Camera) -> None:
+        order.append("unregister")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch.object(provider, "async_register_camera", side_effect=register_camera),
+        patch.object(
+            provider, "async_unregister_camera", side_effect=unregister_camera
+        ),
+    ):
+        async_register_webrtc_provider(hass, provider)
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        camera_ready = True
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await registering.wait()
+
+        removal = hass.async_create_task(camera.async_remove())
+        await asyncio.sleep(0)
+        assert not removal.done()  # Waits for the registration of the retry
+
+        release_registration.set()
+        await removal
+        await hass.async_block_till_done()
+
+    assert order == ["register", "unregister"]
+    assert camera.webrtc_provider is None
+
+
+async def test_overlapping_retries_cancelled_on_removal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test removal stops every retry that still waits, not only the latest one."""
+    cancelled = 0
+    waiting = asyncio.Event()
+
+    async def hanging() -> str:
+        nonlocal cancelled
+        waiting.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled += 1
+            raise
+        return STREAM_SOURCE
+
+    async def failing() -> str:
+        raise TimeoutError("camera not ready")
+
+    behaviour = iter([failing, failing, hanging, failing, hanging])
+
+    async def stream_source() -> str:
+        return await next(behaviour)()
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=stream_source,
+    ):
+        # Both demo cameras fail when added
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+
+        # The first retry hangs
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await waiting.wait()
+        waiting.clear()
+
+        # Another refresh fails and schedules the next retry, which hangs too
+        await camera.async_refresh_providers()
+        freezer.tick(60)
+        async_fire_time_changed(hass)
+        await waiting.wait()
+
+        await camera.async_remove()
+
+    assert cancelled == 2
