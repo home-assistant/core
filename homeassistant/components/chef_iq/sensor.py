@@ -149,22 +149,3 @@ class ChefIqBluetoothSensorEntity(
     def native_value(self) -> float | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available.
-
-        The sensor is only created when the device is seen.
-
-        Since these are sleepy devices which stop broadcasting
-        when not in use, we can't rely on the last update time
-        so once we have seen the device we always return True.
-        """
-        return True
-
-    @property
-    @override
-    def assumed_state(self) -> bool:
-        """Return True if the device is no longer broadcasting."""
-        return not self.processor.available

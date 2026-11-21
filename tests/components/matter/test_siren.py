@@ -19,6 +19,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SIREN
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_sirens(
     hass: HomeAssistant,

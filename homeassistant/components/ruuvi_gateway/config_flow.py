@@ -42,6 +42,14 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
                     host=user_input[CONF_HOST],
                     bearer_token=user_input[CONF_TOKEN],
                 )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
             await self.async_set_unique_id(
                 format_mac(resp.gw_mac), raise_on_progress=False
             )
@@ -53,13 +61,6 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.async_create_entry(title=info["title"], data=user_input),
                 errors,
             )
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         return (None, errors)
 
     @override

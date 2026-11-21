@@ -15,8 +15,8 @@ MODEL_ID: Final = "Balco260"
 DEFAULT_PORT: Final = 502
 DEFAULT_UNIT_ID: Final = 1
 
-# The device's Modbus TCP stack becomes unresponsive when polled faster.
-SCAN_INTERVAL: Final = timedelta(seconds=30)
+# Faster polling has made the device's Modbus TCP stack unresponsive.
+SCAN_INTERVAL: Final = timedelta(seconds=15)
 
 # Left out of the read plan as well as entity creation.
 EXCLUDED_FIELDS: Final = frozenset(
@@ -27,6 +27,7 @@ EXCLUDED_FIELDS: Final = frozenset(
         "g_o_switch",
         "b_soc_high",
         "b_soc_low",
+        "d_working_mode",
         # The library only decodes their zero member, so a real code reads None.
         "d_inverter_fault",
         "d_inverter_warning",

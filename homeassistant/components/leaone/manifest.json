@@ -4,6 +4,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/leaone",
   "integration_type": "device",

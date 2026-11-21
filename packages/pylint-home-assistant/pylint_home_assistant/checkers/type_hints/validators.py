@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from astroid import nodes
 from astroid.exceptions import NameInferenceError
 
-from .models import TypeHintMatch, _Special
+from .models import TypeHintMatch, _Undefined
 
 if TYPE_CHECKING:
     from astroid.typing import InferenceResult
@@ -39,7 +39,7 @@ def is_valid_type(
     in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
-    if expected_type is _Special.UNDEFINED:
+    if expected_type is _Undefined:
         return True
 
     if isinstance(expected_type, list):

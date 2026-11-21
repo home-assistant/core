@@ -10,10 +10,12 @@ from aiopvapi.hub import Hub
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.shades import Shades
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import HUB_EXCEPTIONS
+from .util import get_shade_ids
 
 if TYPE_CHECKING:
     from .model import PowerviewConfigEntry
@@ -36,6 +38,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades
         self.hub = hub
+
         # The hub tends to crash if there are multiple radio operations at the same time
         # but it seems to handle all other requests that do not use RF without issue
         # so we have a lock to prevent multiple radio operations at the same time
@@ -68,4 +71,21 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         # only update if shade_entries is valid
         self.data.store_group_data(shade_entries)
 
+        self.async_remove_stale_devices(
+            {str(shade_id) for shade_id in shade_entries.processed}
+        )
+
         return self.data
+
+    @callback
+    def async_remove_stale_devices(self, current_shade_ids: set[str]) -> None:
+        """Remove shade devices the hub no longer reports."""
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if device.via_device_id is None:
+                continue
+            if not get_shade_ids(device) & current_shade_ids:
+                _LOGGER.debug("removing stale shade device %s", device.name)
+                device_registry.async_remove_device(device.id)

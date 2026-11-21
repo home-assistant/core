@@ -106,7 +106,8 @@ async def test_update_automation_config(
                 "trigger": {"trigger": "automation"},
                 "action": [],
             },
-            "Integration 'automation' does not provide trigger support",
+            "Integration 'automation' does not provide trigger support"
+            " at 'triggers[0]'",
         ),
         (
             {
@@ -119,7 +120,8 @@ async def test_update_automation_config(
                 },
                 "action": [],
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'conditions[0]'",
         ),
         (
             {
@@ -131,7 +133,8 @@ async def test_update_automation_config(
                     "state": "blah",
                 },
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'actions[0]'",
         ),
         (
             {

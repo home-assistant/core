@@ -99,6 +99,24 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_bluetooth_model_info_skipped_with_cloud(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test the model is not read over Bluetooth when the cloud provides it."""
+    # some machines report a family over Bluetooth that can't be parsed
+    mock_lamarzocco.get_model_info_from_bluetooth.side_effect = ValueError(
+        "Invalid model name: LINEA"
+    )
+
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
@@ -316,6 +334,7 @@ async def test_setup_through_bluetooth_only(
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
     assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.assert_called_once()
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
@@ -371,6 +390,7 @@ async def test_manual_offline_mode(
     )
     await hass.config_entries.async_setup(mock_config_entry_bluetooth.entry_id)
     await hass.async_block_till_done()
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_called_once()
 
     main_switch = f"switch.{mock_lamarzocco.serial_number}"
     state = hass.states.get(main_switch)

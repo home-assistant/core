@@ -54,7 +54,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Output 0"
+    assert device_entry.name == "Output 0"
 
     entity_id = "sensor.test_name_output_0_power"
 
@@ -66,7 +66,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Output 0"
+    assert device_entry.name == "Output 0"
 
     # Relay 1 sub-device
     entity_id = "switch.test_name_output_1"
@@ -79,7 +79,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Output 1"
+    assert device_entry.name == "Output 1"
 
     entity_id = "sensor.test_name_output_1_power"
 
@@ -91,7 +91,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Output 1"
+    assert device_entry.name == "Output 1"
 
     # Main device
     entity_id = "update.test_name_firmware"
@@ -133,7 +133,7 @@ async def test_shelly_2pm_gen3_relay_names(
     await init_integration(hass, gen=3, model=MODEL_2PM_G3)
 
     # Relay 0 sub-device
-    entity_id = "switch.kitchen_light"
+    entity_id = "switch.test_name_kitchen_light"
 
     state = hass.states.get(entity_id)
     assert state
@@ -145,7 +145,7 @@ async def test_shelly_2pm_gen3_relay_names(
     assert device_entry
     assert device_entry.name == "Kitchen light"
 
-    entity_id = "sensor.kitchen_light_power"
+    entity_id = "sensor.test_name_kitchen_light_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -158,7 +158,7 @@ async def test_shelly_2pm_gen3_relay_names(
     assert device_entry.name == "Kitchen light"
 
     # Relay 1 sub-device
-    entity_id = "switch.living_room_light"
+    entity_id = "switch.test_name_living_room_light"
 
     state = hass.states.get(entity_id)
     assert state
@@ -170,7 +170,7 @@ async def test_shelly_2pm_gen3_relay_names(
     assert device_entry
     assert device_entry.name == "Living room light"
 
-    entity_id = "sensor.living_room_light_power"
+    entity_id = "sensor.test_name_living_room_light_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -367,7 +367,7 @@ async def test_shelly_pro_3em(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase A"
+    assert device_entry.name == "Phase A"
 
     # Phase B sub-device
     entity_id = "sensor.test_name_phase_b_power"
@@ -380,7 +380,7 @@ async def test_shelly_pro_3em(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase B"
+    assert device_entry.name == "Phase B"
 
     # Phase C sub-device
     entity_id = "sensor.test_name_phase_c_power"
@@ -393,7 +393,7 @@ async def test_shelly_pro_3em(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase C"
+    assert device_entry.name == "Phase C"
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id
@@ -443,7 +443,7 @@ async def test_shelly_pro_3em_with_emeter_name(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase A"
+    assert device_entry.name == "Phase A"
 
     # Phase B sub-device
     entity_id = "sensor.test_name_phase_b_power"
@@ -456,7 +456,7 @@ async def test_shelly_pro_3em_with_emeter_name(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase B"
+    assert device_entry.name == "Phase B"
 
     # Phase C sub-device
     entity_id = "sensor.test_name_phase_c_power"
@@ -469,7 +469,7 @@ async def test_shelly_pro_3em_with_emeter_name(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Phase C"
+    assert device_entry.name == "Phase C"
 
 
 @pytest.mark.parametrize(
@@ -526,7 +526,7 @@ async def test_shelly_fk_06x_with_zone_names(
     ]
 
     for zone_name in zone_names:
-        entity_id = f"valve.{zone_name.lower().replace(' ', '_')}"
+        entity_id = f"valve.test_name_{zone_name.lower().replace(' ', '_')}"
 
         state = hass.states.get(entity_id)
         assert state
@@ -555,7 +555,7 @@ async def test_block_channel_with_name(
     await init_integration(hass, 1)
 
     # channel 1 sub-device; num_outputs is 2 so the name of the channel should be used
-    entity_id = "switch.kitchen_light"
+    entity_id = "switch.test_name_kitchen_light"
 
     state = hass.states.get(entity_id)
     assert state

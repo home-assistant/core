@@ -3,6 +3,7 @@
   "name": "OpenALPR Cloud",
   "categories": ["ai_voice.image_recognition"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/openalpr_cloud",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"

@@ -54,19 +54,19 @@ SENSOR_DESCRIPTIONS = [
     ),
     SensorEntityDescription(
         key="acidBase",
-        translation_key="ph_acid_base_flow_rate",
+        translation_key="ph_acid_base_injection",
         icon="mdi:chemical-weapon",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="cl",
-        translation_key="chlorine_flow_rate",
+        translation_key="chlorine_injection",
         icon="mdi:chemical-weapon",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
 

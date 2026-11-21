@@ -1,14 +1,21 @@
 """Services for the zone integration."""
 
+from enum import StrEnum
+
 import probatio
 
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 
 from .const import DATA_ZONE, DOMAIN
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
+
+
+class ZoneService(StrEnum):
+    """Store keys for zone services."""
+
+    RELOAD = "reload"
 
 
 async def _async_reload_service(service_call: ServiceCall) -> None:
@@ -24,7 +31,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        ZoneService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )

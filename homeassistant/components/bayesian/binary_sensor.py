@@ -30,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -65,7 +69,7 @@ from .const import (
     PLATFORMS,
 )
 from .helpers import Observation
-from .issues import raise_mirrored_entries, raise_no_prob_given_false
+from .issues import raise_mirrored_entries, raise_mirrored_observations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +112,7 @@ NUMERIC_STATE_SCHEMA = probatio.All(
             probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
             probatio.Optional(CONF_BELOW): probatio.Coerce(float),
             probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-            probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+            probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
         },
         required=True,
     ),
@@ -167,7 +171,7 @@ STATE_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ENTITY_ID): cv.entity_id,
         probatio.Required(CONF_TO_STATE): cv.string,
         probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+        probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
@@ -177,7 +181,7 @@ TEMPLATE_SCHEMA = probatio.Schema(
         CONF_PLATFORM: CONF_TEMPLATE,
         probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+        probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
@@ -239,20 +243,6 @@ async def async_setup_platform(
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-
-    # Should deprecate in some future version (2022.10 at time
-    # of writing) & make prob_given_false required in schemas.
-    broken_observations: list[dict[str, Any]] = []
-    for observation in observations:
-        if CONF_P_GIVEN_F not in observation:
-            text = (
-                f"{name}/{observation.get(CONF_ENTITY_ID, '')}"
-                f"{observation.get(CONF_VALUE_TEMPLATE, '')}"
-            )
-            raise_no_prob_given_false(hass, text)
-            _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
-            broken_observations.append(observation)
-    observations = [x for x in observations if x not in broken_observations]
 
     async_add_entities(
         [
@@ -456,21 +446,37 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.probability = self._calculate_new_probability()
         self._attr_is_on = self.probability >= self._probability_threshold
 
-        # detect mirrored entries
-        for entity, observations in self.observations_by_entity.items():
-            raise_mirrored_entries(
-                self.hass, observations, text=f"{self._attr_name}/{entity}"
-            )
-
         all_template_observations: list[Observation] = [
             observations[0] for observations in self.observations_by_template.values()
         ]
-        if len(all_template_observations) == 2:
-            raise_mirrored_entries(
-                self.hass,
-                all_template_observations,
-                text=f"{self._attr_name}/{all_template_observations[0].value_template}",
-            )
+        if (config_entry := self.platform.config_entry) is None:
+            for entity, observations in self.observations_by_entity.items():
+                raise_mirrored_entries(
+                    self.hass, observations, text=f"{self._attr_name}/{entity}"
+                )
+            if len(all_template_observations) == 2:
+                raise_mirrored_entries(
+                    self.hass,
+                    all_template_observations,
+                    text=f"{self._attr_name}/{all_template_observations[0].value_template}",
+                )
+            return
+
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, config_entry_id=config_entry.entry_id
+        ):
+            for entity, observations in self.observations_by_entity.items():
+                raise_mirrored_observations(
+                    self.hass, config_entry, observations, entity, entity
+                )
+            if len(all_template_observations) == 2:
+                raise_mirrored_observations(
+                    self.hass,
+                    config_entry,
+                    all_template_observations,
+                    "template",
+                    next(iter(self.observations_by_template)).template,
+                )
 
     @callback
     def _recalculate_and_write_state(self) -> None:

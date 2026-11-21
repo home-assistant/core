@@ -2,14 +2,12 @@
 
 from typing import Any, override
 
-from pyfibaro.fibaro_device import DeviceModel
-
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry, FibaroController
+from . import FibaroConfigEntry
 from .entity import FibaroEntity
 
 
@@ -31,13 +29,6 @@ async def async_setup_entry(
 
 class FibaroSwitch(FibaroEntity, SwitchEntity):
     """Representation of a Fibaro Switch."""
-
-    def __init__(
-        self, fibaro_device: DeviceModel, controller: FibaroController
-    ) -> None:
-        """Initialize the Fibaro device."""
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
