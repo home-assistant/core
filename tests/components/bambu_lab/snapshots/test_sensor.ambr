@@ -151,7 +151,7 @@
     'supported_features': 0,
     'translation_key': 'current_layer',
     'unique_id': '01P00A000000001_current_layer',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'layers',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_current_layer-state]
@@ -159,6 +159,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Current layer',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'layers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.x1_carbon_current_layer',
@@ -351,9 +352,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -381,14 +380,14 @@
     'supported_features': 0,
     'translation_key': 'total_layers',
     'unique_id': '01P00A000000001_total_layers',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'layers',
   })
 # ---
 # name: test_sensors[sensor.x1_carbon_total_layers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Total layers',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'layers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.x1_carbon_total_layers',

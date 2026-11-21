@@ -65,7 +65,6 @@ SENSORS: tuple[BambuLabSensorEntityDescription, ...] = (
     BambuLabSensorEntityDescription(
         key="total_layers",
         translation_key="total_layers",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda state: state.total_layers,
     ),
     BambuLabSensorEntityDescription(

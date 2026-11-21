@@ -93,7 +93,8 @@
         "name": "Chamber temperature"
       },
       "current_layer": {
-        "name": "Current layer"
+        "name": "Current layer",
+        "unit_of_measurement": "layers"
       },
       "print_finish": {
         "name": "Print finish"
@@ -115,7 +116,8 @@
         }
       },
       "total_layers": {
-        "name": "Total layers"
+        "name": "Total layers",
+        "unit_of_measurement": "layers"
       }
     }
   },
