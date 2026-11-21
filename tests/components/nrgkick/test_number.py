@@ -24,7 +24,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -69,7 +69,7 @@ async def test_set_charging_current(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 10.0},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 10.0},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -98,7 +98,7 @@ async def test_set_energy_limit(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 5000},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 5000},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -127,7 +127,7 @@ async def test_set_phase_count(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -214,7 +214,7 @@ async def test_phase_count_filters_transient_zero_on_service_call(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 1},
         blocking=True,
     )
     mock_nrgkick_api.set_phase_count.assert_awaited_once_with(1)
@@ -258,7 +258,7 @@ async def test_number_command_rejected_by_device(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 10.0,
             },
             blocking=True,

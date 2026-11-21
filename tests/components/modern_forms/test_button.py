@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,7 +52,7 @@ async def test_restart_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.modernformsfan_restart"},
+            {TargetKey.ENTITY_ID: "button.modernformsfan_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()

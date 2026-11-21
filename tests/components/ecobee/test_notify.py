@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
+    NotifyService,
 )
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +27,7 @@ async def test_notify_entity_service(
     assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_SEND_MESSAGE)
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         service_data={"entity_id": entity_id, "message": "It is too cold!"},
         blocking=True,
     )

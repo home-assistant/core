@@ -17,7 +17,7 @@ from homeassistant.components.tessie.const import (
     TessieSeatCoolerOptions,
     TessieSeatHeaterOptions,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -44,7 +44,7 @@ async def test_select(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: [entity_id],
+                TargetKey.ENTITY_ID: [entity_id],
                 SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
             },
             blocking=True,
@@ -64,7 +64,7 @@ async def test_select(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
@@ -83,7 +83,7 @@ async def test_select(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: EnergyExportMode.BATTERY_OK.value,
             },
             blocking=True,
@@ -102,7 +102,7 @@ async def test_select(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: [entity_id],
+                TargetKey.ENTITY_ID: [entity_id],
                 SelectServiceArgument.OPTION: TessieSeatCoolerOptions.LOW,
             },
             blocking=True,
@@ -129,7 +129,7 @@ async def test_errors(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ["select.test_seat_heater_left"],
+                TargetKey.ENTITY_ID: ["select.test_seat_heater_left"],
                 SelectServiceArgument.OPTION: TessieSeatHeaterOptions.LOW,
             },
             blocking=True,
@@ -151,7 +151,7 @@ async def test_errors(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ["select.energy_site_operation_mode"],
+                TargetKey.ENTITY_ID: ["select.energy_site_operation_mode"],
                 SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,

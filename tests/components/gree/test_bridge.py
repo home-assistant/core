@@ -18,20 +18,21 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_MEDIUM,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 
@@ -542,8 +543,11 @@ async def test_real_device_controls_after_dependency_upgrade(
 
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: ENTITY_ID_1, ATTR_TEMPERATURE: 24},
+                ClimateService.SET_TEMPERATURE,
+                {
+                    TargetKey.ENTITY_ID: ENTITY_ID_1,
+                    ClimateServiceArgument.TEMPERATURE: 24,
+                },
                 blocking=True,
             )
             assert commands[-1]["SetTem"] == 24
@@ -554,7 +558,7 @@ async def test_real_device_controls_after_dependency_upgrade(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_OFF,
-                {ATTR_ENTITY_ID: panel_light},
+                {TargetKey.ENTITY_ID: panel_light},
                 blocking=True,
             )
             assert commands[-1]["Lig"] == 0
@@ -563,7 +567,7 @@ async def test_real_device_controls_after_dependency_upgrade(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_OFF,
-                {ATTR_ENTITY_ID: xfan},
+                {TargetKey.ENTITY_ID: xfan},
                 blocking=True,
             )
             assert commands[-1]["Blo"] == 0
