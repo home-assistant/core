@@ -67,5 +67,18 @@
     "invalid_auth": {
       "message": "The SmartyPlants API key was rejected. Re-authenticate the integration with a new key."
     }
+  },
+  "issues": {
+    "legacy_entities": {
+      "title": "Entities left behind by the SmartyPlants custom integration",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Remove the leftover SmartyPlants entities",
+            "description": "These entities were created by the SmartyPlants custom integration and are no longer updated:\n\n{entities}\n\nThis integration already provides the same readings under its own entities, so these ones can be removed. Removing them also frees their entity IDs, so you can rename the current entities to match and leave your automations unchanged.\n\nAnything still pointing at the entities above will stop working once they are removed."
+          }
+        }
+      }
+    }
   }
 }
