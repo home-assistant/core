@@ -1,6 +1,5 @@
 """Test Hikvision integration setup and unload."""
 
-import logging
 from unittest.mock import MagicMock
 from xml.etree.ElementTree import ParseError
 
@@ -165,8 +164,7 @@ async def test_setup_entry_nvr_skips_unmapped_events(
         "audioexception": [1, 2],
     }
 
-    with caplog.at_level(logging.DEBUG):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hik_nvr.return_value.inject_events.assert_called_once_with({"Motion": [1]})
