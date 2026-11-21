@@ -665,20 +665,32 @@ async def test_reload_config_entry_invalid_args(
     ("tool_args", "expected_prefix", "expected_domains"),
     [
         pytest.param(
-            {"query": "random", "type": "helper"},
-            [{"domain": "random", "name": "Random"}],
+            {"query": "random"},
+            [{"domain": "random", "name": "Random", "categories": ["helpers"]}],
             {"random"},
             id="helper_exact",
         ),
         pytest.param(
-            {"query": "sun", "type": "integration"},
-            [{"domain": "sun", "name": "Sun"}],
+            {"query": "sun"},
+            [
+                {
+                    "domain": "sun",
+                    "name": "Sun",
+                    "categories": ["weather_alerts.forecasts"],
+                }
+            ],
             {"sun"},
             id="integration_exact",
         ),
         pytest.param(
             {"query": "Times of the Day"},
-            [{"domain": "tod", "name": "Times of the Day Sensor"}],
+            [
+                {
+                    "domain": "tod",
+                    "name": "Times of the Day Sensor",
+                    "categories": ["helpers.calculate_value"],
+                }
+            ],
             {"tod"},
             id="translated_title_match",
         ),
@@ -696,7 +708,13 @@ async def test_reload_config_entry_invalid_args(
         ),
         pytest.param(
             {"query": "yale bluetooth"},
-            [{"domain": "yalexs_ble", "name": "Yale Access Bluetooth"}],
+            [
+                {
+                    "domain": "yalexs_ble",
+                    "name": "Yale Access Bluetooth",
+                    "categories": ["security_safety.locks_access"],
+                }
+            ],
             {"yalexs_ble"},
             id="multi_word_deduplicated",
         ),
@@ -717,6 +735,42 @@ async def test_reload_config_entry_invalid_args(
             [],
             set(),
             id="hardware_excluded",
+        ),
+        pytest.param(
+            {"category": "pets"},
+            [],
+            {"litterrobot", "surepetcare", "tractive"},
+            id="category_only",
+        ),
+        pytest.param(
+            {"query": "tibber", "category": "energy"},
+            [
+                {
+                    "domain": "tibber",
+                    "name": "Tibber",
+                    "categories": ["energy.energy_prices", "energy.meters_monitoring"],
+                }
+            ],
+            {"tibber"},
+            id="query_and_category_includes_subcategories",
+        ),
+        pytest.param(
+            {"query": "hue", "category": "energy"},
+            [],
+            set(),
+            id="query_and_category_no_match",
+        ),
+        pytest.param(
+            {"category": "helpers", "query": "meter"},
+            [],
+            {"utility_meter"},
+            id="helper_by_category",
+        ),
+        pytest.param(
+            {"category": "helpers", "query": "workday"},
+            [],
+            {"workday"},
+            id="helpers_category_includes_integrations",
         ),
     ],
 )
@@ -741,15 +795,54 @@ async def test_search_integrations(
     assert len(domains) == len(set(domains))
     assert expected_domains <= set(domains)
     assert bool(domains) is bool(expected_domains)
+    if category := tool_args.get("category"):
+        for item in items:
+            assert isinstance(item, dict)
+            assert isinstance(categories := item["categories"], list)
+            assert any(str(cat).partition(".")[0] == category for cat in categories)
+
+
+async def test_search_integrations_pagination(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test paging through the results with offset and next_offset."""
+    tool = SearchIntegrationsTool()
+    domains: list[str] = []
+    offset = 0
+    pages = 0
+    while True:
+        res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"category": "energy", "offset": offset}),
+            llm_context,
+        )
+        assert res.error is False
+        assert isinstance(items := res.data["result"], list)
+        assert isinstance(total := res.data["total"], int)
+        domains.extend(item["domain"] for item in items if isinstance(item, dict))
+        pages += 1
+        if "next_offset" not in res.data:
+            break
+        assert len(items) == 15
+        assert isinstance(next_offset := res.data["next_offset"], int)
+        offset = next_offset
+
+    assert pages > 1
+    assert len(domains) == total
+    assert len(set(domains)) == total
 
 
 @pytest.mark.parametrize(
     "invalid_args",
     [
-        pytest.param({}, id="missing_query"),
+        pytest.param({}, id="missing_query_and_category"),
+        pytest.param({"category": ""}, id="empty_category"),
+        pytest.param({"category": "unknown"}, id="unknown_category"),
+        pytest.param({"category": "energy.energy_prices"}, id="subcategory"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
-        pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
+        pytest.param({"query": "hue", "offset": -1}, id="negative_offset"),
     ],
 )
 async def test_search_integrations_invalid_args(
