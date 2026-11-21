@@ -1,27 +1,43 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_device": "The credentials belong to a different device than the one being reauthenticated."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The new password for your Hikvision device",
+          "username": "The username for your Hikvision device"
+        },
+        "description": "The credentials for {name} are no longer accepted. Enter the current username and password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Use SSL",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hikvision device",
           "password": "The password for your Hikvision device",
           "port": "The port number for the device (default is 80)",
           "ssl": "Enable if your device uses HTTPS",
-          "username": "The username for your Hikvision device"
+          "username": "The username for your Hikvision device",
+          "verify_ssl": "Disable if your device uses a self-signed certificate, which is what Hikvision devices ship with. Only applies when SSL is used"
         },
         "description": "Enter your Hikvision device connection details.",
         "title": "Set up Hikvision device"
@@ -140,6 +156,11 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The device rejected the username or password."
     }
   }
 }

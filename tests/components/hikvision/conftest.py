@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 
@@ -61,6 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
         unique_id=TEST_DEVICE_ID,
     )
@@ -111,6 +113,7 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
         camera.get_id = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
+        camera.auth_failed = False
         camera.current_event_states = {
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],
