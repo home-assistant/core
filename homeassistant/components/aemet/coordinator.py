@@ -1,6 +1,7 @@
 """Weather data coordinator for the AEMET OpenData service."""
 
 from asyncio import timeout
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -13,16 +14,18 @@ from aemet_opendata.const import (
     AOD_FORECAST_HOURLY,
     AOD_TOWN,
 )
-from aemet_opendata.exceptions import AemetError
+from aemet_opendata.exceptions import AemetError, AuthError
 from aemet_opendata.helpers import dict_nested_value
 from aemet_opendata.interface import AEMET
 
 from homeassistant.components.weather import Forecast
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
+from .reminder import async_dismiss_api_key_reminder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +54,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize coordinator."""
         self.aemet = aemet
+        self.reminder_unsub: Callable[[], None] | None = None
 
         super().__init__(
             hass,
@@ -60,12 +64,27 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
+    @callback
+    def async_cancel_api_key_reminder(self) -> None:
+        """Cancel the scheduled API key reminder."""
+        if self.reminder_unsub is not None:
+            self.reminder_unsub()
+            self.reminder_unsub = None
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update coordinator data."""
         async with timeout(API_TIMEOUT):
             try:
                 await self.aemet.update()
+            except AuthError as error:
+                self.async_cancel_api_key_reminder()
+                if self.config_entry is not None:
+                    async_dismiss_api_key_reminder(self.hass, self.config_entry)
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from error
             except AemetError as error:
                 raise UpdateFailed(error) from error
 
