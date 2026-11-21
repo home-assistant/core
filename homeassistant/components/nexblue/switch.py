@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ACTIVE_CHARGING_STATES, DOMAIN
 from .coordinator import (
     FINAL_COMMAND_REFRESH_DELAY,
     NexBlueConfigEntry,
@@ -20,13 +20,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 1
-ACTIVE_CHARGING_STATES = frozenset(
-    {
-        2,  # Charging
-        5,  # Waiting for available power
-        7,  # Waiting for car response
-    }
-)
 
 
 async def async_setup_entry(
