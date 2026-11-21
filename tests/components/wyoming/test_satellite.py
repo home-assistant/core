@@ -1765,10 +1765,22 @@ async def test_timers(hass: HomeAssistant) -> None:
             assert timer_finished.id == timer_started.id
 
 
-async def test_timer_update_rounding(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+@pytest.mark.parametrize(
+    ("duration", "elapsed", "expected_seconds"),
+    [
+        pytest.param(1, 0.6, 1, id="fractional_remaining"),
+        pytest.param(0.4, 0, 1, id="subsecond_duration"),
+        pytest.param(10.2, 0, 11, id="fractional_duration"),
+    ],
+)
+async def test_timer_rounding(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    duration: float,
+    elapsed: float,
+    expected_seconds: int,
 ) -> None:
-    """Keep positive remaining time above zero in pause and resume events."""
+    """Round durations and remaining time up in satellite events."""
     assert await async_setup_component(hass, "intent", {})
 
     with (
@@ -1788,17 +1800,26 @@ async def test_timer_update_rounding(
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
 
-        await intent_helper.async_handle(
-            hass,
-            "test",
-            intent_helper.INTENT_START_TIMER,
-            {"seconds": {"value": 1}},
-            device_id=device.device_id,
+        timer_list_entity_id = device.get_timer_list_entity_id(hass)
+        assert timer_list_entity_id is not None
+        await hass.services.async_call(
+            TIMER_LIST_DOMAIN,
+            "create_timer",
+            {"duration": {"seconds": duration}},
+            target={TargetKey.ENTITY_ID: timer_list_entity_id},
+            blocking=True,
+            return_response=True,
         )
         async with asyncio.timeout(1):
             await mock_client.timer_started_event.wait()
 
-        freezer.tick(timedelta(seconds=0.6))
+        assert mock_client.timer_started is not None
+        assert mock_client.timer_started.total_seconds == expected_seconds
+        assert mock_client.timer_started.start_hours is None
+        assert mock_client.timer_started.start_minutes is None
+        assert mock_client.timer_started.start_seconds == expected_seconds
+
+        freezer.tick(timedelta(seconds=elapsed))
         await intent_helper.async_handle(
             hass,
             "test",
@@ -1810,7 +1831,7 @@ async def test_timer_update_rounding(
             await mock_client.timer_updated_event.wait()
 
         assert mock_client.timer_updated is not None
-        assert mock_client.timer_updated.total_seconds == 1
+        assert mock_client.timer_updated.total_seconds == expected_seconds
         assert not mock_client.timer_updated.is_active
 
         mock_client.timer_updated_event.clear()
@@ -1825,7 +1846,7 @@ async def test_timer_update_rounding(
             await mock_client.timer_updated_event.wait()
 
         assert mock_client.timer_updated is not None
-        assert mock_client.timer_updated.total_seconds == 1
+        assert mock_client.timer_updated.total_seconds == expected_seconds
         assert mock_client.timer_updated.is_active
 
 

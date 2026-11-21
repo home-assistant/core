@@ -931,11 +931,13 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         timer = timer_event.item
         event: Event | None = None
         if timer_event.event_type == TimerListEventType.CREATED:
-            minutes, seconds = divmod(round(timer.created_duration.total_seconds()), 60)
+            minutes, seconds = divmod(
+                math.ceil(timer.created_duration.total_seconds()), 60
+            )
             hours, minutes = divmod(minutes, 60)
             event = TimerStarted(
                 id=timer.timer_id,
-                total_seconds=round(timer.total_duration.total_seconds()),
+                total_seconds=math.ceil(timer.total_duration.total_seconds()),
                 name=timer.name,
                 start_hours=hours or None,
                 start_minutes=minutes or None,
