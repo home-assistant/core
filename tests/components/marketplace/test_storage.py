@@ -14,6 +14,7 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.utils.storage import (
+    REPOSITORIES_STORAGE_MINOR_VERSION,
     STORAGE_CACHE_KEY,
     async_load_from_storage,
     async_save_to_storage,
@@ -128,6 +129,55 @@ async def test_cache_cleared_on_unload(hass: HomeAssistant) -> None:
     assert get_storage_for_key(hass, "test") is not first
 
 
+@pytest.mark.parametrize(
+    ("minor_version", "stored"),
+    [
+        pytest.param(
+            1, {"unchecked_selected_tag": "pull/1/head"}, id="stored_unchecked"
+        ),
+        pytest.param(2, {"selected_tag": "pull/1/head"}, id="stored_checked"),
+    ],
+)
+async def test_selected_tags_stored_unchecked_are_held(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    minor_version: int,
+    stored: dict[str, str],
+) -> None:
+    """Test selections stored before they were checked are moved aside, once."""
+    hass_storage["marketplace.repositories"] = {
+        **_stored({"1": {"full_name": "a/b", "selected_tag": "pull/1/head"}}),
+        "minor_version": minor_version,
+    }
+
+    assert await async_load_from_storage(hass, "repositories") == {
+        "1": {"full_name": "a/b", **stored}
+    }
+    await hass.async_block_till_done()
+    assert hass_storage["marketplace.repositories"]["data"] == {
+        "1": {"full_name": "a/b", **stored}
+    }
+    assert (
+        hass_storage["marketplace.repositories"]["minor_version"]
+        == REPOSITORIES_STORAGE_MINOR_VERSION
+    )
+
+
+async def test_hacs_selected_tags_are_held(
+    hass: HomeAssistant, hass_storage: dict[str, Any], config_dir: Path
+) -> None:
+    """Test the selections HACS stored, unchecked, are moved aside when adopted."""
+    _write_hacs_file(
+        config_dir,
+        "hacs.repositories",
+        {"1": {"full_name": "a/b", "selected_tag": "pull/1/head"}},
+    )
+
+    assert await async_load_from_storage(hass, "repositories") == {
+        "1": {"full_name": "a/b", "unchecked_selected_tag": "pull/1/head"}
+    }
+
+
 async def test_hacs_data_is_adopted(
     hass: HomeAssistant,
     hacs_storage: dict[str, Any],
@@ -140,7 +190,7 @@ async def test_hacs_data_is_adopted(
     assert hacs_storage["marketplace.repositories"] == {
         **_stored(hacs_repositories),
         "key": "marketplace.repositories",
-        "minor_version": 1,
+        "minor_version": REPOSITORIES_STORAGE_MINOR_VERSION,
     }
     assert hacs_storage["marketplace.common"]["version"] == STORAGE_VERSION
     assert hacs_storage["marketplace.common"]["data"] == HACS_COMMON

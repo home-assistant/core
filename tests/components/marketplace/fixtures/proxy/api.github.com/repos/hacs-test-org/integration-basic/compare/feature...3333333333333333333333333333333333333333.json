@@ -1,0 +1,7 @@
+{
+  "url": "https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...3333333333333333333333333333333333333333",
+  "status": "diverged",
+  "ahead_by": 1,
+  "behind_by": 12,
+  "total_commits": 1
+}

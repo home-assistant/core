@@ -1,4 +1,655 @@
 # serializer version: 1
+# name: test_ensure_repository_version_not_upstream[commit_on_fork-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...3333333333333333333333333333333333333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches?per_page=100&page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/deadbee...3333333333333333333333333333333333333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/docs...3333333333333333333333333333333333333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...3333333333333333333333333333333333333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/3333333333333333333333333333333333333333',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/3333333333333333333333333333333333333333',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[commit_on_fork-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/3333333333333333333333333333333333333333',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333333333333333333333333333333333333',
+        'tag': 'refs/tags/3333333333333333333333333333333333333333',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333333333333333333333333333333333333',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'cursor': None,
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333333333333333333333333333333333333',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[missing_commit-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...0123456789abcdef0123456789abcdef01234567?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/0123456789abcdef0123456789abcdef01234567',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/0123456789abcdef0123456789abcdef01234567',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[missing_commit-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/0123456789abcdef0123456789abcdef01234567',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '0123456789abcdef0123456789abcdef01234567',
+        'tag': 'refs/tags/0123456789abcdef0123456789abcdef01234567',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[missing_tag-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/9.9.9',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/9.9.9',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[missing_tag-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/9.9.9',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '9.9.9',
+        'tag': 'refs/tags/9.9.9',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_head-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/pull/1/head',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/pull/1/head',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_head-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/pull/1/head',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': 'pull/1/head',
+        'tag': 'refs/tags/pull/1/head',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_merge-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/pull/1/merge',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/pull/1/merge',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_merge-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/pull/1/merge',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': 'pull/1/merge',
+        'tag': 'refs/tags/pull/1/merge',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_ref-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/refs/pull/1/head',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/refs/pull/1/head',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[pull_request_ref-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/refs/pull/1/head',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': 'refs/pull/1/head',
+        'tag': 'refs/tags/refs/pull/1/head',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[short_commit_on_fork-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...3333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches?per_page=100&page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/deadbee...3333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/docs...3333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...3333333?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/3333333',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/3333333',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_not_upstream[short_commit_on_fork-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/3333333',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333',
+        'tag': 'refs/tags/3333333',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333333333333333333333333333333333333',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'cursor': None,
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '3333333333333333333333333333333333333333',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[branch-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/feature',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[branch-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/feature',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': 'feature',
+        'tag': 'refs/tags/feature',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[branch_like_a_commit-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...deadbee?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[branch_like_a_commit-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/deadbee',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': 'deadbee',
+        'tag': 'refs/tags/deadbee',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[commit_on_branch-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...2222222222222222222222222222222222222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches?per_page=100&page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/deadbee...2222222222222222222222222222222222222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/docs...2222222222222222222222222222222222222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...2222222222222222222222222222222222222222?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[commit_on_branch-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/2222222222222222222222222222222222222222',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222222222222222222222222222222222222',
+        'tag': 'refs/tags/2222222222222222222222222222222222222222',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222222222222222222222222222222222222',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'cursor': None,
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222222222222222222222222222222222222',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[commit_on_default_branch-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...1111111111111111111111111111111111111111?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[commit_on_default_branch-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/1111111111111111111111111111111111111111',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '1111111111111111111111111111111111111111',
+        'tag': 'refs/tags/1111111111111111111111111111111111111111',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '1111111111111111111111111111111111111111',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[default_branch-anonymous]
+  list([
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[default_branch-github]
+  list([
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[short_commit_on_branch-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...2222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches?per_page=100&page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/deadbee...2222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/docs...2222222?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...2222222?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[short_commit_on_branch-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/2222222',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222',
+        'tag': 'refs/tags/2222222',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222222222222222222222222222222222222',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'cursor': None,
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2222222222222222222222222222222222222222',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[short_commit_on_default_branch-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...1111111?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[short_commit_on_default_branch-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/1111111',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '1111111',
+        'tag': 'refs/tags/1111111',
+      }),
+    ),
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '1111111111111111111111111111111111111111',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/2.0.0',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/2.0.0',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/2.0.0',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '2.0.0',
+        'tag': 'refs/tags/2.0.0',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag_like_a_commit-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...20240101?per_page=1',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag_like_a_commit-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/20240101',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '20240101',
+        'tag': 'refs/tags/20240101',
+      }),
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag_like_a_commit_off_branches-anonymous]
+  list([
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...20230101?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches?per_page=100&page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/deadbee...20230101?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/docs...20230101?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/compare/feature...20230101?per_page=1',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/branches/20230101',
+      None,
+    ),
+    tuple(
+      'get',
+      'https://api.github.com/repos/hacs-test-org/integration-basic/git/ref/tags/20230101',
+      None,
+    ),
+  ])
+# ---
+# name: test_ensure_repository_version_upstream[tag_like_a_commit_off_branches-github]
+  list([
+    tuple(
+      'post',
+      'https://api.github.com/graphql',
+      dict({
+        'branch': 'refs/heads/20230101',
+        'name': 'integration-basic',
+        'owner': 'hacs-test-org',
+        'ref': '20230101',
+        'tag': 'refs/tags/20230101',
+      }),
+    ),
+  ])
+# ---
 # name: test_get_documentation[available]
   '## Example readme file (2.0.0)'
 # ---

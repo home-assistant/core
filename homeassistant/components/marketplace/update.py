@@ -14,7 +14,11 @@ from .base import MarketplaceConfigEntry
 from .const import DOMAIN, RELEASE_LIMIT, SIGNAL_REPOSITORY_INSTALLED
 from .entity import RepositoryEntity
 from .enums import MarketplaceSignal, RepositoryCategory
-from .exceptions import GitHubAnonymousRateLimitError, MarketplaceError
+from .exceptions import (
+    GitHubAnonymousRateLimitError,
+    MarketplaceError,
+    VersionNotInRepositoryError,
+)
 from .repositories.base import Repository
 from .utils.logger import LOGGER
 from .utils.validate import valid_ref
@@ -145,6 +149,12 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
 
         try:
             await self.repository.async_install_repository(ref=to_install)
+        except VersionNotInRepositoryError as exception:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="version_not_in_repository",
+                translation_placeholders=exception.translation_placeholders,
+            ) from exception
         except GitHubAnonymousRateLimitError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -71,6 +71,7 @@ EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("releases", False),
     ("selected_tag", None),
     ("show_beta", False),
+    ("unchecked_selected_tag", None),
 )
 
 
@@ -419,7 +420,14 @@ class MarketplaceData:
         repository.data.releases = repository_data.get("releases", False)
         repository.data.installed = repository_data.get("installed", False)
         repository.data.new = repository_data.get("new", False)
+        # A commit selected is checked against the default branch first
+        repository.data.default_branch = repository_data.get(
+            "default_branch", repository.data.default_branch
+        )
         repository.data.selected_tag = repository_data.get("selected_tag")
+        repository.data.unchecked_selected_tag = repository_data.get(
+            "unchecked_selected_tag"
+        )
         repository.data.show_beta = repository_data.get("show_beta", False)
         repository.data.last_version = repository_data.get("last_version")
         repository.data.prerelease = repository_data.get("prerelease")

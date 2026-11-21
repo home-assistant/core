@@ -163,6 +163,7 @@
           'stargazers_count': 0,
           'topics': list([
           ]),
+          'unchecked_selected_tag': None,
         }),
         'integration_manifest': dict({
         }),
@@ -227,6 +228,7 @@
           'stargazers_count': 0,
           'topics': list([
           ]),
+          'unchecked_selected_tag': None,
         }),
         'integration_manifest': dict({
         }),

@@ -1,0 +1,11 @@
+{
+  "url": "https://api.github.com/repos/hacs-test-org/integration-basic/compare/main...20240101",
+  "status": "behind",
+  "ahead_by": 0,
+  "behind_by": 2,
+  "total_commits": 0,
+  "merge_base_commit": {
+    "sha": "9999999999999999999999999999999999999999",
+    "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/9999999999999999999999999999999999999999"
+  }
+}

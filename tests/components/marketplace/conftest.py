@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from functools import lru_cache
 from http import HTTPStatus
+import json
 from pathlib import Path
 import re
 from typing import Any
@@ -40,7 +41,12 @@ from homeassistant.components.marketplace.repositories import (
     TemplateRepository,
     ThemeRepository,
 )
-from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.repositories.base import (
+    DEFAULT_BRANCH_COMMIT_QUERY,
+    UPSTREAM_COMMIT_QUERY,
+    UPSTREAM_REF_QUERY,
+    Repository,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -51,13 +57,21 @@ from . import (
     get_marketplace,
     setup_integration,
 )
-from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN, WARNING_ACCEPTANCE
+from .const import (
+    COMMIT_ON_FEATURE,
+    FROZEN_TIME,
+    PROXY_HEADERS,
+    TOKEN,
+    WARNING_ACCEPTANCE,
+)
 
 FIXTURE_PROXY_PATH = Path(__file__).parent / "fixtures" / "proxy"
 
 # GitHub and the data service answer with JSON for paths that carry no
 # extension, so the recorded files for those hosts have one appended.
 JSON_HOSTS = ("api.github.com", "data-v2.hacs.xyz")
+
+GRAPHQL_URL = "https://api.github.com/graphql"
 
 
 @lru_cache
@@ -101,6 +115,117 @@ def _fixture_key(url: URL) -> str:
     if host in JSON_HOSTS and not path.endswith(".json"):
         return f"{key}.json"
     return key
+
+
+def _recording(fixtures: dict[str, bytes], key: str) -> Any:
+    """Return the recorded JSON response, None when there is none."""
+    if (body := fixtures.get(key)) is None:
+        return None
+    return json.loads(body)
+
+
+def _answer_graphql(
+    fixtures: dict[str, bytes], query: str, variables: dict[str, Any]
+) -> dict[str, Any]:
+    """Answer the GraphQL queries of the ref check from the REST recordings.
+
+    With and without a GitHub connection the check then sees the same
+    repository.
+    """
+    repository = f"api.github.com/repos/{variables['owner']}/{variables['name']}"
+    if (recorded_repository := _recording(fixtures, f"{repository}.json")) is None:
+        return {
+            "data": {"repository": None},
+            "errors": [
+                {
+                    "type": "NOT_FOUND",
+                    "path": ["repository"],
+                    "message": "Could not resolve to a Repository",
+                }
+            ],
+        }
+
+    ref = variables["ref"]
+    comparisons = {
+        branch["name"]: comparison
+        for branch in _recording(fixtures, f"{repository}/branches.json") or []
+        if (
+            comparison := _recording(
+                fixtures, f"{repository}/compare/{branch['name']}...{ref}.json"
+            )
+        )
+        is not None
+    }
+    statuses = {
+        branch: comparison["status"].upper()
+        for branch, comparison in comparisons.items()
+    }
+
+    if query == UPSTREAM_REF_QUERY:
+        branch = _recording(fixtures, f"{repository}/branches/{ref}.json")
+        tag = _recording(fixtures, f"{repository}/git/ref/tags/{ref}.json")
+        # GitHub resolves a pull request to its head commit, a branch of the
+        # repository holds it when the pull request comes from one
+        commit = (
+            COMMIT_ON_FEATURE if ref.removeprefix("refs/").startswith("pull/") else ref
+        )
+        # A commit resolves to the full SHA it has recordings for
+        oid = next(
+            (
+                head
+                for key in sorted(fixtures)
+                if key.startswith(f"{repository}/compare/")
+                and len(head := key.removesuffix(".json").rpartition("...")[2]) == 40
+                and head.startswith(commit)
+            ),
+            None,
+        )
+        found = branch is not None or tag is not None or oid is not None
+        return {
+            "data": {
+                "repository": {
+                    "branch": None if branch is None else {"name": ref},
+                    "tag": None if tag is None else {"name": ref},
+                    "object": {"oid": oid or ref} if found else None,
+                }
+            }
+        }
+
+    if not statuses:
+        # GitHub fails the whole query when the commit does not exist
+        return {"errors": [{"message": "Something went wrong"}]}
+
+    if query == DEFAULT_BRANCH_COMMIT_QUERY:
+        status = statuses[recorded_repository["default_branch"]]
+        return {
+            "data": {
+                "repository": {"defaultBranchRef": {"compare": {"status": status}}}
+            }
+        }
+
+    if query != UPSTREAM_COMMIT_QUERY:
+        raise AssertionError(f"Unexpected GraphQL query: {query}")
+
+    return {
+        "data": {
+            "repository": {
+                "refs": {
+                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                    # GraphQL has no comparison for a branch it can not compare
+                    "nodes": [
+                        {
+                            "compare": None
+                            if (status := statuses.get(branch["name"])) is None
+                            else {"status": status}
+                        }
+                        for branch in _recording(
+                            fixtures, f"{repository}/branches.json"
+                        )
+                    ],
+                }
+            }
+        }
+    }
 
 
 class MarketplaceResponses:
@@ -150,13 +275,32 @@ async def response_mocker(
 
         if (body := fixtures.get(_fixture_key(url))) is None:
             return AiohttpClientMockResponse(
-                method, url, status=HTTPStatus.NOT_FOUND, headers=PROXY_HEADERS
+                method,
+                url,
+                status=HTTPStatus.NOT_FOUND,
+                json={"message": "Not Found"},
+                headers=PROXY_HEADERS,
             )
 
         return AiohttpClientMockResponse(
             method, url, response=body, headers=PROXY_HEADERS
         )
 
+    async def _serve_graphql(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        """Answer a GraphQL query from the overrides or from the recordings."""
+        if (override := responses.pop(str(url))) is not None:
+            return override
+
+        return AiohttpClientMockResponse(
+            method,
+            url,
+            json=_answer_graphql(fixtures, data["query"], data["variables"]),
+            headers=PROXY_HEADERS,
+        )
+
+    aioclient_mock.post(GRAPHQL_URL, side_effect=_serve_graphql)
     for method in ("get", "head", "post"):
         aioclient_mock.request(method, re.compile(r".*"), side_effect=_serve)
 
