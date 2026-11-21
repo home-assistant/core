@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from copy import copy
-from datetime import timedelta
+from datetime import time, timedelta
 import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -17,6 +17,7 @@ from homeassistant.components.sonos.const import (
     MODEL_SONOS_ARC_ULTRA,
     SCAN_INTERVAL,
 )
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
@@ -766,6 +767,26 @@ async def test_alarms_multiple_households(
     alarm_clock.ListAlarms.assert_called_once()
     soco_b.alarmClock.ListAlarms.assert_called_once()
     assert "Could not refresh" not in caplog.text
+
+    # update_alarm works for each household and updates that household's alarm.
+    for entity_id, alarm_clock_mock in (
+        ("media_player.zone_a", alarm_clock),
+        ("media_player.bedroom", soco_b.alarmClock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SonosService.UPDATE_ALARM,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                SonosServiceArgument.ALARM_ID: 14,
+                SonosServiceArgument.TIME: "09:30:00",
+            },
+            blocking=True,
+        )
+        alarm_clock_mock.UpdateAlarm.assert_called_once()
+    data = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    assert data.alarms["test_household_id"].get("14").start_time == time(9, 30)
+    assert data.alarms["household_b"].get("14").start_time == time(9, 30)
 
 
 async def test_alarm_setup_for_undiscovered_speaker(

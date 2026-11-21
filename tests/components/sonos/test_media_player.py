@@ -1,12 +1,14 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
+from datetime import time
 import logging
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from soco.data_structures import (
     DidlAudioBroadcast,
     DidlAudioLineIn,
@@ -1733,6 +1735,7 @@ async def test_source_list_favorites_cleared(
 async def test_service_update_alarm(
     hass: HomeAssistant,
     soco: MockSoCo,
+    config_entry: MockConfigEntry,
     async_autosetup_sonos,
 ) -> None:
     """Test updating an alarm."""
@@ -1765,6 +1768,10 @@ async def test_service_update_alarm(
         ("Volume", 25),
         ("IncludeLinkedZones", "1"),
     ]
+    # The alarm used by the switch entity is updated.
+    alarm = config_entry.runtime_data.alarms["test_household_id"].get("14")
+    assert alarm.start_time == time(7, 15)
+    assert alarm.include_linked_zones is True
 
 
 async def test_service_update_alarm_dne(
