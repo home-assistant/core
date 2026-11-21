@@ -1,12 +1,14 @@
 """UniFi Network abstraction."""
 
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime, tzinfo
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.sites import Sites
+from aiounifi.models.firewall_policy import FirewallPolicySchedule
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
@@ -95,7 +97,13 @@ class UnifiHub:
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self.adoption = UnifiDeviceAdoption(self)
-        self._entity_helper = UnifiEntityHelper(hass, api)
+        self._entity_helper = UnifiEntityHelper(
+            hass,
+            api,
+            self.entity_loader.get_data_update_coordinator(
+                api.firewall_policies
+            ).update_lock,
+        )
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -134,6 +142,19 @@ class UnifiHub:
     ) -> None:
         """Queue commands to execute them together per device."""
         self._entity_helper.queue_poe_port_command(device_id, port_idx, poe_mode)
+
+    async def async_save_firewall_policy(
+        self,
+        obj_id: str,
+        *,
+        enabled: bool | None = None,
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        | None = None,
+    ) -> None:
+        """Save a change to a firewall policy, one write per policy at a time."""
+        await self._entity_helper.save_firewall_policy(
+            obj_id, enabled=enabled, schedule_fn=schedule_fn
+        )
 
     @property
     def signal_reachable(self) -> str:
