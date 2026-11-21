@@ -414,12 +414,13 @@ async def test_turn_on_and_off_optimistic_with_power_command(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "climate_on", "climate_off"),
+    ("hass_config", "initial_state", "climate_on", "climate_off"),
     [
         (
             help_custom_config(
                 climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["heat", "cool"]},)
             ),
+            "heat",
             "heat",
             None,
         ),
@@ -427,6 +428,7 @@ async def test_turn_on_and_off_optimistic_with_power_command(
             help_custom_config(
                 climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["off", "cool"]},)
             ),
+            "off",
             "cool",
             "off",
         ),
@@ -435,6 +437,7 @@ async def test_turn_on_and_off_optimistic_with_power_command(
 async def test_turn_on_and_off_without_power_command(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    initial_state: str,
     climate_on: str | None,
     climate_off: str | None,
 ) -> None:
@@ -442,7 +445,7 @@ async def test_turn_on_and_off_without_power_command(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == "off"
+    assert state.state == initial_state
 
     await common.async_turn_on(hass, ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
@@ -471,6 +474,56 @@ async def test_turn_on_and_off_without_power_command(
         assert state.state == "cool"
         mqtt_mock.async_publish.assert_has_calls([])
     mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "expected_state"),
+    [
+        pytest.param(
+            help_custom_config(climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["auto"]},)),
+            "auto",
+            id="only-auto",
+        ),
+        pytest.param(
+            help_custom_config(
+                climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["heat", "cool"]},)
+            ),
+            "heat",
+            id="first-mode",
+        ),
+        pytest.param(
+            help_custom_config(
+                climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["cool", "heat", "off"]},)
+            ),
+            "off",
+            id="off-preferred",
+        ),
+        pytest.param(
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"modes": ["cool", "heat"], "optimistic": True},),
+            ),
+            "cool",
+            id="optimistic-first-mode",
+        ),
+        pytest.param(
+            help_custom_config(climate.DOMAIN, DEFAULT_CONFIG, ({"modes": []},)),
+            "unknown",
+            id="no-modes",
+        ),
+    ],
+)
+async def test_initial_hvac_mode_without_state_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_state: str,
+) -> None:
+    """Test the initial hvac mode falls back to a mode from the modes list."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
