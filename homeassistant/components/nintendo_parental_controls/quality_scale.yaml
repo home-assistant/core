@@ -32,7 +32,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

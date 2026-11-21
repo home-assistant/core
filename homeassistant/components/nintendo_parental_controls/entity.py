@@ -33,6 +33,14 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
             serial_number=device.extra["serialNumber"],
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self.coordinator.device_available(
+            self._device.device_id
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """When entity is loaded."""
