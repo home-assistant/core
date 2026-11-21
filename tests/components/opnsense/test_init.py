@@ -17,7 +17,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components import device_tracker, sensor
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
     CONF_TRACKER_INTERFACES,
@@ -27,6 +27,7 @@ from homeassistant.components.opnsense.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -93,6 +94,23 @@ async def test_setup_entry_tracker_interface_not_found(
         "interface": "NOPE",
         "known": "WAN, LAN",
     }
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_coordinator_raises_config_entry_error_on_invalid_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+) -> None:
+    """Test coordinator wraps configuration errors as ConfigEntryError."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    mock_opnsense_client.get_arp_table.side_effect = OPNsenseInvalidAuth("bad auth")
+
+    with pytest.raises(ConfigEntryError, match="Error with OPNsense configuration"):
+        await coordinator._async_update_data()
 
 
 STALE_MAC = "aa:bb:cc:dd:ee:ff"
@@ -166,6 +184,14 @@ async def test_remove_config_entry_device_not_loaded(
     assert device_registry.async_get(device.id) is None
 
 
+@pytest.mark.parametrize(
+    ("entity_domain", "unique_id"),
+    [
+        (device_tracker.DOMAIN, ARP[1]["mac"]),
+        (sensor.DOMAIN, f"{ARP[1]['mac']}_interface"),
+        (sensor.DOMAIN, f"{ARP[1]['mac']}_expires"),
+    ],
+)
 async def test_remove_departed_client_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -174,6 +200,8 @@ async def test_remove_departed_client_device(
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
+    entity_domain: str,
+    unique_id: str,
 ) -> None:
     """Test a departed client's device is removable and re-created on reconnect."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -200,9 +228,7 @@ async def test_remove_departed_client_device(
         )
         is None
     )
-    assert (
-        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac) is None
-    )
+    assert entity_registry.async_get_entity_id(entity_domain, DOMAIN, unique_id) is None
 
     mock_opnsense_client.get_arp_table.return_value = ARP
     freezer.tick(SCAN_INTERVAL)
@@ -215,6 +241,6 @@ async def test_remove_departed_client_device(
     assert device is not None
     assert device.name == "Desktop"
     assert (
-        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+        entity_registry.async_get_entity_id(entity_domain, DOMAIN, unique_id)
         is not None
     )

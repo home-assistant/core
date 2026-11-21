@@ -3,13 +3,13 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import OPNsenseDeviceTrackerCoordinator
-from .types import DeviceDetails, OPNsenseConfigEntry
+from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
+from .types import DeviceDetails
 
 
 async def async_setup_entry(
@@ -18,13 +18,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for OPNsense component."""
-    client = entry.runtime_data.client
-    interfaces = entry.runtime_data.tracker_interfaces
+    coordinator = entry.runtime_data.coordinator
     tracked_devices = entry.runtime_data.tracked_devices
 
-    coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
-    entry.runtime_data.tracker_coordinator = coordinator
-
+    @callback
     def _async_add_new_entities() -> None:
         """Rename the devices of renamed clients and add new clients."""
         if not coordinator.data:
@@ -42,7 +39,7 @@ async def async_setup_entry(
                 )
                 and device_entry.name != hostname
             ):
-                device_registry.async_update_device(device_entry.id, name=hostname)
+                device_registry.async_update_device(device_entry.id, name=str(hostname))
 
         entities = []
         for mac_address in coordinator.data:
@@ -57,19 +54,17 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
-    # Initial data fetch
-    await coordinator.async_config_entry_first_refresh()
     _async_add_new_entities()
 
 
 class OPNsenseDeviceTrackerEntity(
-    CoordinatorEntity[OPNsenseDeviceTrackerCoordinator], ScannerEntity
+    CoordinatorEntity[OPNsenseCoordinator], ScannerEntity
 ):
     """Representation of a tracked device."""
 
     def __init__(
         self,
-        coordinator: OPNsenseDeviceTrackerCoordinator,
+        coordinator: OPNsenseCoordinator,
         mac_address: str,
     ) -> None:
         """Initialize the device tracker entity."""
@@ -107,7 +102,9 @@ class OPNsenseDeviceTrackerEntity(
         """Return the primary IP address of the device."""
         device_data = self.device_data
         if device_data:
-            return device_data.get("ip")
+            ip = device_data.get("ip")
+            if ip:
+                return str(ip)
         return None
 
     @property
@@ -117,5 +114,6 @@ class OPNsenseDeviceTrackerEntity(
         device_data = self.device_data
         if device_data:
             hostname = device_data.get("hostname")
-            return hostname or None
+            if hostname:
+                return str(hostname)
         return None
