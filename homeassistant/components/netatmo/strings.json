@@ -134,6 +134,18 @@
       "temp_trend": {
         "name": "Temperature trend"
       },
+      "therm_setpoint_mode": {
+        "name": "Setpoint mode",
+        "state": {
+          "away": "[%key:common::state::not_home%]",
+          "hg": "[%key:component::netatmo::entity::climate::thermostat::state_attributes::preset_mode::state::frost_guard%]",
+          "home": "[%key:common::state::home%]",
+          "manual": "[%key:common::state::manual%]",
+          "max": "Max",
+          "off": "[%key:common::state::off%]",
+          "schedule": "[%key:component::netatmo::entity::climate::thermostat::state_attributes::preset_mode::state::schedule%]"
+        }
+      },
       "wifi_strength": {
         "name": "Wi-Fi strength"
       },
