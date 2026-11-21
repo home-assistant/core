@@ -1452,8 +1452,7 @@ def mock_camera_storage(
         "status",
         {**MOCK_CAMERA_STATUS, "storage:0": deepcopy(MOCK_STORAGE_STATUS)},
     )
-    mock_camera_rpc_device.get_storage_list = AsyncMock(
+    mock_camera_rpc_device.storage_list = AsyncMock(
         return_value=deepcopy(MOCK_STORAGE_ITEMS)
     )
     return mock_camera_rpc_device
-

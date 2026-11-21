@@ -127,7 +127,7 @@ async def test_browse_storage_empty(
     hass: HomeAssistant, mock_camera_storage: Mock
 ) -> None:
     """Test browsing empty storage returns no children."""
-    mock_camera_storage.get_storage_list = AsyncMock(return_value=[])
+    mock_camera_storage.storage_list = AsyncMock(return_value=[])
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
@@ -248,7 +248,7 @@ async def test_browse_storage_inactive(
         )
 
     assert excinfo.value.translation_key == "storage_unavailable"
-    assert mock_camera_storage.get_storage_list.await_count == 0
+    assert mock_camera_storage.storage_list.await_count == 0
 
 
 async def test_resolve_storage_inactive(
@@ -266,7 +266,7 @@ async def test_resolve_storage_inactive(
         )
 
     assert excinfo.value.translation_key == "storage_unavailable"
-    assert mock_camera_storage.get_storage_list.await_count == 0
+    assert mock_camera_storage.storage_list.await_count == 0
 
 
 @pytest.mark.parametrize("side_effect", [DeviceConnectionError(), RpcCallError(999)])
@@ -274,7 +274,7 @@ async def test_browse_storage_unavailable(
     hass: HomeAssistant, mock_camera_storage: Mock, side_effect: Exception
 ) -> None:
     """Test browsing storage raises when the device cannot be reached."""
-    mock_camera_storage.get_storage_list = AsyncMock(side_effect=side_effect)
+    mock_camera_storage.storage_list = AsyncMock(side_effect=side_effect)
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
@@ -290,7 +290,7 @@ async def test_browse_storage_auth_error(
     hass: HomeAssistant, mock_camera_storage: Mock
 ) -> None:
     """Test browsing storage starts reauth on authentication failure."""
-    mock_camera_storage.get_storage_list = AsyncMock(side_effect=InvalidAuthError)
+    mock_camera_storage.storage_list = AsyncMock(side_effect=InvalidAuthError)
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 

@@ -1,10 +1,11 @@
 """Expose Shelly camera storage as media sources."""
 
 from operator import itemgetter
-from typing import Any, NamedTuple, override
+from typing import NamedTuple, override
 from urllib.parse import urljoin
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.rpc_device.models import ShellyStorageItem
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
@@ -116,7 +117,7 @@ class ShellyStorageMediaSource(MediaSource):
         entry_id: str,
         identifier: str,
         error_cls: type[HomeAssistantError],
-    ) -> tuple[ShellyConfigEntry, list[dict[str, Any]]]:
+    ) -> tuple[ShellyConfigEntry, list[ShellyStorageItem]]:
         """Return the config entry and storage items for an entry id."""
         entry: ShellyConfigEntry | None = self.hass.config_entries.async_get_entry(
             entry_id
@@ -139,7 +140,7 @@ class ShellyStorageMediaSource(MediaSource):
                 translation_placeholders={"device": entry.title},
             )
         try:
-            items = await coordinator.device.get_storage_list(STORAGE_ID)
+            items = await coordinator.device.storage_list(STORAGE_ID)
         except InvalidAuthError as err:
             await coordinator.async_shutdown_device_and_start_reauth()
             raise error_cls(
@@ -200,15 +201,15 @@ class ShellyStorageMediaSource(MediaSource):
         return None
 
     def _async_storage_child(
-        self, entry: ShellyConfigEntry, stored: dict[str, Any], base_url: str
+        self, entry: ShellyConfigEntry, stored: ShellyStorageItem, base_url: str
     ) -> BrowseMediaSource:
         """Return BrowseMedia node for a single storage item."""
         kind = MEDIA_KINDS[stored["type"]]
         local_time = dt_util.as_local(
             dt_util.utc_from_timestamp(stored["ts"])
         ).strftime("%Y-%m-%d %H:%M:%S")
-        trigger = stored.get("trigger") or {}
-        title = f"{local_time} · {trigger.get('event', 'manual')}"
+        trigger = stored.get("trigger")
+        title = f"{local_time} · {trigger['event'] if trigger else 'manual'}"
         if (duration := stored.get("duration")) is not None:
             title += f" · {duration:g}s"
         return BrowseMediaSource(
