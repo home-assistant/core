@@ -963,6 +963,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "341513*",
     },
     {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "649A63*",
+    },
+    {
         "domain": "roborock",
         "macaddress": "249E7D*",
     },
