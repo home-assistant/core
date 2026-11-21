@@ -58,6 +58,75 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_food_item_uses_concise_summary(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a food item uses its name and keeps shopping and food details."""
+    shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
+    shopping_item.food.plural_name = "acorn squashes"
+    shopping_item.food.description = "Best roasted with olive oil"
+    food_matching_display = mock_mealie_client.get_shopping_items.return_value.items[2]
+    food_matching_display.food.description = "A purple variety of eggplant"
+
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+        return_response=True,
+    )
+    items = result["todo.mealie_supermarket"]["items"]
+    item = next(item for item in items if item["uid"] == shopping_item.item_id)
+    assert item["summary"] == "acorn squashes"
+    assert item["description"] == "1 can acorn squash\n\nBest roasted with olive oil"
+
+    food_without_plural = mock_mealie_client.get_shopping_items.return_value.items[3]
+    item = next(item for item in items if item["uid"] == food_without_plural.item_id)
+    assert item["summary"] == "flour"
+    assert item["description"] == "1 US cup flour"
+
+    item = next(item for item in items if item["uid"] == food_matching_display.item_id)
+    assert item["summary"] == "aubergine"
+    assert item["description"] == "A purple variety of eggplant"
+
+    note_item = mock_mealie_client.get_shopping_items.return_value.items[0]
+    item = next(item for item in items if item["uid"] == note_item.item_id)
+    assert item["summary"] == "2 Apples"
+    assert item.get("description") is None
+
+
+async def test_complete_concise_food_item_preserves_structured_data(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test completing a concise food item does not convert it to a note."""
+    shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
+    shopping_item.food.plural_name = "acorn squashes"
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: shopping_item.item_id, ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.parse_ingredient.assert_not_awaited()
+    updated_item = mock_mealie_client.update_shopping_item.call_args.args[1]
+    assert updated_item.food_id == shopping_item.food_id
+    assert updated_item.quantity == shopping_item.quantity
+    assert updated_item.unit_id == shopping_item.unit_id
+    assert updated_item.checked is True
+
+
 @pytest.mark.parametrize(
     ("service", "data", "method"),
     [
