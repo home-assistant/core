@@ -853,6 +853,13 @@ def create_heater_cooler_service_auto(
         pytest.param(HEATING_THRESHOLD, None, 15.6, 46.1, id="heating_threshold_only"),
         pytest.param(None, COOLING_THRESHOLD, 10.0, 30.0, id="cooling_threshold_only"),
         pytest.param(
+            (0.0, 40.0, 12.0, 0.5),
+            None,
+            0.0,
+            40.0,
+            id="zero_minimum_is_not_defaulted",
+        ),
+        pytest.param(
             HEATING_THRESHOLD,
             COOLING_THRESHOLD,
             7,
