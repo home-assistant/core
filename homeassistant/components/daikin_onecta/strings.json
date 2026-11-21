@@ -1,0 +1,670 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Unable to connect to the Daikin API.",
+      "invalid_auth": "The Daikin API rejected the authentication token.",
+      "invalid_token": "Invalid or expired token; please restart OAuth setup.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Failed due to an unexpected error.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Daikin device on your network. Press **Submit** to continue setting up Daikin Onecta."
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Daikin Onecta integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "device": {
+    "account": {
+      "name": "Daikin Onecta account"
+    },
+    "climate_zone": {
+      "name": "Climate zone"
+    },
+    "domestic_hot_water_flow_through": {
+      "name": "Domestic hot water flow-through unit"
+    },
+    "domestic_hot_water_tank": {
+      "name": "Domestic hot water tank"
+    },
+    "indoor_hydro_unit": {
+      "name": "Indoor hydro unit"
+    },
+    "indoor_unit": {
+      "name": "Indoor unit"
+    },
+    "management_point": {
+      "name": "Daikin unit"
+    },
+    "outdoor_unit": {
+      "name": "Outdoor unit"
+    },
+    "user_interface": {
+      "name": "User interface"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "daylightsavingtimeenabled": {
+        "name": "Daylight saving time enabled"
+      },
+      "drykeepsetting": {
+        "name": "Dry keep setting"
+      },
+      "gateway_isinerrorstate": {
+        "name": "Gateway is in error state"
+      },
+      "iscoolheatmaster": {
+        "name": "Is cool/heat master"
+      },
+      "isfirmwareupdatesupported": {
+        "name": "Is firmware update supported"
+      },
+      "isholidaymodeactive": {
+        "name": "Is holiday mode active"
+      },
+      "isincautionstate": {
+        "name": "Is in caution state"
+      },
+      "isinemergencystate": {
+        "name": "Is in emergency state"
+      },
+      "isinerrorstate": {
+        "name": "Is in error state"
+      },
+      "isininstallerstate": {
+        "name": "Is in installer state"
+      },
+      "isinmodeconflict": {
+        "name": "Is in mode conflict"
+      },
+      "isinwarningstate": {
+        "name": "Is in warning state"
+      },
+      "islockfunctionenabled": {
+        "name": "Is lock function enabled"
+      },
+      "ispowerfulmodeactive": {
+        "name": "Is powerful mode active"
+      },
+      "ledenabled": {
+        "name": "LED enabled"
+      },
+      "onoffmode": {
+        "name": "On/Off mode"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    },
+    "climate": {
+      "calculated_leaving_water_temperature": {
+        "name": "Calculated leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
+      },
+      "leaving_water_offset": {
+        "name": "Leaving water offset",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
+      },
+      "leaving_water_temperature": {
+        "name": "Leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
+      },
+      "room_temperature": {
+        "name": "Room temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "Position 1 (leftmost)",
+              "2": "Position 2",
+              "3": "Position 3",
+              "4": "Position 4",
+              "5": "Position 5",
+              "6": "Position 6",
+              "7": "Position 7 (rightmost)",
+              "fixed": "Fixed",
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "1": "Position 1 (highest)",
+              "2": "Position 2",
+              "3": "Position 3",
+              "4": "Position 4",
+              "5": "Position 5 (lowest)",
+              "fixed": "Fixed",
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "air_purifier": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "anti_pollen": "Anti-pollen",
+              "auto": "[%key:common::state::auto%]",
+              "auto_fan": "Auto fan",
+              "circulator": "Circulator",
+              "econo": "Econo",
+              "moist": "Moist",
+              "off": "[%key:common::state::off%]"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "schedule": {
+        "name": "Schedule",
+        "state": {
+          "home_assistant_schedule_is_disabled": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "sensor": {
+      "airpurificationmode": {
+        "name": "Air purification mode",
+        "state": {
+          "anti_pollen": "Anti-pollen",
+          "auto": "[%key:component::daikin_onecta::entity::sensor::operationmode::state::auto%]",
+          "auto_fan": "Auto fan",
+          "circulator": "Circulator",
+          "econo": "Econo",
+          "manual_fan": "Manual fan",
+          "moist": "Moist",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "calculatedleavingwatertemperature": {
+        "name": "Calculated leaving water temperature"
+      },
+      "controlmode": {
+        "name": "Control mode",
+        "state": {
+          "external_room_temperature": "External room temperature",
+          "leaving_water_temperature": "Leaving water temperature",
+          "room_temperature": "Room temperature"
+        }
+      },
+      "coolingdailyelectricalconsumption": {
+        "name": "Cooling daily electrical consumption"
+      },
+      "coolingdailygasconsumption": {
+        "name": "Cooling daily gas consumption"
+      },
+      "coolingmonthlyelectricalconsumption": {
+        "name": "Cooling monthly electrical consumption"
+      },
+      "coolingmonthlygasconsumption": {
+        "name": "Cooling monthly gas consumption"
+      },
+      "coolingmonthlythermaloutput": {
+        "name": "Cooling monthly thermal output"
+      },
+      "coolingweeklyelectricalconsumption": {
+        "name": "Cooling weekly electrical consumption"
+      },
+      "coolingweeklygasconsumption": {
+        "name": "Cooling weekly gas consumption"
+      },
+      "coolingyearlyelectricalconsumption": {
+        "name": "Cooling yearly electrical consumption"
+      },
+      "coolingyearlygasconsumption": {
+        "name": "Cooling yearly gas consumption"
+      },
+      "coolingyearlythermaloutput": {
+        "name": "Cooling yearly thermal output"
+      },
+      "currentpowerconsumption": {
+        "name": "Current power consumption"
+      },
+      "currentthermaloutput": {
+        "name": "Current thermal output"
+      },
+      "datetime": {
+        "name": "Date/time"
+      },
+      "deltad": {
+        "name": "DeltaD"
+      },
+      "errorcode": {
+        "name": "Error code"
+      },
+      "fanmotorrotationspeed": {
+        "name": "Fan motor rotation speed"
+      },
+      "gateway_errorcode": {
+        "name": "Gateway error code"
+      },
+      "heatexchangertemperature": {
+        "name": "Heat exchanger temperature"
+      },
+      "heatingdailyelectricalconsumption": {
+        "name": "Heating daily electrical consumption"
+      },
+      "heatingdailygasconsumption": {
+        "name": "Heating daily gas consumption"
+      },
+      "heatingmonthlyelectricalconsumption": {
+        "name": "Heating monthly electrical consumption"
+      },
+      "heatingmonthlygasconsumption": {
+        "name": "Heating monthly gas consumption"
+      },
+      "heatingmonthlythermaloutput": {
+        "name": "Heating monthly thermal output"
+      },
+      "heatingweeklyelectricalconsumption": {
+        "name": "Heating weekly electrical consumption"
+      },
+      "heatingweeklygasconsumption": {
+        "name": "Heating weekly gas consumption"
+      },
+      "heatingyearlyelectricalconsumption": {
+        "name": "Heating yearly electrical consumption"
+      },
+      "heatingyearlygasconsumption": {
+        "name": "Heating yearly gas consumption"
+      },
+      "heatingyearlythermaloutput": {
+        "name": "Heating yearly thermal output"
+      },
+      "heatupmode": {
+        "name": "Heat up mode",
+        "state": {
+          "reheat_only": "Reheat only",
+          "reheat_schedule": "Reheat schedule",
+          "schedule_only": "Schedule only",
+          "scheduled_reheat": "Scheduled reheat"
+        }
+      },
+      "ipaddress": {
+        "name": "IP address"
+      },
+      "leavingwateroffset": {
+        "name": "Leaving water offset"
+      },
+      "leavingwatertemperature": {
+        "name": "Leaving water temperature"
+      },
+      "operationmode": {
+        "name": "Operation mode",
+        "state": {
+          "auto": "Auto",
+          "cooling": "Cooling",
+          "dry": "Dry",
+          "fan_only": "Fan only",
+          "heating": "Heating",
+          "heating_day": "Heating day",
+          "heating_night": "Heating night",
+          "humidification": "Humidification",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "outdoortemperature": {
+        "name": "Outdoor temperature"
+      },
+      "pm10concentration": {
+        "name": "PM10 concentration"
+      },
+      "pm1concentration": {
+        "name": "PM1 concentration"
+      },
+      "pm25concentration": {
+        "name": "PM2.5 concentration"
+      },
+      "powerfulmode": {
+        "name": "Powerful mode"
+      },
+      "ratelimitremainingday": {
+        "name": "Rate limit remaining day"
+      },
+      "regioncode": {
+        "name": "Region code"
+      },
+      "roomhumidity": {
+        "name": "Room humidity"
+      },
+      "roomtemperature": {
+        "name": "Room temperature"
+      },
+      "setpointmode": {
+        "name": "Setpoint mode",
+        "state": {
+          "fixed": "Fixed",
+          "weather_dependent": "Weather dependent",
+          "weather_dependent_cooling_fixed_heating": "Weather-dependent cooling, fixed heating",
+          "weather_dependent_heating_fixed_cooling": "Weather-dependent heating, fixed cooling"
+        }
+      },
+      "sgtin": {
+        "name": "SGTIN"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "suctiontemperature": {
+        "name": "Suction temperature"
+      },
+      "tanktemperature": {
+        "name": "Tank temperature"
+      },
+      "timezone": {
+        "name": "Time zone"
+      },
+      "wificonnectionssid": {
+        "name": "WiFi connection SSID"
+      },
+      "wificonnectionstrength": {
+        "name": "WiFi connection strength"
+      }
+    },
+    "switch": {
+      "economode": {
+        "name": "Econo mode"
+      },
+      "streamermode": {
+        "name": "Streamer mode"
+      }
+    },
+    "update": {
+      "firmwareupdate": {
+        "name": "Firmware update"
+      }
+    }
+  },
+  "exceptions": {
+    "air_purifier_mode_unavailable": {
+      "message": "Air purifier mode control is unavailable for {device}"
+    },
+    "air_purifier_power_unavailable": {
+      "message": "Air purifier power control is unavailable for {device}"
+    },
+    "air_purifier_preset_and_percentage": {
+      "message": "Choose either a preset or a fan speed for {device}"
+    },
+    "air_purifier_set_mode_failed": {
+      "message": "Failed to set the air-purification mode for {device}"
+    },
+    "air_purifier_set_percentage_failed": {
+      "message": "Failed to set the fan speed for {device}"
+    },
+    "air_purifier_speed_unavailable": {
+      "message": "Air purifier speed control is unavailable for {device}"
+    },
+    "air_purifier_turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "air_purifier_turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    },
+    "api_error": {
+      "message": "Daikin API returned HTTP {status}"
+    },
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
+    },
+    "climate_hvac_mode_unavailable": {
+      "message": "The requested HVAC mode is unavailable for {device}"
+    },
+    "climate_operation_mode_unavailable": {
+      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
+    },
+    "climate_power_unavailable": {
+      "message": "The power control is unavailable for {device}"
+    },
+    "climate_temperature_unavailable": {
+      "message": "The temperature control is unavailable for {device}"
+    },
+    "connection_failed": {
+      "message": "Unable to connect to the Daikin API"
+    },
+    "fan_control_unavailable": {
+      "message": "Cannot set the fan mode for {device} because fan-control data is unavailable"
+    },
+    "fan_mode_unavailable": {
+      "message": "The requested fan mode is unavailable for {device}"
+    },
+    "firmware_install_failed": {
+      "message": "Failed to install firmware on {device}"
+    },
+    "firmware_install_unavailable": {
+      "message": "Firmware installation is unavailable for {device}"
+    },
+    "invalid_response": {
+      "message": "Daikin API returned an invalid response"
+    },
+    "manual_refresh_deferred": {
+      "message": "Refresh is deferred; retry in {seconds} seconds"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "preset_mode_unavailable": {
+      "message": "The requested preset mode is unavailable for {device}"
+    },
+    "rate_limit_exceeded": {
+      "message": "Daikin API rate limit exceeded"
+    },
+    "refresh_deferred": {
+      "message": "Refresh delayed while waiting to retry the Daikin API"
+    },
+    "refresh_failed": {
+      "message": "Failed to refresh Daikin devices"
+    },
+    "schedule_select_failed": {
+      "message": "Failed to select schedule for {device}"
+    },
+    "schedule_selection_unavailable": {
+      "message": "Cannot select a schedule for {device} because schedule data is unavailable"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set the fan mode for {device}"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set the HVAC mode for {device}"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set the preset mode for {device}"
+    },
+    "set_swing_mode_failed": {
+      "message": "Failed to set the swing mode for {device}"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set the temperature for {device}"
+    },
+    "swing_control_unavailable": {
+      "message": "Swing control is unavailable for {device}"
+    },
+    "switch_state_unavailable": {
+      "message": "Cannot change {device} because its current switch state is unavailable"
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    },
+    "water_heater_off": {
+      "message": "Cannot set the temperature for {device} while it is off"
+    },
+    "water_heater_on_off_unavailable": {
+      "message": "Water heater on/off control is unavailable for {device}"
+    },
+    "water_heater_operation_mode_unavailable": {
+      "message": "The requested water heater operation mode is unavailable for {device}"
+    },
+    "water_heater_set_operation_mode_failed": {
+      "message": "Failed to set operation mode for {device}"
+    },
+    "water_heater_set_temperature_failed": {
+      "message": "Failed to set temperature for {device}"
+    },
+    "water_heater_temperature_not_settable": {
+      "message": "Cannot set the temperature for {device} because it is not writable"
+    },
+    "water_heater_turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "water_heater_turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_status": "Daikin API status",
+      "max_day": "Daily API request limit",
+      "max_minute": "Per-minute API request limit",
+      "oauth2_status": "Daikin OAuth service status",
+      "oauth2_token_valid": "OAuth token valid",
+      "ratelimit_reset": "Rate limit reset time",
+      "remaining_day": "Daily API requests remaining",
+      "remaining_minute": "Per-minute API requests remaining",
+      "retry_after": "Retry after"
+    }
+  }
+}

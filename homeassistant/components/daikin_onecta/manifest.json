@@ -1,0 +1,34 @@
+{
+  "domain": "daikin_onecta",
+  "name": "Daikin Onecta",
+  "after_dependencies": ["zeroconf"],
+  "categories": [
+    "climate.air_purifiers_humidifiers",
+    "climate.heat_pumps_air_conditioning",
+    "climate.water_heaters"
+  ],
+  "codeowners": ["@jwillemsen"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/daikin_onecta",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["daikin_onecta"],
+  "quality_scale": "bronze",
+  "requirements": ["daikin-onecta==0.7.2"],
+  "zeroconf": [
+    {
+      "name": "altherma4-*._https._tcp.local.",
+      "type": "_https._tcp.local."
+    },
+    {
+      "name": "altherma._daikin._tcp.local.",
+      "type": "_daikin._tcp.local."
+    },
+    {
+      "name": "ndj._daikin._tcp.local.",
+      "type": "_daikin._tcp.local."
+    }
+  ]
+}
