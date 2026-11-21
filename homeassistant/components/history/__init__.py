@@ -31,9 +31,9 @@ _ONE_DAY = timedelta(days=1)
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.deprecated(CONF_INCLUDE),
-            cv.deprecated(CONF_EXCLUDE),
-            cv.deprecated(CONF_ORDER),
+            cv.deprecated(CONF_INCLUDE, breaks_in_ha_version="2027.6.0"),
+            cv.deprecated(CONF_EXCLUDE, breaks_in_ha_version="2027.6.0"),
+            cv.deprecated(CONF_ORDER, breaks_in_ha_version="2027.6.0"),
             INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
                 {probatio.Optional(CONF_ORDER, default=False): cv.boolean}
             ),

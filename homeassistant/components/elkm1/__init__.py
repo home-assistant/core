@@ -134,7 +134,7 @@ DEVICE_SCHEMA_SUBDOMAIN = probatio.Schema(
 )
 
 DEVICE_SCHEMA = probatio.All(
-    cv.deprecated(CONF_TEMPERATURE_UNIT),
+    cv.deprecated(CONF_TEMPERATURE_UNIT, breaks_in_ha_version="2027.6.0"),
     probatio.Schema(
         {
             probatio.Required(CONF_HOST): cv.string,

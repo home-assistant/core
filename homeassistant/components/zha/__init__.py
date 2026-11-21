@@ -84,9 +84,9 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             probatio.All(
-                cv.deprecated(CONF_USB_PATH),
-                cv.deprecated(CONF_BAUDRATE),
-                cv.deprecated(CONF_RADIO_TYPE),
+                cv.deprecated(CONF_USB_PATH, breaks_in_ha_version="2027.6.0"),
+                cv.deprecated(CONF_BAUDRATE, breaks_in_ha_version="2027.6.0"),
+                cv.deprecated(CONF_RADIO_TYPE, breaks_in_ha_version="2027.6.0"),
                 ZHA_CONFIG_SCHEMA,
             ),
         ),

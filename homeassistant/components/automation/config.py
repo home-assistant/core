@@ -63,7 +63,7 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 PLATFORM_SCHEMA = probatio.All(
     _backward_compat_schema,
-    cv.deprecated(CONF_HIDE_ENTITY),
+    cv.deprecated(CONF_HIDE_ENTITY, breaks_in_ha_version="2027.6.0"),
     script.make_script_schema(
         {
             # str on purpose
