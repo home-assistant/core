@@ -103,20 +103,26 @@ REAUTH_V1_V2C_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+V3_CREDENTIALS_SCHEMA = {
+    probatio.Required(CONF_USERNAME): str,
+    probatio.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
+    probatio.Optional(
+        CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
+    ): AUTH_PROTOCOL_SELECTOR,
+    probatio.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
+    probatio.Optional(
+        CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
+    ): PRIV_PROTOCOL_SELECTOR,
+}
+
 STEP_V3_DATA_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_USERNAME): str,
-        probatio.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
-        probatio.Optional(
-            CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
-        ): AUTH_PROTOCOL_SELECTOR,
-        probatio.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
-        probatio.Optional(
-            CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
-        ): PRIV_PROTOCOL_SELECTOR,
-        probatio.Optional(CONF_CONTEXT_NAME): str,
-    }
+    {**V3_CREDENTIALS_SCHEMA, probatio.Optional(CONF_CONTEXT_NAME): str}
 )
+
+# A reauthentication keeps the context of the entry, so it is not part of the form:
+# the context is part of the device identity, and changing it is what the reconfigure
+# flow is for.
+REAUTH_V3_DATA_SCHEMA = probatio.Schema(V3_CREDENTIALS_SCHEMA)
 
 DEVICE_TRACKER_DATA_SCHEMA = probatio.Schema(
     {
@@ -304,8 +310,11 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                     **_suggested_credentials(self._user_data),
                     **user_input,
                     # Stored for every entry, also when there is none, so the
-                    # duplicate check can compare it symmetrically.
-                    CONF_CONTEXT_NAME: user_input.get(CONF_CONTEXT_NAME) or "",
+                    # duplicate check can compare it symmetrically. A reauthentication
+                    # keeps the context of the entry, because its form does not ask.
+                    CONF_CONTEXT_NAME: user_input.get(CONF_CONTEXT_NAME)
+                    or self._user_data.get(CONF_CONTEXT_NAME)
+                    or "",
                 }
                 if result := await self._async_finish(data, errors):
                     return result
@@ -318,11 +327,12 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             suggestions = self._user_data
 
-        if is_v3:
+        if self.source == SOURCE_REAUTH:
+            # A reauthentication restores the credentials of the same device, so it
+            # neither prefills the default community nor offers the context
+            data_schema = REAUTH_V3_DATA_SCHEMA if is_v3 else REAUTH_V1_V2C_DATA_SCHEMA
+        elif is_v3:
             data_schema = STEP_V3_DATA_SCHEMA
-        elif self.source == SOURCE_REAUTH:
-            # Do not prefill the default community when reauthenticating
-            data_schema = REAUTH_V1_V2C_DATA_SCHEMA
         else:
             data_schema = STEP_V1_V2C_DATA_SCHEMA
 

@@ -348,9 +348,10 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
     def _handle_coordinator_update(self) -> None:
         """Update the IP address before the base class writes the state."""
         mac = self.mac_address
+        if TYPE_CHECKING:
+            # Set in __init__ and never changed
+            assert mac is not None
         self._attr_ip_address = (
-            self.coordinator.data.get(mac)
-            if self.coordinator.data and mac is not None
-            else None
+            self.coordinator.data.get(mac) if self.coordinator.data else None
         )
         super()._handle_coordinator_update()

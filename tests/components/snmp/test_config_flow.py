@@ -34,6 +34,7 @@ from homeassistant.components.snmp.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
+    ConfigSubentry,
     FlowType,
     SubentryFlowContext,
     SubentryFlowResult,
@@ -478,6 +479,40 @@ async def test_subentry_flow_single_tracker(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_subentry_flow_single_tracker_added_during_the_walk(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a tracker added while another flow probes the device is refused."""
+    entry = mock_entry(baseoid=None)
+    entry.add_to_hass(hass)
+
+    result = await _async_start_subentry_flow(hass, entry)
+    assert result["type"] is FlowResultType.FORM
+
+    async def _walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Add the tracker of another flow while this one waits for the device."""
+        assert hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data={CONF_BASEOID: ARP_TABLE_MAC_OID},
+                subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
+                title=ARP_TABLE_MAC_OID,
+                unique_id=ARP_TABLE_MAC_OID,
+            ),
+        )
+        return
+        yield  # pylint: disable=unreachable
+
+    with patch_walk(_walk):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_BASEOID: ARP_TABLE_MAC_OID}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)) == 1
 
 
 @pytest.mark.usefixtures("mock_walk_empty")
@@ -1384,6 +1419,7 @@ async def test_reauth_flow_updates_credentials(
         username="user",
         auth_key="old-key",
         auth_protocol="hmac-sha",
+        context_name="ctx",
     )
     entry.add_to_hass(hass)
 
@@ -1398,6 +1434,8 @@ async def test_reauth_flow_updates_credentials(
     data_schema = result["data_schema"].schema
     assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "user"
     assert get_schema_suggested_value(data_schema, CONF_AUTH_KEY) is None
+    # The context is part of the device identity, so a reauth cannot change it
+    assert CONF_CONTEXT_NAME not in data_schema
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
@@ -1417,6 +1455,7 @@ async def test_reauth_flow_updates_credentials(
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_AUTH_KEY] == "new-key"
     assert entry.data[CONF_HOST] == "192.168.1.1"
+    assert entry.data[CONF_CONTEXT_NAME] == "ctx"
     assert mock_setup_entry.called
 
 

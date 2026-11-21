@@ -127,18 +127,15 @@ async def async_normalize_oid(hass: HomeAssistant, oid: str) -> str | None:
     same table compare equal.
     """
     engine = await async_get_snmp_engine(hass)
-    mib_view_controller = engine.cache["mibViewController"]
-
-    def _resolve() -> tuple[int, ...]:
-        object_identity = ObjectIdentity(oid.strip())
-        object_identity.resolve_with_mib(mib_view_controller)
-        return object_identity.get_oid().asTuple()
-
+    # The MIBs are loaded when the engine is created, and pysnmp resolves the
+    # ObjectType of a request in the event loop, so the resolve stays in the loop
+    # too: the view controller shared through the engine is not safe between threads.
     try:
-        resolved = await hass.async_add_executor_job(_resolve)
+        object_identity = ObjectIdentity(oid.strip())
+        object_identity.resolve_with_mib(engine.cache["mibViewController"])
     except PySnmpError:
         return None
-    return ".".join(str(component) for component in resolved)
+    return ".".join(str(component) for component in object_identity.get_oid().asTuple())
 
 
 def create_context_data(context_name: str | None) -> ContextData:
