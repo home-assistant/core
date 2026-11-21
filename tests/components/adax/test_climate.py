@@ -305,6 +305,45 @@ async def test_climate_cloud_stale_data(
         clients[1].set_room_target_temperature.assert_called_once_with("1", 23, True)
 
 
+async def test_climate_cloud_errors_new_client(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_config_entry: MockConfigEntry,
+) -> None:
+    """Test a new client is created after 10 minutes of failing polls."""
+    clients = []
+
+    def _client(*args, **kwargs) -> AsyncMock:
+        client = AsyncMock()
+        client.fetch_rooms_info.return_value = [
+            dict(room) for room in CLOUD_DEVICE_DATA
+        ]
+        clients.append(client)
+        return client
+
+    with patch("homeassistant.components.adax.coordinator.Adax", _client):
+        await setup_integration(hass, mock_cloud_config_entry)
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        clients[0].fetch_rooms_info.side_effect = OSError
+
+        for _ in range(9):
+            freezer.tick(SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert len(clients) == 1
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(clients) == 2
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == HVACMode.HEAT
+
+
 async def test_climate_cloud_new_data_with_same_values(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

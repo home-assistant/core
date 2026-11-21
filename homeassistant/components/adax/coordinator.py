@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the Adax component."""
 
-from datetime import datetime
+from datetime import timedelta
 import logging
 from typing import Any, cast, override
 
@@ -12,11 +12,12 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
-from .const import ACCOUNT_ID, SCAN_INTERVAL, STALE_DATA_TIMEOUT
+from .const import ACCOUNT_ID, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+STALE_DATA_TIMEOUT = timedelta(minutes=10)
 
 
 type AdaxConfigEntry = ConfigEntry[AdaxCloudCoordinator | AdaxLocalCoordinator]
@@ -39,7 +40,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         self.adax_data_handler = self._create_client()
         self._last_rooms: list[dict[str, Any]] | None = None
-        self._last_new_data: datetime = dt_util.utcnow()
+        self._last_new_data = hass.loop.time()
 
     def _create_client(self) -> Adax:
         """Create a client for the Adax cloud API."""
@@ -73,26 +74,34 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 new_data = rooms is not self._last_rooms
 
             if not rooms:
+                self._replace_client_if_stale()
                 raise UpdateFailed("No rooms available from Adax API")
 
         except OSError as e:
+            self._replace_client_if_stale()
             raise UpdateFailed(f"Error communicating with API: {e}") from e
-
-        now = dt_util.utcnow()
-        if new_data:
-            self._last_rooms = rooms
-            self._last_new_data = now
-        elif now - self._last_new_data >= STALE_DATA_TIMEOUT:
-            # Start again with a new client, which logs in again.
-            self.adax_data_handler = self._create_client()
-            self._last_rooms = None
-            self._last_new_data = now
-            raise UpdateFailed("No new data from the Adax API")
 
         for room in rooms:
             room["energyWh"] = int(room.get("energyWh", 0))
 
+        if new_data:
+            self._last_rooms = rooms
+            self._last_new_data = self.hass.loop.time()
+        elif self._replace_client_if_stale():
+            raise UpdateFailed("No new data from the Adax API")
+
         return {r["id"]: r for r in rooms}
+
+    def _replace_client_if_stale(self) -> bool:
+        """Start again with a new client after too long without new data."""
+        now = self.hass.loop.time()
+        if now - self._last_new_data < STALE_DATA_TIMEOUT.total_seconds():
+            return False
+        # A new client logs in again.
+        self.adax_data_handler = self._create_client()
+        self._last_rooms = None
+        self._last_new_data = now
+        return True
 
 
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
