@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition as condition_helper, issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.script import CONF_MAX, CONF_MAX_EXCEEDED, Script
+from homeassistant.helpers.script import (
+    CONF_MAX,
+    CONF_MAX_EXCEEDED,
+    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_QUEUED,
+    Script,
+)
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.typing import ConfigType
 
@@ -29,6 +35,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .dry_run import DryRunInput
 from .entity import (
     AutomationEntity,
     BaseAutomationEntity,
@@ -89,6 +96,39 @@ def _automation_name(automation_config: AutomationEntityConfig) -> str:
     return config_block.get(CONF_ALIAS) or f"{DOMAIN} {list_no}"
 
 
+def _automation_variables(config_block: ConfigType) -> ScriptVariables | None:
+    """Return the variables of an automation, with its trigger variables first."""
+    trigger_variables: ScriptVariables | None = config_block.get(CONF_TRIGGER_VARIABLES)
+    variables: ScriptVariables | None = config_block.get(CONF_VARIABLES)
+    if trigger_variables is None:
+        return variables
+    if variables is None:
+        return trigger_variables
+    merged = ScriptVariables(dict(trigger_variables.as_dict()))
+    merged.variables.update(variables.as_dict())
+    return merged
+
+
+def dry_run_input_from_config(config_block: ConfigType) -> DryRunInput:
+    """Return what a dry run of a validated, unsaved automation config needs."""
+    mode: str = config_block[CONF_MODE]
+    return DryRunInput(
+        enabled=True,
+        mode=mode,
+        current_runs=0,
+        max_runs=(
+            config_block[CONF_MAX]
+            if mode in (SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED)
+            else None
+        ),
+        trigger_config=config_block[CONF_TRIGGERS],
+        condition_config=config_block.get(CONF_CONDITIONS, []),
+        this=None,
+        trigger_variables=config_block.get(CONF_TRIGGER_VARIABLES),
+        variables=_automation_variables(config_block),
+    )
+
+
 async def _create_automation_entities(
     hass: HomeAssistant, automation_configs: list[AutomationEntityConfig]
 ) -> list[BaseAutomationEntity]:
@@ -139,18 +179,6 @@ async def _create_automation_entities(
         else:
             condition = None
 
-        # Add trigger variables to variables
-        variables = None
-        if CONF_TRIGGER_VARIABLES in config_block and CONF_VARIABLES in config_block:
-            variables = ScriptVariables(
-                dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
-            )
-            variables.variables.update(config_block[CONF_VARIABLES].as_dict())
-        elif CONF_TRIGGER_VARIABLES in config_block:
-            variables = config_block[CONF_TRIGGER_VARIABLES]
-        elif CONF_VARIABLES in config_block:
-            variables = config_block[CONF_VARIABLES]
-
         entity = AutomationEntity(
             automation_id,
             name,
@@ -158,7 +186,7 @@ async def _create_automation_entities(
             condition,
             action_script,
             initial_state,
-            variables,
+            _automation_variables(config_block),
             config_block.get(CONF_TRIGGER_VARIABLES),
             automation_config.raw_config,
             automation_config.raw_blueprint_inputs,
