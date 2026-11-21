@@ -121,11 +121,13 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         try:
-            await client.all_devices()
+            devices = await client.all_devices()
         except PowerfoxAuthenticationError:
             return "invalid_auth"
         except PowerfoxConnectionError:
             return "cannot_connect"
         except PowerfoxNoDataError:
+            return "no_devices"
+        if not devices:
             return "no_devices"
         return None
