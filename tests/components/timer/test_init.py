@@ -464,17 +464,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         ServiceValidationError,
-        match="Cannot change timer timer.test1 beyond its duration",
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            TimerService.CHANGE,
-            {TargetKey.ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 20},
-            blocking=True,
-        )
-
-    with pytest.raises(
-        ServiceValidationError,
         match="Cannot change timer timer.test1 to a negative remaining time",
     ):
         await hass.services.async_call(
@@ -525,6 +514,29 @@ async def test_start_service(hass: HomeAssistant) -> None:
             ).isoformat(),
             TimerEntityStateAttribute.LAST_TRANSITION: "started",  # Change does not set last_transition
             TimerEntityStateAttribute.REMAINING: "0:00:14",
+        }
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        TimerService.CHANGE,
+        {TargetKey.ENTITY_ID: "timer.test1", TimerServiceArgument.DURATION: 20},
+        blocking=True,
+    )
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+    # Extending beyond the duration grows the duration to the new remaining time
+    assert (
+        state.attributes
+        == {
+            TimerEntityStateAttribute.EDITABLE: False,
+            TimerEntityStateAttribute.DURATION: "0:00:34",
+            TimerEntityStateAttribute.FINISHES_AT: (
+                utcnow() + timedelta(seconds=34)
+            ).isoformat(),
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",  # Change does not set last_transition
+            TimerEntityStateAttribute.REMAINING: "0:00:34",
         }
     )
 

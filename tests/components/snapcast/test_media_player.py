@@ -7,23 +7,20 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_GROUP_MEMBERS,
-    ATTR_INPUT_SOURCE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_JOIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -75,10 +72,10 @@ async def test_join(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-            ATTR_GROUP_MEMBERS: members,
+            TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: members,
         },
         blocking=True,
     )
@@ -101,9 +98,9 @@ async def test_unjoin(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
+        MediaPlayerService.UNJOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
         },
         blocking=True,
     )
@@ -139,10 +136,12 @@ async def test_join_non_snapcast_client(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-                ATTR_GROUP_MEMBERS: ["media_player.dummy_media_player_1"],
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                    "media_player.dummy_media_player_1"
+                ],
             },
             blocking=True,
         )
@@ -179,10 +178,10 @@ async def test_join_different_server(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-                ATTR_GROUP_MEMBERS: [
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
                     "media_player.snapcast_snapcast_client_server2_client2"
                 ],
             },
@@ -214,10 +213,12 @@ async def test_join_client_key_error(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-                ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                    "media_player.test_client_2_snapcast_client"
+                ],
             },
             blocking=True,
         )
@@ -244,10 +245,12 @@ async def test_join_client_identifier_underscore(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-            ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+            TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                "media_player.test_client_2_snapcast_client"
+            ],
         },
         blocking=True,
     )
@@ -339,10 +342,10 @@ async def test_select_source_group_is_none(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-                ATTR_INPUT_SOURCE: "fake_source",
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                MediaPlayerServiceArgument.SOURCE: "fake_source",
             },
             blocking=True,
         )
@@ -368,10 +371,12 @@ async def test_join_group_is_none(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
-                ATTR_GROUP_MEMBERS: ["media_player.test_client_2_snapcast_client"],
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                    "media_player.test_client_2_snapcast_client"
+                ],
             },
             blocking=True,
         )
@@ -397,9 +402,9 @@ async def test_unjoin_group_is_none(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_UNJOIN,
+            MediaPlayerService.UNJOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_client_1_snapcast_client",
+                TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client",
             },
             blocking=True,
         )
