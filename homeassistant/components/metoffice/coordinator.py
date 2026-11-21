@@ -1,6 +1,8 @@
 """Data update coordinator for the Met Office integration."""
 
+import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Literal, override
 
@@ -16,8 +18,9 @@ from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import location as location_util
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, UPDATE_MINIMUM_DISTANCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +31,71 @@ type MetOfficeConfigEntry = ConfigEntry[MetOfficeRuntimeData]
 class MetOfficeRuntimeData:
     """Met Office config entry."""
 
-    coordinates: str
+    name: str
     hourly_coordinator: MetOfficeUpdateCoordinator
     daily_coordinator: MetOfficeUpdateCoordinator
     twice_daily_coordinator: MetOfficeUpdateCoordinator
-    name: str
+
+    @property
+    def coordinates(self) -> str:
+        """Get current coordinates in string form."""
+        [current_latitude, current_longitude] = self._current_coordinates
+        return f"{current_latitude}_{current_longitude}"
+
+    def __init__(
+        self,
+        name: str,
+        initial_coordinates: tuple[float, float],
+        hourly_coordinator: MetOfficeUpdateCoordinator,
+        daily_coordinator: MetOfficeUpdateCoordinator,
+        twice_daily_coordinator: MetOfficeUpdateCoordinator,
+    ) -> None:
+        """Initialize the runtime data."""
+        self.name = name
+
+        self._initial_coordinates = initial_coordinates
+        self._current_coordinates = initial_coordinates
+
+        self.hourly_coordinator = hourly_coordinator
+        self.daily_coordinator = daily_coordinator
+        self.twice_daily_coordinator = twice_daily_coordinator
+
+    _initial_coordinates: tuple[float, float]
+    _current_coordinates: tuple[float, float]
+
+    async def _set_updated_coordinates(self, latitude: float, longitude: float) -> None:
+        self._current_coordinates = (latitude, longitude)
+        await asyncio.gather(
+            self.daily_coordinator.update_location(latitude, longitude),
+            self.twice_daily_coordinator.update_location(latitude, longitude),
+            self.hourly_coordinator.update_location(latitude, longitude),
+        )
+
+    async def update_coordinates(
+        self, latitude: float | None, longitude: float | None
+    ) -> None:
+        """Updates the coordinates for the weather forecast."""
+        if latitude is None and longitude is None:
+            if self._current_coordinates != self._initial_coordinates:
+                await self._set_updated_coordinates(*self._initial_coordinates)
+            return
+
+        if latitude is None or longitude is None:
+            _LOGGER.error(
+                "When updating location, latitude and longitude must both be supplied or both be omitted"
+            )
+            return
+
+        # Update the location only if we have moved significantly from the previous
+        # location. This will limit the number of times the API is queried unless
+        # moving extremely quickly.
+        distance = location_util.distance(
+            *self._current_coordinates,
+            latitude,
+            longitude,
+        )
+        if distance is not None and distance > UPDATE_MINIMUM_DISTANCE:
+            await self._set_updated_coordinates(latitude, longitude)
 
 
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
@@ -49,6 +112,7 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
         latitude: float,
         longitude: float,
         frequency: Literal["daily", "twice-daily", "hourly"],
+        update_interval: timedelta = DEFAULT_SCAN_INTERVAL,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -56,12 +120,18 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
             _LOGGER,
             name=name,
             config_entry=entry,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=update_interval,
         )
         self._connection = connection
         self._latitude = latitude
         self._longitude = longitude
         self._frequency = frequency
+
+    async def update_location(self, latitude: float, longitude: float) -> None:
+        """Update the location for the weather coordinator."""
+        self._latitude = latitude
+        self._longitude = longitude
+        await self.async_request_refresh()
 
     @override
     async def _async_update_data(self) -> Forecast:
