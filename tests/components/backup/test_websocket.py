@@ -957,6 +957,39 @@ async def test_backup_start_exception(
         assert await client.receive_json() == snapshot
 
 
+@pytest.mark.usefixtures("supervisor_client")
+async def test_backup_start_failure_undoes_pre_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test a failed backup start undoes the pre backup steps that did succeed.
+
+    Supervisor does not send backup/end after a failed start, so the platform
+    that did prepare, like the recorder locking its database, would stay so.
+    """
+    steps = ["async_pre_backup", "async_post_backup"]
+    prepared = Mock(
+        async_pre_backup=AsyncMock(), async_post_backup=AsyncMock(), spec=steps
+    )
+    failing = Mock(
+        async_pre_backup=AsyncMock(side_effect=HomeAssistantError("Boom")),
+        async_post_backup=AsyncMock(),
+        spec=steps,
+    )
+    await setup_backup_platform(hass, domain="prepared", platform=prepared)
+    await setup_backup_platform(hass, domain="failing", platform=failing)
+    await setup_backup_integration(hass, with_hassio=True)
+
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await client.send_json_auto_id({"type": "backup/start"})
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "pre_backup_actions_failed"
+    prepared.async_pre_backup.assert_awaited_once()
+    prepared.async_post_backup.assert_awaited_once()
+
+
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
