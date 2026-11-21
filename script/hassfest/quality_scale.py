@@ -558,7 +558,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",
