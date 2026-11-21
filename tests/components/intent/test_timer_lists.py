@@ -31,6 +31,7 @@ from homeassistant.components.intent.timers import (
     TimerNotFoundError,
 )
 from homeassistant.components.timer_list import (
+    DOMAIN as TIMER_LIST_DOMAIN,
     InMemoryTimerListEntity,
     TimerListEntity,
     TimerStatus,
@@ -123,6 +124,7 @@ async def _async_setup_timer_lists(
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, DOMAIN, {})
 

@@ -23,6 +23,7 @@ from homeassistant.components.intent.timers import (
     async_device_supports_timers,
     async_register_timer_handler,
 )
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -41,6 +42,7 @@ DELAYED_COMMAND_ERROR = "Sorry, I am not aware of any device called lights"
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -1820,6 +1822,7 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     assert not async_device_supports_timers(hass, device_id)
 
     # After intent initialization
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, DOMAIN, {})
     assert not async_device_supports_timers(hass, device_id)
 
