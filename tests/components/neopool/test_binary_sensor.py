@@ -14,7 +14,13 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -298,3 +304,33 @@ async def test_aux_binary_sensor_absent_when_relay_assigned_to_function(
     # The other three AUX relays stay free and keep their sensors.
     for key in {"AUX1", "AUX2", "AUX3", "AUX4"} - {hidden_key}:
         assert _binary_state(hass, mock_config_entry_binary_sensor, key) is not None
+
+
+async def test_aux_binary_sensor_becomes_unavailable_when_relay_occupied_mid_run(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_binary_sensor: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """AUX binary sensor becomes unavailable when its relay is claimed mid-run.
+
+    The supported_fn gate runs only at setup. The available property must
+    re-evaluate it on every coordinator update so that an occupied relay
+    makes existing entities unavailable.
+    """
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry_binary_sensor)
+
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "AUX1")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    occupied_data = {**MOCK_POOL_DATA, "MBF_PAR_HEATING_GPIO": 4}  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = _binary_state(hass, mock_config_entry_binary_sensor, "AUX1")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

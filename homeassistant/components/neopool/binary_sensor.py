@@ -403,6 +403,15 @@ class NeoPoolBinarySensor(NeoPoolEntity, BinarySensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None or desc.supported_fn(self.coordinator.data)
+        )
+
+    @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if the binary sensor is on."""
         if (value_fn := self.entity_description.value_fn) is not None:
