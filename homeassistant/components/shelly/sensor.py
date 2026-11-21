@@ -520,8 +520,8 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
 }
 
-REST_SENSORS: Final = {
-    "rssi": RestSensorDescription(
+REST_SENSORS: Final = (
+    RestSensorDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
@@ -530,14 +530,14 @@ REST_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "uptime": RestSensorDescription(
+    RestSensorDescription(
         key="uptime",
         value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
         device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-}
+)
 
 
 RPC_SENSORS: Final = (
