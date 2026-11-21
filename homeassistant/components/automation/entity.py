@@ -415,6 +415,18 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         self._async_update_logger()
 
+        for (issue_domain, issue_id), issue in tuple(
+            ir.async_get(self.hass).issues.items()
+        ):
+            if (
+                issue_domain == DOMAIN
+                and issue_id.startswith(f"{self.entity_id}_entity_renamed_")
+                and issue.translation_placeholders
+                and issue.translation_placeholders["old_entity_id"]
+                not in self.referenced_entities
+            ):
+                async_delete_issue(self.hass, DOMAIN, issue_id)
+
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get(

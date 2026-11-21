@@ -1,5 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
 
+from functools import partial
 from typing import Any
 
 from homeassistant.components import websocket_api
@@ -10,8 +11,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_registry import (
+    EVENT_ENTITY_REGISTRY_UPDATED,
+    EventEntityRegistryUpdatedData,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -182,6 +188,50 @@ def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
     return automation_entity.referenced_blueprint
 
 
+@callback
+def _async_entity_renamed_issues(
+    hass: HomeAssistant, event: Event[EventEntityRegistryUpdatedData]
+) -> None:
+    """Create fixable issues for automations referencing a renamed entity."""
+    if event.data["action"] != "update" or not (
+        old_entity_id := event.data.get("old_entity_id")
+    ):
+        return
+    if DATA_COMPONENT not in hass.data:
+        return
+    for automation_entity in hass.data[DATA_COMPONENT].entities:
+        if (
+            old_entity_id not in automation_entity.referenced_entities
+            or automation_entity.unique_id is None
+        ):
+            continue
+        new_entity_id = event.data["entity_id"]
+        if not isinstance(name := automation_entity.name, str):
+            name = automation_entity.entity_id
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"{automation_entity.entity_id}_entity_renamed_{old_entity_id}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="entity_renamed",
+            translation_placeholders={
+                "edit": f"/config/automation/edit/{automation_entity.unique_id}",
+                "entity_id": automation_entity.entity_id,
+                "name": name,
+                "old_entity_id": old_entity_id,
+                "new_entity_id": new_entity_id,
+            },
+            data={
+                "type": "entity_renamed",
+                "config_id": automation_entity.unique_id,
+                "old_entity_id": old_entity_id,
+                "new_entity_id": new_entity_id,
+            },
+        )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DATA_COMPONENT] = component = EntityComponent[BaseAutomationEntity](
@@ -205,6 +255,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
+
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        partial(_async_entity_renamed_issues, hass),
+    )
 
     return True
 

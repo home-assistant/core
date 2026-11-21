@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
+import re
 from typing import Any, Literal, NamedTuple, TypedDict, cast, overload, override
 
 import async_interrupt
@@ -2410,3 +2411,41 @@ def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     """Stop execution of a running or halted script."""
     signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send_internal(hass, signal, "stop")
+
+
+def replace_entity_id_in_config(
+    config: Any, old_entity_id: str, new_entity_id: str
+) -> tuple[Any, bool]:
+    """Replace references to an entity ID inside an automation/script config.
+
+    Returns a (possibly new) config object and whether anything was replaced.
+    The entity ID is replaced wherever it occurs as a standalone token —
+    structural entity_id values as well as references inside Jinja templates
+    like states("old.id") or states.old.id.state.
+    """
+    pattern = re.compile(rf"(?<!\w){re.escape(old_entity_id)}(?!\w)")
+
+    def _replace(value: Any) -> tuple[Any, bool]:
+        if isinstance(value, str):
+            new_value, count = pattern.subn(new_entity_id, value)
+            return new_value, count > 0
+        if isinstance(value, dict):
+            changed = False
+            new_dict = {}
+            for key, item in value.items():
+                new_key, key_changed = _replace(key)
+                new_item, item_changed = _replace(item)
+                new_dict[new_key] = new_item
+                changed |= key_changed or item_changed
+            return new_dict, changed
+        if isinstance(value, list):
+            changed = False
+            new_list = []
+            for item in value:
+                new_item, item_changed = _replace(item)
+                new_list.append(new_item)
+                changed |= item_changed
+            return new_list, changed
+        return value, False
+
+    return _replace(config)
