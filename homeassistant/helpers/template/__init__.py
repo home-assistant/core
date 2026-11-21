@@ -102,6 +102,29 @@ _HASS_LOADER = "template.hass_loader"
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
+# One key of a value_json path: .name, ['name'] or ["name"]. Quoted keys
+# with a backslash or carriage return are left to jinja, which unescapes
+# them and normalizes line endings.
+_JSON_PATH_STEP_PATTERN = (
+    r"\.([A-Za-z_][A-Za-z0-9_]*)|\['([^'\\\r]*)'\]|\[\"([^\"\\\r]*)\"\]"
+)
+_JSON_PATH_STEP = re.compile(_JSON_PATH_STEP_PATTERN, re.ASCII)
+# A template that only outputs a value from the JSON payload,
+# e.g. {{ value_json.temperature }} or {{ value_json['ENERGY'].Power }}
+_JSON_PATH_OUTPUT_PATTERN = (
+    rf"\{{\{{-?\s*value_json(?P<path>(?:{_JSON_PATH_STEP_PATTERN})+)\s*-?\}}\}}"
+)
+_JSON_PATH_TEMPLATE = re.compile(_JSON_PATH_OUTPUT_PATTERN, re.ASCII)
+# The same, guarded by the presence of the first key, as Zigbee2MQTT sends it:
+# {% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}
+_GUARDED_JSON_PATH_TEMPLATE = re.compile(
+    r"\{%-?\s*if\s+(?:'(?P<single>[^'\\\r]*)'|\"(?P<double>[^\"\\\r]*)\")"
+    r"\s+in\s+value_json\s*-?%\}"
+    rf"{_JSON_PATH_OUTPUT_PATTERN}"
+    r"\{%-?\s*endif\s*-?%\}",
+    re.ASCII,
+)
+
 EVAL_CACHE_SIZE = 512
 
 # Number of recently compiled template code objects to keep alive per
@@ -353,6 +376,28 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     return value
 
 
+def _render_json_path(
+    value_json: Any, json_path: tuple[str, ...], guarded: bool
+) -> str | None:
+    """Render a plain value_json template like jinja does, None if it can't.
+
+    Only plain dicts that hold the key are handled, or, for a guarded
+    template, plain dicts without the first key. On other payloads `in` is a
+    substring or item test, so those are left to jinja.
+    """
+    if guarded and type(value_json) is dict and json_path[0] not in value_json:
+        return ""
+    value = value_json
+    for key in json_path:
+        if type(value) is not dict or key not in value:
+            return None
+        value = value[key]
+    try:
+        return str(_finalize_output(value)).strip()
+    except RecursionError:
+        return None
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -362,6 +407,8 @@ class Template:
         "_compiled_code",
         "_exc_info",
         "_hash_cache",
+        "_json_path",
+        "_json_path_guarded",
         "_limited",
         "_log_fn",
         "_renders",
@@ -387,6 +434,8 @@ class Template:
         self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
+        self._json_path: tuple[str, ...] | None = None
+        self._json_path_guarded = False
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -637,15 +686,29 @@ class Template:
 
         compiled = self._compiled or self._ensure_compiled()
 
+        if value_json is _SENTINEL:
+            try:
+                value_json = json_loads(value)
+            except JSON_DECODE_EXCEPTIONS:
+                value_json = Undefined
+
+        if (
+            value_json is not Undefined
+            and (json_path := self._get_json_path())
+            and (
+                render_result := _render_json_path(
+                    value_json, json_path, self._json_path_guarded
+                )
+            )
+            is not None
+        ):
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+                return render_result
+            return _parse_result(render_result)
+
         variables = dict(variables or {})
         variables["value"] = value
-
-        if value_json is _SENTINEL:
-            try:  # noqa: SIM105 - suppress is much slower
-                variables["value_json"] = json_loads(value)
-            except JSON_DECODE_EXCEPTIONS:
-                pass
-        elif value_json is not Undefined:
+        if value_json is not Undefined:
             variables["value_json"] = value_json
 
         try:
@@ -667,6 +730,35 @@ class Template:
             return render_result
 
         return _parse_result(render_result)
+
+    def _get_json_path(self) -> tuple[str, ...]:
+        """Return the keys a plain value_json template outputs, empty otherwise.
+
+        Also matches the output guarded by `{% if "key" in value_json %}` on
+        its first key. For attribute access to a name like .items, jinja returns the dict
+        method instead of the key, so those templates are left to jinja.
+        """
+        if (json_path := self._json_path) is None:
+            json_path = ()
+            if match := _JSON_PATH_TEMPLATE.fullmatch(self.template):
+                json_path = self._parse_json_path(match["path"])
+            elif match := _GUARDED_JSON_PATH_TEMPLATE.fullmatch(self.template):
+                guard = match["single"] or match["double"]
+                json_path = self._parse_json_path(match["path"])
+                # Only a guard on the first key makes a missing key render empty
+                if json_path and json_path[0] == guard:
+                    self._json_path_guarded = True
+                else:
+                    json_path = ()
+            self._json_path = json_path
+        return json_path
+
+    @staticmethod
+    def _parse_json_path(path: str) -> tuple[str, ...]:
+        steps = _JSON_PATH_STEP.findall(path)
+        if any(attr and hasattr(dict, attr) for attr, _, _ in steps):
+            return ()
+        return tuple(attr or single or double for attr, single, double in steps)
 
     def _ensure_compiled(
         self,
