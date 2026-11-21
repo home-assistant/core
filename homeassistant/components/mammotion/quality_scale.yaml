@@ -1,0 +1,109 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The mower pushes its state; the coordinator only fetches once at setup.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-conditions: done
+  docs-triggers: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities only listen to the coordinator, which holds the subscription
+      to the library's pushed state.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow.
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: |
+      An offline mower or a missing transport makes the entity unavailable
+      without a log line.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: todo
+    comment: |
+      Bluetooth discovery records the mower's address, but nothing uses it yet.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: |
+      Mowers added to the account appear only after a reload.
+  entity-category:
+    status: exempt
+    comment: |
+      The only entity is the mower itself, a primary entity.
+  entity-device-class:
+    status: exempt
+    comment: |
+      The lawn mower platform has no device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The only entity is the mower itself, a primary entity.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      The only entity uses the lawn mower platform's icons.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Does not have any repairs
+  stale-devices:
+    status: todo
+    comment: |
+      Mowers removed from the account are kept until the user deletes them.
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: |
+      The Mammotion HTTP client uses the shared session; the library's Aliyun
+      cloud client still opens its own sessions.
+  strict-typing: done

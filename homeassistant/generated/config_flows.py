@@ -494,6 +494,7 @@ FLOWS = {
         "lyric",
         "madvr",
         "mailgun",
+        "mammotion",
         "marantz_infrared",
         "marantz_rs232",
         "marketplace",
