@@ -27,8 +27,10 @@ from .const import (
     DOMAIN,
     CameraService,
     CameraServiceArgument,
+    StreamType,
 )
 from .helper import async_get_stream_image, async_stream_endpoint_url
+from .webrtc_recorder import async_record_webrtc
 
 if TYPE_CHECKING:
     from .entity import Camera
@@ -127,22 +129,26 @@ async def _async_handle_record_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle stream recording service calls."""
-    stream = await camera.async_create_stream()
-
-    if not stream:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="record_not_supported",
-            translation_placeholders={"entity_id": camera.entity_id},
-        )
-
     filename = service_call.data[CameraServiceArgument.FILENAME]
     video_path = filename.async_render()
 
-    await stream.async_record(
-        video_path,
-        duration=service_call.data[CameraServiceArgument.DURATION],
-        lookback=service_call.data[CameraServiceArgument.LOOKBACK],
+    duration = service_call.data[CameraServiceArgument.DURATION]
+    lookback = service_call.data[CameraServiceArgument.LOOKBACK]
+    if stream := await camera.async_create_stream():
+        await stream.async_record(video_path, duration=duration, lookback=lookback)
+        return
+
+    if StreamType.WEB_RTC in camera.camera_capabilities.frontend_stream_types:
+        if lookback:
+            raise HomeAssistantError("WebRTC recordings do not support lookback")
+
+        await async_record_webrtc(camera, video_path, duration)
+        return
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="record_not_supported",
+        translation_placeholders={"entity_id": camera.entity_id},
     )
 
 

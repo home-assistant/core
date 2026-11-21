@@ -207,7 +207,12 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
     @override
     async def async_handle_async_webrtc_offer(
-        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        self,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+        *,
+        aiortc_compatible: bool = False,
     ) -> None:
         """Return the source of the stream."""
 

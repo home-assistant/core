@@ -76,7 +76,11 @@ async def mock_camera_webrtc(
     """Initialize a demo camera platform with WebRTC."""
 
     async def async_handle_async_webrtc_offer(
-        offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+        *,
+        aiortc_compatible: bool = False,
     ) -> None:
         send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
@@ -190,7 +194,12 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         _attr_name = "Async No Candidate"
 
         async def async_handle_async_webrtc_offer(
-            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+            self,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+            *,
+            aiortc_compatible: bool = False,
         ) -> None:
             send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
@@ -200,7 +209,12 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         _attr_name = "Async"
 
         async def async_handle_async_webrtc_offer(
-            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+            self,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+            *,
+            aiortc_compatible: bool = False,
         ) -> None:
             send_message(WebRTCAnswer(WEBRTC_ANSWER))
 

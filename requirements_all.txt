@@ -435,6 +435,9 @@ aiorecollect==2023.09.0
 # homeassistant.components.ridwell
 aioridwell==2025.09.0
 
+# homeassistant.components.camera
+aiortc==1.16.0
+
 # homeassistant.components.remember_the_milk
 aiortm==0.20.1
 

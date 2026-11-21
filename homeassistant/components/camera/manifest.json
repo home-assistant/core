@@ -12,5 +12,5 @@
     }
   },
   "quality_scale": "internal",
-  "requirements": ["PyTurboJPEG==1.8.3"]
+  "requirements": ["aiortc==1.16.0", "PyTurboJPEG==1.8.3"]
 }
