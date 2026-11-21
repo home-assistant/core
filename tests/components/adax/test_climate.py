@@ -291,6 +291,19 @@ async def test_climate_cloud_stale_data(
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == HVACMode.HEAT
 
+        # Commands go to the new client.
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 23,
+            },
+            blocking=True,
+        )
+        clients[0].set_room_target_temperature.assert_not_called()
+        clients[1].set_room_target_temperature.assert_called_once_with("1", 23, True)
+
 
 async def test_climate_cloud_new_data_with_same_values(
     hass: HomeAssistant,
