@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

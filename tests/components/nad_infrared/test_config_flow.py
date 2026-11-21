@@ -22,6 +22,7 @@ from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
     [
         (NADDeviceType.RECEIVER, "NAD receiver"),
         (NADDeviceType.AMPLIFIER, "NAD amplifier"),
+        (NADDeviceType.TUNER, "NAD tuner"),
         (NADDeviceType.CD_PLAYER, "NAD CD player"),
         (NADDeviceType.CASSETTE_DECK, "NAD cassette deck"),
     ],
@@ -41,6 +42,7 @@ async def test_user_flow_success(
     assert result["menu_options"] == [
         "receiver",
         "amplifier",
+        "tuner",
         "cd_player",
         "cassette_deck",
     ]

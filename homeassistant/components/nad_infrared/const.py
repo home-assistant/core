@@ -12,6 +12,7 @@ class NADDeviceType(StrEnum):
 
     RECEIVER = "receiver"
     AMPLIFIER = "amplifier"
+    TUNER = "tuner"
     CD_PLAYER = "cd_player"
     CASSETTE_DECK = "cassette_deck"
 
@@ -19,6 +20,7 @@ class NADDeviceType(StrEnum):
 DEVICE_NAMES: dict[NADDeviceType, str] = {
     NADDeviceType.RECEIVER: "NAD receiver",
     NADDeviceType.AMPLIFIER: "NAD amplifier",
+    NADDeviceType.TUNER: "NAD tuner",
     NADDeviceType.CD_PLAYER: "NAD CD player",
     NADDeviceType.CASSETTE_DECK: "NAD cassette deck",
 }

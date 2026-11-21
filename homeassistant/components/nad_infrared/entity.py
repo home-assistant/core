@@ -3,12 +3,15 @@
 from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
 from infrared_protocols.codes.nad.cd import NADCDCode
 from infrared_protocols.codes.nad.tape import NADTapeCode
+from infrared_protocols.codes.nad.tuner import NADTunerCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DEVICE_NAMES, DOMAIN
+
+type NADCode = NADAmplifierCode | NADTunerCode | NADCDCode | NADTapeCode
 
 
 class NadIrEntity(InfraredEmitterConsumerEntity):
@@ -26,8 +29,6 @@ class NadIrEntity(InfraredEmitterConsumerEntity):
             manufacturer="NAD",
         )
 
-    async def _send_nad_command(
-        self, code: NADAmplifierCode | NADCDCode | NADTapeCode
-    ) -> None:
+    async def _send_nad_command(self, code: NADCode) -> None:
         """Send an IR command to the NAD device."""
         await self._send_command(code.to_command())

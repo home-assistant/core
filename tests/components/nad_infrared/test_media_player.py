@@ -63,7 +63,12 @@ def platforms() -> list[Platform]:
 
 @pytest.mark.parametrize(
     "device_type",
-    list(NADDeviceType),
+    [
+        NADDeviceType.RECEIVER,
+        NADDeviceType.AMPLIFIER,
+        NADDeviceType.CD_PLAYER,
+        NADDeviceType.CASSETTE_DECK,
+    ],
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")
@@ -484,3 +489,16 @@ async def test_cassette_deck_action_sends_correct_code(
     state = hass.states.get(CASSETTE_DECK_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("device_type", [NADDeviceType.TUNER], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_no_media_player_for_tuner(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A tuner only gets buttons, not a media player."""
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
