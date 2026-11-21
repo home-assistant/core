@@ -7,16 +7,20 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     CONF_SERIAL,
     DOMAIN,
+    MOCK_DEVICE_DATA,
+    MOCK_EQUIPMENT_ID,
+    MOCK_EQUIPMENT_ID_2,
+    MOCK_HOST,
     MOCK_HOST_2,
-    MOCK_MAC,
+    MOCK_NEW_SERIAL,
     MOCK_SERIAL,
     MOCK_SERIAL_2,
     trigger_callback,
@@ -99,7 +103,8 @@ async def test_unload_entry_keeps_listener_while_other_entry_sets_up(
     second_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
-        unique_id=MOCK_SERIAL_2,
+        unique_id=MOCK_EQUIPMENT_ID_2,
+        minor_version=2,
     )
     second_entry.add_to_hass(hass)
 
@@ -164,31 +169,10 @@ async def test_device_info(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
     )
     assert device is not None
     assert device == snapshot
-
-
-@pytest.mark.parametrize("mock_config_entry", [{CONF_MAC: MOCK_MAC}], indirect=True)
-async def test_device_info_with_mac(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_listener: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test MAC is added to device connections when stored in entry data."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    trigger_callback(mock_listener)
-    await hass.async_block_till_done()
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
-    )
-    assert device is not None
-    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
 
 
 async def test_device_registry_not_updated_on_identical_callback(
@@ -205,7 +189,7 @@ async def test_device_registry_not_updated_on_identical_callback(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
     )
     assert device is not None
     first_modified = device.modified_at
@@ -214,7 +198,7 @@ async def test_device_registry_not_updated_on_identical_callback(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.modified_at == first_modified
@@ -234,7 +218,7 @@ async def test_device_registry_updated_on_sw_version_change(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.sw_version == "1.0.0"
@@ -243,7 +227,189 @@ async def test_device_registry_updated_on_sw_version_change(
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.sw_version == "2.0.0"
+
+
+async def test_migrate_entry_drops_mac(
+    hass: HomeAssistant, mock_legacy_config_entry: MockConfigEntry
+) -> None:
+    """Test migrating to 1.2 drops the MAC, which now comes from the serial."""
+    await hass.config_entries.async_setup(mock_legacy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_legacy_config_entry.state is ConfigEntryState.LOADED
+    assert mock_legacy_config_entry.minor_version == 2
+    assert mock_legacy_config_entry.data == {
+        CONF_HOST: MOCK_HOST,
+        CONF_SERIAL: MOCK_SERIAL,
+    }
+    assert CONF_MAC not in mock_legacy_config_entry.data
+
+
+async def test_legacy_entry_moves_to_meter(
+    hass: HomeAssistant,
+    mock_legacy_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an entry keyed on the dongle moves to the meter, keeping entity IDs."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{MOCK_SERIAL}_power_delivered",
+        config_entry=mock_legacy_config_entry,
+        suggested_object_id="renamed_power",
+    )
+    await hass.config_entries.async_setup(mock_legacy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The first packet adds the remaining entities and re-keys the entry.
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    assert mock_legacy_config_entry.unique_id == MOCK_EQUIPMENT_ID
+    assert mock_legacy_config_entry.state is ConfigEntryState.LOADED
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_legacy_config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in entries} == {
+        f"{MOCK_EQUIPMENT_ID}_{key}" for key in MOCK_DEVICE_DATA
+    }
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{MOCK_EQUIPMENT_ID}_power_delivered"
+        )
+        == "sensor.renamed_power"
+    )
+    assert hass.states.get("sensor.renamed_power") is not None
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_legacy_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, MOCK_EQUIPMENT_ID)}
+
+
+@pytest.mark.parametrize(
+    "equipment_id",
+    [pytest.param(None, id="missing"), pytest.param("", id="empty")],
+)
+async def test_legacy_entry_without_equipment_id_stays(
+    hass: HomeAssistant,
+    mock_legacy_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    equipment_id: str | None,
+) -> None:
+    """Test an entry stays keyed on the dongle when the meter sends no ID."""
+    await hass.config_entries.async_setup(mock_legacy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener, equipment_id=equipment_id)
+    await hass.async_block_till_done()
+
+    assert mock_legacy_config_entry.unique_id == MOCK_SERIAL
+
+
+async def test_legacy_entry_meter_already_configured(
+    hass: HomeAssistant,
+    mock_legacy_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entry is not moved onto a meter another entry already uses."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_EQUIPMENT_ID,
+        minor_version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_legacy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    assert mock_legacy_config_entry.unique_id == MOCK_SERIAL
+    assert caplog.text.count("already uses that meter") == 1
+
+
+async def test_swapped_dongle_replaces_mac(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device drops the MAC of a swapped-out dongle."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_NEW_SERIAL},
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_EQUIPMENT_ID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_NEW_SERIAL))
+    }
+
+
+async def test_registries_move_when_serial_changed_before_setup(
+    hass: HomeAssistant,
+    mock_listener: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the registries move to the meter even if the serial changed first."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_NEW_SERIAL},
+        unique_id=MOCK_EQUIPMENT_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_SERIAL))},
+    )
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{MOCK_SERIAL}_power_delivered",
+        config_entry=entry,
+        suggested_object_id="renamed_power",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(devices) == 1
+    assert devices[0].identifiers == {(DOMAIN, MOCK_EQUIPMENT_ID)}
+    assert devices[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_NEW_SERIAL))
+    }
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{MOCK_EQUIPMENT_ID}_power_delivered"
+        )
+        == "sensor.renamed_power"
+    )
