@@ -434,3 +434,43 @@ async def test_aux_b_subtimer_polls_when_enabled(
     assert enabled_timers is not None
     assert "relay_aux1" in enabled_timers
     assert "relay_aux1b" in enabled_timers
+
+
+async def test_occupied_aux_relay_skipped_even_when_option_enabled(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With use_aux1=True but AUX1 relay occupied, the timer block is skipped.
+
+    When a device function (e.g. heating) is wired to the AUX1 relay, the
+    switch and time entities gate themselves via aux_relay_available. The
+    coordinator must apply the same gate so it does not poll a block that has
+    no consumer.
+    """
+    occupied_data = dict(MOCK_POOL_DATA)
+    occupied_data["MBF_PAR_HEATING_GPIO"] = 4  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Pool",
+        unique_id="neopool_gate_aux_occupied",
+        version=CURRENT_VERSION,
+        data={
+            "host": "192.0.2.24",
+            "port": 502,
+            "name": "Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={CONF_MODBUS_FRAMER: "tcp", CONF_USE_AUX1: True},
+    )
+    calls = _capture_timer_calls(mock_neopool_client)
+    await setup_integration(hass, entry)
+    await _poll_once_more(hass, entry.runtime_data, freezer)
+
+    enabled_timers = calls[-1][0]
+    assert enabled_timers is not None
+    assert "relay_aux1" not in enabled_timers
+    assert "relay_aux1b" not in enabled_timers
