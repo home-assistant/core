@@ -20,6 +20,37 @@
       }
     }
   },
+  "issues": {
+    "migrate_to_template": {
+      "fix_flow": {
+        "abort": {
+          "could_not_get_ping_entity": "Ping entity could not be retrieved after the import",
+          "could_not_get_template_entity": "Template switch could not be retrieved after the import",
+          "could_not_get_wol_entity": "Wake on LAN button could not be retrieved after the import",
+          "could_not_import_host": "Failed to import the configuration into a Ping sensor",
+          "could_not_import_template": "Failed to import the configuration into a Template switch",
+          "could_not_import_wol": "Failed to import the configuration into a Wake on LAN button",
+          "could_not_read_configuration": "Failed to read the YAML configuration"
+        },
+        "create_entry": {
+          "existing_template": "Your Wake on LAN switch has been migrated.\n\nA Template switch with the same configuration already exists as `{entity_id}`, so no new switch was created and `{old_entity_id}` was not replaced.\n\nUpdate automations, scripts and dashboards that use `{old_entity_id}` to use `{entity_id}` before you remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant.",
+          "no_ping": "Your Wake on LAN switch has been migrated.\n\n- A Wake on LAN button sends the magic packets to {mac}.\n- A Template switch that uses the Wake on LAN button has taken over the entity ID of the old Wake on LAN switch.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue.",
+          "with_ping": "Your Wake on LAN switch has been migrated.\n\n- A Wake on LAN button sends the magic packets to {mac}.\n- A Ping binary sensor shows if the host {host} is online.\n- A Template switch that uses the Wake on LAN button and Ping binary sensor has taken over the entity ID of the old Wake on LAN switch.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue."
+        },
+        "step": {
+          "migrate": {
+            "description": "Using the Wake on LAN integration to create a switch entity for mac `{mac}` has been deprecated and will be removed in Home Assistant 2027.6.0.\n\nBy clicking submit, your configuration will be migrated. Depending on your configuration, it can:\n\n- Create a Wake on LAN button entity to send magic packets\n- Create a Ping binary sensor for your host\n- Create a Template switch to control on/off actions",
+            "title": "[%key:component::wake_on_lan::issues::migrate_to_template::title%]"
+          }
+        }
+      },
+      "title": "Wake on LAN switch has been deprecated"
+    },
+    "wol_service_deprecated": {
+      "description": "The Wake on LAN magic packet action has been deprecated and will be removed in Home Assistant 2027.6.0.\n\nPlease create a new Wake on LAN config entry for the device you want to send magic packets to and update any automation or script that reference this action to use a Wake on LAN button entity.",
+      "title": "Wake on LAN magic packet action has been deprecated"
+    }
+  },
   "options": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"

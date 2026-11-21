@@ -57,7 +57,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -698,6 +698,29 @@ def validate_user_input(
     return _validate_user_input
 
 
+async def _validate_wake_on_lan_import(
+    handler: SchemaCommonFlowHandler,
+    user_input: dict[str, Any],
+) -> dict[str, Any]:
+    """Abort if an equivalent Template switch already exists.
+
+    Can be removed when Wake on LAN import is removed in 2027.6.
+    """
+    options = {"template_type": Platform.SWITCH} | user_input
+    compared_keys = (
+        "template_type",
+        CONF_ON_ACTION,
+        CONF_OFF_ACTION,
+        CONF_VALUE_TEMPLATE,
+    )
+    for entry in handler.parent_handler.hass.config_entries.async_entries(DOMAIN):
+        if all(
+            entry.options.get(key) == options.get(key) for key in compared_keys
+        ) and not entry.options.get(CONF_ADDITIONAL_OPTIONS, {}).get(CONF_AVAILABILITY):
+            raise AbortFlow("already_configured")
+    return options
+
+
 TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -821,6 +844,11 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.WEATHER),
         description_placeholders=_get_forecast_description_place_holders,
+    ),
+    "import": SchemaFlowFormStep(
+        # Can be removed when Wake on LAN import is removed in 2027.6
+        config_schema(Platform.SWITCH),
+        validate_user_input=_validate_wake_on_lan_import,
     ),
 }
 

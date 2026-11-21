@@ -61,7 +61,11 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=probatio.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
         validate_user_input=validate,
-    )
+    ),
+    "import": SchemaFlowFormStep(
+        schema=probatio.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
+        validate_user_input=validate,
+    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
