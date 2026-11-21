@@ -21,7 +21,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -168,7 +168,7 @@ async def test_set_input_volume(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.hostname_microphone_input_volume",
+            TargetKey.ENTITY_ID: "number.hostname_microphone_input_volume",
             NumberServiceArgument.VALUE: 40,
         },
         blocking=True,
@@ -188,7 +188,7 @@ async def test_set_brightness(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 50},
+        {TargetKey.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
 
@@ -218,22 +218,30 @@ async def test_set_brightness_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
         )
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(ConnectionResetError, id="connection_reset"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_brightness_connection_closed(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
-    """Test a closed connection raises."""
-    mock_websocket_client.display_control.side_effect = ConnectionClosedException(
-        "Connection is closed"
-    )
+    """Test a lost connection raises."""
+    mock_websocket_client.display_control.side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError,
@@ -243,7 +251,7 @@ async def test_set_brightness_connection_closed(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,

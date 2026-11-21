@@ -24,7 +24,7 @@ from homeassistant.components.todoist.services import (
     TodoistService,
     TodoistServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -200,7 +200,7 @@ async def test_add_todo_list_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Soda", **item_data},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
 
@@ -217,7 +217,7 @@ async def test_add_todo_list_item(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
         return_response=True,
     )
@@ -286,7 +286,7 @@ async def test_update_todo_item_status(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "task-id-1", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.complete_task.called
@@ -309,7 +309,7 @@ async def test_update_todo_item_status(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "task-id-1", ATTR_STATUS: "needs_action"},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.uncomplete_task.called
@@ -542,7 +542,7 @@ async def test_update_todo_items(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "task-id-1", **update_data},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.update_task.called
@@ -554,7 +554,7 @@ async def test_update_todo_items(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
         return_response=True,
     )
@@ -589,7 +589,7 @@ async def test_remove_todo_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["task-id-1", "task-id-2"]},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
     assert api.delete_task.call_count == 2
@@ -645,7 +645,7 @@ async def test_subscribe(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Cheese", ATTR_RENAME: "Wine"},
-        target={ATTR_ENTITY_ID: "todo.name"},
+        target={TargetKey.ENTITY_ID: "todo.name"},
         blocking=True,
     )
 

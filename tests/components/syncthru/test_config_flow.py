@@ -9,11 +9,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_SERIAL,
@@ -21,10 +22,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-FIXTURE_USER_INPUT = {
-    CONF_URL: "http://192.168.1.2/",
-    CONF_NAME: "My Printer",
-}
+FIXTURE_USER_INPUT = {CONF_URL: "http://192.168.1.2/"}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -43,6 +41,7 @@ async def test_full_flow(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Samsung C430W"
     assert result["data"] == FIXTURE_USER_INPUT
     assert result["result"].unique_id is None
 
@@ -55,7 +54,7 @@ async def test_already_configured_by_url(
     udn = "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     MockConfigEntry(
         domain=DOMAIN,
-        data={**FIXTURE_USER_INPUT, CONF_NAME: "Already configured"},
+        data=FIXTURE_USER_INPUT,
         title="Already configured",
         unique_id=udn,
     ).add_to_hass(hass)
@@ -72,8 +71,7 @@ async def test_already_configured_by_url(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
-    assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
+    assert result["data"] == FIXTURE_USER_INPUT
     assert result["result"].unique_id == udn
 
 
@@ -150,6 +148,7 @@ async def test_ssdp(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
             ssdp_location="http://192.168.1.2:5200/Printer.xml",
             upnp={
                 ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
+                ATTR_UPNP_FRIENDLY_NAME: "Samsung C430W Series (192.168.1.2)",
                 ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
                 ATTR_UPNP_PRESENTATION_URL: url,
                 ATTR_UPNP_SERIAL: "00000000",
@@ -167,11 +166,12 @@ async def test_ssdp(hass: HomeAssistant, mock_syncthru: AsyncMock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_URL: url, CONF_NAME: "Printer"},
+        user_input={CONF_URL: url},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_URL: url, CONF_NAME: "Printer"}
+    assert result["title"] == "Samsung C430W Series"
+    assert result["data"] == {CONF_URL: url}
     assert result["result"].unique_id == "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 
 

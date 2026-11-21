@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'bridge': dict({
+      'bridge_type': 1,
+      'firmware_version': '0.1.0',
+      'wifi_firmware_version': '0.2.0',
+    }),
+    'config_entry': dict({
+      'encrypt_token': True,
+    }),
+    'coordinator': dict({
+      'last_update_success': True,
+    }),
+    'locks': list([
+      dict({
+        'battery_charge': 85,
+        'battery_charging': False,
+        'battery_critical': False,
+        'device_type': 0,
+        'door_sensor_state': 2,
+        'door_sensor_state_name': 'door closed',
+        'firmware_version': None,
+        'keypad_battery_critical': None,
+        'mode': 2,
+        'state': 1,
+        'state_name': 'unlocked',
+      }),
+    ]),
+    'openers': list([
+      dict({
+        'battery_critical': False,
+        'device_type': 2,
+        'firmware_version': None,
+        'mode': 3,
+        'ring_action_state': None,
+        'state': 3,
+        'state_name': 'rto active',
+      }),
+    ]),
+  })
+# ---

@@ -208,6 +208,21 @@ async def init_integration(
 
 
 @pytest.fixture
+async def init_integration_v2(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the HomeWizard integration using the v2 API for testing."""
+    mock_config_entry_v2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry_v2
+
+
+@pytest.fixture
 def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(

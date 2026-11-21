@@ -2,6 +2,8 @@
 
 from typing import Final
 
+DOMAIN: Final = "amazon_polly"
+
 CONF_REGION: Final = "region_name"
 CONF_ACCESS_KEY_ID: Final = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY: Final = "aws_secret_access_key"

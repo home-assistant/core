@@ -72,7 +72,14 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.setup import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
+    _async_set_bootstrap_progress_source,
+    async_set_domains_to_be_loaded,
+    async_setup_component,
+)
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
@@ -3874,6 +3881,54 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["id"] == subscription
     assert msg["type"] == "event"
     assert msg["event"] == message
+
+
+async def test_subscribe_bootstrap_progress(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test bootstrap progress updates are forwarded."""
+    await websocket_client.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["success"]
+
+    message = BootstrapProgress(
+        phase=BootstrapPhase.SETUP,
+        elapsed=1.5,
+        integrations=BootstrapIntegrationsProgress(total=3, done=1, failed=["fail"]),
+        active={"slow": 1.0},
+    )
+    _async_set_bootstrap_progress_source(hass, lambda: message)
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "phase": "setup",
+        "elapsed": 1.5,
+        "integrations": {"total": 3, "done": 1, "failed": ["fail"]},
+        "active": {"slow": 1.0},
+    }
+
+
+async def test_subscribe_bootstrap_progress_sends_current_progress(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a (re)connecting client gets the current progress right away."""
+    progress = {"phase": "setup"}
+    _async_set_bootstrap_progress_source(hass, progress.copy)
+    first = await hass_ws_client(hass)
+    await first.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await first.receive_json())["success"]
+    assert (await first.receive_json())["event"] == {"phase": "setup"}
+    await first.close()
+
+    progress["phase"] = "wrap_up"
+    reconnected = await hass_ws_client(hass)
+    await reconnected.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await reconnected.receive_json())["success"]
+    assert (await reconnected.receive_json())["event"] == {"phase": "wrap_up"}
 
 
 async def test_subscribe_system_state(

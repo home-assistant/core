@@ -17,7 +17,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -73,7 +77,7 @@ class FumisDataUpdateCoordinator(DataUpdateCoordinator[FumisInfo]):
                 translation_key="authentication_error",
             ) from err
         except FumisStoveOfflineError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="stove_offline",
             ) from err
