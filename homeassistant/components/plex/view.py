@@ -6,13 +6,24 @@ import logging
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL
 from aiohttp.typedefs import LooseHeaders
+from plexapi.exceptions import BadRequest, NotFound
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import async_fetch_image
 
 from .helpers import get_plex_servers
+from .server import PlexServer
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _lookup_thumbnail_url(server: PlexServer, rating_key: int) -> str | None:
+    """Look up the thumbnail of an item, for links returned before a reload."""
+    try:
+        item = server.fetch_item(rating_key)
+    except NotFound, BadRequest:
+        return None
+    return getattr(item, "thumbUrl", None)
 
 
 class PlexImageView(HomeAssistantView):
@@ -35,7 +46,15 @@ class PlexImageView(HomeAssistantView):
         if (server := get_plex_servers(hass).get(server_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        if (image_url := server.thumbnail_cache.get(media_content_id)) is None:
+        image_url = server.thumbnail_cache.get(media_content_id)
+        if image_url is None and media_content_id.isdecimal():
+            image_url = await hass.async_add_executor_job(
+                _lookup_thumbnail_url, server, int(media_content_id)
+            )
+            if image_url is not None:
+                server.thumbnail_cache[media_content_id] = image_url
+
+        if image_url is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data, content_type = await async_fetch_image(_LOGGER, hass, image_url)
