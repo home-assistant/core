@@ -4,7 +4,12 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from chip.clusters.Objects import CameraAvStreamManagement, WebRtcTransportProvider
+from chip.clusters.Objects import (
+    CameraAvStreamManagement,
+    Globals,
+    WebRtcTransportProvider,
+    ZoneManagement,
+)
 from matter_server.client.exceptions import MatterClientException
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
@@ -28,11 +33,17 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import (
+    CAMERA_ZONE_SOURCE_MAP,
+    CAMERA_ZONE_USE_MAP,
+    CAMERA_ZONE_USE_REVERSE_MAP,
+    DOMAIN,
+    LOGGER,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -49,6 +60,8 @@ TwoWayTalkSupportType = CameraAvStreamManagement.Enums.TwoWayTalkSupportTypeEnum
 
 STREAM_USAGE_LIVE_VIEW = "LiveView"
 MAX_ICE_SERVERS = 10
+
+ZoneFeature = ZoneManagement.Bitmaps.Feature
 
 
 async def async_setup_entry(
@@ -290,6 +303,190 @@ class MatterCamera(MatterEntity, Camera):
         except (MatterError, MatterClientException) as err:
             raise HomeAssistantError(str(err) or type(err).__name__) from err
         return b64decode(result.data)
+
+    def _zone_maximum(self) -> ZoneManagement.Structs.TwoDCartesianVertexStruct:
+        """Return the largest zone coordinates of the camera."""
+        maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct | None = (
+            self.get_matter_attribute_value(ZoneManagement.Attributes.TwoDCartesianMax)
+        )
+        if maximum is None or not maximum.x or not maximum.y:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return maximum
+
+    def _zone_features(self) -> ZoneManagement.Bitmaps.Feature:
+        """Return the zone features of the camera, if it allows changing zones."""
+        feature_map: int | None = self.get_matter_attribute_value(
+            ZoneManagement.Attributes.FeatureMap
+        )
+        if feature_map is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        features = ZoneFeature(feature_map)
+        if ZoneFeature.kUserDefined not in features:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_user_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return features
+
+    def _check_zone_editable(self, zone_id: int, *, remove: bool = False) -> None:
+        """Raise if the zone is known and can't be changed or removed.
+
+        Unknown zone IDs are left to the camera, as the Zones attribute can
+        lag behind a zone that was just created.
+        """
+        zone = next(
+            (
+                zone
+                for zone in self.get_matter_attribute_value(
+                    ZoneManagement.Attributes.Zones
+                )
+                or []
+                if zone.zoneID == zone_id
+            ),
+            None,
+        )
+        if zone is None:
+            return
+        placeholders = {"entity_id": self.entity_id, "zone_id": str(zone_id)}
+        if zone.zoneSource != ZoneManagement.Enums.ZoneSourceEnum.kUser:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "camera_zone_not_removable"
+                    if remove
+                    else "camera_zone_not_editable"
+                ),
+                translation_placeholders=placeholders,
+            )
+        if (
+            not remove
+            and zone.twoDCartesianZone is not None
+            and zone.twoDCartesianZone.use == ZoneManagement.Enums.ZoneUseEnum.kMotion
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_motion_zone_not_editable",
+                translation_placeholders=placeholders,
+            )
+
+    async def async_get_camera_zones(self) -> ServiceResponse:
+        """Return the zones of the camera."""
+        maximum = self._zone_maximum()
+        return {
+            "zones": [
+                {
+                    "zone_id": zone.zoneID,
+                    "name": area.name,
+                    "use": CAMERA_ZONE_USE_MAP.get(area.use),
+                    "source": CAMERA_ZONE_SOURCE_MAP.get(zone.zoneSource),
+                    "vertices": [
+                        _vertex_to_percent(vertex, maximum) for vertex in area.vertices
+                    ],
+                    "color": area.color,
+                }
+                for zone in (
+                    self.get_matter_attribute_value(ZoneManagement.Attributes.Zones)
+                    or []
+                )
+                if (area := zone.twoDCartesianZone) is not None
+            ],
+            "max_zones": self.get_matter_attribute_value(
+                ZoneManagement.Attributes.MaxZones
+            ),
+            "max_user_defined_zones": self.get_matter_attribute_value(
+                ZoneManagement.Attributes.MaxUserDefinedZones
+            ),
+        }
+
+    async def async_set_camera_zone(
+        self,
+        name: str,
+        use: str,
+        vertices: list[dict[str, float]],
+        zone_id: int | None = None,
+        color: str | None = None,
+    ) -> ServiceResponse:
+        """Create a zone, or update the zone with the given ID."""
+        maximum = self._zone_maximum()
+        features = self._zone_features()
+        if use == "focus" and ZoneFeature.kFocusZones not in features:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="camera_focus_zones_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        zone = ZoneManagement.Structs.TwoDCartesianZoneStruct(
+            name=name,
+            use=CAMERA_ZONE_USE_REVERSE_MAP[use],
+            vertices=[_vertex_from_percent(vertex, maximum) for vertex in vertices],
+            color=color,
+        )
+        if zone_id is None:
+            response = await self.send_device_command(
+                ZoneManagement.Commands.CreateTwoDCartesianZone(zone=zone)
+            )
+            zone_id = response["zoneID"]
+        else:
+            self._check_zone_editable(zone_id)
+            await self.send_device_command(
+                ZoneManagement.Commands.UpdateTwoDCartesianZone(
+                    zoneID=zone_id, zone=zone
+                )
+            )
+        return {"zone_id": zone_id}
+
+    async def async_clear_camera_zone(self, zone_id: int) -> None:
+        """Remove a zone from the camera."""
+        self._zone_features()
+        self._check_zone_editable(zone_id, remove=True)
+        try:
+            await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=ZoneManagement.Commands.RemoveZone(zoneID=zone_id),
+            )
+        except MatterError as err:
+            # The camera refuses to remove a zone that a trigger uses
+            if err.status == Globals.Enums.status.kInvalidInState:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="camera_zone_has_trigger",
+                    translation_placeholders={
+                        "entity_id": self.entity_id,
+                        "zone_id": str(zone_id),
+                    },
+                ) from err
+            raise HomeAssistantError(str(err) or type(err).__name__) from err
+
+
+def _vertex_to_percent(
+    vertex: ZoneManagement.Structs.TwoDCartesianVertexStruct,
+    maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct,
+) -> dict[str, float]:
+    """Convert camera coordinates to percent of the sensor."""
+    return {
+        "x": round(vertex.x / maximum.x * 100, 2),
+        "y": round(vertex.y / maximum.y * 100, 2),
+    }
+
+
+def _vertex_from_percent(
+    vertex: dict[str, float], maximum: ZoneManagement.Structs.TwoDCartesianVertexStruct
+) -> ZoneManagement.Structs.TwoDCartesianVertexStruct:
+    """Convert percent of the sensor to camera coordinates."""
+    return ZoneManagement.Structs.TwoDCartesianVertexStruct(
+        x=round(vertex["x"] / 100 * maximum.x),
+        y=round(vertex["y"] / 100 * maximum.y),
+    )
 
 
 DISCOVERY_SCHEMAS = [
