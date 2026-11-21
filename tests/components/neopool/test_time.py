@@ -21,7 +21,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform as ep, entity_registry as er
@@ -1079,3 +1079,32 @@ async def test_setup_when_modules_absent(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_timers.entry_id
     )
+
+
+async def test_aux_timer_becomes_unavailable_when_relay_occupied_mid_run(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_timers: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """AUX timer becomes unavailable when its relay is claimed mid-run.
+
+    The supported_fn gate runs only at setup. The available property must
+    re-evaluate it on every coordinator update so that an occupied relay
+    makes existing entities unavailable instead of leaving them writable
+    with stale values.
+    """
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.TIME]):
+        await setup_integration(hass, mock_config_entry_timers)
+
+    entity_id = _time_entity_id(hass, mock_config_entry_timers, "relay_aux1_start")
+    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    occupied_data = {**MOCK_POOL_DATA, "MBF_PAR_HEATING_GPIO": 4}  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

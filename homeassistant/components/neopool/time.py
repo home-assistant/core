@@ -188,6 +188,18 @@ class NeoPoolTime(NeoPoolDebouncedWriteEntity[int], TimeEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None
+            or desc.supported_fn(
+                self.coordinator.data, self.coordinator.config_entry.options
+            )
+        )
+
+    @property
+    @override
     def native_value(self) -> dt_time | None:
         """Return the optimistic pending time, else the decoded register."""
         if self._pending_value is not None:

@@ -388,6 +388,15 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None or desc.supported_fn(self.coordinator.data)
+        )
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on."""
         desc = self.entity_description
