@@ -647,6 +647,7 @@ FLOWS = {
         "pi_hole",
         "picnic",
         "picotts",
+        "pikvm",
         "ping",
         "pjlink",
         "plaato",

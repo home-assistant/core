@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "missing_serial": "The PiKVM did not report a hardware serial number, so it cannot be uniquely identified."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_totp": "The two-factor authentication secret is invalid. Enter the base32 secret key, not a one-time code.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "totp": "Two-factor authentication secret",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your PiKVM, optionally followed by a port.",
+          "password": "The password you use to log in to the PiKVM web interface.",
+          "totp": "Only needed if two-factor authentication is enabled on your PiKVM. Enter the secret key used to set up your authenticator app, not a one-time code.",
+          "username": "The username you use to log in to the PiKVM web interface.",
+          "verify_ssl": "Only enable this if you replaced the self-signed certificate that ships with PiKVM with one that is trusted and matches the host."
+        },
+        "description": "Set up your PiKVM to monitor its health in Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "memory_utilization": {
+        "name": "Memory utilization"
+      },
+      "msd_storage": {
+        "name": "Mass storage usage"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication with the PiKVM failed. Check the username, password, and two-factor authentication secret."
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the PiKVM."
+    }
+  }
+}
