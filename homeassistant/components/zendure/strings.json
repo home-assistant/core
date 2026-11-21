@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "This Zendure model is not supported yet."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Zendure device on your home network."
+        },
+        "description": "Set up your Zendure device to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_charge_power": {
+        "name": "Battery charge power"
+      },
+      "battery_discharge_power": {
+        "name": "Battery discharge power"
+      },
+      "grid_input_power": {
+        "name": "Grid input power"
+      },
+      "grid_off_power": {
+        "name": "Off-grid power"
+      },
+      "max_charge_power": {
+        "name": "Maximum charge power"
+      },
+      "max_output_power": {
+        "name": "Maximum output power"
+      },
+      "output_home_power": {
+        "name": "Output to home power"
+      },
+      "pack_count": {
+        "name": "Battery packs"
+      },
+      "pack_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "remaining_discharge_time": {
+        "name": "Remaining discharge time"
+      },
+      "solar_input_power": {
+        "name": "Solar input power"
+      },
+      "solar_power_1": {
+        "name": "Solar power 1"
+      },
+      "solar_power_2": {
+        "name": "Solar power 2"
+      },
+      "solar_power_3": {
+        "name": "Solar power 3"
+      },
+      "solar_power_4": {
+        "name": "Solar power 4"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Zendure device: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred with the Zendure device: {error}"
+    }
+  }
+}
