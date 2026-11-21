@@ -3,12 +3,18 @@
 import probatio
 from pyinsteon import devices
 from pyinsteon.constants import ResponseStatus
+from pyinsteon.managers.scene_controller_manager import (
+    ControllerSchema,
+    SceneControllerError,
+)
 from pyinsteon.managers.scene_manager import (
     DeviceLinkSchema,
     async_add_or_update_scene,
     async_delete_scene,
+    async_find_device_scenes,
     async_get_scene,
     async_get_scenes,
+    async_import_device_scene,
 )
 
 from homeassistant.components import websocket_api
@@ -33,7 +39,13 @@ def _scene_to_dict(scene):
                     "has_responder": data.has_responder,
                 }
             )
-    return {"name": scene["name"], "group": scene["group"], "devices": device_dict}
+    return {
+        "name": scene["name"],
+        "group": scene["group"],
+        "devices": device_dict,
+        "controllers": scene["controllers"],
+        "pending": scene["pending"],
+    }
 
 
 @websocket_api.websocket_command({probatio.Required(TYPE): "insteon/scenes/get"})
@@ -45,7 +57,11 @@ async def websocket_get_scenes(
     msg: dict,
 ) -> None:
     """Get all Insteon scenes."""
-    scenes = await async_get_scenes(work_dir=hass.config.config_dir)
+    try:
+        scenes = await async_get_scenes(work_dir=hass.config.config_dir)
+    except SceneControllerError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
     scenes_dict = {
         scene_num: _scene_to_dict(scene) for scene_num, scene in scenes.items()
     }
@@ -64,7 +80,13 @@ async def websocket_get_scene(
 ) -> None:
     """Get an Insteon scene."""
     scene_id = msg["scene_id"]
-    scene = await async_get_scene(scene_num=scene_id, work_dir=hass.config.config_dir)
+    try:
+        scene = await async_get_scene(
+            scene_num=scene_id, work_dir=hass.config.config_dir
+        )
+    except SceneControllerError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
     connection.send_result(msg[ID], _scene_to_dict(scene))
 
 
@@ -74,6 +96,7 @@ async def websocket_get_scene(
         probatio.Required("name"): str,
         probatio.Required("scene_id"): int,
         probatio.Required("links"): DeviceLinkSchema,
+        probatio.Optional("controllers"): ControllerSchema,
     }
 )
 @websocket_api.require_admin
@@ -88,9 +111,17 @@ async def websocket_save_scene(
     name = msg["name"]
     links = msg["links"]
 
-    scene_id, result = await async_add_or_update_scene(
-        scene_num=scene_id, links=links, name=name, work_dir=hass.config.config_dir
-    )
+    try:
+        scene_id, result = await async_add_or_update_scene(
+            scene_num=scene_id,
+            links=links,
+            name=name,
+            work_dir=hass.config.config_dir,
+            controllers=msg.get("controllers"),
+        )
+    except ValueError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
     await devices.async_save(workdir=hass.config.config_dir)
     connection.send_result(
         msg[ID], {"scene_id": scene_id, "result": result == ResponseStatus.SUCCESS}
@@ -113,9 +144,62 @@ async def websocket_delete_scene(
     """Delete an Insteon scene."""
     scene_id = msg["scene_id"]
 
-    result = await async_delete_scene(
-        scene_num=scene_id, work_dir=hass.config.config_dir
+    try:
+        result = await async_delete_scene(
+            scene_num=scene_id, work_dir=hass.config.config_dir
+        )
+    except SceneControllerError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
+    await devices.async_save(workdir=hass.config.config_dir)
+    connection.send_result(
+        msg[ID], {"scene_id": scene_id, "result": result == ResponseStatus.SUCCESS}
     )
+
+
+@websocket_api.websocket_command(
+    {probatio.Required(TYPE): "insteon/scenes/device_scenes"}
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_device_scenes(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get hand-made device scenes that can be imported."""
+    try:
+        device_scenes = await async_find_device_scenes(work_dir=hass.config.config_dir)
+    except SceneControllerError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
+    connection.send_result(msg[ID], device_scenes)
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "insteon/scene/import",
+        probatio.Required("name"): str,
+        probatio.Required("controllers"): ControllerSchema,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_import_scene(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Import a hand-made device scene."""
+    try:
+        scene_id, result = await async_import_device_scene(
+            controllers=msg["controllers"],
+            name=msg["name"],
+            work_dir=hass.config.config_dir,
+        )
+    except ValueError as err:
+        connection.send_error(msg[ID], "scene_error", str(err))
+        return
     await devices.async_save(workdir=hass.config.config_dir)
     connection.send_result(
         msg[ID], {"scene_id": scene_id, "result": result == ResponseStatus.SUCCESS}
