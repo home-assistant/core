@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.silla_prism.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -9,9 +12,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import fire_burst, setup_integration
 from .const import BASE_TOPIC, HELLO_PAYLOAD, HELLO_TOPIC, SERIAL
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_setup_and_unload(

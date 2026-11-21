@@ -6,6 +6,7 @@ from typing import override
 from pyicloud.services.reminders.service import RemindersService
 
 from homeassistant.components.todo import (
+    DOMAIN as TODO_DOMAIN,
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
@@ -13,6 +14,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,19 +44,33 @@ async def async_setup_entry(
     assert coordinator is not None
 
     known: set[str] = set()
+    entity_registry = er.async_get(hass)
 
     @callback
-    def _add_new_lists() -> None:
-        """Add entities for lists that appeared since the last poll."""
-        if not (new := set(coordinator.data or {}) - known):
-            return
-        known.update(new)
-        async_add_entities(
-            IcloudTodoListEntity(coordinator, entry, list_id) for list_id in new
-        )
+    def _sync_lists() -> None:
+        """Add entities for new lists and drop the ones iCloud no longer has.
 
-    _add_new_lists()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_lists))
+        A list missing from a successful full snapshot was deleted or is a
+        tombstone left by a list iCloud rewrote, so its entity is removed
+        rather than kept as an empty duplicate under the same name.
+        """
+        current = set(coordinator.data or {})
+        if new := current - known:
+            known.update(new)
+            async_add_entities(
+                IcloudTodoListEntity(coordinator, entry, list_id) for list_id in new
+            )
+
+        if gone := known - current:
+            known.difference_update(gone)
+            for list_id in gone:
+                if entity_id := entity_registry.async_get_entity_id(
+                    TODO_DOMAIN, DOMAIN, f"{entry.unique_id}_{list_id}"
+                ):
+                    entity_registry.async_remove(entity_id)
+
+    _sync_lists()
+    entry.async_on_unload(coordinator.async_add_listener(_sync_lists))
 
 
 class IcloudTodoListEntity(
@@ -142,12 +158,18 @@ class IcloudTodoListEntity(
     def _create(self, item: TodoItem) -> None:
         """Create a reminder. Runs in the executor."""
         due, all_day = _as_due(item.due)
+        if isinstance(item.due, datetime):
+            time_zone = self.hass.config.time_zone
+        else:
+            time_zone = None
+
         self._service().create(
             list_id=self._list_id,
             title=item.summary or "",
             desc=item.description or "",
             due_date=due,
             all_day=all_day,
+            time_zone=time_zone,
         )
 
     def _update(self, item: TodoItem) -> None:
@@ -166,7 +188,19 @@ class IcloudTodoListEntity(
         if item.summary is not None:
             reminder.title = item.summary
         reminder.desc = item.description or ""
+        old_due = reminder.due_date
+        old_all_day = reminder.all_day
         reminder.due_date, reminder.all_day = _as_due(item.due)
+        if reminder.due_date is None or reminder.all_day:
+            reminder.time_zone = None
+        elif (
+            old_due is None
+            or reminder.all_day != old_all_day
+            or reminder.due_date.timestamp() != old_due.timestamp()
+        ):
+            reminder.time_zone = self.hass.config.time_zone
+        else:
+            reminder.due_date = old_due
         if item.status is not None:
             reminder.completed = item.status == TodoItemStatus.COMPLETED
 

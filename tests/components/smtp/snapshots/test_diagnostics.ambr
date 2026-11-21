@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'encryption': 'starttls',
+      'password': '**REDACTED**',
+      'port': 587,
+      'sender': '**REDACTED**',
+      'sender_name': '**REDACTED**',
+      'server': '**REDACTED**',
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'options': dict({
+      'reply_to': '**REDACTED**',
+      'reply_to_name': '**REDACTED**',
+      'timeout': 1312,
+    }),
+    'subentries': 1,
+  })
+# ---

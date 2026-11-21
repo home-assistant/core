@@ -1,0 +1,12 @@
+[
+  { "status": "Pulling from library/example-image", "id": "1.0" },
+  { "status": "Pulling fs layer", "progressDetail": {}, "id": "095d327c79ae" },
+  {
+    "status": "Downloading",
+    "progressDetail": { "current": 2048, "total": 4096 },
+    "id": "095d327c79ae"
+  },
+  { "status": "Download complete", "progressDetail": {}, "id": "095d327c79ae" },
+  { "status": "Pull complete", "progressDetail": {}, "id": "095d327c79ae" },
+  { "status": "Status: Downloaded newer image for example-image:1.0" }
+]

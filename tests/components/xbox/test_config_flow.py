@@ -4,8 +4,11 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pythonxbox.api.provider.people.models import PeopleResponse
 
 from homeassistant import config_entries
@@ -31,10 +34,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import CLIENT_ID
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures(
@@ -88,7 +87,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.xbox.async_setup_entry", return_value=True
+        "homeassistant.components.xbox.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -181,7 +180,7 @@ async def test_discovery(
     )
 
     with patch(
-        "homeassistant.components.xbox.async_setup_entry", return_value=True
+        "homeassistant.components.xbox.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -696,7 +695,7 @@ async def test_migration_exceptions(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
@@ -731,7 +730,7 @@ async def test_migration_implementation_unavailable(hass: HomeAssistant) -> None
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures(

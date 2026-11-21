@@ -3,21 +3,21 @@
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 uid = (
     "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
@@ -108,8 +108,8 @@ async def test_fan_set_off(
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: [entity_id]},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": false}')
@@ -151,8 +151,8 @@ async def test_fan_set_on(
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": true}')
@@ -193,8 +193,8 @@ async def test_fan_set_percent(
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_PERCENTAGE: 40},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: [entity_id], FanServiceArgument.PERCENTAGE: 40},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"rotationSpeed": 40}')

@@ -24,13 +24,12 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_NAME, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -205,6 +204,10 @@ IGNORED_USB_DEVICES = {
     ("Nabu Casa", "ZBT-2"),
 }
 
+# Only Home Assistant can open these ports. Z-Wave JS runs in its own process
+# and reaches an ESPHome device through its Z-Wave proxy instead.
+ESPHOME_SERIAL_PROXY_SCHEME = "esphome-hass://"
+
 
 def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the manual step."""
@@ -238,6 +241,8 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     port_descriptions = {}
     for port in await usb.async_scan_serial_ports(hass):
         if (port.manufacturer, port.description) in IGNORED_USB_DEVICES:
+            continue
+        if port.device.startswith(ESPHOME_SERIAL_PROXY_SCHEME):
             continue
 
         human_name = usb.human_readable_device_name(
@@ -383,11 +388,6 @@ class AddonFlowManager:
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
-    @cached_property
-    def _addon_setup(self) -> AddonFlowManager:
-        """Return the add-on flow manager."""
-        return AddonFlowManager(self.hass)
-
     VERSION = 1
     MINOR_VERSION = 2
 
@@ -417,6 +417,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # Set if the flow unique id is a placeholder that must be replaced
         # with the home ID before a config entry is created.
         self._unique_id_is_placeholder = False
+
+    @cached_property
+    def _addon_setup(self) -> AddonFlowManager:
+        """Return the add-on flow manager."""
+        return AddonFlowManager(self.hass)
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -468,7 +473,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
             if not self._async_acquire_addon_ownership():
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
@@ -586,7 +594,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: (
+                    "name": (
                         f"Network {home_id_display} at "
                         f"{discovery_info.host}:{discovery_info.port}"
                     )
@@ -614,13 +622,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={
                 "home_id": home_id_display,
-                CONF_URL: self.ws_address[5:],
+                "url": self.ws_address[5:],
             },
         )
 
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
+        if discovery_info.device.startswith(ESPHOME_SERIAL_PROXY_SCHEME):
+            return self.async_abort(reason="serial_proxy_not_supported")
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
         if any(
@@ -634,7 +644,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # at least for a short time.
             # Zeroconf flows never touch the add-on,
             # so an idle discovery prompt should not block USB discovery.
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if current_config_entries := self._async_current_entries(include_ignore=False):
             self._reconfigure_config_entry = next(
                 (
@@ -700,7 +712,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 pid,
             )
             title = human_name.split(" - ")[0].strip()
-        self.context["title_placeholders"] = {CONF_NAME: title}
+        self.context["title_placeholders"] = {"name": title}
 
         self._adapter_discovered = True
         if current_config_entries:
@@ -785,7 +797,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # prompt should not block the add-on discovery.
             if flow["context"].get("source") != SOURCE_ZEROCONF
         ):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         if discovery_info.slug != ADDON_SLUG:
             return self.async_abort(reason="not_zwave_js_addon")
@@ -1270,7 +1284,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if not self._async_acquire_addon_ownership():
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # Remaining prompts, e.g. for other discovered adapters,
         # are superseded by this migration.
@@ -1477,7 +1493,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
 
                 if not self._async_acquire_addon_ownership():
-                    return self.async_abort(reason="already_in_progress")
+                    return self.async_abort(
+                        reason="already_in_progress",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
@@ -1690,7 +1709,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # deduplicated against a pending prompt or an ignored entry.
         placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
-            existing_entry: ConfigEntry | None = None
+            existing_entry: ZwaveJSConfigEntry | None = None
             if (
                 (
                     current_config_entries := self._async_current_entries(
@@ -1719,7 +1738,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
                     if not self._async_acquire_addon_ownership():
-                        return self.async_abort(reason="already_in_progress")
+                        return self.async_abort(
+                            reason="already_in_progress",
+                            translation_domain=HOMEASSISTANT_DOMAIN,
+                        )
                     await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )
@@ -1741,7 +1763,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 flow["context"].get("unique_id") == placeholder_unique_id
                 for flow in self._async_in_progress()
             ):
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry
@@ -1767,7 +1792,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
+            "name": f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
 

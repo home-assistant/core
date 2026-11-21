@@ -24,7 +24,7 @@ CONF_FILE = "config"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Optional(CONF_URL): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional(CONF_URL): probatio.All(probatio.EnsureList(), [str]),
         probatio.Optional(CONF_FILE): cv.string,
     }
 )

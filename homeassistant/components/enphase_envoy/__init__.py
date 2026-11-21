@@ -1,26 +1,43 @@
 """The Enphase Envoy integration."""
 
+import logging
 from typing import TYPE_CHECKING
 
 from pyenphase import Envoy
+from pyenphase.const import EnvoyOptions
 
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_NO_SOLAR, DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
+    options = EnvoyOptions.V2_ACB_MODE | (
+        EnvoyOptions.NO_SOLAR
+        if (ns := entry.data.get(CONF_NO_SOLAR, False))
+        else EnvoyOptions(0)
+    )
+    option_names = [EnvoyOptions.V2_ACB_MODE.name]
+    if ns:
+        option_names.append(EnvoyOptions.NO_SOLAR.name)
+
+    _LOGGER.debug(
+        "Using options: %s for Envoy %s", " ".join(option_names), entry.data[CONF_NAME]
+    )
+
     session = async_create_clientsession(hass, verify_ssl=False)
-    envoy = Envoy(host, session)
-    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
+    envoy = Envoy(host, session, envoy_options=options)
+    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:
@@ -93,16 +110,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+    @callback
+    def state_changes() -> None:
+        """Process config entry state change events."""
+        coordinator.state_changes()
+
+    entry.async_on_unload(entry.async_on_state_change(state_changes))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Unload a config entry."""
     coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

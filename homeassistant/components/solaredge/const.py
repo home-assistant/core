@@ -10,6 +10,7 @@ LOGGER = logging.getLogger(__package__)
 
 DATA_API_CLIENT: Final = "api_client"
 DATA_MODULES_COORDINATOR: Final = "modules_coordinator"
+DATA_SERVICES: Final = "data_services"
 
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"

@@ -17,6 +17,7 @@ from kasa import (
 )
 from kasa.iot import IotStrip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import (
@@ -71,8 +72,6 @@ from .const import (
     MAC_ADDRESS3,
     MODEL,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_tplink_causes_discovery(
@@ -244,7 +243,7 @@ async def test_config_entry_with_stored_credentials(
         override_side_effect(mock_discovery["discover"], lambda *_, **__: {}),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     config = DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict())
     config.http_client = "Foo"

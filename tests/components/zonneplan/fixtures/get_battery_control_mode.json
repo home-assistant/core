@@ -1,0 +1,23 @@
+{
+  "control_mode": "self_consumption",
+  "processing": false,
+  "modes": {
+    "self_consumption": {
+      "enabled": true,
+      "available": true
+    },
+    "home_optimization": {
+      "enabled": false,
+      "available": true
+    },
+    "dynamic_charging": {
+      "enabled": false,
+      "available": true
+    },
+    "day_ahead_arbitrage": {
+      "enabled": false,
+      "available": false,
+      "unavailability_reason_code": "disallowed_by_project"
+    }
+  }
+}

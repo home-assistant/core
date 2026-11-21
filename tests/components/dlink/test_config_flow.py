@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dlink.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
@@ -14,14 +16,13 @@ from .conftest import (
     CONF_DHCP_DATA,
     CONF_DHCP_FLOW,
     CONF_DHCP_FLOW_NEW_IP,
+    DHCP_FORMATTED_MAC,
     patch_config_flow,
 )
 
-from tests.common import MockConfigEntry
-
 
 def _patch_setup_entry():
-    return patch("homeassistant.components.dlink.async_setup_entry", return_value=True)
+    return patch("homeassistant.components.dlink.async_setup_entry", return_value=None)
 
 
 async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
@@ -35,6 +36,7 @@ async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -138,6 +140,7 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == DHCP_FORMATTED_MAC
 
 
 async def test_dhcp_failed_legacy_auth(

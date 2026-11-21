@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'active_installations': 310400,
+      'apps': dict({
+        'core_samba': 76357,
+      }),
+      'core_integrations': dict({
+        'myq': 0,
+        'spotify': 24388,
+        'youtube': 339,
+      }),
+      'custom_integrations': dict({
+        'hacs': 157481,
+      }),
+      'reports_integrations': 249256,
+    }),
+    'names': dict({
+      'myq': 'myq',
+      'spotify': 'spotify',
+      'youtube': 'YouTube',
+    }),
+    'options': dict({
+      'tracked_apps': list([
+        'core_samba',
+      ]),
+      'tracked_custom_integrations': list([
+        'hacs',
+      ]),
+      'tracked_integrations': list([
+        'youtube',
+        'spotify',
+        'myq',
+      ]),
+    }),
+  })
+# ---

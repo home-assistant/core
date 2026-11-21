@@ -43,7 +43,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util.ssl import client_context, client_context_no_verify
+from homeassistant.util.ssl import create_client_context, create_no_verify_ssl_context
 
 from . import SmtpConfigEntry
 from .const import (
@@ -99,7 +99,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         ),
         probatio.Optional(CONF_SENDER_NAME): cv.string,
         probatio.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
             SelectSelectorConfig(
                 options=ENCRYPTION_OPTIONS,
@@ -113,7 +113,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -130,7 +130,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -321,10 +321,10 @@ async def validate_input(
             timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             use_tls=user_input[CONF_ENCRYPTION] == "tls",
             start_tls=user_input[CONF_ENCRYPTION] == "starttls",
-            tls_context=(
-                client_context()
+            tls_context=await hass.async_add_executor_job(
+                create_client_context
                 if user_input[CONF_VERIFY_SSL]
-                else client_context_no_verify()
+                else create_no_verify_ssl_context
             ),
         ):
             pass

@@ -1,5 +1,6 @@
 """Test the sensor websocket API."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.sensor.const import (
@@ -9,8 +10,6 @@ from homeassistant.components.sensor.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_device_class_units(

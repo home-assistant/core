@@ -10,12 +10,7 @@ from awesomeversion import (
 )
 import probatio
 
-from homeassistant.components.mqtt import (
-    DOMAIN as MQTT_DOMAIN,
-    valid_publish_topic,
-    valid_subscribe_topic,
-)
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
@@ -34,9 +29,11 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
+    MQTT_DOMAIN,
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
+from .models import MySensorsConfigEntry
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
@@ -92,7 +89,7 @@ def _validate_version(version: str) -> dict[str, str]:
 
 
 def _is_same_device(
-    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: ConfigEntry
+    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: MySensorsConfigEntry
 ) -> bool:
     """Check if another ConfigDevice is actually the same as user_input.
 
@@ -210,6 +207,11 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         # Naive check that doesn't consider config entry state.
         if MQTT_DOMAIN not in self.hass.config.components:
             return self.async_abort(reason="mqtt_required")
+
+        from homeassistant.components.mqtt import (  # noqa: PLC0415
+            valid_publish_topic,
+            valid_subscribe_topic,
+        )
 
         gw_type = self._gw_type = CONF_GATEWAY_TYPE_MQTT
         errors: dict[str, str] = {}

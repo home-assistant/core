@@ -73,7 +73,6 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: ip_address},
             )
 
-        self._set_confirm_only()
         placeholders = {
             "name": init_data.name,
             "host": ip_address,

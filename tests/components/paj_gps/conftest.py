@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, patch
 
 from pajgps_api.models.auth import AuthResponse
 from pajgps_api.models.device import Device
+from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent the PAJ GPS integration from setting up during config flow tests."""
     with patch(
         "homeassistant.components.paj_gps.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
@@ -63,4 +63,5 @@ def mock_paj_gps_api() -> Generator[AsyncMock]:
         api.get_all_last_positions.return_value = [
             TrackPoint(**load_json_object_fixture("trackpoint.json", DOMAIN))
         ]
+        api.get_last_sensor_data.return_value = SensorData(did=1, volt=12400)
         yield api

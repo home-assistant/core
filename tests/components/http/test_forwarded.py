@@ -7,10 +7,9 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http.forwarded import async_setup_forwarded
-
-from tests.typing import ClientSessionGenerator
 
 
 async def mock_handler(request):

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -66,7 +67,7 @@ CONFIG_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Required(CONF_USERNAME): selector.TextSelector(),
-        probatio.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_SSL, default=DEFAULT_SSL): selector.BooleanSelector(),
@@ -88,6 +89,7 @@ class WebminConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

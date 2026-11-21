@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.fan import (
@@ -15,12 +16,9 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.components.group.fan import DEFAULT_NAME
@@ -35,12 +33,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, get_fixture_path
 
 FAN_GROUP = "fan.fan_group"
 
@@ -431,7 +428,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 async def test_service_calls(hass: HomeAssistant) -> None:
     """Test calling services."""
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: FAN_GROUP}, blocking=True
     )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_ON
     assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_ON
@@ -439,8 +436,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 66},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_GROUP, FanServiceArgument.PERCENTAGE: 66},
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -452,7 +449,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     assert fan_group_state.attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+        FAN_DOMAIN, FanService.TURN_OFF, {TargetKey.ENTITY_ID: FAN_GROUP}, blocking=True
     )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_OFF
     assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_OFF
@@ -460,8 +457,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 100},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_GROUP, FanServiceArgument.PERCENTAGE: 100},
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -473,8 +470,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 0},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_GROUP, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_OFF
@@ -483,8 +480,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_OSCILLATE,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: True},
+        FanService.OSCILLATE,
+        {TargetKey.ENTITY_ID: FAN_GROUP, FanServiceArgument.OSCILLATING: True},
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -496,8 +493,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_OSCILLATE,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: False},
+        FanService.OSCILLATE,
+        {TargetKey.ENTITY_ID: FAN_GROUP, FanServiceArgument.OSCILLATING: False},
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -509,8 +506,11 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_FORWARD},
+        FanService.SET_DIRECTION,
+        {
+            TargetKey.ENTITY_ID: FAN_GROUP,
+            FanServiceArgument.DIRECTION: DIRECTION_FORWARD,
+        },
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -522,8 +522,11 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_REVERSE},
+        FanService.SET_DIRECTION,
+        {
+            TargetKey.ENTITY_ID: FAN_GROUP,
+            FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
+        },
         blocking=True,
     )
     living_room_fan_state = hass.states.get(LIVING_ROOM_FAN_ENTITY_ID)
@@ -579,8 +582,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "fan.nested_group"},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: "fan.nested_group"},
             blocking=True,
         )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_ON

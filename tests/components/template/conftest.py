@@ -7,6 +7,15 @@ from unittest.mock import AsyncMock, Mock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_mock_service,
+    mock_platform,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.plugins import WebSocketGenerator
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
@@ -16,16 +25,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_mock_service,
-    mock_platform,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.conftest import WebSocketGenerator
 
 _TEST_EXTRA_ATTRIBUTES_ENTITY_ID = "sensor.test_extra_attributes"
 

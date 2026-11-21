@@ -25,13 +25,12 @@ class MarantzIrRuntimeData:
 type MarantzIrConfigEntry = ConfigEntry[MarantzIrRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MarantzIrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MarantzIrConfigEntry) -> None:
     """Set up Marantz IR from a config entry."""
     entry.runtime_data = MarantzIrRuntimeData()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MarantzIrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MarantzIrConfigEntry) -> None:
     """Unload a Marantz IR config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

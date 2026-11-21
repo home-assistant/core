@@ -29,6 +29,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     LOGGER,
+    SESSION_HISTORY_WINDOW,
     UPDATE_REBOOT_MINIMUM_DOWNTIME,
     UPDATE_REBOOT_RETURN_TIMEOUT,
     UPDATE_REBOOT_START_TIMEOUT,
@@ -39,6 +40,7 @@ from .const import (
 class PeblarRuntimeData:
     """Class to hold runtime data."""
 
+    authorization_coordinator: PeblarAuthorizationDataUpdateCoordinator
     data_coordinator: PeblarDataUpdateCoordinator
     last_known_charging_limit = 6
     system_information: PeblarSystemInformation
@@ -47,6 +49,20 @@ class PeblarRuntimeData:
 
 
 type PeblarConfigEntry = ConfigEntry[PeblarRuntimeData]
+
+
+@dataclass(kw_only=True, frozen=True)
+class PeblarSessionAuthorization:
+    """Class to hold who was let in to start a charging session."""
+
+    session_number: int
+    """Counts up with every session, so a higher one is a later session."""
+
+    started_at: datetime
+    """When the charger started the session, by its own clock."""
+
+    token: str
+    """What the card that authorized it was called."""
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -74,7 +90,8 @@ class PeblarData:
 def _coordinator_exception_handler[
     _DataUpdateCoordinatorT: PeblarDataUpdateCoordinator
     | PeblarVersionDataUpdateCoordinator
-    | PeblarUserConfigurationDataUpdateCoordinator,
+    | PeblarUserConfigurationDataUpdateCoordinator
+    | PeblarAuthorizationDataUpdateCoordinator,
     **_P,
 ](
     func: Callable[Concatenate[_DataUpdateCoordinatorT, _P], Coroutine[Any, Any, Any]],
@@ -178,6 +195,68 @@ class PeblarVersionDataUpdateCoordinator(
         # round here and stop itself again.
         self._reboot_watcher = None
         watcher.async_stop()
+
+
+class PeblarAuthorizationDataUpdateCoordinator(
+    DataUpdateCoordinator[PeblarSessionAuthorization | None]
+):
+    """Class to manage fetching who was let in to charge.
+
+    The charger does not announce this as it happens. It lives in the
+    meter history, which is a request of its own and a far heavier one
+    than the poll it sits beside, so this runs on its own slower clock
+    and gets pulled forward when the session changes.
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, entry: PeblarConfigEntry, peblar: Peblar
+    ) -> None:
+        """Initialize the coordinator."""
+        self.peblar = peblar
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"Peblar {entry.title} authorization",
+            update_interval=timedelta(minutes=5),
+        )
+
+    @_coordinator_exception_handler
+    @override
+    async def _async_update_data(self) -> PeblarSessionAuthorization | None:
+        """Fetch data from the Peblar device.
+
+        Returns what the card was called rather than what it is: the
+        identifier is the card, and someone carries that card around.
+        """
+        history = await self.peblar.meter_history(
+            start=dt_util.utcnow() - SESSION_HISTORY_WINDOW
+        )
+        if not history.session:
+            return None
+
+        # A charger set to charge without authentication was shown no
+        # card, so there is nothing to look up and nobody to name.
+        session = history.session[-1]
+        if session.auth_token is None:
+            return None
+
+        token = next(
+            (
+                known.rfid_token_description
+                for known in await self.peblar.rfid_tokens()
+                if known.rfid_token_uid == session.auth_token
+            ),
+            None,
+        )
+        if token is None:
+            return None
+
+        return PeblarSessionAuthorization(
+            session_number=session.session_number,
+            started_at=dt_util.utc_from_timestamp(session.session_start_time),
+            token=token,
+        )
 
 
 class _RebootWatcher:

@@ -6,27 +6,26 @@ from unittest.mock import AsyncMock
 from afsapi import FSConnectionError, FSNotImplementedError, PlayCaps
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.frontier_silicon.media_player import AFSAPIMediaPlayer
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
     STATE_IDLE,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.name_of_the_device"
 DST_SWITCH_ENTITY_ID = "switch.name_of_the_device_daylight_saving_time"
@@ -81,8 +80,8 @@ async def test_async_media_previous_track_maps_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
 

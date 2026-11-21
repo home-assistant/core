@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from sunsynk.exceptions import SunsynkConnectionError
 from sunsynk.grid import Grid
 from syrupy.assertion import SnapshotAssertion
@@ -14,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_GRID_POWER = "sensor.garage_inverter_grid_power"
 ENTITY_ID_GRID_POWER_2 = "sensor.inverter_2938475610_grid_power"

@@ -1,16 +1,15 @@
 """Tests for the youless component."""
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 import requests_mock
 
 from homeassistant.components.youless.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
 
 
 async def init_component(hass: HomeAssistant) -> MockConfigEntry:

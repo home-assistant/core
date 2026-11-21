@@ -1,8 +1,13 @@
 {
   "domain": "tado",
   "name": "Tado",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "tado*"

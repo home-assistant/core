@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend(
     {probatio.Required(CONF_DOMAIN): DOMAIN}

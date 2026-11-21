@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "spot_price": {
+        "default": "mdi:transmission-tower"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "service": "mdi:chart-line"
+    }
+  }
+}

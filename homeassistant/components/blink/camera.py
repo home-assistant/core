@@ -17,6 +17,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN
@@ -56,6 +57,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
         self._camera = camera
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{camera.serial}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
@@ -175,10 +177,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.save_recent_clips(output_dir=file_path)
         except OSError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="cant_write",
-            ) from err
+            raise os_write_error(err, file_path) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
@@ -195,10 +194,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.video_to_file(filename)
         except OSError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="cant_write",
-            ) from err
+            raise os_write_error(err, filename) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er

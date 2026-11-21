@@ -6,7 +6,6 @@ import probatio
 
 from homeassistant.const import CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
@@ -24,7 +23,13 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, ClimateEntityStateAttribute, HVACAction, HVACMode
+from .const import (
+    DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+    HVACAction,
+    HVACMode,
+)
 
 CONF_HVAC_MODE = "hvac_mode"
 
@@ -32,7 +37,9 @@ HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.ext
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_HVAC_MODE): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [probatio.Coerce(HVACMode)]
+                probatio.EnsureList(),
+                probatio.NonEmpty(),
+                [probatio.Coerce(HVACMode)],
             ),
         },
     }
@@ -72,8 +79,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
-        # Climate entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return state.attributes.get(ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT)
 
 
 class ClimateTargetTemperatureChangedTrigger(

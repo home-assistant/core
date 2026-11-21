@@ -19,12 +19,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_PASSWORD,
@@ -55,6 +50,7 @@ from .const import (
     SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
+from .coordinator import SwitchbotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,14 +74,14 @@ def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler()
@@ -142,7 +138,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         sensor_type = SUPPORTED_MODEL_TYPES[model_name]
 
         options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
         return self.async_create_entry(
@@ -163,7 +159,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry_from_discovery(user_input)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             data_schema=probatio.Schema({}),
@@ -185,7 +180,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="password",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv)
             },
@@ -252,7 +249,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={
@@ -309,7 +306,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_KEY_ID): str,
-                    probatio.Required(CONF_ENCRYPTION_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str,
                 }
             ),
             description_placeholders={
@@ -407,7 +404,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -497,10 +494,9 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                     ): bool
                 }
             )
-        if (
-            CONF_SENSOR_TYPE in self.config_entry.data
-            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.CURTAIN
-        ):
+        if CONF_SENSOR_TYPE in self.config_entry.data and self.config_entry.data[
+            CONF_SENSOR_TYPE
+        ] in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options.update(
                 {
                     probatio.Optional(

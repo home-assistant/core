@@ -58,6 +58,24 @@ async def websocket_delete(
         )
         return
 
+    if user.system_generated:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_modify_system_generated",
+                "Unable to delete system generated users.",
+            )
+        )
+        return
+
+    if user.is_owner:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "cannot_delete_owner", "Unable to delete the owner"
+            )
+        )
+        return
+
     await hass.auth.async_remove_user(user)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
@@ -137,7 +155,11 @@ async def websocket_update(
     msg.pop("type")
     msg_id = msg.pop("id")
 
-    await hass.auth.async_update_user(user, **msg)
+    try:
+        await hass.auth.async_update_user(user, **msg)
+    except ValueError as err:
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
 
     connection.send_message(
         websocket_api.result_message(msg_id, {"user": _user_info(user)})

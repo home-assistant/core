@@ -8,7 +8,6 @@ from pyaprilaire.const import Attribute
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -17,7 +16,7 @@ from .coordinator import AprilaireCoordinator
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PORT, default=7000): cv.port,
+        probatio.Required(CONF_PORT, default=7000): probatio.Port(),
     }
 )
 
@@ -28,6 +27,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aprilaire."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(
@@ -65,6 +65,8 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors={"base": "connection_failed"},
         )

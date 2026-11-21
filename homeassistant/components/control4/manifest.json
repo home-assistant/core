@@ -1,8 +1,10 @@
 {
   "domain": "control4",
   "name": "Control4",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@lawtancool", "@davidrecordon"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/control4",
   "integration_type": "hub",
   "iot_class": "local_polling",

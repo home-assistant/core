@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
-from functools import wraps
+from functools import partial, wraps
 from typing import Any, Concatenate, cast, override
 
 from aioshelly.block_device import Block
@@ -11,7 +11,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -23,6 +23,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_blu_trv_device_info,
     get_rpc_channel_name,
     get_rpc_device_info,
     get_rpc_key,
@@ -152,13 +153,26 @@ def async_setup_entry_rpc(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
-    if coordinator.device.initialized:
+    # Mains-powered devices keep the last known data while reconnecting
+    if coordinator.device.initialized or not coordinator.sleep_period:
         async_setup_rpc_attribute_entities(
             hass, config_entry, async_add_entities, sensors, sensor_class
         )
     else:
         async_restore_rpc_attribute_entities(
             hass, config_entry, async_add_entities, coordinator, sensors, sensor_class
+        )
+        # Restoring only covers the registry, add entities that are new since then
+        coordinator.async_on_initialized(
+            partial(
+                async_setup_rpc_attribute_entities,
+                hass,
+                config_entry,
+                async_add_entities,
+                sensors,
+                sensor_class,
+                skip_registered=True,
+            )
         )
 
 
@@ -169,6 +183,8 @@ def async_setup_rpc_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
+    *,
+    skip_registered: bool = False,
 ) -> None:
     """Set up entities for RPC attributes."""
     coordinator = config_entry.runtime_data.rpc
@@ -180,13 +196,15 @@ def async_setup_rpc_attribute_entities(
         assert polling_coordinator
 
     entities = []
-    for sensor_id in sensors:
-        description = sensors[sensor_id]
-        key_instances = get_rpc_key_instances(
-            coordinator.device.status, description.key
-        )
+    for sensor_id, description in sensors.items():
+        legacy_ids = description.legacy_ids or {}
+        key_instances = [
+            (key, legacy_ids.get(component, sensor_id))
+            for component in description.components or (description.key,)
+            for key in get_rpc_key_instances(coordinator.device.status, component)
+        ]
 
-        for key in key_instances:
+        for key, attribute in key_instances:
             # Filter non-existing sensors
             if description.models and coordinator.model not in description.models:
                 continue
@@ -211,7 +229,7 @@ def async_setup_rpc_attribute_entities(
                 entity_class = get_entity_class(sensor_class, description)
                 domain = entity_class.__module__.split(".")[-1]
                 unique_id = entity_class(
-                    coordinator, key, sensor_id, description
+                    coordinator, key, attribute, description
                 ).unique_id
                 LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
@@ -219,15 +237,25 @@ def async_setup_rpc_attribute_entities(
                 if not sleep_period:
                     entities.append(
                         get_entity_class(sensor_class, description)(
-                            polling_coordinator, key, sensor_id, description
+                            polling_coordinator, key, attribute, description
                         )
                     )
             else:
                 entities.append(
                     get_entity_class(sensor_class, description)(
-                        coordinator, key, sensor_id, description
+                        coordinator, key, attribute, description
                     )
                 )
+
+    if skip_registered:
+        ent_reg = er.async_get(hass)
+        domain = sensor_class.__module__.split(".")[-1]
+        entities = [
+            entity
+            for entity in entities
+            if ent_reg.async_get_entity_id(domain, DOMAIN, entity.unique_id) is None
+        ]
+
     if not entities:
         return
 
@@ -245,12 +273,16 @@ def async_restore_rpc_attribute_entities(
 ) -> None:
     """Restore RPC attributes entities."""
     entities: list[Entity] = []
-    sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
 
     ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
+    descriptions = {
+        legacy_id: description
+        for description in sensors.values()
+        for legacy_id in (description.legacy_ids or {}).values()
+    } | dict(sensors)
 
     for entry in entries:
         if entry.domain != domain:
@@ -259,14 +291,12 @@ def async_restore_rpc_attribute_entities(
         key = entry.unique_id.split("-")[-2]
         attribute = entry.unique_id.split("-")[-1]
 
-        if description := sensors.get(attribute):
-            entity_class = get_entity_class(sensor_class, description)
-            if sleep_period:
-                entities.append(
-                    entity_class(coordinator, key, attribute, description, entry)
+        if description := descriptions.get(attribute):
+            entities.append(
+                get_entity_class(sensor_class, description)(
+                    coordinator, key, attribute, description, entry
                 )
-            else:
-                entities.append(entity_class(coordinator, key, attribute, description))
+            )
 
     if not entities:
         return
@@ -309,6 +339,10 @@ class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
     sub_key: str | None = None
+    # Components the description applies to, defaults to the key
+    components: tuple[str, ...] | None = None
+    # Description ID per component, keeps unique IDs from before a merge
+    legacy_ids: Mapping[str, str] | None = None
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
@@ -726,18 +760,14 @@ def get_entity_class(
 def get_entity_block_device_info(
     coordinator: ShellyBlockCoordinator,
     block: Block | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for block entities."""
     return get_block_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         block,
-        suggested_area=coordinator.suggested_area,
     )
 
 
@@ -745,17 +775,28 @@ def get_entity_rpc_device_info(
     coordinator: ShellyRpcCoordinator,
     key: str | None = None,
     emeter_phase: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for RPC entities."""
     return get_rpc_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         key,
         emeter_phase=emeter_phase,
-        suggested_area=coordinator.suggested_area,
+    )
+
+
+def get_entity_blu_trv_device_info(
+    coordinator: ShellyRpcCoordinator, key: str
+) -> DeviceInfo:
+    """Get device info for BLU TRV entities."""
+    config = coordinator.device.config[key]
+    return get_blu_trv_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
+        config,
+        config["addr"],
+        coordinator.mac,
+        coordinator.device.status[key].get("fw_ver"),
     )

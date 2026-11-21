@@ -1,6 +1,7 @@
 {
   "domain": "history_stats",
   "name": "History Stats",
+  "categories": ["helpers.calculate_value"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["recorder"],

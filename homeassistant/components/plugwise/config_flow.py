@@ -16,10 +16,8 @@ import probatio
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
     CONF_BASE,
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -55,7 +53,7 @@ SMILE_RECONF_SCHEMA = probatio.Schema(
 
 def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> probatio.Schema:
     """Generate base schema for gateways."""
-    schema = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+    schema = probatio.Schema({probatio.Required(probatio.Secret(CONF_PASSWORD)): str})
 
     if not discovery_info:
         schema = schema.extend(
@@ -171,8 +169,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_NAME: _name},
-                ATTR_CONFIGURATION_URL: (
+                "title_placeholders": {"name": _name},
+                "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                 ),
             }
