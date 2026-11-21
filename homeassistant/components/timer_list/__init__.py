@@ -50,6 +50,7 @@ __all__ = [
     "TimerListEventType",
     "TimerListServices",
     "TimerStatus",
+    "async_get_timer_list_entity",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +73,14 @@ def entity_became_available(event: Event[EventStateChangedData]) -> bool:
     if new_state is None or new_state.state == STATE_UNAVAILABLE:
         return False
     return old_state is None or old_state.state == STATE_UNAVAILABLE
+
+
+@callback
+def async_get_timer_list_entity(
+    hass: HomeAssistant, entity_id: str
+) -> TimerListEntity | None:
+    """Return the timer list entity for an entity ID."""
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
