@@ -1,0 +1,10 @@
+{
+  "access_token": "migrated-access",
+  "refresh_token": "migrated-refresh",
+  "token_type": "Bearer",
+  "expires_in": 7200,
+  "scope": "openid profile read devices content delete",
+  "created_at": 1794830400,
+  "sub": "7abd2f69-3f6d-4540-bee8-d9a526d32d6c",
+  "id_token": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI3YWJkMmY2OSJ9.c2lnbmF0dXJl"
+}

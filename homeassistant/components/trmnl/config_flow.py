@@ -1,85 +1,167 @@
 """Config flow for TRMNL."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any, override
 
+import jwt
 import probatio
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigFlow,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import DOMAIN, LOGGER
-
-STEP_USER_SCHEMA = probatio.Schema(
-    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+from .application_credentials import async_revoke_token
+from .const import (
+    CLIENT_ID,
+    CONF_HOME_ENTITIES,
+    DOMAIN,
+    LOGGER,
+    OAUTH2_SCOPES,
+    REQUIRED_SCOPES,
 )
+from .coordinator import TRMNLConfigEntry, scope_granted
 
-TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
 
+class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
+    """TRMNL config flow: sign in on trmnl.com."""
 
-class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
-    """TRMNL config flow."""
+    DOMAIN = DOMAIN
+    VERSION = 2
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: TRMNLConfigEntry) -> TRMNLOptionsFlow:
+        """Return the options flow."""
+        return TRMNLOptionsFlow()
+
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        """Return the logger."""
+        return LOGGER
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user, reauth, or reconfigure."""
-        errors: dict[str, str] = {}
-        if user_input:
-            session = async_get_clientsession(self.hass)
-            client = TRMNLClient(token=user_input[CONF_API_KEY], session=session)
-            try:
-                user = await client.get_me()
-            except TRMNLAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except TRMNLError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(str(user.identifier))
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
-                        data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
-                        data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user.name,
-                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
-                )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_SCHEMA,
-            errors=errors,
-            description_placeholders={"account_url": TRMNL_ACCOUNT_URL},
+        """Start the sign in on trmnl.com."""
+        await async_import_client_credential(
+            self.hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="TRMNL")
         )
+        return await super().async_step_user(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
+        """Sign in again, for example to grant a scope the user unticked before."""
         return await self.async_step_user()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user to sign in again."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Create the entry, or revoke the new token when the flow aborts."""
+        try:
+            return await self._async_create_or_update_entry(data)
+        except AbortFlow as abort:
+            await async_revoke_token(self.hass, data["token"]["access_token"])
+            return self.async_abort(
+                reason=abort.reason,
+                description_placeholders=abort.description_placeholders,
+                translation_domain=abort.translation_domain,
+            )
+
+    async def _async_create_or_update_entry(
+        self, data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Create the entry, or update it after reauth or reconfigure."""
+        try:
+            subject = jwt.decode(
+                data["token"]["id_token"], options={"verify_signature": False}
+            )["sub"]
+        except KeyError, jwt.DecodeError:
+            raise AbortFlow("missing_account_identity") from None
+
+        # A token response without scope was granted every requested scope (RFC 6749 5.1).
+        granted = set(data["token"].get("scope", OAUTH2_SCOPES).split())
+        if not REQUIRED_SCOPES.issubset(granted):
+            raise AbortFlow("missing_scopes")
+
+        client = TRMNLClient(
+            token=data["token"]["access_token"],
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            await client.get_devices()
+            user = await client.get_me() if "profile" in granted else None
+        except TRMNLAuthenticationError:
+            raise AbortFlow("oauth_unauthorized") from None
+        except TRMNLError, TimeoutError:
+            raise AbortFlow("cannot_connect") from None
+
+        await self.async_set_unique_id(subject)
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=data
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data
+            )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=user.name if user else "TRMNL", data=data)
+
+
+class TRMNLOptionsFlow(OptionsFlowWithReload):
+    """TRMNL options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the entities to show on TRMNL."""
+        if user_input is not None:
+            if user_input[CONF_HOME_ENTITIES] and not scope_granted(
+                self.config_entry, "content"
+            ):
+                self.config_entry.async_start_reauth(self.hass)
+                return self.async_abort(reason="content_not_granted")
+            return self.async_create_entry(data=user_input)
+        schema = probatio.Schema(
+            {
+                probatio.Optional(
+                    CONF_HOME_ENTITIES,
+                    default=self.config_entry.options.get(CONF_HOME_ENTITIES, []),
+                ): EntitySelector(EntitySelectorConfig(multiple=True))
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

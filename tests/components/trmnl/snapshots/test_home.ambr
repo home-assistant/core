@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_setup_creates_plugin_setting_and_pushes_the_home
+  tuple(
+    42,
+    dict({
+      'areas': dict({
+        'bedroom': 'Bedroom',
+        'kitchen': 'Kitchen',
+      }),
+      'entities': list([
+        dict({
+          'area_id': 'kitchen',
+          'attributes': dict({
+          }),
+          'device_class': 'temperature',
+          'domain': 'sensor',
+          'entity_id': 'sensor.temp',
+          'name': 'temp',
+          'state': '21.5',
+          'unit': '°C',
+        }),
+        dict({
+          'area_id': 'bedroom',
+          'attributes': dict({
+            'brightness': 128,
+          }),
+          'device_class': None,
+          'domain': 'light',
+          'entity_id': 'light.lamp',
+          'name': 'Desk lamp',
+          'state': 'on',
+          'unit': None,
+        }),
+        dict({
+          'area_id': None,
+          'attributes': dict({
+            'current_temperature': 66,
+          }),
+          'device_class': None,
+          'domain': 'climate',
+          'entity_id': 'climate.hall',
+          'name': 'hall',
+          'state': 'heat',
+          'unit': '°F',
+        }),
+      ]),
+    }),
+  )
+# ---
