@@ -423,7 +423,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             reconfigure_entry_data = self._get_reconfigure_entry().data
             port = reconfigure_entry_data[CONF_PORT]
-            ssl = reconfigure_entry_data.get(CONF_SSL, DEFAULT_SSL)
+            ssl = reconfigure_entry_data[CONF_SSL]
 
             if (port == DEFAULT_HTTP_PORT and not ssl) or (
                 port == DEFAULT_HTTPS_PORT and ssl
