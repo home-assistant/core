@@ -39,6 +39,7 @@ class EnergyZeroData(NamedTuple):
     electricity_all_in_today: EnergyPrices
     electricity_all_in_tomorrow: EnergyPrices | None
     gas_today: EnergyPrices | None
+    gas_all_in_today: EnergyPrices | None
     electricity_price_step: timedelta
 
     def next_price(
@@ -92,7 +93,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
         today = dt_util.now().date()
-        gas_today = None
+        gas_today: dict[PriceType, EnergyPrices] = {}
         electricity_tomorrow: dict[PriceType, EnergyPrices] = {}
         local_tz = ZoneInfo(self.hass.config.time_zone)
 
@@ -104,7 +105,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                 gas_today = await self.energyzero.get_gas_prices(
                     start_date=today,
                     end_date=today,
-                    price_type=PriceType.MARKET_WITH_VAT,
+                    price_type=(PriceType.MARKET_WITH_VAT, PriceType.ALL_IN),
                     local_tz=local_tz,
                 )
             except EnergyZeroNoDataError:
@@ -127,6 +128,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             ),
             electricity_all_in_today=electricity_today[PriceType.ALL_IN],
             electricity_all_in_tomorrow=electricity_tomorrow.get(PriceType.ALL_IN),
-            gas_today=gas_today,
+            gas_today=gas_today.get(PriceType.MARKET_WITH_VAT),
+            gas_all_in_today=gas_today.get(PriceType.ALL_IN),
             electricity_price_step=self.electricity_price_step,
         )

@@ -76,7 +76,7 @@ async def test_coordinator_requests_both_prices_with_vat(
     mock_energyzero.get_gas_prices.assert_awaited_once_with(
         start_date=today,
         end_date=today,
-        price_type=PriceType.MARKET_WITH_VAT,
+        price_type=(PriceType.MARKET_WITH_VAT, PriceType.ALL_IN),
         local_tz=local_tz,
     )
 

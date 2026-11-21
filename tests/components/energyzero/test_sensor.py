@@ -42,9 +42,13 @@ async def test_sensor(
     with patch("homeassistant.components.energyzero.PLATFORMS", ["sensor"]):
         await setup_integration(hass, mock_config_entry)
 
-    gas_state = hass.states.get("sensor.gas_market_price_current_hour")
+    gas_state = hass.states.get("sensor.gas_price_current_hour_market_price")
     assert gas_state
     assert gas_state.state == "0.5468407201224"
+
+    gas_all_in_state = hass.states.get("sensor.gas_price_current_hour_all_in_price")
+    assert gas_all_in_state
+    assert gas_all_in_state.state == "1.2736393201224"
 
     energy_state = hass.states.get("sensor.electricity_price_current_market_price")
     assert energy_state
@@ -81,7 +85,22 @@ async def test_sensor_ignores_missing_tomorrow_prices(
     [
         (
             "get_gas_prices",
-            "sensor.gas_market_price_current_hour",
+            "sensor.gas_price_current_hour_market_price",
+            STATE_UNKNOWN,
+        ),
+        (
+            "get_gas_prices",
+            "sensor.gas_price_next_hour_market_price",
+            STATE_UNKNOWN,
+        ),
+        (
+            "get_gas_prices",
+            "sensor.gas_price_current_hour_all_in_price",
+            STATE_UNKNOWN,
+        ),
+        (
+            "get_gas_prices",
+            "sensor.gas_price_next_hour_all_in_price",
             STATE_UNKNOWN,
         ),
         (
@@ -162,34 +181,87 @@ async def test_existing_market_registry_entries(
         assert entry.unique_id == original.unique_id
         assert entry.name == original.name
         assert entry.disabled_by == original.disabled_by
-    assert len(er.async_entries_for_config_entry(entity_registry, "12345")) == 16
+    assert len(er.async_entries_for_config_entry(entity_registry, "12345")) == 18
+
+
+@pytest.mark.usefixtures("mock_energyzero")
+@pytest.mark.parametrize("disabled_by", [None, er.RegistryEntryDisabler.USER])
+async def test_existing_gas_registry_entries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Keep existing gas identities and customizations when all-in is added."""
+    mock_config_entry.add_to_hass(hass)
+    entries = [
+        entity_registry.async_get_or_create(
+            "sensor",
+            "energyzero",
+            f"12345_today_gas_{key}",
+            suggested_object_id=f"gas_market_price_{object_id}",
+            config_entry=mock_config_entry,
+            disabled_by=disabled_by,
+        )
+        for key, object_id in (
+            ("current_hour_price", "current_hour"),
+            ("next_hour_price", "next_hour"),
+        )
+    ]
+    entries = [
+        entity_registry.async_update_entity(
+            entry.entity_id, name=f"Custom {entry.entity_id}"
+        )
+        for entry in entries
+    ]
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for original in entries:
+        assert (entry := entity_registry.async_get(original.entity_id))
+        assert entry.id == original.id
+        assert entry.entity_id == original.entity_id
+        assert entry.unique_id == original.unique_id
+        assert entry.name == original.name
+        assert entry.disabled_by == original.disabled_by
+    assert entity_registry.async_get("sensor.gas_price_current_hour_all_in_price")
+    assert entity_registry.async_get("sensor.gas_price_next_hour_all_in_price")
+    assert len(er.async_entries_for_config_entry(entity_registry, "12345")) == 18
 
 
 @pytest.mark.parametrize(
-    ("moment", "current", "next_hour"),
+    ("moment", "current", "next_hour", "all_in", "all_in_next_hour"),
     [
         pytest.param(
             "2026-04-10T00:00:00+02:00",
             "0.54345990633176",
             "0.54345990633176",
+            "1.27025850633176",
+            "1.27025850633176",
             id="midnight",
         ),
         pytest.param(
             "2026-04-10T05:00:00+02:00",
             "0.54345990633176",
             "0.5468407201224",
+            "1.27025850633176",
+            "1.2736393201224",
             id="next-hour-boundary",
         ),
         pytest.param(
             "2026-04-10T05:59:59+02:00",
             "0.54345990633176",
             "0.5468407201224",
+            "1.27025850633176",
+            "1.2736393201224",
             id="before-boundary",
         ),
         pytest.param(
             "2026-04-10T06:00:00+02:00",
             "0.5468407201224",
             "0.5468407201224",
+            "1.2736393201224",
+            "1.2736393201224",
             id="boundary",
         ),
     ],
@@ -201,6 +273,8 @@ async def test_gas_prices_after_fresh_start(
     moment: str,
     current: str,
     next_hour: str,
+    all_in: str,
+    all_in_next_hour: str,
 ) -> None:
     """Exercise actual REST parsing without a remembered sensor value."""
     await hass.config.async_set_time_zone("Europe/Amsterdam")
@@ -217,17 +291,21 @@ async def test_gas_prices_after_fresh_start(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
+    assert (state := hass.states.get("sensor.gas_price_current_hour_market_price"))
     assert state.state == current
-    assert (state := hass.states.get("sensor.gas_market_price_next_hour"))
+    assert (state := hass.states.get("sensor.gas_price_next_hour_market_price"))
     assert state.state == next_hour
+    assert (state := hass.states.get("sensor.gas_price_current_hour_all_in_price"))
+    assert state.state == all_in
+    assert (state := hass.states.get("sensor.gas_price_next_hour_all_in_price"))
+    assert state.state == all_in_next_hour
 
 
 @pytest.mark.parametrize(
-    ("block_count", "expected"),
+    ("block_count", "expected", "expected_all_in"),
     [
-        pytest.param(2, "0.5468407201224", id="new-price"),
-        pytest.param(1, STATE_UNKNOWN, id="missing-price"),
+        pytest.param(2, "0.5468407201224", "1.2736393201224", id="new-price"),
+        pytest.param(1, STATE_UNKNOWN, STATE_UNKNOWN, id="missing-price"),
     ],
 )
 async def test_gas_price_expires_at_boundary(
@@ -236,6 +314,7 @@ async def test_gas_price_expires_at_boundary(
     freezer: FrozenDateTimeFactory,
     block_count: int,
     expected: str,
+    expected_all_in: str,
 ) -> None:
     """A refresh must select the new interval or report an unknown price."""
     await hass.config.async_set_time_zone("Europe/Amsterdam")
@@ -257,14 +336,18 @@ async def test_gas_price_expires_at_boundary(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
+        assert (state := hass.states.get("sensor.gas_price_current_hour_market_price"))
         assert state.state == "0.54345990633176"
+        assert (state := hass.states.get("sensor.gas_price_current_hour_all_in_price"))
+        assert state.state == "1.27025850633176"
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
+    assert (state := hass.states.get("sensor.gas_price_current_hour_market_price"))
     assert state.state == expected
+    assert (state := hass.states.get("sensor.gas_price_current_hour_all_in_price"))
+    assert state.state == expected_all_in
 
 
 async def test_gas_price_survives_calendar_rollover(
@@ -286,7 +369,7 @@ async def test_gas_price_survives_calendar_rollover(
     ) as request:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
+        assert (state := hass.states.get("sensor.gas_price_current_hour_market_price"))
         assert state.state == "0.54345990633176"
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -294,5 +377,7 @@ async def test_gas_price_survives_calendar_rollover(
 
     assert request.await_args_list[1].kwargs["params"]["date"] == "09-04-2026"
     assert request.await_args_list[4].kwargs["params"]["date"] == "10-04-2026"
-    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
+    assert (state := hass.states.get("sensor.gas_price_current_hour_market_price"))
     assert state.state == "0.54345990633176"
+    assert (state := hass.states.get("sensor.gas_price_current_hour_all_in_price"))
+    assert state.state == "1.27025850633176"

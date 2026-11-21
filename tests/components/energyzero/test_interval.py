@@ -143,7 +143,7 @@ async def test_electricity_interval(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 16
+    assert len(entries) == 18
     assert all(entry.unique_id.startswith("12345_today_") for entry in entries)
 
 
