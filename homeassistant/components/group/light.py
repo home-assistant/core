@@ -1,5 +1,6 @@
 """Platform allowing several lights to be grouped into one light."""
 
+import asyncio
 from collections import Counter
 import itertools
 import logging
@@ -164,17 +165,61 @@ class LightGroup(GroupEntity, LightEntity):
         data = {
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
-        data[ATTR_ENTITY_ID] = self._entity_ids
+        service_calls = [{**data, ATTR_ENTITY_ID: self._entity_ids}]
 
-        _LOGGER.debug("Forwarded turn_on command: %s", data)
+        if (kelvin := data.get(LightServiceArgument.COLOR_TEMP_KELVIN)) is not None:
+            entity_ids_by_kelvin: dict[int, list[str]] = {}
+            for entity_id in self._entity_ids:
+                entity_ids_by_kelvin.setdefault(
+                    self._clamp_color_temp_kelvin(entity_id, kelvin), []
+                ).append(entity_id)
+            service_calls = [
+                {
+                    **data,
+                    LightServiceArgument.COLOR_TEMP_KELVIN: member_kelvin,
+                    ATTR_ENTITY_ID: entity_ids,
+                }
+                for member_kelvin, entity_ids in entity_ids_by_kelvin.items()
+            ]
 
-        await self.hass.services.async_call(
-            LIGHT_DOMAIN,
-            LightService.TURN_ON,
-            data,
-            blocking=True,
-            context=self._context,
+        _LOGGER.debug("Forwarded turn_on commands: %s", service_calls)
+
+        results = await asyncio.gather(
+            *(
+                self.hass.services.async_call(
+                    LIGHT_DOMAIN,
+                    LightService.TURN_ON,
+                    service_call,
+                    blocking=True,
+                    context=self._context,
+                )
+                for service_call in service_calls
+            ),
+            return_exceptions=True,
         )
+
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+
+    @callback
+    def _clamp_color_temp_kelvin(self, entity_id: str, kelvin: int) -> int:
+        """Limit a color temperature to the range reported by a member."""
+        if (state := self.hass.states.get(entity_id)) is None:
+            return kelvin
+        if (
+            min_kelvin := state.attributes.get(
+                LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN
+            )
+        ) is not None:
+            kelvin = max(kelvin, min_kelvin)
+        if (
+            max_kelvin := state.attributes.get(
+                LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN
+            )
+        ) is not None:
+            kelvin = min(kelvin, max_kelvin)
+        return kelvin
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
