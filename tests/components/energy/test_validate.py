@@ -29,6 +29,7 @@ async def test_validation_empty_config(hass: HomeAssistant) -> None:
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -97,6 +98,7 @@ async def test_validation(
         "energy_sources": [[], [], []],
         "device_consumption": [[]],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -125,6 +127,7 @@ async def test_validation_device_consumption_entity_missing(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -148,6 +151,7 @@ async def test_validation_device_consumption_stat_missing(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -173,6 +177,7 @@ async def test_validation_device_consumption_entity_unavailable(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -198,6 +203,7 @@ async def test_validation_device_consumption_entity_non_numeric(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -231,6 +237,7 @@ async def test_validation_device_consumption_entity_unexpected_unit(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -256,6 +263,7 @@ async def test_validation_device_consumption_recorder_not_tracked(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -289,6 +297,7 @@ async def test_validation_device_consumption_no_last_reset(
             ]
         ],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -326,6 +335,7 @@ async def test_validation_solar(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -372,6 +382,7 @@ async def test_validation_home(
         "energy_sources": [issues],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -425,6 +436,7 @@ async def test_validation_battery(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -682,6 +694,7 @@ async def test_validation_grid(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -747,6 +760,7 @@ async def test_validation_grid_external_cost_compensation(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -814,6 +828,7 @@ async def test_validation_grid_price_not_exist(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -877,6 +892,7 @@ async def test_validation_grid_auto_cost_entity_errors(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -941,6 +957,7 @@ async def test_validation_grid_price_errors(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1078,6 +1095,7 @@ async def test_validation_gas(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1174,6 +1192,7 @@ async def test_validation_gas_price_unit_mismatch(
         "energy_sources": [expected_issues],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1218,6 +1237,7 @@ async def test_validation_gas_price_not_exist(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1253,6 +1273,7 @@ async def test_validation_gas_no_costs_tracking(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1301,6 +1322,7 @@ async def test_validation_grid_no_costs_tracking(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1435,6 +1457,7 @@ async def test_validation_water(
         ],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1470,6 +1493,7 @@ async def test_validation_water_no_costs_tracking(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1485,6 +1509,7 @@ async def test_validation_device_consumption_water_entity_missing(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [
             [
                 {
@@ -1523,6 +1548,7 @@ async def test_validation_device_consumption_water_entity_unexpected_unit(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [
             [
                 {
@@ -1582,6 +1608,7 @@ async def test_validation_device_consumption_water_valid_units(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [[], [], []],
     }
 
@@ -1599,6 +1626,7 @@ async def test_validation_device_consumption_water_recorder_not_tracked(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
         "device_consumption_water": [
             [
                 {
@@ -1635,6 +1663,7 @@ async def test_validation_device_consumption_gas_entity_missing(
                 },
             ]
         ],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1671,6 +1700,7 @@ async def test_validation_device_consumption_gas_entity_unexpected_unit(
                 }
             ]
         ],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1707,6 +1737,7 @@ async def test_validation_device_consumption_gas_valid_units(
         "energy_sources": [],
         "device_consumption": [],
         "device_consumption_gas": [[], [], []],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
 
@@ -1732,5 +1763,173 @@ async def test_validation_device_consumption_gas_recorder_not_tracked(
                 }
             ]
         ],
+        "fixed_costs": [],
         "device_consumption_water": [],
     }
+
+
+@pytest.mark.parametrize("unit", ["EUR", "EUR/day"])
+async def test_validation_fixed_cost(
+    hass: HomeAssistant, mock_energy_manager: EnergyManager, unit: str
+) -> None:
+    """Test validating fixed costs with a number and an entity amount."""
+    hass.states.async_set(
+        "sensor.standing_charge", "0.62", {"unit_of_measurement": unit}
+    )
+    await mock_energy_manager.async_update(
+        {
+            "fixed_costs": [
+                {
+                    "id": "number",
+                    "type": "grid",
+                    "name": "Network fee",
+                    "number_amount": 5.99,
+                    "entity_amount": None,
+                    "period": "month",
+                },
+                {
+                    "id": "entity",
+                    "type": "gas",
+                    "name": "Standing charge",
+                    "number_amount": None,
+                    "entity_amount": "sensor.standing_charge",
+                    "period": "day",
+                },
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert (await validate.async_validate(hass)).as_dict()["fixed_costs"] == [[], []]
+
+
+@pytest.mark.parametrize(
+    ("state", "unit", "expected"),
+    [
+        pytest.param(
+            None,
+            None,
+            {
+                "type": "entity_not_defined",
+                "affected_entities": {("sensor.standing_charge", None)},
+                "translation_placeholders": None,
+            },
+            id="missing",
+        ),
+        pytest.param(
+            "unavailable",
+            "EUR",
+            {
+                "type": "entity_state_non_numeric",
+                "affected_entities": {("sensor.standing_charge", "unavailable")},
+                "translation_placeholders": None,
+            },
+            id="unavailable",
+        ),
+        pytest.param(
+            "nan",
+            "EUR",
+            {
+                "type": "entity_state_non_numeric",
+                "affected_entities": {("sensor.standing_charge", "nan")},
+                "translation_placeholders": None,
+            },
+            id="not_a_number",
+        ),
+        pytest.param(
+            "0.62",
+            "EUR/month",
+            {
+                "type": "entity_unexpected_unit_fixed_cost",
+                "affected_entities": {("sensor.standing_charge", "EUR/month")},
+                "translation_placeholders": {"currency": "EUR"},
+            },
+            id="unit_of_another_period",
+        ),
+        pytest.param(
+            "0.62",
+            "kEUR/day",
+            {
+                "type": "entity_unexpected_unit_fixed_cost",
+                "affected_entities": {("sensor.standing_charge", "kEUR/day")},
+                "translation_placeholders": {"currency": "EUR"},
+            },
+            id="unit_ending_with_the_currency",
+        ),
+        pytest.param(
+            "0.62",
+            None,
+            {
+                "type": "entity_unexpected_unit_fixed_cost",
+                "affected_entities": {("sensor.standing_charge", None)},
+                "translation_placeholders": {"currency": "EUR"},
+            },
+            id="no_unit",
+        ),
+    ],
+)
+async def test_validation_fixed_cost_entity_errors(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    state: str | None,
+    unit: str | None,
+    expected: dict[str, Any],
+) -> None:
+    """Test validating the amount entity of a fixed cost."""
+    if state is not None:
+        hass.states.async_set(
+            "sensor.standing_charge", state, {"unit_of_measurement": unit}
+        )
+    await mock_energy_manager.async_update(
+        {
+            "fixed_costs": [
+                {
+                    "id": "entity",
+                    "type": "grid",
+                    "name": "Standing charge",
+                    "number_amount": None,
+                    "entity_amount": "sensor.standing_charge",
+                    "period": "day",
+                }
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert (await validate.async_validate(hass)).as_dict()["fixed_costs"] == [
+        [expected]
+    ]
+
+
+async def test_validation_fixed_cost_sensor_not_recorded(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    mock_is_entity_recorded: dict[str, bool],
+) -> None:
+    """Test validating a fixed cost sensor that is not recorded."""
+    mock_is_entity_recorded["sensor.network_fee_fixed_cost"] = False
+    await mock_energy_manager.async_update(
+        {
+            "fixed_costs": [
+                {
+                    "id": "number",
+                    "type": "grid",
+                    "name": "Network fee",
+                    "number_amount": 5.99,
+                    "entity_amount": None,
+                    "period": "month",
+                }
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert (await validate.async_validate(hass)).as_dict()["fixed_costs"] == [
+        [
+            {
+                "type": "recorder_untracked",
+                "affected_entities": {("sensor.network_fee_fixed_cost", None)},
+                "translation_placeholders": None,
+            }
+        ]
+    ]

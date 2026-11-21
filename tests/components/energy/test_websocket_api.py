@@ -185,6 +185,24 @@ async def test_save_preferences(
                 "name": "Gas Meter",
             }
         ],
+        "fixed_costs": [
+            {
+                "id": "standing_charge",
+                "type": "grid",
+                "name": "Standing charge",
+                "number_amount": 0.62,
+                "entity_amount": None,
+                "period": "day",
+            },
+            {
+                "id": "gas_standing_charge",
+                "type": "gas",
+                "name": "Gas standing charge",
+                "number_amount": None,
+                "entity_amount": "sensor.gas_standing_charge",
+                "period": "month",
+            },
+        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
@@ -216,6 +234,10 @@ async def test_save_preferences(
             "sensor.return_to_grid_offpeak": (
                 "sensor.return_to_grid_offpeak_compensation"
             ),
+        },
+        "fixed_cost_sensors": {
+            "standing_charge": "sensor.standing_charge_fixed_cost",
+            "gas_standing_charge": "sensor.gas_standing_charge_fixed_cost",
         },
         "solar_forecast_domains": ["some_domain"],
     }
@@ -374,6 +396,7 @@ async def test_validate(
         "device_consumption": [],
         "device_consumption_water": [],
         "device_consumption_gas": [],
+        "fixed_costs": [],
     }
 
 

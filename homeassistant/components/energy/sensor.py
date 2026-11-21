@@ -4,7 +4,9 @@ import asyncio
 from collections.abc import Mapping
 import copy
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
+import math
 from typing import Any, Final, Literal, Self, cast, override
 
 from homeassistant.components.sensor import (
@@ -18,12 +20,16 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.recorder import reset_detected  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
     EntityStateAttribute,
+    Platform,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
     HomeAssistant,
     State,
     callback,
@@ -33,13 +39,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util, unit_conversion
+from homeassistant.util import dt as dt_util, slugify, unit_conversion
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import BATTERY_CHARGE_DIRECTIONS, BATTERY_DIRECTIONS, DOMAIN
-from .data import EnergyManager, PowerConfig, async_get_manager
+from .data import EnergyManager, FixedCostType, PowerConfig, async_get_manager
 from .helpers import generate_power_sensor_entity_id, generate_power_sensor_unique_id
 
 SUPPORTED_STATE_CLASSES = {
@@ -75,7 +84,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the energy sensors."""
-    sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
+    sensor_manager = SensorManager(
+        hass, await async_get_manager(hass), async_add_entities
+    )
     await sensor_manager.async_start()
 
 
@@ -142,13 +153,18 @@ class SensorManager:
     """Class to handle creation/removal of sensor data."""
 
     def __init__(
-        self, manager: EnergyManager, async_add_entities: AddEntitiesCallback
+        self,
+        hass: HomeAssistant,
+        manager: EnergyManager,
+        async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize sensor manager."""
+        self.hass = hass
         self.manager = manager
         self.async_add_entities = async_add_entities
         self.current_entities: dict[tuple[str, str | None, str], EnergyCostSensor] = {}
         self.current_power_entities: dict[str, EnergyPowerSensor] = {}
+        self.current_fixed_cost_entities: dict[str, EnergyFixedCostSensor] = {}
 
     async def async_start(self) -> None:
         """Start."""
@@ -159,9 +175,10 @@ class SensorManager:
 
     async def _process_manager_data(self) -> None:
         """Process manager data."""
-        to_add: list[EnergyCostSensor | EnergyPowerSensor] = []
+        to_add: list[_ManagedSensor] = []
         to_remove = dict(self.current_entities)
         power_to_remove = dict(self.current_power_entities)
+        fixed_cost_to_remove = dict(self.current_fixed_cost_entities)
 
         async def finish() -> None:
             if to_add:
@@ -175,6 +192,10 @@ class SensorManager:
             for power_key, power_entity in power_to_remove.items():
                 self.current_power_entities.pop(power_key)
                 await _async_remove_if_added(power_entity)
+
+            for fixed_cost_id, fixed_cost_entity in fixed_cost_to_remove.items():
+                self.current_fixed_cost_entities.pop(fixed_cost_id)
+                await self._async_remove_fixed_cost_sensor(fixed_cost_entity)
 
         # This guard is for the optional typing of EnergyManager.data.
         # In practice, data is always set to default preferences in async_update
@@ -211,6 +232,14 @@ class SensorManager:
                 power_to_remove,
             )
 
+        for fixed_cost in self.manager.data.get("fixed_costs", []):
+            if (sensor := fixed_cost_to_remove.pop(fixed_cost["id"], None)) is not None:
+                sensor.update_config(fixed_cost)
+                continue
+            sensor = EnergyFixedCostSensor(fixed_cost)
+            self.current_fixed_cost_entities[fixed_cost["id"]] = sensor
+            to_add.append(sensor)
+
         await finish()
 
     @callback
@@ -218,7 +247,7 @@ class SensorManager:
         self,
         adapter: SourceAdapter,
         config: Mapping[str, Any],
-        to_add: list[EnergyCostSensor | EnergyPowerSensor],
+        to_add: list[_ManagedSensor],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
     ) -> None:
         """Process sensor data."""
@@ -256,7 +285,7 @@ class SensorManager:
     def _process_grid_export_sensor(
         self,
         config: Mapping[str, Any],
-        to_add: list[EnergyCostSensor | EnergyPowerSensor],
+        to_add: list[_ManagedSensor],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
     ) -> None:
         """Process grid export compensation sensor (unified format).
@@ -306,7 +335,7 @@ class SensorManager:
     def _process_power_sensor_data(
         self,
         energy_source: Mapping[str, Any],
-        to_add: list[EnergyCostSensor | EnergyPowerSensor],
+        to_add: list[_ManagedSensor],
         to_remove: dict[str, EnergyPowerSensor],
     ) -> None:
         """Process power sensor data for battery and grid sources."""
@@ -332,11 +361,24 @@ class SensorManager:
             or any(power_key in power_config for _, power_key in BATTERY_DIRECTIONS)
         )
 
+    async def _async_remove_fixed_cost_sensor(
+        self, entity: EnergyFixedCostSensor
+    ) -> None:
+        """Remove the sensor of a deleted fixed cost, with its registry entry."""
+        entity_registry = er.async_get(self.hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, cast(str, entity.unique_id)
+        ):
+            entity_registry.async_remove(entity_id)
+        # Wait for it, so the same fixed cost can be added again right away
+        if entity.hass is not None:
+            await entity.async_remove(force_remove=True)
+
     def _create_or_keep_power_sensor(
         self,
         source_type: str,
         power_config: PowerConfig,
-        to_add: list[EnergyCostSensor | EnergyPowerSensor],
+        to_add: list[_ManagedSensor],
         to_remove: dict[str, EnergyPowerSensor],
     ) -> None:
         """Create a power sensor or keep an existing one."""
@@ -988,3 +1030,302 @@ class EnergyPowerSensor(SensorEntity):
         """Handle source sensor state changes."""
         self._update_state()
         self.async_write_ha_state()
+
+
+def _period_start(now: datetime, period: str) -> datetime:
+    """Return the local start of the period that contains now."""
+    day = dt_util.as_local(now).date()
+    if period == "month":
+        day = day.replace(day=1)
+    elif period == "year":
+        day = day.replace(month=1, day=1)
+    return dt_util.start_of_local_day(day)
+
+
+def _next_period_start(start: datetime, period: str) -> datetime:
+    """Return the local start of the period after the one that contains start."""
+    day = dt_util.as_local(start).date()
+    if period == "day":
+        day += timedelta(days=1)
+    elif period == "month":
+        day = (day.replace(day=28) + timedelta(days=4)).replace(day=1)
+    else:
+        day = day.replace(year=day.year + 1, month=1, day=1)
+    return dt_util.start_of_local_day(day)
+
+
+def _previous_period_start(start: datetime, period: str) -> datetime:
+    """Return the local start of the period before the one that contains start."""
+    day = dt_util.as_local(start).date()
+    if period == "day":
+        day -= timedelta(days=1)
+    elif period == "month":
+        day = (day.replace(day=1) - timedelta(days=1)).replace(day=1)
+    else:
+        day = day.replace(year=day.year - 1, month=1, day=1)
+    return dt_util.start_of_local_day(day)
+
+
+def _same_period_in_local_time(start: datetime) -> datetime:
+    """Return the start of the same calendar day in the local time zone."""
+    return dt_util.start_of_local_day(start.date())
+
+
+def _parse_restored_datetime(value: Any) -> datetime | None:
+    """Parse a restored datetime."""
+    return dt_util.parse_datetime(value) if isinstance(value, str) else None
+
+
+@dataclass
+class EnergyFixedCostSensorExtraStoredData(SensorExtraStoredData):
+    """Data to continue the total and know which periods are already charged."""
+
+    last_reset: datetime
+    last_charged: datetime
+    period: str
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the data."""
+        data = super().as_dict()
+        data["last_reset"] = self.last_reset.isoformat()
+        data["last_charged"] = self.last_charged.isoformat()
+        data["period"] = self.period
+        return data
+
+    @classmethod
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize the data from a dict, if it has a total and its periods."""
+        if (
+            (extra := SensorExtraStoredData.from_dict(restored)) is None
+            or not isinstance(extra.native_value, (int, float))
+            or (last_reset := _parse_restored_datetime(restored.get("last_reset")))
+            is None
+            or (last_charged := _parse_restored_datetime(restored.get("last_charged")))
+            is None
+            or (period := restored.get("period")) not in ("day", "month", "year")
+        ):
+            return None
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            last_reset,
+            last_charged,
+            period,
+        )
+
+
+class EnergyFixedCostSensor(RestoreSensor):
+    """Add a fixed cost, like a standing charge, at the start of each period."""
+
+    _attr_entity_registry_visible_default = False
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+
+    def __init__(self, config: FixedCostType) -> None:
+        """Initialize the sensor."""
+        super().__init__()
+        self._config = config
+        self._attr_unique_id = f"fixed_cost_{config['id']}"
+        self._attr_name = config["name"]
+        self.entity_id = f"sensor.{slugify(config['name'])}_fixed_cost"
+        # The start of the last period that was charged, in the local time zone
+        self._last_charged: datetime
+        self._unsub_charge: CALLBACK_TYPE | None = None
+        self._unsub_amount_entity: CALLBACK_TYPE | None = None
+        # SensorManager awaits add_finished; async_on_remove resolves it on the
+        # abort path too, since add_to_platform_abort fires on-remove callbacks.
+        self.add_finished: asyncio.Future[None] = (
+            asyncio.get_running_loop().create_future()
+        )
+        self.async_on_remove(lambda: _set_result_unless_done(self.add_finished))
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the total and charge the periods that are due."""
+        if (restored := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = restored.native_value
+            self._attr_last_reset = restored.last_reset
+            self._last_charged = _same_period_in_local_time(restored.last_charged)
+            if restored.period != self._config["period"]:
+                self._async_period_changed(restored.period)
+        else:
+            # Start a new cycle at 0 instead of dropping a lost total. The first
+            # state of a cycle is the zero point of the statistics, so charges
+            # are only added after it.
+            self._attr_native_value = 0.0
+            self._attr_last_reset = dt_util.utcnow()
+            # The current period is due
+            self._last_charged = _previous_period_start(
+                dt_util.utcnow(), self._config["period"]
+            )
+
+        self.hass.data[DOMAIN]["fixed_cost_sensors"][self._config["id"]] = (
+            self.entity_id
+        )
+        self._async_track_amount_entity()
+        self.async_on_remove(
+            self.hass.bus.async_listen(
+                EVENT_CORE_CONFIG_UPDATE, self._async_core_config_updated
+            )
+        )
+        self.async_on_remove(self._async_unsubscribe)
+        # Runs after the platform writes the restored or zero state
+        self._async_schedule_charge(dt_util.utcnow())
+        _set_result_unless_done(self.add_finished)
+
+    @callback
+    def _async_unsubscribe(self) -> None:
+        """Stop the timer and the amount entity listener."""
+        if self._unsub_charge is not None:
+            self._unsub_charge()
+            self._unsub_charge = None
+        if self._unsub_amount_entity is not None:
+            self._unsub_amount_entity()
+            self._unsub_amount_entity = None
+
+    @callback
+    def _async_track_amount_entity(self) -> None:
+        """Charge a period that is due once the amount entity has a valid state."""
+        if self._unsub_amount_entity is not None:
+            self._unsub_amount_entity()
+            self._unsub_amount_entity = None
+        if (entity_id := self._config["entity_amount"]) is not None:
+            self._unsub_amount_entity = async_track_state_change_event(
+                self.hass, entity_id, self._async_charge
+            )
+
+    @callback
+    def _async_core_config_updated(self, event: Event) -> None:
+        """Move the next charge to the period start in a new time zone."""
+        if "time_zone" not in event.data:
+            return
+        self._last_charged = _same_period_in_local_time(self._last_charged)
+        self._async_charge()
+
+    @callback
+    def _async_schedule_charge(self, point_in_time: datetime) -> None:
+        """Charge the periods that are due at a point in time."""
+        if self._unsub_charge is not None:
+            self._unsub_charge()
+        self._unsub_charge = async_track_point_in_utc_time(
+            self.hass, self._async_charge, point_in_time
+        )
+
+    def _amount(self) -> float | None:
+        """Return the amount to charge per period, if it is known."""
+        if (number_amount := self._config["number_amount"]) is not None:
+            return number_amount
+        if (
+            state := self.hass.states.get(cast(str, self._config["entity_amount"]))
+        ) is None:
+            return None
+        currency = self.hass.config.currency
+        # The amount is added as is, so it is not charged in any other unit
+        if state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) not in (
+            currency,
+            f"{currency}/{self._config['period']}",
+        ):
+            return None
+        try:
+            amount = float(state.state)
+        except ValueError:
+            return None
+        return amount if math.isfinite(amount) else None
+
+    @callback
+    def _async_charge(self, _: Any = None) -> None:
+        """Charge every period that started since the last charge."""
+        period = self._config["period"]
+        current = _period_start(dt_util.utcnow(), period)
+        periods = 0
+        start = self._last_charged
+        while (start := _next_period_start(start, period)) <= current:
+            periods += 1
+        if periods and (amount := self._amount()) is not None:
+            self._attr_native_value = cast(float, self.native_value) + amount * periods
+            self._last_charged = current
+            self.async_write_ha_state()
+        self._async_schedule_charge(_next_period_start(current, period))
+
+    @callback
+    def update_config(self, config: FixedCostType) -> None:
+        """Update the config."""
+        old_config = self._config
+        self._config = config
+        self._attr_name = config["name"]
+        # Only a sensor that is added has a timer, not a disabled one
+        if self._unsub_charge is not None:
+            self._async_config_changed(old_config)
+
+    @callback
+    def _async_config_changed(self, old_config: FixedCostType) -> None:
+        """Apply a changed config to the added sensor."""
+        if self._config["entity_amount"] != old_config["entity_amount"]:
+            self._async_track_amount_entity()
+        if (old_period := old_config["period"]) != self._config["period"]:
+            self._async_period_changed(old_period)
+        self._async_charge()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_period_changed(self, old_period: str) -> None:
+        """Move the last charged period to the new period length."""
+        now = dt_util.utcnow()
+        period = self._config["period"]
+        if self._last_charged >= _period_start(now, old_period):
+            # The current period of the new length counts as charged
+            self._last_charged = _period_start(now, period)
+        else:
+            # The amount was not known yet, the current period is still due
+            self._last_charged = _previous_period_start(now, period)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the entity ID stored for the frontend."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hass.data[DOMAIN]["fixed_cost_sensors"][self._config["id"]] = (
+            self.entity_id
+        )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removing from hass."""
+        self.hass.data[DOMAIN]["fixed_cost_sensors"].pop(self._config["id"])
+        await super().async_will_remove_from_hass()
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
+        """Return the total together with its cycle and the last charged period."""
+        return EnergyFixedCostSensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            cast(datetime, self.last_reset),
+            self._last_charged,
+            self._config["period"],
+        )
+
+    @override
+    async def async_get_last_sensor_data(
+        self,
+    ) -> EnergyFixedCostSensorExtraStoredData | None:
+        """Return the restored data, if it is complete."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return EnergyFixedCostSensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the units of measurement."""
+        return self.hass.config.currency
+
+
+type _ManagedSensor = EnergyCostSensor | EnergyPowerSensor | EnergyFixedCostSensor

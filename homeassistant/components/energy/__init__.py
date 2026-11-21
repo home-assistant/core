@@ -38,6 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.data[DOMAIN] = {
         "cost_sensors": {},
+        "fixed_cost_sensors": {},
     }
 
     return True
