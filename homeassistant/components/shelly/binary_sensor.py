@@ -271,6 +271,7 @@ RPC_SENSORS: Final = {
     ),
     "overtemp": RpcBinarySensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="errors",
         translation_key="overheating",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -280,6 +281,7 @@ RPC_SENSORS: Final = {
     ),
     "overpower": RpcBinarySensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="errors",
         translation_key="overpowering",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -289,6 +291,7 @@ RPC_SENSORS: Final = {
     ),
     "overvoltage": RpcBinarySensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="errors",
         translation_key="overvoltage",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -298,6 +301,7 @@ RPC_SENSORS: Final = {
     ),
     "overcurrent": RpcBinarySensorDescription(
         key="switch",
+        components=("switch", "cover"),
         sub_key="errors",
         translation_key="overcurrent",
         device_class=BinarySensorDeviceClass.PROBLEM,
