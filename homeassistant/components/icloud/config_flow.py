@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from functools import partial
 import logging
 import os
+from threading import Event
 from typing import TYPE_CHECKING, Any, override
 
 import probatio
@@ -17,6 +18,7 @@ from pyicloud.exceptions import (
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
+    PyiCloudSecurityKeyTimeoutException,
     PyiCloudServiceNotActivatedException,
     PyiCloudServiceUnavailable,
 )
@@ -30,6 +32,9 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
+
+if TYPE_CHECKING:
+    from fido2.hid import CtapHidDevice
 
 from .account import (
     IcloudConfigEntry,
@@ -54,7 +59,10 @@ from .const import (
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
 CONF_REQUEST_NEW_CODE = "request_new_code"
+CONF_SECURITY_KEY = "security_key"
 TERMS_URL = "https://www.icloud.com/terms"
+
+SECURITY_KEY_TIMEOUT = 60
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +86,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
         self._forced_2fa = False
+        self._refresh_security_key_challenge = False
 
         self._accept_terms = False
         self._resume_step_id = "user"
@@ -96,6 +105,15 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         what is entered there.
         """
         return self._forced_2fa or bool(self.api and self.api.requires_2fa)
+
+    @property
+    def _requires_security_key(self) -> bool:
+        """Return True when Apple wants a security key instead of a code."""
+        return (
+            self._requires_2fa
+            and self.api is not None
+            and self.api.two_factor_delivery_method == "security_key"
+        )
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
         """Show the setup form to the user."""
@@ -220,6 +238,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 raise
             return api, True
         return api, False
+
+    async def _async_ask_second_factor(self, user_input, step_id):
+        """Ask for the security key or code Apple wants to finish signing in."""
+        if self._requires_security_key:
+            return await self.async_step_security_key()
+        if not code_can_be_delivered(self.api):
+            return await self._report_undeliverable_code(user_input, step_id)
+        return await self.async_step_verification_code()
 
     async def _report_undeliverable_code(self, user_input, step_id):
         """Send the flow back to the password when no code can be sent.
@@ -373,9 +399,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     return result
 
         if self._requires_2fa:
-            if not code_can_be_delivered(self.api):
-                return await self._report_undeliverable_code(user_input, step_id)
-            return await self.async_step_verification_code()
+            return await self._async_ask_second_factor(user_input, step_id)
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
@@ -417,12 +441,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             if isinstance(error, PyiCloud2FARequiredException) or (
                 isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
             ):
-                if not code_can_be_delivered(self.api):
-                    return await self._report_undeliverable_code(user_input, step_id)
                 # The session that was challenged is the one the code has to
                 # go through, so it is kept.
                 self._forced_2fa = True
-                return await self.async_step_verification_code()
+                return await self._async_ask_second_factor(user_input, step_id)
             _LOGGER.error(
                 "Could not read the devices of the iCloud account for %s: %s",
                 self._username,
@@ -518,6 +540,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         # Get the API from the existing entry runtime data
         account = self._get_reauth_entry().runtime_data
         self.api = account.api
+        # Apple only accepts a security key challenge issued for this sign-in.
+        self._refresh_security_key_challenge = True
 
         # If the API is None, it means the existing entry was never successfully authenticated,
         # so we need to show the setup form again to get the password.
@@ -541,6 +565,94 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         and trigger 2FA challenge if needed.
         """
         return await self._validate_and_create_entry(user_input, "reauth_confirm")
+
+    async def async_step_security_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Sign in with a security key connected to Home Assistant."""
+        if TYPE_CHECKING:
+            assert self.api is not None
+
+        errors: dict[str, str] = {}
+        keys: list[CtapHidDevice] = await self.hass.async_add_executor_job(
+            getattr, self.api, "fido2_devices"
+        )
+
+        if user_input is not None:
+            if not keys:
+                errors["base"] = "no_security_key"
+            else:
+                key = keys[int(user_input.get(CONF_SECURITY_KEY, 0))]
+                errors = await self._confirm_security_key(key)
+
+            if not errors:
+                return await self.async_step_user(self._credentials_input())
+
+        schema: dict[Any, Any] = {}
+        if len(keys) > 1:
+            schema[probatio.Required(CONF_SECURITY_KEY, default=0)] = probatio.All(
+                probatio.Coerce(int),
+                probatio.In(
+                    {
+                        index: key.descriptor.product_name
+                        or f"Security key {index + 1}"
+                        for index, key in enumerate(keys)
+                    }
+                ),
+            )
+
+        return self.async_show_form(
+            step_id="security_key",
+            data_schema=probatio.Schema(schema),
+            errors=errors,
+            description_placeholders={
+                "key_names": ", ".join(self.api.security_key_names or []),
+                "timeout": str(SECURITY_KEY_TIMEOUT),
+            },
+        )
+
+    async def _confirm_security_key(self, key: CtapHidDevice) -> dict[str, str]:
+        """Sign Apple's challenge with the security key."""
+        if TYPE_CHECKING:
+            assert self.api is not None
+
+        if self._refresh_security_key_challenge:
+            try:
+                await self.hass.async_add_executor_job(
+                    partial(self.api.authenticate, force_refresh=True)
+                )
+            except PyiCloudException as error:
+                _LOGGER.error("Failed to start a new iCloud sign-in: %s", error)
+                return {"base": "security_key_failed"}
+            self._refresh_security_key_challenge = False
+            # The challenge it was forced for belonged to the old session.
+            self._forced_2fa = False
+            if not self.api.requires_2fa:
+                return {}
+
+        cancel = Event()
+        timer = self.hass.loop.call_later(SECURITY_KEY_TIMEOUT, cancel.set)
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.api.confirm_security_key, key, event=cancel)
+            )
+        except PyiCloudSecurityKeyTimeoutException:
+            errors = {"base": "security_key_timeout"}
+        except PyiCloudException as error:
+            _LOGGER.error("Failed to sign in with the security key: %s", error)
+            errors = {"base": "security_key_failed"}
+        else:
+            if not self.api.requires_2fa:
+                self._forced_2fa = False
+                return {}
+            _LOGGER.error("Apple did not accept the security key sign-in")
+            errors = {"base": "security_key_failed"}
+        finally:
+            timer.cancel()
+
+        # Apple accepts only one answer per challenge.
+        self._refresh_security_key_challenge = True
+        return errors
 
     async def async_step_trusted_device(
         self,

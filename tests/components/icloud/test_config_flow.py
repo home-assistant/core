@@ -1,6 +1,8 @@
 """Tests for the iCloud config flow."""
 
+from collections.abc import Callable
 from contextlib import contextmanager
+from threading import Event
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from pyicloud.const import AppleAuthError
@@ -11,6 +13,8 @@ from pyicloud.exceptions import (
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
+    PyiCloudSecurityKeyException,
+    PyiCloudSecurityKeyTimeoutException,
     PyiCloudServiceUnavailable,
 )
 import pytest
@@ -19,6 +23,7 @@ from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
     CONF_REQUEST_NEW_CODE,
+    CONF_SECURITY_KEY,
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
 )
@@ -1441,3 +1446,288 @@ async def test_switching_to_a_configured_account_after_an_outage_is_refused(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+def _security_key(name: str | None) -> MagicMock:
+    """Return a mock FIDO2 device."""
+    key = MagicMock()
+    key.descriptor.product_name = name
+    return key
+
+
+@pytest.fixture(name="service_security_key")
+def mock_controller_security_key_service():
+    """Mock a service that asks for a security key."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService"
+    ) as service_mock:
+        api = service_mock.return_value
+        api.requires_2fa = True
+        api.requires_2sa = True
+        api.two_factor_delivery_method = "security_key"
+        api.security_key_names = ["YubiKey"]
+        api.fido2_devices = [_security_key("YubiKey 5")]
+
+        def _confirm_security_key(key: MagicMock, *, event: Event) -> None:
+            api.requires_2fa = False
+            api.requires_2sa = False
+
+        api.confirm_security_key = Mock(side_effect=_confirm_security_key)
+        yield service_mock
+
+
+async def _start_security_key_flow(hass: HomeAssistant) -> ConfigFlowResult:
+    """Sign in until the security key step is shown."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_SECURITY_KEY
+    return result
+
+
+async def test_security_key_success(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test signing in with a security key."""
+    result = await _start_security_key_flow(hass)
+    assert result["errors"] == {}
+    assert result["description_placeholders"]["key_names"] == "YubiKey"
+    assert CONF_SECURITY_KEY not in result["data_schema"].schema
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert result["data"][CONF_USERNAME] == USERNAME
+    api = service_security_key.return_value
+    api.confirm_security_key.assert_called_once()
+    assert api.confirm_security_key.call_args.args == (api.fido2_devices[0],)
+    assert isinstance(api.confirm_security_key.call_args.kwargs["event"], Event)
+    api.authenticate.assert_not_called()
+
+
+async def test_security_key_choose_key(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test choosing between several connected security keys."""
+    api = service_security_key.return_value
+    api.fido2_devices = [_security_key("YubiKey 5"), _security_key(None)]
+
+    result = await _start_security_key_flow(hass)
+    assert result["data_schema"]({}) == {CONF_SECURITY_KEY: 0}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_SECURITY_KEY: 1}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    assert api.confirm_security_key.call_args.args == (api.fido2_devices[1],)
+
+
+async def test_security_key_not_connected(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test submitting the security key step without a key connected."""
+    api = service_security_key.return_value
+    api.fido2_devices = []
+
+    result = await _start_security_key_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_security_key"}
+    api.confirm_security_key.assert_not_called()
+
+    api.fido2_devices = [_security_key("YubiKey 5")]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+
+
+def _time_out(key: MagicMock, *, event: Event) -> None:
+    """Act like nobody touched the key before the timeout."""
+    event.set()
+    raise PyiCloudSecurityKeyTimeoutException("Not touched")
+
+
+def _refuse(key: MagicMock, *, event: Event) -> None:
+    """Act like the key refused to sign."""
+    raise PyiCloudSecurityKeyException("Refused")
+
+
+def _apple_rejects(key: MagicMock, *, event: Event) -> None:
+    """Act like Apple rejected the signature."""
+    raise PyiCloudAPIResponseException("Rejected")
+
+
+def _not_trusted(key: MagicMock, *, event: Event) -> None:
+    """Act like Apple accepted the signature but still wants 2FA."""
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(_time_out, "security_key_timeout", id="timeout"),
+        pytest.param(_refuse, "security_key_failed", id="key_refused"),
+        pytest.param(_apple_rejects, "security_key_failed", id="apple_rejected"),
+        pytest.param(_not_trusted, "security_key_failed", id="not_trusted"),
+    ],
+)
+async def test_security_key_error_then_retry(
+    hass: HomeAssistant,
+    service_security_key: MagicMock,
+    side_effect: Callable[..., None],
+    error: str,
+) -> None:
+    """Test a failed security key sign-in can be retried with a new challenge."""
+    api = service_security_key.return_value
+    confirm = api.confirm_security_key.side_effect
+    api.confirm_security_key.side_effect = side_effect
+
+    result = await _start_security_key_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_SECURITY_KEY
+    assert result["errors"] == {"base": error}
+
+    api.confirm_security_key.side_effect = confirm
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    api.authenticate.assert_called_once_with(force_refresh=True)
+
+
+async def test_security_key_new_challenge_fails(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test an error asking Apple for a new security key challenge."""
+    api = service_security_key.return_value
+    confirm = api.confirm_security_key.side_effect
+    api.confirm_security_key.side_effect = _refuse
+    api.authenticate.side_effect = PyiCloudAPIResponseException("Unavailable")
+
+    result = await _start_security_key_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "security_key_failed"}
+    api.confirm_security_key.assert_called_once()
+
+    api.authenticate.side_effect = None
+    api.confirm_security_key.side_effect = confirm
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+
+
+async def test_security_key_reauth(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test reauthentication asks Apple for a new security key challenge."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    api = service_security_key.return_value
+    config_entry.runtime_data = MagicMock(api=api, requires_verification_code=False)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_SECURITY_KEY
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    api.authenticate.assert_called_once_with(force_refresh=True)
+    api.confirm_security_key.assert_called_once()
+
+
+async def test_security_key_reauth_no_longer_needed(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test reauthentication when the new sign-in no longer needs a key."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    api = service_security_key.return_value
+    config_entry.runtime_data = MagicMock(api=api, requires_verification_code=False)
+
+    def _authenticate(force_refresh: bool) -> None:
+        api.requires_2fa = False
+        api.requires_2sa = False
+
+    api.authenticate.side_effect = _authenticate
+
+    result = await config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    api.confirm_security_key.assert_not_called()
+
+
+async def test_security_key_when_reading_devices_is_challenged(
+    hass: HomeAssistant, service_security_key: MagicMock
+) -> None:
+    """Test a challenge raised while reading devices asks for the security key."""
+    api = service_security_key.return_value
+    api.requires_2fa = False
+    api.requires_2sa = False
+    devices = PropertyMock(
+        side_effect=[PyiCloud2FARequiredException(USERNAME, Response()), {"x": 1}]
+    )
+    type(api).devices = devices
+
+    def _confirm_security_key(key: MagicMock, *, event: Event) -> None:
+        """Accept the key without changing what the service reports."""
+
+    api.confirm_security_key.side_effect = _confirm_security_key
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_SECURITY_KEY
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    api.confirm_security_key.assert_called_once()
