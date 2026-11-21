@@ -1,17 +1,18 @@
 """Support for using switch with ecobee thermostats."""
 
+from dataclasses import dataclass
 from datetime import tzinfo
 import logging
-from typing import Any, override
+from typing import Any, Self, override
 
-from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from . import EcobeeConfigEntry, EcobeeData
-from .climate import HASS_TO_ECOBEE_HVAC
+from .climate import ECOBEE_HVAC_TO_HASS
 from .const import ECOBEE_AUX_HEAT_ONLY
 from .entity import EcobeeBaseEntity
 
@@ -102,7 +103,26 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self.update_without_throttle = True
 
 
-class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
+@dataclass
+class EcobeeAuxHeatOnlyExtraStoredData(ExtraStoredData):
+    """Object to hold the HVAC mode to restore after auxiliary heat."""
+
+    hvac_mode: str
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {"hvac_mode_before_aux_heat": self.hvac_mode}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize restored auxiliary heat data."""
+        if (hvac_mode := restored.get("hvac_mode_before_aux_heat")) is None:
+            return None
+        return cls(hvac_mode)
+
+
+class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
     """Representation of a aux_heat_only ecobee switch."""
 
     _attr_translation_key = "aux_heat_only"
@@ -116,22 +136,63 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_aux_heat_only"
 
-        self._last_hvac_mode_before_aux_heat = HASS_TO_ECOBEE_HVAC.get(
-            HVACMode.HEAT_COOL
-        )
+        self._last_hvac_mode_before_aux_heat: str | None = None
+        self._is_aux_heat_only = False
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the previous HVAC mode when auxiliary heat was active."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state is None:
+            return
+        self._is_aux_heat_only = last_state.state == "on"
+        if not (extra_data := await self.async_get_last_extra_data()):
+            return
+        if (
+            hvac_mode := EcobeeAuxHeatOnlyExtraStoredData.from_dict(
+                extra_data.as_dict()
+            )
+        ) is not None:
+            if hvac_mode.hvac_mode in ECOBEE_HVAC_TO_HASS:
+                self._last_hvac_mode_before_aux_heat = hvac_mode.hvac_mode
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> EcobeeAuxHeatOnlyExtraStoredData | None:
+        """Return the HVAC mode to restore after auxiliary heat."""
+        if self._last_hvac_mode_before_aux_heat is None:
+            return None
+        return EcobeeAuxHeatOnlyExtraStoredData(self._last_hvac_mode_before_aux_heat)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
+        if self._is_aux_heat_only:
+            return
         self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        self._is_aux_heat_only = True
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
+        if not self._is_aux_heat_only or self._last_hvac_mode_before_aux_heat is None:
+            return
         self.data.ecobee.set_hvac_mode(
             self.thermostat_index, self._last_hvac_mode_before_aux_heat
         )
+        self._last_hvac_mode_before_aux_heat = None
+        self._is_aux_heat_only = False
+
+    async def async_update(self) -> None:
+        """Update the switch state from the thermostat."""
+        await self.data.update()
+        if self.is_on:
+            self._is_aux_heat_only = True
+            return
+        self._is_aux_heat_only = False
+        self._last_hvac_mode_before_aux_heat = None
 
     @property
     @override
