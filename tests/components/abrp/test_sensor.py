@@ -3,7 +3,13 @@
 import logging
 from unittest.mock import MagicMock
 
-from aioabrp import ChargingState, ConnectionEvent, ConnectionState, Telemetry
+from aioabrp import (
+    ChargingState,
+    ConnectionEvent,
+    ConnectionState,
+    DrivingState,
+    Telemetry,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -36,7 +42,7 @@ VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 _ABSENT_VEHICLE_ID = 999999999999
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -62,6 +68,13 @@ async def test_telemetry_sensors_snapshot(
             soh=build_metric_value(98.0),
             range=build_metric_value(100000.0),
             battery_temperature=build_metric_value(23.7),
+            battery_temperature_min=build_metric_value(21.4),
+            battery_temperature_max=build_metric_value(26.1),
+            external_temperature=build_metric_value(8.5),
+            cabin_temperature=build_metric_value(20.5),
+            current=build_metric_value(33.1),
+            hvac_power=build_metric_value(1200.0),
+            driving_state=build_metric_value(DrivingState.DRIVE),
             charging_state=build_metric_value(ChargingState.CHARGING_AC),
         ),
     )
