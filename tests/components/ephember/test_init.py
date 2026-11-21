@@ -6,7 +6,7 @@ from pyephember2.pyephember2 import EphEmberError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
@@ -53,3 +53,21 @@ async def test_get_zones_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_rejected_password_starts_reauth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a rejected password asks the user for the new one."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ephember.EphEmber",
+        side_effect=RuntimeError("Unable to login."),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
