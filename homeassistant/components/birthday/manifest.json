@@ -1,0 +1,12 @@
+{
+  "domain": "birthday",
+  "name": "Birthday",
+  "categories": ["helpers.store_value"],
+  "codeowners": ["@Jump-333"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/birthday",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "platinum",
+  "single_config_entry": true
+}

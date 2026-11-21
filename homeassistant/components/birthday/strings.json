@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_day": "Day has to be between 1 and {max_day} for the selected month.",
+      "invalid_month": "Month has to be between 1 and 12.",
+      "invalid_year": "Year has to be between {min_year} and {max_year}.",
+      "name_empty": "The name cannot be empty.",
+      "name_exists": "A birthday with this name already exists.",
+      "not_leap_year": "{year} is not a leap year, so February only has 28 days."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "add_another": "Add another birthday",
+          "day": "Day",
+          "month": "Month",
+          "name": "[%key:common::config_flow::data::name%]",
+          "year": "Year"
+        },
+        "data_description": {
+          "add_another": "Save this birthday and add another one.",
+          "day": "The day of the month of the birthday.",
+          "month": "The month of the birthday, from 1 to 12.",
+          "name": "The name of the person.",
+          "year": "Optional. If set, the age is shown in the calendar."
+        },
+        "description": "This creates the birthday calendar. You can add, edit and remove birthdays later from the integration page.",
+        "title": "Add your first birthday"
+      }
+    }
+  },
+  "config_subentries": {
+    "birthday": {
+      "entry_type": "Birthday",
+      "error": {
+        "invalid_day": "[%key:component::birthday::config::error::invalid_day%]",
+        "invalid_month": "[%key:component::birthday::config::error::invalid_month%]",
+        "invalid_year": "[%key:component::birthday::config::error::invalid_year%]",
+        "name_empty": "[%key:component::birthday::config::error::name_empty%]",
+        "name_exists": "[%key:component::birthday::config::error::name_exists%]",
+        "not_leap_year": "[%key:component::birthday::config::error::not_leap_year%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Edit birthday",
+        "user": "Add birthday"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "day": "[%key:component::birthday::config::step::user::data::day%]",
+            "month": "[%key:component::birthday::config::step::user::data::month%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "year": "[%key:component::birthday::config::step::user::data::year%]"
+          },
+          "data_description": {
+            "year": "[%key:component::birthday::config::step::user::data_description::year%]"
+          },
+          "title": "Edit birthday"
+        },
+        "user": {
+          "data": {
+            "add_another": "[%key:component::birthday::config::step::user::data::add_another%]",
+            "day": "[%key:component::birthday::config::step::user::data::day%]",
+            "month": "[%key:component::birthday::config::step::user::data::month%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "year": "[%key:component::birthday::config::step::user::data::year%]"
+          },
+          "data_description": {
+            "add_another": "[%key:component::birthday::config::step::user::data_description::add_another%]",
+            "day": "[%key:component::birthday::config::step::user::data_description::day%]",
+            "month": "[%key:component::birthday::config::step::user::data_description::month%]",
+            "name": "[%key:component::birthday::config::step::user::data_description::name%]",
+            "year": "[%key:component::birthday::config::step::user::data_description::year%]"
+          },
+          "title": "Add birthday"
+        }
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "birthdays": {
+        "name": "Birthdays"
+      }
+    }
+  }
+}

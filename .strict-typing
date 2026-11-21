@@ -121,6 +121,7 @@ homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.birthday.*
 homeassistant.components.bitcoin.*
 homeassistant.components.bitvis.*
 homeassistant.components.blockchain.*
