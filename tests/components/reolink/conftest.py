@@ -31,6 +31,8 @@ from homeassistant.helpers.device_registry import format_mac
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "4.5.6.7"
+TEST_HOST3 = "4.5.6.8"
+TEST_HOST4 = "4.5.6.9"
 TEST_USERNAME = "admin"
 TEST_USERNAME2 = "username"
 TEST_PASSWORD = "password"
