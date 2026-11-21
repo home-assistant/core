@@ -25,7 +25,10 @@ from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
     RepositoryCategory,
 )
-from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.exceptions import (
+    MarketplaceError,
+    RepositoryInUseError,
+)
 from homeassistant.components.marketplace.repositories.base import RepositoryManifest
 from homeassistant.components.marketplace.repositories.integration import (
     IntegrationRepository,
@@ -1346,6 +1349,164 @@ async def test_repository_uninstall_refused_while_in_use(
     response = await client.receive_json()
 
     assert response["error"]["code"] == "repository_in_use"
+    assert repository.data.installed is True
+
+
+async def test_repository_uninstall_releases_a_shared_domain(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test uninstalling one of two installs of a domain keeps the files in use.
+
+    Its config entry runs the files the other repository keeps, the uninstalled
+    one is only forgotten, and the other one can then be updated.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    MockConfigEntry(domain=repository.data.domain).add_to_hass(hass)
+    fork = IntegrationRepository(marketplace, "fork/example")
+    fork.data.id = "9001"
+    fork.data.domain = repository.data.domain
+    fork.data.installed = True
+    marketplace.repositories.register(fork)
+
+    with patch.object(type(repository), "remove_local_directory") as remove:
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        assert (await client.receive_json())["success"]
+
+    remove.assert_not_called()
+    assert repository.data.installed is False
+    assert repository.data.installed_version is None
+    assert fork.data.installed is True
+    assert fork.sharing_install() is None
+
+    # The last install of the domain is still pulled from under nothing
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/uninstall", "repository": "9001"}
+    )
+    response = await client.receive_json()
+    assert response["error"]["code"] == "repository_in_use"
+    assert fork.data.installed is True
+
+
+async def test_repository_uninstall_answers_in_use_after_a_race(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the uninstall answers in use when the sharing install went meanwhile."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    MockConfigEntry(domain=repository.data.domain).add_to_hass(hass)
+    fork = IntegrationRepository(marketplace, "fork/example")
+
+    # Shared when the command checks, no longer once the uninstall has the lock
+    with (
+        patch.object(
+            IntegrationRepository, "sharing_install", side_effect=[fork, None]
+        ),
+        patch.object(type(repository), "remove_local_directory") as remove,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_in_use"
+    remove.assert_not_called()
+    assert repository.data.installed is True
+
+
+async def test_sharing_install_needs_an_integration_domain(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test only integrations with a domain share their install."""
+    plugin = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert plugin.sharing_install() is None
+
+    first = IntegrationRepository(marketplace, "alice/example")
+    second = IntegrationRepository(marketplace, "bob/example")
+    for number, repository in enumerate((first, second)):
+        repository.data.id = f"900{number}"
+        repository.data.installed = True
+        marketplace.repositories.register(repository)
+    assert first.sharing_install() is None
+
+    first.data.domain = second.data.domain = "example"
+    assert first.sharing_install() is second
+
+
+async def test_repository_uninstall_removes_shared_files_by_default(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an uninstall not asking for a release removes shared files too.
+
+    A critical repository is removed that way, its files must not stay loadable
+    because another repository shares them.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.domain = "example"
+    repository.data.installed = True
+    fork = IntegrationRepository(marketplace, "fork/example")
+    fork.data.id = "9001"
+    fork.data.domain = "example"
+    fork.data.installed = True
+    marketplace.repositories.register(fork)
+
+    with (
+        patch.object(type(repository), "_async_uninstall") as uninstall,
+        patch.object(type(repository), "_async_release") as release,
+    ):
+        await repository.uninstall()
+
+    uninstall.assert_awaited_once()
+    release.assert_not_called()
+
+
+async def test_repository_release_refused_once_nothing_shares(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a release keeps the files when the sharing install went meanwhile.
+
+    Two uninstalls of the two installs of a domain both see the other one, the
+    second one must not remove the files the config entry runs.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.domain = "example"
+    repository.data.installed = True
+
+    with (
+        patch.object(type(repository), "remove_local_directory") as remove,
+        pytest.raises(RepositoryInUseError),
+    ):
+        await repository.uninstall(release_only=True)
+
+    remove.assert_not_called()
     assert repository.data.installed is True
 
 

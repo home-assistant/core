@@ -168,10 +168,10 @@ class IntegrationRepository(Repository):
         return await super().remove_local_directory()
 
     @override
-    async def async_pre_install(self) -> None:
-        """Run pre install steps."""
+    def sharing_install(self) -> Repository | None:
+        """Return another installed integration with the same domain, if any."""
         if not self.data.domain:
-            return
+            return None
 
         for repository in self.marketplace.repositories.list_installed:
             if (
@@ -179,14 +179,21 @@ class IntegrationRepository(Repository):
                 and repository.data.category == RepositoryCategory.INTEGRATION
                 and repository.data.domain == self.data.domain
             ):
-                raise MarketplaceError(
-                    translation_domain=DOMAIN,
-                    translation_key="integration_owned",
-                    translation_placeholders={
-                        "domain": str(self.data.domain),
-                        "owner": repository.data.full_name,
-                    },
-                )
+                return repository
+        return None
+
+    @override
+    async def async_pre_install(self) -> None:
+        """Run pre install steps."""
+        if (repository := self.sharing_install()) is not None:
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="integration_owned",
+                translation_placeholders={
+                    "domain": str(self.data.domain),
+                    "owner": repository.data.full_name,
+                },
+            )
 
     @override
     async def async_post_installation(self) -> None:

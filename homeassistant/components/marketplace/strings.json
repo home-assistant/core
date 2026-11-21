@@ -182,7 +182,7 @@
       "message": "There is no manifest.json at {path}."
     },
     "integration_owned": {
-      "message": "The {domain} directory belongs to {owner}."
+      "message": "The {domain} directory belongs to {owner}, uninstall it first."
     },
     "invalid_category": {
       "message": "Repositories cannot be added to the {category} category."
