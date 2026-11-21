@@ -51,3 +51,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) ->
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_reset()

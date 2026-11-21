@@ -47,6 +47,11 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
+    async def async_reset(self) -> None:
+        """Close the connection to the gateway."""
+        LOGGER.debug("Resetting bridge - host %s", self.host)
+        await self.dynalite_devices.async_reset()
+
     def reload_config(self, config: Mapping[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)

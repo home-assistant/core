@@ -39,6 +39,7 @@ async def create_entity_from_device(hass: HomeAssistant, device: DynaliteBaseDev
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
     ) as mock_dyn_dev:
         mock_dyn_dev().async_setup = AsyncMock(return_value=True)
+        mock_dyn_dev.return_value.async_reset = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
