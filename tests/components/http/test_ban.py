@@ -17,7 +17,9 @@ from pytest_homeassistant.common import async_get_persistent_notifications
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
+from homeassistant.components.api import APIConfigView
 from homeassistant.components.http import DOMAIN
+from homeassistant.components.http.auth import async_setup_auth
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -466,6 +468,45 @@ async def test_unauthenticated_probe_still_triggers_ip_ban(
     notifications = async_get_persistent_notifications(hass)
     assert "ip-ban" in notifications
     assert "http-login" not in notifications
+
+
+async def test_registered_api_config_view_authentication(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test real API config view routing with HTTP authentication and IP bans."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    APIConfigView().register(hass, app, app.router)
+    setup_bans(hass, app, 5)
+    await async_setup_auth(hass, app)
+    remote_ip = ip_address("192.0.2.55")
+    mock_real_ip(app)(str(remote_ip))
+    client = await aiohttp_client(app)
+
+    response = await client.get("/api/config")
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+
+    # The registered view does not support HEAD, unlike a synthetic add_get route.
+    response = await client.head("/api/config")
+    assert response.status == HTTPStatus.METHOD_NOT_ALLOWED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+
+    response = await client.get(
+        "/api/config", headers={"Authorization": "Bearer invalid"}
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+    assert "http-login" in async_get_persistent_notifications(hass)
+
+    response = await client.get(
+        "/api/config", headers={"Authorization": f"Bearer {hass_access_token}"}
+    )
+    assert response.status == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
