@@ -116,11 +116,12 @@ def async_register_rest_command(
             }
             headers[hdrs.CONTENT_TYPE] = content_type
 
+        # Header values often hold tokens, so only their names are logged
         _LOGGER.debug(
             "Calling %s %s with headers: %s and payload: %s",
             method,
             request_url,
-            headers,
+            list(headers),
             payload,
         )
 

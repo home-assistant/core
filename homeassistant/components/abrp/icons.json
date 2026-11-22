@@ -35,5 +35,10 @@
         "default": "mdi:battery-heart-variant"
       }
     }
+  },
+  "services": {
+    "send_telemetry": {
+      "service": "mdi:upload"
+    }
   }
 }

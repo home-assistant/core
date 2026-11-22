@@ -12,21 +12,13 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ELECTRIC,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -93,9 +85,9 @@ async def test_water_heater_turn_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_OFF,
+        WaterHeaterService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+            TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
         },
         blocking=True,
     )
@@ -121,9 +113,9 @@ async def test_water_heater_turn_off_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_OFF,
+            WaterHeaterService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+                TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
             },
             blocking=True,
         )
@@ -150,9 +142,9 @@ async def test_water_heater_turn_on(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_ON,
+        WaterHeaterService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+            TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
         },
         blocking=True,
     )
@@ -180,9 +172,9 @@ async def test_water_heater_turn_on_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+                TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
             },
             blocking=True,
         )
@@ -207,10 +199,10 @@ async def test_water_heater_set_operation_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
-            ATTR_OPERATION_MODE: STATE_OFF,
+            TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
         },
         blocking=True,
     )
@@ -237,10 +229,10 @@ async def test_water_heater_set_operation_electric(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
-            ATTR_OPERATION_MODE: STATE_ELECTRIC,
+            TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_ELECTRIC,
         },
         blocking=True,
     )
@@ -265,10 +257,10 @@ async def test_water_heater_set_temp(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
-            ATTR_TEMPERATURE: 35,
+            TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+            WaterHeaterServiceArgument.TEMPERATURE: 35,
         },
         blocking=True,
     )
@@ -291,10 +283,10 @@ async def test_water_heater_set_temp_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
-                ATTR_TEMPERATURE: 35,
+                TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+                WaterHeaterServiceArgument.TEMPERATURE: 35,
             },
             blocking=True,
         )
@@ -327,10 +319,10 @@ async def test_water_heater_set_temp_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
-                ATTR_TEMPERATURE: 35,
+                TargetKey.ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+                WaterHeaterServiceArgument.TEMPERATURE: 35,
             },
             blocking=True,
         )
