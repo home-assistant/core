@@ -394,12 +394,11 @@ async def test_get_issues_filtering(
 
 
 @pytest.mark.parametrize(
-    ("context_language", "ha_language", "expected_language"),
+    ("context_language", "expected_language"),
     [
-        pytest.param("de", "en", "de", id="explicit_context_language"),
-        pytest.param("*", "nl", "nl", id="wildcard_uses_hass_language"),
-        pytest.param(None, "", "en", id="none_and_empty_hass_falls_back_to_en"),
-        pytest.param("   ", "fr", "fr", id="whitespace_context_uses_hass_language"),
+        pytest.param("de", "de", id="explicit_context_language"),
+        pytest.param("*", "nl", id="wildcard_uses_hass_language"),
+        pytest.param(None, "nl", id="none_uses_hass_language"),
     ],
 )
 async def test_get_issues_language_resolution(
@@ -407,12 +406,11 @@ async def test_get_issues_language_resolution(
     llm_context: llm.LLMContext,
     llm_api: llm.APIInstance,
     context_language: str | None,
-    ha_language: str,
     expected_language: str,
 ) -> None:
     """Test translation language resolution from LLMContext and hass.config."""
     llm_context.language = context_language
-    hass.config.language = ha_language
+    hass.config.language = "nl"
 
     ir.async_create_issue(
         hass,

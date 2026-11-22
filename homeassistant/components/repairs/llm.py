@@ -32,13 +32,6 @@ _SEVERITY_ORDER: dict[str, int] = {
 }
 
 
-def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
-    """Resolve a translation language code from an LLMContext language."""
-    if language and (stripped := language.strip()) and stripped != "*":
-        return stripped
-    return hass.config.language or "en"
-
-
 def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObjectType:
     """Format an active IssueEntry for LLM consumption."""
     if TYPE_CHECKING:
@@ -168,7 +161,11 @@ class GetIssuesTool(Tool):
         if not issues:
             return ToolResult(data={"issues": []})
 
-        language = _resolve_language(hass, llm_context.language)
+        language = (
+            llm_context.language
+            if llm_context.language and llm_context.language != "*"
+            else hass.config.language
+        )
         translations = await translation.async_get_translations(
             hass,
             language,
