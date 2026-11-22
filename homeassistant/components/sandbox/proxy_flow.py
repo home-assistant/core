@@ -152,9 +152,7 @@ class _SandboxFlowProxyMixin:
                         is not None
                     ):
                         await bridge.entry_sync.flush(entry.entry_id)
-                        await bridge.entry_sync.async_prepare_setup(
-                            entry, request.entry
-                        )
+                        bridge.entry_sync.async_prepare_setup(entry, request.entry)
                         if (subentry_id := self.context.get("subentry_id")) is not None:
                             request.context = encode_json(
                                 _to_jsonable(dict(self.context))

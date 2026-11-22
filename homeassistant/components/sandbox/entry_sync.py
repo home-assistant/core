@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.storage import Store
 from homeassistant.util import ulid as ulid_util
 
 from ._proto import sandbox_pb2 as pb
@@ -162,7 +161,6 @@ class EntrySync:
         self._owns = owns
         self._assign_subentry_ids = assign_subentry_ids
         self._subentry_ids: dict[str, dict[str, str]] = {}
-        self._subentry_lock = asyncio.Lock()
         self._snapshots: dict[str, dict[str, Any]] = {}
         self._pending: dict[str, asyncio.Task[None]] = {}
         self._errors: dict[str, Exception] = {}
@@ -171,18 +169,6 @@ class EntrySync:
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, self._changed
         )
         channel.register(MSG_ENTRY_UPDATE, self._handle_update)
-
-    def _subentry_store(self, entry_id: str) -> Store[dict[str, str]]:
-        return Store(
-            self.hass, 1, f"sandbox.subentry_ids.{entry_id}", atomic_writes=True
-        )
-
-    async def _async_load_subentry_ids(self, entry_id: str) -> dict[str, str]:
-        if entry_id not in self._subentry_ids:
-            self._subentry_ids[entry_id] = (
-                await self._subentry_store(entry_id).async_load() or {}
-            )
-        return self._subentry_ids[entry_id]
 
     def local_subentry_id(self, entry_id: str, remote_id: str) -> str:
         """Resolve worker aliases for host registry ownership."""
@@ -207,18 +193,12 @@ class EntrySync:
             },
         )
 
-    async def async_prepare_setup(self, entry: ConfigEntry, msg: pb.EntrySetup) -> None:
-        """Restore worker-local IDs, including references saved by the integration."""
-        async with self._subentry_lock:
-            await self._async_load_subentry_ids(entry.entry_id)
-            snapshot = self._remote_snapshot(entry.entry_id, entry_snapshot(entry))
-            msg.subentries = encode_json(list(snapshot["subentries"].values()))
-            self.track(entry)
-
-    async def _async_remove_subentry_ids(self, entry_id: str) -> None:
-        async with self._subentry_lock:
-            self._subentry_ids.pop(entry_id, None)
-            await self._subentry_store(entry_id).async_remove()
+    @callback
+    def async_prepare_setup(self, entry: ConfigEntry, msg: pb.EntrySetup) -> None:
+        """Use aliases only for subentries created by this worker."""
+        snapshot = self._remote_snapshot(entry.entry_id, entry_snapshot(entry))
+        msg.subentries = encode_json(list(snapshot["subentries"].values()))
+        self.track(entry)
 
     @callback
     def track(self, entry: ConfigEntry) -> None:
@@ -240,7 +220,7 @@ class EntrySync:
             and self._owns(entry)
         ):
             self.forget(entry.entry_id)
-            self.hass.async_create_task(self._async_remove_subentry_ids(entry.entry_id))
+            self._subentry_ids.pop(entry.entry_id, None)
             return
         if (
             self._applying
@@ -308,41 +288,23 @@ class EntrySync:
         ):
             raise HomeAssistantError("Entry update does not belong to this sandbox")
         before, after = decode_json_dict(msg.before), decode_json_dict(msg.after)
-        async with self._subentry_lock:
+        ids = dict(self._subentry_ids.get(entry.entry_id, {}))
+        if self._assign_subentry_ids:
+            for remote_id in after["subentries"].keys() - before["subentries"].keys():
+                if remote_id not in ids:
+                    if remote_id in entry.subentries:
+                        raise HomeAssistantError("Subentry ID already in use")
+                    ids[remote_id] = ulid_util.ulid_now()
+            before = _map_subentry_ids(before, ids)
+            after = _map_subentry_ids(after, ids)
+        self._applying = True
+        try:
+            apply_entry_update(self.hass, entry, before, after)
+            self._snapshots[entry.entry_id] = entry_snapshot(entry)
             if self._assign_subentry_ids:
-                ids = await self._async_load_subentry_ids(entry.entry_id)
-                updated_ids = dict(ids)
-                for remote_id in (
-                    after["subentries"].keys() - before["subentries"].keys()
-                ):
-                    if remote_id not in updated_ids:
-                        if remote_id in entry.subentries:
-                            raise HomeAssistantError("Subentry ID already in use")
-                        updated_ids[remote_id] = ulid_util.ulid_now()
-                before = _map_subentry_ids(before, updated_ids)
-                after = _map_subentry_ids(after, updated_ids)
-                if updated_ids != ids:
-                    # Persist aliases before canonical entries can reference them.
-                    await self._subentry_store(entry.entry_id).async_save(updated_ids)
-                    # Store logs write failures without raising them.
-                    if (
-                        await self._subentry_store(entry.entry_id).async_load()
-                        != updated_ids
-                    ):
-                        raise HomeAssistantError("Could not save subentry IDs")
-                    self._subentry_ids[entry.entry_id] = updated_ids
-            if (
-                self.hass.config_entries.async_get_entry(msg.entry_id) is not entry
-                or not self._owns(entry)
-                or msg.entry_id not in self._snapshots
-            ):
-                raise HomeAssistantError("Entry update does not belong to this sandbox")
-            self._applying = True
-            try:
-                apply_entry_update(self.hass, entry, before, after)
-                self._snapshots[entry.entry_id] = entry_snapshot(entry)
-            finally:
-                self._applying = False
+                self._subentry_ids[entry.entry_id] = ids
+        finally:
+            self._applying = False
         return pb.EntryUpdateResult()
 
     async def async_stop(self) -> None:
@@ -352,3 +314,4 @@ class EntrySync:
             await self.flush()
         except HomeAssistantError:
             _LOGGER.error("Stopping sandbox with unacknowledged config changes")
+        self._subentry_ids.clear()

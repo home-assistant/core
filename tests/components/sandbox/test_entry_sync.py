@@ -4,7 +4,6 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
 
 from homeassistant_sandbox.channel import ChannelRemoteError
 from homeassistant_sandbox.entry_runner import _entry_from_proto
@@ -21,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.util.file import WriteError
 
 
 @pytest.fixture
@@ -203,12 +201,12 @@ async def test_foreign_entry_rejected(
     assert entry_snapshot(foreign) == before
 
 
-async def test_worker_ids_survive_restart(
+async def test_restart_uses_host_subentry_ids(
     entry: MockConfigEntry,
     peers: tuple[EntrySync, ClientEntrySync, ConfigEntry],
     hass_storage: dict[str, Any],
 ) -> None:
-    """A fresh bridge restores IDs referenced by integration data."""
+    """A fresh worker receives canonical IDs without a persisted alias map."""
     main, worker, child = peers
     subentry = ConfigSubentry(
         subentry_id="worker-device",
@@ -218,30 +216,24 @@ async def test_worker_ids_survive_restart(
         unique_id=None,
     )
     worker.hass.config_entries.async_add_subentry(child, subentry)
-    worker.hass.config_entries.async_update_entry(
-        child, data={"selected_subentry": subentry.subentry_id}
-    )
     await worker.flush()
     host_id = main.local_subentry_id(entry.entry_id, subentry.subentry_id)
     assert host_id != subentry.subentry_id
-    assert hass_storage[f"sandbox.subentry_ids.{entry.entry_id}"]["data"] == {
-        subentry.subentry_id: host_id
-    }
+    assert f"sandbox.subentry_ids.{entry.entry_id}" not in hass_storage
+    payload = entry_to_setup_proto(entry)
+    main.async_prepare_setup(entry, payload)
+    assert set(_entry_from_proto(payload).subentries) == {"original", "worker-device"}
     await main.async_stop()
     restored = EntrySync(
         main.hass, main.channel, lambda item: True, assign_subentry_ids=True
     )
     try:
         payload = entry_to_setup_proto(entry)
-        await restored.async_prepare_setup(entry, payload)
+        restored.async_prepare_setup(entry, payload)
         restarted_child = _entry_from_proto(payload)
-        assert (
-            restarted_child.subentries[restarted_child.data["selected_subentry"]].title
-            == "Worker device"
-        )
-        assert (
-            restored.local_subentry_id(entry.entry_id, subentry.subentry_id) == host_id
-        )
+        assert set(restarted_child.subentries) == {"original", host_id}
+        assert restarted_child.subentries[host_id].title == "Worker device"
+        assert restored.remote_subentry_id(entry.entry_id, host_id) == host_id
         assert restarted_child.subentries["original"].subentry_id == "original"
     finally:
         await restored.async_stop()
@@ -279,36 +271,10 @@ async def test_worker_ids_are_scoped_to_entry(
     assert second_id in second.subentries
 
 
-async def test_mapping_save_failure_does_not_add_subentry(
-    entry: MockConfigEntry,
-    peers: tuple[EntrySync, ClientEntrySync, ConfigEntry],
-) -> None:
-    """Canonical entries cannot outlive the mapping needed to reload them."""
-    _main, worker, child = peers
-    with patch(
-        "homeassistant.helpers.storage.Store._async_write_data",
-        side_effect=WriteError("Disk write failed"),
-    ):
-        worker.hass.config_entries.async_add_subentry(
-            child,
-            ConfigSubentry(
-                subentry_id="local-device",
-                data=MappingProxyType({}),
-                subentry_type="device",
-                title="Device",
-                unique_id=None,
-            ),
-        )
-        with pytest.raises(HomeAssistantError, match="reload required"):
-            await worker.flush()
-    assert set(entry.subentries) == {"original"}
-
-
 async def test_removing_entry_removes_id_map(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     peers: tuple[EntrySync, ClientEntrySync, ConfigEntry],
-    hass_storage: dict[str, Any],
 ) -> None:
     """Mappings are retained across unloads but removed with their entry."""
     main, worker, child = peers
@@ -323,11 +289,12 @@ async def test_removing_entry_removes_id_map(
         ),
     )
     await worker.flush()
-    key = f"sandbox.subentry_ids.{entry.entry_id}"
+    host_id = main.local_subentry_id(entry.entry_id, "worker-device")
+    assert host_id != "worker-device"
     main.forget(entry.entry_id)
-    assert key in hass_storage
+    assert main.remote_subentry_id(entry.entry_id, host_id) == "worker-device"
     assert await hass.config_entries.async_remove(entry.entry_id) == {
         "require_restart": False
     }
     await hass.async_block_till_done()
-    assert key not in hass_storage
+    assert main.remote_subentry_id(entry.entry_id, host_id) == host_id

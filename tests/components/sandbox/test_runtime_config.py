@@ -77,12 +77,11 @@ async def test_started_worker_config_and_subentries(
         async def async_setup_entry(hass, entry):
             assert hass.is_running
             await hass.config_entries.async_wait_initialized()
-            if "worker-device" not in entry.subentries:
+            if not any(sub.unique_id == "worker-device" for sub in entry.subentries.values()):
                 hass.config_entries.async_add_subentry(entry, ConfigSubentry(
                     subentry_id="worker-device", data=MappingProxyType({}),
                     subentry_type="device", title="Worker device", unique_id="worker-device",
                 ))
-            hass.config_entries.async_update_entry(entry, data=entry.data | {"selected_subentry": "worker-device"})
             started = False
             @callback
             def on_start(hass):
@@ -134,7 +133,8 @@ async def test_started_worker_config_and_subentries(
             _attr_should_poll = False
             _attr_device_info = {"identifiers": {("sandbox_runtime_test", "device")}, "name": "Device"}
         async def async_setup_entry(hass, entry, async_add_entities):
-            async_add_entities([TestSensor()], config_subentry_id=entry.data["selected_subentry"])
+            subentry = next(sub for sub in entry.subentries.values() if sub.unique_id == "worker-device")
+            async_add_entities([TestSensor()], config_subentry_id=subentry.subentry_id)
     """)
     )
     entry = MockConfigEntry(
@@ -180,7 +180,7 @@ async def test_started_worker_config_and_subentries(
         channel = process.channel
         assert channel is not None
         request = entry_to_setup_proto(entry)
-        await bridges[-1].entry_sync.async_prepare_setup(entry, request)
+        bridges[-1].entry_sync.async_prepare_setup(entry, request)
         # The fixture has already provisioned this artifact on the child.
         request.integration_source.kind = "builtin"
         result = await channel.call("sandbox/entry_setup", request, timeout=10)
@@ -189,7 +189,6 @@ async def test_started_worker_config_and_subentries(
         assert entry.data == {
             "token": "old",
             "migrated": True,
-            "selected_subentry": "worker-device",
         }
         host_subentry_id = next(key for key in entry.subentries if key != "device")
         assert host_subentry_id != "worker-device"
@@ -246,11 +245,26 @@ async def test_started_worker_config_and_subentries(
         assert saved["data"] == {
             "token": "refreshed",
             "migrated": True,
-            "selected_subentry": "worker-device",
         }
         assert {sub["subentry_id"] for sub in saved["subentries"]} == {
             "device",
             host_subentry_id,
+        }
+
+        data = SandboxData(manager=manager, bridges={"custom": bridges[-1]})
+        hass.data[DATA_SANDBOX] = data
+        hass.config_entries.router = SandboxFlowRouter(hass, manager, data=data)
+        flow = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, "device"),
+            context={"source": "reconfigure", "subentry_id": host_subentry_id},
+        )
+        assert flow["type"] is FlowResultType.FORM
+        flow = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {"host": "worker-host-updated"}
+        )
+        assert flow["type"] is FlowResultType.ABORT
+        assert entry.subentries[host_subentry_id].data == {
+            "host": "worker-host-updated"
         }
 
         first_pid = values["pid"]
@@ -261,7 +275,7 @@ async def test_started_worker_config_and_subentries(
         channel = process.channel
         assert channel is not None
         request = entry_to_setup_proto(entry)
-        await bridges[-1].entry_sync.async_prepare_setup(entry, request)
+        bridges[-1].entry_sync.async_prepare_setup(entry, request)
         request.integration_source.kind = "builtin"
         result = await channel.call("sandbox/entry_setup", request, timeout=10)
         assert result.ok, result.reason
@@ -274,19 +288,18 @@ async def test_started_worker_config_and_subentries(
         assert values["data"]["token"] == "refreshed"
         assert values["subentry_id"] == "device"
         assert values["pid"] != first_pid
-        assert (
-            values["subentries"][values["data"]["selected_subentry"]]["unique_id"]
-            == "worker-device"
-        )
+        assert values["subentries"][host_subentry_id]["unique_id"] == "worker-device"
+        assert values["subentries"][host_subentry_id]["data"] == {
+            "host": "worker-host-updated"
+        }
+        assert set(values["subentries"]) == {"device", host_subentry_id}
         assert set(entry.subentries) == {"device", host_subentry_id}
         assert (
             entity_registry.async_get(entities[0].entity_id).config_subentry_id
             == host_subentry_id
         )
 
-        data = SandboxData(manager=manager, bridges={"custom": bridges[-1]})
-        hass.data[DATA_SANDBOX] = data
-        hass.config_entries.router = SandboxFlowRouter(hass, manager, data=data)
+        data.bridges["custom"] = bridges[-1]
         flow = await hass.config_entries.subentries.async_init(
             (entry.entry_id, "device"), context={"source": "user"}
         )
@@ -321,18 +334,6 @@ async def test_started_worker_config_and_subentries(
         assert flow["type"] is FlowResultType.ABORT
         assert flow["translation_domain"] == "homeassistant"
         assert entry.subentries[added_id].data == {"host": "changed-host"}
-        flow = await hass.config_entries.subentries.async_init(
-            (entry.entry_id, "device"),
-            context={"source": "reconfigure", "subentry_id": host_subentry_id},
-        )
-        assert flow["type"] is FlowResultType.FORM
-        flow = await hass.config_entries.subentries.async_configure(
-            flow["flow_id"], {"host": "worker-host-updated"}
-        )
-        assert flow["type"] is FlowResultType.ABORT
-        assert entry.subentries[host_subentry_id].data == {
-            "host": "worker-host-updated"
-        }
     finally:
         hass.config_entries.router = None
         await manager.async_graceful_shutdown_all(timeout=5)
