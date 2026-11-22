@@ -14,7 +14,12 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import Platform, TargetKey
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
+    TargetKey,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
@@ -134,6 +139,12 @@ async def test_litter_box_set_sleep_time(
         NUMBER_DOMAIN, "tuya", f"tuya.{mock_device.id}{code}"
     )
     assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.MINUTES
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 1440
+    assert state.attributes["step"] == 1
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
