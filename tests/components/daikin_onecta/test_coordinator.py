@@ -241,7 +241,7 @@ async def test_polling_child_firmware_change_does_not_update_gateway_registry(
     with patch.object(
         registry, "async_get_or_create", wraps=registry.async_get_or_create
     ) as async_get_or_create:
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
     async_get_or_create.assert_not_called()
 
@@ -368,14 +368,14 @@ async def test_rate_limited_first_refresh_does_not_load_empty_cache(
     )
 
     with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
     assert err.value.translation_key == "rate_limit_exceeded"
     assert coordinator.data_or_none is None
     assert coordinator.client.get_gateway_devices.await_count == 1
 
     with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
     assert err.value.translation_key == "rate_limit_exceeded"
     assert coordinator.data_or_none is None
@@ -598,7 +598,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.client.rate_limit = RateLimit(day_limit=400)
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         assert coordinator.update_interval == timedelta(seconds=296)
 
@@ -1131,7 +1131,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert exc_info.value.translation_key == "api_error"
         assert exc_info.value.translation_placeholders == {"status": "500"}
@@ -1150,7 +1150,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._async_get_cloud_devices = AsyncMock(side_effect=response_error)
 
         with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert exc_info.value.translation_key == "invalid_response"
         assert exc_info.value.__cause__ is response_error
@@ -1170,7 +1170,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert exc_info.value.translation_key == "authentication_failed"
 
@@ -1188,7 +1188,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
 
         with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert exc_info.value.translation_key == "authentication_failed"
         assert exc_info.value.__cause__ is token_error
@@ -1207,7 +1207,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
 
         with pytest.raises(OAuth2TokenRequestError) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert exc_info.value is token_error
 
@@ -1218,7 +1218,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=None)
 
-        assert await coordinator._async_update_data_from_cloud() == {}
+        assert await coordinator._async_update_data() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with()
         assert coordinator.update_interval == timedelta(seconds=30)
 
@@ -1233,7 +1233,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = mock_utcnow.return_value - timedelta(seconds=1)
         coordinator._async_get_cloud_devices = AsyncMock()
 
-        assert await coordinator._async_update_data_from_cloud() == {}
+        assert await coordinator._async_update_data() == {}
         assert coordinator.update_interval == timedelta(seconds=30)
         coordinator._async_get_cloud_devices.assert_not_awaited()
 
@@ -1249,7 +1249,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
-        assert await coordinator._async_update_data_from_cloud() == {}
+        assert await coordinator._async_update_data() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with()
 
     async def test_connection_error_uses_update_failed(
@@ -1266,7 +1266,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         with pytest.raises(UpdateFailedUnreachable) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
         assert exc_info.value.translation_key == "connection_failed"
@@ -1287,7 +1287,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data_from_cloud()
+            await coordinator._async_update_data()
 
         assert coordinator.update_interval == expected_interval
 
@@ -1301,7 +1301,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         missing_device.mark_unavailable.assert_called_once_with()
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
@@ -1328,7 +1328,7 @@ class TestOnectaDataUpdateCoordinator:
             return_value=[existing_device.device, new_device]
         )
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
@@ -1364,7 +1364,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[updated_device])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
@@ -1380,7 +1380,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
@@ -1395,7 +1395,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         existing_device.set_device_data.assert_called_once_with(cloud_device)
         coordinator._async_register_device.assert_not_called()
@@ -1411,7 +1411,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
 
-        await coordinator._async_update_data_from_cloud()
+        await coordinator._async_update_data()
 
         coordinator._async_register_device.assert_called_once_with(existing_device)
 

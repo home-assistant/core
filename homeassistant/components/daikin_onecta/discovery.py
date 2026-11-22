@@ -13,7 +13,6 @@ from .const import (
     SENSOR_KEYS,
     SWITCH_KEYS,
 )
-from .utils import is_on_off_value, is_read_only_on_off_value
 
 
 def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
@@ -40,18 +39,13 @@ def has_climate_entity(point: ManagementPoint) -> bool:
     )
 
 
-def scalar_platform(
-    name: str,
-    characteristic: Characteristic,
-) -> Platform | None:
-    """Return the platform that exposes a scalar characteristic, if any."""
-    values = characteristic.values or []
-    if characteristic.settable and is_on_off_value(values):
-        return Platform.SWITCH if name in SWITCH_KEYS and name != "onOffMode" else None
-    if name in BINARY_SENSOR_KEYS and (
-        characteristic.values is None
-        or is_read_only_on_off_value(characteristic.settable, characteristic.values)
-    ):
+def scalar_platform(name: str) -> Platform | None:
+    """Return the stable platform assigned to a scalar characteristic key."""
+    # Platform ownership comes from the characteristic's integration metadata,
+    # not its current writability, which can change with gateway or device state.
+    if name in SWITCH_KEYS:
+        return Platform.SWITCH
+    if name in BINARY_SENSOR_KEYS:
         return Platform.BINARY_SENSOR
     if name in SENSOR_KEYS:
         return Platform.SENSOR
@@ -87,18 +81,9 @@ def scalar_platform_for_point(
         and has_climate_entity(point)
     ):
         return None
-    if (
-        name in {"onOffMode", "powerfulMode"}
-        and point.management_point_type == "climateControl"
-        and point.air_purification is None
-        and not gateway_online
-    ):
-        return Platform.SWITCH if name in SWITCH_KEYS else None
     if name == "onOffMode" and point.management_point_type == "climateControl":
         if point.air_purification is not None:
             return None
-        if characteristic.settable and is_on_off_value(characteristic.values):
-            return Platform.SWITCH
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.
     if name in {"onOffMode", "powerfulMode"} and (
@@ -107,7 +92,7 @@ def scalar_platform_for_point(
         and point.domestic_hot_water is not None
     ):
         return None
-    return scalar_platform(name, characteristic)
+    return scalar_platform(name)
 
 
 def scalar_characteristics_for_platform(

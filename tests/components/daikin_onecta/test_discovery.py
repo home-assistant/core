@@ -65,87 +65,22 @@ def test_air_purification_mode_sensor_when_climate_entity_exists() -> None:
 
 
 @pytest.mark.parametrize(
-    (
-        "name",
-        "characteristic",
-        "expected",
-    ),
+    ("name", "expected"),
     [
-        pytest.param(
-            "econoMode",
-            Characteristic(value="on", settable=True, values=["on", "off"]),
-            Platform.SWITCH,
-            id="econo-mode-is-a-switch-before-point-classification",
-        ),
-        pytest.param(
-            "econoMode",
-            Characteristic(value="on", settable=True, values=["on", "off"]),
-            Platform.SWITCH,
-            id="econo-mode-switch-on-water-heater",
-        ),
-        pytest.param(
-            "ledEnabled",
-            Characteristic(value="on", settable=True, values=["on", "off"]),
-            None,
-            id="writable-on-off-without-switch-description",
-        ),
-        pytest.param(
-            "ledEnabled",
-            Characteristic(value="on", values=["on", "off"]),
-            Platform.BINARY_SENSOR,
-            id="read-only-on-off-binary-sensor",
-        ),
-        pytest.param(
-            "ledEnabled",
-            Characteristic(value="on"),
-            Platform.BINARY_SENSOR,
-            id="binary-sensor-without-values",
-        ),
-        pytest.param(
-            "ledEnabled",
-            Characteristic(value="on", values=["on", "off", "auto"]),
-            None,
-            id="read-only-on-off-with-additional-value",
-        ),
-        pytest.param(
-            "streamerMode",
-            Characteristic(value="on", settable=True, values=["on", "off", "auto"]),
-            None,
-            id="writable-switch-with-additional-value",
-        ),
-        pytest.param(
-            "operationMode",
-            Characteristic(value="heating"),
-            Platform.SENSOR,
-            id="control-operation-mode-sensor",
-        ),
-        pytest.param(
-            "operationMode",
-            Characteristic(value="heating"),
-            Platform.SENSOR,
-            id="non-control-operation-mode",
-        ),
-        pytest.param(
-            "futureCharacteristic",
-            Characteristic(value="unknown"),
-            None,
-            id="unknown-characteristic",
-        ),
+        pytest.param("econoMode", Platform.SWITCH, id="econo-mode"),
+        pytest.param("onOffMode", Platform.SWITCH, id="power"),
+        pytest.param("streamerMode", Platform.SWITCH, id="streamer-mode"),
+        pytest.param("ledEnabled", Platform.BINARY_SENSOR, id="led-enabled"),
+        pytest.param("operationMode", Platform.SENSOR, id="operation-mode"),
+        pytest.param("futureCharacteristic", None, id="unknown-characteristic"),
     ],
 )
 def test_scalar_platform(
     name: str,
-    characteristic: Characteristic,
     expected: Platform | None,
 ) -> None:
-    """Classify supported scalar characteristics consistently."""
-    assert (
-        scalar_platform(
-            name,
-            characteristic,
-        )
-        is expected
-    )
+    """Classify supported scalar characteristics from their stable keys."""
+    assert scalar_platform(name) is expected
 
 
 @pytest.mark.parametrize(
@@ -173,15 +108,18 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
             "onOffMode",
             False,
             True,
-            Platform.BINARY_SENSOR,
+            Platform.SWITCH,
             id="read-only-power-online",
         ),
         pytest.param(
             "onOffMode", False, False, Platform.SWITCH, id="read-only-power-offline"
         ),
-        pytest.param("powerfulMode", False, False, None, id="read-only-boost-offline"),
+        pytest.param(
+            "powerfulMode", False, False, Platform.SENSOR, id="read-only-boost-offline"
+        ),
         pytest.param("onOffMode", True, True, Platform.SWITCH, id="writable-power"),
         pytest.param("powerfulMode", False, True, Platform.SENSOR, id="boost"),
+        pytest.param("powerfulMode", True, False, Platform.SENSOR, id="writable-boost"),
     ],
 )
 def test_climate_control_without_supported_setpoint_is_exposed(
@@ -207,6 +145,65 @@ def test_climate_control_without_supported_setpoint_is_exposed(
         )
         is expected_platform
     )
+
+
+async def test_switch_platform_is_stable_when_writability_changes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep a power characteristic on the switch platform as writability flips."""
+    devices = _load_gateway_devices("minimal_data")
+    gateway = devices[0]
+    point = ManagementPoint(
+        embedded_id="independent_power",
+        management_point_type="other",
+        characteristics={
+            "onOffMode": Characteristic(
+                value="off", settable=False, values=["on", "off"]
+            )
+        },
+    )
+    gateway.management_points.append(point)
+
+    await _async_setup_fixture(
+        hass, config_entry, "minimal_data", gateway_devices=devices
+    )
+    coordinator = config_entry.runtime_data
+    unique_id = f"{gateway.id}_{point.embedded_id}_onOffMode"
+    switch_entity_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH.value, DOMAIN, unique_id
+    )
+    assert switch_entity_id is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR.value, DOMAIN, unique_id
+        )
+        is None
+    )
+    initial_state = hass.states.get(switch_entity_id)
+    assert initial_state is not None and initial_state.state == STATE_UNAVAILABLE
+
+    on_off_mode = point.characteristic("onOffMode")
+    assert on_off_mode is not None
+    on_off_mode.settable = True
+    mock_onecta_client.get_gateway_devices.return_value = devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.SWITCH.value, DOMAIN, unique_id)
+        == switch_entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR.value, DOMAIN, unique_id
+        )
+        is None
+    )
+    updated_state = hass.states.get(switch_entity_id)
+    assert updated_state is not None and updated_state.state == "off"
 
 
 def test_settable_climate_power_without_setpoint_has_switch_description() -> None:

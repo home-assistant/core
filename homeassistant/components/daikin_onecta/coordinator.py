@@ -426,7 +426,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Identify fresh cloud responses separately from local write notifications."""
         return self._cloud_update_sequence
 
-    async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
+    @override
+    async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
         previous_devices = self.data_or_none
         devices = previous_devices or {}
@@ -542,11 +543,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 self.update_interval = self._determine_update_interval()
 
         return devices
-
-    @override
-    async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
-        """Fetch data for the Home Assistant coordinator interface."""
-        return await self._async_update_data_from_cloud()
 
     def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
