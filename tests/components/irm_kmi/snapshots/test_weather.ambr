@@ -817,6 +817,238 @@
     }),
   ])
 # ---
+# name: test_get_forecasts_radar[default]
+  dict({
+    'weather.brussels': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2023-12-26T18:00:00+01:00',
+          'might_rain': False,
+          'precipitation': 0.72,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:10:00+01:00',
+          'might_rain': False,
+          'precipitation': 7.2,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:20:00+01:00',
+          'might_rain': False,
+          'precipitation': 12,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:30:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:40:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_forecasts_radar[exclude_past]
+  dict({
+    'weather.brussels': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2023-12-26T18:00:00+01:00',
+          'might_rain': False,
+          'precipitation': 0.72,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:10:00+01:00',
+          'might_rain': False,
+          'precipitation': 7.2,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:20:00+01:00',
+          'might_rain': False,
+          'precipitation': 12,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:30:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:40:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_forecasts_radar[include_past]
+  dict({
+    'weather.brussels': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2023-12-26T17:00:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T17:10:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T17:20:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T17:30:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T17:40:00+01:00',
+          'might_rain': False,
+          'precipitation': 0.6,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T17:50:00+01:00',
+          'might_rain': False,
+          'precipitation': 0.06,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:00:00+01:00',
+          'might_rain': False,
+          'precipitation': 0.72,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:10:00+01:00',
+          'might_rain': False,
+          'precipitation': 7.2,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:20:00+01:00',
+          'might_rain': False,
+          'precipitation': 12,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:30:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-26T18:40:00+01:00',
+          'might_rain': False,
+          'precipitation': 0,
+          'rain_forecast_max': 0,
+          'rain_forecast_min': 0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_forecasts_radar_converts_every_rate
+  dict({
+    'weather.brussels': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2023-12-28T15:10:00+01:00',
+          'might_rain': True,
+          'precipitation': 0.6,
+          'rain_forecast_max': 0.9,
+          'rain_forecast_min': 0.3,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-28T15:20:00+01:00',
+          'might_rain': True,
+          'precipitation': 0.3,
+          'rain_forecast_max': 0.6,
+          'rain_forecast_min': 0.0,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-28T15:30:00+01:00',
+          'might_rain': True,
+          'precipitation': 2.4,
+          'rain_forecast_max': 3.6,
+          'rain_forecast_min': 1.2,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+        dict({
+          'datetime': '2023-12-28T15:40:00+01:00',
+          'might_rain': True,
+          'precipitation': 7.2,
+          'rain_forecast_max': 9.0,
+          'rain_forecast_min': 5.4,
+          'unit': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_weather_nl[forecast_nl.json][weather.brussels-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

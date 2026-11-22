@@ -406,6 +406,9 @@ aiopegelonline==0.1.1
 # homeassistant.components.opnsense
 aiopnsense==1.0.10
 
+# homeassistant.components.proxmoxve
+aioproxmox==0.1.5
+
 # homeassistant.components.ptdevices
 aioptdevices==2026.11.1
 
@@ -491,7 +494,7 @@ aiotedee==0.3.0
 aiothreema==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==2.1.0
+aiotractive==2.1.1
 
 # homeassistant.components.trimlight
 aiotrimlight==0.4.0
@@ -509,7 +512,7 @@ aiovitesy==1.4.8
 aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.11
+aiovodafone==3.3.13
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -521,7 +524,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.1.0
+aiowebostv==1.1.1
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -1697,7 +1700,7 @@ mitsubishi-comfort==0.6.2
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.7
+modbus-connection[tmodbus]==4.12.8
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2004,9 +2007,6 @@ prometheus-client==0.21.0
 # homeassistant.components.prowl
 prowlpy==1.1.5
 
-# homeassistant.components.proxmoxve
-proxmoxer==2.3.0
-
 # homeassistant.components.hardware
 # homeassistant.components.recorder
 # homeassistant.components.systemmonitor
@@ -2064,7 +2064,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.3
 
 # homeassistant.components.opendisplay
-py-opendisplay==8.1.0
+py-opendisplay==8.2.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2097,7 +2097,7 @@ pyElectra==1.2.14
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.8
+pyHik==0.5.0
 
 # homeassistant.components.homee
 pyHomee==1.4.7
@@ -2227,7 +2227,7 @@ pydaikin==2.24.1
 pydanfossair==1.0.0
 
 # homeassistant.components.deako
-pydeako==0.6.0
+pydeako-community==0.6.1
 
 # homeassistant.components.deconz
 pydeconz==120
@@ -2851,7 +2851,7 @@ python-mystrom==2.5.0
 python-open-router==0.5.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.5.0
+python-opendata-transport==0.6.2
 
 # homeassistant.components.openevse
 python-openevse-http==1.8.0
@@ -2882,7 +2882,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.22.2
+python-roborock==7.26.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3108,7 +3108,7 @@ samsungtvws[async,encrypted]==3.0.7
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.7.0
+satel-integra==1.7.1
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -3201,7 +3201,7 @@ smart-meter-texas==0.6.0
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.2
+soco==0.32.4
 
 # homeassistant.components.sofar
 sofar-modbus==0.32.0

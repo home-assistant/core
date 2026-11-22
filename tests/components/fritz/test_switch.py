@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
+from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
 from pytest_homeassistant.common import (
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
     TargetKey,
 )
@@ -719,22 +721,21 @@ async def test_switch_no_mesh_wifi_uplink(
 @pytest.mark.parametrize(
     ("wan_access_data", "expected_state"),
     [
-        (None, STATE_UNAVAILABLE),
-        ("unknown", STATE_UNAVAILABLE),
-        ("error", STATE_UNAVAILABLE),
-        ("granted", STATE_ON),
-        ("denied", STATE_OFF),
+        pytest.param(None, STATE_UNKNOWN, id="none"),
+        pytest.param("unknown", STATE_UNKNOWN, id="unknown"),
+        pytest.param("error", STATE_UNKNOWN, id="error"),
+        pytest.param("granted", STATE_ON, id="granted"),
+        pytest.param("denied", STATE_OFF, id="denied"),
     ],
 )
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
 async def test_switch_device_wan_access(
     hass: HomeAssistant,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
+    fh_class_mock: type[FritzHosts],
     wan_access_data: str | None,
     expected_state: str,
 ) -> None:
-    """Test Fritz!Tools switches have proper WAN access state."""
+    """Test profile switch of a device with an IP reflects its WAN access state."""
 
     entity_id = "switch.printer_internet_access"
 
@@ -784,6 +785,46 @@ async def test_switch_device_no_ip_address(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    "ip_address",
+    [
+        pytest.param("", id="empty"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_switch_tracked_device_lost_ip_address(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+    ip_address: str | None,
+) -> None:
+    """Test profile switch of a tracked device becomes unavailable without an IP."""
+
+    entity_id = "switch.printer_internet_access"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    # WAN access stays "granted", so only the missing IP makes it unavailable
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    attributes[0]["IPAddress"] = ip_address
+    fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
