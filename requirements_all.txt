@@ -494,7 +494,7 @@ aiotedee==0.3.0
 aiothreema==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==2.1.0
+aiotractive==2.1.1
 
 # homeassistant.components.trimlight
 aiotrimlight==0.4.0
