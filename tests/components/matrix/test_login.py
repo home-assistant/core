@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pytest
 
 from homeassistant.components.matrix import MatrixBot
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
 
@@ -18,7 +18,6 @@ class LoginTestParameters:
     access_token: dict[str, str]
     expected_login_state: bool
     expected_caplog_messages: set[str]
-    expected_expection: type[Exception] | None = None
 
 
 good_password_missing_token = LoginTestParameters(
@@ -61,8 +60,8 @@ bad_password_bad_access_token = LoginTestParameters(
         " M_UNKNOWN_TOKEN, Invalid access token passed.",
         "Logging in using password",
         "Login by password failed: status_code, LoginError",
+        "Login failed, both token and username/password are invalid",
     },
-    expected_expection=ConfigEntryAuthFailed,
 )
 
 bad_password_missing_access_token = LoginTestParameters(
@@ -72,8 +71,8 @@ bad_password_missing_access_token = LoginTestParameters(
     expected_caplog_messages={
         "Logging in using password",
         "Login by password failed: status_code, LoginError",
+        "Login failed, both token and username/password are invalid",
     },
-    expected_expection=ConfigEntryAuthFailed,
 )
 
 
@@ -95,11 +94,7 @@ async def test_login(
     matrix_bot._password = params.password
     matrix_bot._access_tokens = params.access_token
 
-    if params.expected_expection:
-        with pytest.raises(params.expected_expection):
-            await matrix_bot._login()
-    else:
-        await matrix_bot._login()
+    assert await matrix_bot._login() == params.expected_login_state
     assert matrix_bot._client.logged_in == params.expected_login_state
     assert set(caplog.messages).issuperset(params.expected_caplog_messages)
 
