@@ -2426,12 +2426,10 @@ async def test_get_label_settings(
         }
     )
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"label_id": "unknown"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Label 'unknown' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Label 'unknown' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"label_id": "unknown"}), llm_context
+        )
 
 
 async def test_update_label_settings(
@@ -2493,22 +2491,19 @@ async def test_update_label_settings_errors(
     label_registry.async_create("Power")
 
     tool = label_tools["config__update_label_settings"]
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"label_id": "unknown", "name": "Water"}),
-        llm_context,
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Label 'unknown' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Label 'unknown' not found."):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"label_id": "unknown", "name": "Water"}),
+            llm_context,
+        )
 
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"label_id": "energy", "name": "power"}),
-        llm_context,
-    )
-    assert result.error
-    assert "already in use" in result.data["error"]
+    with pytest.raises(HomeAssistantError, match="already in use"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"label_id": "energy", "name": "power"}),
+            llm_context,
+        )
 
 
 async def test_create_label(
@@ -2537,11 +2532,10 @@ async def test_create_label(
     )
     assert label_registry.async_get_label("energy") is not None
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"name": "energy"}), llm_context
-    )
-    assert result.error
-    assert "already in use" in result.data["error"]
+    with pytest.raises(HomeAssistantError, match="already in use"):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"name": "energy"}), llm_context
+        )
 
 
 async def test_delete_label(
@@ -2560,12 +2554,10 @@ async def test_delete_label(
     assert result == llm.ToolResult(data={"result": {"label_id": "energy"}})
     assert label_registry.async_get_label("energy") is None
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Label 'energy' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Label 'energy' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+        )
 
 
 @pytest.mark.parametrize(

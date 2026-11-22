@@ -1492,10 +1492,7 @@ class GetLabelSettingsTool(Tool):
     ) -> ToolResult:
         """Return the settings of the label."""
         args = self.parameters(tool_input.tool_args)
-        try:
-            entry = _get_label_entry(hass, args["label_id"])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        entry = _get_label_entry(hass, args["label_id"])
         return ToolResult(data={"result": _format_label_settings(entry)})
 
 
@@ -1527,14 +1524,11 @@ class UpdateLabelSettingsTool(Tool):
         """Update the settings of the label and return the new settings."""
         settings = self.parameters(tool_input.tool_args)
         label_id = settings.pop("label_id")
-        try:
-            _get_label_entry(hass, label_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_label_entry(hass, label_id)
         try:
             entry = lr.async_get(hass).async_update(label_id, **settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_label_settings(entry)})
 
 
@@ -1561,7 +1555,7 @@ class CreateLabelTool(Tool):
         try:
             entry = lr.async_get(hass).async_create(**settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_label_settings(entry)})
 
 
@@ -1586,10 +1580,7 @@ class DeleteLabelTool(Tool):
     ) -> ToolResult:
         """Delete the label."""
         label_id = self.parameters(tool_input.tool_args)["label_id"]
-        try:
-            _get_label_entry(hass, label_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_label_entry(hass, label_id)
         lr.async_get(hass).async_delete(label_id)
         return ToolResult(data={"result": {"label_id": label_id}})
 
