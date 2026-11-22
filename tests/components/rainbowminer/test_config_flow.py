@@ -249,6 +249,10 @@ async def test_reauth_errors_then_recovers(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    username_key = next(
+        key for key in result["data_schema"].schema if key == CONF_USERNAME
+    )
+    assert username_key.description == {"suggested_value": "new-user"}
 
     mock_rainbowminer_client.get_status.side_effect = None
     result = await hass.config_entries.flow.async_configure(

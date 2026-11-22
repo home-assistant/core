@@ -29,7 +29,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -112,7 +112,7 @@ class RainbowMinerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_REAUTH_DATA_SCHEMA,
-                {CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME)},
+                {CONF_USERNAME: (user_input or reauth_entry.data).get(CONF_USERNAME)},
             ),
             description_placeholders={"name": reauth_entry.title},
             errors=errors,
