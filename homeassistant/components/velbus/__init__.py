@@ -58,8 +58,9 @@ class VelbusData:
     controller: Velbus
     scan_task: asyncio.Task
     known_unique_ids: set[str] = field(default_factory=set)
-    discoverers: list[Callable[[], None]] = field(default_factory=list)
+    discoverers: list[Callable[[set[int] | None], None]] = field(default_factory=list)
     reconnect_scan_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
+    scanned_module_addresses: set[int] | None = None
 
 
 async def velbus_scan_task(controller: Velbus) -> None:
@@ -77,9 +78,10 @@ def _register_bus_listeners(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
     """Attach module and scan listeners on the controller."""
     controller = entry.runtime_data.controller
 
-    async def on_module_found(_module: Module) -> None:
+    async def on_module_found(module: Module) -> None:
         """Keep the registries in sync when a module finishes loading."""
-        await async_sync_bus_state(hass, entry)
+        address = module.get_addresses()[0]
+        await async_sync_bus_state(hass, entry, restrict_to_addresses={address})
 
     async def on_scan_complete(found_addresses: set[int]) -> None:
         """Reconcile devices and entities after a full bus scan."""

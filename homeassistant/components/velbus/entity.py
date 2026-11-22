@@ -42,6 +42,11 @@ class VelbusEntity(Entity):
         else:
             self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
+    @property
+    def module_address(self) -> int:
+        """Return the Velbus module address for this entity."""
+        return int(self._module_address)
+
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""
         if not self._channel.is_sub_device():

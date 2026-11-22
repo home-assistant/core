@@ -558,11 +558,53 @@ async def test_scan_complete_removes_stale_devices(
     )
 
 
-async def test_bus_sync_adds_new_switch_entity(
+async def test_removed_module_entities_are_not_rediscovered(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Modules absent from a scan stay removed even when the controller still reports them."""
+    await init_integration(hass, config_entry)
+    assert config_entry.runtime_data.scanned_module_addresses is not None
+
+    addresses_without_88 = {
+        address
+        for address in config_entry.runtime_data.scanned_module_addresses
+        if address != 88
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=addresses_without_88)
+
+    climate_unique_id = "asdfghjk-3"
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "88"), config_entry.entry_id
+        )
+        is None
+    )
+
+    await async_sync_bus_state(hass, config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "88"), config_entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_module_found_adds_new_switch_entity(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
-    mock_relay: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """New channels reported by the controller are registered without reloading."""
@@ -571,7 +613,7 @@ async def test_bus_sync_adds_new_switch_entity(
     extra_relay = MagicMock()
     extra_relay.get_categories.return_value = ["switch"]
     extra_relay.get_name.return_value = "Extra relay"
-    extra_relay.get_module_address.return_value = 88
+    extra_relay.get_module_address.return_value = 50
     extra_relay.get_channel_number.return_value = 56
     extra_relay.get_module_type_name.return_value = "VMB4RYNO"
     extra_relay.get_full_name.return_value = "Living room"
@@ -582,28 +624,50 @@ async def test_bus_sync_adds_new_switch_entity(
     extra_relay.is_on.return_value = False
     extra_relay.is_connected.return_value = True
 
+    extra_module = MagicMock()
+    extra_module.get_addresses.return_value = [50]
+    extra_module.get_type_name.return_value = "VMB4RYNO"
+    extra_module.get_type.return_value = 2
+    extra_module.get_name.return_value = "Garage"
+    extra_module.get_serial.return_value = "extra-serial"
+    extra_module.get_sw_version.return_value = "1.0.1"
+
     controller.return_value.get_all_switch.return_value = [
         *controller.return_value.get_all_switch.return_value,
         extra_relay,
     ]
+    controller.return_value.get_modules.return_value = {
+        **controller.return_value.get_modules.return_value,
+        50: extra_module,
+    }
 
-    await async_sync_bus_state(hass, config_entry)
+    assert controller.return_value._module_found_callbacks
+    await controller.return_value._module_found_callbacks[0](extra_module)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get_entity_id("switch", DOMAIN, "extra-serial-56")
 
 
-async def test_reconnect_scan_is_registered(
+async def test_reconnect_scan_is_debounced_via_connect_callback(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
 ) -> None:
-    """A full bus scan is scheduled through the reconnect debouncer."""
+    """Connect notifications schedule one debounced full bus scan."""
     await init_integration(hass, config_entry)
-    debouncer = config_entry.runtime_data.reconnect_scan_debouncer
-    assert debouncer is not None
     assert controller.return_value._connect_callbacks
+    controller.return_value.scan.reset_mock()
 
-    await debouncer.function()
+    connect = controller.return_value._connect_callbacks[0]
+    await connect()
+    await connect()
+    controller.return_value.scan.assert_not_called()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_SCAN_COOLDOWN + 1)
+    )
+    await hass.async_block_till_done()
+
     controller.return_value.scan.assert_awaited_once_with()
 
 

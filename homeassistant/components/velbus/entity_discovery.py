@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .entity import VelbusEntity
+
 if TYPE_CHECKING:
     from . import VelbusConfigEntry
 
@@ -109,8 +111,15 @@ async def async_setup_platform_discovery(
     await entry.runtime_data.scan_task
 
     @callback
-    def _add_discovered() -> None:
+    def _add_discovered(allowed_module_addresses: set[int] | None = None) -> None:
         entities = discover(entry.runtime_data.controller)
+        if allowed_module_addresses is not None:
+            entities = [
+                entity
+                for entity in entities
+                if isinstance(entity, VelbusEntity)
+                and entity.module_address in allowed_module_addresses
+            ]
         new_entities = [
             entity
             for entity in entities

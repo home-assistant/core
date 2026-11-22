@@ -44,10 +44,18 @@ def _upsert_module_device(
     )
 
 
-def _upsert_module_devices(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
+def _upsert_module_devices(
+    hass: HomeAssistant,
+    entry: VelbusConfigEntry,
+    *,
+    module_addresses: set[int] | None = None,
+) -> None:
     """Ensure every loaded module has a device registry entry."""
     dev_reg = dr.async_get(hass)
     for module in entry.runtime_data.controller.get_modules().values():
+        address = module.get_addresses()[0]
+        if module_addresses is not None and address not in module_addresses:
+            continue
         _upsert_module_device(dev_reg, entry.entry_id, module)
 
 
@@ -93,10 +101,29 @@ async def async_sync_bus_state(
     entry: VelbusConfigEntry,
     *,
     found_addresses: set[int] | None = None,
+    restrict_to_addresses: set[int] | None = None,
 ) -> None:
     """Update devices and entities from the controller's current bus state."""
-    _upsert_module_devices(hass, entry)
+    data = entry.runtime_data
+
+    if found_addresses is not None:
+        data.scanned_module_addresses = set(found_addresses)
+
+    upsert_addresses: set[int] | None
+    if restrict_to_addresses is not None:
+        upsert_addresses = restrict_to_addresses
+        if data.scanned_module_addresses is not None:
+            data.scanned_module_addresses.update(restrict_to_addresses)
+    elif data.scanned_module_addresses is not None:
+        upsert_addresses = data.scanned_module_addresses
+    else:
+        upsert_addresses = None
+
+    _upsert_module_devices(hass, entry, module_addresses=upsert_addresses)
+
     if found_addresses is not None:
         _remove_stale_devices(hass, entry, found_addresses)
-    for discoverer in entry.runtime_data.discoverers:
-        discoverer()
+
+    discovery_filter = restrict_to_addresses or data.scanned_module_addresses
+    for discoverer in data.discoverers:
+        discoverer(discovery_filter)
