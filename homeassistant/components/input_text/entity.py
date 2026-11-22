@@ -52,6 +52,21 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
         self._attr_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_unique_id = config[CONF_ID]
 
+    def _is_valid(self, value: str) -> bool:
+        """Return whether the value fits the length range and the pattern."""
+        if not self.native_min <= len(value) <= self.native_max:
+            return False
+        return self.pattern_cmp is None or self.pattern_cmp.match(value) is not None
+
+    def _valid_initial(self, initial: str | None) -> str | None:
+        """Return the initial value, or None if it is invalid."""
+        if initial is None or self._is_valid(initial):
+            return initial
+        _LOGGER.warning(
+            "Ignoring invalid initial value of %s: %s", self.entity_id, initial
+        )
+        return None
+
     @classmethod
     @override
     def from_storage(cls, config: ConfigType) -> Self:
@@ -79,6 +94,7 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+        self._attr_native_value = self._valid_initial(self._attr_native_value)
         if self._attr_native_value is not None:
             return
 
@@ -86,7 +102,7 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
         value = state.state if state else None
 
         # Check against None because value can be 0
-        if value is not None and self.native_min <= len(value) <= self.native_max:
+        if value is not None and self._is_valid(value):
             self._attr_native_value = value
 
     @override
@@ -114,4 +130,6 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._update_config_attributes(config)
+        if self.native_value is not None and not self._is_valid(self.native_value):
+            self._attr_native_value = self._valid_initial(config.get(CONF_INITIAL))
         self.async_write_ha_state()

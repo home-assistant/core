@@ -9,7 +9,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -47,7 +47,7 @@ async def test_set_value(hass: HomeAssistant) -> None:
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_TIME,
+            TargetKey.ENTITY_ID: ENTITY_TIME,
             TimeServiceArgument.TIME: "01:02:03",
         },
         blocking=True,

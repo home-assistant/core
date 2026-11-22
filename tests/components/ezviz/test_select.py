@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -75,7 +75,7 @@ async def test_battery_work_mode_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             SelectServiceArgument.OPTION: "high_performance",
         },
         blocking=True,

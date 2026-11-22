@@ -33,7 +33,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import GoogleHealthConfigEntry
@@ -44,6 +43,7 @@ from .coordinator import (
     GoogleHealthDataUpdateCoordinator,
     GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
+    GoogleHealthNutritionData,
     GoogleHealthSleepCoordinator,
     GoogleHealthSleepData,
 )
@@ -69,6 +69,20 @@ def _sleep_stage_minutes(
             if stage.type == stage_type
         ),
         None,
+    )
+
+
+def _nutrient_grams(data: GoogleHealthNutritionData | None, nutrient: str) -> float:
+    """Return daily intake in grams for a nutrient type."""
+    if not data or not data.nutrition:
+        return 0.0
+    return next(
+        (
+            item.quantity.grams_sum
+            for item in data.nutrition.nutrients
+            if item.nutrient == nutrient
+        ),
+        0.0,
     )
 
 
@@ -246,21 +260,13 @@ SLEEP_SENSORS: list[
         key="sleep_start_time",
         translation_key="sleep_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            dt_util.parse_datetime(data.sleep.start_time)
-            if data and data.sleep and data.sleep.start_time
-            else None
-        ),
+        value_fn=lambda data: data.sleep.start_time if data and data.sleep else None,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, datetime | None](
         key="sleep_end_time",
         translation_key="sleep_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            dt_util.parse_datetime(data.sleep.end_time)
-            if data and data.sleep and data.sleep.end_time
-            else None
-        ),
+        value_fn=lambda data: data.sleep.end_time if data and data.sleep else None,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthSleepCoordinator, int | None](
         key="sleep_rem",
@@ -325,6 +331,85 @@ NUTRITION_SENSORS: list[
             else 0.0
         ),
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_fat",
+        translation_key="total_fat",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_fat.grams_sum
+            if data and data.nutrition and data.nutrition.total_fat
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_carbohydrate",
+        translation_key="total_carbohydrate",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_carbohydrate.grams_sum
+            if data and data.nutrition and data.nutrition.total_carbohydrate
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="protein",
+        translation_key="protein",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _nutrient_grams(data, "PROTEIN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="dietary_fiber",
+        translation_key="dietary_fiber",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "DIETARY_FIBER"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sugar",
+        translation_key="sugar",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SUGAR"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sodium",
+        translation_key="sodium",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.MILLIGRAMS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SODIUM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="calories_from_fat",
+        translation_key="calories_from_fat",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.nutrition.energy_from_fat.kcal_sum
+            if data and data.nutrition and data.nutrition.energy_from_fat
+            else 0.0
+        ),
+    ),
 ]
 
 
@@ -347,11 +432,7 @@ DEVICE_SENSORS: list[GoogleHealthDeviceSensorEntityDescription] = [
         key="last_sync_time",
         translation_key="last_sync_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: (
-            dt_util.parse_datetime(device.last_sync_time)
-            if device.last_sync_time
-            else None
-        ),
+        value_fn=lambda device: device.last_sync_time,
     ),
 ]
 

@@ -19,7 +19,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -78,7 +78,7 @@ async def test_selects_keep_their_choice_when_a_voice_assistant_returns(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "aggressive",
         },
         blocking=True,
@@ -339,7 +339,7 @@ async def test_select_generic_entity(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_my_select",
+            TargetKey.ENTITY_ID: "select.test_my_select",
             SelectServiceArgument.OPTION: "b",
         },
         blocking=True,

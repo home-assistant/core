@@ -48,8 +48,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -519,7 +519,7 @@ async def test_firmware_update_success(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -621,7 +621,7 @@ async def test_firmware_update_raises(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -637,7 +637,7 @@ async def test_firmware_update_raises(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -682,9 +682,9 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
+        assert "Some lengthy release notes" in result["result"]["release_notes"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]["release_notes"]
+        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]["release_notes"]
 
     # Battery-powered devices
     with patch(
@@ -701,9 +701,9 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+        assert "Some lengthy release notes" in result["result"]["release_notes"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]["release_notes"]
+        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]["release_notes"]
 
 
 async def test_update_version_sync_device_registry(

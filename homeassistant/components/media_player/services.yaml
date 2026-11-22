@@ -228,6 +228,7 @@ select_sound_mode:
         - media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
   fields:
     sound_mode:
+      required: true
       example: "Music"
       selector:
         state:

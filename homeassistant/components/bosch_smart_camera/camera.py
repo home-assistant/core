@@ -4,30 +4,20 @@ import asyncio
 from dataclasses import replace
 from typing import override
 
-from bosch_shc_camera_client.cameras import Camera as CameraData, CameraModel
-
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, Stream
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import BoschCameraConfigEntry, BoschCameraCoordinator
+from .entity import BoschCameraEntity
 
 PARALLEL_UPDATES = 0
 
 # Wait between attempts to give a preloaded stream a new session.
 REOPEN_INTERVAL = 30
-
-MODEL_NAMES = {
-    CameraModel.EYES_OUTDOOR: "Eyes Outdoor",
-    CameraModel.INDOOR_360: "360° Indoor",
-    CameraModel.EYES_OUTDOOR_II: "Eyes Outdoor II",
-    CameraModel.EYES_INDOOR_II: "Eyes Indoor II",
-}
 
 
 async def async_setup_entry(
@@ -51,36 +41,21 @@ async def async_setup_entry(
     _add_new_cameras()
 
 
-class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
+class BoschCamera(BoschCameraEntity, Camera):
     """A camera of the account, showing the image of its latest event."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(self, coordinator: BoschCameraCoordinator, camera_id: str) -> None:
         """Initialize the camera."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, camera_id)
         Camera.__init__(self)
-        self._camera_id = camera_id
         self._reopen_task: asyncio.Task[None] | None = None
         self._removing = False
         # The TLS proxy only speaks TCP.
         self.stream_options[CONF_RTSP_TRANSPORT] = "tcp"
         self._attr_unique_id = camera_id
-        data = self._camera_data
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, camera_id)},
-            manufacturer="Bosch",
-            model=MODEL_NAMES.get(data.model, data.hardware_version or None),
-            name=data.title,
-            sw_version=data.firmware_version,
-        )
-
-    @property
-    def _camera_data(self) -> CameraData:
-        """Return the latest data of this camera."""
-        return self.coordinator.data[self._camera_id]
 
     @override
     async def async_camera_image(
