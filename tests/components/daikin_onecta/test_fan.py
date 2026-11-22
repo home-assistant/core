@@ -617,6 +617,45 @@ async def test_air_purifier_rejects_manual_speed_as_preset(
     command.assert_not_awaited()
 
 
+async def test_air_purifier_ignores_missing_mode_value(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Ignore a null current mode when building preset options."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.mode is not None
+    purification.mode.value = None
+
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    entity = hass.data[FAN_DOMAIN].get_entity(AIR_PURIFIER_ENTITY_ID)
+    assert isinstance(entity, DaikinAirPurifier)
+    assert entity.preset_modes == [
+        "auto_fan",
+        "econo",
+        "anti_pollen",
+        "circulator",
+        "auto",
+        "moist",
+    ]
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: AIR_PURIFIER_ENTITY_ID,
+            FanServiceArgument.PRESET_MODE: "auto_fan",
+        },
+        blocking=True,
+    )
+
+    execute.assert_awaited_once()
+
+
 async def test_air_purifier_does_not_expose_read_only_preset_modes(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

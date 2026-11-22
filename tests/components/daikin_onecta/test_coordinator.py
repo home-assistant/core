@@ -16,6 +16,7 @@ from daikin_onecta import (
     OnectaRateLimitError,
     OnectaResponseError,
 )
+from daikin_onecta.exceptions import OnectaRequestError
 from daikin_onecta.models import Characteristic, GatewayDevice
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
@@ -500,6 +501,24 @@ class TestOnectaDataUpdateCoordinator:
 
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
         assert coordinator._last_patch_call is None
+
+    async def test_unexpected_request_error_has_request_log_message(
+        self,
+        coordinator: OnectaDataUpdateCoordinator,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Log other request failures as requests, not OAuth token failures."""
+        error = OnectaRequestError(
+            "unexpected request failure",
+            method="PATCH",
+            path="/v1/management-points/point/characteristics/power",
+        )
+        caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
+
+        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+
+        assert "Daikin request PATCH" in caplog.text
+        assert "OAuth token request failed" not in caplog.text
 
     async def test_command_token_connection_error_returns_failure(
         self, coordinator: OnectaDataUpdateCoordinator, caplog: pytest.LogCaptureFixture

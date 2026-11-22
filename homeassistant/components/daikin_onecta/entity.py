@@ -107,6 +107,15 @@ def present_devices(
         )
 
 
+def iter_management_points(
+    coordinator: OnectaDataUpdateCoordinator,
+) -> Iterator[tuple[DaikinOnectaDevice, ManagementPoint]]:
+    """Yield every management point on a currently present gateway."""
+    for device in present_devices(coordinator):
+        for management_point in device.device.management_points:
+            yield device, management_point
+
+
 def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
     """Return the Home Assistant device info for a gateway."""
     return DeviceInfo(identifiers={(DOMAIN, device.id)})

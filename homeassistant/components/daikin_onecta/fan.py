@@ -176,7 +176,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             [
                 enum_value_to_state(preset)
                 for preset in purification.modes
-                if preset != "manualFan"
+                if preset not in (None, "manualFan")
             ]
             if mode and mode.settable
             else []
@@ -265,7 +265,10 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
                 (
                     mode
                     for mode in purification.modes
-                    if mode != "manualFan" and enum_value_to_state(mode) == preset_mode
+                    if (
+                        mode not in (None, "manualFan")
+                        and enum_value_to_state(mode) == preset_mode
+                    )
                 ),
                 None,
             )

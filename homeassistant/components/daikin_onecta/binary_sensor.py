@@ -23,8 +23,8 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 
 PARALLEL_UPDATES = 1
@@ -64,28 +64,26 @@ def _create_binary_sensors(
 ) -> list[DaikinBinarySensor]:
     """Create supported binary sensors from the current cloud model."""
     sensors: list[DaikinBinarySensor] = []
-    for device in present_devices(coordinator):
-        for management_point in device.device.management_points:
-            for value, _characteristic in scalar_characteristics_for_platform(
-                management_point,
-                Platform.BINARY_SENSOR,
-                gateway_online=device.gateway_online,
-            ):
-                unique_id = management_point_unique_id(
-                    device.id, management_point.embedded_id, value
+    for device, management_point in iter_management_points(coordinator):
+        for value, _characteristic in scalar_characteristics_for_platform(
+            management_point,
+            Platform.BINARY_SENSOR,
+            gateway_online=device.gateway_online,
+        ):
+            unique_id = management_point_unique_id(
+                device.id, management_point.embedded_id, value
+            )
+            if is_known(Platform.BINARY_SENSOR, unique_id):
+                continue
+            sensors.append(
+                DaikinBinarySensor(
+                    device,
+                    coordinator,
+                    management_point.embedded_id,
+                    BINARY_SENSOR_DESCRIPTIONS[value],
+                    value,
                 )
-                if is_known(Platform.BINARY_SENSOR, unique_id):
-                    continue
-                sensors.append(
-                    DaikinBinarySensor(
-                        device,
-                        coordinator,
-                        management_point.embedded_id,
-                        BINARY_SENSOR_DESCRIPTIONS[value],
-                        value,
-                    )
-                )
-
+            )
     return sensors
 
 

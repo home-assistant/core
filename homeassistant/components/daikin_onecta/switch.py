@@ -15,8 +15,8 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 
 PARALLEL_UPDATES = 1
@@ -53,28 +53,26 @@ def _create_switches(
     """Create supported switches from the current cloud model."""
     switches: list[DaikinSwitch] = []
 
-    for device in present_devices(coordinator):
-        for management_point in device.device.management_points:
-            for value, _characteristic in scalar_characteristics_for_platform(
-                management_point,
-                Platform.SWITCH,
-                gateway_online=device.gateway_online,
-            ):
-                unique_id = management_point_unique_id(
-                    device.id, management_point.embedded_id, value
+    for device, management_point in iter_management_points(coordinator):
+        for value, _characteristic in scalar_characteristics_for_platform(
+            management_point,
+            Platform.SWITCH,
+            gateway_online=device.gateway_online,
+        ):
+            unique_id = management_point_unique_id(
+                device.id, management_point.embedded_id, value
+            )
+            if is_known(Platform.SWITCH, unique_id):
+                continue
+            switches.append(
+                DaikinSwitch(
+                    device,
+                    coordinator,
+                    management_point.embedded_id,
+                    SWITCH_DESCRIPTIONS[value],
+                    value,
                 )
-                if is_known(Platform.SWITCH, unique_id):
-                    continue
-                switches.append(
-                    DaikinSwitch(
-                        device,
-                        coordinator,
-                        management_point.embedded_id,
-                        SWITCH_DESCRIPTIONS[value],
-                        value,
-                    )
-                )
-
+            )
     return switches
 
 

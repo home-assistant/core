@@ -298,32 +298,43 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.retry_after,
                 )
                 return False
-            except (
-                OAuth2TokenRequestBaseError,
-                OnectaRequestError,
-                TimeoutError,
-            ) as err:
-                if isinstance(err, OnectaApiError):
-                    _LOGGER.debug(
-                        "Daikin request %s %s failed with HTTP %s",
-                        err.method,
-                        err.path,
-                        err.status,
-                    )
-                elif isinstance(err, OnectaConnectionError):
-                    _LOGGER.debug(
-                        "Daikin request %s %s failed to connect: %s",
-                        err.method,
-                        err.path,
-                        err,
-                    )
-                elif isinstance(err, TimeoutError):
-                    _LOGGER.debug("Daikin request timed out")
-                else:
-                    _LOGGER.debug(
-                        "Daikin OAuth token request failed with %s",
-                        type(err).__name__,
-                    )
+            except OnectaResponseError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s returned an invalid response: %s",
+                    err.method,
+                    err.path,
+                    err,
+                )
+                return False
+            except OnectaApiError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed with HTTP %s",
+                    err.method,
+                    err.path,
+                    err.status,
+                )
+                return False
+            except OnectaConnectionError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed to connect: %s",
+                    err.method,
+                    err.path,
+                    err,
+                )
+                return False
+            except OAuth2TokenRequestBaseError as err:
+                _LOGGER.debug(
+                    "Daikin OAuth token request failed with %s",
+                    type(err).__name__,
+                )
+                return False
+            except TimeoutError:
+                _LOGGER.debug("Daikin request timed out")
+                return False
+            except OnectaRequestError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed: %s", err.method, err.path, err
+                )
                 return False
             had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None
@@ -495,7 +506,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     # waited for the cloud lock; keep its current data and
                     # regular polling cadence.
                     self.update_interval = self._determine_update_interval()
-                    return self.data_or_none or devices
+                    return devices
                 retry_after = self._polling_backoff_remaining() or _POST_WRITE_COOLDOWN
                 self.update_interval = retry_after
                 if not self.last_update_success:

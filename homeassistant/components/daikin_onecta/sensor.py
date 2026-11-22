@@ -30,8 +30,8 @@ from .entity import (
     DaikinOnectaAccountEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 from .utils import enum_value_to_state
 
@@ -270,11 +270,10 @@ def _create_device_sensors(
 ) -> list[SensorEntity]:
     """Create supported device sensors from the current cloud model."""
     sensors: list[SensorEntity] = []
-    for device in present_devices(coordinator):
-        for management_point in device.device.management_points:
-            add_management_point_sensors(
-                coordinator, device, management_point, sensors, is_known
-            )
+    for device, management_point in iter_management_points(coordinator):
+        add_management_point_sensors(
+            coordinator, device, management_point, sensors, is_known
+        )
     return sensors
 
 

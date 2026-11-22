@@ -15,8 +15,6 @@ from daikin_onecta.models import (
 )
 
 from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -34,7 +32,6 @@ from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import CLIMATE_ENTITY_DESCRIPTIONS, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
@@ -173,8 +170,16 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         # Assistant reflects the new state without waiting for the next poll.
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self._get_current_temperature()
-        self._attr_max_temp = self._get_max_temp()
-        self._attr_min_temp = self._get_min_temp()
+        if (max_temp := self._get_max_temp()) is None:
+            if hasattr(self, "_attr_max_temp"):
+                del self._attr_max_temp
+        else:
+            self._attr_max_temp = max_temp
+        if (min_temp := self._get_min_temp()) is None:
+            if hasattr(self, "_attr_min_temp"):
+                del self._attr_min_temp
+        else:
+            self._attr_min_temp = min_temp
         self._attr_target_temperature_step = self._get_target_temperature_step()
         self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_hvac_modes = self._get_hvac_modes()
@@ -315,30 +320,22 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             unit = sensory_data.unit if sensory_data is not None else None
         return temperature_unit_or_celsius(unit)
 
-    def _get_max_temp(self) -> float:
-        """Return the maximum configurable temperature."""
-        setpointdict = self._get_setpoint()
+    def _get_max_temp(self) -> float | None:
+        """Return the maximum configurable temperature, if provided."""
+        setpoint = self._get_setpoint()
         return (
-            setpointdict.max_value
-            if setpointdict is not None and setpointdict.max_value is not None
-            else TemperatureConverter.convert(
-                DEFAULT_MAX_TEMP,
-                UnitOfTemperature.CELSIUS,
-                self.native_temperature_unit,
-            )
+            float(setpoint.max_value)
+            if setpoint is not None and setpoint.max_value is not None
+            else None
         )
 
-    def _get_min_temp(self) -> float:
-        """Return the minimum configurable temperature."""
-        setpointdict = self._get_setpoint()
+    def _get_min_temp(self) -> float | None:
+        """Return the minimum configurable temperature, if provided."""
+        setpoint = self._get_setpoint()
         return (
-            setpointdict.min_value
-            if setpointdict is not None and setpointdict.min_value is not None
-            else TemperatureConverter.convert(
-                DEFAULT_MIN_TEMP,
-                UnitOfTemperature.CELSIUS,
-                self.native_temperature_unit,
-            )
+            float(setpoint.min_value)
+            if setpoint is not None and setpoint.min_value is not None
+            else None
         )
 
     def _get_target_temperature(self) -> float | None:
