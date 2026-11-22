@@ -17,6 +17,7 @@ from pytest_homeassistant.common import (
 from rpi_bad_power import RpiBadPowerError
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.rpi_power import binary_sensor
 from homeassistant.components.rpi_power.binary_sensor import (
     DESCRIPTION_NORMALIZED,
@@ -24,8 +25,8 @@ from homeassistant.components.rpi_power.binary_sensor import (
 )
 from homeassistant.components.rpi_power.const import DOMAIN, ISSUE_UNDER_VOLTAGE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -287,6 +288,20 @@ async def test_push_notifications_and_unload(
         domain=DOMAIN,
         issue_id=ISSUE_UNDER_VOLTAGE,
     )
+
+    # Manual update_entity while push watcher is active does not re-read or overwrite state
+    client.get.reset_mock()
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    client.get.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
     # Push transition True -> False logs normalization
     events.put_nowait(False)

@@ -153,6 +153,8 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
 
     def update(self) -> None:
         """Update the state synchronously (initial read and legacy polling fallback)."""
+        if self._watch_task is not None:
+            return
         try:
             value = self._under_voltage.get()
         except OSError as err:
