@@ -16,7 +16,12 @@ from aiohomeconnect.model import (
     HomeAppliance,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
+from aiohomeconnect.model.error import (
+    ConflictError,
+    HomeConnectApiError,
+    HomeConnectError,
+    UnauthorizedError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -359,6 +364,156 @@ async def test_light_async_update_skips_missing_brightness_setting(
     assert state
     assert state.state == STATE_OFF
     assert ATTR_BRIGHTNESS not in state.attributes
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
+async def test_light_async_update_additional_unauthorized_error_starts_reauth(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test unauthorized additional setting updates start reauth and stop fetching."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    primary_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_ENABLED
+    brightness_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_BRIGHTNESS
+
+    async def get_setting(ha_id: str, setting_key: SettingKey) -> GetSetting:
+        if setting_key == brightness_setting:
+            raise UnauthorizedError("unauthorized")
+        return GetSetting(setting_key, setting_key.value, True)
+
+    client.get_setting = AsyncMock(side_effect=get_setting)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: "light.hood_ambient_light"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert client.get_setting.await_args_list == [
+        call(appliance.ha_id, setting_key=primary_setting),
+        call(appliance.ha_id, setting_key=brightness_setting),
+    ]
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["entry_id"] == config_entry.entry_id
+    assert flows_in_progress[0]["context"]["source"] == "reauth"
+
+
+@pytest.mark.parametrize(
+    ("failed_setting", "expected_state"),
+    [
+        (SettingKey.COOKING_COMMON_LIGHTING, STATE_UNAVAILABLE),
+        (SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS, STATE_ON),
+    ],
+    ids=["primary setting", "brightness setting"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
+async def test_light_async_update_availability_uses_primary_setting(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    failed_setting: SettingKey,
+    expected_state: str,
+) -> None:
+    """Test only a failure updating the primary setting marks the light unavailable."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    async def get_setting(ha_id: str, setting_key: SettingKey) -> GetSetting:
+        if setting_key is failed_setting:
+            raise ConflictError("SDK.Error.UnsupportedSetting")
+        value = setting_key is SettingKey.COOKING_COMMON_LIGHTING
+        return GetSetting(setting_key, setting_key.value, value)
+
+    client.get_setting = AsyncMock(side_effect=get_setting)
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: "light.hood_functional_light"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state("light.hood_functional_light", expected_state)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
+async def test_light_secondary_setting_does_not_restore_primary_availability(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test dependent setting events do not restore availability after a primary failure."""
+    entity_id = "light.hood_functional_light"
+    primary_setting = SettingKey.COOKING_COMMON_LIGHTING
+    brightness_setting = SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    client.get_setting = AsyncMock(
+        side_effect=ConflictError("SDK.Error.UnsupportedSetting")
+    )
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    event_key = EventKey(brightness_setting)
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=50,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    async def get_setting(ha_id: str, setting_key: SettingKey) -> GetSetting:
+        value = setting_key is primary_setting
+        return GetSetting(setting_key, setting_key.value, value)
+
+    client.get_setting = AsyncMock(side_effect=get_setting)
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert hass.states.is_state(entity_id, STATE_ON)
 
 
 @pytest.mark.parametrize(

@@ -10,6 +10,7 @@ from typing import Any, Concatenate, cast, override
 from aiohomeconnect.model import EventKey, OptionKey, SettingKey, StatusKey
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
+    ConflictError,
     HomeConnectError,
     TooManyRequestsError,
     UnauthorizedError,
@@ -61,7 +62,13 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the coordinator.
+
+        If we receive an update from the coordinator,
+        the entity is available, unless derived classes use additional
+        logic to determine availability.
+        """
+        self._attr_available = True
         self.update_native_value()
         self.async_write_ha_state()
         _LOGGER.debug("Updated %s", self)
@@ -71,10 +78,19 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         """Return the BSH key."""
         return self.entity_description.key
 
-    def _create_fetch_entity_error(self, err: HomeConnectError) -> HomeAssistantError:
+    def _handle_update_error(self, err: HomeConnectError) -> HomeAssistantError:
         """Create a translated fetch error and start reauth if required."""
         if isinstance(err, UnauthorizedError):
             self.coordinator.async_start_reauth()
+        if isinstance(err, ConflictError):
+            if err.key in (
+                "SDK.Error.UnsupportedStatus",
+                "SDK.Error.UnsupportedSetting",
+                "SDK.Error.UnsupportedOption",
+                "SDK.Error.InvalidOptionState",
+            ):
+                self._attr_available = False
+                self.async_write_ha_state()
         return HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="fetch_entity_state",
@@ -114,7 +130,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
                 await self.coordinator.update_option(cast(OptionKey, key))
                 return
         except HomeConnectError as err:
-            raise self._create_fetch_entity_error(err) from err
+            raise self._handle_update_error(err) from err
 
         await super().async_update()
 

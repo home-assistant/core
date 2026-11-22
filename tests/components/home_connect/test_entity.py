@@ -24,6 +24,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
+    ConflictError,
     HomeConnectError,
     NoProgramActiveError,
     SelectedProgramNotSetError,
@@ -756,6 +757,52 @@ async def test_entity_async_update_error(
     )
 
     assert f"Error fetching state of {entity_id}: {error}" in caplog.text
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_entity_async_update_unsupported_setting_availability(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test unsupported settings become unavailable and recover on update."""
+    entity_id = "switch.washer_power"
+    setting_key = SettingKey.BSH_COMMON_POWER_STATE
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+    client.get_setting = AsyncMock(
+        side_effect=ConflictError("SDK.Error.UnsupportedSetting")
+    )
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    client.get_setting = AsyncMock(
+        return_value=GetSetting(
+            setting_key,
+            setting_key.value,
+            "BSH.Common.EnumType.PowerState.Off",
+        )
+    )
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert hass.states.is_state(entity_id, STATE_OFF)
 
 
 @pytest.mark.parametrize(

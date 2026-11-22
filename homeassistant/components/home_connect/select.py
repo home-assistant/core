@@ -463,7 +463,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         try:
             await self.coordinator.update_current_program(cast(EventKey, self.bsh_key))
         except HomeConnectError as err:
-            raise self._create_fetch_entity_error(err) from err
+            raise self._handle_update_error(err) from err
 
     @override
     async def async_select_option(self, option: str) -> None:
