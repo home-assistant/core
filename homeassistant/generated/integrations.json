@@ -7493,6 +7493,17 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "jotul": {
+      "name": "J\u00f8tul",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "junker": {
       "name": "Junker",
       "integration_type": "service",
@@ -7504,17 +7515,6 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "jotul": {
-      "name": "J\u00f8tul",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
     },
     "justnimbus": {
       "name": "JustNimbus",
