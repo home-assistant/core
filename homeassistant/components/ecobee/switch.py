@@ -176,8 +176,6 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
         if self.is_on:
             return
         hvac_mode = self.thermostat["settings"]["hvacMode"]
-        if hvac_mode == ECOBEE_AUX_HEAT_ONLY:
-            return
         self._last_hvac_mode_before_aux_heat = hvac_mode
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
         self.update_without_throttle = True
@@ -197,15 +195,17 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
             )
         self.data.ecobee.set_hvac_mode(self.thermostat_index, hvac_mode)
         self.update_without_throttle = True
-        self._last_hvac_mode_before_aux_heat = None
 
     async def async_update(self) -> None:
         """Update the switch state from the thermostat."""
-        if self.update_without_throttle:
+        update_without_throttle = self.update_without_throttle
+        if update_without_throttle:
             await self.data.update(no_throttle=True)
             self.update_without_throttle = False
         else:
             await self.data.update()
+        if not self.is_on and not update_without_throttle:
+            self._last_hvac_mode_before_aux_heat = None
 
     @property
     @override
