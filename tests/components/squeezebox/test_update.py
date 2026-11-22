@@ -16,7 +16,7 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     UpdateService,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -89,7 +89,7 @@ async def test_update_plugins_install_fallback(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -150,7 +150,7 @@ async def test_update_plugins_install_restart_fail(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -193,7 +193,7 @@ async def test_update_plugins_install_ok(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

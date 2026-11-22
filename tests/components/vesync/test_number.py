@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -44,7 +44,7 @@ async def test_set_mist_level_bad_range(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
                 NumberServiceArgument.VALUE: "10",
             },
             blocking=True,
@@ -66,7 +66,7 @@ async def test_set_mist_level(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
                 NumberServiceArgument.VALUE: "3",
             },
             blocking=True,
@@ -111,7 +111,7 @@ async def test_set_mist_level_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL,
                 NumberServiceArgument.VALUE: "3",
             },
             blocking=True,

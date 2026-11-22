@@ -14,11 +14,10 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
-    CREATE_EVENT_SERVICE,
     DOMAIN,
-    SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityDescription,
+    CalendarService,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
@@ -232,7 +231,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -408,7 +407,7 @@ async def test_create_event_service_invalid_params(
     with pytest.raises(expected_error, match=re.escape(error_match)):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
@@ -425,7 +424,7 @@ async def test_create_event_service_invalid_params(
     ("service", "expected"),
     [
         (
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "calendar.calendar_1": {
                     "events": [
@@ -481,7 +480,7 @@ async def test_list_events_service(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
     ],
 )
 @pytest.mark.parametrize(
@@ -522,7 +521,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="should be positive"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "duration": "-01:00:00",
@@ -539,7 +538,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="at most one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "end_date_time": end,
@@ -555,7 +554,7 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="at least one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
             },
@@ -610,7 +609,7 @@ async def test_list_events_service_same_dates(
     with pytest.raises(probatio.error.MultipleInvalid, match=re.escape(error_msg)):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             service_data={
                 "entity_id": "calendar.calendar_1",
                 **service_data,

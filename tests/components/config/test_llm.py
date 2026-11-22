@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from typing import Any, override
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import probatio
 import pytest
@@ -22,9 +22,12 @@ from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
     GetConfigEntriesTool,
+    GetCoreConfigTool,
+    GetFlowsInProgressTool,
     ReloadConfigEntryTool,
     SearchIntegrationsTool,
     StartFlowTool,
+    UpdateCoreConfigTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -99,8 +102,11 @@ async def test_async_get_tools(
         "config__get_config_entries",
         "config__reload_config_entry",
         "config__search_integrations",
+        "config__get_flows_in_progress",
         "config__start_flow",
         "config__configure_flow",
+        "config__get_core_config",
+        "config__update_core_config",
     ]
     assert ha_tools.prompt is None
 
@@ -111,8 +117,10 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         GetConfigEntriesTool(),
         ReloadConfigEntryTool(),
         SearchIntegrationsTool(),
+        GetFlowsInProgressTool(),
         StartFlowTool(),
         ConfigureFlowTool(),
+        UpdateCoreConfigTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -156,6 +164,14 @@ async def test_call_through_api(
     )
     assert search_tool.integration == config_component.DOMAIN
     assert search_tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+
+    flows_tool = next(
+        tool for tool in api.tools if tool.name == "config__get_flows_in_progress"
+    )
+    assert flows_tool.integration == config_component.DOMAIN
+    assert flows_tool.annotations == llm.ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
     )
 
@@ -699,20 +715,32 @@ async def test_reload_config_entry_invalid_args(
     ("tool_args", "expected_prefix", "expected_domains"),
     [
         pytest.param(
-            {"query": "random", "type": "helper"},
-            [{"domain": "random", "name": "Random"}],
+            {"query": "random"},
+            [{"domain": "random", "name": "Random", "categories": ["helpers"]}],
             {"random"},
             id="helper_exact",
         ),
         pytest.param(
-            {"query": "sun", "type": "integration"},
-            [{"domain": "sun", "name": "Sun"}],
+            {"query": "sun"},
+            [
+                {
+                    "domain": "sun",
+                    "name": "Sun",
+                    "categories": ["weather_alerts.forecasts"],
+                }
+            ],
             {"sun"},
             id="integration_exact",
         ),
         pytest.param(
             {"query": "Times of the Day"},
-            [{"domain": "tod", "name": "Times of the Day Sensor"}],
+            [
+                {
+                    "domain": "tod",
+                    "name": "Times of the Day Sensor",
+                    "categories": ["helpers.calculate_value"],
+                }
+            ],
             {"tod"},
             id="translated_title_match",
         ),
@@ -730,7 +758,13 @@ async def test_reload_config_entry_invalid_args(
         ),
         pytest.param(
             {"query": "yale bluetooth"},
-            [{"domain": "yalexs_ble", "name": "Yale Access Bluetooth"}],
+            [
+                {
+                    "domain": "yalexs_ble",
+                    "name": "Yale Access Bluetooth",
+                    "categories": ["security_safety.locks_access"],
+                }
+            ],
             {"yalexs_ble"},
             id="multi_word_deduplicated",
         ),
@@ -751,6 +785,42 @@ async def test_reload_config_entry_invalid_args(
             [],
             set(),
             id="hardware_excluded",
+        ),
+        pytest.param(
+            {"category": "pets"},
+            [],
+            {"litterrobot", "surepetcare", "tractive"},
+            id="category_only",
+        ),
+        pytest.param(
+            {"query": "tibber", "category": "energy"},
+            [
+                {
+                    "domain": "tibber",
+                    "name": "Tibber",
+                    "categories": ["energy.energy_prices", "energy.meters_monitoring"],
+                }
+            ],
+            {"tibber"},
+            id="query_and_category_includes_subcategories",
+        ),
+        pytest.param(
+            {"query": "hue", "category": "energy"},
+            [],
+            set(),
+            id="query_and_category_no_match",
+        ),
+        pytest.param(
+            {"category": "helpers", "query": "meter"},
+            [],
+            {"utility_meter"},
+            id="helper_by_category",
+        ),
+        pytest.param(
+            {"category": "helpers", "query": "workday"},
+            [],
+            {"workday"},
+            id="helpers_category_includes_integrations",
         ),
     ],
 )
@@ -775,15 +845,54 @@ async def test_search_integrations(
     assert len(domains) == len(set(domains))
     assert expected_domains <= set(domains)
     assert bool(domains) is bool(expected_domains)
+    if category := tool_args.get("category"):
+        for item in items:
+            assert isinstance(item, dict)
+            assert isinstance(categories := item["categories"], list)
+            assert any(str(cat).partition(".")[0] == category for cat in categories)
+
+
+async def test_search_integrations_pagination(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test paging through the results with offset and next_offset."""
+    tool = SearchIntegrationsTool()
+    domains: list[str] = []
+    offset = 0
+    pages = 0
+    while True:
+        res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"category": "energy", "offset": offset}),
+            llm_context,
+        )
+        assert res.error is False
+        assert isinstance(items := res.data["result"], list)
+        assert isinstance(total := res.data["total"], int)
+        domains.extend(item["domain"] for item in items if isinstance(item, dict))
+        pages += 1
+        if "next_offset" not in res.data:
+            break
+        assert len(items) == 15
+        assert isinstance(next_offset := res.data["next_offset"], int)
+        offset = next_offset
+
+    assert pages > 1
+    assert len(domains) == total
+    assert len(set(domains)) == total
 
 
 @pytest.mark.parametrize(
     "invalid_args",
     [
-        pytest.param({}, id="missing_query"),
+        pytest.param({}, id="missing_query_and_category"),
+        pytest.param({"category": ""}, id="empty_category"),
+        pytest.param({"category": "unknown"}, id="unknown_category"),
+        pytest.param({"category": "energy.energy_prices"}, id="subcategory"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
-        pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
+        pytest.param({"query": "hue", "offset": -1}, id="negative_offset"),
     ],
 )
 async def test_search_integrations_invalid_args(
@@ -1493,6 +1602,163 @@ async def test_oauth_and_external_step_on_configure_step(
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_get_flows_in_progress(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test listing pending discovery and reauth flows with title resolution."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    translations: dict[str, dict[str, str]] = {
+        "config": {
+            f"component.{TEST_DOMAIN}.config.flow_title": "{model} ({host})",
+        },
+        "title": {
+            f"component.{TEST_DOMAIN}.title": "Test Integration Title",
+        },
+    }
+
+    async def _get_trans(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Any = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
+        return translations.get(category, {})
+
+    class DiscoveryFlow(ConfigFlow):
+        """Test flow supporting zeroconf, ssdp, dhcp, reauth, reconfigure, and user."""
+
+        VERSION = 1
+
+        @override
+        async def async_step_zeroconf(
+            self, discovery_info: Any = None
+        ) -> ConfigFlowResult:
+            self.context["title_placeholders"] = {
+                "model": "Hue Bridge",
+                "host": "192.168.1.2",
+            }
+            return await self.async_step_confirm()
+
+        @override
+        async def async_step_ssdp(self, discovery_info: Any = None) -> ConfigFlowResult:
+            self.context["title_placeholders"] = {"host": "192.168.1.3", "name": ""}
+            return await self.async_step_confirm()
+
+        @override
+        async def async_step_dhcp(self, discovery_info: Any = None) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_reauth(
+            self, entry_data: dict[str, Any]
+        ) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="reconfigure")
+
+        @override
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            return self.async_show_form(step_id="user")
+
+    with (
+        mock_config_flow(TEST_DOMAIN, DiscoveryFlow),
+        patch(
+            "homeassistant.components.config.llm.translation.async_get_translations",
+            side_effect=_get_trans,
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=TEST_DOMAIN,
+            title="Existing Entry",
+            entry_id="01J00000000000000000001001",
+        )
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await entry.start_reconfigure_flow(hass)
+        disc_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        ssdp_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+        )
+        dhcp_result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_DHCP}
+        )
+        reauth_result = await entry.start_reauth_flow(hass)
+
+        expected_flows = [
+            {
+                "flow_id": f"{TEST_DOMAIN}:{disc_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "zeroconf",
+                "title": "Hue Bridge (192.168.1.2)",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{ssdp_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "ssdp",
+                "title": "Test Integration Title",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{dhcp_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "dhcp",
+                "title": "Test Integration Title",
+                "step_id": "confirm",
+            },
+            {
+                "flow_id": f"{TEST_DOMAIN}:{reauth_result['flow_id'][-4:]}",
+                "domain": TEST_DOMAIN,
+                "source": "reauth",
+                "title": "Existing Entry",
+                "step_id": "confirm",
+                "entry_id": f"{TEST_DOMAIN}:1001",
+            },
+        ]
+
+        tool = GetFlowsInProgressTool()
+        all_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {}),
+            llm_context,
+        )
+        assert all_res == llm.ToolResult(data={"result": expected_flows})
+
+        filtered_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"domain": f"  {TEST_DOMAIN.upper()}  "}),
+            llm_context,
+        )
+        assert filtered_res == llm.ToolResult(data={"result": expected_flows})
+
+        empty_res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"domain": "other_domain"}),
+            llm_context,
+        )
+        assert empty_res == llm.ToolResult(data={"result": []})
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_SSDP]
 )
@@ -1564,6 +1830,16 @@ async def test_discovery_oauth_handoff(
             id="start_flow_invalid_flow_type",
         ),
         pytest.param(
+            "config__get_flows_in_progress",
+            {"domain": ""},
+            id="get_flows_in_progress_empty_domain",
+        ),
+        pytest.param(
+            "config__get_flows_in_progress",
+            {"domain": "   "},
+            id="get_flows_in_progress_whitespace_domain",
+        ),
+        pytest.param(
             "config__start_flow",
             {"domain": "   "},
             id="start_flow_whitespace_domain",
@@ -1590,9 +1866,168 @@ async def test_flow_tools_invalid_parameters(
     tool_name: str,
     tool_args: dict[str, Any],
 ) -> None:
-    """Test invalid arguments are rejected by StartFlowTool and ConfigureFlowTool."""
+    """Test invalid arguments are rejected by flow tools."""
     with pytest.raises(probatio.Invalid):
         await llm_api.async_call_tool(llm.ToolInput(tool_name, tool_args))
+
+
+async def test_get_core_config(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting the core config."""
+    tool = GetCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    assert res.error is False
+    assert res.data == {
+        "result": {
+            "location_name": "test home",
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
+            "elevation": 0,
+            "radius": 100,
+            "time_zone": "US/Pacific",
+            "country": None,
+            "currency": "EUR",
+            "language": "en",
+            "unit_system": "metric",
+            "internal_url": None,
+            "internal_url_in_use": None,
+            "external_url": None,
+            "external_url_in_use": None,
+        }
+    }
+
+
+async def test_get_core_config_urls_in_use(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the URLs in use are the detected ones until a URL is set."""
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.1.10")
+    tool = GetCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] is None
+    assert result["internal_url_in_use"] == "http://192.168.1.10:8123"
+    assert result["external_url"] is None
+    assert result["external_url_in_use"] is None
+
+    await hass.config.async_update(
+        internal_url="http://homeassistant.local:8123",
+        external_url="https://example.com",
+    )
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] == "http://homeassistant.local:8123"
+    assert result["internal_url_in_use"] == "http://homeassistant.local:8123"
+    assert result["external_url"] == "https://example.com"
+    assert result["external_url_in_use"] == "https://example.com"
+
+
+async def test_update_core_config(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test updating the core config."""
+    tool = UpdateCoreConfigTool()
+    res = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "location_name": "Home",
+                "latitude": 52.37,
+                "longitude": 4.89,
+                "country": "NL",
+                "time_zone": "Europe/Amsterdam",
+                "unit_system": "us_customary",
+                "external_url": "https://example.com",
+            },
+        ),
+        llm_context,
+    )
+    assert res.error is False
+    result = res.data["result"]
+    assert result["location_name"] == "Home"
+    assert result["latitude"] == 52.37
+    assert result["longitude"] == 4.89
+    assert result["country"] == "NL"
+    assert result["time_zone"] == "Europe/Amsterdam"
+    assert result["unit_system"] == "us_customary"
+    assert result["external_url"] == "https://example.com"
+    assert hass.config.country == "NL"
+    assert hass.config.time_zone == "Europe/Amsterdam"
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "updates_units"),
+    [("us_customary", True), ("metric", False), (None, False)],
+)
+async def test_update_core_config_updates_units(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    unit_system: str | None,
+    updates_units: bool,
+) -> None:
+    """Test that only a new unit system changes the units of the sensors."""
+    tool_args: dict[str, Any] = {"location_name": "Home"}
+    if unit_system:
+        tool_args["unit_system"] = unit_system
+    tool = UpdateCoreConfigTool()
+    with patch(
+        "homeassistant.components.config.core.async_update_suggested_units"
+    ) as mock_update_units:
+        res = await tool.async_call(
+            hass, llm.ToolInput(tool.name, tool_args), llm_context
+        )
+    assert res.error is False
+    assert mock_update_units.called is updates_units
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param({"country": "XX"}, "Invalid input", id="country"),
+        pytest.param({"currency": "XXX"}, "Invalid input", id="currency"),
+        pytest.param({"latitude": 100}, "Invalid input", id="latitude"),
+        pytest.param({"radius": -1}, "Invalid input", id="radius"),
+        pytest.param(
+            {"external_url": "https://example.com/path"},
+            "Invalid input",
+            id="url_with_path",
+        ),
+        pytest.param({"time_zone": "Mars/Base"}, "Received invalid time zone", id="tz"),
+    ],
+)
+async def test_update_core_config_invalid(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test that invalid values return an error and change nothing."""
+    tool = UpdateCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert res.error is True
+    assert res.data["error"].startswith(error)
+    assert hass.config.country is None
+    assert hass.config.time_zone == "US/Pacific"
+
+
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param({"location": "home"}, id="location"),
+        pytest.param({"unit_system": "imperial"}, id="unit_system"),
+    ],
+)
+async def test_update_core_config_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by UpdateCoreConfigTool."""
+    tool = UpdateCoreConfigTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
 
 
 async def test_get_config_entries_flow_capabilities(

@@ -78,6 +78,56 @@ async def velbus_scan_task(
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
         )
+    _migrate_via_devices_to_children(hass, entry_id)
+
+
+def _child_name_from_registry(
+    child_name: str | None, parent_name: str | None
+) -> str | None:
+    """Strip a legacy parent prefix from a channel device name."""
+    if child_name and parent_name:
+        prefix = f"{parent_name} - "
+        if child_name.startswith(prefix):
+            return child_name.removeprefix(prefix)
+    return child_name
+
+
+def _is_channel_subdevice_identifier(
+    child_identifiers: set[tuple[str, str]],
+    parent_identifiers: set[tuple[str, str]],
+) -> bool:
+    """Return whether the child identifier denotes a module channel."""
+    if len(child_identifiers) != 1 or len(parent_identifiers) != 1:
+        return False
+    _, child_id = next(iter(child_identifiers))
+    _, parent_id = next(iter(parent_identifiers))
+    if not child_id.startswith(f"{parent_id}-"):
+        return False
+    return bool(child_id.removeprefix(f"{parent_id}-"))
+
+
+def _migrate_via_devices_to_children(hass: HomeAssistant, entry_id: str) -> None:
+    """Convert legacy via_device channel devices to child devices."""
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        if device.via_device_id is None:
+            continue
+        parent = dev_reg.async_get(device.via_device_id)
+        if parent is None or parent.config_entry_id != entry_id:
+            continue
+        if not _is_channel_subdevice_identifier(device.identifiers, parent.identifiers):
+            continue
+        _LOGGER.debug(
+            "Converting channel device %s to child of %s",
+            device.identifiers,
+            parent.identifiers,
+        )
+        dev_reg.async_get_or_create_child(
+            config_entry_id=entry_id,
+            identifiers=device.identifiers,
+            parent_device_id=parent.id,
+            name=_child_name_from_registry(device.name, parent.name),
+        )
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
@@ -196,9 +246,8 @@ async def async_remove_config_entry_device(
     if device_entry.config_entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
-    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-        if sub_device.via_device_id == device_entry.id:
-            dev_reg.async_remove_device(sub_device.id)
+    for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
+        dev_reg.async_remove_device(child.id)
     return True
 
 
