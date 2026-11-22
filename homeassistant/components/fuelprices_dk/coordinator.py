@@ -5,13 +5,16 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectionError, ClientResponseError
 from pybraendstofpriser import Braendstofpriser
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_STATION, DOMAIN, SUBENTRY_TYPE_STATION
 
@@ -65,7 +68,13 @@ class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[int, FuelPricesDKStatio
         except ClientResponseError as exc:
             if exc.status == 401:
                 raise ConfigEntryAuthFailed(exc) from exc
+            if exc.status == 429 or 500 <= exc.status < 600:
+                raise UpdateFailedUnreachable(f"HTTP {exc.status}") from exc
             raise
+        except TimeoutError as exc:
+            raise UpdateFailedUnreachable("Request timed out") from exc
+        except ClientConnectionError as exc:
+            raise UpdateFailedUnreachable(str(exc)) from exc
 
         return {
             item["station"]["id"]: FuelPricesDKStation(
