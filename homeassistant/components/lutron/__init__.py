@@ -117,7 +117,9 @@ async def async_setup_entry(
                 config_entry.entry_id,
             )
 
-        if area.occupancy_group is not None:
+        # Lutron creates an occupancy group for every area; only areas with a
+        # motion sensor ever report occupancy
+        if area.occupancy_group is not None and area.sensors:
             entry_data.binary_sensors.append((area.name, area.occupancy_group))
             platform = Platform.BINARY_SENSOR
             _async_check_entity_unique_id(
