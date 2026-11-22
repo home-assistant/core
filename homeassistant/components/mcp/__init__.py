@@ -4,14 +4,17 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import ModelContextProtocolCoordinator, TokenManager
-from .types import ModelContextProtocolConfigEntry
+from .coordinator import (
+    ModelContextProtocolConfigEntry,
+    ModelContextProtocolCoordinator,
+    TokenManager,
+)
 
 __all__ = [
     "DOMAIN",
@@ -51,13 +54,22 @@ def _load_jsonschema() -> None:
 async def _create_token_manager(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
 ) -> TokenManager | None:
-    """Create a OAuth token manager for the config entry.
+    """Create a token manager for the config entry.
 
+    OAuth takes precedence over a token provided by the app discovery.
     Returns None if the server does not require authentication.
     """
     implementation = await async_get_config_entry_implementation(hass, entry)
     if not implementation:
-        return None
+        if CONF_API_TOKEN not in entry.data:
+            return None
+
+        # Read on every request, as ongoing conversations keep their tools
+        # when a new token reloads the entry
+        async def api_token_manager() -> str:
+            return cast(str, entry.data[CONF_API_TOKEN])
+
+        return api_token_manager
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 

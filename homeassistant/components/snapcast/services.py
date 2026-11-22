@@ -1,5 +1,7 @@
 """Support for interacting with Snapcast clients."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -8,11 +10,19 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_SNAPSHOT = "snapshot"
-SERVICE_RESTORE = "restore"
-SERVICE_SET_LATENCY = "set_latency"
 
-ATTR_LATENCY = "latency"
+class SnapcastService(StrEnum):
+    """Store keys for Snapcast services."""
+
+    SNAPSHOT = "snapshot"
+    RESTORE = "restore"
+    SET_LATENCY = "set_latency"
+
+
+class SnapcastServiceArgument(StrEnum):
+    """Store keys for Snapcast service arguments."""
+
+    LATENCY = "latency"
 
 
 @callback
@@ -21,7 +31,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SNAPSHOT,
+        SnapcastService.SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="async_snapshot",
@@ -29,7 +39,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_RESTORE,
+        SnapcastService.RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="async_restore",
@@ -37,8 +47,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_LATENCY,
+        SnapcastService.SET_LATENCY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={probatio.Required(ATTR_LATENCY): cv.positive_int},
+        schema={probatio.Required(SnapcastServiceArgument.LATENCY): cv.positive_int},
         func="async_set_latency",
     )

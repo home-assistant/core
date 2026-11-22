@@ -9,11 +9,7 @@ from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.tariff import EnvoyStorageSettings
 
-from homeassistant.components.number import (
-    NumberDeviceClass,
-    NumberEntity,
-    NumberEntityDescription,
-)
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -46,14 +42,14 @@ RELAY_ENTITIES = (
     EnvoyRelayNumberEntityDescription(
         key="soc_low",
         translation_key="cutoff_battery_level",
-        device_class=NumberDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
         value_fn=attrgetter("soc_low"),
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
         translation_key="restore_battery_level",
-        device_class=NumberDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
         value_fn=attrgetter("soc_high"),
     ),
@@ -63,7 +59,6 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     key="reserve_soc",
     translation_key="reserve_soc",
     native_unit_of_measurement=PERCENTAGE,
-    device_class=NumberDeviceClass.BATTERY,
     value_fn=attrgetter("reserved_soc"),
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )

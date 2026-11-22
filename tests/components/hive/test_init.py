@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.hive.const import DOMAIN
 from homeassistant.components.hive.services import HiveService
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -69,6 +70,23 @@ _GLASS_BREAK_BINARY_SENSOR = {
         "online": True,
     },
     "status": {"state": False},
+}
+
+_BATTERY_SENSOR = {
+    "device_id": "hive-trv-id",
+    "hiveID": "hive-trv-id",
+    "hiveName": "Lounge TRV",
+    "haName": "Lounge TRV Battery",
+    "device_name": "Lounge TRV",
+    "hiveType": "Battery",
+    "parentDevice": "hive-hub-id",
+    "deviceData": {
+        "model": "TRV",
+        "version": "1.2.3",
+        "manufacturer": "Hive",
+        "online": True,
+    },
+    "status": {"state": 87},
 }
 
 # The hub's own diagnostic sensor reports the hub as its own parent
@@ -278,3 +296,32 @@ async def test_all_platforms_forwarded_without_devices(
     assert entry.state is ConfigEntryState.LOADED
     assert "Error setting up entry" not in caplog.text
     assert "Error unloading entry" not in caplog.text
+
+
+async def test_battery_sensor_has_measurement_state_class(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The battery sensor records long-term statistics."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive({}, {"sensor": [_BATTERY_SENSOR]})
+    mock_hive.session.updateData = AsyncMock()
+    mock_hive.sensor.getSensor = AsyncMock(side_effect=lambda device: device)
+
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "hive-trv-id-Battery"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "87"
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT

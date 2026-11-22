@@ -55,6 +55,39 @@
     'type': 'object',
   })
 # ---
+# name: test_async_get_tools.1
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+    }),
+    'type': 'object',
+  })
+# ---
+# name: test_get_apps
+  dict({
+    'data': dict({
+      'apps': list([
+        dict({
+          'installed_version': '3.1.0',
+          'latest_version': '3.1.0',
+          'name': 'File editor',
+          'slug': 'core_configurator',
+          'state': 'stopped',
+          'update_available': False,
+        }),
+        dict({
+          'installed_version': '2.11.0b8',
+          'latest_version': '2.11.0b9',
+          'name': 'Music Assistant (BETA)',
+          'slug': 'd5369777_music_assistant_beta',
+          'state': 'started',
+          'update_available': True,
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
 # name: test_get_logs_default
   dict({
     'data': dict({
