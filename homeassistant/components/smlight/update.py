@@ -25,6 +25,7 @@ from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
 PARALLEL_UPDATES = 1
+FIRMWARE_UPDATE_TIMEOUT = 600
 
 
 def zigbee_firmware_list(data: SmFwData, idx: int) -> FirmwareList:
@@ -110,6 +111,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{device}"
 
         self._finished_event = asyncio.Event()
+        self._update_error = False
         self._firmware: Firmware | None = None
         self._unload: list[Callable[[], None]] = []
         self.idx = idx
@@ -253,15 +255,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     @callback
     def _update_failed(self, event: MessageEvent) -> None:
+        """Notify the install task of a failure without interrupting the listener."""
+        self._update_error = True
         self._update_done()
-        self.coordinator.in_progress = False
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="firmware_update_failed",
-            translation_placeholders={
-                "device_name": str(self.name),
-            },
-        )
 
     @override
     async def async_install(
@@ -277,15 +273,30 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.coordinator.in_progress = True
             self._attr_in_progress = True
             self._attr_update_percentage = None
+            self._update_error = False
             self.register_callbacks()
 
             try:
-                await self.coordinator.async_execute_command(
-                    self.coordinator.client.fw_update, firmware, self.idx
-                )
+                try:
+                    async with asyncio.timeout(FIRMWARE_UPDATE_TIMEOUT):
+                        accepted = await self.coordinator.async_execute_command(
+                            self.coordinator.client.fw_update, firmware, self.idx
+                        )
+                        if accepted:
+                            await self._finished_event.wait()
+                except TimeoutError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="firmware_update_timeout",
+                        translation_placeholders={"device_name": str(self.name)},
+                    ) from err
 
-                # block until update finished event received
-                await self._finished_event.wait()
+                if not accepted or self._update_error:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="firmware_update_failed",
+                        translation_placeholders={"device_name": str(self.name)},
+                    )
 
                 # allow time for SLZB-06 to reboot before updating coordinator data
                 try:

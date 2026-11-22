@@ -481,7 +481,7 @@ async def test_update_firmware_failed(
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Test firmware updates."""
+    """A flash error is reported to the install action."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -489,22 +489,20 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        UpdateService.INSTALL,
-        {TargetKey.ENTITY_ID: entity_id},
-        blocking=False,
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
     )
-
-    assert len(mock_smlight_client.fw_update.mock_calls) == 1
-
+    mock_smlight_client.fw_update.assert_awaited_once()
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
+    event_function(MOCK_FIRMWARE_FAIL)
 
-    async def _call_event_function(event: MessageEvent):
-        event_function(event)
-
-    with pytest.raises(HomeAssistantError):
-        await _call_event_function(MOCK_FIRMWARE_FAIL)
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await install_task
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
@@ -527,18 +525,21 @@ async def test_update_firmware_failed(
             True,
             id="auth_error",
         ),
+        pytest.param(
+            [False], HomeAssistantError, "Firmware update failed", False, id="rejected"
+        ),
     ],
 )
 async def test_update_install_command_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
-    side_effect: type[Exception],
+    side_effect: type[Exception] | list[bool],
     expected_exception: type[Exception],
     expected_match: str,
     expected_reauth: bool,
 ) -> None:
-    """Test install service handles connection and auth errors from fw_update."""
+    """Test errors and rejections from the firmware command."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     mock_smlight_client.fw_update.side_effect = side_effect
@@ -565,12 +566,33 @@ async def test_update_install_command_error(
     assert bool(reauth_flows) is expected_reauth
 
 
-async def test_update_reboot_timeout(
+@pytest.mark.parametrize(
+    ("message", "elapsed", "expected_error"),
+    [
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            "Firmware update timed out",
+            id="missing-completion",
+        ),
+        pytest.param(
+            MOCK_FIRMWARE_DONE,
+            timedelta(minutes=3, seconds=1),
+            r"Timeout waiting for .* to reboot after update",
+            id="reboot",
+        ),
+    ],
+)
+async def test_update_timeout(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    message: MessageEvent,
+    elapsed: timedelta,
+    expected_error: str,
 ) -> None:
-    """Test reboot timeout raises a translated user-facing error."""
+    """Report which phase of the firmware install timed out."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -578,38 +600,25 @@ async def test_update_reboot_timeout(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    with (
-        patch(
-            "homeassistant.components.smlight.update.asyncio.timeout",
-            side_effect=TimeoutError,
-        ),
-        patch(
-            "homeassistant.components.smlight.update.asyncio.sleep",
-            return_value=None,
-        ),
-    ):
-        install_task = hass.async_create_task(
-            hass.services.async_call(
-                UPDATE_DOMAIN,
-                UpdateService.INSTALL,
-                {TargetKey.ENTITY_ID: entity_id},
-                blocking=True,
-            )
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
-        await asyncio.sleep(0)
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
+    event_function(message)
+    await asyncio.sleep(0)
 
-        assert len(mock_smlight_client.fw_update.mock_calls) == 1
-
-        event_function = get_mock_event_function(
-            mock_smlight_client, SmEvents.FW_UPD_done
-        )
-        event_function(MOCK_FIRMWARE_DONE)
-
-        with pytest.raises(
-            HomeAssistantError,
-            match=r"Timeout waiting for .* to reboot after update",
-        ):
-            await install_task
+    freezer.tick(elapsed)
+    async_fire_time_changed(hass)
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await install_task
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
