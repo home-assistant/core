@@ -351,3 +351,22 @@ async def test_write_during_poll_of_other_camera(
     await _poll(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert hass.states.get(OTHER_ENTITY_ID).state == "80"
+
+
+async def test_removed_cameras_are_forgotten_by_the_audio_tracking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator._audio_unreachable.add("removed")
+    coordinator._audio_writes["removed"] = 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "removed" not in coordinator._audio_unreachable
+    assert "removed" not in coordinator._audio_writes

@@ -142,6 +142,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def _async_update_audio_settings(self, cameras: list[Camera]) -> None:
         """Poll the audio settings of each camera, isolating failures."""
+        # Forget removed cameras so a camera that comes back is logged again.
+        listed = {camera.id for camera in cameras}
+        self._audio_unreachable &= listed
+        for camera_id in self._audio_writes.keys() - listed:
+            del self._audio_writes[camera_id]
         polled: dict[str, tuple[int, AudioSettings | None]] = {}
         for camera in cameras:
             writes = self._audio_writes[camera.id]
