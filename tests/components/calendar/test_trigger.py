@@ -802,41 +802,177 @@ async def test_update_next_event(
     ]
 
 
-async def test_update_missed(
+async def test_update_in_read_window(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     trigger_format: TriggerFormat,
 ) -> None:
-    """Test that new events are missed if they arrive outside the update interval."""
+    """Test that an event added to a window that was already read fires."""
 
     event_data1 = test_entity.create_event(
         start=dt.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=dt.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     async with create_automation(hass, trigger_format, EVENT_START):
-        # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
-        # added, but the next update happens after the event is already over.
+        # The window up to 10:45:02 is read at 10:38:02, before the event is added
         await fake_schedule.fire_until(
             dt.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
         )
         assert len(calls_data()) == 0
 
-        test_entity.create_event(
+        event_data2 = test_entity.create_event(
             start=dt.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
             end=dt.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
         )
+        test_entity.async_write_ha_state()
+        await hass.async_block_till_done()
 
-        # Only the first event is returned
         await fake_schedule.fire_until(
             dt.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
         )
         assert calls_data() == [
             trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data2
+            ),
+            trigger_format.get_expected_call_data(
                 CALENDAR_ENTITY_ID, EVENT_START, event_data1
             ),
         ]
+
+
+def _test_time(time: str) -> dt.datetime:
+    """Return a datetime on the test day."""
+    return dt.datetime.fromisoformat(f"2022-04-19 {time}+00:00")
+
+
+@pytest.mark.parametrize(
+    ("initial_start", "updated_start"),
+    [
+        pytest.param("10:35:00", "10:35:00", id="unchanged"),
+        pytest.param("10:35:00", "10:37:00", id="later_in_same_window"),
+        pytest.param("10:35:00", "10:40:00", id="later_into_next_window"),
+        pytest.param("10:39:00", "10:37:00", id="earlier_into_read_window"),
+    ],
+)
+async def test_event_moved_after_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    initial_start: str,
+    updated_start: str,
+) -> None:
+    """Test that an event moved after its window was read fires once, when due."""
+    test_entity.create_event(
+        start=_test_time(initial_start),
+        end=_test_time(initial_start) + dt.timedelta(minutes=1),
+        summary="Departure",
+        uid="departure",
+    )
+    async with create_automation(hass, trigger_format, EVENT_START):
+        # The first window, up to 10:38:02, is read when the automation is set up
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+
+        test_entity.remove_event("Departure")
+        event_data = test_entity.create_event(
+            start=_test_time(updated_start),
+            end=_test_time(updated_start) + dt.timedelta(minutes=1),
+            summary="Departure",
+            uid="departure",
+        )
+        test_entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_event_removed_after_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test that an event removed after its window was read does not fire."""
+    test_entity.create_event(
+        start=_test_time("10:35:00"),
+        end=_test_time("10:36:00"),
+        summary="Departure",
+    )
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+
+        test_entity.remove_event("Departure")
+        test_entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+@pytest.mark.parametrize(
+    ("uid", "expected_calls"),
+    [
+        pytest.param("departure", 1, id="with_uid"),
+        pytest.param(None, 0, id="without_uid"),
+    ],
+)
+async def test_event_moved_into_past_before_firing(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    uid: str | None,
+    expected_calls: int,
+) -> None:
+    """Test an event moved to a time that has passed fires right away if it has a uid.
+
+    Without a uid there is no way to tell it apart from an event that has
+    already fired.
+    """
+    test_entity.create_event(
+        start=_test_time("10:37:00"),
+        end=_test_time("10:38:00"),
+        summary="Departure",
+        uid=uid,
+    )
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:36:00"))
+        assert calls_data() == []
+
+        test_entity.remove_event("Departure")
+        event_data = test_entity.create_event(
+            start=_test_time("10:35:00"),
+            end=_test_time("10:36:00"),
+            summary="Departure",
+            uid=uid,
+        )
+        test_entity.async_write_ha_state()
+        await hass.async_block_till_done()
+        # The entity is polled every minute, so the refetch is debounced
+        await fake_schedule.fire_time(dt_util.utcnow() + dt.timedelta(seconds=2))
+
+        expected = [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
+        ] * expected_calls
+        assert calls_data() == expected
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == expected
 
 
 @pytest.mark.parametrize(

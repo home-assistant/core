@@ -14,6 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send_internal
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -25,6 +26,7 @@ from .const import (
     EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     EVENT_RRULE,
     EVENT_SUMMARY,
+    SIGNAL_CALENDAR_STATE_WRITTEN,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
 )
@@ -228,6 +230,11 @@ class CalendarEntity(Entity):
         # Notify websocket subscribers of event changes (debounced)
         if self._event_listeners and self._event_listener_debouncer:
             self._event_listener_debouncer.async_schedule_call()
+        # Calendar triggers re-read their queued events, since events can
+        # change without changing the state.
+        async_dispatcher_send_internal(
+            self.hass, SIGNAL_CALENDAR_STATE_WRITTEN.format(self.entity_id)
+        )
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(

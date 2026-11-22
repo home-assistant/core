@@ -4,6 +4,7 @@ from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.signal_type import SignalTypeFormat
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
@@ -17,6 +18,10 @@ SERVICE_GET_EVENTS: Final = "get_events"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
+
+SIGNAL_CALENDAR_STATE_WRITTEN: SignalTypeFormat[()] = SignalTypeFormat(
+    "calendar_state_written_{}"
+)
 
 
 class CalendarEntityStateAttribute(StrEnum):
