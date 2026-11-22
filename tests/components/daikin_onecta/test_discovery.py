@@ -25,6 +25,7 @@ from homeassistant.components.daikin_onecta.const import (
 )
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
+    has_air_purifier_power_control,
     scalar_platform,
     scalar_platform_for_point,
 )
@@ -42,6 +43,25 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
     """Never create value sensors for binary, switch, update, or select keys."""
     assert SENSOR_KEYS.isdisjoint(BINARY_SENSOR_KEYS | SWITCH_KEYS | UPDATE_KEYS)
     assert "schedule" not in SENSOR_KEYS
+
+
+def test_air_purification_mode_sensor_when_climate_entity_exists() -> None:
+    """Keep purifier mode visible when a climate entity prevents a fan entity."""
+    point = _load_gateway_devices("mc80z")[0].management_points_by_type(
+        "climateControl"
+    )[0]
+    assert has_air_purifier_power_control(point)
+    characteristic = point.scalar_characteristic("airPurificationMode")
+    assert characteristic is not None
+
+    with patch(
+        "homeassistant.components.daikin_onecta.discovery.has_climate_entity",
+        return_value=True,
+    ):
+        assert (
+            scalar_platform_for_point(point, "airPurificationMode", characteristic)
+            is Platform.SENSOR
+        )
 
 
 @pytest.mark.parametrize(

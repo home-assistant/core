@@ -109,12 +109,6 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             and self._characteristic_exposed_on(self._value, Platform.SWITCH)
         )
 
-    def sensor_value(self) -> str | None:
-        """Return the state of the switch."""
-        characteristic = self._characteristic(self._value)
-        result = characteristic.value if characteristic is not None else None
-        return result if isinstance(result, str) else None
-
     @property
     @override
     def available(self) -> bool:

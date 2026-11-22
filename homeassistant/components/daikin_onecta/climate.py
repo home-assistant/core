@@ -187,16 +187,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self._attr_preset_mode = self._get_preset_mode()
         self._attr_fan_mode = self._get_fan_mode()
 
-    async def _async_execute_climate_command(
-        self, command: Callable[[ClimateControlClient], Awaitable[None]]
-    ) -> bool:
-        """Execute a bound climate command through the serialized gateway."""
-        return await self.coordinator.async_execute_command(
-            lambda client: command(
-                client.climate_control(self._device_id, self._embedded_id)
-            )
-        )
-
     async def _async_set_fixed_fan_control(
         self,
         *,
@@ -216,7 +206,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if current_mode.value != FANMODE_FIXED:
             if not current_mode.settable:
                 self._raise_service_validation_error(unavailable_key)
-            if not await self._async_execute_climate_command(set_mode):
+            if not await self.coordinator.async_execute_command(
+                lambda client: set_mode(
+                    client.climate_control(self._device_id, self._embedded_id)
+                )
+            ):
                 return False
             if (state := get_state()) is not None:
                 state[0].value = FANMODE_FIXED
@@ -224,8 +218,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             self._publish_write_update()
 
         if fixed.value != target:
-            if not await self._async_execute_climate_command(
-                lambda climate: set_position(climate, target)
+            if not await self.coordinator.async_execute_command(
+                lambda client: set_position(
+                    client.climate_control(self._device_id, self._embedded_id), target
+                )
             ):
                 return False
             if (state := get_state()) is not None and (fixed := state[1]) is not None:
@@ -376,17 +372,16 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
 
             if self._attr_native_target_temperature != value:
-                res = await self._async_execute_climate_command(
-                    lambda climate: climate.set_temperature(omv, self._setpoint, value)
+                await self._async_execute_command(
+                    lambda client: client.climate_control(
+                        self._device_id, self._embedded_id
+                    ).set_temperature(omv, self._setpoint, value),
+                    "set_temperature_failed",
                 )
-                # When updating the value to the daikin cloud worked update our local cached version
-                if res:
-                    setpointdict = self._get_setpoint(omv)
-                    if setpointdict is not None:
-                        setpointdict.value = value
-                        self._publish_write_update()
-                else:
-                    self._raise_command_failed("set_temperature_failed")
+                setpointdict = self._get_setpoint(omv)
+                if setpointdict is not None:
+                    setpointdict.value = value
+                    self._publish_write_update()
 
     def _get_hvac_mode(self) -> HVACMode | None:
         """Return current HVAC mode."""
@@ -472,10 +467,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if on_off_mode is not None:
             if cc is None or cc.on_off_mode is None or not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
-            if not await self._async_execute_climate_command(
-                lambda climate: climate.set_power(on_off_mode == "on")
-            ):
-                self._raise_command_failed("set_hvac_mode_failed")
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_power(on_off_mode == "on"),
+                "set_hvac_mode_failed",
+            )
             cc = self._climate_control()
             if cc is not None and cc.on_off_mode is not None:
                 cc.on_off_mode.value = on_off_mode
@@ -490,10 +487,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
-            if not await self._async_execute_climate_command(
-                lambda climate: climate.set_operation_mode(operation_mode)
-            ):
-                self._raise_command_failed("set_hvac_mode_failed")
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_operation_mode(operation_mode),
+                "set_hvac_mode_failed",
+            )
             cc = self._climate_control()
             if cc is not None and cc.operation_mode is not None:
                 cc.operation_mode.value = operation_mode
@@ -593,10 +592,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         elif fan_speed.current_mode.value != fan_mode:
             if not fan_speed.current_mode.settable:
                 self._raise_service_validation_error("fan_control_unavailable")
-            if not await self._async_execute_climate_command(
-                lambda climate: climate.set_fan_mode(operation_mode, fan_mode)
-            ):
-                self._raise_command_failed("set_fan_mode_failed")
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_fan_mode(operation_mode, fan_mode),
+                "set_fan_mode_failed",
+            )
             fan_operation = self._fan_operation(operation_mode)
             if fan_operation is None or fan_operation.fan_speed is None:
                 return
@@ -732,16 +733,16 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         )
         if new_mode is None:
             self._raise_service_validation_error("swing_control_unavailable")
-        result = await self._async_execute_climate_command(
-            lambda climate: climate.set_fan_direction(
-                operation_mode, direction, new_mode
-            )
+        await self._async_execute_command(
+            lambda client: client.climate_control(
+                self._device_id, self._embedded_id
+            ).set_fan_direction(operation_mode, direction, new_mode),
+            "set_swing_mode_failed",
         )
-        if result:
-            axis = self._fan_direction_axis(direction, operation_mode)
-            if axis is not None:
-                axis.current_mode.value = new_mode
-        return result
+        axis = self._fan_direction_axis(direction, operation_mode)
+        if axis is not None:
+            axis.current_mode.value = new_mode
+        return True
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -782,20 +783,25 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Disable the current Daikin preset mode."""
         daikin_mode = HA_PRESET_TO_DAIKIN[preset_mode]
         if preset_mode == PRESET_AWAY:
-            result = await self._async_execute_climate_command(
-                lambda climate: climate.set_holiday_mode(False)
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_holiday_mode(False),
+                "set_preset_mode_failed",
             )
         else:
-            result = await self._async_execute_climate_command(
-                lambda climate: climate.set_mode_characteristic(daikin_mode, False)
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_mode_characteristic(daikin_mode, False),
+                "set_preset_mode_failed",
             )
-        if result:
-            preset = self._preset_characteristic(daikin_mode)
-            if preset_mode == PRESET_AWAY and preset is not None:
-                preset.value.enabled = False
-            elif preset is not None:
-                preset.value = "off"
-        return result
+        preset = self._preset_characteristic(daikin_mode)
+        if preset_mode == PRESET_AWAY and preset is not None:
+            preset.value.enabled = False
+        elif preset is not None:
+            preset.value = "off"
+        return True
 
     async def _async_enable_preset_mode(self, preset_mode: str) -> bool:
         """Enable the requested Daikin preset mode."""
@@ -806,24 +812,29 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 return False
         if preset_mode == PRESET_AWAY:
             today = dt_util.now().date()
-            result = await self._async_execute_climate_command(
-                lambda climate: climate.set_holiday_mode(
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_holiday_mode(
                     True,
                     start_date=today,
                     end_date=today + timedelta(days=60),
-                )
+                ),
+                "set_preset_mode_failed",
             )
         else:
-            result = await self._async_execute_climate_command(
-                lambda climate: climate.set_mode_characteristic(daikin_mode, True)
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_mode_characteristic(daikin_mode, True),
+                "set_preset_mode_failed",
             )
-        if result:
-            preset = self._preset_characteristic(daikin_mode)
-            if preset_mode == PRESET_AWAY and preset is not None:
-                preset.value.enabled = True
-            elif preset is not None:
-                preset.value = "on"
-        return result
+        preset = self._preset_characteristic(daikin_mode)
+        if preset_mode == PRESET_AWAY and preset is not None:
+            preset.value.enabled = True
+        elif preset is not None:
+            preset.value = "on"
+        return True
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -868,16 +879,17 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if cc.on_off_mode.value == "off":
             if not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
-            if not await self._async_execute_climate_command(
-                lambda climate: climate.set_power(True)
-            ):
-                self._raise_command_failed("turn_on_failed")
-            else:
-                cc = self._climate_control()
-                if cc is None or cc.on_off_mode is None:
-                    return
-                cc.on_off_mode.value = "on"
-                self._publish_write_update()
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_power(True),
+                "turn_on_failed",
+            )
+            cc = self._climate_control()
+            if cc is None or cc.on_off_mode is None:
+                return
+            cc.on_off_mode.value = "on"
+            self._publish_write_update()
 
     @override
     async def async_turn_off(self) -> None:
@@ -890,13 +902,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if cc.on_off_mode.value == "on":
             if not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
-            if not await self._async_execute_climate_command(
-                lambda climate: climate.set_power(False)
-            ):
-                self._raise_command_failed("turn_off_failed")
-            else:
-                cc = self._climate_control()
-                if cc is None or cc.on_off_mode is None:
-                    return
-                cc.on_off_mode.value = "off"
-                self._publish_write_update()
+            await self._async_execute_command(
+                lambda client: client.climate_control(
+                    self._device_id, self._embedded_id
+                ).set_power(False),
+                "turn_off_failed",
+            )
+            cc = self._climate_control()
+            if cc is None or cc.on_off_mode is None:
+                return
+            cc.on_off_mode.value = "off"
+            self._publish_write_update()

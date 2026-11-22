@@ -73,7 +73,10 @@ def scalar_platform_for_point(
     if (
         name == "airPurificationMode"
         and point.management_point_type == "climateControl"
-        and (not gateway_online or has_air_purifier_power_control(point))
+        and (
+            not gateway_online
+            or (has_air_purifier_power_control(point) and not has_climate_entity(point))
+        )
     ):
         return None
     # Econo mode is already exposed as a preset only on climate points that
