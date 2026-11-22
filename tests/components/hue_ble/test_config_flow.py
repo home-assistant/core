@@ -27,7 +27,9 @@ from . import (
     TEST_DEVICE_NAME,
 )
 
-AUTH_ERROR = ConnectionError()
+AUTH_ERROR = ConnectionError(
+    generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC), None
+)
 AUTH_ERROR.__cause__ = PairingError()
 
 
@@ -80,6 +82,11 @@ async def test_user_form(
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
             side_effect=[True],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.supports_on_off",
+            new_callable=PropertyMock,
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
@@ -156,7 +163,9 @@ async def test_user_form_no_device(
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
-            ConnectionError,
+            ConnectionError(
+                generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC), None
+            ),
             True,
             None,
             Error.CANNOT_CONNECT,
@@ -276,6 +285,11 @@ async def test_user_form_exception(
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
             side_effect=[True],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.supports_on_off",
+            new_callable=PropertyMock,
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
