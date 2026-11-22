@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
+from .exceptions import HeatingControlError
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
@@ -248,11 +249,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-
         if hvac_mode == HVACMode.AUTO:
-            await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
+            result = await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
         else:
-            await self._device.set_control_mode_async(HMIP_MANUAL_CM)
+            result = await self._device.set_control_mode_async(HMIP_MANUAL_CM)
+
+        if not result.success:
+            raise HeatingControlError from result.exception
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
