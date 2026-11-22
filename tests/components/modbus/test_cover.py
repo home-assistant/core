@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
@@ -205,20 +206,17 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
 
-# Due to fact that modbus now reads imidiatly after connect and the
-# fixture do not return until connected, it is not possible to
-# test the restore.
-# THIS IS WORK TBD.
-@pytest.mark.skip
 @pytest.mark.parametrize(
-    "mock_test_state",
+    ("mock_test_state", "expected"),
     [
-        (State(ENTITY_ID, CoverState.CLOSED),),
-        (State(ENTITY_ID, CoverState.CLOSING),),
-        (State(ENTITY_ID, CoverState.OPENING),),
-        (State(ENTITY_ID, CoverState.OPEN),),
+        ((State(ENTITY_ID, CoverState.CLOSED),), CoverState.CLOSED),
+        ((State(ENTITY_ID, CoverState.CLOSING),), CoverState.CLOSING),
+        ((State(ENTITY_ID, CoverState.OPENING),), CoverState.OPENING),
+        ((State(ENTITY_ID, CoverState.OPEN),), CoverState.OPEN),
+        ((State(ENTITY_ID, STATE_UNAVAILABLE),), STATE_UNKNOWN),
+        ((State(ENTITY_ID, STATE_UNKNOWN),), STATE_UNKNOWN),
     ],
-    indirect=True,
+    indirect=["mock_test_state"],
 )
 @pytest.mark.parametrize(
     "do_config",
@@ -242,11 +240,42 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     ],
 )
 async def test_restore_state_cover(
-    hass: HomeAssistant, mock_test_state, mock_modbus
+    hass: HomeAssistant, mock_test_state, expected, mock_modbus_to_test_errors_config
 ) -> None:
-    """Run test for cover restore state."""
-    test_state = mock_test_state[0].state
-    assert hass.states.get(ENTITY_ID).state == test_state
+    """Run test for cover restore state, before the first read."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    ("mock_test_state", "expected"),
+    [
+        ((State(ENTITY_ID, CoverState.CLOSED),), CoverState.CLOSED),
+        ((State(ENTITY_ID, CoverState.OPEN),), CoverState.OPEN),
+        ((State(ENTITY_ID, STATE_UNAVAILABLE),), STATE_UNKNOWN),
+        ((State(ENTITY_ID, STATE_UNKNOWN),), STATE_UNKNOWN),
+    ],
+    indirect=["mock_test_state"],
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                    CONF_ADDRESS: 1234,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
+    ],
+)
+async def test_restore_state_coil_cover(
+    hass: HomeAssistant, mock_test_state, expected, mock_modbus_to_test_errors_config
+) -> None:
+    """Run test for coil cover restore state, without opening/closing states."""
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
