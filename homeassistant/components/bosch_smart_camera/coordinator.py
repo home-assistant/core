@@ -63,6 +63,9 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self.account_states: dict[str, CameraAccountStates] = {}
         self._write_seq = 0
         self._written_at: dict[str, int] = {}
+        self.motion_states: dict[str, bool] = {}
+        self._motion_writes: defaultdict[str, int] = defaultdict(int)
+        self._motion_unreachable: set[str] = set()
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -110,11 +113,51 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             if written > started
         }
         data = {camera.id: camera for camera in cameras}
+        await self._async_update_motion_states(cameras)
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
         self._sync_devices(data)
         return data
+
+    async def _async_update_motion_states(self, cameras: list[Camera]) -> None:
+        """Poll the motion detection of each camera, isolating failures."""
+        polled: dict[str, tuple[int, bool | None]] = {}
+        for camera in cameras:
+            writes = self._motion_writes[camera.id]
+            try:
+                settings = await self._client.get_motion_settings(camera.id)
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                if camera.id not in self._motion_unreachable:
+                    self._motion_unreachable.add(camera.id)
+                    _LOGGER.info(
+                        "The motion detection of %s is unreachable", camera.title
+                    )
+                _LOGGER.debug(
+                    "Unable to read the motion detection of a camera", exc_info=True
+                )
+                enabled = None
+            else:
+                if camera.id in self._motion_unreachable:
+                    self._motion_unreachable.discard(camera.id)
+                    _LOGGER.info(
+                        "The motion detection of %s is reachable again", camera.title
+                    )
+                enabled = settings.enabled
+            polled[camera.id] = (writes, enabled)
+        # A write that finished while polling outdates the polled state, also
+        # for cameras polled before the write.
+        states: dict[str, bool] = {}
+        for camera_id, (writes, enabled) in polled.items():
+            if writes != self._motion_writes[camera_id]:
+                enabled = self.motion_states.get(camera_id)
+            if enabled is not None:
+                states[camera_id] = enabled
+        self.motion_states = states
 
     async def async_get_snapshot(self, camera_id: str) -> bytes | None:
         """Return the image of the camera's latest event, cached briefly."""
@@ -154,6 +197,27 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self._write_seq += 1
         self._written_at[camera_id] = self._write_seq
         self.account_states[camera_id] = replace(state, privacy_mode=enabled)
+        self.async_update_listeners()
+
+    async def async_set_motion_detection(self, camera_id: str, enabled: bool) -> None:
+        """Switch the motion detection of a camera and update the cached state."""
+        try:
+            await self._client.set_motion_enabled(camera_id, enabled)
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="motion_detection_failed"
+            ) from err
+        # The camera may have been removed while the write was running.
+        if camera_id not in self.data:
+            return
+        # The camera may revert the write within a second, so the next poll wins.
+        self._motion_writes[camera_id] += 1
+        self.motion_states[camera_id] = enabled
         self.async_update_listeners()
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:

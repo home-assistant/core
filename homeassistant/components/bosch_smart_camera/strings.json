@@ -23,6 +23,9 @@
   },
   "entity": {
     "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
       "privacy_mode": {
         "name": "Privacy mode"
       }
@@ -34,6 +37,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "motion_detection_failed": {
+      "message": "Unable to change the motion detection at Bosch."
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."

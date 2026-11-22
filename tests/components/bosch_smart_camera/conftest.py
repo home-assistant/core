@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
-from bosch_shc_camera_client.states import CameraAccountStates
+from bosch_shc_camera_client.settings import SettingWriteResult
+from bosch_shc_camera_client.states import CameraAccountStates, MotionSettings
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -73,6 +74,28 @@ def mock_set_privacy_mode() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.cloud_set_privacy_mode",
         autospec=True,
         return_value=CloudPutResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_motion_settings() -> Generator[AsyncMock]:
+    """Mock the motion settings read of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.get_motion_settings",
+        autospec=True,
+        return_value=MotionSettings(enabled=False, sensitivity="MEDIUM"),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_set_motion_enabled() -> Generator[AsyncMock]:
+    """Mock the motion detection write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.set_motion_enabled",
+        autospec=True,
+        return_value=SettingWriteResult(status=204, response=None, sent=None),
     ) as mock:
         yield mock
 
