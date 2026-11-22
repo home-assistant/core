@@ -85,7 +85,7 @@ async def test_position(
         COVER_DOMAIN,
         CoverService.SET_POSITION,
         {
-            TargetKey.ENTITY_ID: "cover.basement_covername",
+            TargetKey.ENTITY_ID: entity_id,
             CoverServiceArgument.POSITION: 25,
         },
         blocking=True,

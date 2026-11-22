@@ -47,7 +47,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_OFF,
-        {TargetKey.ENTITY_ID: "light.dimmer_full_name_dimmer"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_once_with(0, 0)
@@ -56,7 +56,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.TRANSITION: 1,
         },
         blocking=True,
@@ -67,7 +67,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.BRIGHTNESS: 0,
             LightServiceArgument.TRANSITION: 1,
         },
@@ -80,7 +80,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.BRIGHTNESS: 33,
         },
         blocking=True,

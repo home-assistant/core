@@ -56,7 +56,7 @@ async def test_switch_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {TargetKey.ENTITY_ID: "switch.living_room_relayname"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_relay.turn_off.assert_called_once_with()
@@ -64,7 +64,7 @@ async def test_switch_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {TargetKey.ENTITY_ID: "switch.living_room_relayname"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_relay.turn_on.assert_called_once_with()

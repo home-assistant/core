@@ -50,7 +50,7 @@ async def test_set_target_temperature(
         CLIMATE_DOMAIN,
         ClimateService.SET_TEMPERATURE,
         {
-            TargetKey.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: entity_id,
             ClimateServiceArgument.TEMPERATURE: 29,
         },
         blocking=True,
@@ -82,7 +82,7 @@ async def test_set_preset_mode(
         CLIMATE_DOMAIN,
         ClimateService.SET_PRESET_MODE,
         {
-            TargetKey.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: entity_id,
             ClimateServiceArgument.PRESET_MODE: set_mode,
         },
         blocking=True,
@@ -111,7 +111,7 @@ async def test_set_hvac_mode(
         CLIMATE_DOMAIN,
         ClimateService.SET_HVAC_MODE,
         {
-            TargetKey.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: entity_id,
             ClimateServiceArgument.HVAC_MODE: set_mode,
         },
         blocking=True,
@@ -133,7 +133,7 @@ async def test_set_hvac_mode_invalid(
             CLIMATE_DOMAIN,
             ClimateService.SET_HVAC_MODE,
             {
-                TargetKey.ENTITY_ID: "climate.living_room_temperature",
+                TargetKey.ENTITY_ID: entity_id,
                 ClimateServiceArgument.HVAC_MODE: "auto",
             },
             blocking=True,

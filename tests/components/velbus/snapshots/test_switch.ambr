@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_vmb2ble_relayname',
@@ -91,7 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_vmb2ble_relayname',

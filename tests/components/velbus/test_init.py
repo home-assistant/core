@@ -208,7 +208,7 @@ async def test_api_call(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {TargetKey.ENTITY_ID: "switch.living_room_relayname"},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert exc_info.value.translation_placeholders == {"entity": entity_id}

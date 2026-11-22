@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement CoverName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverName',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
@@ -95,7 +95,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement CoverNameNoPos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverNameNoPos',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
