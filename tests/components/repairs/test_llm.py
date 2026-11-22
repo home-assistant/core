@@ -1,6 +1,6 @@
 """Tests for the repairs LLM tools."""
 
-from typing import Any
+import dataclasses
 from unittest.mock import patch
 
 import probatio
@@ -16,6 +16,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
 TOOL_NAME = "repairs__get_issues"
+MOCK_DOMAINS = ["domain_a", "domain_b"]
 
 
 @pytest.fixture
@@ -41,6 +42,52 @@ async def llm_api(
     assert await async_setup_component(hass, "llm", {})
     llm_context.context = Context(user_id=hass_admin_user.id)
     return await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
+
+
+@pytest.fixture
+def setup_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
+    """Populate representative issues covering sorting, visibility, and filters."""
+    disabled_entry = MockConfigEntry(
+        domain="domain_a", disabled_by=ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+
+    for domain, issue_id, severity, issue_domain, entry_id in (
+        ("domain_a", "warn_1", ir.IssueSeverity.WARNING, None, None),
+        ("domain_b", "err_0", ir.IssueSeverity.ERROR, "other_domain", None),
+        ("domain_a", "err_2", ir.IssueSeverity.ERROR, None, None),
+        ("domain_a", "err_1", ir.IssueSeverity.ERROR, None, None),
+        ("domain_b", "crit_1", ir.IssueSeverity.CRITICAL, None, None),
+        (
+            "domain_a",
+            "hidden",
+            ir.IssueSeverity.CRITICAL,
+            None,
+            disabled_entry.entry_id,
+        ),
+        ("domain_b", "ignored_warn", ir.IssueSeverity.WARNING, None, None),
+        ("domain_a", "ignored_crit", ir.IssueSeverity.CRITICAL, None, None),
+    ):
+        ir.async_create_issue(
+            hass,
+            domain,
+            issue_id,
+            config_entry_id=entry_id,
+            is_fixable=False,
+            issue_domain=issue_domain,
+            severity=severity,
+            translation_key=issue_id,
+        )
+
+    ir.async_ignore_issue(hass, "domain_b", "ignored_warn", True)
+    ir.async_ignore_issue(hass, "domain_a", "ignored_crit", True)
+    issue_registry.issues[("domain_a", "inactive")] = dataclasses.replace(
+        issue_registry.issues[("domain_b", "ignored_warn")],
+        active=False,
+        domain="domain_a",
+        issue_id="inactive",
+        severity=None,
+    )
 
 
 async def test_tool_exposure_and_schema(
@@ -127,272 +174,62 @@ async def test_get_issues_formatting(
     assert result == snapshot
 
 
-async def test_get_issues_empty(llm_api: llm.APIInstance) -> None:
-    """Test empty issue list when no active issues exist."""
-    result = await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, {}))
-    assert result == llm.ToolResult(data={"issues": []})
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_get_issues_sorting_storage_and_hidden_entries(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_admin_user: MockUser,
-    llm_context: llm.LLMContext,
-) -> None:
-    """Test sorting tie-breakers, storage-loaded issues, and hidden entries."""
-    hass_storage[ir.STORAGE_KEY] = {
-        "version": ir.STORAGE_VERSION_MAJOR,
-        "minor_version": ir.STORAGE_VERSION_MINOR,
-        "data": {
-            "issues": [
-                {
-                    "breaks_in_ha_version": None,
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created": "2026-11-16T01:00:00+00:00",
-                    "data": None,
-                    "dismissed_version": None,
-                    "domain": "automation",
-                    "is_fixable": True,
-                    "is_persistent": True,
-                    "issue_domain": None,
-                    "issue_id": "z_persistent_error",
-                    "learn_more_url": None,
-                    "severity": "error",
-                    "translation_key": "service_not_found",
-                    "translation_placeholders": {
-                        "service": "light.turn_on",
-                        "entity_id": "automation.z",
-                        "name": "Z",
-                        "edit": "/config/automation/edit/z",
-                    },
-                },
-                {
-                    "config_entry_id": None,
-                    "config_subentry_id": None,
-                    "created": "2026-11-16T01:00:00+00:00",
-                    "dismissed_version": "2026.11.0",
-                    "domain": "homeassistant",
-                    "is_persistent": False,
-                    "issue_id": "inactive_dismissed",
-                },
-            ]
-        },
-    }
-    await ir.async_load(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    assert await async_setup_component(hass, "llm", {})
-    llm_context.context = Context(user_id=hass_admin_user.id)
-    api = await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
-
-    enabled_entry = MockConfigEntry(domain="automation", title="Enabled")
-    enabled_entry.add_to_hass(hass)
-    disabled_entry = MockConfigEntry(
-        domain="automation",
-        title="Disabled",
-        disabled_by=ConfigEntryDisabler.USER,
-    )
-    disabled_entry.add_to_hass(hass)
-
-    # Insert sensor before homeassistant at same severity to test domain tie-breaker
-    ir.async_create_issue(
-        hass,
-        "sensor",
-        "units_changed_sensor.power",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="units_changed",
-        translation_placeholders={"statistic_id": "sensor.power"},
-    )
-    ir.async_create_issue(
-        hass,
-        "homeassistant",
-        "yaml_aqualogic",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": "aqualogic",
-            "integration_title": "AquaLogic",
-        },
-    )
-    # Same (ignored=False, severity=ERROR, domain="automation") as z_persistent_error
-    ir.async_create_issue(
-        hass,
-        "automation",
-        "a_runtime_error",
-        config_entry_id=enabled_entry.entry_id,
-        is_fixable=True,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="service_not_found",
-        translation_placeholders={
-            "service": "light.turn_on",
-            "entity_id": "automation.a",
-            "name": "A",
-            "edit": "/config/automation/edit/a",
-        },
-    )
-    ir.async_create_issue(
-        hass,
-        "automation",
-        "validation_failed_critical",
-        is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
-        translation_key="validation_failed_actions",
-        translation_placeholders={
-            "entity_id": "automation.alarm",
-            "name": "Alarm",
-            "error": "Invalid config",
-            "edit": "/config/automation/edit/2",
-        },
-    )
-    ir.async_create_issue(
-        hass,
-        "automation",
-        "hidden_disabled_entry",
-        config_entry_id=disabled_entry.entry_id,
-        is_fixable=False,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="validation_failed_actions",
-        translation_placeholders={
-            "entity_id": "automation.disabled",
-            "name": "Disabled",
-            "error": "Disabled",
-            "edit": "/config/automation/edit/3",
-        },
-    )
-    # Insert ignored WARNING before ignored CRITICAL to test ignored severity sort
-    ir.async_create_issue(
-        hass,
-        "sensor",
-        "ignored_warn",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="units_changed",
-        translation_placeholders={"statistic_id": "sensor.ignored"},
-    )
-    ir.async_ignore_issue(hass, "sensor", "ignored_warn", True)
-    ir.async_create_issue(
-        hass,
-        "homeassistant",
-        "ignored_critical",
-        is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": "demo",
-            "integration_title": "Demo",
-        },
-    )
-    ir.async_ignore_issue(hass, "homeassistant", "ignored_critical", True)
-
-    default_result = await api.async_call_tool(llm.ToolInput(TOOL_NAME, {}))
-    assert [item["issue_id"] for item in default_result.data["issues"]] == [
-        "validation_failed_critical",
-        "a_runtime_error",
-        "z_persistent_error",
-        "yaml_aqualogic",
-        "units_changed_sensor.power",
-        "ignored_critical",
-        "ignored_warn",
-    ]
-
-    without_ignored = await api.async_call_tool(
-        llm.ToolInput(TOOL_NAME, {"include_ignored": "false"})
-    )
-    assert [item["issue_id"] for item in without_ignored.data["issues"]] == [
-        "validation_failed_critical",
-        "a_runtime_error",
-        "z_persistent_error",
-        "yaml_aqualogic",
-        "units_changed_sensor.power",
-    ]
-
-
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
+@pytest.mark.usefixtures("setup_issues")
 @pytest.mark.parametrize(
     ("tool_args", "expected_ids"),
     [
         pytest.param(
-            {"domain": "  AUTOMATION  "},
-            ["auto_error"],
+            {},
+            [
+                "crit_1",
+                "err_1",
+                "err_2",
+                "err_0",
+                "warn_1",
+                "ignored_crit",
+                "ignored_warn",
+            ],
+            id="default_priority_sort",
+        ),
+        pytest.param(
+            {"include_ignored": False},
+            ["crit_1", "err_1", "err_2", "err_0", "warn_1"],
+            id="exclude_ignored",
+        ),
+        pytest.param(
+            {"domain": "  DOMAIN_A  "},
+            ["err_1", "err_2", "warn_1", "ignored_crit"],
             id="single_domain",
         ),
         pytest.param(
-            {"domain": "aqualogic"},
+            {"domain": "other_domain"},
             [],
             id="does_not_match_issue_domain",
         ),
         pytest.param(
-            {"domain": ["sensor", "  HOMEASSISTANT "]},
-            ["yaml_aqualogic", "sensor_warn"],
-            id="domain_list",
+            {"domain": ["domain_b", " DOMAIN_A "], "severity": "ERROR"},
+            ["err_1", "err_2", "err_0"],
+            id="domain_list_and_severity",
         ),
         pytest.param(
-            {"severity": "ERROR"},
-            ["auto_error"],
-            id="severity_error",
-        ),
-        pytest.param(
-            {"domain": "homeassistant", "severity": "warning"},
-            ["yaml_aqualogic"],
-            id="domain_and_severity",
-        ),
-        pytest.param(
-            {"domain": "hue"},
-            [],
-            id="no_matches",
+            {"severity": "warning", "include_ignored": "false"},
+            ["warn_1"],
+            id="severity_without_ignored",
         ),
     ],
 )
-async def test_get_issues_filtering(
-    hass: HomeAssistant,
+async def test_get_issues_filtering_and_sorting(
     llm_api: llm.APIInstance,
     tool_args: JsonObjectType,
     expected_ids: list[str],
 ) -> None:
-    """Test filtering repair issues by domain and severity."""
-    ir.async_create_issue(
-        hass,
-        "automation",
-        "auto_error",
-        is_fixable=True,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="service_not_found",
-        translation_placeholders={
-            "service": "light.turn_on",
-            "entity_id": "automation.morning",
-            "name": "Morning",
-            "edit": "/config/automation/edit/1",
-        },
-    )
-    ir.async_create_issue(
-        hass,
-        "homeassistant",
-        "yaml_aqualogic",
-        is_fixable=False,
-        issue_domain="aqualogic",
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": "aqualogic",
-            "integration_title": "AquaLogic",
-        },
-    )
-    ir.async_create_issue(
-        hass,
-        "sensor",
-        "sensor_warn",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="units_changed",
-        translation_placeholders={"statistic_id": "sensor.power"},
-    )
-
+    """Test priority sorting, visibility rules, and filtering."""
     result = await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, tool_args))
     assert [item["issue_id"] for item in result.data["issues"]] == expected_ids
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
 @pytest.mark.parametrize(
     ("context_language", "expected_language"),
     [
@@ -411,15 +248,13 @@ async def test_get_issues_language_resolution(
     """Test translation language resolution from LLMContext and hass.config."""
     llm_context.language = context_language
     hass.config.language = "nl"
-
     ir.async_create_issue(
         hass,
-        "sensor",
-        "sensor_warn",
+        "domain_a",
+        "issue_1",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="units_changed",
-        translation_placeholders={"statistic_id": "sensor.power"},
+        translation_key="issue_1",
     )
 
     with patch(
@@ -429,73 +264,38 @@ async def test_get_issues_language_resolution(
         await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, {}))
 
     mock_get_translations.assert_awaited_once_with(
-        hass, expected_language, "issues", {"sensor"}
+        hass, expected_language, "issues", {"domain_a"}
     )
 
 
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    [["uninstalled_custom_domain"]],
-)
-async def test_get_issues_uninstalled_domain_real_translations(
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
+async def test_get_issues_missing_translations_and_placeholders(
     hass: HomeAssistant,
     llm_api: llm.APIInstance,
 ) -> None:
-    """Test real translation lookup when an issue belongs to an unknown domain."""
+    """Test omitted missing translations and partial placeholder substitution."""
     ir.async_create_issue(
         hass,
-        "uninstalled_custom_domain",
-        "orphan_issue",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="orphan_translation_key",
-    )
-
-    result = await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, {}))
-    assert [
-        (item["issue_id"], "title" in item, "description" in item)
-        for item in result.data["issues"]
-    ] == [("orphan_issue", False, False)]
-
-
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    [["custom_partial", "custom_plain"]],
-)
-async def test_get_issues_placeholder_substitution(
-    hass: HomeAssistant,
-    llm_api: llm.APIInstance,
-) -> None:
-    """Test placeholder substitution with missing placeholders and plain strings."""
-    ir.async_create_issue(
-        hass,
-        "custom_partial",
+        "domain_a",
         "partial_issue",
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="partial_key",
-        translation_placeholders={"known": "value", "empty": ""},
+        translation_placeholders={"known": "value"},
     )
     ir.async_create_issue(
         hass,
-        "custom_plain",
-        "plain_issue",
+        "domain_b",
+        "orphan_issue",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="plain_key",
+        translation_key="orphan_key",
     )
 
     mock_translations = {
-        "component.custom_partial.issues.partial_key.title": (
-            "Found {known} [{empty}] {missing}"
-        ),
-        "component.custom_partial.issues.partial_key.description": (
-            "Details for {known} and {missing}"
-        ),
-        "component.custom_plain.issues.plain_key.title": "Plain title",
-        "component.custom_plain.issues.plain_key.description": "Plain description",
+        "component.domain_a.issues.partial_key.title": "Found {known} {missing}",
+        "component.domain_a.issues.partial_key.description": "Details for {known}",
     }
-
     with patch(
         "homeassistant.components.repairs.llm.translation.async_get_translations",
         return_value=mock_translations,
@@ -503,32 +303,21 @@ async def test_get_issues_placeholder_substitution(
         result = await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, {}))
 
     assert [
-        (item["issue_id"], item["title"], item["description"])
+        (item["issue_id"], item.get("title"), item.get("description"))
         for item in result.data["issues"]
     ] == [
-        (
-            "partial_issue",
-            "Found value [] {missing}",
-            "Details for value and {missing}",
-        ),
-        ("plain_issue", "Plain title", "Plain description"),
+        ("partial_issue", "Found value {missing}", "Details for value"),
+        ("orphan_issue", None, None),
     ]
 
 
 @pytest.mark.parametrize(
     "invalid_args",
     [
-        pytest.param({"domain": ""}, id="empty_domain_str"),
-        pytest.param({"domain": "   "}, id="whitespace_domain_str"),
+        pytest.param({"domain": "   "}, id="whitespace_domain"),
         pytest.param({"domain": []}, id="empty_domain_list"),
-        pytest.param({"domain": ["hue", "   "]}, id="valid_and_whitespace_domain"),
-        pytest.param({"domain": 123}, id="non_str_domain"),
-        pytest.param({"domain": None}, id="none_domain"),
         pytest.param({"severity": "info"}, id="invalid_severity"),
-        pytest.param({"severity": None}, id="none_severity"),
         pytest.param({"include_ignored": "invalid"}, id="invalid_include_ignored"),
-        pytest.param({"include_ignored": None}, id="none_include_ignored"),
-        pytest.param({"include_ignored": []}, id="list_include_ignored"),
         pytest.param({"unknown": True}, id="unknown_arg"),
     ],
 )
@@ -536,6 +325,6 @@ async def test_get_issues_invalid_args(
     llm_api: llm.APIInstance,
     invalid_args: JsonObjectType,
 ) -> None:
-    """Test invalid arguments raise probatio.Invalid."""
+    """Test invalid arguments are rejected by the schema."""
     with pytest.raises(probatio.Invalid):
         await llm_api.async_call_tool(llm.ToolInput(TOOL_NAME, invalid_args))

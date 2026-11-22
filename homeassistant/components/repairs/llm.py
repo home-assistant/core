@@ -24,7 +24,6 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 from .const import DOMAIN
 
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
-_SEVERITIES = [severity.value for severity in ir.IssueSeverity]
 _SEVERITY_ORDER: dict[str, int] = {
     ir.IssueSeverity.CRITICAL: 0,
     ir.IssueSeverity.ERROR: 1,
@@ -42,7 +41,7 @@ def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObj
     result: JsonObjectType = {
         "domain": issue.domain,
         "issue_id": issue.issue_id,
-        "severity": str(issue.severity).lower(),
+        "severity": str(issue.severity),
         "is_fixable": issue.is_fixable,
         "created": issue.created.isoformat(),
     }
@@ -53,7 +52,7 @@ def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObj
     for field in ("title", "description"):
         if value := translations.get(f"{key_prefix}.{field}"):
             for placeholder, replacement in placeholders.items():
-                value = value.replace(f"{{{placeholder}}}", str(replacement))
+                value = value.replace(f"{{{placeholder}}}", replacement)
             result[field] = value
     if issue.breaks_in_ha_version:
         result["breaks_in_ha_version"] = issue.breaks_in_ha_version
@@ -79,18 +78,12 @@ def _get_issues(
         and not issue_registry.async_is_hidden(issue)
         and (include_ignored or issue.dismissed_version is None)
         and (domains is None or issue.domain.lower() in domains)
-        and (
-            severity is None
-            or (issue.severity is not None and str(issue.severity).lower() == severity)
-        )
+        and (severity is None or issue.severity == severity)
     ]
     issues.sort(
         key=lambda issue: (
             issue.dismissed_version is not None,
-            _SEVERITY_ORDER.get(
-                str(issue.severity).lower() if issue.severity is not None else "",
-                len(_SEVERITY_ORDER),
-            ),
+            _SEVERITY_ORDER.get(issue.severity or "", 3),
             issue.domain,
             issue.issue_id,
         )
@@ -130,17 +123,11 @@ class GetIssuesTool(Tool):
             ),
             probatio.Optional(
                 "severity",
-                description=(
-                    "Filter by issue severity. Allowed values: "
-                    "'warning', 'error', 'critical'."
-                ),
-            ): probatio.All(str, probatio.Lower, probatio.In(_SEVERITIES)),
+                description="Filter by issue severity.",
+            ): probatio.All(str, probatio.Lower, probatio.In(list(_SEVERITY_ORDER))),
             probatio.Optional(
                 "include_ignored",
-                description=(
-                    "Whether to include ignored (dismissed) issues in the results "
-                    "(default: true)."
-                ),
+                description="Whether to include ignored (dismissed) issues in the results.",
                 default=True,
             ): cv.boolean,
         }

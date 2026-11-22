@@ -65,15 +65,15 @@
       }),
       'include_ignored': dict({
         'default': True,
-        'description': 'Whether to include ignored (dismissed) issues in the results (default: true).',
+        'description': 'Whether to include ignored (dismissed) issues in the results.',
         'type': 'boolean',
       }),
       'severity': dict({
-        'description': "Filter by issue severity. Allowed values: 'warning', 'error', 'critical'.",
+        'description': 'Filter by issue severity.',
         'enum': list([
-          'critical',
-          'error',
-          'warning',
+          <IssueSeverity.CRITICAL: 'critical'>,
+          <IssueSeverity.ERROR: 'error'>,
+          <IssueSeverity.WARNING: 'warning'>,
         ]),
         'format': 'lower',
         'type': 'string',
