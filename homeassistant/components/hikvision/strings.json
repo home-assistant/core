@@ -504,6 +504,323 @@
         "name": "Zoom limit ratio"
       }
     },
+    "sensor": {
+      "backlight_compensation": {
+        "name": "Backlight compensation",
+        "state": {
+          "false": "[%key:component::hikvision::entity::select::backlight_compensation::state::false%]",
+          "true": "[%key:component::hikvision::entity::select::backlight_compensation::state::ture%]",
+          "ture": "[%key:component::hikvision::entity::select::backlight_compensation::state::ture%]"
+        }
+      },
+      "backlight_compensation_mode": {
+        "name": "Backlight compensation mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::auto%]",
+          "center": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::center%]",
+          "close": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::close%]",
+          "down": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::down%]",
+          "left": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::left%]",
+          "region": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::region%]",
+          "right": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::right%]",
+          "up": "[%key:component::hikvision::entity::select::backlight_compensation_mode::state::up%]"
+        }
+      },
+      "capture_mode": {
+        "name": "Capture mode",
+        "state": {
+          "1920_1080_30fps": "[%key:component::hikvision::entity::select::capture_mode::state::1920_1080_30fps%]",
+          "close": "[%key:component::hikvision::entity::select::capture_mode::state::close%]"
+        }
+      },
+      "color_mode": {
+        "name": "Color mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::color_mode::state::auto%]",
+          "black_white": "[%key:component::hikvision::entity::select::color_mode::state::black_white%]",
+          "color": "[%key:component::hikvision::entity::select::color_mode::state::color%]",
+          "indoor": "[%key:component::hikvision::entity::select::color_mode::state::indoor%]",
+          "outdoor": "[%key:component::hikvision::entity::select::color_mode::state::outdoor%]"
+        }
+      },
+      "day_night_mode": {
+        "name": "Day/night mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::day_night_mode::state::auto%]",
+          "day": "[%key:component::hikvision::entity::select::day_night_mode::state::day%]",
+          "eventtrigger": "[%key:component::hikvision::entity::select::day_night_mode::state::eventtrigger%]",
+          "night": "[%key:component::hikvision::entity::select::day_night_mode::state::night%]",
+          "schedule": "[%key:component::hikvision::entity::select::day_night_mode::state::schedule%]"
+        }
+      },
+      "day_night_schedule_type": {
+        "name": "Day/night schedule type",
+        "state": {
+          "day": "[%key:component::hikvision::entity::select::day_night_schedule_type::state::day%]",
+          "night": "[%key:component::hikvision::entity::select::day_night_schedule_type::state::night%]"
+        }
+      },
+      "defog": {
+        "name": "Defog",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::defog::state::auto%]",
+          "close": "[%key:component::hikvision::entity::select::defog::state::close%]",
+          "manual": "[%key:component::hikvision::entity::select::defog::state::manual%]",
+          "open": "[%key:component::hikvision::entity::select::defog::state::open%]"
+        }
+      },
+      "digital_slow_shutter": {
+        "name": "[%key:component::hikvision::entity::switch::digital_slow_shutter::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "digital_slow_shutter_level": {
+        "name": "Digital slow shutter level",
+        "state": {
+          "1_25": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::1_25%]",
+          "1_5": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::1_5%]",
+          "2": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::2%]",
+          "3": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::3%]",
+          "4": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::4%]",
+          "6": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::6%]",
+          "8": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::8%]",
+          "auto": "[%key:component::hikvision::entity::select::digital_slow_shutter_level::state::auto%]"
+        }
+      },
+      "event_intelligence_brightness_mode": {
+        "name": "Event intelligence brightness mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::event_intelligence_brightness_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::event_intelligence_brightness_mode::state::manual%]"
+        }
+      },
+      "exposure_mode": {
+        "name": "Exposure mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::exposure_mode::state::auto%]",
+          "irisfirst": "[%key:component::hikvision::entity::select::exposure_mode::state::irisfirst%]",
+          "manual": "[%key:component::hikvision::entity::select::exposure_mode::state::manual%]",
+          "piris_general": "[%key:component::hikvision::entity::select::exposure_mode::state::piris_general%]",
+          "shutterfirst": "[%key:component::hikvision::entity::select::exposure_mode::state::shutterfirst%]"
+        }
+      },
+      "flip_direction": {
+        "name": "Flip direction",
+        "state": {
+          "center": "[%key:component::hikvision::entity::select::flip_direction::state::center%]",
+          "leftright": "[%key:component::hikvision::entity::select::flip_direction::state::leftright%]",
+          "updown": "[%key:component::hikvision::entity::select::flip_direction::state::updown%]"
+        }
+      },
+      "focus_distance_mode": {
+        "name": "Focus distance mode",
+        "state": {
+          "compatible": "[%key:component::hikvision::entity::select::focus_distance_mode::state::compatible%]",
+          "manual": "[%key:component::hikvision::entity::select::focus_distance_mode::state::manual%]"
+        }
+      },
+      "focus_limit_mode": {
+        "name": "Focus limit mode"
+      },
+      "focus_mode": {
+        "name": "Focus mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::focus_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::focus_mode::state::manual%]",
+          "semiautomatic": "[%key:component::hikvision::entity::select::focus_mode::state::semiautomatic%]"
+        }
+      },
+      "highlight_compensation": {
+        "name": "[%key:component::hikvision::entity::switch::highlight_compensation::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "highlight_compensation_mode": {
+        "name": "Highlight compensation mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::highlight_compensation_mode::state::auto%]",
+          "close": "[%key:component::hikvision::entity::select::highlight_compensation_mode::state::close%]",
+          "open": "[%key:component::hikvision::entity::select::highlight_compensation_mode::state::open%]"
+        }
+      },
+      "image_flip": {
+        "name": "[%key:component::hikvision::entity::switch::image_flip::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "image_freeze": {
+        "name": "[%key:component::hikvision::entity::switch::image_freeze::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "image_loss_detection": {
+        "name": "[%key:component::hikvision::entity::switch::image_loss_detection::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "image_stabilization": {
+        "name": "[%key:component::hikvision::entity::switch::image_stabilization::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "ir_light_mode": {
+        "name": "IR light mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::ir_light_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::ir_light_mode::state::manual%]"
+        }
+      },
+      "iris_level": {
+        "name": "Iris level"
+      },
+      "lens_distortion_correction": {
+        "name": "[%key:component::hikvision::entity::switch::lens_distortion_correction::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "lens_initialization": {
+        "name": "[%key:component::hikvision::entity::switch::lens_initialization::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "light_brightness_mode": {
+        "name": "Light brightness mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::light_brightness_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::light_brightness_mode::state::manual%]"
+        }
+      },
+      "max_shutter_speed": {
+        "name": "Maximum shutter speed"
+      },
+      "min_shutter_speed": {
+        "name": "Minimum shutter speed"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction": {
+        "name": "Noise reduction",
+        "state": {
+          "advanced": "[%key:component::hikvision::entity::select::noise_reduction::state::advanced%]",
+          "close": "[%key:component::hikvision::entity::select::noise_reduction::state::close%]",
+          "general": "[%key:component::hikvision::entity::select::noise_reduction::state::general%]"
+        }
+      },
+      "p_iris_mode": {
+        "name": "P-Iris mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::p_iris_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::p_iris_mode::state::manual%]"
+        }
+      },
+      "proportional_pan": {
+        "name": "[%key:component::hikvision::entity::switch::proportional_pan::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "rotate": {
+        "name": "[%key:component::hikvision::entity::switch::rotate::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "scene_mode": {
+        "name": "Scene mode",
+        "state": {
+          "indoor": "[%key:component::hikvision::entity::select::scene_mode::state::indoor%]",
+          "outdoor": "[%key:component::hikvision::entity::select::scene_mode::state::outdoor%]"
+        }
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_supplement_light": {
+        "name": "[%key:component::hikvision::entity::switch::smart_supplement_light::name%]",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
+      "smart_supplement_light_mode": {
+        "name": "Smart supplement light mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::smart_supplement_light_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::smart_supplement_light_mode::state::manual%]"
+        }
+      },
+      "supplement_light": {
+        "name": "Supplement light",
+        "state": {
+          "close": "[%key:component::hikvision::entity::select::supplement_light::state::close%]",
+          "colorvuwhitelight": "[%key:component::hikvision::entity::select::supplement_light::state::colorvuwhitelight%]",
+          "eventintelligence": "[%key:component::hikvision::entity::select::supplement_light::state::eventintelligence%]",
+          "irlight": "[%key:component::hikvision::entity::select::supplement_light::state::irlight%]"
+        }
+      },
+      "supplement_light_mode": {
+        "name": "Supplement light mode",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::supplement_light_mode::state::auto%]",
+          "manual": "[%key:component::hikvision::entity::select::supplement_light_mode::state::manual%]"
+        }
+      },
+      "video_standard": {
+        "name": "[%key:component::hikvision::entity::select::video_standard::name%]",
+        "state": {
+          "50hz": "[%key:component::hikvision::entity::select::video_standard::state::50hz%]",
+          "60hz": "[%key:component::hikvision::entity::select::video_standard::state::60hz%]"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::wdr::state::auto%]",
+          "close": "[%key:component::hikvision::entity::select::wdr::state::close%]",
+          "open": "[%key:component::hikvision::entity::select::wdr::state::open%]"
+        }
+      },
+      "white_balance": {
+        "name": "White balance",
+        "state": {
+          "auto": "[%key:component::hikvision::entity::select::white_balance::state::auto%]",
+          "auto1": "[%key:component::hikvision::entity::select::white_balance::state::auto1%]",
+          "auto2": "[%key:component::hikvision::entity::select::white_balance::state::auto2%]",
+          "autotrace": "[%key:component::hikvision::entity::select::white_balance::state::autotrace%]",
+          "daylightlamp": "[%key:component::hikvision::entity::select::white_balance::state::daylightlamp%]",
+          "incandescentlight": "[%key:component::hikvision::entity::select::white_balance::state::incandescentlight%]",
+          "indoor": "[%key:component::hikvision::entity::select::white_balance::state::indoor%]",
+          "locked": "[%key:component::hikvision::entity::select::white_balance::state::locked%]",
+          "manual": "[%key:component::hikvision::entity::select::white_balance::state::manual%]",
+          "naturallight": "[%key:component::hikvision::entity::select::white_balance::state::naturallight%]",
+          "outdoor": "[%key:component::hikvision::entity::select::white_balance::state::outdoor%]",
+          "sodiumlight": "[%key:component::hikvision::entity::select::white_balance::state::sodiumlight%]",
+          "warmlight": "[%key:component::hikvision::entity::select::white_balance::state::warmlight%]"
+        }
+      },
+      "zoom_limit_ratio": {
+        "name": "Zoom limit ratio"
+      }
+    },
     "switch": {
       "backlight_compensation": {
         "name": "Backlight compensation"

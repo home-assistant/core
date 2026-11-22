@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HikvisionConfigEntry
+from .const import IMAGE_SWITCH_SETTINGS
 from .coordinator import HikvisionImageCoordinator
 from .entity import HikvisionImageEntity
 
@@ -26,92 +27,15 @@ class HikvisionSwitchEntityDescription(SwitchEntityDescription):
     path: str
 
 
-SWITCH_DESCRIPTIONS: tuple[HikvisionSwitchEntityDescription, ...] = (
-    # Only a camera that has the flag without a mode to go with it gets this one: pyHik
-    # folds the flag into the mode, which is then a select.
+SWITCH_DESCRIPTIONS: tuple[HikvisionSwitchEntityDescription, ...] = tuple(
     HikvisionSwitchEntityDescription(
-        key="backlight_compensation",
-        translation_key="backlight_compensation",
-        path="BLC/enabled",
+        key=setting.key,
+        translation_key=setting.key,
+        path=setting.path,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="highlight_compensation",
-        translation_key="highlight_compensation",
-        path="HLC/enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="smart_supplement_light",
-        translation_key="smart_supplement_light",
-        path="Exposure/OverexposeSuppress/enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="image_flip",
-        translation_key="image_flip",
-        path="ImageFlip/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        # Called corridor mode by ISAPI: the picture is turned a quarter turn.
-        key="rotate",
-        translation_key="rotate",
-        path="corridor/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="lens_distortion_correction",
-        translation_key="lens_distortion_correction",
-        path="LensDistortionCorrection/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="image_stabilization",
-        translation_key="image_stabilization",
-        path="EIS/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="digital_slow_shutter",
-        translation_key="digital_slow_shutter",
-        path="DSS/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="image_freeze",
-        translation_key="image_freeze",
-        path="ImageFreeze/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="lens_initialization",
-        translation_key="lens_initialization",
-        path="LensInitialization/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="proportional_pan",
-        translation_key="proportional_pan",
-        path="proportionalpan/enabled",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
-    HikvisionSwitchEntityDescription(
-        key="image_loss_detection",
-        translation_key="image_loss_detection",
-        path="enableImageLossDetection",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-    ),
+        entity_registry_enabled_default=setting.enabled_by_default,
+    )
+    for setting in IMAGE_SWITCH_SETTINGS
 )
 
 _DESCRIPTIONS_BY_PATH = {

@@ -13,6 +13,46 @@ DEFAULT_PORT = 80
 
 
 @dataclass(frozen=True, kw_only=True)
+class ImageSwitchSetting:
+    """An on/off image setting that the integration knows."""
+
+    key: str
+    # Matched case-insensitively: some firmware spells the same path differently.
+    path: str
+    enabled_by_default: bool = False
+
+
+# The switch platform makes a switch of each of these, and the sensor platform a
+# read-only sensor when the camera offers only one of the two values. The
+# translation key is the key.
+IMAGE_SWITCH_SETTINGS: tuple[ImageSwitchSetting, ...] = (
+    # Only a camera that has the flag without a mode to go with it gets this one: pyHik
+    # folds the flag into the mode, which is then a select.
+    ImageSwitchSetting(key="backlight_compensation", path="BLC/enabled"),
+    ImageSwitchSetting(
+        key="highlight_compensation", path="HLC/enabled", enabled_by_default=True
+    ),
+    ImageSwitchSetting(
+        key="smart_supplement_light",
+        path="Exposure/OverexposeSuppress/enabled",
+        enabled_by_default=True,
+    ),
+    ImageSwitchSetting(key="image_flip", path="ImageFlip/enabled"),
+    # Called corridor mode by ISAPI: the picture is turned a quarter turn.
+    ImageSwitchSetting(key="rotate", path="corridor/enabled"),
+    ImageSwitchSetting(
+        key="lens_distortion_correction", path="LensDistortionCorrection/enabled"
+    ),
+    ImageSwitchSetting(key="image_stabilization", path="EIS/enabled"),
+    ImageSwitchSetting(key="digital_slow_shutter", path="DSS/enabled"),
+    ImageSwitchSetting(key="image_freeze", path="ImageFreeze/enabled"),
+    ImageSwitchSetting(key="lens_initialization", path="LensInitialization/enabled"),
+    ImageSwitchSetting(key="proportional_pan", path="proportionalpan/enabled"),
+    ImageSwitchSetting(key="image_loss_detection", path="enableImageLossDetection"),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class ImageSelectSetting:
     """An image setting with a list of choices that the integration knows."""
 

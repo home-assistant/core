@@ -10,12 +10,11 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from . import HikvisionConfigEntry
 from .const import IMAGE_SELECT_SETTINGS
 from .coordinator import HikvisionImageCoordinator
-from .entity import HikvisionImageEntity
+from .entity import HikvisionImageChoiceEntity, image_option_map
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,29 +47,6 @@ _DESCRIPTIONS_BY_PATH = {
 }
 
 
-def _option_map(
-    setting: ImageSetting, description: HikvisionSelectEntityDescription
-) -> dict[str, str] | None:
-    """Return the entity option for each value the camera accepts.
-
-    Returns None if two camera values would end up with the same option, or only
-    differ in case.
-    """
-    # Untranslated options are checked too: a camera can list the same value
-    # twice, which pyHik keeps.
-    options = {
-        slugify(option) if description.translate_options else option: option
-        for option in setting.options
-    }
-    if len(options) != len(setting.options):
-        return None
-    # The camera's value is read in any case: values that only differ in case
-    # could not be told apart.
-    if len({value.lower() for value in setting.options}) != len(setting.options):
-        return None
-    return options
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HikvisionConfigEntry,
@@ -88,7 +64,9 @@ async def async_setup_entry(
             continue
         if (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower())) is None:
             continue
-        if (options := _option_map(setting, description)) is None:
+        if (
+            options := image_option_map(setting, description.translate_options)
+        ) is None:
             _LOGGER.debug(
                 "Skipping %s: its options %s cannot be told apart",
                 setting.path,
@@ -101,7 +79,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HikvisionImageSelect(HikvisionImageEntity, SelectEntity):
+class HikvisionImageSelect(HikvisionImageChoiceEntity, SelectEntity):
     """A select for an image setting with a list of choices."""
 
     entity_description: HikvisionSelectEntityDescription
@@ -115,42 +93,14 @@ class HikvisionImageSelect(HikvisionImageEntity, SelectEntity):
         options: dict[str, str],
     ) -> None:
         """Initialize the select."""
-        super().__init__(coordinator, entry, description, setting.path)
-        self._setting = setting
-        self._value_by_option = options
-        # The camera may report a value in another case than it lists it in
-        self._option_by_value = {
-            value.lower(): option for option, value in options.items()
-        }
+        super().__init__(coordinator, entry, description, setting, options)
         self._attr_options = list(options)
-
-    @property
-    @override
-    def _reported(self) -> bool:
-        """Return whether the camera reports the mode, or the flag it is linked to.
-
-        The camera leaves the mode out while the flag is off.
-        """
-        enabled_path = self._setting.linked_enabled_path
-        return super()._reported or (
-            enabled_path is not None and enabled_path in self.coordinator.data
-        )
 
     @property
     @override
     def current_option(self) -> str | None:
         """Return the current option."""
-        value = self._value
-        if (enabled_path := self._setting.linked_enabled_path) is not None:
-            # The mode is missing while the feature is off. A flag that the camera
-            # does not report, or reports as neither true nor false, says nothing:
-            # it must not hide an active mode.
-            enabled = self.coordinator.data.get(enabled_path)
-            if enabled is not None and enabled.lower() == "false":
-                value = self._setting.off_value
-        if value is None:
-            return None
-        return self._option_by_value.get(value.lower())
+        return self._current_option
 
     @override
     async def async_select_option(self, option: str) -> None:
