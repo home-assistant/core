@@ -2996,7 +2996,7 @@ async def test_install_from_the_catalog_falls_back_after_a_refresh(
     )
     assert (await client.receive_json())["success"]
 
-    assert _installed_files(config_dir) == ["custom_components/example/manifest.json"]
+    assert _installed_files(config_dir) == INTEGRATION_FILES
 
 
 @pytest.mark.parametrize("github_token", [None])

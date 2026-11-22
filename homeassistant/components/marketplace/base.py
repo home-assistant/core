@@ -984,22 +984,25 @@ class MarketplaceManager:
 
     async def async_mark_installed_integrations(self) -> None:
         """Mark integrations installed before the marker existed."""
-        for repository in self.repositories.list_installed:
-            if (
-                repository.data.category == RepositoryCategory.INTEGRATION
-                and repository.data.domain
-            ):
-                try:
-                    await self.hass.async_add_executor_job(
-                        write_marketplace_marker, Path(repository.localpath)
+        async with self.filesystem_lock:
+            for repository in self.repositories.list_installed:
+                if (
+                    repository.data.category == RepositoryCategory.INTEGRATION
+                    and repository.data.domain
+                ):
+                    try:
+                        await self.hass.async_add_executor_job(
+                            write_marketplace_marker, Path(repository.localpath)
+                        )
+                    except OSError as err:
+                        LOGGER.warning(
+                            "Could not write Marketplace marker for %s: %s",
+                            repository.data.domain,
+                            err,
+                        )
+                    async_mark_marketplace_integration(
+                        self.hass, repository.data.domain
                     )
-                except OSError as err:
-                    LOGGER.warning(
-                        "Could not write Marketplace marker for %s: %s",
-                        repository.data.domain,
-                        err,
-                    )
-                async_mark_marketplace_integration(self.hass, repository.data.domain)
 
     async def async_download_file(
         self,
