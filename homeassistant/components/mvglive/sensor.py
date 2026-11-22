@@ -247,7 +247,11 @@ class MVGSensor(SensorEntity):
         try:
             departures = await MvgApi.departures_async(
                 station_id=self._station_id,
-                limit=MAX_DEPARTURES if has_local_filters else self._number,
+                limit=(
+                    max(MAX_DEPARTURES, self._number)
+                    if has_local_filters
+                    else self._number
+                ),
                 offset=self._timeoffset,
                 transport_types=self._transport_types,
                 session=async_get_clientsession(self.hass),

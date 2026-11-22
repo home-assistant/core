@@ -62,21 +62,30 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    ("filters", "limit", "expected_minutes"),
+    ("filters", "number", "limit", "expected_minutes"),
     [
-        pytest.param({}, 2, [5, 6], id="no_local_filters"),
+        pytest.param({}, 2, 2, [5, 6], id="no_local_filters"),
         pytest.param(
             {CONF_DESTINATIONS: ["Feldmoching"]},
+            2,
             MAX_DEPARTURES,
             [6, 7],
             id="destination",
         ),
-        pytest.param({CONF_LINES: ["U2"]}, MAX_DEPARTURES, [6, 8], id="line"),
+        pytest.param({CONF_LINES: ["U2"]}, 2, MAX_DEPARTURES, [6, 8], id="line"),
         pytest.param(
             {CONF_DESTINATIONS: ["Feldmoching"], CONF_LINES: ["U2"]},
+            2,
             MAX_DEPARTURES,
             [6, 9],
             id="destination_and_line",
+        ),
+        pytest.param(
+            {CONF_LINES: ["U2"]},
+            150,
+            150,
+            [6, 8, 9, 10],
+            id="line_number_above_max",
         ),
     ],
 )
@@ -86,6 +95,7 @@ async def test_sensor_options(
     mvg_api: dict[str, AsyncMock],
     freezer: FrozenDateTimeFactory,
     filters: dict[str, list[str]],
+    number: int,
     limit: int,
     expected_minutes: list[int],
 ) -> None:
@@ -116,7 +126,7 @@ async def test_sensor_options(
             **filters,
             CONF_PRODUCTS: ["U-Bahn"],
             CONF_TIMEOFFSET: 5,
-            CONF_NUMBER: 2,
+            CONF_NUMBER: number,
         },
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
