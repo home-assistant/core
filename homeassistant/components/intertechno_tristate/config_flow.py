@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.pt2262 import PT2262Command
-import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -43,6 +43,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._device_data: dict[str, Any] | None = None
+        self._pairing_errors: dict[str, str] | None = None
 
     @override
     async def async_step_user(
@@ -113,9 +114,12 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask user to put the target device in pairing mode."""
         if user_input is None:
+            errors = self._pairing_errors
+            self._pairing_errors = None
             return self.async_show_form(
                 step_id="pairing_mode",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
+                errors=errors,
             )
 
         assert self._device_data is not None
@@ -152,17 +156,14 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=self._device_data,
                 )
 
-            return self.async_show_form(
-                step_id="pairing_mode",
-                data_schema=vol.Schema({}),
-                errors={"base": "no_response"},
-            )
+            self._pairing_errors = {"base": "no_response"}
+            return await self.async_step_pairing_mode()
 
         return self.async_show_form(
             step_id="pairing_result",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         _CONF_DEVICE_RESPONDED,
                         default=False,
                     ): selector.BooleanSelector()
@@ -174,44 +175,44 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         transmitters: list[str],
         user_input: dict[str, Any] | None = None,
-    ) -> vol.Schema:
+    ) -> probatio.Schema:
         """Build the one-step add form schema."""
         if user_input is None:
             user_input = {}
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_TRANSMITTER,
                     default=user_input.get(CONF_TRANSMITTER, transmitters[0]),
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(include_entities=transmitters),
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_HOUSECODE,
                     default=user_input.get(CONF_HOUSECODE, "A"),
                 ): selector.TextSelector(),
-                vol.Required(
+                probatio.Required(
                     CONF_GROUP,
                     default=user_input.get(CONF_GROUP, 1),
-                ): vol.All(
+                ): probatio.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_CHANNEL,
                     default=user_input.get(CONF_CHANNEL, 1),
-                ): vol.All(
+                ): probatio.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
             }
         )

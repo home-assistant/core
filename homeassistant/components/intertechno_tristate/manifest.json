@@ -1,8 +1,10 @@
 {
   "domain": "intertechno_tristate",
   "name": "Intertechno TriState",
+  "categories": ["plugs_switches"],
   "codeowners": ["@Phunkafizer"],
   "config_flow": true,
+  "connectivity": ["rf"],
   "dependencies": ["radio_frequency"],
   "documentation": "https://www.home-assistant.io/integrations/intertechno_tristate",
   "integration_type": "device",
