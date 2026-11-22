@@ -159,6 +159,7 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
         pytest.param(
             "onOffMode", False, False, Platform.SWITCH, id="read-only-power-offline"
         ),
+        pytest.param("powerfulMode", False, False, None, id="read-only-boost-offline"),
         pytest.param("onOffMode", True, True, Platform.SWITCH, id="writable-power"),
         pytest.param("powerfulMode", False, True, Platform.SENSOR, id="boost"),
     ],
@@ -167,7 +168,7 @@ def test_climate_control_without_supported_setpoint_is_exposed(
     name: str,
     settable: bool,
     gateway_online: bool,
-    expected_platform: Platform,
+    expected_platform: Platform | None,
 ) -> None:
     """Expose controls when no climate entity can own them."""
     point = ManagementPoint(
