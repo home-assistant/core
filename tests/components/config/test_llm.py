@@ -42,7 +42,11 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, DependencyError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    DependencyError,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     config_entry_oauth2_flow,
@@ -2112,16 +2116,14 @@ async def test_get_entity_settings(
         }
     )
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={
-            "error": "Entity 'switch.unknown' not found. Entities without a unique "
-            "ID have no settings."
-        },
-        error=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'switch.unknown' not found. Entities without a unique ID "
+        "have no settings.",
+    ):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
+        )
 
 
 async def test_update_entity_settings(
@@ -2234,10 +2236,9 @@ async def test_update_entity_settings_errors(
     )
 
     tool = entity_tools["config__update_entity_settings"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, tool_args), llm_context
-    )
-    assert result == llm.ToolResult(data={"error": error}, error=True)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
 
 
 @pytest.mark.parametrize(
@@ -2349,16 +2350,14 @@ async def test_remove_entity(
 
     tool = entity_tools["config__remove_entity"]
     for entity_id in ("switch.provided", "switch.disabled"):
-        result = await tool.async_call(
-            hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), llm_context
-        )
-        assert result == llm.ToolResult(
-            data={
-                "error": f"Entity '{entity_id}' is still provided by its "
-                "integration, or is disabled. Only entities that their "
-                "integration no longer provides can be removed."
-            },
-            error=True,
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await tool.async_call(
+                hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), llm_context
+            )
+        assert str(exc_info.value) == (
+            f"Entity '{entity_id}' is still provided by its integration, or is "
+            "disabled. Only entities that their integration no longer provides "
+            "can be removed."
         )
         assert entity_registry.async_get(entity_id) is not None
 
@@ -2368,10 +2367,10 @@ async def test_remove_entity(
     assert result == llm.ToolResult(data={"result": {"entity_id": "switch.restored"}})
     assert entity_registry.async_get("switch.restored") is None
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
-    )
-    assert result.error
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
+        )
 
 
 async def test_get_config_entries_flow_capabilities(
