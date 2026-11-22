@@ -44,7 +44,9 @@ class MockAdsDevice:
         # out get no first value, as with a PLC that never answers.
         self.values: dict[str, bytes] = {}
         self._handles = count(1)
-        self._subscriptions: dict[str, tuple[int, Callable[[Any, str], None]]] = {}
+        self._subscriptions: dict[
+            str, list[tuple[int, Callable[[Any, str], None]]]
+        ] = {}
 
     def add_device_notification(
         self,
@@ -54,7 +56,7 @@ class MockAdsDevice:
     ) -> tuple[int, int]:
         """Hand out a handle, then deliver the first value from another thread."""
         handle = next(self._handles)
-        self._subscriptions[name] = (handle, callback)
+        self._subscriptions.setdefault(name, []).append((handle, callback))
         if name in self.values:
             # The hub registers the handle before releasing the lock the
             # callback takes, so the delivery cannot run ahead of it.
@@ -66,16 +68,16 @@ class MockAdsDevice:
         return handle, handle
 
     async def async_push(self, hass: HomeAssistant, name: str, payload: bytes) -> None:
-        """Deliver a new value for a variable, from a thread like the router."""
-        handle, callback = self._subscriptions[name]
-        await hass.async_add_executor_job(
-            callback, build_notification(handle, payload), name
-        )
+        """Deliver a new value to every subscription of a variable, like the router."""
+        for handle, callback in self._subscriptions[name]:
+            await hass.async_add_executor_job(
+                callback, build_notification(handle, payload), name
+            )
         await hass.async_block_till_done()
 
     async def async_push_unknown(self, hass: HomeAssistant, payload: bytes) -> None:
         """Deliver a notification for a handle nobody subscribed to."""
-        _, callback = next(iter(self._subscriptions.values()))
+        _, callback = next(iter(self._subscriptions.values()))[0]
         await hass.async_add_executor_job(
             callback, build_notification(next(self._handles), payload), "unknown"
         )
