@@ -2042,12 +2042,11 @@ class UpdateDeviceSettingsTool(Tool):
             settings["disabled_by"] = dr.DeviceEntryDisabler.USER
 
         registry = dr.async_get(hass)
-        enabling = (
+        if (
             "disabled_by" in settings
             and settings["disabled_by"] is None
             and device.disabled_by is not None
-        )
-        if enabling:
+        ):
             if (
                 config_entry := hass.config_entries.async_get_entry(
                     device.config_entry_id
@@ -2065,20 +2064,6 @@ class UpdateDeviceSettingsTool(Tool):
                     f"The parent device '{device.parent_device_id}' is disabled. "
                     "Enable the parent device first."
                 )
-        # Enabling the device enables these entities and the child devices that it
-        # disabled, which reloads the integration
-        device_ids = [device_id] + [
-            child.id
-            for child in dr.async_entries_for_parent_device(registry, device_id)
-            if child.disabled_by is dr.DeviceEntryDisabler.DEVICE
-        ]
-        entities_to_enable = enabling and any(
-            entity.disabled_by is er.RegistryEntryDisabler.DEVICE
-            for enabled_device_id in device_ids
-            for entity in er.async_entries_for_device(
-                er.async_get(hass), enabled_device_id, include_disabled_entities=True
-            )
-        )
         updated: dr.AnyDeviceEntry | None
         if isinstance(device, dr.ChildDeviceEntry):
             updated = registry.async_update_child_device(device_id, **settings)
@@ -2086,22 +2071,7 @@ class UpdateDeviceSettingsTool(Tool):
             updated = registry.async_update_device(device_id, **settings)
         if TYPE_CHECKING:
             assert updated is not None
-
-        result = _format_device_settings(updated)
-        if entities_to_enable and updated.disabled_by is None:
-            if (
-                config_entry := hass.config_entries.async_get_entry(
-                    updated.config_entry_id
-                )
-            ) and not config_entry.supports_unload:
-                result["note"] = "Home Assistant must restart to add the device."
-            else:
-                result["note"] = (
-                    "The integration reloads in "
-                    f"{config_entries.RELOAD_AFTER_UPDATE_DELAY} seconds to add "
-                    "the device."
-                )
-        return ToolResult(data={"result": result})
+        return ToolResult(data={"result": _format_device_settings(updated)})
 
 
 @callback

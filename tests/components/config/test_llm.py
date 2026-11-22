@@ -3345,47 +3345,18 @@ async def test_update_device_settings_invalid_args(
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
 
 
-@pytest.mark.parametrize(
-    ("supports_unload", "note"),
-    [
-        (True, "The integration reloads in 30 seconds to add the device."),
-        (False, "Home Assistant must restart to add the device."),
-    ],
-)
 async def test_update_device_settings_enable(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    supports_unload: bool,
-    note: str,
 ) -> None:
-    """Test that enabling a device tells how the device is added."""
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True)
-            if supports_unload
-            else None,
-        ),
-    )
+    """Test enabling a device."""
     config_entry = MockConfigEntry(domain=TEST_DOMAIN)
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(TEST_DOMAIN, "strip")},
         disabled_by=dr.DeviceEntryDisabler.USER,
-    )
-    entity_registry.async_get_or_create(
-        "switch",
-        TEST_DOMAIN,
-        "outlet",
-        config_entry=config_entry,
-        device_id=device.id,
-        disabled_by=er.RegistryEntryDisabler.DEVICE,
     )
 
     tool = UpdateDeviceSettingsTool()
@@ -3394,69 +3365,8 @@ async def test_update_device_settings_enable(
         llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
         llm_context,
     )
-    assert not result.error
     assert result.data["result"]["disabled_by"] is None
-    assert result.data["result"]["note"] == note
     assert device_registry.async_get(device.id).disabled_by is None
-
-
-async def test_update_device_settings_enable_without_entities(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that enabling a device without entities to enable gives no note."""
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(TEST_DOMAIN, "strip")},
-        disabled_by=dr.DeviceEntryDisabler.USER,
-    )
-
-    tool = UpdateDeviceSettingsTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
-        llm_context,
-    )
-    assert "note" not in result.data["result"]
-    assert device_registry.async_get(device.id).disabled_by is None
-
-
-async def test_update_device_settings_enable_parent_with_child_entities(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the note when only a child device of the enabled device has entities."""
-    parent, child = _create_parent_and_child(hass, device_registry)
-    entity = entity_registry.async_get_or_create(
-        "switch",
-        "test",
-        "outlet_1",
-        config_entry=hass.config_entries.async_get_entry(parent.config_entry_id),
-        device_id=child.id,
-    )
-    device_registry.async_update_device(
-        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-    assert device_registry.async_get(child.id).disabled_by is (
-        dr.DeviceEntryDisabler.DEVICE
-    )
-    assert entity_registry.async_get(entity.entity_id).disabled_by is (
-        er.RegistryEntryDisabler.DEVICE
-    )
-
-    tool = UpdateDeviceSettingsTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"device_id": parent.id, "disabled_by": None}),
-        llm_context,
-    )
-    assert "note" in result.data["result"]
 
 
 async def test_update_device_settings_enable_disabled_config_entry(
