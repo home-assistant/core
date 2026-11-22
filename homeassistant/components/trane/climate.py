@@ -16,11 +16,12 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DEADBAND
 from .entity import TraneZoneEntity
 from .types import TraneConfigEntry
 
 PARALLEL_UPDATES = 0
+
+ATTR_DEADBAND = "deadband_fahrenheit"
 
 HA_TO_ZONE_MODE = {
     HVACMode.OFF: ZoneMode.OFF,

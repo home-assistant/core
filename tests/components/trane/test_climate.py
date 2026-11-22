@@ -14,10 +14,8 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-
-from homeassistant.components.trane.const import ATTR_DEADBAND
+from homeassistant.components.trane.climate import ATTR_DEADBAND
 from homeassistant.const import Platform, TargetKey
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM

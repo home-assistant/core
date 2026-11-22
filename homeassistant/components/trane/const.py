@@ -4,6 +4,4 @@ DOMAIN = "trane"
 
 CONF_SECRET_KEY = "secret_key"
 
-ATTR_DEADBAND = "deadband_fahrenheit"
-
 MANUFACTURER = "Trane"
