@@ -288,6 +288,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if STATE_HEAT_PUMP not in states:
                 states.append(STATE_HEAT_PUMP)
             states.append(STATE_PERFORMANCE)
+        if (current_operation := self.current_operation) is not None and (
+            current_operation not in states
+        ):
+            states.append(current_operation)
         return states
 
     def _requested_modes(self, operation_mode: str) -> tuple[str | None, str | None]:

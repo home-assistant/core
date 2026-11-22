@@ -79,8 +79,8 @@ def scalar_platform_for_point(
         )
     ):
         return None
-    # Econo mode is already exposed as a preset only on climate points that
-    # also produce a climate entity; otherwise retain the scalar switch.
+    # Keep climate power and mode characteristics on the climate entity when
+    # that point produces one, rather than exposing duplicate scalar entities.
     if (
         name in {"econoMode", "onOffMode", "powerfulMode"}
         and point.management_point_type == "climateControl"

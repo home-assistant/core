@@ -997,12 +997,12 @@ async def test_climate_state_handles_missing_hvac_data(
     assert state.state == expected_state
 
 
-async def test_climate_state_does_not_advertise_read_only_off_mode(
+async def test_climate_state_advertises_read_only_off_mode(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Keep observed off state while excluding the unwritable off mode option."""
+    """Advertise the observed off state even without writable power control."""
     (
         entity_id,
         _,
@@ -1021,7 +1021,7 @@ async def test_climate_state_does_not_advertise_read_only_off_mode(
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
     assert state is not None and entity is not None
     assert state.state == HVACMode.OFF
-    assert HVACMode.OFF not in entity.hvac_modes
+    assert HVACMode.OFF in entity.hvac_modes
 
 
 async def test_climate_service_publishes_fixed_mode_before_speed_failure(
