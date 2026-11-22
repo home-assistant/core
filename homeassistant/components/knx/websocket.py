@@ -267,6 +267,7 @@ async def ws_get_knx_project(
         probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
         probatio.Optional("group_id"): str,
         probatio.Optional("include_configured", default=True): bool,
+        probatio.Optional("include_superseded", default=True): bool,
     }
 )
 @websocket_api.async_response
@@ -285,6 +286,7 @@ async def ws_get_entity_suggestions(
             platform=msg.get("platform"),
             group_id=msg.get("group_id"),
             include_configured=msg["include_configured"],
+            include_superseded=msg["include_superseded"],
         ),
     )
     connection.send_result(msg["id"], result)

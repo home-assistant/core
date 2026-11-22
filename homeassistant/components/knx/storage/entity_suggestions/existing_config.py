@@ -35,6 +35,7 @@ from .const import (
     ProviderSuggestion,
     SuggestedGroupAddress,
 )
+from .ga_config import ConfigPath, iter_ga_configs
 from .ga_mapping import (
     ChannelMapping,
     GaSlot,
@@ -46,8 +47,6 @@ from .ga_mapping import (
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
     from ..config_store import KNXEntityStoreModel
-
-type ConfigPath = tuple[str, ...]
 
 # the keys of a group address config that address a single group address
 _SLOTS: tuple[GaSlot, ...] = (CONF_GA_WRITE, CONF_GA_STATE)
@@ -83,22 +82,6 @@ def _project_address(address: str | int | None) -> str | None:
     return str(parsed) if isinstance(parsed, GroupAddress) else None
 
 
-def _iter_ga_configs(
-    config: dict[str, Any], path: ConfigPath = ()
-) -> list[tuple[ConfigPath, dict[str, Any]]]:
-    """Return the group address configs of a `knx` config with their path."""
-    ga_configs: list[tuple[ConfigPath, dict[str, Any]]] = []
-    for key, value in config.items():
-        if not isinstance(value, dict):
-            continue
-        if any(slot in value for slot in (*_SLOTS, CONF_GA_PASSIVE)):
-            ga_configs.append(((*path, key), value))
-        else:
-            # a section or the chosen option of a group select
-            ga_configs.extend(_iter_ga_configs(value, (*path, key)))
-    return ga_configs
-
-
 def _reference(path: ConfigPath, slot: GaSlot) -> str:
     """Name a `write` or `state` key of a config - eg. "ga_switch.write"."""
     return ".".join((*path, slot))
@@ -112,7 +95,7 @@ def _source_addresses(config: dict[str, Any]) -> list[SourceAddress]:
     """
     return [
         SourceAddress(_reference(path, slot), address, slot)
-        for path, ga_config in _iter_ga_configs(config)
+        for path, ga_config in iter_ga_configs(config)
         for slot in _SLOTS
         if (address := _project_address(ga_config.get(slot))) is not None
     ]
@@ -125,7 +108,7 @@ def _apply(config: dict[str, Any], mapping: ChannelMapping) -> dict[str, Any]:
     (eg. a central heating/cooling switchover) and keeps the addresses it has.
     """
     result = deepcopy(config)
-    for path, ga_config in _iter_ga_configs(result):
+    for path, ga_config in iter_ga_configs(result):
         passive: list[str] = []
         replaced = False
         for slot in _SLOTS:
@@ -166,7 +149,7 @@ def _project_addresses(knx_config: dict[str, Any]) -> list[str]:
     return list(
         dict.fromkeys(
             project_address
-            for _, ga_config in _iter_ga_configs(knx_config)
+            for _, ga_config in iter_ga_configs(knx_config)
             for address in (
                 *(ga_config.get(slot) for slot in _SLOTS),
                 *(ga_config.get(CONF_GA_PASSIVE) or ()),
@@ -207,7 +190,7 @@ def _suggested_name(
         mapping.target.channel
         not in (project["devices"][mapping.target.device]["channels"])
     ):
-        for _, ga_config in _iter_ga_configs(knx_config):
+        for _, ga_config in iter_ga_configs(knx_config):
             if (address := ga_config.get(CONF_GA_WRITE)) and (
                 group_address := project["group_addresses"].get(address)
             ):
