@@ -60,5 +60,17 @@
     "write_timeout": {
       "message": "Timeout while writing coil {address}"
     }
+  },
+  "options": {
+    "step": {
+      "log_set": {
+        "description": "A LOG.SET file selects the registers the pump sends without being asked. Download {link} and load it from a USB stick on the pump.\n\nThe pump only sends the first 20 slots, where 32-bit registers take two. Read-only registers are placed first, and the remaining registers are polled.",
+        "title": "LOG.SET for MODBUS40"
+      },
+      "log_set_unavailable": {
+        "description": "A LOG.SET file selects the registers the pump sends without being asked. It can only be created while the integration is loaded.",
+        "title": "LOG.SET for MODBUS40"
+      }
+    }
   }
 }
