@@ -372,7 +372,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         self.async_write_ha_state()
         try:
             await self.coordinator.supervisor_client.supervisor.update()
-        except SupervisorError as error:
+        except SupervisorError as err:
             self._update_ongoing = False
             self._version_before_update = None
             self._attr_in_progress = False
@@ -380,8 +380,8 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="supervisor_update_error",
-                translation_placeholders={"error": str(error)},
-            ) from error
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @callback
     @override
