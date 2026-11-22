@@ -5,6 +5,7 @@ from datetime import datetime
 from freezegun.api import FrozenDateTimeFactory
 from holidays import HALF_DAY, OPTIONAL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.workday.const import (
@@ -1095,3 +1096,52 @@ async def test_options_form_country_options(hass: HomeAssistant) -> None:
             "include_sundays": True,
         },
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_duplicate_of_entry_without_country_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry from before the country options is found as a duplicate."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Workday Sensor SE",
+        data={},
+        options={
+            "country": "SE",
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "custom_holidays": {"add_holidays": [], "remove_holidays": []},
+            "country_settings": {"language": "sv"},
+        },
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY: "SE"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EXCLUDES: DEFAULT_EXCLUDES,
+            CONF_OFFSET: DEFAULT_OFFSET,
+            CONF_WORKDAYS: DEFAULT_WORKDAYS,
+            SECTION_CUSTOM_HOLIDAYS: {CONF_ADD_HOLIDAYS: [], CONF_REMOVE_HOLIDAYS: []},
+            SECTION_COUNTRY_SETTINGS: {
+                CONF_LANGUAGE: "sv",
+                CONF_INCLUDE_SUNDAYS: False,
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

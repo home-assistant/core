@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Any, cast
 
-from holidays import DateLike, HolidayBase
+from holidays import DateLike, HolidayBase, country_holidays
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
@@ -18,6 +18,7 @@ from .const import (
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
+    COUNTRY_OPTIONS,
     DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -118,3 +119,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) ->
         hass.config_entries.async_update_entry(
             entry, options=options, version=2, minor_version=1
         )
+
+    if entry.version == 2 and entry.minor_version < 2:
+        options = dict(entry.options)
+        if country := options.get(CONF_COUNTRY):
+            try:
+                country_data = await hass.async_add_import_executor_job(
+                    country_holidays, country
+                )
+            except NotImplementedError:
+                supported_options = {}
+            else:
+                supported_options = country_data.get_supported_options()
+            # Store the defaults, so equal entries are found as duplicates
+            country_settings = dict(options.get(SECTION_COUNTRY_SETTINGS, {}))
+            for option in COUNTRY_OPTIONS:
+                if option in supported_options:
+                    country_settings.setdefault(option, supported_options[option])
+            if country_settings:
+                options[SECTION_COUNTRY_SETTINGS] = country_settings
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
