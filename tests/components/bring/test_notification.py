@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.services import BringService, BringServiceArgument
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -33,7 +33,7 @@ async def test_send_notification(
         service_data={
             BringServiceArgument.MESSAGE: "GOING_SHOPPING",
         },
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -64,7 +64,7 @@ async def test_send_notification_exception(
             service_data={
                 BringServiceArgument.MESSAGE: "GOING_SHOPPING",
             },
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "notify_request_failed"
@@ -91,7 +91,7 @@ async def test_send_notification_service_validation_error(
                 BringServiceArgument.MESSAGE: "URGENT_MESSAGE",
                 BringServiceArgument.ITEM: "",
             },
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "notify_missing_argument"

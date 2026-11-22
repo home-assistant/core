@@ -129,6 +129,7 @@ async def test_diagnostics_with_bluetooth(
             "api_version": {"major": 99, "minor": 99},
             "device_capabilities": {
                 "bluetooth_proxy": {"feature_flags": 0, "mac_address": ""},
+                "crash_report": {"flags": 0},
                 "sendspin": {"client_id": "", "feature_flags": 0},
                 "serial_proxies": [],
                 "store_yaml": {"supported": False},

@@ -110,15 +110,75 @@ async def test_config_entry_not_ready_no_locks(
     assert mock_config_entry.error_reason_translation_key == "no_locks"
 
 
-async def test_auth_failed_during_setup(
+@pytest.mark.parametrize("method", ["get_local_bridge", "get_locks"])
+async def test_transient_auth_failure_during_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    method: str,
 ) -> None:
-    """Test an auth error during setup starts reauth immediately."""
-    mock_tedee.get_local_bridge.side_effect = TedeeLocalAuthException("")
+    """Test an auth error during setup retries setup instead of starting reauth."""
+    getattr(mock_tedee, method).side_effect = TedeeLocalAuthException("")
 
     await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.error_reason_translation_key
+        == "authentication_failed_transient"
+    )
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    getattr(mock_tedee, method).side_effect = None
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("method", ["get_local_bridge", "get_locks"])
+async def test_persistent_auth_failure_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+) -> None:
+    """Test auth errors during setup lasting longer than the grace period start reauth."""
+    getattr(mock_tedee, method).side_effect = TedeeLocalAuthException("")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    freezer.tick(timedelta(minutes=10, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_auth_failure_grace_period_survives_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the grace period is not restarted by reloading the entry."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_tedee.sync.side_effect = TedeeLocalAuthException("")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_tedee.get_local_bridge.side_effect = TedeeLocalAuthException("")
+    freezer.tick(timedelta(minutes=10, seconds=1))
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))

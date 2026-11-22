@@ -1,7 +1,7 @@
 """Support for Meteo-France raining forecast sensor."""
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from meteofrance_api.helpers import readable_phenomenons_dict
 from meteofrance_api.model.forecast import Forecast
@@ -40,6 +40,8 @@ from .const import (
     MODEL,
 )
 from .coordinator import MeteoFranceAlertUpdateCoordinator, MeteoFranceConfigEntry
+
+PARALLEL_UPDATES = 0
 
 ALERT_LEVELS = {1: "green", 2: "yellow", 3: "orange", 4: "red"}
 
@@ -234,7 +236,8 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         entry = self.platform.config_entry
-        assert entry and entry.unique_id
+        if TYPE_CHECKING:
+            assert entry and entry.unique_id
         forecast = entry.runtime_data.forecast_coordinator.data
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
