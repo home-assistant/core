@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from fritzconnection.lib.fritzstatus import FritzStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -108,11 +109,41 @@ async def test_available_update_can_be_installed(
         mocked_update_call.assert_called_once()
 
 
+INTERNET_INTERRUPTION_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "If this FRITZ!Box is your main internet router, your internet connection "
+        "will be interrupted during the update. Depending on the model and the "
+        "connection type, this can take up to 10 minutes."
+    ),
+}
+DO_NOT_INTERRUPT_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "Do not restart, remove power from, or otherwise interrupt the device while "
+        "the update is in progress."
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("wan_enabled", "expected_messages"),
+    [
+        pytest.param(
+            True,
+            [INTERNET_INTERRUPTION_MESSAGE, DO_NOT_INTERRUPT_MESSAGE],
+            id="wan_enabled",
+        ),
+        pytest.param(False, [DO_NOT_INTERRUPT_MESSAGE], id="wan_disabled"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fh_class_mock")
 async def test_release_notes_messages(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     fc_class_mock,
+    wan_enabled: bool,
+    expected_messages: list[dict[str, str]],
 ) -> None:
     """Test the release notes messages are shown before an update."""
 
@@ -121,7 +152,10 @@ async def test_release_notes_messages(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]):
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]),
+        patch.object(FritzStatus, "has_wan_enabled", wan_enabled),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -134,24 +168,7 @@ async def test_release_notes_messages(
     assert result["success"]
     assert result["result"] == {
         "release_notes": None,
-        "messages": [
-            {
-                "severity": "warning",
-                "message": (
-                    "If this FRITZ!Box is your main internet router, your internet "
-                    "connection will be interrupted during the update. Depending on "
-                    "the model and the connection type, this can take up to 10 "
-                    "minutes."
-                ),
-            },
-            {
-                "severity": "warning",
-                "message": (
-                    "Do not restart, remove power from, or otherwise interrupt the "
-                    "device while the update is in progress."
-                ),
-            },
-        ],
+        "messages": expected_messages,
     }
 
 

@@ -64,14 +64,19 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         device_friendly_name: str,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
+        release_notes_messages: tuple[UpdateReleaseNotesMessage, ...] = (
+            RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+        )
+        if avm_wrapper.device_is_router:
+            release_notes_messages = (
+                RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION,
+                *release_notes_messages,
+            )
         description = FritzUpdateEntityDescription(
             key="update",
             name="FRITZ!OS",
             value_fn=None,
-            release_notes_messages=(
-                RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION,
-                RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
-            ),
+            release_notes_messages=release_notes_messages,
         )
         super().__init__(avm_wrapper, device_friendly_name, description)
 
