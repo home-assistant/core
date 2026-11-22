@@ -43,13 +43,12 @@ class ValidationErrorInfo:
 
         The message of a secret error may echo the value, it is replaced.
         """
-        if isinstance(self.exception, probatio.Invalid) and not isinstance(
-            self.exception, probatio.MultipleInvalid
-        ):
+        if isinstance(self.exception, probatio.Invalid):
             if self.exception.secret:
                 return _SECRET_MESSAGE
-            return self.exception.msg
-        # A HomeAssistantError, or a MultipleInvalid without errors
+            if not isinstance(self.exception, probatio.MultipleInvalid):
+                return self.exception.msg
+        # A HomeAssistantError or a MultipleInvalid
         return str(self.exception)
 
     @override

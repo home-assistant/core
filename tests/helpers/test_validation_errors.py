@@ -267,6 +267,38 @@ def test_secret_error_text() -> None:
     assert str(ValidationErrors(records)) == "invalid value at '[0].outer.password'"
 
 
+@pytest.mark.parametrize(
+    ("validator", "expected_code"),
+    [
+        pytest.param(probatio.In(["allowed"]), "not_in_list", id="in"),
+        pytest.param(cv.matches_regex("^a+$"), None, id="message_with_value"),
+    ],
+)
+def test_secret_multiple_invalid_record(
+    validator: Any, expected_code: str | None
+) -> None:
+    """Test a record made from a secret MultipleInvalid does not have the value."""
+    schema = probatio.Schema({probatio.Secret("password"): validator})
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema({"password": "hunter2"})
+
+    record = ValidationErrorInfo(exc_info.value, ("password",))
+
+    assert record.message == "invalid value"
+    assert str(record) == "invalid value at 'password'"
+    assert str(ValidationErrors([record])) == "invalid value at 'password'"
+    assert validation_errors_as_dicts(ValidationErrors([record])) == [
+        {
+            "message": "invalid value",
+            "path": ["password"],
+            "code": expected_code,
+            "translation_key": None,
+            "translation_domain": None,
+            "translation_placeholders": {},
+        }
+    ]
+
+
 def test_group_segment() -> None:
     """Test a trailing group is kept in the record and dropped for clients."""
     schema = probatio.Schema(
