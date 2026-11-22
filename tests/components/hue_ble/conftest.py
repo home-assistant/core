@@ -125,8 +125,12 @@ def mock_light() -> Generator[AsyncMock]:
             client.colour_temp = colour if type(colour) is int else client.colour_temp
             client.colour_xy = colour if type(colour) is tuple else client.colour_xy
             client.effect = (
-                effect or client.effect[0] if client.effect else None,
-                effect_speed or client.effect[1] if client.effect else None,
+                effect
+                if effect is not None
+                else (client.effect[0] if client.effect else None),
+                effect_speed
+                if effect_speed is not None
+                else (client.effect[1] if client.effect else None),
             )
             client.colour_temp_mode = type(colour) is int
             run_callbacks()
