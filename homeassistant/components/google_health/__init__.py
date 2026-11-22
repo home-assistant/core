@@ -20,7 +20,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import api
 from .const import DOMAIN
 from .coordinator import (
-    MAX_CONCURRENT_REQUESTS,
     GoogleHealthActivityCoordinator,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
@@ -67,34 +66,27 @@ async def async_setup_entry(
 
     api_client = GoogleHealthApi(auth)
 
-    semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
     coordinators: list[GoogleHealthDataUpdateCoordinator[Any]] = []
 
     activity_coordinator = None
     if all(scope in scopes for scope in api_client.steps.required_read_scopes):
-        activity_coordinator = GoogleHealthActivityCoordinator(
-            hass, entry, api_client, semaphore
-        )
+        activity_coordinator = GoogleHealthActivityCoordinator(hass, entry, api_client)
         coordinators.append(activity_coordinator)
 
     body_coordinator = None
     if all(scope in scopes for scope in api_client.weight.required_read_scopes):
-        body_coordinator = GoogleHealthBodyCoordinator(
-            hass, entry, api_client, semaphore
-        )
+        body_coordinator = GoogleHealthBodyCoordinator(hass, entry, api_client)
         coordinators.append(body_coordinator)
 
     sleep_coordinator = None
     if all(scope in scopes for scope in api_client.sleep.required_read_scopes):
-        sleep_coordinator = GoogleHealthSleepCoordinator(
-            hass, entry, api_client, semaphore
-        )
+        sleep_coordinator = GoogleHealthSleepCoordinator(hass, entry, api_client)
         coordinators.append(sleep_coordinator)
 
     nutrition_coordinator = None
     if all(scope in scopes for scope in api_client.hydration_log.required_read_scopes):
         nutrition_coordinator = GoogleHealthNutritionCoordinator(
-            hass, entry, api_client, semaphore
+            hass, entry, api_client
         )
         coordinators.append(nutrition_coordinator)
 
@@ -105,9 +97,7 @@ async def async_setup_entry(
 
     device_coordinator = None
     if all(scope in scopes for scope in api_client.paired_devices.required_read_scopes):
-        device_coordinator = GoogleHealthDeviceCoordinator(
-            hass, entry, api_client, semaphore
-        )
+        device_coordinator = GoogleHealthDeviceCoordinator(hass, entry, api_client)
         await device_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GoogleHealthData(

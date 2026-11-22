@@ -1,11 +1,10 @@
 """Coordinators for Google Health."""
 
 import asyncio
-from collections.abc import Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from google_health_api import GoogleHealthApi
 from google_health_api.exceptions import (
@@ -48,7 +47,6 @@ BODY_POLLING_INTERVAL = timedelta(hours=1)
 DEVICE_POLLING_INTERVAL = timedelta(hours=1)
 DEFAULT_PAGE_SIZE = 1
 SLEEP_PAGE_SIZE = 10
-MAX_CONCURRENT_REQUESTS = 5
 
 
 @dataclass
@@ -143,11 +141,9 @@ class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         update_interval: timedelta,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         self.api = api_client
-        self._semaphore = semaphore
         super().__init__(
             hass,
             logger,
@@ -155,11 +151,6 @@ class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=update_interval,
             config_entry=entry,
         )
-
-    async def _async_request[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
-        """Run an API coroutine under the shared concurrency limit."""
-        async with self._semaphore:
-            return await coro
 
     @override
     async def _async_update_data(self) -> _DataT:
@@ -192,7 +183,6 @@ class GoogleHealthActivityCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -202,7 +192,6 @@ class GoogleHealthActivityCoordinator(
             update_interval=POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
-            semaphore=semaphore,
         )
 
     @override
@@ -224,25 +213,15 @@ class GoogleHealthActivityCoordinator(
             active_zone_minutes_rollup,
             sedentary_period_rollup,
         ) = await asyncio.gather(
-            self._async_request(self.api.steps.today(self.hass.config.time_zone)),
-            self._async_request(self.api.distance.today(self.hass.config.time_zone)),
-            self._async_request(
-                self.api.active_energy_burned.today(self.hass.config.time_zone)
-            ),
-            self._async_request(
-                self.api.total_calories.today(self.hass.config.time_zone)
-            ),
-            self._async_request(self.api.floors.today(self.hass.config.time_zone)),
-            self._async_request(self.api.altitude.today(self.hass.config.time_zone)),
-            self._async_request(
-                self.api.active_minutes.today(self.hass.config.time_zone)
-            ),
-            self._async_request(
-                self.api.active_zone_minutes.today(self.hass.config.time_zone)
-            ),
-            self._async_request(
-                self.api.sedentary_period.today(self.hass.config.time_zone)
-            ),
+            self.api.steps.today(self.hass.config.time_zone),
+            self.api.distance.today(self.hass.config.time_zone),
+            self.api.active_energy_burned.today(self.hass.config.time_zone),
+            self.api.total_calories.today(self.hass.config.time_zone),
+            self.api.floors.today(self.hass.config.time_zone),
+            self.api.altitude.today(self.hass.config.time_zone),
+            self.api.active_minutes.today(self.hass.config.time_zone),
+            self.api.active_zone_minutes.today(self.hass.config.time_zone),
+            self.api.sedentary_period.today(self.hass.config.time_zone),
         )
 
         steps = steps_rollup.data if steps_rollup else None
@@ -284,7 +263,6 @@ class GoogleHealthBodyCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -294,7 +272,6 @@ class GoogleHealthBodyCoordinator(
             update_interval=BODY_POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
-            semaphore=semaphore,
         )
 
     @override
@@ -304,11 +281,9 @@ class GoogleHealthBodyCoordinator(
         # in descending order (newest first). Querying with page_size=1 and grabbing
         # the first element is sufficient to fetch the most recent measurement.
         weight_result, hr_result, body_fat_result = await asyncio.gather(
-            self._async_request(self.api.weight.list(page_size=DEFAULT_PAGE_SIZE)),
-            self._async_request(
-                self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE)
-            ),
-            self._async_request(self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE)),
+            self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
         )
 
         weight = (
@@ -338,7 +313,6 @@ class GoogleHealthDeviceCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -348,7 +322,6 @@ class GoogleHealthDeviceCoordinator(
             update_interval=DEVICE_POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
-            semaphore=semaphore,
         )
 
     @override
@@ -380,7 +353,6 @@ class GoogleHealthSleepCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -390,15 +362,12 @@ class GoogleHealthSleepCoordinator(
             update_interval=BODY_POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
-            semaphore=semaphore,
         )
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthSleepData:
         """Fetch latest sleep session."""
-        sleep_result = await self._async_request(
-            self.api.sleep.list(page_size=SLEEP_PAGE_SIZE)
-        )
+        sleep_result = await self.api.sleep.list(page_size=SLEEP_PAGE_SIZE)
 
         # Find the first session with a sleep summary
         for data_point in sleep_result.data_points or ():
@@ -427,7 +396,6 @@ class GoogleHealthNutritionCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -437,19 +405,14 @@ class GoogleHealthNutritionCoordinator(
             update_interval=POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
-            semaphore=semaphore,
         )
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthNutritionData:
         """Fetch hydration and nutrition rollups for today."""
         hydration_rollup, nutrition_rollup = await asyncio.gather(
-            self._async_request(
-                self.api.hydration_log.today(self.hass.config.time_zone)
-            ),
-            self._async_request(
-                self.api.nutrition_log.today(self.hass.config.time_zone)
-            ),
+            self.api.hydration_log.today(self.hass.config.time_zone),
+            self.api.nutrition_log.today(self.hass.config.time_zone),
         )
 
         return GoogleHealthNutritionData(
