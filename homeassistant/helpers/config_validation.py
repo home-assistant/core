@@ -320,10 +320,9 @@ def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]
     Unlike All(ensure_list, [item_validator]), errors of a single item have no
     list index in their path, so the path is valid in the config as written.
 
-    script.async_validate_block_collect_errors follows the forms accepted here,
-    and the ones the predicates which refer to this note tell apart, to find
-    the items of a config as written: a new form needs a rule there, and a
-    test case.
+    script.async_validate_block_collect_errors follows the forms accepted here
+    to find the items of a config as written: a new form needs a rule there,
+    and a test case.
     """
     list_schema = probatio.Schema([item_validator])
     # A schema, to raise MultipleInvalid like the list schema does
@@ -1852,11 +1851,12 @@ def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
 
 
 def _condition_list_key(value: Any) -> str | None:
-    """Return the key which holds the conditions of an and, or or not condition.
+    """Return the key which holds the conditions of an `and`, `or` or `not` condition.
 
     The key is the one in the condition as written, also for a shorthand.
 
-    See the note at _list_of.
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
     """
     if (shorthand := _condition_shorthand(value)) is not None:
         return shorthand[0]
@@ -1989,7 +1989,8 @@ _TRIGGER_SUBLIST_SCHEMA = probatio.Schema(
 def _is_trigger_sublist(value: Any) -> bool:
     """Return if an item of a trigger list is a 'triggers:' sublist.
 
-    See the note at _list_of.
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
     """
     return isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1
 
@@ -2145,7 +2146,8 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 def _is_parallel_sequence_branch(value: Any) -> bool:
     """Return if a parallel branch is a sequence action, not a shorthand.
 
-    See the note at _list_of.
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
     """
     return (
         isinstance(value, dict)

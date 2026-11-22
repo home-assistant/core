@@ -552,8 +552,8 @@ def _iter_nested_leaf_items(
 ) -> Iterator[_SubmittedItem]:
     """Yield the leaf items of the blocks in config as submitted, following layout.
 
-    This is _async_validate_nested_blocks for a config which did not pass its
-    schema: what is missing or malformed is skipped, and the forms the schema
+    Mirrors _async_validate_nested_blocks for a config which is not validated:
+    what is missing or malformed is skipped, and the forms the schema
     normalizes are followed as written.
     """
     if not isinstance(config, dict):
