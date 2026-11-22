@@ -134,7 +134,7 @@ class HueBLELight(LightEntity):
         """Set a light state using the effect API."""
 
         brightness = (
-            max(1, min(254, kwargs.get[ATTR_BRIGHTNESS]))  # type: ignore[index]
+            max(1, min(254, kwargs[ATTR_BRIGHTNESS]))
             if kwargs.get(ATTR_BRIGHTNESS)
             else self._api.brightness
         )
