@@ -518,7 +518,7 @@
     'device_id': <DeviceEntry identifiers=[('tuya', 'nyriu7sjgj9oruzmpsm')]>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'button.poopy_nano_2_start_cleaning',
     'has_entity_name': True,
     'hidden_by': None,
