@@ -870,6 +870,9 @@
       },
       "lora_firmware": {
         "name": "LoRa add-on firmware"
+      },
+      "release_notes_messages": {
+        "do_not_unplug": "Do not unplug or power off the device during the update."
       }
     },
     "valve": {
