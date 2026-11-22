@@ -106,7 +106,7 @@ def _mock_client(mac_address: str) -> AsyncMock:
 
 
 async def test_unexpected_device(hass: HomeAssistant) -> None:
-    """Test setup is retried when a different device answers at the host."""
+    """Test setup fails when a different device answers at the host."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="12:34:56:78:90:ab",
@@ -123,7 +123,7 @@ async def test_unexpected_device(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == (
         "Unexpected device found at localhost; expected 12:34:56:78:90:ab,"
         " found 12:34:56:78:90:cd"
