@@ -1,6 +1,7 @@
 """Test Tuya camera platform."""
 
-from threading import Thread
+import asyncio
+from threading import Event, Thread
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -217,6 +218,95 @@ async def test_failed_preloaded_stream_worker_is_stopped_before_refresh(
         finally:
             stream._thread_quit.set()
             await hass.async_add_executor_job(worker.join)
+
+    assert mock_manager.get_device_stream_allocate.call_count == 2
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_refreshed_stream_worker_stops_without_restarting(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """A refreshed stream must not reopen the single-use URL while stopping."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/first",
+        "rtsps://example.com/second",
+    ]
+    stream = _test_stream(hass, "rtsps://example.com/first")
+    worker_started = Event()
+    sources: list[str] = []
+
+    def fake_stream_worker(source: str, *args: Any) -> None:
+        sources.append(source)
+        worker_started.set()
+        args[-1].wait(1)
+
+    with (
+        patch(
+            "homeassistant.components.camera.entity.create_stream", return_value=stream
+        ),
+        patch(
+            "homeassistant.components.stream.worker.stream_worker",
+            side_effect=fake_stream_worker,
+        ),
+        patch("homeassistant.components.stream._should_retry", return_value=False),
+    ):
+        assert await camera.async_create_stream() is stream
+        assert await camera.async_create_stream() is stream
+        assert stream.source == "rtsps://example.com/second"
+        assert not stream._fast_restart_once
+
+        await stream.start()
+        try:
+            assert await hass.async_add_executor_job(worker_started.wait, 3)
+        finally:
+            await asyncio.wait_for(stream.stop(), timeout=4)
+
+    assert stream._thread is None
+    assert sources == ["rtsps://example.com/second"]
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_refreshed_stream_source_times_out(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """A slow cloud allocation cannot block other stream requests indefinitely."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/first",
+        "rtsps://example.com/second",
+    ]
+    stream = _test_stream(hass, "rtsps://example.com/first")
+
+    async def stalled_source() -> str:
+        await asyncio.Event().wait()
+        return "rtsps://example.com/never"
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+        with (
+            patch.object(camera, "stream_source", side_effect=stalled_source),
+            patch(
+                "homeassistant.components.tuya.camera.CAMERA_STREAM_SOURCE_TIMEOUT",
+                0.05,
+            ),
+            pytest.raises(TimeoutError),
+        ):
+            await camera.async_create_stream()
+
+        assert stream.source == "rtsps://example.com/first"
+        assert await camera.async_create_stream() is stream
+        assert stream.source == "rtsps://example.com/second"
 
     assert mock_manager.get_device_stream_allocate.call_count == 2
 

@@ -16,6 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.components.camera.const import CAMERA_STREAM_SOURCE_TIMEOUT
 from homeassistant.components.stream import Stream
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -116,12 +117,14 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             if stream.outputs() and stream.available:
                 return stream
 
-            if source := await self.stream_source():
-                # A Tuya URL is valid for a single session. Stop the old
-                # worker before updating its source, including when preloading
-                # is enabled (Stream.stop() keeps preloaded workers running).
+            async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                source = await self.stream_source()
+            if source:
+                # Stop the old worker even when preloading is enabled.
                 await stream._stop()  # noqa: SLF001
-                stream.update_source(source)
+                # The worker has stopped; update_source() would leave a
+                # spurious restart request armed for the next worker.
+                stream.source = source
             return stream
 
     @override
