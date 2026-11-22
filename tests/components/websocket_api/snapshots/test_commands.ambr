@@ -115,7 +115,51 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[condition_shorthand]
+# name: test_validate_config_invalid[action_list]
+  dict({
+    'actions': dict({
+      'error': "Invalid trigger 'non_existing' specified at '[0].wait_for_trigger[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            0,
+            'wait_for_trigger',
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[condition_list]
+  dict({
+    'conditions': dict({
+      'error': "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at '[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[condition_shorthand]
   dict({
     'conditions': dict({
       'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].or[0]'",
@@ -150,7 +194,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[errors_in_two_keys]
+# name: test_validate_config_invalid[errors_in_two_keys]
   dict({
     'actions': dict({
       'error': None,
@@ -194,7 +238,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[home_assistant_error]
+# name: test_validate_config_invalid[home_assistant_error]
   dict({
     'conditions': dict({
       'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0]'",
@@ -215,7 +259,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[nested_blocks]
+# name: test_validate_config_invalid[nested_blocks]
   dict({
     'actions': dict({
       'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].if[0]'",
@@ -302,7 +346,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[nested_single_items]
+# name: test_validate_config_invalid[nested_single_items]
   dict({
     'actions': dict({
       'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at 'repeat.sequence'",
@@ -324,7 +368,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[parallel]
+# name: test_validate_config_invalid[parallel]
   dict({
     'actions': dict({
       'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c' at '[0].parallel[0]'",
@@ -376,7 +420,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[platform_errors]
+# name: test_validate_config_invalid[platform_errors]
   dict({
     'triggers': dict({
       'error': "required key not provided at '[1].entity_id'",
@@ -409,7 +453,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[schema_and_platform_errors]
+# name: test_validate_config_invalid[schema_and_platform_errors]
   dict({
     'actions': dict({
       'error': "not a valid option at '[0].bogus'",
@@ -455,7 +499,7 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[schema_errors]
+# name: test_validate_config_invalid[schema_errors]
   dict({
     'actions': dict({
       'error': "not a valid option at '[1].bogus'",
@@ -489,7 +533,171 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[single_item]
+# name: test_validate_config_invalid[single_action_nested_single_trigger]
+  dict({
+    'actions': dict({
+      'error': "Invalid trigger 'non_existing' specified at 'wait_for_trigger'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            'wait_for_trigger',
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_action_unknown_action]
+  dict({
+    'actions': dict({
+      'error': 'Unable to determine action',
+      'errors': list([
+        dict({
+          'code': None,
+          'message': 'Unable to determine action',
+          'path': list([
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_condition]
+  dict({
+    'conditions': dict({
+      'error': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+      'errors': list([
+        dict({
+          'code': None,
+          'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+          'path': list([
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_condition_home_assistant_error]
+  dict({
+    'conditions': dict({
+      'error': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+          'path': list([
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_condition_nested_single_condition]
+  dict({
+    'conditions': dict({
+      'error': "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at 'conditions'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+          'path': list([
+            'conditions',
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_condition_unknown_condition]
+  dict({
+    'conditions': dict({
+      'error': 'Invalid condition "non_existing" specified',
+      'errors': list([
+        dict({
+          'code': None,
+          'message': 'Invalid condition "non_existing" specified',
+          'path': list([
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_trigger]
+  dict({
+    'triggers': dict({
+      'error': "Invalid trigger 'non_existing' specified",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_trigger_sublist]
+  dict({
+    'triggers': dict({
+      'error': "Invalid trigger 'x' specified at 'triggers[1]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'x' specified",
+          'path': list([
+            'triggers',
+            1,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[single_trigger_with_path]
   dict({
     'triggers': dict({
       'error': "required key not provided at 'entity_id'",
@@ -510,7 +718,71 @@
     }),
   })
 # ---
-# name: test_validate_config_errors[trigger_sublist]
+# name: test_validate_config_invalid[trigger_list]
+  dict({
+    'triggers': dict({
+      'error': "Invalid trigger 'non_existing' specified at '[0]'",
+      'errors': list([
+        dict({
+          'code': None,
+          'message': "Invalid trigger 'non_existing' specified",
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': None,
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[trigger_list_not_a_mapping]
+  dict({
+    'triggers': dict({
+      'error': "expected a mapping at '[0]'",
+      'errors': list([
+        dict({
+          'code': 'not_a_dictionary',
+          'message': 'expected a mapping',
+          'path': list([
+            0,
+          ]),
+          'translation_domain': None,
+          'translation_key': 'expected_mapping',
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[trigger_list_with_path]
+  dict({
+    'triggers': dict({
+      'error': "required key not provided at '[0].entity_id'",
+      'errors': list([
+        dict({
+          'code': 'required',
+          'message': 'required key not provided',
+          'path': list([
+            0,
+            'entity_id',
+          ]),
+          'translation_domain': None,
+          'translation_key': 'required',
+          'translation_placeholders': dict({
+          }),
+        }),
+      ]),
+      'valid': False,
+    }),
+  })
+# ---
+# name: test_validate_config_invalid[trigger_sublist]
   dict({
     'triggers': dict({
       'error': "Invalid trigger 'non_existing' specified at '[1].triggers[1]'",
