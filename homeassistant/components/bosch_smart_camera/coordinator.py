@@ -122,6 +122,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def _async_update_motion_states(self, cameras: list[Camera]) -> None:
         """Poll the motion detection of each camera, isolating failures."""
+        # Forget removed cameras so a camera that comes back is logged again.
+        listed = {camera.id for camera in cameras}
+        self._motion_unreachable &= listed
+        for camera_id in self._motion_writes.keys() - listed:
+            del self._motion_writes[camera_id]
         polled: dict[str, tuple[int, bool | None]] = {}
         for camera in cameras:
             writes = self._motion_writes[camera.id]

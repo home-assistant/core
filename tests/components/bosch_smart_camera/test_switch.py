@@ -515,3 +515,22 @@ async def test_motion_failed_poll_without_write(
     await hass.async_block_till_done()
 
     assert hass.states.get(MOTION_ID).state == STATE_UNAVAILABLE
+
+
+async def test_removed_cameras_are_forgotten_by_the_motion_tracking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator._motion_unreachable.add("removed")
+    coordinator._motion_writes["removed"] = 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "removed" not in coordinator._motion_unreachable
+    assert "removed" not in coordinator._motion_writes
