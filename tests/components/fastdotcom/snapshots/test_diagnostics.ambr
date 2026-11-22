@@ -2,9 +2,39 @@
 # name: test_get_config_entry_diagnostics
   dict({
     'coordinator_data': dict({
+      'bytes_downloaded': 125000000,
+      'bytes_uploaded': 62500000,
+      'client': dict({
+        'asn': '64512',
+        'ip': '**REDACTED**',
+        'isp': 'Example Fiber',
+        'location': dict({
+          'city': 'Madrid',
+          'country': 'ES',
+        }),
+      }),
       'download_speed': 100.0,
+      'elapsed_seconds': 10.5,
       'loaded_ping': 20.2,
+      'loaded_pings': list([
+        19.8,
+        20.6,
+      ]),
+      'targets': list([
+        dict({
+          'location': dict({
+            'city': 'Madrid',
+            'country': 'ES',
+          }),
+          'name': '**REDACTED**',
+          'url': '**REDACTED**',
+        }),
+      ]),
       'unloaded_ping': 15.2,
+      'unloaded_pings': list([
+        15.0,
+        15.4,
+      ]),
       'upload_speed': 50.0,
     }),
   })

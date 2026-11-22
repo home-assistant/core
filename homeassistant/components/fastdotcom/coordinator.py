@@ -3,10 +3,11 @@
 from datetime import timedelta
 from typing import override
 
-from fastdotcom import fast_com
+from fastdotcom import FastDotComError, FastSpeedtestResult, async_fast_com
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
@@ -14,7 +15,9 @@ from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 type FastdotcomConfigEntry = ConfigEntry[FastdotcomDataUpdateCoordinator]
 
 
-class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float] | None]):
+class FastdotcomDataUpdateCoordinator(
+    DataUpdateCoordinator[FastSpeedtestResult | None]
+):
     """Class to manage fetching Fast.com data API."""
 
     def __init__(self, hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
@@ -28,9 +31,10 @@ class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float] | N
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, float] | None:
-        """Run an executor job to retrieve Fast.com data."""
+    async def _async_update_data(self) -> FastSpeedtestResult:
+        """Retrieve Fast.com speedtest data asynchronously."""
+        session = async_get_clientsession(self.hass)
         try:
-            return await self.hass.async_add_executor_job(fast_com)
-        except Exception as exc:
+            return await async_fast_com(session=session)
+        except FastDotComError as exc:
             raise UpdateFailed(f"Error communicating with Fast.com: {exc}") from exc
