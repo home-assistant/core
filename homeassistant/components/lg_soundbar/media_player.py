@@ -166,7 +166,10 @@ class LGDevice(MediaPlayerEntity):
             if "b_powerstatus" in data:
                 self._device_on = data["b_powerstatus"]
                 if data["b_powerstatus"]:
-                    self._attr_state = MediaPlayerState.ON
+                    # Also sent while already on, such as in the answer to the
+                    # check of a silent soundbar: keep PLAYING or PAUSED then
+                    if self._attr_state == MediaPlayerState.OFF:
+                        self._attr_state = MediaPlayerState.ON
                 else:
                     self._attr_state = MediaPlayerState.OFF
         elif response["msg"] == "FUNC_VIEW_INFO":

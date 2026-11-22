@@ -309,6 +309,60 @@ async def test_state_follows_a_reported_power_status(
     assert hass.states.get(ENTITY_ID).state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("play_control", "expected_state"),
+    [
+        pytest.param(0, MediaPlayerState.PLAYING, id="playing"),
+        pytest.param(1, MediaPlayerState.PAUSED, id="paused"),
+    ],
+)
+async def test_power_status_while_on_keeps_the_playback_state(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    play_control: int,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test that a soundbar reporting it is on keeps playing or paused.
+
+    The library asks a silent soundbar that is on for its status, and the answer
+    comes without any play info to restore the playback state.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    callback = find_update_callback(mock_client)
+    send_power_status(callback, True)
+    callback(
+        {"msg": "PLAY_INFO", "data": {"i_stream_type": 1, "i_play_ctrl": play_control}}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+async def test_power_status_turns_on_a_soundbar_that_was_off(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a soundbar reporting it is on after being off is on again."""
+    await setup_integration(hass, mock_config_entry)
+
+    callback = find_update_callback(mock_client)
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+
 async def test_availability_follows_the_connection(
     hass: HomeAssistant,
     mock_client: AsyncMock,
