@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, EntityCategory
+from homeassistant.const import EntityCategory, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +68,7 @@ async def test_setpoint_limits(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: new_value,
         },
         blocking=True,
@@ -110,7 +110,7 @@ async def test_setpoint_limits_inverted(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: value,
             },
             blocking=True,
@@ -133,7 +133,7 @@ async def test_setpoint_limits_fahrenheit(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.guest_room_maximum_setpoint",
+            TargetKey.ENTITY_ID: "number.guest_room_maximum_setpoint",
             NumberServiceArgument.VALUE: 73,
         },
         blocking=True,
@@ -168,7 +168,7 @@ async def test_setpoint_limits_concurrent(hass: HomeAssistant) -> None:
                 NUMBER_DOMAIN,
                 NumberService.SET_VALUE,
                 {
-                    CommonServiceArgument.ENTITY_ID: entity_id,
+                    TargetKey.ENTITY_ID: entity_id,
                     NumberServiceArgument.VALUE: value,
                 },
                 blocking=True,

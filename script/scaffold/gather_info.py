@@ -63,10 +63,16 @@ and has to match the directory name of the integration."""
                 "oauth2": True,
                 "iot_class": "local_polling",
                 "categories": ["diy_makers"],
+                "integration_type": "hub",
             }
         )
     else:
-        info.update(gather_new_integration(arguments.template == "integration"))
+        info.update(
+            gather_new_integration(
+                arguments.template == "integration",
+                arguments.template == "config_flow_helper",
+            )
+        )
 
     return Info(**info)
 
@@ -77,7 +83,7 @@ YES_NO = {
 }
 
 
-def gather_new_integration(determine_auth: bool) -> Info:
+def gather_new_integration(determine_auth: bool, is_helper: bool = False) -> Info:
     """Gather info about new integration from user."""
     fields = {
         "name": {
@@ -118,6 +124,22 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
                 ]
             ],
         },
+        "integration_type": {
+            "prompt": (
+                f"""What is the integration type?
+
+Valid types are {", ".join(IntegrationType)}.
+
+More info @ https://contributors.home-assistant.io/core/integrations/manifest/#integration_type
+"""
+            ),
+            "validators": [
+                [
+                    f"You need to pick one of {', '.join(IntegrationType)}.",
+                    lambda value: value in IntegrationType,
+                ]
+            ],
+        },
     }
 
     if determine_auth:
@@ -140,30 +162,6 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
                     "default": "no",
                     **YES_NO,
                 },
-                "integration_type": {
-                    "prompt": (
-                        "What is the integration type?"
-                        "\n\nValid types are "
-                        f"{', '.join(IntegrationType)}."
-                        "\nThis field is recommended and"
-                        " required in some cases."
-                        " To intentionally leave it"
-                        " unset, type 'omit'."
-                        "\n\nMore info @ "
-                        "https://contributors.home-assistant.io"
-                        "/core/integrations/manifest"
-                        "/#integration_type\n"
-                    ),
-                    "validators": [
-                        [
-                            "You need to pick one of"
-                            f" {', '.join(IntegrationType)}"
-                            " or 'omit'.",
-                            lambda value: value in IntegrationType or value == "omit",
-                        ]
-                    ],
-                    "converter": lambda value: None if value == "omit" else value,
-                },
                 "oauth2": {
                     "prompt": (
                         "Can the user authenticate the device using OAuth2? (yes/no)"
@@ -174,7 +172,13 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
             }
         )
 
+    if is_helper:
+        del fields["integration_type"]
+
     info = _gather_info(fields)
+
+    if is_helper:
+        info["integration_type"] = "helper"
 
     if info.get("integration_type") not in (
         NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}

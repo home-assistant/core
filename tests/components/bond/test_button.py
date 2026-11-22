@@ -4,7 +4,7 @@ from bond_async import Action, DeviceType
 
 from homeassistant.components.bond.button import STEP_SIZE
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -138,7 +138,7 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.name_1_increase_flame"},
+            {TargetKey.ENTITY_ID: "button.name_1_increase_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -151,7 +151,7 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.name_1_decrease_flame"},
+            {TargetKey.ENTITY_ID: "button.name_1_decrease_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -177,9 +177,7 @@ async def test_press_button(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {
-                CommonServiceArgument.ENTITY_ID: "button.name_1_start_increasing_brightness"
-            },
+            {TargetKey.ENTITY_ID: "button.name_1_start_increasing_brightness"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -192,9 +190,7 @@ async def test_press_button(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {
-                CommonServiceArgument.ENTITY_ID: "button.name_1_start_decreasing_brightness"
-            },
+            {TargetKey.ENTITY_ID: "button.name_1_start_decreasing_brightness"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -220,7 +216,7 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.name_1_open_next"},
+            {TargetKey.ENTITY_ID: "button.name_1_open_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -231,7 +227,7 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.name_1_close_next"},
+            {TargetKey.ENTITY_ID: "button.name_1_close_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -254,7 +250,7 @@ async def test_preset_button(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.name_1_preset"},
+            {TargetKey.ENTITY_ID: "button.name_1_preset"},
             blocking=True,
         )
         await hass.async_block_till_done()

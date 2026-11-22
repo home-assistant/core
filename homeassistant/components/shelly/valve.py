@@ -119,64 +119,72 @@ class RpcShellySimpleWaterValve(RpcShellyBaseWaterValve):
         await self.coordinator.device.boolean_set(self._id, False)
 
 
-RPC_VALVES: dict[str, RpcValveDescription] = {
-    "water_valve": RpcValveDescription(
-        key="number",
+RPC_VALVES: tuple[RpcValveDescription, ...] = (
+    RpcValveDescription(
+        key="water_valve",
+        components=("number",),
         sub_key="value",
         role="position",
         entity_class=RpcShellyWaterValve,
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "neo_water_valve": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="neo_water_valve",
+        components=("boolean",),
         sub_key="value",
         role="state",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_NEO_WATER_VALVE},
     ),
-    "boolean_zone0": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone0",
+        components=("boolean",),
         sub_key="value",
         role="zone0",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone1": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone1",
+        components=("boolean",),
         sub_key="value",
         role="zone1",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone2": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone2",
+        components=("boolean",),
         sub_key="value",
         role="zone2",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone3": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone3",
+        components=("boolean",),
         sub_key="value",
         role="zone3",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone4": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone4",
+        components=("boolean",),
         sub_key="value",
         role="zone4",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone5": RpcValveDescription(
-        key="boolean",
+    RpcValveDescription(
+        key="boolean_zone5",
+        components=("boolean",),
         sub_key="value",
         role="zone5",
         entity_class=RpcShellySimpleWaterValve,
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-}
+)
 
 
 async def async_setup_entry(

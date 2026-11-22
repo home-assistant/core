@@ -37,7 +37,7 @@ from homeassistant.components.zonneplan.coordinator import (
     BATTERY_CONTROL_UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -92,7 +92,7 @@ async def _set_value(hass: HomeAssistant, entity_id: str, value: float) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,

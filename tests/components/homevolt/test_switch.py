@@ -21,7 +21,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -193,7 +193,7 @@ async def test_switch_command_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+            {TargetKey.ENTITY_ID: switch_entity_id},
             blocking=True,
         )
 

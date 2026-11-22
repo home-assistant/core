@@ -19,7 +19,7 @@ from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -84,7 +84,7 @@ async def test_press_button_via_service(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -111,7 +111,7 @@ async def test_press_ptz_button_passes_move_duration(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ptz_entry.entity_id},
+        {TargetKey.ENTITY_ID: ptz_entry.entity_id},
         blocking=True,
     )
 
@@ -138,7 +138,7 @@ async def test_press_button_service_propagates_api_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -162,7 +162,7 @@ async def test_press_button_invalid_auth_starts_reauth(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -217,7 +217,7 @@ async def test_press_unavailable_offline_device_via_service(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: mute_entry.entity_id},
+        {TargetKey.ENTITY_ID: mute_entry.entity_id},
         blocking=True,
     )
 

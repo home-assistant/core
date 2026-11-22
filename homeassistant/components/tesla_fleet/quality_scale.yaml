@@ -68,7 +68,9 @@ rules:
   entity-translations: done
   exception-translations:
     status: todo
-    comment: PR already raised to fix these
+    comment: |
+      The coordinators raise UpdateFailed with untranslated API messages,
+      and setup raises ConfigEntryNotReady with a hard-coded message.
   icon-translations: done
   reconfiguration-flow:
     status: todo

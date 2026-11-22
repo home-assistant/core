@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,7 +41,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.backyard_backyard_loudness",
+            TargetKey.ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )
@@ -54,7 +54,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.backyard_backyard_loudness",
+            TargetKey.ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )

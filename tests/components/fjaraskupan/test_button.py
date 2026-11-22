@@ -19,7 +19,7 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fjaraskupan.const import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -88,7 +88,7 @@ async def test_reset_grease_filter(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: BUTTON_ENTITY_ID},
+        {TargetKey.ENTITY_ID: BUTTON_ENTITY_ID},
         blocking=True,
     )
 
@@ -109,7 +109,7 @@ async def test_reset_grease_filter_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: BUTTON_ENTITY_ID},
+            {TargetKey.ENTITY_ID: BUTTON_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == "write_error"

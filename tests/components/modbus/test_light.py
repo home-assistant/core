@@ -8,6 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
 )
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
@@ -34,11 +35,10 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -314,12 +314,16 @@ async def test_light_service_turn(
     assert DOMAIN in hass.config.components
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -327,20 +331,26 @@ async def test_light_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
@@ -407,8 +417,8 @@ async def test_color_temp_brightness_light(
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
@@ -423,8 +433,8 @@ async def test_color_temp_brightness_light(
         )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
