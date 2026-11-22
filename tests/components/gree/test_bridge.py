@@ -16,13 +16,13 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_MEDIUM,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
@@ -214,8 +214,11 @@ async def test_real_device_controls_after_dependency_upgrade(
 
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: ENTITY_ID_1, ATTR_TEMPERATURE: 24},
+                ClimateService.SET_TEMPERATURE,
+                {
+                    TargetKey.ENTITY_ID: ENTITY_ID_1,
+                    ClimateServiceArgument.TEMPERATURE: 24,
+                },
                 blocking=True,
             )
             assert commands[-1]["SetTem"] == 24

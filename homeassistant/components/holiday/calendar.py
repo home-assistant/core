@@ -1,7 +1,7 @@
 """Holiday Calendar."""
 
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from holidays import PUBLIC, HolidayBase, country_holidays
 
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_PROVINCE, COUNTRY_OPTIONS, DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -24,6 +24,7 @@ def _get_obj_holidays_and_language(
     province: str | None,
     language: str,
     selected_categories: list[str] | None,
+    country_options: dict[str, Any],
 ) -> tuple[HolidayBase, str]:
     """Get the object for the requested country and year."""
     obj_holidays = country_holidays(
@@ -32,6 +33,7 @@ def _get_obj_holidays_and_language(
         years={dt_util.now().year, dt_util.now().year + 1},
         language=language,
         categories=selected_categories,
+        **country_options,
     )
     if language == "en":
         for lang in obj_holidays.supported_languages:
@@ -42,6 +44,7 @@ def _get_obj_holidays_and_language(
                     years={dt_util.now().year, dt_util.now().year + 1},
                     language=lang,
                     categories=selected_categories,
+                    **country_options,
                 )
                 language = lang
                 break
@@ -56,6 +59,7 @@ def _get_obj_holidays_and_language(
             years={dt_util.now().year, dt_util.now().year + 1},
             language=default_language,
             categories=selected_categories,
+            **country_options,
         )
         language = default_language
 
@@ -71,6 +75,11 @@ async def async_setup_entry(
     country: str = config_entry.data[CONF_COUNTRY]
     province: str | None = config_entry.data.get(CONF_PROVINCE)
     categories: list[str] | None = config_entry.options.get(CONF_CATEGORIES)
+    country_options: dict[str, Any] = {
+        option: config_entry.options[option]
+        for option in COUNTRY_OPTIONS
+        if option in config_entry.options
+    }
     language = hass.config.language
 
     if categories is None:
@@ -79,7 +88,12 @@ async def async_setup_entry(
         categories = [PUBLIC, *categories]
 
     obj_holidays, language = await hass.async_add_executor_job(
-        _get_obj_holidays_and_language, country, province, language, categories
+        _get_obj_holidays_and_language,
+        country,
+        province,
+        language,
+        categories,
+        country_options,
     )
 
     async_add_entities(
@@ -90,6 +104,7 @@ async def async_setup_entry(
                 province,
                 language,
                 categories,
+                country_options,
                 obj_holidays,
                 config_entry.entry_id,
             )
@@ -114,6 +129,7 @@ class HolidayCalendarEntity(CalendarEntity):
         province: str | None,
         language: str,
         categories: list[str] | None,
+        country_options: dict[str, Any],
         obj_holidays: HolidayBase,
         unique_id: str,
     ) -> None:
@@ -123,6 +139,7 @@ class HolidayCalendarEntity(CalendarEntity):
         self._location = name
         self._language = language
         self._categories = categories
+        self._country_options = country_options
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
@@ -200,6 +217,7 @@ class HolidayCalendarEntity(CalendarEntity):
             years=list({start_date.year, end_date.year}),
             language=self._language,
             categories=self._categories,
+            **self._country_options,
         )
 
         event_list: list[CalendarEvent] = []

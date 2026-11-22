@@ -28,6 +28,7 @@ from aioshelly.const import (
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
 from aioshelly.rpc_device.models import ShellyLedStripEffect
+from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import network
@@ -77,11 +78,12 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     WALL_DISPLAY_RELEASE_URL,
+    WALL_DISPLAY_UI_MIN_FIRMWARE,
     All_LIGHT_TYPES,
 )
 
 if TYPE_CHECKING:
-    from .coordinator import ShellyConfigEntry
+    from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 
 
 @callback
@@ -320,6 +322,8 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
+        if xmod_name := (info.get("jwt") or {}).get("n"):
+            return cast(str, xmod_name)
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -488,9 +492,6 @@ def get_rpc_key_instances(
     if key in keys_dict:
         return [key]
 
-    if key == "switch" and "cover:0" in keys_dict:
-        key = "cover"
-
     if key in All_LIGHT_TYPES and all_lights:
         return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
 
@@ -586,6 +587,19 @@ def update_device_fw_info(
 def brightness_to_percentage(brightness: int) -> int:
     """Convert brightness level to percentage."""
     return int(100 * (brightness + 1) / 255)
+
+
+def is_rpc_wall_display_brightness_supported(
+    coordinator: ShellyRpcCoordinator,
+) -> bool:
+    """Return true if the device has a supported Wall Display brightness config."""
+    device = coordinator.device
+    return (
+        coordinator.model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX)
+        and "brightness" in device.config.get("ui", {})
+        and AwesomeVersion(device.shelly["ver"])
+        >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    )
 
 
 def percentage_to_brightness(percentage: int) -> int:
