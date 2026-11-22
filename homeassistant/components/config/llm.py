@@ -48,9 +48,8 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_LABEL_THEME_COLORS
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
-from .label_registry import SUPPORTED_LABEL_THEME_COLORS
 
 _SEARCH_LIMIT = 15
 _STATUS_VALUES = ["loaded", "error", "not_loaded"]
