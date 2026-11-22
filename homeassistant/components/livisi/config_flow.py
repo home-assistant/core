@@ -1,6 +1,7 @@
 """Config flow for Livisi Home Assistant."""
 
-from typing import override
+from collections.abc import Mapping
+from typing import Any, override
 
 from livisi import (
     IncorrectIpAddressException,
@@ -62,6 +63,44 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthentication flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new password."""
+        errors = {}
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            try:
+                connection = await livisi_connect(
+                    reauth_entry.data[CONF_HOST], user_input[CONF_PASSWORD]
+                )
+            except WrongCredentialException:
+                errors["base"] = "wrong_password"
+            except IncorrectIpAddressException:
+                errors["base"] = "wrong_ip_address"
+            except LivisiException:
+                errors["base"] = "cannot_connect"
+            else:
+                await connection.close()
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            errors=errors,
         )
 
     async def _login(self, user_input: dict[str, str]) -> None:
