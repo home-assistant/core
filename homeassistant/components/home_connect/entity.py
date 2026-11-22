@@ -12,6 +12,7 @@ from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectError,
     TooManyRequestsError,
+    UnauthorizedError,
 )
 
 from homeassistant.core import callback
@@ -70,6 +71,19 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         """Return the BSH key."""
         return self.entity_description.key
 
+    def _create_fetch_entity_error(self, err: HomeConnectError) -> HomeAssistantError:
+        """Create a translated fetch error and start reauth if required."""
+        if isinstance(err, UnauthorizedError):
+            self.coordinator.async_start_reauth()
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_entity_state",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                **get_dict_from_home_connect_error(err),
+            },
+        )
+
     @property
     @override
     def available(self) -> bool:
@@ -100,14 +114,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
                 await self.coordinator.update_option(cast(OptionKey, key))
                 return
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="fetch_entity_state",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    **get_dict_from_home_connect_error(err),
-                },
-            ) from err
+            raise self._create_fetch_entity_error(err) from err
 
         await super().async_update()
 

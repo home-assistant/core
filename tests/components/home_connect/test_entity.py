@@ -27,6 +27,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     NoProgramActiveError,
     SelectedProgramNotSetError,
+    UnauthorizedError,
 )
 from aiohomeconnect.model.program import (
     EnumerateProgram,
@@ -755,6 +756,64 @@ async def test_entity_async_update_error(
     )
 
     assert f"Error fetching state of {entity_id}: {error}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("platforms", "entity_id", "client_method"),
+    [
+        ([Platform.SWITCH], "switch.washer_power", "get_setting"),
+        (
+            [Platform.BINARY_SENSOR],
+            "binary_sensor.washer_remote_control",
+            "get_status_value",
+        ),
+        (
+            [Platform.SWITCH],
+            "switch.washer_i_dos_1_active",
+            "get_active_program_option",
+        ),
+    ],
+    ids=["setting", "status", "option"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_entity_async_update_unauthorized_error_starts_reauth(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+) -> None:
+    """Test unauthorized entity updates start reauthentication."""
+    option_key = OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[ProgramDefinitionOption(option_key, "Boolean")],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.get(entity_id)
+
+    method = AsyncMock(side_effect=UnauthorizedError("unauthorized"))
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once()
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["entry_id"] == config_entry.entry_id
+    assert flows_in_progress[0]["context"]["source"] == "reauth"
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)

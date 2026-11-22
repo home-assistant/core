@@ -615,6 +615,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for listener, _ in self._listeners.values():
             listener()
 
+    def async_start_reauth(self) -> None:
+        """Start the reauthentication flow for this config entry."""
+        self._config_entry.async_start_reauth(self.hass)
+
     @override
     async def _async_update_data(self) -> HomeConnectApplianceData:
         """Fetch data from Home Connect."""
@@ -638,9 +642,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
                 await asyncio_sleep(delay)
             except UnauthorizedError as error:
-                # Reauth flow need to be started explicitly as
-                # we don't use the default config entry coordinator.
-                self._config_entry.async_start_reauth(self.hass)
+                self.async_start_reauth()
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="auth_error",
