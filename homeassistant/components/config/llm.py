@@ -31,10 +31,12 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_integration_descriptions
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
+from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
 _SEARCH_LIMIT = 15
 _INTEGRATION_FILTER_TYPES = ["integration", "helper"]
@@ -57,6 +59,7 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
+_UPDATE_CORE_CONFIG_SCHEMA = probatio.Schema(UPDATE_CONFIG_SCHEMA)
 
 
 def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
@@ -794,6 +797,144 @@ class ConfigureFlowTool(Tool):
         )
 
 
+def _url_in_use(hass: HomeAssistant, *, internal: bool) -> str | None:
+    """Return the internal or external URL that Home Assistant uses."""
+    try:
+        return get_url(hass, allow_internal=internal, allow_external=not internal)
+    except NoURLAvailableError:
+        return None
+
+
+def _format_core_config(hass: HomeAssistant) -> JsonObjectType:
+    """Return the core config fields that the update tool manages."""
+    config = hass.config
+    return {
+        "location_name": config.location_name,
+        "latitude": config.latitude,
+        "longitude": config.longitude,
+        "elevation": config.elevation,
+        "radius": config.radius,
+        "time_zone": config.time_zone,
+        "country": config.country,
+        "currency": config.currency,
+        "language": config.language,
+        # Integrations must not use the name of the unit system, so it is private
+        "unit_system": config.units._name,  # noqa: SLF001
+        "internal_url": config.internal_url,
+        "internal_url_in_use": _url_in_use(hass, internal=True),
+        "external_url": config.external_url,
+        "external_url_in_use": _url_in_use(hass, internal=False),
+    }
+
+
+class GetCoreConfigTool(Tool):
+    """LLM Tool to get the core config."""
+
+    name = "config__get_core_config"
+    title = "Get core config"
+    description = (
+        "Get the core config of Home Assistant: the name and location of the home, "
+        "the radius of the home zone in meters, the time zone, country, currency, "
+        "language, unit system, and the internal and external URLs. internal_url "
+        "and external_url are only set to override the URLs that Home Assistant "
+        "finds itself: the local network address, and the Home Assistant Cloud "
+        "address. The *_in_use fields show the URLs that Home Assistant uses."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the core config."""
+        return ToolResult(data={"result": _format_core_config(hass)})
+
+
+class UpdateCoreConfigTool(Tool):
+    """LLM Tool to update the core config."""
+
+    name = "config__update_core_config"
+    title = "Update core config"
+    description = (
+        "Update the core config of Home Assistant. Only the given fields change."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "location_name", description="The name of the home."
+            ): str,
+            probatio.Optional("latitude"): probatio.Coerce(float),
+            probatio.Optional("longitude"): probatio.Coerce(float),
+            probatio.Optional(
+                "elevation", description="Elevation in meters above sea level."
+            ): probatio.Coerce(int),
+            probatio.Optional(
+                "radius", description="Radius of the home zone in meters."
+            ): probatio.Coerce(int),
+            probatio.Optional(
+                "time_zone", description="IANA time zone, e.g. 'Europe/Amsterdam'."
+            ): str,
+            probatio.Optional(
+                "country", description="ISO 3166-1 alpha-2 country code, e.g. 'NL'."
+            ): str,
+            probatio.Optional(
+                "currency", description="ISO 4217 currency code, e.g. 'EUR'."
+            ): str,
+            probatio.Optional(
+                "language", description="Language code, e.g. 'en' or 'pt-BR'."
+            ): str,
+            probatio.Optional(
+                "unit_system",
+                description=(
+                    "A new unit system also changes the units of sensors, except "
+                    "units the user set."
+                ),
+            ): probatio.In(["metric", "us_customary"]),
+            probatio.Optional(
+                "internal_url",
+                description=(
+                    "URL of Home Assistant on the local network. Only set it when "
+                    "the URL in use does not work. null lets Home Assistant find it."
+                ),
+            ): probatio.Any(str, None),
+            probatio.Optional(
+                "external_url",
+                description=(
+                    "URL of Home Assistant on the internet. Only set it when the "
+                    "URL in use does not work. null lets Home Assistant find it."
+                ),
+            ): probatio.Any(str, None),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the core config."""
+        args = self.parameters(tool_input.tool_args)
+        # Like the UI, a new unit system also changes the units of the sensors
+        current_unit_system = hass.config.units._name  # noqa: SLF001
+        if args.get("unit_system", current_unit_system) != current_unit_system:
+            args["update_units"] = True
+        try:
+            data = _UPDATE_CORE_CONFIG_SCHEMA(args)
+        except probatio.Invalid as err:
+            return _error_result(f"Invalid input: {err}")
+        try:
+            await async_update_config(hass, data)
+        except ValueError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": _format_core_config(hass)})
+
+
 @dataclass(frozen=True, kw_only=True, slots=True)
 class _RegistrySettings:
     """The settings of a registry, for the generic registry settings tools.
@@ -1104,6 +1245,8 @@ def async_get_tools(
             SearchIntegrationsTool(),
             StartFlowTool(),
             ConfigureFlowTool(),
+            GetCoreConfigTool(),
+            UpdateCoreConfigTool(),
             GetRegistrySettingsTool(_ENTITY_REGISTRY),
             UpdateRegistrySettingsTool(_ENTITY_REGISTRY),
             RemoveRegistryItemTool(_ENTITY_REGISTRY),

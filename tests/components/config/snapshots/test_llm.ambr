@@ -150,6 +150,64 @@
       ]),
       'type': 'object',
     }),
+    'config__update_core_config': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'country': dict({
+          'description': "ISO 3166-1 alpha-2 country code, e.g. 'NL'.",
+          'type': 'string',
+        }),
+        'currency': dict({
+          'description': "ISO 4217 currency code, e.g. 'EUR'.",
+          'type': 'string',
+        }),
+        'elevation': dict({
+          'description': 'Elevation in meters above sea level.',
+          'type': 'integer',
+        }),
+        'external_url': dict({
+          'description': 'URL of Home Assistant on the internet. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'internal_url': dict({
+          'description': 'URL of Home Assistant on the local network. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'language': dict({
+          'description': "Language code, e.g. 'en' or 'pt-BR'.",
+          'type': 'string',
+        }),
+        'latitude': dict({
+          'type': 'number',
+        }),
+        'location_name': dict({
+          'description': 'The name of the home.',
+          'type': 'string',
+        }),
+        'longitude': dict({
+          'type': 'number',
+        }),
+        'radius': dict({
+          'description': 'Radius of the home zone in meters.',
+          'type': 'integer',
+        }),
+        'time_zone': dict({
+          'description': "IANA time zone, e.g. 'Europe/Amsterdam'.",
+          'type': 'string',
+        }),
+        'unit_system': dict({
+          'description': 'A new unit system also changes the units of sensors, except units the user set.',
+          'enum': list([
+            'metric',
+            'us_customary',
+          ]),
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
     'config__update_entity_settings': dict({
       'additionalProperties': False,
       'properties': dict({
