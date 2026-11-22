@@ -13,10 +13,11 @@ from .coordinator import (
     SMHIConfigEntry,
     SMHIDataUpdateCoordinator,
     SMHIFireDataUpdateCoordinator,
+    SMHIRadarDataUpdateCoordinator,
     SMHIRuntimeData,
 )
 
-PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> None:
@@ -34,7 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> None
     await coordinator.async_config_entry_first_refresh()
     fire_coordinator = SMHIFireDataUpdateCoordinator(hass, entry)
     await fire_coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = SMHIRuntimeData(coordinator, fire_coordinator)
+    radar_coordinator = SMHIRadarDataUpdateCoordinator(hass, entry)
+    await radar_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = SMHIRuntimeData(
+        coordinator, fire_coordinator, radar_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

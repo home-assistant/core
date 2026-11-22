@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import load_fixture
 from pytradfri.command import Command
+from pytradfri.const import ATTR_ID, ROOT_AIR_PURIFIER
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
 
@@ -102,6 +103,14 @@ def gateway_response() -> str:
 def air_purifier() -> str:
     """Return an air purifier response."""
     return load_fixture("air_purifier.json", DOMAIN)
+
+
+@pytest.fixture(scope="package")
+def air_purifier_without_values(air_purifier: str) -> str:
+    """Return an air purifier response whose control reports no values."""
+    response = json.loads(air_purifier)
+    response[ROOT_AIR_PURIFIER] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.fixture(scope="package")
