@@ -16,6 +16,7 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -710,6 +711,7 @@ async def test_assist_api_prompt(
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test prompt for the assist API."""
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     context = Context()
