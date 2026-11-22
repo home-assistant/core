@@ -20,18 +20,17 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
-    _ENTITY_REGISTRY,
     ConfigureFlowTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
+    GetEntitySettingsTool,
     GetFlowsInProgressTool,
-    GetRegistrySettingsTool,
     ReloadConfigEntryTool,
-    RemoveRegistryItemTool,
+    RemoveEntityTool,
     SearchIntegrationsTool,
     StartFlowTool,
     UpdateCoreConfigTool,
-    UpdateRegistrySettingsTool,
+    UpdateEntitySettingsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -136,9 +135,9 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         StartFlowTool(),
         ConfigureFlowTool(),
         UpdateCoreConfigTool(),
-        GetRegistrySettingsTool(_ENTITY_REGISTRY),
-        UpdateRegistrySettingsTool(_ENTITY_REGISTRY),
-        RemoveRegistryItemTool(_ENTITY_REGISTRY),
+        GetEntitySettingsTool(),
+        UpdateEntitySettingsTool(),
+        RemoveEntityTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -2049,20 +2048,14 @@ async def test_update_core_config_invalid_args(
 
 
 @pytest.fixture
-def entity_tools(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> dict[str, llm.Tool]:
+def entity_tools() -> dict[str, llm.Tool]:
     """Return the entity registry tools by name."""
-    ha_tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
-    assert ha_tools is not None
     return {
         tool.name: tool
-        for tool in ha_tools.tools
-        if isinstance(
-            tool,
-            GetRegistrySettingsTool
-            | UpdateRegistrySettingsTool
-            | RemoveRegistryItemTool,
+        for tool in (
+            GetEntitySettingsTool(),
+            UpdateEntitySettingsTool(),
+            RemoveEntityTool(),
         )
     }
 
