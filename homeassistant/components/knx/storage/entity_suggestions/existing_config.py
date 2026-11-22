@@ -201,8 +201,11 @@ def _suggested_name(
     """Name a suggestion after its channel, or after what it acts on.
 
     Applications without channels name their objects "Output A", "Channel B" …
-    - the group addresses are what says which room is meant there.
+    - the group addresses are what says which room is meant there, unless the
+    output was given a name in the parameters of its device.
     """
+    if mapping.channel_label:
+        return mapping.channel_label
     if (
         mapping.target.channel
         not in (project["devices"][mapping.target.device]["channels"])

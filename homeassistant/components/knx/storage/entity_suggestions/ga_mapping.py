@@ -35,8 +35,8 @@ class ChannelRef:
     """A channel of a device.
 
     `channel` is a channel id of the project, or - for devices whose
-    application doesn't define channels - the shared text of its communication
-    objects, which is what separates the outputs of such a device.
+    application doesn't define channels - what separates the outputs of such a
+    device: the text parameter its communication objects share, or their text.
     """
 
     device: str
@@ -58,6 +58,9 @@ class ChannelMapping:
     target: ChannelRef
     device_name: str
     channel_name: str
+    # name given to the channel in the parameters of its device, None if the
+    # channel has none - unlike `channel_name` this is never a generic text
+    channel_label: str | None = None
     # reference -> addresses of the target channel; references that are absent
     # are device global (eg. a central switchover object) and stay as they are
     addresses: dict[str, MappedAddress] = field(default_factory=dict)
@@ -128,10 +131,16 @@ def _channel_of(index: ProjectIndex, com_object: CommunicationObject) -> str | N
 
     Applications that don't define channels separate their outputs only by the
     text of the objects ("Output A", "Channel B", …), so that is used instead.
+    The text is often a parameter of the device - a name given to the output.
+    That parameter is preferred where project data has it: it is the same for
+    identically programmed devices whatever the outputs are named, and it
+    keeps outputs apart that were given the same name.
     """
     if com_object["channel"]:
         return com_object["channel"]
     if com_object["device_address"] not in index.devices_with_channels:
+        if text_parameter := com_object.get("text_parameter"):
+            return text_parameter["identifier"]
         return com_object["text"] or None
     return None
 
@@ -347,12 +356,23 @@ def _counterpart(
     return match
 
 
-def _channel_name(project: KNXProject, target: ChannelRef) -> str:
-    """Name of a channel - the project channel name or the objects text."""
-    channels = project["devices"][target.device]["channels"]
+def _channel_names(index: ProjectIndex, target: ChannelRef) -> tuple[str, str | None]:
+    """Name of a channel and the name given to it in the device parameters."""
+    channels = index.project["devices"][target.device]["channels"]
     if (channel := channels.get(target.channel)) is not None:
-        return channel["name"]
-    return target.channel
+        return channel["name"], None
+    for com_object in sorted(
+        index.com_objects_by_device.get(target.device, ()),
+        key=lambda com_object: com_object["number"],
+    ):
+        if (text_parameter := com_object.get("text_parameter")) and text_parameter[
+            "identifier"
+        ] == target.channel:
+            # objects of one parameter may differ in their text ("… input",
+            # "… output") - the first one is as good as any
+            return com_object["text"], text_parameter["value"]
+    # the shared text of the objects
+    return target.channel, None
 
 
 def _map_channel(
@@ -364,10 +384,12 @@ def _map_channel(
 ) -> ChannelMapping:
     """Resolve the addresses one channel uses in place of the source addresses."""
     project = index.project
+    channel_name, channel_label = _channel_names(index, target)
     mapping = ChannelMapping(
         target=target,
         device_name=project["devices"][target.device]["name"],
-        channel_name=_channel_name(project, target),
+        channel_name=channel_name,
+        channel_label=channel_label,
     )
     for reference, source_object in source_objects.items():
         counterpart = _counterpart(

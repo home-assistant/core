@@ -50,9 +50,11 @@ def _com_object(
     text: str = "",
     dpts: list[dict] | None = None,
     module_def: dict | None = None,
+    text_parameter: dict | None = None,
     **flag_values: bool,
 ) -> dict:
-    return {
+    # project data stored by an older parser has no text parameter
+    return ({"text_parameter": text_parameter} if text_parameter else {}) | {
         "name": f"KO {number}",
         "number": number,
         "text": text,
@@ -578,6 +580,159 @@ async def test_functions_told_apart_by_folders(
     assert suggestion["unmatched"] == (
         [] if brightness else ["ga_brightness.state", "ga_brightness.write"]
     )
+
+
+def _named_output(
+    device: str,
+    base: int,
+    addresses: str,
+    parameter: str,
+    name: str | None,
+    text: str | None = None,
+) -> list[dict]:
+    """Objects of an output whose text is a parameter of its device."""
+    text_parameter = {"identifier": parameter, "value": name}
+    text = text or name or "Output"
+    return [
+        _com_object(
+            base,
+            device,
+            "Switch",
+            [f"{addresses}/1"],
+            text=text,
+            text_parameter=text_parameter,
+            write=True,
+        ),
+        _com_object(
+            base + 1,
+            device,
+            "Status",
+            [f"{addresses}/2"],
+            text=text,
+            text_parameter=text_parameter,
+            transmit=True,
+            read=True,
+        ),
+    ]
+
+
+def _named_outputs_project() -> dict[str, Any]:
+    """Build a project of two devices without channels naming their outputs."""
+    return _project(
+        [
+            *_named_output("1.0.40", 1, "7/0", "P-1_R-1", "Light"),
+            # the same name as the output before
+            *_named_output("1.0.40", 11, "7/1", "P-2_R-2", "Light"),
+            # not named - the default text of the application is shown
+            *_named_output("1.0.40", 21, "7/2", "P-3_R-3", None, "Output C"),
+            *_named_output("1.0.41", 1, "7/3", "P-1_R-1", "Kitchen"),
+        ],
+        {
+            "1.0.40": _device("Switch actuator", APP_SWITCH),
+            "1.0.41": _device("Switch actuator 2", APP_SWITCH),
+        },
+    )
+
+
+def test_outputs_separated_by_text_parameter() -> None:
+    """Test outputs of a device without channels are told apart by parameter."""
+    mappings = derive_channel_mappings(
+        build_project_index(_named_outputs_project()),
+        [
+            SourceAddress("switch", "7/0/1", "write"),
+            SourceAddress("state", "7/0/2", "state"),
+        ],
+    )
+    assert mappings == [
+        # of the same name as the source output - still an output of its own
+        ChannelMapping(
+            target=ChannelRef("1.0.40", "P-2_R-2"),
+            device_name="Switch actuator",
+            channel_name="Light",
+            channel_label="Light",
+            addresses={
+                "switch": MappedAddress("7/1/1"),
+                "state": MappedAddress("7/1/2"),
+            },
+        ),
+        ChannelMapping(
+            target=ChannelRef("1.0.40", "P-3_R-3"),
+            device_name="Switch actuator",
+            channel_name="Output C",
+            channel_label=None,
+            addresses={
+                "switch": MappedAddress("7/2/1"),
+                "state": MappedAddress("7/2/2"),
+            },
+        ),
+        # the same output of another device, whatever it is named
+        ChannelMapping(
+            target=ChannelRef("1.0.41", "P-1_R-1"),
+            device_name="Switch actuator 2",
+            channel_name="Kitchen",
+            channel_label="Kitchen",
+            addresses={
+                "switch": MappedAddress("7/3/1"),
+                "state": MappedAddress("7/3/2"),
+            },
+        ),
+    ]
+
+
+def test_text_parameter_shared_by_different_texts() -> None:
+    """Test objects of one text parameter are one output whatever their text."""
+    objects = _named_output("1.0.40", 1, "7/0", "P-1_R-1", "Bath") + _named_output(
+        "1.0.40", 11, "7/1", "P-2_R-2", "Hall"
+    )
+    for com_object in objects:
+        direction = "output" if com_object["flags"]["transmit"] else "input"
+        com_object["text"] += f" - {direction}"
+    mappings = derive_channel_mappings(
+        build_project_index(
+            _project(objects, {"1.0.40": _device("Switch actuator", APP_SWITCH)})
+        ),
+        [
+            SourceAddress("switch", "7/0/1", "write"),
+            SourceAddress("state", "7/0/2", "state"),
+        ],
+    )
+    assert len(mappings) == 1
+    assert mappings[0].target == ChannelRef("1.0.40", "P-2_R-2")
+    assert mappings[0].channel_name == "Hall - input"
+    assert mappings[0].channel_label == "Hall"
+    assert mappings[0].addresses == {
+        "switch": MappedAddress("7/1/1"),
+        "state": MappedAddress("7/1/2"),
+    }
+
+
+async def test_suggestions_named_after_text_parameter(
+    hass_storage: dict[str, Any],
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test an output is named as in the parameters of its device."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
+        "version": 1,
+        "data": _named_outputs_project(),
+    }
+    await knx.setup_integration()
+    await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": "7/0/1", "state": "7/0/2"}}
+    )
+    await knx.assert_read("7/0/2", 0)
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert {
+        suggestion_id: (suggestion["suggested_name"], suggestion["secondary_info"])
+        for suggestion_id, suggestion in by_id.items()
+    } == {
+        "cfg_1.0.40_P-2_R-2_switch": ("Light", "Light"),
+        # an output that was not named is named after its address
+        "cfg_1.0.40_P-3_R-3_switch": ("GA 7/2/1", "Output C"),
+        "cfg_1.0.41_P-1_R-1_switch": ("Kitchen", "Kitchen"),
+    }
 
 
 def _folder_project(
