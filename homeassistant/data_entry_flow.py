@@ -351,7 +351,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid_util.random_uuid_hex()
+        flow.flow_id = uuid_util.secure_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)

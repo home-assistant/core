@@ -1314,7 +1314,7 @@ haveniaq==0.1.0
 hdate[astral]==1.2.2
 
 # homeassistant.components.hdfury
-hdfury==1.6.1
+hdfury==1.7.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.6
@@ -2309,7 +2309,7 @@ pyfido==2.1.2
 pyfirefly==0.1.17
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.49
+pyfireservicerota==0.0.50
 
 # homeassistant.components.flic_button
 pyflic-ble==0.2.6
@@ -2815,7 +2815,7 @@ python-google-weather-api==0.0.11
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.2.0
+python-homewizard-energy==10.3.0
 
 # homeassistant.components.hotspring
 python-hotspring==5.0.0
@@ -3463,7 +3463,7 @@ vegehub==0.1.26
 vehicle==3.0.0
 
 # homeassistant.components.velbus
-velbus-aio==2026.11.3
+velbus-aio==2026.11.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.22

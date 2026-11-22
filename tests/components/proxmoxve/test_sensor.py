@@ -1,5 +1,6 @@
 """Tests for the Proxmox VE sensor platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -71,6 +72,37 @@ async def test_storage_missing_used_fraction(
 
     state = hass.states.get("sensor.storage_local_storage_usage_percentage")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("cluster_resources", "expected_percentage"),
+    [
+        pytest.param(
+            [{"type": "qemu", "vmid": 100, "mem": 536870912}],
+            "25.0",
+            id="guest_memory",
+        ),
+        pytest.param([], "50.0", id="not_in_cluster_resources"),
+    ],
+)
+async def test_vm_memory_source(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    cluster_resources: list[dict[str, Any]],
+    expected_percentage: str,
+) -> None:
+    """Test VM memory comes from cluster resources, falling back to the node list."""
+    mock_proxmox_client.cluster.resources.get.return_value = cluster_resources
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.vm_web_memory_usage_percentage")
+    assert state.state == expected_percentage
 
 
 async def test_sensors_according_to_permissions(
