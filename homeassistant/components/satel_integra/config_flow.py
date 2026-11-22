@@ -632,7 +632,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                         f"{user_input[CONF_NAME]}"
                         f" ({subconfig_entry.data[CONF_ZONE_NUMBER]})"
                     ),
-                    data_updates=user_input,
+                    data_updates={CONF_ZONE_TYPE: None, **user_input},
                 )
 
         suggested_values: dict[str, Any] = {
@@ -701,7 +701,7 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
                     f"{user_input[CONF_NAME]}"
                     f" ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})"
                 ),
-                data_updates=user_input,
+                data_updates={CONF_ZONE_TYPE: None, **user_input},
             )
 
         return self.async_show_form(
