@@ -129,17 +129,19 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 # The update listener reloads a loaded entry when the key changes
-                if (
+                reload = (
                     not reauth_entry.update_listeners
                     or reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
-                ):
-                    self.hass.config_entries.async_schedule_reload(
-                        reauth_entry.entry_id
-                    )
-                return self.async_update_and_abort(
+                )
+                result = self.async_update_and_abort(
                     reauth_entry,
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
 
         return self.async_show_form(
             step_id="reauth_confirm",

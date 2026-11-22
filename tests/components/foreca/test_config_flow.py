@@ -1,6 +1,6 @@
 """Test the Foreca config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyforeca import (
     ForecaAuthError,
@@ -228,6 +228,33 @@ async def test_reauth(
     assert mock_config_entry.data == {CONF_API_KEY: "new-key"}
     mock_foreca_client.current.assert_awaited_once()
     mock_setup_entry.assert_awaited_once()
+
+
+async def test_reauth_entry_with_setup_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test reauth sets up an entry that failed with the new API key."""
+    mock_foreca_client.current.side_effect = ForecaAuthError
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_foreca_client.current.side_effect = None
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    with patch(
+        "homeassistant.components.foreca.ForecaApiClient",
+        return_value=mock_foreca_client,
+    ) as client_cls:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert client_cls.call_args.args[0] == "new-key"
 
 
 @pytest.mark.parametrize("api_key", ["new-key", "test-key"], ids=["new", "same"])
