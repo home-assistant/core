@@ -27,7 +27,11 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .utils import round_temperature_to_step, temperature_unit_or_celsius
+from .utils import (
+    round_temperature_to_step,
+    set_optional_temperature_bound,
+    temperature_unit_or_celsius,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -94,14 +98,20 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_native_current_temperature = self.get_current_temperature()
         self._attr_native_target_temperature = self.get_target_temperature()
         dht = self.domestic_hotwater_temperature
-        if dht is not None and dht.min_value is not None:
-            self._attr_min_temp = float(dht.min_value)
-        elif hasattr(self, "_attr_min_temp"):
-            del self._attr_min_temp
-        if dht is not None and dht.max_value is not None:
-            self._attr_max_temp = float(dht.max_value)
-        elif hasattr(self, "_attr_max_temp"):
-            del self._attr_max_temp
+        set_optional_temperature_bound(
+            self,
+            "min",
+            float(dht.min_value)
+            if dht is not None and dht.min_value is not None
+            else None,
+        )
+        set_optional_temperature_bound(
+            self,
+            "max",
+            float(dht.max_value)
+            if dht is not None and dht.max_value is not None
+            else None,
+        )
         self._attr_target_temperature_step = (
             float(dht.step_value)
             if dht is not None and dht.step_value is not None
@@ -283,9 +293,11 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         states: list[str] = []
         hot_water = self._hot_water
         power = hot_water.power if hot_water is not None else None
-        if power is not None and power.settable:
-            states = [STATE_OFF, STATE_HEAT_PUMP]
         pwf = hot_water.powerful_mode if hot_water is not None else None
+        if power is not None and power.settable:
+            states = [STATE_OFF]
+            if not (pwf is not None and pwf.value == "on" and not pwf.settable):
+                states.append(STATE_HEAT_PUMP)
         if (
             power is not None
             and (power.settable or power.value == "on")

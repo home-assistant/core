@@ -2,11 +2,13 @@
 
 from decimal import ROUND_HALF_UP, Decimal
 import re
+from typing import Literal
 
 from daikin_onecta.models import FanDirectionMode, FanSpeedMode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
+from homeassistant.helpers.entity import Entity
 
 
 def account_identifier(entry: ConfigEntry) -> str:
@@ -42,6 +44,18 @@ def enum_value_to_state(value: str) -> str:
 def is_read_only_on_off_value(settable: bool, values: list[str] | None) -> bool:
     """Return whether a characteristic is a read-only on/off string value."""
     return not settable and values is not None and set(values) == {"on", "off"}
+
+
+def set_optional_temperature_bound(
+    entity: Entity, bound: Literal["min", "max"], value: float | None
+) -> None:
+    """Set a reported temperature bound or restore Home Assistant's default."""
+    attribute = f"_attr_{bound}_temp"
+    if value is None:
+        if hasattr(entity, attribute):
+            delattr(entity, attribute)
+    else:
+        setattr(entity, attribute, value)
 
 
 def round_temperature_to_step(

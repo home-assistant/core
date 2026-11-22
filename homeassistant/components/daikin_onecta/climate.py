@@ -46,6 +46,7 @@ from .entity import (
 from .utils import (
     fixed_positions,
     round_temperature_to_step,
+    set_optional_temperature_bound,
     temperature_unit_or_celsius,
 )
 
@@ -170,16 +171,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         # Assistant reflects the new state without waiting for the next poll.
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self._get_current_temperature()
-        if (max_temp := self._get_max_temp()) is None:
-            if hasattr(self, "_attr_max_temp"):
-                del self._attr_max_temp
-        else:
-            self._attr_max_temp = max_temp
-        if (min_temp := self._get_min_temp()) is None:
-            if hasattr(self, "_attr_min_temp"):
-                del self._attr_min_temp
-        else:
-            self._attr_min_temp = min_temp
+        set_optional_temperature_bound(self, "max", self._get_max_temp())
+        set_optional_temperature_bound(self, "min", self._get_min_temp())
         self._attr_target_temperature_step = self._get_target_temperature_step()
         self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_hvac_modes = self._get_hvac_modes()
@@ -225,7 +218,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 self._raise_service_validation_error(unavailable_key)
             if not await self._async_execute_climate_command(set_mode):
                 return False
-            current_mode.value = FANMODE_FIXED
+            if (state := get_state()) is not None:
+                state[0].value = FANMODE_FIXED
             # Keep the confirmed mode if the subsequent position write fails.
             self._publish_write_update()
 
@@ -754,11 +748,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Set the vertical swing mode."""
         if swing_mode not in self._get_swing_modes():
             self._raise_service_validation_error("swing_control_unavailable")
-        res = True
         if self.swing_mode != swing_mode:
-            res = await self._async_set_swing("vertical", swing_mode)
-
-            if res is True:
+            if await self._async_set_swing("vertical", swing_mode):
                 self._publish_write_update()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
@@ -768,11 +759,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Set the horizontal swing mode."""
         if swing_horizontal_mode not in self._get_swing_horizontal_modes():
             self._raise_service_validation_error("swing_control_unavailable")
-        res = True
         if self.swing_horizontal_mode != swing_horizontal_mode:
-            res = await self._async_set_swing("horizontal", swing_horizontal_mode)
-
-            if res is True:
+            if await self._async_set_swing("horizontal", swing_horizontal_mode):
                 self._publish_write_update()
             else:
                 self._raise_command_failed("set_swing_mode_failed")

@@ -98,11 +98,16 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     @override
     def update_state(self) -> None:
-        """Refresh the state from the current device data."""
-        if (value := self.sensor_value()) is not None:
-            self._attr_is_on = value == "on"
-        else:
-            self._attr_is_on = None
+        """Refresh the state and platform exposure from current device data."""
+        characteristic = self._characteristic(self._value)
+        result = characteristic.value if characteristic is not None else None
+        self._attr_is_on = result == "on" if isinstance(result, str) else None
+        self._is_exposed_on_platform = (
+            characteristic is not None
+            and characteristic.settable
+            and set(characteristic.values or []) == {"on", "off"}
+            and self._characteristic_exposed_on(self._value, Platform.SWITCH)
+        )
 
     def sensor_value(self) -> str | None:
         """Return the state of the switch."""
@@ -114,14 +119,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return whether the characteristic still exposes writable on/off values."""
-        characteristic = self._characteristic(self._value)
-        return (
-            super().available
-            and self._characteristic_exposed_on(self._value, Platform.SWITCH)
-            and characteristic is not None
-            and characteristic.settable
-            and set(characteristic.values or []) == {"on", "off"}
-        )
+        return super().available and self._is_exposed_on_platform
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

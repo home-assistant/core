@@ -357,6 +357,9 @@ async def test_water_heater_rejects_heat_pump_with_read_only_performance_mode(
     powerful_mode.settable = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
+    entity = hass.data[WATER_HEATER_DOMAIN].get_entity(ALTHERMA_WATER_HEATER_ENTITY_ID)
+    assert isinstance(entity, DaikinWaterTank)
+    assert STATE_HEAT_PUMP not in entity.operation_list
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(

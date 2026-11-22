@@ -521,6 +521,61 @@ async def test_climate_service_sets_fixed_fan_speed(
     )
 
 
+async def test_climate_service_sets_fixed_mode_on_replaced_model(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Update the current model when a fixed-mode command replaces the model."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    fan_operation = climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_speed is not None
+    assert fan_operation.fan_speed.modes is not None
+    fixed_mode = fan_operation.fan_speed.modes[FANMODE_FIXED]
+    target_speed = fixed_mode.value
+    fan_operation.fan_speed.current_mode.value = "auto"
+    coordinator.async_update_listeners()
+    device = coordinator.data[gateway_id]
+    old_current_mode = fan_operation.fan_speed.current_mode
+
+    async def replace_device_model(*_args: object, **_kwargs: object) -> None:
+        device.set_device_data(deepcopy(device.device))
+
+    mock_onecta_client.patch_characteristic.side_effect = replace_device_model
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, "fan_mode": str(target_speed)},
+        blocking=True,
+    )
+
+    current_management_point = device.management_point(management_point.embedded_id)
+    assert current_management_point is not None
+    current_climate_control = current_management_point.climate_control
+    assert current_climate_control is not None
+    current_fan_operation = current_climate_control.fan_operation()
+    assert (
+        current_fan_operation is not None
+        and current_fan_operation.fan_speed is not None
+    )
+    assert current_fan_operation.fan_speed.modes is not None
+    assert old_current_mode.value == "auto"
+    assert current_fan_operation.fan_speed.current_mode.value == FANMODE_FIXED
+    assert current_fan_operation.fan_speed.modes[FANMODE_FIXED].value == target_speed
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == str(target_speed)
+
+
 @pytest.mark.parametrize(
     ("preset_mode", "native_characteristic"),
     [(PRESET_AWAY, "holidayMode"), (PRESET_BOOST, "powerfulMode")],

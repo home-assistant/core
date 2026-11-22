@@ -116,8 +116,11 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
 
     @override
     def update_state(self) -> None:
-        """Refresh the state from the current device data."""
+        """Refresh the state and platform exposure from current device data."""
         self._attr_is_on = self.sensor_value()
+        self._is_exposed_on_platform = self._characteristic_exposed_on(
+            self._value, Platform.BINARY_SENSOR
+        )
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
@@ -135,6 +138,4 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the source characteristic is still available."""
-        return super().available and self._characteristic_exposed_on(
-            self._value, Platform.BINARY_SENSOR
-        )
+        return super().available and self._is_exposed_on_platform
