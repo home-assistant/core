@@ -12,9 +12,9 @@ maps that back onto its own configuration format.
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Literal, cast
+from typing import Literal
 
-from xknxproject.models import CommunicationObject, KNXProject
+from xknxproject.models import CommunicationObject, GroupObjectTreeNode, KNXProject
 
 type GaSlot = Literal["write", "state"]
 
@@ -73,10 +73,31 @@ class ProjectIndex:
     com_objects_by_device: dict[str, list[CommunicationObject]]
     devices_by_application: dict[str, list[str]]
     devices_with_channels: frozenset[str]
+    # (device, object number) -> names of the folders the object is placed in
+    # below its channel; objects placed directly in a channel are absent
+    folders: dict[tuple[str, int], tuple[str, ...]]
+
+
+def _index_folders(
+    project: KNXProject,
+    nodes: list[GroupObjectTreeNode],
+    path: tuple[str, ...],
+    folders: dict[tuple[str, int], tuple[str, ...]],
+) -> None:
+    """Record the folders of the communication objects of a group object tree."""
+    for node in nodes:
+        # folders are named relative to the channel they are in
+        node_path = () if node["type"] == "Channel" else (*path, node["name"])
+        if node_path:
+            for com_object_id in node["communication_object_ids"]:
+                if com_object := project["communication_objects"].get(com_object_id):
+                    key = (com_object["device_address"], com_object["number"])
+                    folders[key] = node_path
+        _index_folders(project, node["nodes"], node_path, folders)
 
 
 def build_project_index(project: KNXProject) -> ProjectIndex:
-    """Index communication objects by device and devices by application.
+    """Index communication objects by device and folder, devices by application.
 
     Project data stored by an older parser may lack some of the keys.
     """
@@ -86,16 +107,19 @@ def build_project_index(project: KNXProject) -> ProjectIndex:
             com_objects_by_device[device_address].append(com_object)
     devices_by_application: dict[str, list[str]] = defaultdict(list)
     devices_with_channels: set[str] = set()
+    folders: dict[tuple[str, int], tuple[str, ...]] = {}
     for address, device in project["devices"].items():
         if application := device.get("application"):
             devices_by_application[application].append(address)
         if device.get("channels"):
             devices_with_channels.add(address)
+        _index_folders(project, device.get("group_object_tree", []), (), folders)
     return ProjectIndex(
         project=project,
         com_objects_by_device=dict(com_objects_by_device),
         devices_by_application=dict(devices_by_application),
         devices_with_channels=frozenset(devices_with_channels),
+        folders=folders,
     )
 
 
@@ -112,14 +136,11 @@ def _channel_of(index: ProjectIndex, com_object: CommunicationObject) -> str | N
     return None
 
 
-def _module_of(com_object: CommunicationObject) -> dict[str, Any] | None:
-    """Module instance a communication object belongs to.
-
-    xknxproject 3.10.0 writes this as `module_def` while its
-    `CommunicationObject` still declares `module`, so both names are accepted.
-    """
-    values = cast(dict[str, Any], com_object)
-    return values.get("module_def") or values.get("module")
+def _folders_of(
+    index: ProjectIndex, com_object: CommunicationObject
+) -> tuple[str, ...]:
+    """Names of the folders a communication object is placed in below its channel."""
+    return index.folders.get((com_object["device_address"], com_object["number"]), ())
 
 
 def _slot_allows(slot: GaSlot, com_object: CommunicationObject) -> bool:
@@ -258,7 +279,25 @@ def _same_type(first: CommunicationObject, second: CommunicationObject) -> bool:
     return first["object_size"] == second["object_size"]
 
 
+def _unambiguous(
+    index: ProjectIndex,
+    source: CommunicationObject,
+    matches: list[CommunicationObject],
+) -> CommunicationObject | None:
+    """Return the only match, or the only one in the same folders as `source`.
+
+    A channel may offer a function in several of its folders - eg. relative
+    dimming of the brightness in "Behaviour" and of each colour in "Colour
+    control". The folders are what tells them apart.
+    """
+    if len(matches) > 1:
+        folders = _folders_of(index, source)
+        matches = [match for match in matches if _folders_of(index, match) == folders]
+    return matches[0] if len(matches) == 1 else None
+
+
 def _counterpart(
+    index: ProjectIndex,
     source: CommunicationObject,
     candidates: list[CommunicationObject],
     same_channel_identity: bool,
@@ -278,26 +317,24 @@ def _counterpart(
             for candidate in candidates
             if candidate["number"] == source["number"]
         ]
-        if len(matches) == 1:
-            return matches[0]
-    if module := _module_of(source):
+        if (match := _unambiguous(index, source, matches)) is not None:
+            return match
+    if module := source.get("module_def"):
         matches = [
             candidate
             for candidate in candidates
-            if (candidate_module := _module_of(candidate)) is not None
+            if (candidate_module := candidate.get("module_def")) is not None
             and candidate_module["definition"] == module["definition"]
             and candidate_module["root_number"] == module["root_number"]
         ]
-        if len(matches) == 1:
-            return matches[0]
+        if (match := _unambiguous(index, source, matches)) is not None:
+            return match
     matches = [
         candidate
         for candidate in candidates
         if candidate["function_text"] == source["function_text"]
     ]
-    if len(matches) == 1:
-        return matches[0]
-    return None
+    return _unambiguous(index, source, matches)
 
 
 def _channel_name(project: KNXProject, target: ChannelRef) -> str:
@@ -323,7 +360,9 @@ def _map_channel(
         channel_name=_channel_name(project, target),
     )
     for reference, source_object in source_objects.items():
-        counterpart = _counterpart(source_object, candidates, same_channel_identity)
+        counterpart = _counterpart(
+            index, source_object, candidates, same_channel_identity
+        )
         links = [
             link
             for link in (counterpart["group_address_links"] if counterpart else ())

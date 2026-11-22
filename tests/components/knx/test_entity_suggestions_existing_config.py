@@ -23,6 +23,7 @@ from .conftest import KNXTestKit
 APP_COVER = "M-0001_A-COVER"
 APP_SWITCH = "M-0001_A-SWITCH"
 APP_BUTTON = "M-0002_A-BUTTON"
+APP_DALI = "M-0003_A-DALI"
 
 
 def _flags(write: bool = False, transmit: bool = False, read: bool = False) -> dict:
@@ -66,7 +67,12 @@ def _com_object(
     }
 
 
-def _device(name: str, application: str, channels: list[str] | None = None) -> dict:
+def _device(
+    name: str,
+    application: str,
+    channels: list[str] | None = None,
+    group_object_tree: list[dict] | None = None,
+) -> dict:
     return {
         "name": name,
         "hardware_name": name,
@@ -85,6 +91,19 @@ def _device(name: str, application: str, channels: list[str] | None = None) -> d
             }
             for channel in channels or []
         },
+        "group_object_tree": group_object_tree or [],
+    }
+
+
+def _node(
+    node_type: str, identifier: str, name: str, numbers: list[int], device: str
+) -> dict:
+    return {
+        "type": node_type,
+        "identifier": identifier,
+        "name": name,
+        "communication_object_ids": [f"{device}/O-{number}" for number in numbers],
+        "nodes": [],
     }
 
 
@@ -204,14 +223,87 @@ _BUTTON_OBJECTS = [
     ),
 ]
 
-_ALL_OBJECTS = _COVER_OBJECTS + _SWITCH_OBJECTS + _BUTTON_OBJECTS
+# a lighting gateway whose channels offer the brightness and the white colour
+# component with objects of the same function text - only the folder they are
+# placed in tells them apart
+_GATEWAY_OBJECTS = [
+    obj
+    for channel, base, addresses in (("CH-1", 30, "5/0"), ("CH-2", 40, "5/1"))
+    for obj in (
+        _com_object(
+            base, "1.0.20", "Switch", [f"{addresses}/1"], channel=channel, write=True
+        ),
+        _com_object(
+            base + 1,
+            "1.0.20",
+            "Dim absolute",
+            [f"{addresses}/2"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            write=True,
+        ),
+        _com_object(
+            base + 2,
+            "1.0.20",
+            "Status dim value",
+            [f"{addresses}/3"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            transmit=True,
+            read=True,
+        ),
+        _com_object(
+            base + 3,
+            "1.0.20",
+            "Dim absolute",
+            [f"{addresses}/4"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            write=True,
+        ),
+        _com_object(
+            base + 4,
+            "1.0.20",
+            "Status dim value",
+            [f"{addresses}/5"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            transmit=True,
+            read=True,
+        ),
+    )
+]
+_GATEWAY_TREE = [
+    _node("Channel", channel, f"Group {channel}", [], "1.0.20")
+    | {
+        "nodes": [
+            _node(
+                "Folder",
+                f"PB-{base}",
+                "Behaviour",
+                [base, base + 1, base + 2],
+                "1.0.20",
+            ),
+            _node(
+                "Folder",
+                f"PB-{base + 3}",
+                "Colour control",
+                [base + 3, base + 4],
+                "1.0.20",
+            ),
+        ]
+    }
+    for channel, base in (("CH-1", 30), ("CH-2", 40))
+]
+
+_ALL_OBJECTS = _COVER_OBJECTS + _SWITCH_OBJECTS + _BUTTON_OBJECTS + _GATEWAY_OBJECTS
 
 
 def _project() -> dict[str, Any]:
     """Build a project out of the objects above."""
     communication_objects = {
-        f"{com_object['device_address']}/O-{index}": com_object
-        for index, com_object in enumerate(_ALL_OBJECTS)
+        f"{com_object['device_address']}/O-{com_object['number']}": com_object
+        for com_object in _ALL_OBJECTS
     }
     group_addresses: dict[str, Any] = {}
     for com_object_id, com_object in communication_objects.items():
@@ -245,6 +337,9 @@ def _project() -> dict[str, Any]:
             "1.0.11": _device("Switch actuator 2", APP_SWITCH),
             "1.0.12": _device("Switch actuator 3", APP_SWITCH),
             "1.1.1": _device("Push button", APP_BUTTON, ["CH-1", "CH-2"]),
+            "1.0.20": _device(
+                "Lighting gateway", APP_DALI, ["CH-1", "CH-2"], _GATEWAY_TREE
+            ),
         },
         "communication_objects": communication_objects,
     }
@@ -430,6 +525,53 @@ async def test_most_complete_configuration_is_suggested(
 
     unconfigured = _by_id(await get_entity_suggestions(include_configured=False))
     assert sorted(unconfigured) == ["cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"]
+
+
+@pytest.mark.parametrize(
+    ("with_tree", "brightness"),
+    [
+        (True, {"write": "5/1/2", "state": "5/1/3", "passive": []}),
+        # project data stored by an older parser has no group object tree - an
+        # ambiguous function is left out rather than guessed
+        (False, None),
+    ],
+)
+async def test_functions_told_apart_by_folders(
+    hass_storage: dict[str, Any],
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+    with_tree: bool,
+    brightness: dict[str, Any] | None,
+) -> None:
+    """Test objects of the same function are matched by the folder they are in."""
+    project = _project()
+    if not with_tree:
+        for device in project["devices"].values():
+            del device["group_object_tree"]
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": project}
+    await knx.setup_integration()
+    await create_ui_entity(
+        Platform.LIGHT,
+        {
+            "ga_switch": {"write": "5/0/1"},
+            "ga_brightness": {"write": "5/0/2", "state": "5/0/3"},
+        },
+    )
+    await knx.assert_read("5/0/3", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert list(by_id) == ["cfg_1.0.20_CH-2_light"]
+    suggestion = by_id["cfg_1.0.20_CH-2_light"]["suggestions"]["light"]
+    assert suggestion["knx"]["ga_switch"] == {
+        "write": "5/1/1",
+        "state": None,
+        "passive": [],
+    }
+    assert suggestion["knx"].get("ga_brightness") == brightness
+    assert suggestion["unmatched"] == (
+        [] if brightness else ["ga_brightness.state", "ga_brightness.write"]
+    )
 
 
 async def test_no_project(
