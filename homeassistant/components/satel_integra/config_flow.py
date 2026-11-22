@@ -14,7 +14,6 @@ from satel_integra.exceptions import (
     SatelPanelBusyError,
 )
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
@@ -106,9 +105,7 @@ PARTITION_SCHEMA = probatio.Schema(
 ZONE_AND_OUTPUT_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Optional(
-            CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
-        ): selector.DeviceClassSelector(
+        probatio.Optional(CONF_ZONE_TYPE): selector.DeviceClassSelector(
             selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
         ),
     }
@@ -168,7 +165,6 @@ def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
                 data={
                     CONF_ZONE_NUMBER: number,
                     CONF_NAME: zone.name or label,
-                    CONF_ZONE_TYPE: None,
                     CONF_ENABLE_TEMPERATURE_SENSOR: False,
                 },
             )
@@ -194,11 +190,7 @@ def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
                 subentry_type=SUBENTRY_TYPE_OUTPUT,
                 unique_id=f"{SUBENTRY_TYPE_OUTPUT}_{number}",
                 title=title,
-                data={
-                    CONF_OUTPUT_NUMBER: number,
-                    CONF_NAME: name,
-                    CONF_ZONE_TYPE: None,
-                },
+                data={CONF_OUTPUT_NUMBER: number, CONF_NAME: name},
             )
         )
     return subentries

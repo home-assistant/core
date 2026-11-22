@@ -302,7 +302,6 @@ async def test_setup_adds_discovered_zones(
     assert zone.data == {
         CONF_ZONE_NUMBER: 6,
         CONF_NAME: "Zone 6",
-        CONF_ZONE_TYPE: None,
         CONF_ENABLE_TEMPERATURE_SENSOR: False,
     }
     assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION)) == int(
@@ -340,7 +339,7 @@ async def test_setup_classifies_discovered_outputs(
     } == {
         f"output_{number}": (
             f"Output {number}: {name}",
-            {CONF_OUTPUT_NUMBER: number, CONF_NAME: name, CONF_ZONE_TYPE: None},
+            {CONF_OUTPUT_NUMBER: number, CONF_NAME: name},
         )
         for number, name in ((2, "Alarm status"), (3, "Remote relay"))
     }

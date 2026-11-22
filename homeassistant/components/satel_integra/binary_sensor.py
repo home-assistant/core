@@ -249,7 +249,7 @@ async def async_setup_entry(
 
     for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_OUTPUT):
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
-        output_type: BinarySensorDeviceClass | None = subentry.data[CONF_ZONE_TYPE]
+        output_type: BinarySensorDeviceClass | None = subentry.data.get(CONF_ZONE_TYPE)
 
         async_add_entities(
             [
@@ -323,7 +323,7 @@ class SatelIntegraZoneBinarySensor(
         super().__init__(coordinator, config_entry_id, subentry, zone_number)
         self.entity_description = description
         if description.key == "violation":
-            self._attr_device_class = subentry.data[CONF_ZONE_TYPE]
+            self._attr_device_class = subentry.data.get(CONF_ZONE_TYPE)
         else:
             self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
