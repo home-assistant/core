@@ -181,3 +181,9 @@ IMAGE_SELECT_SETTINGS: tuple[ImageSelectSetting, ...] = (
         key="capture_mode", path="CaptureMode/mode", enabled_by_default=False
     ),
 )
+
+# Fired when the camera changed a setting on its own, or only applies one once it
+# restarts: the logbook describes it.
+EVENT_IMAGE_SETTING_CHANGED = f"{DOMAIN}_image_setting_changed"
+ATTR_NAME = "name"
+ATTR_MESSAGE = "message"

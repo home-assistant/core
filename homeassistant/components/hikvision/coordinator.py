@@ -12,12 +12,18 @@ from typing import TYPE_CHECKING, Any, override
 from pyhik.image import PRIVILEGE_SUB_STATUSES, ImageSetting, ImageWriteResult
 from pyhik.isapi import ISAPIAuthError, ISAPIClient, ISAPIConnectionError, ISAPIError
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import ATTR_MESSAGE, ATTR_NAME, DOMAIN, EVENT_IMAGE_SETTING_CHANGED
 
 if TYPE_CHECKING:
     from . import HikvisionConfigEntry, HikvisionData
@@ -43,6 +49,9 @@ _CONFLICT_KEYS = {
         frozenset({"wdr/mode", "dehaze/dehazemode"}),
     ),
 }
+# The sub status of a change the camera made, but that only takes effect once it
+# restarts, such as the power line frequency.
+REBOOT_REQUIRED = "rebootRequired"
 # What the camera writes to turn one of them off: the flag, or the mode.
 _OFF_VALUES = frozenset({"false", "close", "off"})
 
@@ -320,6 +329,10 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         # the disabled ones. Not what is left in the entity registry from an earlier
         # setup: a setting that is no longer accepted may still have an entry there.
         self.entity_paths: set[str] = set()
+        # The entity this setup has added for a setting, by lowercase path, while it
+        # is in Home Assistant. A disabled entity is not, nor one left in the
+        # registry by an earlier setup.
+        self.entity_ids: dict[str, str] = {}
         # Set under the lock by the first 401, and kept for the life of this client:
         # a request queued behind it must not send the rejected password again, as
         # repeated attempts can lock the account. A reload makes a new client.
@@ -601,13 +614,20 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         """Return the name of the camera, as the logs give it."""
         return self.config_entry.title
 
-    async def async_set_setting(self, path: str, value: str) -> None:
-        """Write one setting and update the stored values."""
+    async def async_set_setting(
+        self, path: str, value: str, context: Context | None = None
+    ) -> None:
+        """Write one setting and update the stored values.
+
+        The context is that of the action that asked for the change.
+        """
         await self._async_write(
-            self.client.set_image_setting, (path, value), {path: value}
+            self.client.set_image_setting, (path, value), path, {path: value}, context
         )
 
-    async def async_set_linked_setting(self, setting: ImageSetting, value: str) -> None:
+    async def async_set_linked_setting(
+        self, setting: ImageSetting, value: str, context: Context | None = None
+    ) -> None:
         """Write a mode that also controls an enabled flag, such as BLC."""
         updates = {setting.path: value}
         if setting.linked_enabled_path:
@@ -615,14 +635,20 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 "false" if value == setting.off_value else "true"
             )
         await self._async_write(
-            self.client.set_image_linked_setting, (setting, value), updates
+            self.client.set_image_linked_setting,
+            (setting, value),
+            setting.path,
+            updates,
+            context,
         )
 
     async def _async_write(
         self,
         method: Callable[..., ImageWriteResult],
         args: tuple[Any, ...],
+        path: str,
         updates: dict[str, str],
+        context: Context | None,
     ) -> None:
         """Send a write to the camera and store what it changed."""
         try:
@@ -643,18 +669,24 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 result = await self._async_send(
                     method,
                     *args,
-                    on_result=partial(self._async_cancelled_write_done, updates),
+                    on_result=partial(
+                        self._async_cancelled_write_done, path, updates, context
+                    ),
                 )
         except ISAPIError as err:
             raise await self._async_write_error(err) from err
-        if error := self._apply_write_result(updates, result):
+        if error := self._apply_write_result(path, updates, context, result):
             raise error
         if not self._stopping:
             # Not while unloading: the poll would only be refused.
             await self.async_request_refresh()
 
     async def _async_cancelled_write_done(
-        self, updates: dict[str, str], result: ImageWriteResult
+        self,
+        path: str,
+        updates: dict[str, str],
+        context: Context | None,
+        result: ImageWriteResult,
     ) -> None:
         """Show what a write did when the action that asked for it was cancelled.
 
@@ -662,13 +694,20 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         would ever show it. The lock is still held here, so the refresh that
         follows a write is only started, to run once it is released.
         """
-        if not self._apply_write_result(updates, result) and not self._stopping:
+        if (
+            not self._apply_write_result(path, updates, context, result)
+            and not self._stopping
+        ):
             self.config_entry.async_create_background_task(
                 self.hass, self.async_request_refresh(), f"{self.name} refresh"
             )
 
     def _apply_write_result(
-        self, updates: dict[str, str], result: ImageWriteResult
+        self,
+        path: str,
+        updates: dict[str, str],
+        context: Context | None,
+        result: ImageWriteResult,
     ) -> HomeAssistantError | None:
         """Store what a write changed, and return the error to raise if refused."""
         _LOGGER.debug(
@@ -681,8 +720,17 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
             f", also changed {result.also_changed}" if result.also_changed else "",
         )
         # The camera may have had to switch other settings off first, even when it
-        # then refused the change itself: show them as they are on the camera.
+        # then refused the change itself: show them as they are on the camera, and
+        # tell the user.
         others = self._as_settings_spell(result.also_changed)
+        self._async_log_also_changed(path, others, context)
+        if result.success and result.sub_status == REBOOT_REQUIRED:
+            # Applied, but only in effect once the camera restarts.
+            self._async_tell(
+                path,
+                "was changed, and takes effect once the camera restarts",
+                context,
+            )
         if not result.success:
             if others:
                 # Only these are known, and no poll follows a refused write: not
@@ -719,6 +767,72 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.data = {**self.data, **others, **updates}
         self.async_update_listeners()
         return None
+
+    def _async_log_also_changed(
+        self, path: str, others: dict[str, str], context: Context | None
+    ) -> None:
+        """Tell the user about each setting changed to make room for another."""
+        requested = self._async_entity_name(path)[0]
+        for other_path, value in others.items():
+            action = "turned off" if value.lower() in _OFF_VALUES else f"set to {value}"
+            self._async_tell(
+                other_path,
+                f"was {action} automatically so that {requested} could be changed",
+                context,
+                # The entry is about this action when the setting has no entity.
+                fallback=path,
+            )
+
+    @callback
+    def _async_tell(
+        self,
+        path: str,
+        message: str,
+        context: Context | None,
+        fallback: str | None = None,
+    ) -> None:
+        """Log what happened to a setting, and put it in the logbook.
+
+        The logbook entry belongs to the action that asked for the change, and to
+        the device; it links to the entity of the setting, or else to the entity
+        of the fallback setting, so that the views of either show it.
+        """
+        name, entity_id = self._async_entity_name(path)
+        if entity_id is None and fallback is not None:
+            entity_id = self._async_entity_name(fallback)[1]
+        _LOGGER.info("%s %s", name, message)
+        data: dict[str, str] = {ATTR_NAME: name, ATTR_MESSAGE: message}
+        if (device_id := self._async_device_id()) is not None:
+            data[ATTR_DEVICE_ID] = device_id
+        if entity_id is not None:
+            data[ATTR_ENTITY_ID] = entity_id
+        self.hass.bus.async_fire(EVENT_IMAGE_SETTING_CHANGED, data, context=context)
+
+    def _async_device_id(self) -> str | None:
+        """Return the ID of the camera's device in the device registry."""
+        device = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, self.config_entry.runtime_data.device_id),
+            self.config_entry.entry_id,
+        )
+        return device.id if device else None
+
+    def _async_entity_name(self, path: str) -> tuple[str, str | None]:
+        """Return the name and entity ID of the entity for a setting, if any.
+
+        A mode that comes with an enabled flag, such as BLC, has one entity, for the
+        mode: the camera reports the flag when it turns the feature off. Without an
+        entity of this setup, the path stands in for the name.
+        """
+        path = path.lower()
+        for setting in self.settings:
+            if (flag := setting.linked_enabled_path) and flag.lower() == path:
+                path = setting.path.lower()
+                break
+        if (entity_id := self.entity_ids.get(path)) is None or (
+            state := self.hass.states.get(entity_id)
+        ) is None:
+            return self._spellings.get(path, path), None
+        return state.name, entity_id
 
     async def _async_write_error(self, err: ISAPIError) -> HomeAssistantError:
         """Return the translated error for a write the device did not take."""

@@ -19,12 +19,17 @@ from pyhik.isapi import ISAPIError
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hikvision.const import DOMAIN, IMAGE_SELECT_SETTINGS
+from homeassistant.components.hikvision.const import (
+    DOMAIN,
+    EVENT_IMAGE_SETTING_CHANGED,
+    IMAGE_SELECT_SETTINGS,
+)
 from homeassistant.components.hikvision.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -39,7 +44,7 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -500,6 +505,69 @@ async def test_linked_mode_without_an_enabled_flag(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(HLC_MODE).state == expected
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_linked_flag_is_logged_for_its_mode_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test BLC/enabled is reported for the BLC mode, the entity it belongs to."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    context = Context()
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "ok", {"BLC/enabled": "false"}
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: SHUTTER, ATTR_OPTION: "1/500"},
+        blocking=True,
+        context=context,
+    )
+
+    assert [(e.data["name"], e.data.get("entity_id")) for e in events] == [
+        ("Front Camera Backlight compensation mode", BLC_MODE)
+    ]
+    assert events[0].data["message"] == (
+        "was turned off automatically so that Front Camera Shutter speed could be"
+        " changed"
+    )
+    # The entry belongs to the action that asked for the change.
+    assert events[0].context.id == context.id
+
+
+@pytest.mark.usefixtures("mock_hikcamera", "mock_image_settings")
+async def test_no_link_to_an_entity_this_setup_did_not_add(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test only an entity that is in Home Assistant is linked to.
+
+    Not a disabled one, nor a registry entry left by an earlier setup: the path
+    stands in for the name, as the camera's settings spell it.
+    """
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.image_coordinator
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN,
+        "hikvision",
+        f"{mock_config_entry.runtime_data.device_id}_image_old_setting",
+        suggested_object_id="old_setting",
+    )
+    # Disabled by default.
+    assert hass.states.get(FLIP_DIRECTION) is None
+
+    assert coordinator._async_entity_name("old/setting") == ("old/setting", None)
+    assert coordinator._async_entity_name("imageflip/imageflipstyle") == (
+        "ImageFlip/ImageFlipStyle",
+        None,
+    )
+    assert coordinator._async_entity_name("wdr/MODE") == ("Front Camera WDR", WDR)
 
 
 @pytest.mark.usefixtures("mock_hikcamera")

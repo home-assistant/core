@@ -371,4 +371,4 @@ class HikvisionImageNumber(HikvisionImageEntity, NumberEntity):
                 translation_domain=DOMAIN,
                 translation_key="image_setting_not_whole",
             )
-        await self.coordinator.async_set_setting(self._path, str(whole))
+        await self.coordinator.async_set_setting(self._path, str(whole), self._context)

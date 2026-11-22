@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,11 +17,13 @@ from pyhik.isapi import ISAPIAuthError, ISAPIConnectionError, ISAPIError
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.hikvision.const import DOMAIN, EVENT_IMAGE_SETTING_CHANGED
 from homeassistant.components.hikvision.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -37,9 +40,9 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID
@@ -289,6 +292,157 @@ async def test_turn_on_off(
     assert hass.states.get(HLC).state == (
         STATE_ON if expected_value == "true" else STATE_OFF
     )
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_other_settings_changed_to_make_room_are_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    image_values: dict[str, str],
+) -> None:
+    """Test the user is told when the camera had to switch another setting off."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.hikvision")
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "ok", {"HLC/enabled": "false", "WDR/mode": "CLOSE"}
+    )
+    mock_image_settings.get_image_values.return_value = {
+        **image_values,
+        "HLC/enabled": "false",
+        "Exposure/OverexposeSuppress/enabled": "true",
+    }
+
+    context = Context()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: SMART_LIGHT},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    # The entries belong to the action that asked for the change.
+    assert all(e.context.id == context.id for e in events)
+    # The switch has an entity: it is named and linked. WDR has none in this test,
+    # so the path stands in for its name, and the entry links to the switch that
+    # was turned on. Both are the camera's.
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
+    )
+    message = (
+        "was turned off automatically so that Front Camera Smart supplement light"
+        " could be changed"
+    )
+    assert [dict(e.data) for e in events] == [
+        {
+            "name": "Front Camera Highlight compensation",
+            "message": message,
+            "entity_id": HLC,
+            "device_id": device.id,
+        },
+        {
+            "name": "WDR/mode",
+            "message": message,
+            "entity_id": SMART_LIGHT,
+            "device_id": device.id,
+        },
+    ]
+    # In the log too, for an installation without the logbook.
+    assert f"Front Camera Highlight compensation {message}" in caplog.text
+    assert f"WDR/mode {message}" in caplog.text
+    assert hass.states.get(HLC).state == STATE_OFF
+    assert hass.states.get(SMART_LIGHT).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_change_that_needs_a_restart_is_logged(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the user is told when a change only takes effect once the camera restarts."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "rebootRequired"
+    )
+
+    context = Context()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HLC},
+        blocking=True,
+        context=context,
+    )
+
+    assert [
+        (e.data["name"], e.data["message"], e.data["entity_id"]) for e in events
+    ] == [
+        (
+            "Front Camera Highlight compensation",
+            "was changed, and takes effect once the camera restarts",
+            HLC,
+        )
+    ]
+    assert events[0].context.id == context.id
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_renamed_entity_is_still_linked(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the entry links to the entity under its new ID once it is renamed."""
+    await setup_integration(hass, mock_config_entry)
+    entity_registry.async_update_entity(HLC, new_entity_id="switch.renamed_hlc")
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "ok", {"HLC/enabled": "false"}
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SMART_LIGHT}, blocking=True
+    )
+
+    assert [e.data["entity_id"] for e in events] == ["switch.renamed_hlc"]
+    # Removing the renamed entity forgets it.
+    coordinator = mock_config_entry.runtime_data.image_coordinator
+    entity_registry.async_remove("switch.renamed_hlc")
+    await hass.async_block_till_done()
+    assert "hlc/enabled" not in coordinator.entity_ids
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_other_settings_are_logged_when_the_change_is_still_refused(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a blocker that was switched off is reported even if the change failed."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        False, 403, "WDROrDehazeMutexHLC", {"HLC/enabled": "false"}
+    )
+
+    # The blocker was switched off, so it is not named as the reason.
+    with pytest.raises(HomeAssistantError, match="did not accept the image setting"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SMART_LIGHT}, blocking=True
+        )
+
+    assert [e.data["name"] for e in events] == ["Front Camera Highlight compensation"]
+    # The stored value follows the camera without waiting for the next poll.
+    assert hass.states.get(HLC).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("mock_hikcamera")

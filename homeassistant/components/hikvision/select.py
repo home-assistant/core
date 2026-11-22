@@ -107,6 +107,8 @@ class HikvisionImageSelect(HikvisionImageChoiceEntity, SelectEntity):
         """Change the option."""
         value = self._value_by_option[option]
         if self._setting.linked_enabled_path is not None:
-            await self.coordinator.async_set_linked_setting(self._setting, value)
+            await self.coordinator.async_set_linked_setting(
+                self._setting, value, self._context
+            )
         else:
-            await self.coordinator.async_set_setting(self._path, value)
+            await self.coordinator.async_set_setting(self._path, value, self._context)

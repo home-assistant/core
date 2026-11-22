@@ -4,7 +4,7 @@ from typing import override
 
 from pyhik.image import ImageSetting
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -141,6 +141,31 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
     def _value(self) -> str | None:
         """Return the current raw value of the setting."""
         return self.coordinator.data.get(self._path)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Tell the coordinator which entity shows the setting, while it is added."""
+        await super().async_added_to_hass()
+        path = self._path.lower()
+        entity_ids = self.coordinator.entity_ids
+        entity_ids[path] = self.entity_id
+
+        @callback
+        def _forget() -> None:
+            if entity_ids.get(path) == self.entity_id:
+                del entity_ids[path]
+
+        self.async_on_remove(_forget)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Keep the coordinator pointing at the entity once it is renamed."""
+        super().async_entity_id_changed(old_entity_id)
+        entity_ids = self.coordinator.entity_ids
+        path = self._path.lower()
+        if entity_ids.get(path) == old_entity_id:
+            entity_ids[path] = self.entity_id
 
 
 def image_option_map(setting: ImageSetting, translate: bool) -> dict[str, str] | None:
