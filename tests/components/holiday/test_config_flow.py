@@ -600,3 +600,33 @@ async def test_reconfigure_shows_saved_options(hass: HomeAssistant) -> None:
         get_schema_suggested_value(result["data_schema"].schema, CONF_INCLUDE_SUNDAYS)
         is True
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_duplicate_of_entry_without_options(hass: HomeAssistant) -> None:
+    """Test an entry from before the country options is found as a duplicate."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Sweden",
+        data={CONF_COUNTRY: "SE"},
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY: "SE"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_INCLUDE_SUNDAYS: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
