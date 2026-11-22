@@ -1,9 +1,8 @@
 """Support for Daikin air purifiers."""
 
-from collections.abc import Awaitable, Callable
 from typing import Any, override
 
-from daikin_onecta.air_purification import AirPurificationClient
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import AirPurification, FanSpeedMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -102,19 +101,6 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     def is_on(self) -> bool | None:
         """Return the cached Daikin power state, including unknown values."""
         return self._attr_is_on
-
-    async def _async_execute_air_purification_command(
-        self,
-        command: Callable[[AirPurificationClient], Awaitable[None]],
-        translation_key: str,
-    ) -> None:
-        """Execute a typed air-purification command."""
-        await self._async_execute_command(
-            lambda client: command(
-                client.air_purification(self._device_id, self._embedded_id)
-            ),
-            translation_key,
-        )
 
     def _fixed_speeds(self, mode: str | None = None) -> list[int]:
         """Return the current mode's ordered writable fixed speeds."""
@@ -221,7 +207,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
                 await self.async_set_percentage(percentage)
                 return
         if not self.is_on:
-            await self._async_execute_air_purification_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.air_purification,
                 lambda purifier: purifier.set_power(True),
                 "air_purifier_turn_on_failed",
             )
@@ -243,7 +230,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             self._raise_service_validation_error("air_purifier_power_unavailable")
         if not self.is_on:
             return
-        await self._async_execute_air_purification_command(
+        await self._async_execute_sub_client_command(
+            OnectaClient.air_purification,
             lambda purifier: purifier.set_power(False),
             "air_purifier_turn_off_failed",
         )
@@ -315,7 +303,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             self._raise_service_validation_error("air_purifier_mode_unavailable")
         if mode == purification.mode.value:
             return
-        await self._async_execute_air_purification_command(
+        await self._async_execute_sub_client_command(
+            OnectaClient.air_purification,
             lambda purifier: purifier.set_mode(mode),
             "air_purifier_set_mode_failed",
         )
@@ -348,7 +337,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         fixed = self._fixed_speed_characteristic("manualFan")
         if fixed is not None and fixed.value == speed:
             return
-        await self._async_execute_air_purification_command(
+        await self._async_execute_sub_client_command(
+            OnectaClient.air_purification,
             lambda purifier: purifier.set_fixed_fan_speed("manualFan", speed),
             "air_purifier_set_percentage_failed",
         )

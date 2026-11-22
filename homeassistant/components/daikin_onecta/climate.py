@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
@@ -207,15 +208,19 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if current_mode.value != FANMODE_FIXED:
             if not current_mode.settable:
                 self._raise_service_validation_error(unavailable_key)
-            await self._async_execute_climate_command(set_mode, command_failed_key)
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control, set_mode, command_failed_key
+            )
             if (state := get_state()) is not None:
                 state[0].value = FANMODE_FIXED
             # Keep the confirmed mode if the subsequent position write fails.
             self._publish_write_update()
 
         if fixed.value != target:
-            await self._async_execute_climate_command(
-                lambda climate: set_position(climate, target), command_failed_key
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
+                lambda climate: set_position(climate, target),
+                command_failed_key,
             )
             if (state := get_state()) is not None and (fixed := state[1]) is not None:
                 fixed.value = target
@@ -237,19 +242,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             management_point.climate_control if management_point is not None else None
         )
 
-    async def _async_execute_climate_command(
-        self,
-        command: Callable[[ClimateControlClient], Awaitable[None]],
-        translation_key: str,
-    ) -> None:
-        """Execute a command against this zone's climate control."""
-        await self._async_execute_command(
-            lambda client: command(
-                client.climate_control(self._device_id, self._embedded_id)
-            ),
-            translation_key,
-        )
-
     async def _async_set_power(self, on: bool, translation_key: str) -> None:
         """Set the climate control's power state when it differs."""
         cc = self._climate_control()
@@ -262,8 +254,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             return
         if not cc.on_off_mode.settable:
             self._raise_service_validation_error("climate_power_unavailable")
-        await self._async_execute_climate_command(
-            lambda climate: climate.set_power(on), translation_key
+        await self._async_execute_sub_client_command(
+            OnectaClient.climate_control,
+            lambda climate: climate.set_power(on),
+            translation_key,
         )
         if (cc := self._climate_control()) is not None and cc.on_off_mode is not None:
             cc.on_off_mode.value = state
@@ -396,7 +390,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
 
             if self._attr_native_target_temperature != value:
-                await self._async_execute_climate_command(
+                await self._async_execute_sub_client_command(
+                    OnectaClient.climate_control,
                     lambda climate: climate.set_temperature(omv, self._setpoint, value),
                     "set_temperature_failed",
                 )
@@ -487,7 +482,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:
-            if cc is None or cc.on_off_mode is None or not cc.on_off_mode.settable:
+            if cc is None or cc.on_off_mode is None:
                 self._raise_service_validation_error("climate_power_unavailable")
             await self._async_set_power(on_off_mode == "on", "set_hvac_mode_failed")
             cc = self._climate_control()
@@ -499,7 +494,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_operation_mode(operation_mode),
                 "set_hvac_mode_failed",
             )
@@ -602,7 +598,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         elif fan_speed.current_mode.value != fan_mode:
             if not fan_speed.current_mode.settable:
                 self._raise_service_validation_error("fan_control_unavailable")
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_fan_mode(operation_mode, fan_mode),
                 "set_fan_mode_failed",
             )
@@ -743,7 +740,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         )
         if new_mode is None:
             self._raise_service_validation_error("swing_control_unavailable")
-        await self._async_execute_climate_command(
+        await self._async_execute_sub_client_command(
+            OnectaClient.climate_control,
             lambda climate: climate.set_fan_direction(
                 operation_mode, direction, new_mode
             ),
@@ -788,12 +786,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Disable the current Daikin preset mode."""
         daikin_mode = HA_PRESET_TO_DAIKIN[preset_mode]
         if preset_mode == PRESET_AWAY:
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_holiday_mode(False),
                 "set_preset_mode_failed",
             )
         else:
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_mode_characteristic(daikin_mode, False),
                 "set_preset_mode_failed",
             )
@@ -812,7 +812,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 self._raise_command_failed("set_preset_mode_failed")
         if preset_mode == PRESET_AWAY:
             today = dt_util.now().date()
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_holiday_mode(
                     True,
                     start_date=today,
@@ -821,7 +822,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 "set_preset_mode_failed",
             )
         else:
-            await self._async_execute_climate_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.climate_control,
                 lambda climate: climate.set_mode_characteristic(daikin_mode, True),
                 "set_preset_mode_failed",
             )

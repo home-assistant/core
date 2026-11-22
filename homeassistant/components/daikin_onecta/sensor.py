@@ -355,7 +355,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
-        self._current_characteristic: Characteristic | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
@@ -376,8 +375,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        _, characteristic = self._get_current_characteristic()
-        self._current_characteristic = characteristic
+        characteristic = self._get_current_characteristic()
         self._is_exposed_on_platform = characteristic is not None and (
             self._sub_type is not None
             or self._characteristic_exposed_on(self._value, Platform.SENSOR)
@@ -388,19 +386,16 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             self.entity_description,
         )
 
-    def _get_current_characteristic(
-        self,
-    ) -> tuple[ManagementPoint | None, Characteristic | None]:
+    def _get_current_characteristic(self) -> Characteristic | None:
         """Return the current characteristic from its management point."""
         point = self._management_point
         if point is None:
-            return None, None
-        characteristic = (
+            return None
+        return (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
             else point.characteristic(self._value)
         )
-        return point, characteristic
 
     def _sensor_value(
         self, characteristic: Characteristic | None

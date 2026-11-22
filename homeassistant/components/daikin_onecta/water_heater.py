@@ -1,9 +1,8 @@
 """Support for the Daikin BRP069A62."""
 
-from collections.abc import Awaitable, Callable
 from typing import Any, override
 
-from daikin_onecta.client import DomesticHotWaterClient
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import DomesticHotWater, Setpoint
 
 from homeassistant.components.water_heater import (
@@ -146,19 +145,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Return whether domestic-hot-water data is still available."""
         return super().available and self._hot_water is not None
 
-    async def _async_execute_hot_water_command(
-        self,
-        command: Callable[[DomesticHotWaterClient], Awaitable[None]],
-        translation_key: str,
-    ) -> None:
-        """Execute a typed hot-water command through the cloud adapter."""
-        await self._async_execute_command(
-            lambda client: command(
-                client.domestic_hot_water(self._device_id, self._embedded_id)
-            ),
-            translation_key,
-        )
-
     @property
     def domestic_hotwater_temperature(self) -> Setpoint | None:
         """Return the domestic hot-water temperature setpoint."""
@@ -233,7 +219,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     async def _async_write_tank_temperature(self, target_temperature: float) -> None:
         """Write a validated target temperature if it changed."""
         if target_temperature != self._attr_native_target_temperature:
-            await self._async_execute_hot_water_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.domestic_hot_water,
                 lambda hot_water: hot_water.set_temperature(target_temperature),
                 "water_heater_set_temperature_failed",
             )
@@ -325,8 +312,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     async def _async_set_power(self, on: bool, translation_key: str) -> None:
         """Write and publish the water-heater power state."""
-        await self._async_execute_hot_water_command(
-            lambda hot_water: hot_water.set_power(on), translation_key
+        await self._async_execute_sub_client_command(
+            OnectaClient.domestic_hot_water,
+            lambda hot_water: hot_water.set_power(on),
+            translation_key,
         )
         hot_water = self._hot_water
         if hot_water is not None and hot_water.power is not None:
@@ -366,7 +355,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if powerful_mode is not None and STATE_PERFORMANCE in (
             self.operation_list or []
         ):
-            await self._async_execute_hot_water_command(
+            await self._async_execute_sub_client_command(
+                OnectaClient.domestic_hot_water,
                 lambda hot_water: hot_water.set_powerful_mode(powerful_mode == "on"),
                 "water_heater_set_operation_mode_failed",
             )

@@ -239,6 +239,20 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         """Return whether the coordinator and gateway are available."""
         return super().available and self._device.available
 
+    async def _async_execute_sub_client_command[SubClientT](
+        self,
+        sub_client_factory: Callable[[OnectaClient, str, str], SubClientT],
+        command: Callable[[SubClientT], Awaitable[None]],
+        translation_key: str,
+    ) -> None:
+        """Execute a command against a management-point sub-client."""
+        await self._async_execute_command(
+            lambda client: command(
+                sub_client_factory(client, self._device_id, self._embedded_id)
+            ),
+            translation_key,
+        )
+
     async def _async_execute_command(
         self,
         command: Callable[[OnectaClient], Awaitable[None]],
