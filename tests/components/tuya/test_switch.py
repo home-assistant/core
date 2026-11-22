@@ -173,6 +173,41 @@ async def test_selective_state_update(
     )
 
 
+@pytest.mark.parametrize("mock_device_code", ["msp_mzuro9jgjs7uiryn"])
+@pytest.mark.parametrize("code", ["sleep", "uv"])
+@pytest.mark.parametrize(
+    ("service", "value"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+async def test_litter_box_actions(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    code: str,
+    service: str,
+    value: bool,
+) -> None:
+    """Test litter box switch actions."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, "tuya", f"tuya.{mock_device.id}{code}"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": code, "value": value}]
+    )
+
+
 @pytest.mark.parametrize(
     "mock_device_code",
     ["cz_PGEkBctAbtzKOZng"],

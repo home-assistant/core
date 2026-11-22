@@ -602,12 +602,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="auto_clean",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.SLEEP,
             translation_key="sleep",
             entity_category=EntityCategory.CONFIG,
         ),
-        SwitchEntityDescription(
+        TuyaSwitchEntityDescription(
             key=DPCode.UV,
             translation_key="uv_sterilization",
             entity_category=EntityCategory.CONFIG,
