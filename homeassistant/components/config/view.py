@@ -13,7 +13,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.file import write_utf8_file_atomic
+from homeassistant.util.file import file_lock, write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -125,7 +125,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
 
         path = hass.config.path(self.path)
 
-        async with self.mutation_lock:
+        async with self.mutation_lock, file_lock(path):
             current = await self.read_config(hass)
             self._write_value(hass, current, config_key, data)
 
@@ -142,10 +142,10 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
     async def delete(self, request: web.Request, config_key: str) -> web.Response:
         """Remove an entry."""
         hass = request.app[KEY_HASS]
-        async with self.mutation_lock:
+        path = hass.config.path(self.path)
+        async with self.mutation_lock, file_lock(path):
             current = await self.read_config(hass)
             value = self._get_value(hass, current, config_key)
-            path = hass.config.path(self.path)
 
             if value is None:
                 return self.json_message("Resource not found", HTTPStatus.BAD_REQUEST)

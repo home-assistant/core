@@ -39,7 +39,8 @@
     "entity_renamed": {
       "fix_flow": {
         "abort": {
-          "cannot_update": "Could not update the configuration automatically. To fix this error, [edit the automation]({edit}) manually and replace `{old_entity_id}` with `{new_entity_id}`."
+          "cannot_update": "The automation could not be updated automatically. To fix this error, replace `{old_entity_id}` with `{new_entity_id}` in the file where the automation is defined (e.g. [the editor]({edit}) for automations stored in automations.yaml), then reload it.",
+          "still_referenced": "The stored references were updated, but the automation still refers to `{old_entity_id}` elsewhere (for example inside a blueprint). [Edit the automation]({edit}) to finish the repair manually."
         },
         "step": {
           "confirm": {
@@ -49,6 +50,10 @@
         }
       },
       "title": "{name} still refers to a renamed entity"
+    },
+    "entity_renamed_yaml": {
+      "description": "The automation \"{name}\" (`{entity_id}`) still refers to `{old_entity_id}`, which was renamed to `{new_entity_id}`.\n\nThis automation is defined in YAML — replace `{old_entity_id}` with `{new_entity_id}` in the file where it is configured, then reload automations.",
+      "title": "[%key:component::automation::issues::entity_renamed::title%]"
     },
     "service_not_found": {
       "fix_flow": {

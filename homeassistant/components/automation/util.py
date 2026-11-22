@@ -270,10 +270,27 @@ async def _async_replace_automations(
         for automation in old_automations
         if isinstance(automation, UnavailableAutomationEntity)
     ]
+    removed_ids: set[Any] = {automation.unique_id for automation in old_automations}
+    removed_entity_ids = {automation.entity_id for automation in old_automations}
+    entity_renamed_issue_ids = [
+        issue_id
+        for (issue_domain, issue_id), issue in ir.async_get(hass).issues.items()
+        if issue_domain == DOMAIN
+        and (issue_data := issue.data) is not None
+        and issue_data.get("type") == "entity_renamed"
+        and (
+            issue_data.get("config_id") in removed_ids
+            or any(
+                issue_id.startswith(f"{entity_id}_entity_renamed_")
+                for entity_id in removed_entity_ids
+            )
+        )
+    ]
     with ir.async_refresh_issues(
         hass,
         DOMAIN,
-        issue_ids=[automation.repair_issue_id for automation in broken_automations],
+        issue_ids=[automation.repair_issue_id for automation in broken_automations]
+        + entity_renamed_issue_ids,
     ):
         await asyncio.gather(
             *(automation.async_remove() for automation in old_automations)

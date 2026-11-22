@@ -1,5 +1,6 @@
 """File utility functions."""
 
+import asyncio
 import logging
 import os
 import tempfile
@@ -9,6 +10,17 @@ from atomicwrites import AtomicWriter
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
+
+# Shared locks serializing read-modify-write cycles on the same file, e.g.
+# between the config editor and repair flows.
+_file_locks: dict[str, asyncio.Lock] = {}
+
+
+def file_lock(path: str) -> asyncio.Lock:
+    """Return the shared lock for a file path."""
+    if (lock := _file_locks.get(path)) is None:
+        lock = _file_locks[path] = asyncio.Lock()
+    return lock
 
 
 class WriteError(HomeAssistantError):

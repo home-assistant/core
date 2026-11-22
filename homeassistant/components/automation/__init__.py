@@ -12,12 +12,18 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
     EventEntityRegistryUpdatedData,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
+from homeassistant.helpers.script import entity_id_in_config
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -197,24 +203,78 @@ def _async_entity_renamed_issues(
         old_entity_id := event.data.get("old_entity_id")
     ):
         return
+    new_entity_id = event.data["entity_id"]
+    issue_registry = ir.async_get(hass)
+
+    # Retarget pending issues when the entity is renamed again, and remove
+    # them when the referenced ID becomes valid once more.
+    for (issue_domain, issue_id), issue in tuple(issue_registry.issues.items()):
+        if (
+            issue_domain != DOMAIN
+            or not issue.data
+            or issue.data.get("type") != "entity_renamed"
+        ):
+            continue
+        if issue.data.get("new_entity_id") == old_entity_id:
+            if issue.data.get("old_entity_id") == new_entity_id:
+                # Renamed back: the stored reference works again.
+                async_delete_issue(hass, DOMAIN, issue_id)
+            else:
+                placeholders = dict(issue.translation_placeholders or {})
+                placeholders["new_entity_id"] = new_entity_id
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=issue.is_fixable or False,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key=issue.translation_key or "entity_renamed",
+                    translation_placeholders=placeholders,
+                    data={**issue.data, "new_entity_id": new_entity_id},
+                )
+        elif issue.data.get("old_entity_id") == new_entity_id:
+            async_delete_issue(hass, DOMAIN, issue_id)
+
     if DATA_COMPONENT not in hass.data:
         return
     for automation_entity in hass.data[DATA_COMPONENT].entities:
-        if (
-            old_entity_id not in automation_entity.referenced_entities
-            or automation_entity.unique_id is None
+        if old_entity_id not in automation_entity.referenced_entities and (
+            automation_entity.raw_config is None
+            or not entity_id_in_config(automation_entity.raw_config, old_entity_id)
         ):
             continue
-        new_entity_id = event.data["entity_id"]
         if not isinstance(name := automation_entity.name, str):
             name = automation_entity.entity_id
+        if automation_entity.unique_id is None:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"{automation_entity.entity_id}_entity_renamed_{old_entity_id}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.ERROR,
+                translation_key="entity_renamed_yaml",
+                translation_placeholders={
+                    "entity_id": automation_entity.entity_id,
+                    "name": name,
+                    "old_entity_id": old_entity_id,
+                    "new_entity_id": new_entity_id,
+                },
+                data={
+                    "type": "entity_renamed",
+                    "old_entity_id": old_entity_id,
+                    "new_entity_id": new_entity_id,
+                },
+            )
+            continue
         async_create_issue(
             hass,
             DOMAIN,
             f"{automation_entity.entity_id}_entity_renamed_{old_entity_id}",
             is_fixable=True,
             is_persistent=True,
-            severity=IssueSeverity.WARNING,
+            severity=IssueSeverity.ERROR,
             translation_key="entity_renamed",
             translation_placeholders={
                 "edit": f"/config/automation/edit/{automation_entity.unique_id}",

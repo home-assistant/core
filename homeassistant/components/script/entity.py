@@ -43,6 +43,7 @@ from homeassistant.helpers.script import (
     CONF_MAX_EXCEEDED,
     Script,
     ScriptRunResult,
+    entity_id_in_config,
     script_stack_cv,
 )
 from homeassistant.helpers.service import async_set_service_schema
@@ -462,12 +463,37 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             ir.async_get(self.hass).issues.items()
         ):
             if (
-                issue_domain == DOMAIN
-                and issue_id.startswith(f"{self.entity_id}_entity_renamed_")
-                and issue.translation_placeholders
-                and issue.translation_placeholders["old_entity_id"]
-                not in self.referenced_entities
+                issue_domain != DOMAIN
+                or (data := issue.data) is None
+                or data.get("type") != "entity_renamed"
             ):
+                continue
+            config_id = data.get("config_id")
+            if (config_id is not None and config_id != self.unique_id) or (
+                config_id is None
+                and not issue_id.startswith(f"{self.entity_id}_entity_renamed_")
+            ):
+                continue
+            old_entity_id = data.get("old_entity_id")
+            if not isinstance(old_entity_id, str):
+                continue
+            if old_entity_id in self.referenced_entities or (
+                self.raw_config is not None
+                and entity_id_in_config(self.raw_config, old_entity_id)
+            ):
+                # Re-create so an active issues refresh keeps the warning
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=issue.is_fixable or False,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key=issue.translation_key or "entity_renamed",
+                    translation_placeholders=issue.translation_placeholders,
+                    data=data,
+                )
+            else:
                 async_delete_issue(self.hass, DOMAIN, issue_id)
 
         if (state := await self.async_get_last_state()) and (

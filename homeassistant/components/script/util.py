@@ -2,9 +2,10 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import async_refresh_issues
 from homeassistant.helpers.typing import ConfigType
@@ -142,8 +143,20 @@ async def async_process_config(
         for script in removed_scripts
         if isinstance(script, UnavailableScriptEntity)
     ]
+    removed_ids: set[Any] = {script.unique_id for script in removed_scripts}
+    entity_renamed_issue_ids = [
+        issue_id
+        for (issue_domain, issue_id), issue in ir.async_get(hass).issues.items()
+        if issue_domain == DOMAIN
+        and (issue_data := issue.data) is not None
+        and issue_data.get("type") == "entity_renamed"
+        and issue_data.get("config_id") in removed_ids
+    ]
     with async_refresh_issues(
-        hass, DOMAIN, issue_ids=[script.repair_issue_id for script in broken_scripts]
+        hass,
+        DOMAIN,
+        issue_ids=[script.repair_issue_id for script in broken_scripts]
+        + entity_renamed_issue_ids,
     ):
         # Remove scripts which have changed config or no longer exist
         await asyncio.gather(*(script.async_remove() for script in removed_scripts))

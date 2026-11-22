@@ -129,3 +129,80 @@ async def test_entity_renamed_fix_flow(
     assert updated["test_script"]["sequence"][0]["target"]["entity_id"] == (
         "binary_sensor.new"
     )
+
+
+async def test_entity_renamed_fix_flow_yaml_directive(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the fix flow aborts when the file contains YAML directives."""
+    path = hass.config.path(SCRIPT_CONFIG_PATH)
+
+    def _write_config() -> None:
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(dump({"test_script": copy.deepcopy(SCRIPT_CONFIG)}))
+            file.write("included: !include other.yaml\n")
+
+    await hass.async_add_executor_job(_write_config)
+
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {script.DOMAIN: {"test_script": copy.deepcopy(SCRIPT_CONFIG)}},
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get_or_create(
+        "binary_sensor", "test", "uid", suggested_object_id="old"
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="binary_sensor.new"
+    )
+    await hass.async_block_till_done()
+
+    issue_id = "script.test_script_entity_renamed_binary_sensor.old"
+    assert issue_registry.async_get_issue(script.DOMAIN, issue_id)
+
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, script.DOMAIN, issue_id)
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    await hass.async_block_till_done()
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "cannot_update"
+    assert issue_registry.async_get_issue(script.DOMAIN, issue_id)
+
+
+async def test_entity_renamed_back_deletes_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test renaming the entity back removes the pending issue."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {script.DOMAIN: {"test_script": copy.deepcopy(SCRIPT_CONFIG)}},
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get_or_create(
+        "binary_sensor", "test", "uid", suggested_object_id="old"
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="binary_sensor.new"
+    )
+    await hass.async_block_till_done()
+
+    issue_id = "script.test_script_entity_renamed_binary_sensor.old"
+    assert issue_registry.async_get_issue(script.DOMAIN, issue_id)
+
+    entity_registry.async_update_entity(
+        "binary_sensor.new", new_entity_id="binary_sensor.old"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(script.DOMAIN, issue_id) is None

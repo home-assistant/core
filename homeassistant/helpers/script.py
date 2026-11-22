@@ -2413,6 +2413,38 @@ def debug_stop(hass: HomeAssistant, key: str, run_id: str) -> None:
     async_dispatcher_send_internal(hass, signal, "stop")
 
 
+# Keys whose values are never entity references, e.g. an automation's own id
+# must not be rewritten or the targeted reload no longer finds it.
+_ENTITY_ID_SKIP_KEYS = frozenset(
+    {"id", "alias", "device_id", "area_id", "floor_id", "label_id", "event_type"}
+)
+
+
+def _entity_id_pattern(entity_id: str) -> re.Pattern[str]:
+    """Return a pattern matching an entity ID as a standalone token."""
+    return re.compile(rf"(?<!\w){re.escape(entity_id)}(?!\w)")
+
+
+def entity_id_in_config(config: Any, entity_id: str) -> bool:
+    """Return whether a config references an entity ID as a standalone token.
+
+    Also matches references inside Jinja templates like states("old.id"),
+    which referenced_entities does not extract.
+    """
+    pattern = _entity_id_pattern(entity_id)
+
+    def _find(value: Any) -> bool:
+        if isinstance(value, str):
+            return bool(pattern.search(value))
+        if isinstance(value, dict):
+            return any(_find(key) or _find(item) for key, item in value.items())
+        if isinstance(value, list):
+            return any(_find(item) for item in value)
+        return False
+
+    return _find(config)
+
+
 def replace_entity_id_in_config(
     config: Any, old_entity_id: str, new_entity_id: str
 ) -> tuple[Any, bool]:
@@ -2423,7 +2455,7 @@ def replace_entity_id_in_config(
     structural entity_id values as well as references inside Jinja templates
     like states("old.id") or states.old.id.state.
     """
-    pattern = re.compile(rf"(?<!\w){re.escape(old_entity_id)}(?!\w)")
+    pattern = _entity_id_pattern(old_entity_id)
 
     def _replace(value: Any) -> tuple[Any, bool]:
         if isinstance(value, str):
@@ -2434,9 +2466,13 @@ def replace_entity_id_in_config(
             new_dict = {}
             for key, item in value.items():
                 new_key, key_changed = _replace(key)
-                new_item, item_changed = _replace(item)
-                new_dict[new_key] = new_item
-                changed |= key_changed or item_changed
+                if key in _ENTITY_ID_SKIP_KEYS:
+                    new_dict[new_key] = item
+                else:
+                    new_item, item_changed = _replace(item)
+                    new_dict[new_key] = new_item
+                    changed |= item_changed
+                changed |= key_changed
             return new_dict, changed
         if isinstance(value, list):
             changed = False

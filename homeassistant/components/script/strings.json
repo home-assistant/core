@@ -38,7 +38,8 @@
     "entity_renamed": {
       "fix_flow": {
         "abort": {
-          "cannot_update": "Could not update the configuration automatically. To fix this error, [edit the script]({edit}) manually and replace `{old_entity_id}` with `{new_entity_id}`."
+          "cannot_update": "The script could not be updated automatically. To fix this error, replace `{old_entity_id}` with `{new_entity_id}` in the file where the script is defined (e.g. [the editor]({edit}) for scripts stored in scripts.yaml), then reload it.",
+          "still_referenced": "The stored references were updated, but the script still refers to `{old_entity_id}` elsewhere (for example inside a blueprint). [Edit the script]({edit}) to finish the repair manually."
         },
         "step": {
           "confirm": {
