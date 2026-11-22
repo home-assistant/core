@@ -149,7 +149,7 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
 @pytest.mark.parametrize(
     ("name", "settable", "expected_platform"),
     [
-        pytest.param("onOffMode", False, Platform.SWITCH, id="read-only-power"),
+        pytest.param("onOffMode", False, Platform.BINARY_SENSOR, id="read-only-power"),
         pytest.param("onOffMode", True, Platform.SWITCH, id="writable-power"),
         pytest.param("powerfulMode", False, Platform.SENSOR, id="boost"),
     ],
