@@ -23,6 +23,8 @@ from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectApiError,
     HomeConnectError,
+    NoProgramActiveError,
+    NoProgramSelectedError,
     SelectedProgramNotSetError,
     TooManyRequestsError,
     UnauthorizedError,
@@ -475,6 +477,52 @@ async def test_program_select_async_update(
 
     method.assert_awaited_once_with(appliance.ha_id)
     assert hass.states.is_state(entity_id, "dishcare_dishwasher_program_eco_50")
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method", "error"),
+    [
+        (
+            "select.dishwasher_active_program",
+            "get_active_program",
+            NoProgramActiveError("no active program"),
+        ),
+        (
+            "select.dishwasher_selected_program",
+            "get_selected_program",
+            NoProgramSelectedError("no selected program"),
+        ),
+    ],
+    ids=["no active program", "no selected program"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_without_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+    error: HomeConnectError,
+) -> None:
+    """Test manual updates set the program state to unknown when no program exists."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    method = AsyncMock(side_effect=error)
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
 
 @pytest.mark.parametrize(

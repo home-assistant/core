@@ -27,6 +27,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
     NoProgramActiveError,
+    NoProgramSelectedError,
     TooManyRequestsError,
     UnauthorizedError,
 )
@@ -900,32 +901,35 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
     async def update_current_program(self, key: EventKey) -> None:
         """Update the current program for appliance."""
-        if key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM:
-            updated_program = await self.client.get_active_program(
-                self.data.info.ha_id,
-            )
+        try:
+            if key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM:
+                updated_program = await self.client.get_active_program(
+                    self.data.info.ha_id,
+                )
+            else:
+                assert key == EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                updated_program = await self.client.get_selected_program(
+                    self.data.info.ha_id,
+                )
+        except NoProgramActiveError, NoProgramSelectedError:
+            current_program_key = None
         else:
-            assert key == EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
-            updated_program = await self.client.get_selected_program(
-                self.data.info.ha_id,
-            )
-
-        current_program_key = updated_program.key
-        program_options = updated_program.options
-        if current_program_key in FAVORITE_PROGRAMS and program_options:
-            for option in program_options:
-                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
-                    event_key = EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
-                    if (event := self.data.events.get(event_key)) is None:
-                        self.data.events[event_key] = event = Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            option.value,
-                        )
-                    event.value = option.value
+            current_program_key = updated_program.key
+            program_options = updated_program.options
+            if current_program_key in FAVORITE_PROGRAMS and program_options:
+                for option in program_options:
+                    if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
+                        event_key = EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
+                        if (event := self.data.events.get(event_key)) is None:
+                            self.data.events[event_key] = event = Event(
+                                event_key,
+                                event_key.value,
+                                0,
+                                "",
+                                "",
+                                option.value,
+                            )
+                        event.value = option.value
 
         self.data.events[key] = Event(
             key,
