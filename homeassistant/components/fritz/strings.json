@@ -184,6 +184,11 @@
       "wi_fi_main_5ghz_high_6ghz": {
         "name": "Wi-Fi Main 5GHz High / 6GHz"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "internet_interruption": "If this FRITZ!Box is your main internet router, your internet connection will be interrupted during the update. Depending on the model and the connection type, this can take up to 10 minutes."
+      }
     }
   },
   "exceptions": {
