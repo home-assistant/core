@@ -1848,6 +1848,7 @@ async def test_reconfigure_secure_tunnel_existing_keyring(
     assert menu_step["description_placeholders"] == {
         "current_connection": "Secure Tunneling (TCP) @ 192.168.0.1:3675",
         "keyring_project": "Fixture",
+        "data_secure_count": "2",
     }
 
     with patch(
@@ -1938,6 +1939,7 @@ async def test_reconfigure_secure_tunnel_stored_keyring_unusable(
     assert menu_step["description_placeholders"] == {
         "current_connection": "Secure Tunneling (TCP) @ 192.168.0.1:3675",
         "keyring_project": "knx/keyring.knxkeys",
+        "data_secure_count": "0",
     }
 
     with patch(
@@ -1993,6 +1995,7 @@ async def test_reconfigure_secure_routing_existing_keyring(
     assert menu_step["description_placeholders"] == {
         "current_connection": "Routing as 0.0.240",
         "keyring_project": "Fixture",
+        "data_secure_count": "2",
     }
 
     with patch(
@@ -2126,6 +2129,7 @@ async def test_reconfigure_keyfile_upload_no_backbone_key(
     assert menu_step["description_placeholders"] == {
         "current_connection": "Secure Routing as 0.0.240",
         "keyring_project": "-",
+        "data_secure_count": "0",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -2220,6 +2224,7 @@ async def test_reconfigure_menu_description(
     assert menu_step["description_placeholders"] == {
         "current_connection": current_connection,
         "keyring_project": "-",
+        "data_secure_count": "0",
     }
 
 

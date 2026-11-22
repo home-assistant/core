@@ -291,15 +291,24 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             menu_options=menu_options,
             description_placeholders={
                 "current_connection": _describe_connection(self.initial_data),
-                "keyring_project": await self._async_keyring_project(),
+                **await self._async_keyring_placeholders(),
             },
         )
 
-    async def _async_keyring_project(self) -> str:
-        """Return the project name of the imported keyring, or its filename."""
-        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
-            return stored_keyring.keyring.project_name
-        return self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) or "-"
+    async def _async_keyring_placeholders(self) -> dict[str, str]:
+        """Describe the imported keyring: project name and Data Secure usage."""
+        if (stored_keyring := await self._async_get_stored_keyring()) is None:
+            return {
+                "keyring_project": self.initial_data.get(CONF_KNX_KNXKEY_FILENAME)
+                or "-",
+                "data_secure_count": "0",
+            }
+        return {
+            "keyring_project": stored_keyring.keyring.project_name,
+            "data_secure_count": str(
+                len(stored_keyring.keyring.get_data_secure_group_keys())
+            ),
+        }
 
     async def async_step_remove_knxkeys(
         self, user_input: dict[str, Any] | None = None
@@ -327,16 +336,10 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.finish_flow()
 
-        data_secure_count = 0
-        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
-            data_secure_count = len(stored_keyring.keyring.get_data_secure_group_keys())
         return self.async_show_form(
             step_id="remove_knxkeys",
             data_schema=probatio.Schema({}),
-            description_placeholders={
-                "keyring_project": await self._async_keyring_project(),
-                "data_secure_count": str(data_secure_count),
-            },
+            description_placeholders=await self._async_keyring_placeholders(),
         )
 
     async def async_step_connection_type(

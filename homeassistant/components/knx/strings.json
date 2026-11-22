@@ -55,7 +55,7 @@
         "title": "Tunnel settings"
       },
       "reconfigure": {
-        "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}",
+        "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}\nKNX Data Secure group addresses: {data_secure_count}",
         "menu_options": {
           "connection_type": "Reconfigure KNX connection",
           "remove_knxkeys": "Remove KNX keyring file",
