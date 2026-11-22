@@ -113,6 +113,7 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
         # From the key of the description, not from the path: the firmware can spell
         # or shape a path differently, and the entity must stay the same.
         self._attr_unique_id = f"{data.device_id}_image_{description.key}"
+        coordinator.entity_paths.add(path.lower())
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device_id)},
             name=data.device_name,

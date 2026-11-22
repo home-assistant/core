@@ -1,5 +1,6 @@
 """Test Hikvision integration setup and unload."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import MagicMock, patch
@@ -887,6 +888,42 @@ async def test_image_platforms_set_up_before_a_failure_are_unloaded(
     with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
         await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert hass.states.get(HLC_SWITCH).state == STATE_UNAVAILABLE
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(HLC_SWITCH).state == STATE_ON
+
+
+async def test_image_platforms_set_up_before_a_cancel_are_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the next setup works after one cancelled once the switches were set up.
+
+    A platform left behind would make the next setup fail with "has already been
+    setup", and the client it uses is closed.
+    """
+    forward = hass.config_entries.async_forward_entry_setups
+    calls = 0
+
+    async def _forward(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        nonlocal calls
+        calls += 1
+        await forward(entry, platforms)
+        if calls == 2:
+            raise asyncio.CancelledError
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
+        await setup_integration(hass, mock_config_entry)
+    # Core reports a setup cancelled from within as failed.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_image_settings.close.assert_called_once()
+    mock_hikcamera.return_value.disconnect.assert_called_once()
     assert hass.states.get(HLC_SWITCH).state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
