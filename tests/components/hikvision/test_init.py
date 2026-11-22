@@ -27,13 +27,20 @@ from homeassistant.components.hikvision import (
     STREAM_CREDENTIALS,
 )
 from homeassistant.components.hikvision.const import CONF_RANDOM_ID, DOMAIN
-from homeassistant.components.hikvision.coordinator import SCAN_INTERVAL
+from homeassistant.components.hikvision.coordinator import (
+    REAUTH_RETRY_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -48,12 +55,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID, TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
@@ -1260,6 +1269,213 @@ async def test_credentials_watch_is_removed_on_unload(
     camera.remove_update_callback.assert_any_call(
         callback, f"{TEST_DEVICE_ID}.{STREAM_CREDENTIALS}"
     )
+
+
+async def test_reauth_is_asked_again_when_a_reconfigure_form_is_closed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entry does not stay stopped, without a prompt, behind a form."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(_credentials_callback(camera), "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Home Assistant does not start a reauthentication next to the form.
+    camera.disconnect.assert_called_once()
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_RECONFIGURE]
+
+    # Still open: nothing changes.
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_RECONFIGURE]
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+
+
+async def test_reauth_is_asked_again_only_once_behind_a_closed_form(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the prompt that came back is not brought back again once it is closed.
+
+    The user may close it on purpose: the entry stays as it is until a reload.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(_credentials_callback(camera), "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    [reauth] = hass.config_entries.flow.async_progress()
+
+    hass.config_entries.flow.async_abort(reauth["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_reauth_is_not_asked_again_once_the_entry_is_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the wait for a closed form ends with the entry."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(_credentials_callback(camera), "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_reauth_is_not_asked_again_once_new_credentials_were_saved(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the wait for a closed form ends without asking once it has no reason to.
+
+    Saving the form reloads the entry, and the unload of that reload can fail,
+    with the new password saved.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(_credentials_callback(camera), "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_PASSWORD: "corrected"},
+    )
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Nor later: the wait is over.
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_reauth_is_asked_after_an_unload_that_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the wait goes on while the entry unloads, and asks if the unload fails.
+
+    The entry is then still stopped, with the rejected password.
+    """
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(_credentials_callback(camera), "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS)
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not hass.config_entries.flow.async_progress()
+
+    # The unload failed.
+    mock_config_entry.mock_state(hass, ConfigEntryState.FAILED_UNLOAD)
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+
+
+async def test_the_wait_for_a_closed_form_ends_when_home_assistant_stops(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the timer is one Home Assistant cancels as it stops.
+
+    Stopping does not unload the entry.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await mock_config_entry.start_reconfigure_flow(hass)
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+
+    with patch(
+        "homeassistant.components.hikvision.coordinator.async_track_time_interval",
+        wraps=async_track_time_interval,
+    ) as track:
+        await hass.async_add_executor_job(_credentials_callback(camera), "")
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    track.assert_called_once()
+    assert track.call_args.kwargs["cancel_on_shutdown"] is True
+
+
+async def test_a_stream_callback_queued_before_the_unload_does_nothing_after_it(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test an old stream does not start a reauthentication on an unloaded entry."""
+    await setup_integration(hass, mock_config_entry)
+    camera = mock_hikcamera.return_value
+    callback = _credentials_callback(camera)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    camera.disconnect.reset_mock()
+
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(callback, "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    camera.disconnect.assert_not_called()
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
