@@ -11,16 +11,21 @@ from aiohomeconnect.model import (
     EventKey,
     EventMessage,
     EventType,
+    GetSetting,
     HomeAppliance,
     Option,
     OptionKey,
     Program,
     ProgramDefinition,
     ProgramKey,
+    SettingKey,
+    Status,
+    StatusKey,
 )
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectError,
+    NoProgramActiveError,
     SelectedProgramNotSetError,
 )
 from aiohomeconnect.model.program import (
@@ -31,6 +36,10 @@ from aiohomeconnect.model.program import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -43,6 +52,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -475,3 +486,304 @@ async def test_option_entity_functionality_exception(
             {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    (
+        "platforms",
+        "appliance",
+        "entity_id",
+        "key",
+        "client_method",
+        "client_key_arg",
+        "client_method_return_value",
+    ),
+    [
+        (
+            [Platform.SWITCH],
+            ApplianceType.WASHER,
+            "switch.washer_power",
+            SettingKey.BSH_COMMON_POWER_STATE,
+            "get_setting",
+            "setting_key",
+            GetSetting(
+                SettingKey.BSH_COMMON_POWER_STATE,
+                "BSH.Common.Setting.PowerState",
+                "BSH.Common.EnumType.PowerState.Off",
+            ),
+        ),
+        (
+            [Platform.BINARY_SENSOR],
+            ApplianceType.WASHER,
+            "binary_sensor.washer_remote_control",
+            StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,
+            "get_status_value",
+            "status_key",
+            Status(
+                StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,
+                "BSH.Common.Status.RemoteControlActive",
+                False,
+            ),
+        ),
+    ],
+    indirect=["appliance"],
+    ids=["setting entity", "status entity"],
+)
+async def test_entity_async_update_by_key_type(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    key: SettingKey | StatusKey,
+    client_method: str,
+    client_key_arg: str,
+    client_method_return_value: GetSetting | Status,
+) -> None:
+    """Test entity updates fetch a setting or status by its key type."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+    setattr(
+        client,
+        client_method,
+        method := AsyncMock(return_value=client_method_return_value),
+    )
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id, **{client_key_arg: key})
+    assert hass.states.is_state(entity_id, STATE_OFF)
+
+
+@pytest.mark.parametrize(
+    ("get_active_program_option_side_effect", "expected_state"),
+    [
+        (None, STATE_ON),
+        (NoProgramActiveError("error.key"), STATE_OFF),
+    ],
+    ids=["active program", "selected program"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_option_entity_async_update(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_option_side_effect: NoProgramActiveError | None,
+    expected_state: str,
+) -> None:
+    """Test option updates use active program data or fall back to selected."""
+    option_key = OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE
+    entity_id = "switch.washer_i_dos_1_active"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[ProgramDefinitionOption(option_key, "Boolean")],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.get(entity_id)
+
+    client.get_active_program_option = AsyncMock(
+        side_effect=get_active_program_option_side_effect,
+        return_value=Option(option_key, True),
+    )
+    client.get_selected_program_option = AsyncMock(
+        return_value=Option(option_key, False),
+    )
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    client.get_active_program_option.assert_awaited_once_with(
+        appliance.ha_id, option_key=option_key
+    )
+    if get_active_program_option_side_effect:
+        client.get_selected_program_option.assert_awaited_once_with(
+            appliance.ha_id, option_key=option_key
+        )
+    else:
+        client.get_selected_program_option.assert_not_awaited()
+    assert hass.states.is_state(entity_id, expected_state)
+
+
+@pytest.mark.parametrize(
+    ("platforms", "appliance", "entity_id"),
+    [
+        (
+            [Platform.BINARY_SENSOR],
+            ApplianceType.WASHER,
+            "binary_sensor.washer_connectivity",
+        ),
+        (
+            [Platform.SENSOR],
+            ApplianceType.DISHWASHER,
+            "sensor.dishwasher_program_aborted",
+        ),
+        (
+            [Platform.BUTTON],
+            ApplianceType.DISHWASHER,
+            "button.dishwasher_stop_program",
+        ),
+    ],
+    indirect=["appliance"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_async_update_with_non_data_key(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+) -> None:
+    """Test entities using event or string keys use the coordinator refresh."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.get(entity_id)
+
+    coordinator = config_entry.runtime_data.appliance_coordinators[appliance.ha_id]
+    coordinator.async_request_refresh = AsyncMock()
+    client.get_setting.reset_mock()
+    client.get_status_value.reset_mock()
+    client.get_active_program_option.reset_mock()
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("platforms", "appliance", "entity_id", "key", "client_method"),
+    [
+        (
+            [Platform.SWITCH],
+            ApplianceType.WASHER,
+            "switch.washer_power",
+            SettingKey.BSH_COMMON_POWER_STATE,
+            "get_setting",
+        ),
+        (
+            [Platform.BINARY_SENSOR],
+            ApplianceType.WASHER,
+            "binary_sensor.washer_remote_control",
+            StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,
+            "get_status_value",
+        ),
+        (
+            [Platform.SWITCH],
+            ApplianceType.WASHER,
+            "switch.washer_i_dos_1_active",
+            OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+            "get_active_program_option",
+        ),
+        (
+            [Platform.SWITCH],
+            ApplianceType.WASHER,
+            "switch.washer_i_dos_1_active",
+            OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+            "get_selected_program_option",
+        ),
+    ],
+    indirect=["appliance"],
+    ids=[
+        "setting entity",
+        "status entity",
+        "active program option entity",
+        "selected program option entity",
+    ],
+)
+async def test_entity_async_update_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+    key: SettingKey | StatusKey | OptionKey,
+    client_method: str,
+) -> None:
+    """Test API errors while updating an entity use the translated error."""
+    if isinstance(key, OptionKey):
+        client.get_available_program = AsyncMock(
+            return_value=ProgramDefinition(
+                ProgramKey.UNKNOWN,
+                options=[ProgramDefinitionOption(key, "Boolean")],
+            )
+        )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.get(entity_id)
+
+    error = HomeConnectError("error.key")
+    client.get_active_program_option = AsyncMock(
+        side_effect=NoProgramActiveError("error.key")
+    )
+    setattr(client, client_method, AsyncMock(side_effect=error))
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert f"Error fetching state of {entity_id}: {error}" in caplog.text
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_disabled_entity_async_update_does_not_fetch_data(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test manual updates do not fetch data for a disabled entity."""
+    entity_id = "switch.washer_power"
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert hass.states.get(entity_id)
+
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    client.get_setting.reset_mock()
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    client.get_setting.assert_not_awaited()

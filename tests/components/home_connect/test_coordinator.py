@@ -95,7 +95,7 @@ INITIAL_FETCH_CLIENT_METHODS = [
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
-    return [Platform.SENSOR, Platform.SWITCH]
+    return [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR]
 
 
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
@@ -116,6 +116,7 @@ async def test_coordinator_failure_refresh_and_stream(
     )
     entity_id_1 = "binary_sensor.washer_remote_control"
     entity_id_2 = "binary_sensor.washer_remote_start"
+    entity_to_force_update = "binary_sensor.washer_connectivity"
     await async_setup_component(hass, HA_DOMAIN, {})
     await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -130,7 +131,10 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Force a coordinator refresh.
     await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_to_force_update},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -153,7 +157,10 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Force a coordinator refresh.
     await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_to_force_update},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -176,7 +183,10 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Force a coordinator refresh
     await hass.services.async_call(
-        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_to_force_update},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -1042,6 +1052,7 @@ async def test_auth_error_while_updating_appliance(
 ) -> None:
     """Test config entry requires reauth on auth error."""
     entity_id = "switch.dishwasher_power"
+    entity_to_force_update = "binary_sensor.dishwasher_connectivity"
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -1055,7 +1066,7 @@ async def test_auth_error_while_updating_appliance(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: entity_to_force_update},
         blocking=True,
     )
 
@@ -1098,6 +1109,7 @@ async def test_other_errors_while_updating_appliance(
 ) -> None:
     """Test that other errors are informed through the logs."""
     entity_id = "switch.dishwasher_power"
+    entity_to_force_update = "binary_sensor.dishwasher_connectivity"
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -1110,7 +1122,7 @@ async def test_other_errors_while_updating_appliance(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: entity_to_force_update},
         blocking=True,
     )
 

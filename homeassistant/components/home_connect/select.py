@@ -455,6 +455,24 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         )
 
     @override
+    async def async_update(self) -> None:
+        # Ignore manual update requests if the entity is disabled
+        # Copied from CoordinatorEntity.async_update
+        if not self.enabled:
+            return
+        try:
+            await self.coordinator.update_current_program(cast(EventKey, self.bsh_key))
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_entity_state",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    **get_dict_from_home_connect_error(err),
+                },
+            ) from err
+
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
         program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
