@@ -1,0 +1,10 @@
+get_forecasts_radar:
+  target:
+    entity:
+      integration: irm_kmi
+      domain: weather
+  fields:
+    include_past_forecasts:
+      default: false
+      selector:
+        boolean:

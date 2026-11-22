@@ -1,26 +1,21 @@
 """Reolink Integration views."""
 
 import asyncio
-from base64 import urlsafe_b64decode, urlsafe_b64encode
 from collections import defaultdict
-from contextlib import aclosing
 from datetime import datetime
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+import secrets
 
-from aiohttp import ClientError, ClientTimeout, web
-from reolink_aio.enums import VodRequestType
+from aiohttp import web
+from reolink_aio.baichuan.media_decoder import HLS_PLAYLIST
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.ssl import SSLCipherList
 
-from .host import ReolinkHost
 from .util import get_host
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,18 +27,10 @@ TELEPHOTO_PREFIXES = ("autotrack_", "telephoto_")
 
 
 @callback
-def async_generate_playback_proxy_url(
-    config_entry_id: str, channel: int, filename: str, stream_res: str, vod_type: str
-) -> str:
-    """Generate proxy URL for event video."""
-
-    url_format = PlaybackProxyView.url
-    return url_format.format(
-        config_entry_id=config_entry_id,
-        channel=channel,
-        filename=urlsafe_b64encode(filename.encode("utf-8")).decode("utf-8"),
-        stream_res=stream_res,
-        vod_type=vod_type,
+def async_generate_playback_proxy_url(config_entry_id: str, token: str) -> str:
+    """Generate the URL of the HLS playlist of a recording being downloaded."""
+    return PlaybackProxyView.url.format(
+        config_entry_id=config_entry_id, token=token, filename=HLS_PLAYLIST
     )
 
 
@@ -61,247 +48,38 @@ def async_generate_thumbnail_url(
 
 
 class PlaybackProxyView(HomeAssistantView):
-    """View to proxy playback video from Reolink."""
+    """View to serve the HLS files of a Reolink recording being downloaded."""
 
-    requires_auth = True
-    url = (
-        "/api/reolink/video"
-        "/{config_entry_id}/{channel}/{stream_res}"
-        "/{vod_type}/{filename}"
-    )
-    name = "api:reolink_playback"
+    # The HLS player does not authenticate the requests for the files in the
+    # playlist, the random token of the playback is used instead.
+    requires_auth = False
+    url = "/api/reolink/hls/{config_entry_id}/{token}/{filename}"
+    name = "api:reolink_hls"
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize a proxy view."""
+        """Initialize the HLS view."""
         self.hass = hass
-        self.session = async_get_clientsession(
-            hass,
-            verify_ssl=False,
-            ssl_cipher=SSLCipherList.INSECURE,
-        )
-        self._vod_type: str | None = None
-        self._mp4_streams: dict[str, asyncio.Task] = {}
 
     async def get(
-        self,
-        request: web.Request,
-        config_entry_id: str,
-        channel: str,
-        stream_res: str,
-        vod_type: str,
-        filename: str,
-        retry: int = 2,
-    ) -> web.StreamResponse:
-        """Get playback proxy video response."""
-        retry = retry - 1
-
-        filename_decoded = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
-        ch = int(channel)
-        if self._vod_type is not None:
-            vod_type = self._vod_type
+        self, request: web.Request, config_entry_id: str, token: str, filename: str
+    ) -> web.FileResponse:
+        """Return a HLS file, wait for it when it is not downloaded yet."""
         try:
-            host = get_host(self.hass, config_entry_id)
+            playback = get_host(self.hass, config_entry_id).hls_playback
         except Unresolvable:
-            err_str = (
-                "Reolink playback proxy could not find"
-                f" config entry id: {config_entry_id}"
-            )
-            _LOGGER.warning(err_str)
-            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+            playback = None
+        if playback is None or not secrets.compare_digest(playback.token, token):
+            raise web.HTTPNotFound
 
-        if vod_type == VodRequestType.NVR_DOWNLOAD.value:
-            return await self._async_stream_mp4(
-                request, host, ch, stream_res, filename_decoded
-            )
+        path = await playback.async_get_file(filename)
+        if path is None:
+            raise web.HTTPNotFound
 
-        try:
-            _mime_type, reolink_url = await host.api.get_vod_source(
-                ch, filename_decoded, stream_res, VodRequestType(vod_type)
-            )
-        except ReolinkError as err:
-            _LOGGER.warning("Reolink playback proxy error: %s", str(err))
-            return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
-
-        headers = dict(request.headers)
-        headers.pop("Host", None)
-        headers.pop("Referer", None)
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Requested Playback Proxy Method %s, Headers: %s",
-                request.method,
-                headers,
-            )
-            _LOGGER.debug(
-                "Opening VOD stream from %s: %s",
-                host.api.camera_name(ch),
-                host.api.hide_password(reolink_url),
-            )
-
-        try:
-            reolink_response = await self.session.get(
-                reolink_url,
-                headers=headers,
-                timeout=ClientTimeout(
-                    connect=15, sock_connect=15, sock_read=5, total=None
-                ),
-            )
-        except ClientError as err:
-            err_str = host.api.hide_password(
-                f"Reolink playback error while getting mp4: {err!s}"
-            )
-            if retry <= 0:
-                _LOGGER.warning(err_str)
-                return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
-            _LOGGER.debug("%s, renewing token", err_str)
-            await host.api.expire_session(unsubscribe=False)
-            return await self.get(
-                request, config_entry_id, channel, stream_res, vod_type, filename, retry
-            )
-
-        if reolink_response.status == HTTPStatus.SERVICE_UNAVAILABLE:
-            response_headers = {}
-            if retry_after := reolink_response.headers.get("Retry-After"):
-                response_headers["Retry-After"] = retry_after
-            reolink_response.release()
-            return web.Response(
-                text="Reolink playback service temporarily unavailable",
-                status=HTTPStatus.SERVICE_UNAVAILABLE,
-                headers=response_headers,
-            )
-
-        # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
-        if reolink_response.content_type not in [
-            "video/mp4",
-            "application/octet-stream",
-            "apolication/octet-stream",
-        ]:
-            err_str = (
-                "Reolink playback expected video/mp4"
-                f" but got {reolink_response.content_type}"
-            )
-            if (
-                reolink_response.content_type == "video/x-flv"
-                and vod_type == VodRequestType.PLAYBACK.value
-            ):
-                # next time use DOWNLOAD immediately
-                self._vod_type = VodRequestType.DOWNLOAD.value
-                _LOGGER.debug(
-                    "%s, retrying using download instead of playback cmd", err_str
-                )
-                return await self.get(
-                    request,
-                    config_entry_id,
-                    channel,
-                    stream_res,
-                    self._vod_type,
-                    filename,
-                    retry,
-                )
-
-            _LOGGER.error(err_str)
-            if reolink_response.content_type == "text/html":
-                text = await reolink_response.text()
-                _LOGGER.debug(text)
-            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
-
-        response_headers = dict(reolink_response.headers)
-        _LOGGER.debug(
-            "Response Playback Proxy Status %s:%s, Headers: %s",
-            reolink_response.status,
-            reolink_response.reason,
-            response_headers,
-        )
-        if "Content-Type" not in response_headers:
-            response_headers["Content-Type"] = reolink_response.content_type
-        if response_headers["Content-Type"] == "apolication/octet-stream":
-            response_headers["Content-Type"] = "application/octet-stream"
-
-        response = web.StreamResponse(
-            status=reolink_response.status,
-            reason=reolink_response.reason,
-            headers=response_headers,
-        )
-
-        await response.prepare(request)
-
-        try:
-            async for chunk in reolink_response.content.iter_chunked(65536):
-                await response.write(chunk)
-        except TimeoutError:
-            _LOGGER.debug(
-                "Timeout while reading Reolink playback from %s, writing EOF",
-                host.api.nvr_name,
-            )
-        finally:
-            reolink_response.release()
-
-        await response.write_eof()
-        return response
-
-    async def _async_stream_mp4(
-        self,
-        request: web.Request,
-        host: ReolinkHost,
-        channel: int,
-        stream_res: str,
-        filename: str,
-    ) -> web.StreamResponse:
-        """Stream a NVR recording as fragmented mp4 using the Baichuan protocol."""
-        start_time, end_time = filename.split("_", 1)
-        mp4_stream = host.api.baichuan.stream_mp4(
-            channel,
-            datetime.strptime(start_time, "%Y%m%d%H%M%S"),
-            datetime.strptime(end_time, "%Y%m%d%H%M%S"),
-            stream_res,
-            get_ffmpeg_manager(self.hass).binary,
-        )
-        _LOGGER.debug(
-            "Opening Baichuan VOD stream from %s: %s",
-            host.api.camera_name(channel),
-            filename,
-        )
-
-        # the NVR allows only one download at a time, stop the previous playback
-        if (previous := self._mp4_streams.get(host.unique_id)) is not None:
-            _LOGGER.debug(
-                "Reolink %s: Cancelling previous Baichuan recording stream",
-                host.api.nvr_name,
-            )
-            previous.cancel()
-        task = asyncio.current_task()
-        if TYPE_CHECKING:
-            assert task is not None
-        self._mp4_streams[host.unique_id] = task
-
-        try:
-            # aclosing: stop ffmpeg and the download directly when the client disconnects
-            async with aclosing(mp4_stream):
-                # get the first part before sending the headers, to be able to return an error status
-                try:
-                    first_part = await anext(mp4_stream, b"")
-                except ReolinkError as err:
-                    _LOGGER.warning("Reolink playback proxy error: %s", str(err))
-                    return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
-
-                response = web.StreamResponse(headers={"Content-Type": "video/mp4"})
-                await response.prepare(request)
-                await response.write(first_part)
-                try:
-                    async for part in mp4_stream:
-                        await response.write(part)
-                except ReolinkError as err:
-                    _LOGGER.warning(
-                        "Reolink playback error while streaming mp4 from %s: %s",
-                        host.api.camera_name(channel),
-                        str(err),
-                    )
-
-            await response.write_eof()
-            return response
-        finally:
-            if self._mp4_streams.get(host.unique_id) is task:
-                del self._mp4_streams[host.unique_id]
+        if filename == HLS_PLAYLIST:
+            content_type = "application/vnd.apple.mpegurl"
+        else:
+            content_type = "video/mp4"
+        return web.FileResponse(path, headers={"Content-Type": content_type})
 
 
 class ThumbnailView(HomeAssistantView):

@@ -347,8 +347,6 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if context is None:
             context = cast(_FlowContextT, {})
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid_util.secure_uuid_hex()

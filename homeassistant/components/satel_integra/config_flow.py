@@ -237,7 +237,12 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if not errors:
-                return self.async_update_reload_and_abort(
+                update_and_abort = (
+                    self.async_update_and_abort
+                    if reconfigure_entry.update_listeners
+                    else self.async_update_reload_and_abort
+                )
+                return update_and_abort(
                     reconfigure_entry,
                     data_updates={
                         CONF_HOST: normalized_input[CONF_HOST],
