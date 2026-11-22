@@ -2097,7 +2097,7 @@ pyElectra==1.2.14
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.8
+pyHik==0.5.0
 
 # homeassistant.components.homee
 pyHomee==1.4.7
