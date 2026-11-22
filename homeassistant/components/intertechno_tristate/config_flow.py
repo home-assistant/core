@@ -5,6 +5,13 @@ from typing import Any, override
 import probatio
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.pt2262 import ITTristateCommand
+from rf_protocols.commands.pt2262.ITTristateCommand import (
+    MIN_CHANNEL,
+    MIN_GROUP,
+    MAX_CHANNEL,
+    MAX_GROUP,
+    REPEAT_COUNT_LEARN,
+)
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -20,18 +27,9 @@ from .const import (
     CONF_HOUSECODE,
     CONF_TRANSMITTER,
     DOMAIN,
-    REPEAT_COUNT_LEARN
-)
-from rf_protocols.commands.pt2262.ITTristateCommand import (
-    MIN_CHANNEL,
-    MIN_GROUP,
-    MAX_CHANNEL,
-    MAX_GROUP,
 )
 
-_SAMPLE_COMMAND = ITTristateCommand(
-    housecode="A", group=1, channel=1, on=True
-)
+_SAMPLE_COMMAND = ITTristateCommand(housecode="A", group=1, channel=1, on=True)
 _CONF_DEVICE_RESPONDED = "device_responded"
 
 
