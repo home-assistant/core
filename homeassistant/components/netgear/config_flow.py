@@ -62,7 +62,7 @@ def _ordered_shared_schema(schema_input):
     return {
         probatio.Optional(
             CONF_PORT, default=schema_input.get(CONF_PORT, DEFAULT_PORT)
-        ): int,
+        ): probatio.Port(),
         probatio.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, False)): bool,
         probatio.Optional(
             CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
