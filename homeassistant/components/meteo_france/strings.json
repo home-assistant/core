@@ -58,7 +58,13 @@
         "name": "UV index"
       },
       "weather_alert": {
-        "name": "Weather alert"
+        "name": "Weather alert",
+        "state": {
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
       },
       "wind_gust": {
         "name": "Wind gust"

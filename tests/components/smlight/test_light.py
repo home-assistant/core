@@ -11,19 +11,16 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -95,8 +92,8 @@ async def test_light_turn_on_off(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -111,8 +108,8 @@ async def test_light_turn_on_off(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -143,8 +140,8 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 200},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 200},
         blocking=True,
     )
 
@@ -173,8 +170,11 @@ async def test_light_rgb_color(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 128, 64)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.RGB_COLOR: (255, 128, 64),
+        },
         blocking=True,
     )
 
@@ -204,8 +204,8 @@ async def test_light_effect(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Rainbow"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.EFFECT: "Rainbow"},
         blocking=True,
     )
 
@@ -218,8 +218,8 @@ async def test_light_effect(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Blur"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.EFFECT: "Blur"},
         blocking=True,
     )
 
@@ -247,8 +247,11 @@ async def test_light_invalid_effect(
     with pytest.raises(HomeAssistantError, match="Unknown effect: InvalidEffect"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "InvalidEffect"},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                LightServiceArgument.EFFECT: "InvalidEffect",
+            },
             blocking=True,
         )
 
@@ -271,8 +274,8 @@ async def test_light_turn_on_when_on_is_noop(
     mock_ultima_client.actions.ambilight.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -321,8 +324,8 @@ async def test_ambilight_connection_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -333,8 +336,8 @@ async def test_ambilight_connection_error(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

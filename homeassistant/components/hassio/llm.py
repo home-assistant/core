@@ -4,14 +4,24 @@ from datetime import UTC, datetime, timedelta
 import math
 from typing import override
 
+from aiohasupervisor import ResponseLineIterator, SupervisorError
+from aiohasupervisor.models import LogFormat, LogsOptions, Plugin
+
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.system_log.llm import SystemLogGetLogsTool  # pylint: disable=home-assistant-component-root-import
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.llm import LLM_API_HOME_ASSISTANT, LLMContext
+from homeassistant.helpers.llm import (
+    LLM_API_HOME_ASSISTANT,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
 
 from .const import DATA_ADDONS_LIST, DOMAIN
-from .handler import HassioAPIError, get_supervisor_passthrough_client
+from .handler import get_supervisor_client
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -37,6 +47,53 @@ def _journal_time(time: datetime) -> str:
         microseconds=1
     )
     return f"{microseconds // 1_000_000}.{microseconds % 1_000_000:06d}"
+
+
+class SupervisorGetAppsTool(Tool):
+    """LLM tool listing installed apps from the Supervisor."""
+
+    name = "hassio__get_apps"
+    title = "Get installed apps"
+    description = (
+        "List installed Home Assistant apps (formerly add-ons), including their "
+        "names, slugs, installed and latest available versions, update availability, "
+        "and running state. Use this to check which version of an app is installed "
+        "or whether it is running. To read an app's logs, use hassio__get_logs "
+        "with source app:<slug>."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the currently installed apps and their versions."""
+        supervisor = get_supervisor_client(hass)
+        try:
+            apps = await supervisor.addons.list()
+        except SupervisorError as err:
+            raise HomeAssistantError("Could not list installed apps") from err
+
+        return ToolResult(
+            data={
+                "apps": [
+                    {
+                        "name": app.name,
+                        "slug": app.slug,
+                        "installed_version": app.version,
+                        "latest_version": app.version_latest,
+                        "update_available": app.update_available,
+                        "state": app.state.value,
+                    }
+                    for app in sorted(
+                        apps, key=lambda app: (app.name.casefold(), app.slug)
+                    )
+                ]
+            }
+        )
 
 
 class SupervisorGetLogsTool(SystemLogGetLogsTool):
@@ -70,32 +127,41 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
         lines: int,
     ) -> list[str]:
         """Return the oldest lines of the log of a source in the time window."""
-        if source.startswith(APP_SOURCE_PREFIX):
-            command = f"/addons/{source.removeprefix(APP_SOURCE_PREFIX)}/logs"
-        else:
-            command = f"/{source}/logs"
-
-        supervisor = get_supervisor_passthrough_client(hass)
+        options = LogsOptions(
+            # Verbose adds the timestamp and the process to each line
+            format=LogFormat.PLAIN if source in _PLAIN_SOURCES else LogFormat.VERBOSE,
+            no_colors=True,
+            # The journal has lines received after the record was created,
+            # so read until the next second and filter the rest out later
+            range=(
+                f"realtime={_journal_time(start_time)}"
+                f":{math.floor(end_time.timestamp()) + 1}:{lines}"
+            ),
+        )
         try:
-            text: str = await supervisor.send_command(
-                command,
-                method="get",
-                return_text=True,
-                params={
-                    # Verbose adds the timestamp and the process to each line
-                    "format": "plain" if source in _PLAIN_SOURCES else "verbose",
-                    "no_colors": "",
-                },
-                # The journal has lines received after the record was created,
-                # so read until the next second and filter the rest out later
-                range_header=(
-                    f"realtime={_journal_time(start_time)}"
-                    f":{math.floor(end_time.timestamp()) + 1}:{lines}"
-                ),
-            )
-        except HassioAPIError as err:
+            stream = await _async_open_log(hass, source, options)
+            return [line async for line in stream]
+        except SupervisorError as err:
             raise HomeAssistantError(f"Could not read the {source} log") from err
-        return text.splitlines()
+
+
+async def _async_open_log(
+    hass: HomeAssistant, source: str, options: LogsOptions
+) -> ResponseLineIterator:
+    """Open the log of a source."""
+    client = get_supervisor_client(hass)
+    if source.startswith(APP_SOURCE_PREFIX):
+        return await client.addons.addon_logs(
+            source.removeprefix(APP_SOURCE_PREFIX), options
+        )
+    match source:
+        case "core":
+            return await client.homeassistant.logs(options)
+        case "supervisor":
+            return await client.supervisor.logs(options)
+        case "host":
+            return await client.host.logs(options)
+    return await client.plugins.logs(Plugin(source), options)
 
 
 @callback
@@ -107,4 +173,4 @@ def async_get_tools(
         return None
 
     apps = {app.slug: app.name for app in hass.data.get(DATA_ADDONS_LIST) or []}
-    return LLMTools(tools=[SupervisorGetLogsTool(apps)])
+    return LLMTools(tools=[SupervisorGetLogsTool(apps), SupervisorGetAppsTool()])

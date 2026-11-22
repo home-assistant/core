@@ -157,6 +157,9 @@
     "alarm_activation_outdated": {
       "message": "The alarm system was not armed because more sensors report a problem than at the last attempt: {devices}"
     },
+    "cloud_throttled": {
+      "message": "The Homematic IP Cloud is throttling this IP address, trying again in {minutes} minutes"
+    },
     "device_not_found": {
       "message": "No matching Homematic IP device found for device ID {device_id}"
     },

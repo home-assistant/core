@@ -339,6 +339,68 @@ async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
     assert len(hass.config_entries.async_entries()) == 1
 
 
+async def test_reload_entry_survives_client_disconnect(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test a client disconnect does not truncate the reload.
+
+    The HTTP runner is created with handler_cancellation=True, so a disconnect
+    cancels the request handler. Reload unloads the entry before setting it up
+    again, so an unshielded cancel leaves the entry unloaded.
+    """
+    reloading = asyncio.Event()
+    disconnected = asyncio.Event()
+    setup_calls = 0
+
+    async def mock_setup_entry(hass: HomeAssistant, entry: core_ce.ConfigEntry) -> None:
+        """Stall in the setup after the unload, so the cancel lands on this await."""
+        nonlocal setup_calls
+        setup_calls += 1
+        if setup_calls == 2:
+            reloading.set()
+            await disconnected.wait()
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    with mock_config_flow("comp", ConfigFlow):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is core_ce.ConfigEntryState.LOADED
+
+        view = config_entries.ConfigManagerEntryResourceReloadView()
+        request = Mock()
+        request.__getitem__ = Mock(
+            side_effect={"hass_user": hass_admin_user}.__getitem__
+        )
+        request.app = {KEY_HASS: hass}
+
+        task = hass.async_create_task(view.post(request, entry.entry_id))
+        await reloading.wait()
+
+        # The client goes away mid-reload.
+        task.cancel()
+        disconnected.set()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        await hass.async_block_till_done()
+
+    # The setup after the unload must still have completed.
+    assert entry.state is core_ce.ConfigEntryState.LOADED
+    assert setup_calls == 2
+
+
 async def test_reload_invalid_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
@@ -2509,6 +2571,7 @@ async def test_ignore_flow(
         assert response["success"]
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+    assert "test" not in hass.config.components
 
     entry = hass.config_entries.async_entries("test")[0]
     assert entry.source == "ignore"

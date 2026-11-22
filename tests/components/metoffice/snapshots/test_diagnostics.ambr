@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'daily': dict({
+      'forecast': dict({
+        'distance_from_requested_location': 1975.3601,
+        'first_timestep': '2024-11-22T00:00:00+00:00',
+        'frequency': 'daily',
+        'last_timestep': '2024-11-29T00:00:00+00:00',
+        'model_run_date': '2024-11-23T12:00:00+00:00',
+        'timesteps': 8,
+      }),
+      'last_update_success': True,
+      'last_update_success_time': '2024-11-23T12:00:00+00:00',
+    }),
+    'hourly': dict({
+      'forecast': dict({
+        'distance_from_requested_location': 1975.3601,
+        'first_timestep': '2024-11-23T12:00:00+00:00',
+        'frequency': 'hourly',
+        'last_timestep': '2024-11-25T12:00:00+00:00',
+        'model_run_date': '2024-11-23T12:00:00+00:00',
+        'timesteps': 49,
+      }),
+      'last_update_success': True,
+      'last_update_success_time': '2024-11-23T12:00:00+00:00',
+    }),
+    'twice_daily': dict({
+      'forecast': None,
+      'last_update_success': True,
+      'last_update_success_time': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_twice_daily_fetched
+  dict({
+    'daily': dict({
+      'forecast': dict({
+        'distance_from_requested_location': 1975.3601,
+        'first_timestep': '2024-11-22T00:00:00+00:00',
+        'frequency': 'daily',
+        'last_timestep': '2024-11-29T00:00:00+00:00',
+        'model_run_date': '2024-11-23T12:00:00+00:00',
+        'timesteps': 8,
+      }),
+      'last_update_success': True,
+      'last_update_success_time': '2024-11-23T12:00:00+00:00',
+    }),
+    'hourly': dict({
+      'forecast': dict({
+        'distance_from_requested_location': 1975.3601,
+        'first_timestep': '2024-11-23T12:00:00+00:00',
+        'frequency': 'hourly',
+        'last_timestep': '2024-11-25T12:00:00+00:00',
+        'model_run_date': '2024-11-23T12:00:00+00:00',
+        'timesteps': 49,
+      }),
+      'last_update_success': True,
+      'last_update_success_time': '2024-11-23T12:00:00+00:00',
+    }),
+    'twice_daily': dict({
+      'forecast': dict({
+        'distance_from_requested_location': 1975.3601,
+        'first_timestep': '2024-11-22T00:00:00+00:00',
+        'frequency': 'twice-daily',
+        'last_timestep': '2024-11-29T12:00:00+00:00',
+        'model_run_date': '2024-11-23T12:00:00+00:00',
+        'timesteps': 16,
+      }),
+      'last_update_success': True,
+      'last_update_success_time': '2024-11-23T12:00:00+00:00',
+    }),
+  })
+# ---

@@ -201,6 +201,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     if not (local_mode := entry.options.get(CONF_OFFLINE_MODE, False)):
         await _get_thing_settings()
 
+    issue_id = f"missing_bluetooth_token_{entry.entry_id}"
+    if entry.options.get(CONF_USE_BLUETOOTH, True) and not entry.data.get(CONF_TOKEN):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="missing_bluetooth_token",
+            data={"entry_id": entry.entry_id},
+            translation_placeholders={"name": entry.title},
+            config_entry_id=entry.entry_id,
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,
         cloud_client=cloud_client,
