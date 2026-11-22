@@ -269,9 +269,11 @@ async def test_get_issues_language_resolution(
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
+@pytest.mark.parametrize("replacement", ["value", "Notify {edit}"])
 async def test_get_issues_missing_translations_and_placeholders(
     hass: HomeAssistant,
     llm_api: llm.APIInstance,
+    replacement: str,
 ) -> None:
     """Test omitted missing translations and partial placeholder substitution."""
     ir.async_create_issue(
@@ -281,7 +283,10 @@ async def test_get_issues_missing_translations_and_placeholders(
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="partial_key",
-        translation_placeholders={"known": "value"},
+        translation_placeholders={
+            "known": replacement,
+            "edit": "/config/automation/edit/1",
+        },
     )
     ir.async_create_issue(
         hass,
@@ -306,7 +311,11 @@ async def test_get_issues_missing_translations_and_placeholders(
         (item["issue_id"], item.get("title"), item.get("description"))
         for item in result.data["issues"]
     ] == [
-        ("partial_issue", "Found value {missing}", "Details for value"),
+        (
+            "partial_issue",
+            f"Found {replacement} {{missing}}",
+            f"Details for {replacement}",
+        ),
         ("orphan_issue", None, None),
     ]
 

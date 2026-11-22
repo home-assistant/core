@@ -1,5 +1,6 @@
 """LLM tools for the repairs integration."""
 
+import re
 from typing import TYPE_CHECKING, override
 
 import probatio
@@ -47,9 +48,11 @@ def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObj
     placeholders = issue.translation_placeholders or {}
     for field in ("title", "description"):
         if value := translations.get(f"{key_prefix}.{field}"):
-            for placeholder, replacement in placeholders.items():
-                value = value.replace(f"{{{placeholder}}}", replacement)
-            result[field] = value
+            result[field] = re.sub(
+                r"{([^{}]+)}",
+                lambda match: placeholders.get(match[1], match[0]),
+                value,
+            )
     if issue.breaks_in_ha_version:
         result["breaks_in_ha_version"] = issue.breaks_in_ha_version
     if issue.learn_more_url:
