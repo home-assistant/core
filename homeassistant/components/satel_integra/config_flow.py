@@ -106,7 +106,7 @@ PARTITION_SCHEMA = probatio.Schema(
 ZONE_AND_OUTPUT_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(
+        probatio.Optional(
             CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
         ): selector.DeviceClassSelector(
             selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
