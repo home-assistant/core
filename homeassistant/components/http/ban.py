@@ -97,7 +97,6 @@ async def ban_middleware(
             request.method in ("GET", "HEAD")
             and hdrs.AUTHORIZATION not in request.headers
             and SIGN_QUERY_PARAM not in request.query
-            and "token" not in request.query
         )
         await process_wrong_login(request, notify=not anonymous_read)
         raise

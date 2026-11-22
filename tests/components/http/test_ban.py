@@ -18,7 +18,6 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
 from homeassistant.components.api import APIConfigView
-from homeassistant.components.camera import CameraImageView
 from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.auth import async_setup_auth
 from homeassistant.components.http.ban import (
@@ -472,38 +471,17 @@ async def test_unauthenticated_probe_still_triggers_ip_ban(
 
 
 @pytest.mark.parametrize(
-    ("query_string", "expect_login_notification"),
+    "path",
     [
-        pytest.param("", False, id="anonymous"),
-        pytest.param("?token=invalid", True, id="entity-token"),
+        pytest.param("/api/config", id="no-query"),
+        pytest.param("/api/config?token=ignored", id="ignored-token-parameter"),
     ],
 )
-async def test_camera_proxy_unknown_entity_token_authentication(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    query_string: str,
-    expect_login_notification: bool,
-) -> None:
-    """Recognize query credentials on real camera proxy requests returning 401."""
-    app = web.Application()
-    app[KEY_HASS] = hass
-    component = Mock()
-    component.get_entity.return_value = None
-    CameraImageView(component).register(hass, app, app.router)
-    setup_bans(hass, app, 5)
-    await async_setup_auth(hass, app)
-    client = await aiohttp_client(app)
-
-    response = await client.get(f"/api/camera_proxy/camera.unknown{query_string}")
-    assert response.status == HTTPStatus.UNAUTHORIZED
-    notifications = async_get_persistent_notifications(hass)
-    assert ("http-login" in notifications) is expect_login_notification
-
-
 async def test_registered_api_config_view_authentication(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
+    path: str,
 ) -> None:
     """Test real API config view routing with HTTP authentication and IP bans."""
     app = web.Application()
@@ -515,7 +493,7 @@ async def test_registered_api_config_view_authentication(
     mock_real_ip(app)(str(remote_ip))
     client = await aiohttp_client(app)
 
-    response = await client.get("/api/config")
+    response = await client.get(path)
     assert response.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
     assert "http-login" not in async_get_persistent_notifications(hass)
