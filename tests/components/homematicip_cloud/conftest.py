@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
-from homematicip.connection.rest_connection import RestConnection, RestResult
+from homematicip.connection.rest_connection import RestConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -36,9 +36,6 @@ def mock_connection_fixture() -> RestConnection:
     connection = AsyncMock(spec=RestConnection)
 
     def _rest_call_side_effect(path, body=None, custom_header=None):
-        if path == "group/heating/setControlMode":
-            return RestResult(status=200)
-
         return path, body
 
     connection.async_post.side_effect = _rest_call_side_effect

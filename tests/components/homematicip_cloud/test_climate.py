@@ -27,10 +27,9 @@ from homeassistant.components.homematicip_cloud.climate import (
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_GROUP_MEMBER_UNREACHABLE,
 )
-from homeassistant.components.homematicip_cloud.exceptions import HeatingControlError
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .helper import (
@@ -481,7 +480,7 @@ async def test_hmip_heating_group_set_hvac_mode_error(
                 text='{"errorCode": "INVALID_REQUEST"}',
             ),
         ) as mock_set_control_mode,
-        pytest.raises(HeatingControlError) as exc_info,
+        pytest.raises(HomeAssistantError, match="INVALID_REQUEST"),
     ):
         await hass.services.async_call(
             "climate",
@@ -491,8 +490,6 @@ async def test_hmip_heating_group_set_hvac_mode_error(
         )
 
     assert mock_set_control_mode.await_count == 1
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "heating_control_failed"
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == HVACMode.AUTO

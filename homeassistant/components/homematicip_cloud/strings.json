@@ -163,9 +163,6 @@
     "device_not_found": {
       "message": "No matching Homematic IP device found for device ID {device_id}"
     },
-    "heating_control_failed": {
-      "message": "Unable to change the heating operating mode. Please try again."
-    },
     "pull_latch_failed": {
       "message": "{device_name} did not pull the latch, the access point returned {error_code}"
     },
