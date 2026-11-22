@@ -44,7 +44,7 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     EVENT_LISTENER_DEBOUNCE_COOLDOWN,
-    SIGNAL_CALENDAR_STATE_WRITTEN,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,6 +121,13 @@ class QueuedCalendarEvent:
     def trigger_time_utc(self) -> dt.datetime:
         """Return the trigger time in UTC for fold-safe timeline comparisons."""
         return dt_util.as_utc(self.trigger_time)
+
+    @property
+    def occurrence_key(self) -> tuple[str, str, str | None] | None:
+        """Return a key identifying the event occurrence, if it has a uid."""
+        if self.event.uid is None:
+            return None
+        return (self.entity_id, self.event.uid, self.event.recurrence_id)
 
 
 @dataclass
@@ -258,10 +265,10 @@ class CalendarEventListener:
     This listener will poll every UPDATE_INTERVAL to fetch a set of upcoming
     calendar events in the upcoming window of time, putting them into a queue.
     The queue is drained by scheduling an alarm for the next upcoming event
-    trigger time, one event at a time. When a calendar entity writes its state,
-    its upcoming queued events are replaced by a new fetch of the window, so
-    events that moved, were removed or were added since the window was read
-    are picked up.
+    trigger time, one event at a time. When a calendar entity reports that its
+    events may have changed, its upcoming queued events are replaced by a new
+    fetch of the window, so events that moved, were removed or were added since
+    the window was read are picked up.
     """
 
     def __init__(
@@ -279,7 +286,7 @@ class CalendarEventListener:
         self._trigger_payload = trigger_payload
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
-        self._unsub_state_written: list[CALLBACK_TYPE] = []
+        self._unsub_events_updated: list[CALLBACK_TYPE] = []
         self._entity_ids = entity_ids
         self._event_type = event_type
         self._offset = offset
@@ -287,32 +294,41 @@ class CalendarEventListener:
             event_fetcher(hass, entity_ids), event_type, offset
         )
         self._entity_debouncers: dict[str, Debouncer[Coroutine[Any, Any, None]]] = {}
+        self._pending_refetch: set[str] = set()
+        # Trigger times of fired events, to not fire them again when they move
+        self._dispatched: dict[tuple[str, str, str | None], dt.datetime] = {}
+        self._lock = asyncio.Lock()
         self._timespan = Timespan.from_duration(dt_util.now(), UPDATE_INTERVAL)
         self._events: list[QueuedCalendarEvent] = []
 
     async def async_attach(self) -> None:
         """Attach a calendar event listener."""
-        self._events.extend(await self._fetcher(self._timespan))
-        self._unsub_refresh = async_track_time_interval(
-            self._hass, self._handle_refresh, UPDATE_INTERVAL
-        )
+        # Subscribe first so changes during the initial fetch are not missed
         for entity_id in self._entity_ids:
-            debouncer = Debouncer(
+            self._entity_debouncers[entity_id] = Debouncer(
                 self._hass,
                 _LOGGER,
                 cooldown=EVENT_LISTENER_DEBOUNCE_COOLDOWN,
                 immediate=True,
                 function=partial(self._async_refetch_entity, entity_id),
             )
-            self._entity_debouncers[entity_id] = debouncer
-            self._unsub_state_written.append(
+            self._unsub_events_updated.append(
                 async_dispatcher_connect(
                     self._hass,
-                    SIGNAL_CALENDAR_STATE_WRITTEN.format(entity_id),
-                    debouncer.async_schedule_call,
+                    SIGNAL_CALENDAR_EVENTS_UPDATED.format(entity_id),
+                    partial(self._handle_events_updated, entity_id),
                 )
             )
-        self._listen_next_calendar_event()
+        try:
+            async with self._lock:
+                self._events.extend(await self._fetcher(self._timespan))
+                self._unsub_refresh = async_track_time_interval(
+                    self._hass, self._handle_refresh, UPDATE_INTERVAL
+                )
+                self._listen_next_calendar_event()
+        except BaseException:
+            self.async_detach()
+            raise
 
     @callback
     def async_detach(self) -> None:
@@ -321,9 +337,9 @@ class CalendarEventListener:
         if self._unsub_refresh:
             self._unsub_refresh()
         self._unsub_refresh = None
-        for unsub in self._unsub_state_written:
+        for unsub in self._unsub_events_updated:
             unsub()
-        self._unsub_state_written.clear()
+        self._unsub_events_updated.clear()
         for debouncer in self._entity_debouncers.values():
             debouncer.async_shutdown()
         self._entity_debouncers.clear()
@@ -362,6 +378,8 @@ class CalendarEventListener:
         while self._events and self._events[0].trigger_time_utc <= now_utc:
             queued_event = self._events.pop(0)
             _LOGGER.debug("Dispatching event: %s", queued_event.event)
+            if key := queued_event.occurrence_key:
+                self._dispatched[key] = queued_event.trigger_time_utc
             payload = {
                 **self._trigger_payload,
                 ATTR_ENTITY_ID: queued_event.entity_id,
@@ -373,61 +391,82 @@ class CalendarEventListener:
         """Handle core config update."""
         now = dt_util.as_local(now_utc)
         _LOGGER.debug("Refresh events @ %s", now)
-        # Dispatch any eligible events in the boundary case where refresh
-        # fires before the calendar event.
-        self._dispatch_events(now)
-        self._clear_event_listener()
-        self._timespan = self._timespan.next_upcoming(now, UPDATE_INTERVAL)
-        try:
-            self._events.extend(await self._fetcher(self._timespan))
-        except HomeAssistantError as ex:
-            _LOGGER.error("Calendar trigger failed to fetch events: %s", ex)
-        self._listen_next_calendar_event()
+        async with self._lock:
+            # Dispatch any eligible events in the boundary case where refresh
+            # fires before the calendar event.
+            self._dispatch_events(now)
+            self._clear_event_listener()
+            # Keep the window that just ended, as its events can move into this one
+            previous_start = dt_util.as_utc(self._timespan.start)
+            self._dispatched = {
+                key: trigger_time
+                for key, trigger_time in self._dispatched.items()
+                if trigger_time >= previous_start
+            }
+            self._timespan = self._timespan.next_upcoming(now, UPDATE_INTERVAL)
+            try:
+                events = await self._fetcher(self._timespan)
+            except HomeAssistantError as ex:
+                _LOGGER.error("Calendar trigger failed to fetch events: %s", ex)
+            else:
+                self._events.extend(events)
+            self._listen_next_calendar_event()
+
+    @callback
+    def _handle_events_updated(self, entity_id: str) -> None:
+        """Schedule a refetch of the events of a calendar."""
+        # The debouncer drops calls made while it runs, so track them here
+        self._pending_refetch.add(entity_id)
+        self._entity_debouncers[entity_id].async_schedule_call()
 
     async def _async_refetch_entity(self, entity_id: str) -> None:
         """Replace the upcoming queued events of a calendar with fresh ones."""
-        timespan = self._timespan
         fetcher = queued_event_fetcher(
             event_fetcher(self._hass, {entity_id}), self._event_type, self._offset
         )
-        try:
-            events = await fetcher(timespan)
-        except HomeAssistantError as ex:
-            _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
-            return
-        # Detached, or the refresh read the next window while fetching
-        if self._unsub_refresh is None or timespan is not self._timespan:
-            return
+        async with self._lock:
+            while entity_id in self._pending_refetch and self._unsub_refresh:
+                self._pending_refetch.discard(entity_id)
+                try:
+                    events = await fetcher(self._timespan)
+                except HomeAssistantError as ex:
+                    _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
+                    return
+                self._replace_entity_events(entity_id, events)
 
+    @callback
+    def _replace_entity_events(
+        self, entity_id: str, events: list[QueuedCalendarEvent]
+    ) -> None:
+        """Replace the upcoming queued events of a calendar."""
         # Events due by now are left alone, as they may already have fired
         now_utc = dt_util.utcnow()
-        replaced_keys: set[tuple[str | None, str | None]] = set()
+        queued_keys: set[tuple[str, str, str | None] | None] = set()
         kept: list[QueuedCalendarEvent] = []
         for queued_event in self._events:
             if (
                 queued_event.entity_id == entity_id
                 and queued_event.trigger_time_utc > now_utc
             ):
-                replaced_keys.add(
-                    (queued_event.event.uid, queued_event.event.recurrence_id)
-                )
+                queued_keys.add(queued_event.occurrence_key)
             else:
                 kept.append(queued_event)
 
-        now = dt_util.as_local(now_utc)
-        for queued_event in events:
-            if queued_event.trigger_time_utc > now_utc:
-                kept.append(queued_event)
-            elif (
-                queued_event.event.uid is not None
-                and (queued_event.event.uid, queued_event.event.recurrence_id)
-                in replaced_keys
-            ):
-                # Moved to a time that has passed before it fired
-                kept.append(QueuedCalendarEvent(now, queued_event.event, entity_id))
-
+        # Skip events that fired and then moved later, unless another
+        # occurrence with the same key was queued
+        kept.extend(
+            queued_event
+            for queued_event in events
+            if queued_event.trigger_time_utc > now_utc
+            and (
+                (key := queued_event.occurrence_key) is None
+                or key not in self._dispatched
+                or key in queued_keys
+            )
+        )
         kept.sort(key=lambda x: x.trigger_time_utc)
         self._events = kept
+        now = dt_util.as_local(now_utc)
         self._dispatch_events(now)
         self._clear_event_listener()
         self._listen_next_calendar_event()

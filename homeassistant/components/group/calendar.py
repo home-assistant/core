@@ -136,8 +136,7 @@ class CalendarGroup(GroupEntity, CalendarEntity):
             # A nested group reports an unchanged state when only its later
             # events change. Writing state here could loop through cycles.
             self.async_update_group_state()
-            if self._event_listener_debouncer:
-                self._event_listener_debouncer.async_schedule_call()
+            self._async_notify_events_updated()
 
         self.async_on_remove(
             async_track_state_report_event(

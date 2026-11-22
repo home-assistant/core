@@ -10,6 +10,7 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     MockPlatform,
     async_fire_time_changed,
+    async_mock_service,
     get_fixture_path,
     mock_platform,
 )
@@ -581,6 +582,51 @@ async def test_subscribe_updates_on_member_report(
         "Dinner",
         "Movie",
     ]
+
+
+async def test_trigger_updates_on_member_report(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+) -> None:
+    """Test triggers pick up member events added without a state change."""
+    await _setup_groups(hass)
+    calls = async_mock_service(hass, "test", "automation")
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": CALENDAR_DOMAIN,
+                    "entity_id": GROUP_ENTITY_ID,
+                    "event": "start",
+                },
+                "action": {
+                    "action": "test.automation",
+                    "data": {"summary": "{{ trigger.calendar_event.summary }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    home = calendar_platform[1]
+    home._events.append(
+        CalendarEvent(
+            start=NOW + dt.timedelta(minutes=5),
+            end=NOW + dt.timedelta(minutes=10),
+            summary="Call",
+        )
+    )
+    home.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    freezer.move_to(NOW + dt.timedelta(minutes=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [call.data["summary"] for call in calls] == ["Call"]
 
 
 @pytest.mark.usefixtures("calendar_platform")

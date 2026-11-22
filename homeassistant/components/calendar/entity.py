@@ -26,7 +26,7 @@ from .const import (
     EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     EVENT_RRULE,
     EVENT_SUMMARY,
-    SIGNAL_CALENDAR_STATE_WRITTEN,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
 )
@@ -227,13 +227,8 @@ class CalendarEntity(Entity):
         """
         super()._async_write_ha_state()
 
-        # Notify websocket subscribers of event changes (debounced)
-        if self._event_listeners and self._event_listener_debouncer:
-            self._event_listener_debouncer.async_schedule_call()
-        # Events can change without a state change; triggers re-read them
-        async_dispatcher_send_internal(
-            self.hass, SIGNAL_CALENDAR_STATE_WRITTEN.format(self.entity_id)
-        )
+        # Events can change without a state change
+        self._async_notify_events_updated()
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
@@ -272,6 +267,15 @@ class CalendarEntity(Entity):
             self.entity_id,
             event.start_datetime_local,
             event.end_datetime_local,
+        )
+
+    @callback
+    def _async_notify_events_updated(self) -> None:
+        """Notify websocket subscribers and triggers that events may have changed."""
+        if self._event_listeners and self._event_listener_debouncer:
+            self._event_listener_debouncer.async_schedule_call()
+        async_dispatcher_send_internal(
+            self.hass, SIGNAL_CALENDAR_EVENTS_UPDATED.format(self.entity_id)
         )
 
     @callback

@@ -19,8 +19,8 @@ DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
-SIGNAL_CALENDAR_STATE_WRITTEN: SignalTypeFormat[()] = SignalTypeFormat(
-    "calendar_state_written_{}"
+SIGNAL_CALENDAR_EVENTS_UPDATED: SignalTypeFormat[()] = SignalTypeFormat(
+    "calendar_events_updated_{}"
 )
 
 
