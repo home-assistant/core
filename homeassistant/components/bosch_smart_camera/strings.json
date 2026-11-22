@@ -26,6 +26,11 @@
       "wifi_signal_strength": {
         "name": "Wi-Fi signal strength"
       }
+    },
+    "switch": {
+      "privacy_mode": {
+        "name": "Privacy mode"
+      }
     }
   },
   "exceptions": {
@@ -34,6 +39,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "privacy_mode_failed": {
+      "message": "Unable to change the privacy mode at Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."

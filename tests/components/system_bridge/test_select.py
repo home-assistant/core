@@ -21,12 +21,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +63,7 @@ async def test_power_profile(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
+            TargetKey.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
             SelectServiceArgument.OPTION: "performance",
         },
         blocking=True,
@@ -132,6 +127,11 @@ async def test_power_profile_added_later(
             "A connection error occurred",
             id="connection_closed",
         ),
+        pytest.param(
+            ConnectionResetError,
+            "A connection error occurred",
+            id="connection_reset",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -149,7 +149,7 @@ async def test_power_profile_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
+                TargetKey.ENTITY_ID: POWER_PROFILE_ENTITY_ID,
                 SelectServiceArgument.OPTION: "performance",
             },
             blocking=True,
@@ -176,7 +176,7 @@ async def test_select_default_input(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             SelectServiceArgument.OPTION: "Headset",
         },
         blocking=True,
@@ -213,7 +213,7 @@ async def test_select_duplicate_names(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             SelectServiceArgument.OPTION: f"{microphone.name} (twin)",
         },
         blocking=True,

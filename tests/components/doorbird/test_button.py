@@ -1,7 +1,7 @@
 """Test DoorBird buttons."""
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import DoorbirdMockerType
@@ -18,7 +18,7 @@ async def test_relay_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: relay_1_entity_id},
+        {TargetKey.ENTITY_ID: relay_1_entity_id},
         blocking=True,
     )
     assert hass.states.get(relay_1_entity_id).state != STATE_UNKNOWN
@@ -36,7 +36,7 @@ async def test_ir_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ir_entity_id},
+        {TargetKey.ENTITY_ID: ir_entity_id},
         blocking=True,
     )
     assert hass.states.get(ir_entity_id).state != STATE_UNKNOWN
@@ -54,7 +54,7 @@ async def test_reset_favorites_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: reset_entity_id},
+        {TargetKey.ENTITY_ID: reset_entity_id},
         blocking=True,
     )
     assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN

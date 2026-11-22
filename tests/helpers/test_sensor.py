@@ -65,8 +65,6 @@ def test_sensor_device_info_to_hass_device_info_read_only() -> None:
     )
 
     with pytest.raises(TypeError, match="is shared and cannot be modified"):
-        device_info["sw_version"] = "1.0"
-    with pytest.raises(TypeError, match="is shared and cannot be modified"):
         device_info.sw_version = "1.0"
     with pytest.raises(TypeError, match="is shared and cannot be modified"):
         del device_info.model

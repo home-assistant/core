@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -104,7 +104,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: number_entity_id,
+                TargetKey.ENTITY_ID: number_entity_id,
                 NumberServiceArgument.VALUE: 100,
             },
             blocking=True,
@@ -123,7 +123,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -136,7 +136,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 50,
         },
         blocking=True,
@@ -187,7 +187,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: number_entity_id,
+                TargetKey.ENTITY_ID: number_entity_id,
                 NumberServiceArgument.VALUE: 100,
             },
             blocking=True,
@@ -198,7 +198,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -249,7 +249,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -262,7 +262,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -317,7 +317,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: pixels_per_segment_entity_id,
+                TargetKey.ENTITY_ID: pixels_per_segment_entity_id,
                 NumberServiceArgument.VALUE: 5000,
             },
             blocking=True,
@@ -327,7 +327,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: pixels_per_segment_entity_id,
+            TargetKey.ENTITY_ID: pixels_per_segment_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -345,7 +345,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: music_pixels_per_segment_entity_id,
+                TargetKey.ENTITY_ID: music_pixels_per_segment_entity_id,
                 NumberServiceArgument.VALUE: 5000,
             },
             blocking=True,
@@ -355,7 +355,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: music_pixels_per_segment_entity_id,
+            TargetKey.ENTITY_ID: music_pixels_per_segment_entity_id,
             NumberServiceArgument.VALUE: 100,
         },
         blocking=True,
@@ -372,7 +372,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: segments_entity_id,
+                TargetKey.ENTITY_ID: segments_entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -382,7 +382,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: segments_entity_id,
+            TargetKey.ENTITY_ID: segments_entity_id,
             NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -399,7 +399,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: music_segments_entity_id,
+                TargetKey.ENTITY_ID: music_segments_entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -409,7 +409,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: music_segments_entity_id,
+            TargetKey.ENTITY_ID: music_segments_entity_id,
             NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
