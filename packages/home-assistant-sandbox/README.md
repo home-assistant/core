@@ -31,7 +31,7 @@ flowchart LR
     Bridge --> Proxies
 ```
 
-Configure sandboxed integrations through `sandbox.integrations` in YAML. Selected built-in integrations share one worker process. Selected custom integrations share another. Each worker runs its own Home Assistant instance.
+Each worker runs its own Home Assistant instance.
 
 1. Home Assistant includes a router that decides during integration setup whether an integration runs on the host or in a specific worker.
 2. The worker manager starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
