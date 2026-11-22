@@ -42,6 +42,8 @@ from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 def test_sensor_keys_exclude_other_platform_keys() -> None:
     """Never create value sensors for binary, switch, update, or select keys."""
     assert SENSOR_KEYS.isdisjoint(BINARY_SENSOR_KEYS | SWITCH_KEYS | UPDATE_KEYS)
+    assert "onOffMode" in SWITCH_KEYS
+    assert "onOffMode" not in BINARY_SENSOR_KEYS
     assert "schedule" not in SENSOR_KEYS
 
 
@@ -59,8 +61,7 @@ def test_air_purification_mode_sensor_when_climate_entity_exists() -> None:
         return_value=True,
     ):
         assert (
-            scalar_platform_for_point(point, "airPurificationMode", characteristic)
-            is Platform.SENSOR
+            scalar_platform_for_point(point, "airPurificationMode") is Platform.SENSOR
         )
 
 
@@ -95,10 +96,7 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
     point = _load_gateway_devices("offlinedevice")[0].management_points_by_type(
         "climateControl"
     )[0]
-    characteristic = point.scalar_characteristic(name)
-    assert characteristic is not None
-
-    assert scalar_platform_for_point(point, name, characteristic) is None
+    assert scalar_platform_for_point(point, name) is None
 
 
 @pytest.mark.parametrize(
@@ -136,13 +134,8 @@ def test_climate_control_without_supported_setpoint_is_exposed(
             name: Characteristic(value="on", settable=settable, values=["on", "off"]),
         },
     )
-    characteristic = point.scalar_characteristic(name)
-    assert characteristic is not None
-
     assert (
-        scalar_platform_for_point(
-            point, name, characteristic, gateway_online=gateway_online
-        )
+        scalar_platform_for_point(point, name, gateway_online=gateway_online)
         is expected_platform
     )
 
@@ -226,9 +219,7 @@ def test_econo_mode_is_a_switch_without_a_climate_entity() -> None:
     assert econo_mode is not None
 
     assert (
-        scalar_platform_for_point(
-            point_without_temperature_control, "econoMode", econo_mode
-        )
+        scalar_platform_for_point(point_without_temperature_control, "econoMode")
         is Platform.SWITCH
     )
 
@@ -243,19 +234,13 @@ def test_econo_mode_is_a_switch_without_a_climate_entity() -> None:
     )
     main_zone_econo_mode = main_zone.scalar_characteristic("econoMode")
     assert main_zone_econo_mode is not None
-    assert (
-        scalar_platform_for_point(main_zone, "econoMode", main_zone_econo_mode)
-        is Platform.SWITCH
-    )
+    assert scalar_platform_for_point(main_zone, "econoMode") is Platform.SWITCH
 
     device = _load_gateway_devices("climate_floorheatingairflow")[0]
     climate_point = device.management_points_by_type("climateControl")[0]
     climate_econo_mode = climate_point.scalar_characteristic("econoMode")
     assert climate_econo_mode is not None
-    assert (
-        scalar_platform_for_point(climate_point, "econoMode", climate_econo_mode)
-        is None
-    )
+    assert scalar_platform_for_point(climate_point, "econoMode") is None
 
 
 def test_energy_description_key() -> None:

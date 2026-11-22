@@ -116,9 +116,6 @@
       },
       "ledenabled": {
         "name": "LED enabled"
-      },
-      "onoffmode": {
-        "name": "On/Off mode"
       }
     },
     "button": {

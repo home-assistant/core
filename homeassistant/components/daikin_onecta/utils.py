@@ -46,11 +46,6 @@ def enum_value_to_state(value: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
 
 
-def is_read_only_on_off_value(settable: bool, values: list[str] | None) -> bool:
-    """Return whether a characteristic is a read-only on/off string value."""
-    return not settable and is_on_off_value(values)
-
-
 def is_on_off_value(values: list[str] | None) -> bool:
     """Return whether a characteristic supports exactly on/off values."""
     return values is not None and set(values) == {"on", "off"}

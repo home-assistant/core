@@ -555,6 +555,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 positions = fixed_positions(fixed) if fixed.settable else None
                 if positions is not None:
                     fan_modes.extend(str(position) for position in positions)
+                elif (
+                    not fixed.settable
+                    and fan_speed.current_mode.value == FANMODE_FIXED
+                    and fixed.value is not None
+                ):
+                    fan_modes.append(str(fixed.value))
             else:
                 fan_modes.append(mode)
         return fan_modes
@@ -775,16 +781,21 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_preset_mode(self) -> str:
         """Return the active preset mode."""
+        return next(iter(self._get_active_preset_modes()), PRESET_NONE)
+
+    def _get_active_preset_modes(self) -> list[str]:
+        """Return every preset reported as active by Daikin."""
+        active_modes = []
         for mode in PRESET_MODES:
             preset = self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode])
             if preset is None:
                 continue
             if mode == PRESET_AWAY:
                 if preset.value.enabled:
-                    return mode
+                    active_modes.append(mode)
             elif preset.value == "on":
-                return mode
-        return PRESET_NONE
+                active_modes.append(mode)
+        return active_modes
 
     async def _async_disable_preset_mode(self, preset_mode: str) -> None:
         """Disable the current Daikin preset mode."""
@@ -840,15 +851,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the active preset mode."""
-        if preset_mode == self.preset_mode:
-            return
         if preset_mode not in self._get_preset_modes():
             self._raise_service_validation_error("preset_mode_unavailable")
-        if (current_preset := self.preset_mode) not in (None, PRESET_NONE):
+
+        active_presets = self._get_active_preset_modes()
+        presets_to_disable = [
+            current_preset
+            for current_preset in active_presets
+            if current_preset != preset_mode
+        ]
+        for current_preset in presets_to_disable:
             await self._async_disable_preset_mode(current_preset)
             self._publish_write_update()
 
-        if preset_mode != PRESET_NONE:
+        if preset_mode != PRESET_NONE and preset_mode not in active_presets:
             await self._async_enable_preset_mode(preset_mode)
             self._publish_write_update()
 

@@ -767,7 +767,6 @@ BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
         "islockfunctionenabled",
         "ispowerfulmodeactive",
         "ledenabled",
-        "onoffmode",
         "drykeepsetting",
     }
 )

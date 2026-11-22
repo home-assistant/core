@@ -9,7 +9,7 @@ from daikin_onecta.models import Characteristic, ManagementPoint
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     ChildDeviceInfo,
     DeviceEntryType,
@@ -189,7 +189,7 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
+            translation_placeholders={"device": self._error_device_name},
         )
 
     def _raise_command_failed(self, translation_key: str) -> Never:
@@ -197,8 +197,13 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
+            translation_placeholders={"device": self._error_device_name},
         )
+
+    @property
+    def _error_device_name(self) -> str:
+        """Return the device name used in translated error messages."""
+        return self._device.name
 
 
 class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
@@ -232,6 +237,23 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         """Initialize shared coordinator and device state."""
         super().__init__(coordinator, device)
         self._embedded_id = embedded_id
+
+    @property
+    @override
+    def _error_device_name(self) -> str:
+        """Return the management-point child name when it has one."""
+        child_device = dr.async_get(self.hass).async_get_child_device_by_identifier(
+            (
+                DOMAIN,
+                management_point_unique_id(self._device_id, self._embedded_id),
+            ),
+            self.coordinator.config_entry.entry_id,
+        )
+        return (
+            child_device.name
+            if child_device is not None and child_device.name is not None
+            else self._device.name
+        )
 
     @property
     @override
@@ -287,7 +309,6 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
             and scalar_platform_for_point(
                 point,
                 name,
-                characteristic,
                 gateway_online=self._device.gateway_online,
             )
             is platform

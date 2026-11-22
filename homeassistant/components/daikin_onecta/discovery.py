@@ -55,15 +55,10 @@ def scalar_platform(name: str) -> Platform | None:
 def scalar_platform_for_point(
     point: ManagementPoint,
     name: str,
-    characteristic: Characteristic | None = None,
     *,
     gateway_online: bool = True,
 ) -> Platform | None:
     """Return the Home Assistant platform for a point's scalar characteristic."""
-    if characteristic is None:
-        characteristic = point.scalar_characteristic(name)
-    if characteristic is None:
-        return None
     if (
         name == "airPurificationMode"
         and point.management_point_type == "climateControl"
@@ -84,8 +79,7 @@ def scalar_platform_for_point(
     if name == "onOffMode" and point.management_point_type == "climateControl":
         if point.air_purification is not None:
             return None
-    # These controls belong to their typed entity even when Daikin reports them
-    # as read-only while the gateway is offline.
+    # Typed entities own these controls while the gateway is offline.
     if name in {"onOffMode", "powerfulMode"} and (
         point.management_point_type
         in {"domesticHotWaterFlowThrough", "domesticHotWaterTank"}
@@ -103,9 +97,7 @@ def scalar_characteristics_for_platform(
         (name, characteristic)
         for name, characteristic in point.scalar_characteristics().items()
         if (
-            scalar_platform_for_point(
-                point, name, characteristic, gateway_online=gateway_online
-            )
+            scalar_platform_for_point(point, name, gateway_online=gateway_online)
             is platform
         )
     )

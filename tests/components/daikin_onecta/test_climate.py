@@ -679,6 +679,60 @@ async def test_climate_service_toggles_presets(
     ] == expected_patch_prefix[native_characteristic]
 
 
+async def test_climate_service_clears_all_active_presets(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Clear every active preset when switching to none."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    management_point.characteristics["econoMode"] = Characteristic(
+        value="on", settable=True, values=["on", "off"]
+    )
+    powerful_mode = climate_control.mode_characteristic("powerfulMode")
+    econo_mode = climate_control.mode_characteristic("econoMode")
+    assert powerful_mode is not None and econo_mode is not None
+    powerful_mode.value = "on"
+    powerful_mode.settable = True
+    econo_mode.value = "on"
+    econo_mode.settable = True
+    coordinator.async_update_listeners()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_NONE},
+        blocking=True,
+    )
+
+    assert powerful_mode.value == "off"
+    assert econo_mode.value == "off"
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
+        call(
+            gateway_id,
+            management_point.embedded_id,
+            "powerfulMode",
+            "off",
+            path=None,
+        ),
+        call(
+            gateway_id,
+            management_point.embedded_id,
+            "econoMode",
+            "off",
+            path=None,
+        ),
+    ]
+
+
 @pytest.mark.parametrize(
     ("target_preset", "initial_value", "expected_state", "expected_value"),
     [
@@ -2225,6 +2279,18 @@ async def test_climate_platform_services_and_management_points(
 
     mock_onecta_client.patch_characteristic.assert_not_awaited()
 
+    climate_controls["living_room"].operation_mode = SimpleNamespace(
+        value="cooling", values=["heating", "cooling"], settable=True
+    )
+    climate_controls["living_room"].setpoint("roomTemperature").settable = True
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+    with pytest.raises(HomeAssistantError) as err:
+        await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
+    assert err.value.translation_key == "set_temperature_failed"
+    assert err.value.translation_placeholders == {"device": living_room_device.name}
+
 
 @pytest.mark.parametrize(
     (
@@ -2925,6 +2991,9 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     [
         pytest.param("quiet", False, True, 1, [], id="current-mode-read-only"),
         pytest.param("fixed", False, True, 1, ["1", "2"], id="fixed-position"),
+        pytest.param(
+            "fixed", True, False, 1, ["quiet", "3"], id="current-fixed-speed-read-only"
+        ),
         pytest.param("quiet", True, False, 1, ["quiet"], id="fixed-speed-read-only"),
         pytest.param("quiet", True, True, 0, ["quiet"], id="zero-step-is-ignored"),
     ],
