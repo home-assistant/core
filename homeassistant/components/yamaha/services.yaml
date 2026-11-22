@@ -20,6 +20,7 @@ menu_cursor:
       domain: media_player
   fields:
     cursor:
+      required: true
       example: down
       selector:
         text:

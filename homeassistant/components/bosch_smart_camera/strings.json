@@ -26,6 +26,11 @@
       "camera_light": {
         "name": "Camera light"
       }
+    },
+    "switch": {
+      "privacy_mode": {
+        "name": "Privacy mode"
+      }
     }
   },
   "exceptions": {
@@ -37,6 +42,9 @@
     },
     "light_failed": {
       "message": "Unable to switch the camera light."
+    },
+    "privacy_mode_failed": {
+      "message": "Unable to change the privacy mode at Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."
