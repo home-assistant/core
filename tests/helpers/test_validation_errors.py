@@ -456,12 +456,40 @@ def _raise_in_except() -> None:
         raise HomeAssistantError("bad")
 
 
+def _raise_multiple_invalid() -> None:
+    """Raise a MultipleInvalid which the raising frame keeps a reference to."""
+    err = probatio.MultipleInvalid([probatio.Invalid("bad")])
+    raise err
+
+
+def _raise_validation_errors() -> None:
+    """Raise a ValidationErrors which the raising frame keeps a reference to."""
+    err = ValidationErrors([ValidationErrorInfo(probatio.Invalid("bad"), ())])
+    raise err
+
+
+def _raise_validation_errors_of_raised_error() -> None:
+    """Raise a ValidationErrors with a record made from a raised error."""
+    errors: list[ValidationErrorInfo] = []
+    try:
+        _raise_from()
+    except probatio.Invalid as err:
+        errors.append(ValidationErrorInfo(err, ()))
+    raise ValidationErrors(errors)
+
+
 @pytest.mark.parametrize(
     "validate",
     [
         pytest.param(_raise_plain, id="plain"),
         pytest.param(_raise_from, id="explicit_cause"),
         pytest.param(_raise_in_except, id="implicit_context"),
+        pytest.param(_raise_multiple_invalid, id="multiple_invalid"),
+        pytest.param(_raise_validation_errors, id="validation_errors"),
+        pytest.param(
+            _raise_validation_errors_of_raised_error,
+            id="validation_errors_of_raised_error",
+        ),
     ],
 )
 def test_no_reference_cycles(validate: Callable[[], None]) -> None:

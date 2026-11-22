@@ -100,25 +100,24 @@ def iter_validation_errors(
 ) -> Iterator[ValidationErrorInfo]:
     """Yield the errors in err, located below path.
 
-    At least one error is yielded. The traceback of an error, and of the
-    exceptions it is chained to, is cleared when it is put in a record, to not
-    keep the frames which raised them alive.
+    At least one error is yielded. The traceback of err, of each error in it,
+    and of the exceptions they are chained to, is cleared, to not keep the
+    frames which raised them alive.
     """
+    _clear_tracebacks(err)
     if isinstance(err, ValidationErrors):
         for info in err.errors:
+            _clear_tracebacks(info.exception)
             yield ValidationErrorInfo(info.exception, (*path, *info.path))
     elif isinstance(err, probatio.MultipleInvalid) and err.errors:
         for sub_err in err.errors:
             yield from iter_validation_errors(sub_err, path)
     elif isinstance(err, probatio.MultipleInvalid):
         # Without errors it is still an error: something was rejected
-        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, tuple(path))
     elif isinstance(err, probatio.Invalid):
-        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, (*path, *err.path))
     else:
-        _clear_tracebacks(err)
         yield ValidationErrorInfo(err, tuple(path))
 
 
