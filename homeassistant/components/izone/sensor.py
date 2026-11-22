@@ -87,6 +87,7 @@ WIRELESS_ZONE_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Zone], ...
     IZoneSensorEntityDescription[Zone](
         key="rf_signal",
         translation_key="rf_signal",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

@@ -1655,7 +1655,7 @@ class ConfigEntriesFlowManager(
                 f"Cannot initialize a {source} flow without a link to the config entry"
             )
 
-        flow_id = ulid_util.ulid_now()
+        flow_id = ulid_util.secure_ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
@@ -1747,8 +1747,6 @@ class ConfigEntriesFlowManager(
     ) -> tuple[ConfigFlow, ConfigFlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            raise data_entry_flow.UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = flow_id

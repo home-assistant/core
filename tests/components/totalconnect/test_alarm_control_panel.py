@@ -19,10 +19,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.totalconnect.const import DOMAIN
-from homeassistant.components.totalconnect.services import (
-    SERVICE_ALARM_ARM_AWAY_INSTANT,
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-)
+from homeassistant.components.totalconnect.services import TotalConnectService
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -195,8 +192,8 @@ async def test_disarming_invalid_usercode(
 @pytest.mark.parametrize(
     ("service", "arm_type"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
+        (TotalConnectService.ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
+        (TotalConnectService.ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
     ],
 )
 async def test_instant_arming(
@@ -285,8 +282,8 @@ async def test_arming_exceptions(
 @pytest.mark.parametrize(
     ("service", "prefix"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, "arm_home_instant"),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, "arm_away_instant"),
+        (TotalConnectService.ARM_HOME_INSTANT, "arm_home_instant"),
+        (TotalConnectService.ARM_AWAY_INSTANT, "arm_away_instant"),
     ],
 )
 async def test_instant_arming_exceptions(

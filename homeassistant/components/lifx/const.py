@@ -38,6 +38,7 @@ class LIFXService(StrEnum):
     EFFECT_STOP = "effect_stop"
     PAINT_THEME = "paint_theme"
     SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+    SET_MOOD = "set_mood"
     SET_STATE = "set_state"
 
 
@@ -50,11 +51,14 @@ class LIFXServiceArgument(StrEnum):
     CLOUD_SATURATION_MAX = "cloud_saturation_max"
     CLOUD_SATURATION_MIN = "cloud_saturation_min"
     COLOR_NAME = "color_name"
+    COLOR_TEMP_KELVIN = "color_temp_kelvin"
     CYCLES = "cycles"
     DIRECTION = "direction"
     DURATION = "duration"
+    HS_COLOR = "hs_color"
     INFRARED = "infrared"
     MODE = "mode"
+    MOOD = "mood"
     PALETTE = "palette"
     PERIOD = "period"
     POWER = "power"
@@ -67,6 +71,7 @@ class LIFXServiceArgument(StrEnum):
     SPREAD = "spread"
     THEME = "theme"
     TRANSITION = "transition"
+    XY_COLOR = "xy_color"
     ZONES = "zones"
 
 

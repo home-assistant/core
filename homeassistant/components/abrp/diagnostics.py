@@ -29,7 +29,7 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data.telemetry_coordinator
     event = coordinator.last_connection_event
     vehicles: list[dict[str, Any]] = []
-    for raw, display in entry.runtime_data.garage_coordinator.data:
+    for raw in entry.runtime_data.garage_coordinator.data:
         metrics: dict[str, dict[str, Any]] = {}
         if (telemetry := coordinator.data.get(raw.vehicle_id)) is not None:
             for metric, metric_value in telemetry.items():
@@ -46,7 +46,7 @@ async def async_get_config_entry_diagnostics(
         vehicles.append(
             {
                 "vehicle_model": raw.vehicle_model,
-                "display": asdict(display) if display is not None else None,
+                "display": asdict(raw.display) if raw.display is not None else None,
                 "metrics": metrics,
             }
         )

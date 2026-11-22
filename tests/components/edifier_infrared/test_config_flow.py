@@ -30,6 +30,8 @@ from homeassistant.helpers import entity_registry as er
         (EdifierModel.S360DB, EdifierCommandSet.S360DB),
         (EdifierModel.RC20G, EdifierCommandSet.RC20G),
         (EdifierModel.S3000PRO, EdifierCommandSet.S3000PRO),
+        (EdifierModel.RC80B, EdifierCommandSet.RC80B),
+        (EdifierModel.RC31A, EdifierCommandSet.R2600),
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")

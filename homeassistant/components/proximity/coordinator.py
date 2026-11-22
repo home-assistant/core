@@ -125,11 +125,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialize the Proximity coordinator."""
-        self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
-        self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
-        self.tolerance: int = config_entry.data[CONF_TOLERANCE]
-        self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
-        self.unit_of_measurement: str = config_entry.data.get(
+        self.ignored_zone_ids: list[str] = config_entry.options[CONF_IGNORED_ZONES]
+        self.tracked_entities: list[str] = config_entry.options[CONF_TRACKED_ENTITIES]
+        self.tolerance: int = config_entry.options[CONF_TOLERANCE]
+        self.proximity_zone_id: str = config_entry.options[CONF_ZONE]
+        self.unit_of_measurement: str = config_entry.options.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
         self.entity_mapping: dict[str, list[str]] = defaultdict(list)
@@ -186,8 +186,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
-                data={
-                    **self.config_entry.data,
+                options={
+                    **self.config_entry.options,
                     CONF_TRACKED_ENTITIES: [
                         tracked_entity
                         for tracked_entity in (

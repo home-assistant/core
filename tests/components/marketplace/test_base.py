@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 import logging
+from pathlib import Path
+import stat
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -738,3 +740,16 @@ async def test_mark_installed_integrations_survives_write_error(
         in caplog.text
     )
     mark.assert_called_once_with(marketplace.hass, "example")
+
+
+async def test_saved_card_and_its_gzip_share_the_file_mode(
+    marketplace: MarketplaceManager, tmp_path: Path
+) -> None:
+    """Test the gzip next to a dashboard card is as readable as the card."""
+    card = tmp_path / "card.js"
+
+    assert await marketplace.async_save_file(str(card), "console.log('card');")
+
+    card_mode = stat.S_IMODE(card.stat().st_mode)
+    assert card_mode != 0o600
+    assert stat.S_IMODE((tmp_path / "card.js.gz").stat().st_mode) == card_mode

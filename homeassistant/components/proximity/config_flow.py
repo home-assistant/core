@@ -7,7 +7,11 @@ import probatio
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_ZONE, UnitOfLength
 from homeassistant.core import State, callback
 from homeassistant.helpers.selector import (
@@ -60,7 +64,7 @@ def _base_schema(user_input: dict[str, Any]) -> VolDictType:
 class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a proximity config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def _user_form_schema(
         self, user_input: dict[str, Any] | None = None
@@ -110,7 +114,9 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
                 tries += 1
                 possible_title = f"{title} {tries}"
 
-            return self.async_create_entry(title=possible_title, data=user_input)
+            return self.async_create_entry(
+                title=possible_title, data={}, options=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -118,7 +124,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ProximityOptionsFlow(OptionsFlow):
+class ProximityOptionsFlow(OptionsFlowWithReload):
     """Handle a option flow."""
 
     def _user_form_schema(self, user_input: dict[str, Any]) -> probatio.Schema:
@@ -129,16 +135,11 @@ class ProximityOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            # Settings are stored in data, so OptionsFlowWithReload would not reload
-            if self.hass.config_entries.async_update_entry(
-                self.config_entry, data={**self.config_entry.data, **user_input}
-            ):
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
-            return self.async_create_entry(title=self.config_entry.title, data={})
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
+            )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self._user_form_schema(dict(self.config_entry.data)),
+            data_schema=self._user_form_schema(dict(self.config_entry.options)),
         )

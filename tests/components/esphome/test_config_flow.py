@@ -23,7 +23,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.esphome import config_flow, dashboard
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
@@ -1845,19 +1845,6 @@ async def test_user_flow_manual_key_repairs_stale_storage(
     # The stale stored key was repaired with the manually proven one.
     storage = await async_get_encryption_key_storage(hass)
     assert await storage.async_get_key("11:22:33:44:55:aa") == VALID_NOISE_PSK
-
-
-async def test_repair_stored_key_without_mac_is_a_no_op(hass: HomeAssistant) -> None:
-    """Test the repair helper does nothing when no MAC is known."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.esphome.config_flow.async_get_encryption_key_storage"
-    ) as mock_storage:
-        await flow._async_repair_stored_key(VALID_NOISE_PSK)
-
-    mock_storage.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
