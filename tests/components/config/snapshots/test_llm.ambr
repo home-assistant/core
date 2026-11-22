@@ -64,6 +64,19 @@
       }),
       'type': 'object',
     }),
+    'config__get_device_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'device_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'device_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_entity_settings': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -267,6 +280,48 @@
           'type': 'string',
         }),
       }),
+      'type': 'object',
+    }),
+    'config__update_device_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'area_id': dict({
+          'description': 'The area_id. null removes the area.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'device_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'disabled_by': dict({
+          'description': "'user' disables the device and its entities, null enables it.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name_by_user': dict({
+          'description': 'The name of the device. null uses the name from the integration.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'device_id',
+      ]),
       'type': 'object',
     }),
     'config__update_entity_settings': dict({
