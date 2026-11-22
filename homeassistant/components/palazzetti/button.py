@@ -5,6 +5,7 @@ from typing import override
 from pypalazzetti.exceptions import CommunicationError
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -12,6 +13,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -29,6 +32,7 @@ async def async_setup_entry(
 class PalazzettiSilentButtonEntity(PalazzettiEntity, ButtonEntity):
     """Representation of a Palazzetti Silent button."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "silent"
 
     def __init__(

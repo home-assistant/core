@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components.abrp.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import SOURCE_USER
@@ -365,3 +366,30 @@ async def test_reauth(
     mock_abrp_client.assert_not_called()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == expected_setups
+
+
+@pytest.mark.parametrize(
+    ("id_token", "expected_login_hint"),
+    [
+        pytest.param(
+            build_id_token(email="sofie@example.com", name="Sofie"),
+            "sofie@example.com",
+            id="email",
+        ),
+        pytest.param(build_id_token(name="Sofie"), None, id="no_email"),
+        pytest.param("header.not-base64!.sig", None, id="unparsable_id_token"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth_login_hint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_login_hint: str | None,
+) -> None:
+    """Reauth prefills the stored account's email on the login page when known."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert URL(result["url"]).query.get("login_hint") == expected_login_hint

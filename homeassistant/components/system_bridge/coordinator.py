@@ -9,6 +9,7 @@ from typing import Any, override
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
+    BadRequestException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -18,6 +19,8 @@ from systembridgeconnector.models.modules import (
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.models.notification import NotificationEvent
+from systembridgeconnector.models.settings import Settings
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 from systembridgeconnector.websocket_client import WebSocketClient
 
@@ -28,13 +31,14 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
+from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES, SIGNAL_NOTIFICATION_EVENT
 from .data import SystemBridgeData
 
 type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
@@ -171,6 +175,31 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         setattr(self.data, module_name, module)
         self.async_set_updated_data(self.data)
 
+    async def async_handle_settings(self, settings: Settings) -> None:
+        """Follow the saved commands when any client changes the settings."""
+        self.data.commands = {
+            command.id: command for command in settings.commands.allowlist
+        }
+        self.async_set_updated_data(self.data)
+
+    async def _async_update_commands(self) -> None:
+        """Fetch the saved commands, keeping the last ones if the host can't say."""
+        previous = self.data.commands
+        try:
+            commands = await self.websocket_client.get_commands()
+        except (
+            BadRequestException,
+            ConnectionClosedException,
+            ConnectionErrorException,
+        ) as exception:
+            self.logger.debug(
+                "Could not get the saved commands for %s: %s", self.title, exception
+            )
+            return
+        # A settings event received during the request is at least as new
+        if self.data.commands is previous:
+            self.data.commands = {command.id: command for command in commands.allowlist}
+
     async def async_handle_power_state(self, event: PowerStateEvent) -> None:
         """Go unavailable as soon as the host says it's sleeping or shutting down."""
         if event.state is PowerState.RESUMED:
@@ -192,12 +221,33 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             "System Bridge WebSocket close",
         )
 
+    @callback
+    def async_reconnect_now(self) -> None:
+        """Reconnect without waiting out the backoff, as the host is back."""
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._reconnect_after = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_request_refresh(),
+            "System Bridge reconnect",
+        )
+
+    async def async_handle_notification_event(self, event: NotificationEvent) -> None:
+        """Pass a click on, or close of, a notification to the event entity."""
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_NOTIFICATION_EVENT.format(self.config_entry.entry_id),
+            event,
+        )
+
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
             await self.websocket_client.listen(
                 callback=self.async_handle_module,
+                notification_event_callback=self.async_handle_notification_event,
                 power_state_callback=self.async_handle_power_state,
+                settings_callback=self.async_handle_settings,
             )
         except AuthenticationException as exception:
             self.logger.error(
@@ -291,7 +341,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
-            # A power event can stop the listener just as registration finishes
+            # Changes made while disconnected send no event, so fetch them now
+            await self._async_update_commands()
+
+            # A power event can stop the listener while registering or fetching
             if self.listen_task.done() or self.listen_task.cancelling():
                 self._reconnect_delay = min(
                     self._reconnect_delay * 2, MAX_UPDATE_INTERVAL

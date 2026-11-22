@@ -17,13 +17,7 @@ from homeassistant.components.monzo.const import (
     DEVICE_MODEL_POT,
     DOMAIN,
 )
-from homeassistant.components.monzo.services import (
-    ATTR_ACCOUNT,
-    ATTR_AMOUNT,
-    ATTR_POT,
-    SERVICE_DEPOSIT_INTO_POT,
-    SERVICE_WITHDRAW_FROM_POT,
-)
+from homeassistant.components.monzo.services import MonzoService, MonzoServiceArgument
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import (
@@ -81,9 +75,9 @@ async def _async_call_transfer(
         DOMAIN,
         service_name,
         {
-            ATTR_ACCOUNT: devices.account_device_id,
-            ATTR_POT: devices.pot_device_id,
-            ATTR_AMOUNT: amount,
+            MonzoServiceArgument.ACCOUNT: devices.account_device_id,
+            MonzoServiceArgument.POT: devices.pot_device_id,
+            MonzoServiceArgument.AMOUNT: amount,
         },
         blocking=True,
     )
@@ -118,11 +112,11 @@ async def test_non_transfer_account_is_rejected(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: flex_device.id,
-                ATTR_POT: transfer_devices.pot_device_id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: flex_device.id,
+                MonzoServiceArgument.POT: transfer_devices.pot_device_id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -133,8 +127,8 @@ async def test_non_transfer_account_is_rejected(
 @pytest.mark.parametrize(
     ("service_name", "transfer_method"),
     [
-        (SERVICE_DEPOSIT_INTO_POT, lambda account: account.pot_deposit),
-        (SERVICE_WITHDRAW_FROM_POT, lambda account: account.pot_withdraw),
+        (MonzoService.DEPOSIT_INTO_POT, lambda account: account.pot_deposit),
+        (MonzoService.WITHDRAW_FROM_POT, lambda account: account.pot_withdraw),
     ],
 )
 async def test_transfer_and_refresh(
@@ -178,7 +172,7 @@ async def test_invalid_amount(
         await _async_call_transfer(
             hass,
             transfer_devices,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             amount,
         )
 
@@ -201,11 +195,11 @@ async def test_invalid_resource_type(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: getattr(transfer_devices, account_device),
-                ATTR_POT: getattr(transfer_devices, pot_device),
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: getattr(transfer_devices, account_device),
+                MonzoServiceArgument.POT: getattr(transfer_devices, pot_device),
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -221,11 +215,11 @@ async def test_missing_device(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: "missing-device",
-                ATTR_POT: transfer_devices.pot_device_id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: "missing-device",
+                MonzoServiceArgument.POT: transfer_devices.pot_device_id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -251,11 +245,11 @@ async def test_device_from_other_integration(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: transfer_devices.account_device_id,
-                ATTR_POT: other_device.id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: transfer_devices.account_device_id,
+                MonzoServiceArgument.POT: other_device.id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -302,11 +296,11 @@ async def test_devices_from_different_entries(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: transfer_devices.account_device_id,
-                ATTR_POT: other_pot.id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: transfer_devices.account_device_id,
+                MonzoServiceArgument.POT: other_pot.id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -337,11 +331,11 @@ async def test_pot_must_belong_to_selected_account(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: joint_account.id,
-                ATTR_POT: transfer_devices.pot_device_id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: joint_account.id,
+                MonzoServiceArgument.POT: transfer_devices.pot_device_id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
         )
@@ -364,11 +358,11 @@ async def test_transfer_requires_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DEPOSIT_INTO_POT,
+            MonzoService.DEPOSIT_INTO_POT,
             {
-                ATTR_ACCOUNT: transfer_devices.account_device_id,
-                ATTR_POT: transfer_devices.pot_device_id,
-                ATTR_AMOUNT: 1,
+                MonzoServiceArgument.ACCOUNT: transfer_devices.account_device_id,
+                MonzoServiceArgument.POT: transfer_devices.pot_device_id,
+                MonzoServiceArgument.AMOUNT: 1,
             },
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
@@ -386,7 +380,9 @@ async def test_api_error(
     monzo.user_account.pot_deposit.side_effect = InvalidMonzoAPIResponseError
 
     with pytest.raises(HomeAssistantError) as error:
-        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+        await _async_call_transfer(
+            hass, transfer_devices, MonzoService.DEPOSIT_INTO_POT, 1
+        )
 
     assert error.value.translation_key == "transfer_status_unknown"
     assert monzo.user_account.accounts.await_count == 1
@@ -410,7 +406,9 @@ async def test_transport_error(
     monzo.user_account.pot_deposit.side_effect = api_error
 
     with pytest.raises(HomeAssistantError) as error:
-        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+        await _async_call_transfer(
+            hass, transfer_devices, MonzoService.DEPOSIT_INTO_POT, 1
+        )
 
     assert error.value.translation_key == "transfer_status_unknown"
     assert monzo.user_account.accounts.await_count == 1
@@ -426,7 +424,9 @@ async def test_false_transfer_result_is_failure(
     monzo.user_account.pot_deposit.return_value = False
 
     with pytest.raises(HomeAssistantError) as error:
-        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+        await _async_call_transfer(
+            hass, transfer_devices, MonzoService.DEPOSIT_INTO_POT, 1
+        )
 
     assert error.value.translation_key == "transfer_failed"
     assert monzo.user_account.accounts.await_count == 1
@@ -447,7 +447,9 @@ async def test_api_rejection_details(
     )
 
     with pytest.raises(HomeAssistantError) as error:
-        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+        await _async_call_transfer(
+            hass, transfer_devices, MonzoService.DEPOSIT_INTO_POT, 1
+        )
 
     assert error.value.translation_key == "transfer_rejected"
     assert error.value.translation_placeholders == {
@@ -484,6 +486,8 @@ async def test_expired_authorisation_starts_reauthentication(
         patch.object(polling_config_entry, "async_start_reauth") as start_reauth,
         pytest.raises(HomeAssistantError),
     ):
-        await _async_call_transfer(hass, transfer_devices, SERVICE_DEPOSIT_INTO_POT, 1)
+        await _async_call_transfer(
+            hass, transfer_devices, MonzoService.DEPOSIT_INTO_POT, 1
+        )
 
     start_reauth.assert_called_once_with(hass)

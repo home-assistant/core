@@ -8,7 +8,6 @@ from typing import Any, override
 from greencell_client.access import GreencellAccess
 from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
 from greencell_client.mqtt_parser import MqttParser
-from greencell_client.utils import GreencellUtils
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
@@ -25,17 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-    GREENCELL_HABU_DEN,
-    GREENCELL_OTHER_DEVICE,
-    MANUFACTURER,
-)
+from .const import CONF_SERIAL_NUMBER
+from .entity import GreencellEntity
 from .models import GreencellConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -256,12 +249,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HabuSensor(SensorEntity):
+class HabuSensor(GreencellEntity, SensorEntity):
     """Abstract base class for Habu sensors integration."""
 
     entity_description: GreencellSensorDescription
-    _attr_has_entity_name = True
-    _remove_listener: Callable[[], None] | None = None
 
     def __init__(
         self,
@@ -271,42 +262,10 @@ class HabuSensor(SensorEntity):
         description: GreencellSensorDescription,
     ) -> None:
         """Initialize the sensor entity."""
+        super().__init__(serial_number, access)
         self._sensor_type = sensor_type
-        self._serial_number = serial_number
-        self._access = access
         self.entity_description = description
-
         self._attr_unique_id = f"{serial_number}_{description.key}"
-
-        if GreencellUtils.device_is_habu_den(self._serial_number):
-            device_name = GREENCELL_HABU_DEN
-        else:
-            device_name = GREENCELL_OTHER_DEVICE
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            name=f"{device_name} {serial_number}",
-            manufacturer=MANUFACTURER,
-            model=device_name,
-            serial_number=serial_number,
-        )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if the entity is available."""
-        return not self._access.is_disabled()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register the entity with Home Assistant."""
-        unsub = self._access.register_listener(self._schedule_update)
-        if unsub is not None:
-            self.async_on_remove(unsub)
-
-    def _schedule_update(self) -> None:
-        """Schedule an update for the entity."""
-        self.async_schedule_update_ha_state()
 
 
 class Habu3PhaseSensor(HabuSensor):

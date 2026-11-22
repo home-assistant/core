@@ -13,12 +13,14 @@ from ring_doorbell.webrtcstream import RingWebRtcMessage
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
     CameraEntityFeature,
     StreamType,
     async_get_image,
     async_get_mjpeg_stream,
     get_camera_from_entity_id,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -26,6 +28,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
@@ -380,6 +383,40 @@ async def test_camera_stream_attributes(
     assert supported_features is CameraEntityFeature(0)
     camera = get_camera_from_entity_id(hass, "camera.front_last_recording")
     assert camera.camera_capabilities.frontend_stream_types == set()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "labs_enabled", "expected_two_way_audio"),
+    [
+        pytest.param("camera.front_live_view", True, True, id="live_view"),
+        pytest.param("camera.front_live_view", False, False, id="labs_disabled"),
+        pytest.param("camera.front_last_recording", True, False, id="last_recording"),
+    ],
+)
+async def test_camera_two_way_audio(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+    labs_enabled: bool,
+    expected_two_way_audio: bool,
+) -> None:
+    """Test two way audio capability of the camera entities."""
+    assert await async_setup_component(hass, "labs", {})
+    assert await async_setup_component(hass, CAMERA_DOMAIN, {})
+    await async_update_preview_feature(
+        hass, CAMERA_DOMAIN, "two_way_audio", labs_enabled
+    )
+    await setup_platform(hass, Platform.CAMERA)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/capabilities", "entity_id": entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["two_way_audio"] is expected_two_way_audio
 
 
 async def test_camera_webrtc(

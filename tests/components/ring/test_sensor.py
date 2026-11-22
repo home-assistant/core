@@ -1,7 +1,6 @@
 """The tests for the Ring sensor platform."""
 
 from datetime import UTC, datetime
-import logging
 from typing import cast
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -202,7 +201,6 @@ async def test_only_chime_devices(
 
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()
-    caplog.set_level(logging.DEBUG)
     caplog.clear()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

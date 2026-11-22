@@ -52,18 +52,16 @@ rules:
   discovery:
     status: exempt
     comment: There is no option to discover devices without adding the integration.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: Migrate time sensors to timestamp or a duration device class
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
@@ -71,9 +69,7 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: The integration does not have anything to reconfigure.
-  repair-issues:
-    status: exempt
-    comment: The integration does not have any issues to repair.
+  repair-issues: done
   stale-devices: done
 
   # Platinum

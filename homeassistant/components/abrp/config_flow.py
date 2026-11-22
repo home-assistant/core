@@ -1,6 +1,7 @@
 """Config flow for the A Better Routeplanner integration."""
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
 from typing import Any, override
 
@@ -37,7 +38,14 @@ class AbrpFlowHandler(
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": " ".join(OAUTH2_SCOPES)}
+        data = {"scope": " ".join(OAUTH2_SCOPES)}
+        if self.source == SOURCE_REAUTH:
+            id_token = self._get_reauth_entry().data["token"].get("id_token")
+            with suppress(AbrpAuthError):
+                # Only prefills the login page; the account is still checked on return.
+                if email := parse_unverified_identity(id_token).email:
+                    data["login_hint"] = email
+        return data
 
     @override
     async def async_step_user(
@@ -74,8 +82,7 @@ class AbrpFlowHandler(
         binding the entry to an unverified account. A token without a
         refresh_token aborts as well: the entry could not outlive the access
         token, and the stream would retry it forever. On a new entry an empty
-        garage aborts too: the garage is only re-read at setup, so such an entry
-        would load green and stay empty until a manual reload.
+        garage aborts too, so a new entry always starts with a vehicle to show.
         """
         try:
             identity = parse_unverified_identity(data["token"].get("id_token"))

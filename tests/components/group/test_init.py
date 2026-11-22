@@ -888,6 +888,7 @@ async def test_is_on_and_state_mixed_domains(
 
 async def test_reloading_groups(hass: HomeAssistant) -> None:
     """Test reloading the group config."""
+    initial_listeners = hass.bus.async_listeners().get(EVENT_STATE_CHANGED, 0)
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -921,7 +922,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.second_group",
         "group.test_group",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -936,7 +937,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.all_tests",
         "group.hello",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:

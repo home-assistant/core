@@ -29,6 +29,11 @@
     }
   },
   "entity": {
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
     "sensor": {
       "battery_capacity": {
         "name": "Battery capacity"

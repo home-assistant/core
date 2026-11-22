@@ -183,7 +183,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         vlpfile = VlpFile(file_path)
         await vlpfile.read()
         if not vlpfile.get():
-            raise InvalidVlpFile("no_modules")
+            raise InvalidVlpFile(
+                translation_domain=DOMAIN,
+                translation_key="no_modules",
+            )
 
     async def async_step_vlp(
         self, user_input: dict[str, Any] | None = None
@@ -202,8 +205,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     # validate it
                     await self._validate_vlp_file(self._vlp_file)
-                except InvalidVlpFile as e:
-                    step_errors[CONF_VLP_FILE] = str(e)
+                except InvalidVlpFile as exc:
+                    if exc.translation_key is not None:
+                        step_errors[CONF_VLP_FILE] = exc.translation_key
             if self.source == SOURCE_RECONFIGURE:
                 old_entry = self._get_reconfigure_entry()
                 return self.async_update_reload_and_abort(

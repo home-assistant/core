@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.services import EcovacsService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
@@ -81,7 +81,7 @@ async def test_get_positions_service(
     assert await hass.services.async_call(
         DOMAIN,
         EcovacsService.RAW_GET_POSITIONS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     ) == {entity_id: mock_device_execute_response}
