@@ -33,6 +33,7 @@ class FlowHandler(
 
     # See https://developers.home-assistant.io/docs/core/platform/application_credentials/
     VERSION = 1
+    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @property
@@ -68,13 +69,10 @@ class FlowHandler(
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
-            if reauth_entry.unique_id is not None:
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             if reason := await self._async_test_api_access(access_token):
                 return self.async_abort(reason=reason)
-            return self.async_update_reload_and_abort(
-                reauth_entry, unique_id=unique_id, data=data
-            )
+            return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         self._abort_if_unique_id_configured()
 

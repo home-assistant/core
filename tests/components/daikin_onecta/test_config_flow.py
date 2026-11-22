@@ -21,6 +21,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.daikin_onecta import async_migrate_entry
 from homeassistant.components.daikin_onecta.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -276,6 +277,7 @@ async def test_reauth_oauth_create_entry(
         hass, DOMAIN, ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET)
     )
     hass.config_entries.async_update_entry(config_entry, unique_id=existing_unique_id)
+    assert await async_migrate_entry(hass, config_entry)
     config_entry.add_to_hass(hass)
     result = await async_reauth_external_step(hass, config_entry, hass_client_no_auth)
     aioclient_mock.post(
