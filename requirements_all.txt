@@ -476,7 +476,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.5.0
+aioswitcher==6.6.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -509,7 +509,7 @@ aiovitesy==1.4.8
 aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.11
+aiovodafone==3.3.13
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -521,7 +521,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.1.0
+aiowebostv==1.1.1
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -2064,7 +2064,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.3
 
 # homeassistant.components.opendisplay
-py-opendisplay==8.1.0
+py-opendisplay==8.2.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2185,7 +2185,7 @@ pyblu==2.2.0
 pybotvac==0.0.29
 
 # homeassistant.components.fuelprices_dk
-pybraendstofpriser==2.3.1
+pybraendstofpriser==2.4.0
 
 # homeassistant.components.braviatv
 pybravia==0.5.3
@@ -2245,7 +2245,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.10.1
+pydrawise==2026.11.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -3201,7 +3201,7 @@ smart-meter-texas==0.6.0
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.2
+soco==0.32.4
 
 # homeassistant.components.sofar
 sofar-modbus==0.32.0

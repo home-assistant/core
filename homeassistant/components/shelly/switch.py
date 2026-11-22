@@ -27,7 +27,6 @@ from .const import (
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_NEO_WATER_VALVE,
-    MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
     RPC_ERROR_CODE_REMOTE_DISABLED,
 )
@@ -369,7 +368,6 @@ RPC_SWITCHES = (
         method_off="boolean_set",
         method_params_fn=lambda id, value: (id, value),
         role="start_charging",
-        models={MODEL_TOP_EV_CHARGER_EVE01},
     ),
     RpcSwitchDescription(
         key="boolean_state",
