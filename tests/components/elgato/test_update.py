@@ -28,7 +28,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_LATEST_VERSION,
@@ -40,7 +40,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_MAC,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -597,8 +596,8 @@ async def test_install_keeps_the_device_from_everyone(
         turn_on = hass.async_create_task(
             hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: "light.frenck"},
+                LightService.TURN_ON,
+                {TargetKey.ENTITY_ID: "light.frenck"},
                 blocking=True,
             )
         )
