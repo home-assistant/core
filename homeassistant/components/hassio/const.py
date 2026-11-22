@@ -67,6 +67,7 @@ ATTR_UUID = "uuid"
 ATTR_WS_EVENT = "event"
 
 X_AUTH_TOKEN = "X-Supervisor-Token"
+X_FORWARDED_PREFIX = "X-Forwarded-Prefix"
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_SOURCE = "X-Hass-Source"
 
