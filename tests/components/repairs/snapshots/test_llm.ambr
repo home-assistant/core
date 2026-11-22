@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_get_issues_formatting
+  dict({
+    'data': dict({
+      'issues': list([
+        dict({
+          'created': '2026-11-16T02:00:00+00:00',
+          'domain': 'automation',
+          'is_fixable': True,
+          'issue_id': 'service_not_found_morning',
+          'severity': 'error',
+          'title': 'Morning uses an unknown action',
+        }),
+        dict({
+          'breaks_in_ha_version': '2027.2.0',
+          'created': '2026-11-16T02:00:00+00:00',
+          'description': '''
+            Configuring AquaLogic using YAML is being removed.
+            
+            Your existing YAML configuration has been imported into the UI automatically.
+            
+            Remove the `aqualogic` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.
+          ''',
+          'domain': 'homeassistant',
+          'is_fixable': False,
+          'issue_domain': 'aqualogic',
+          'issue_id': 'deprecated_yaml_aqualogic',
+          'learn_more_url': 'https://www.home-assistant.io/integrations/aqualogic',
+          'severity': 'warning',
+          'title': 'The AquaLogic YAML configuration is being removed',
+        }),
+        dict({
+          'created': '2026-11-16T02:00:00+00:00',
+          'description': '''
+            Configuring Demo using YAML is being removed.
+            
+            Your existing YAML configuration has been imported into the UI automatically.
+            
+            Remove the `demo` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.
+          ''',
+          'domain': 'homeassistant',
+          'ignored': True,
+          'is_fixable': False,
+          'issue_id': 'ignored_demo_yaml',
+          'severity': 'warning',
+          'title': 'The Demo YAML configuration is being removed',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_tool_exposure_and_schema
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'domain': dict({
+        'description': "Filter by the issue's owning integration domain (e.g. 'automation', 'hue', 'mqtt', or 'homeassistant' for core reauth and YAML issues).",
+        'items': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'minItems': 1,
+        'type': 'array',
+      }),
+      'include_ignored': dict({
+        'default': True,
+        'description': 'Whether to include ignored (dismissed) issues in the results (default: true).',
+        'type': 'boolean',
+      }),
+      'severity': dict({
+        'description': "Filter by issue severity. Allowed values: 'warning', 'error', 'critical'.",
+        'enum': list([
+          'critical',
+          'error',
+          'warning',
+        ]),
+        'format': 'lower',
+        'type': 'string',
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
