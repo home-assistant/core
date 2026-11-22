@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from rf_protocols.commands.pt2262 import PT2262Command
+from rf_protocols.commands.pt2262 import ITTristateCommand
 
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.components.switch import SwitchEntity
@@ -21,7 +21,6 @@ from .const import (
     CONF_HOUSECODE,
     CONF_TRANSMITTER,
     DOMAIN,
-    encode_tristate_data,
     format_device_summary,
 )
 
@@ -40,8 +39,9 @@ async def async_setup_entry(
 class IntertechnoTristateSwitch(SwitchEntity, RestoreEntity):
     """Switch entity for Intertechno TriState devices."""
 
+    _attr_assumed_state = True
     _attr_has_entity_name = True
-    _attr_name = "Output"
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -113,13 +113,11 @@ class IntertechnoTristateSwitch(SwitchEntity, RestoreEntity):
 
     async def _async_send(self, on: bool) -> None:
         """Send on/off command."""
-        command = PT2262Command(
-            data=encode_tristate_data(
-                housecode=self._housecode,
-                group=self._group,
-                channel=self._channel,
-                on=on,
-            )
+        command = ITTristateCommand(
+            housecode=self._housecode,
+            group=self._group,
+            channel=self._channel,
+            on=on,
         )
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context

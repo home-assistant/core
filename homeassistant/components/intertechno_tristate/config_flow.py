@@ -4,7 +4,7 @@ from typing import Any, override
 
 import probatio
 from rf_protocols.commands import ModulationType
-from rf_protocols.commands.pt2262 import PT2262Command
+from rf_protocols.commands.pt2262 import ITTristateCommand
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -20,17 +20,11 @@ from .const import (
     CONF_HOUSECODE,
     CONF_TRANSMITTER,
     DOMAIN,
-    MAX_CHANNEL,
-    MAX_GROUP,
-    MIN_CHANNEL,
-    MIN_GROUP,
-    REPEAT_COUNT_LEARN,
-    VALID_HOUSECODES,
-    encode_tristate_data,
+    REPEAT_COUNT_LEARN
 )
 
-_SAMPLE_COMMAND = PT2262Command(
-    data=encode_tristate_data(housecode="A", group=1, channel=1, on=True)
+_SAMPLE_COMMAND = ITTristateCommand(
+    housecode="A", group=1, channel=1, on=True
 )
 _CONF_DEVICE_RESPONDED = "device_responded"
 
@@ -68,26 +62,29 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
             group: int = user_input[CONF_GROUP]
             channel: int = user_input[CONF_CHANNEL]
 
-            if housecode not in VALID_HOUSECODES:
+            if housecode not in ITTristateCommand.VALID_HOUSECODES:
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._async_user_schema(transmitters, user_input),
                     errors={CONF_HOUSECODE: "invalid_housecode"},
                 )
-            if not (MIN_GROUP <= group <= MAX_GROUP):
+            if not (ITTristateCommand.MIN_GROUP <= group <= ITTristateCommand.MAX_GROUP):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._async_user_schema(transmitters, user_input),
                     errors={CONF_GROUP: "invalid_group"},
                 )
 
-            if not (MIN_CHANNEL <= channel <= MAX_CHANNEL):
+            if not (ITTristateCommand.MIN_CHANNEL <= channel <= ITTristateCommand.MAX_CHANNEL):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._async_user_schema(transmitters, user_input),
                     errors={CONF_CHANNEL: "invalid_channel"},
                 )
 
+            await self.async_set_unique_id(
+                f"{transmitter}_{housecode}_{group}_{channel}"
+            )
             self._async_abort_entries_match(
                 {
                     CONF_TRANSMITTER: transmitter,
@@ -123,13 +120,11 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         assert self._device_data is not None
-        command = PT2262Command(
-            data=encode_tristate_data(
-                housecode=self._device_data[CONF_HOUSECODE],
-                group=self._device_data[CONF_GROUP],
-                channel=self._device_data[CONF_CHANNEL],
-                on=True,
-            ),
+        command = ITTristateCommand(
+            housecode=self._device_data[CONF_HOUSECODE],
+            group=self._device_data[CONF_GROUP],
+            channel=self._device_data[CONF_CHANNEL],
+            on=True,
             repeat_count=REPEAT_COUNT_LEARN,
         )
         await async_send_command(
