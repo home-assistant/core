@@ -78,6 +78,17 @@ def mock_set_privacy_mode() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_set_notifications() -> Generator[AsyncMock]:
+    """Mock the notifications write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.cloud_set_notifications",
+        autospec=True,
+        return_value=CloudPutResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Register the OAuth2 application credentials."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})

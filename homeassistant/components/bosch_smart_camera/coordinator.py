@@ -62,7 +62,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         )
         self.account_states: dict[str, CameraAccountStates] = {}
         self._write_seq = 0
-        self._written_at: dict[str, int] = {}
+        self._written_at: dict[tuple[str, str], int] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -100,13 +100,19 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         # A response that predates a write must not undo it.
-        for camera_id, written in self._written_at.items():
-            if written > started and camera_id in self.account_states:
-                states[camera_id] = self.account_states[camera_id]
+        for (camera_id, field), written in self._written_at.items():
+            if (
+                written > started
+                and camera_id in states
+                and (cached := self.account_states.get(camera_id)) is not None
+            ):
+                states[camera_id] = replace(
+                    states[camera_id], **{field: getattr(cached, field)}
+                )
         self.account_states = states
         self._written_at = {
-            camera_id: written
-            for camera_id, written in self._written_at.items()
+            key: written
+            for key, written in self._written_at.items()
             if written > started
         }
         data = {camera.id: camera for camera in cameras}
@@ -152,8 +158,32 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             return
         # The camera list is only polled every few minutes.
         self._write_seq += 1
-        self._written_at[camera_id] = self._write_seq
+        self._written_at[camera_id, "privacy_mode"] = self._write_seq
         self.account_states[camera_id] = replace(state, privacy_mode=enabled)
+        self.async_update_listeners()
+
+    async def async_set_notifications(self, camera_id: str, enabled: bool) -> None:
+        """Switch the push notifications of a camera and update the cached state."""
+        result = await self._client.set_notifications(camera_id, enabled)
+        if result.status in (401, 403):
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            )
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="notifications_failed"
+            )
+        # The camera may have been removed while the write was running.
+        if (state := self.account_states.get(camera_id)) is None:
+            return
+        # The camera list is only polled every few minutes.
+        self._write_seq += 1
+        self._written_at[camera_id, "notifications_status"] = self._write_seq
+        self.account_states[camera_id] = replace(
+            state,
+            notifications_status="FOLLOW_CAMERA_SCHEDULE" if enabled else "ALWAYS_OFF",
+        )
         self.async_update_listeners()
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:

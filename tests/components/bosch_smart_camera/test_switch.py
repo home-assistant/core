@@ -31,6 +31,7 @@ from .conftest import CAMERA_ID
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 
 ENTITY_ID = "switch.garden_privacy_mode"
+NOTIFICATIONS_ID = "switch.garden_notifications"
 
 
 async def test_privacy_mode_switch(
@@ -191,6 +192,40 @@ async def test_poll_during_write_keeps_written_state(
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
+async def test_poll_during_write_keeps_other_fields_of_the_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a notifications write during a poll keeps the polled privacy mode."""
+    await setup_integration(hass, mock_config_entry)
+    release = asyncio.Event()
+    polled = {CAMERA_ID: CameraAccountStates(True, "ALWAYS_OFF")}
+
+    async def slow_states(*args: object, **kwargs: object) -> dict:
+        await release.wait()
+        return polled
+
+    mock_account_states.side_effect = slow_states
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
 async def test_camera_removed_during_write(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -216,3 +251,150 @@ async def test_camera_removed_during_write(
     )
 
     assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_notifications_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the notifications switch reflects the camera list."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_ON
+    entry = entity_registry.async_get(NOTIFICATIONS_ID)
+    assert entry.unique_id == f"{CAMERA_ID}_notifications"
+    assert entry.translation_key == "notifications"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+
+@pytest.mark.parametrize(
+    ("service", "enabled", "state"),
+    [(SERVICE_TURN_ON, True, STATE_ON), (SERVICE_TURN_OFF, False, STATE_OFF)],
+)
+async def test_set_notifications(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    mock_account_states: AsyncMock,
+    service: str,
+    enabled: bool,
+    state: str,
+) -> None:
+    """Test switching the notifications writes to the cloud and updates the state."""
+    # Start from the opposite state so the write has to change the cache.
+    mock_account_states.return_value = {
+        CAMERA_ID: CameraAccountStates(
+            False, "ALWAYS_OFF" if enabled else "FOLLOW_CAMERA_SCHEDULE"
+        )
+    }
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(NOTIFICATIONS_ID).state != state
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: NOTIFICATIONS_ID}, blocking=True
+    )
+
+    assert mock_set_notifications.call_args.args[2:] == (CAMERA_ID, enabled)
+    assert hass.states.get(NOTIFICATIONS_ID).state == state
+
+
+async def test_set_notifications_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+) -> None:
+    """Test a rejected write raises and keeps the state."""
+    mock_set_notifications.return_value = CloudPutResult(ok=False, status=500)
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "notifications_failed"
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_ON
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_set_notifications_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    status: int,
+) -> None:
+    """Test a rejected token raises and starts the reauthentication flow."""
+    mock_set_notifications.return_value = CloudPutResult(ok=False, status=status)
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "auth_failed"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_notifications_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_account_states: AsyncMock,
+) -> None:
+    """Test the switch is unavailable when the camera reports no notifications."""
+    mock_account_states.return_value = {CAMERA_ID: CameraAccountStates(False, None)}
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_UNAVAILABLE
+
+
+async def test_notifications_missing_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_account_states: AsyncMock,
+) -> None:
+    """Test the switch is unavailable when the list has no state for the camera."""
+    mock_account_states.return_value = {}
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_UNAVAILABLE
+
+
+async def test_notifications_camera_removed_during_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    mock_list_cameras: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write that finishes after the camera was removed does not fail."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def remove_then_ok(*args: object) -> CloudPutResult:
+        mock_list_cameras.return_value = []
+        mock_account_states.return_value = {}
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return CloudPutResult(ok=True, status=204)
+
+    mock_set_notifications.side_effect = remove_then_ok
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+        blocking=True,
+    )
+
+    assert hass.states.get(NOTIFICATIONS_ID) is None

@@ -23,6 +23,9 @@
   },
   "entity": {
     "switch": {
+      "notifications": {
+        "name": "Notifications"
+      },
       "privacy_mode": {
         "name": "Privacy mode"
       }
@@ -34,6 +37,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "notifications_failed": {
+      "message": "Unable to change the notifications at Bosch."
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."
