@@ -15,7 +15,7 @@ from homeassistant.components.wallbox.coordinator import (
     check_token_validity,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -94,7 +94,7 @@ async def test_wallbox_refresh_failed_error_auth(
             "number",
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                TargetKey.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
                 NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
@@ -108,7 +108,7 @@ async def test_wallbox_refresh_failed_error_auth(
             "number",
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                TargetKey.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
                 NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,

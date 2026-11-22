@@ -7,7 +7,7 @@ from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.nut.const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_ON, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -99,7 +99,7 @@ async def test_switch_pdu_dynamic_outlets(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -108,7 +108,7 @@ async def test_switch_pdu_dynamic_outlets(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -198,7 +198,7 @@ async def test_switch_outlets_without_outlet_count(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     run_command.assert_called_with("ups1", "outlet.1.load.off")
@@ -206,7 +206,7 @@ async def test_switch_outlets_without_outlet_count(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     run_command.assert_called_with("ups1", "outlet.1.load.on")
