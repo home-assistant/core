@@ -1260,10 +1260,7 @@ class GetEntitySettingsTool(Tool):
     ) -> ToolResult:
         """Return the settings of the entity."""
         args = self.parameters(tool_input.tool_args)
-        try:
-            entry = _get_entity_entry(hass, args["entity_id"])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        entry = _get_entity_entry(hass, args["entity_id"])
         return ToolResult(data={"result": _format_entity_settings(hass, entry)})
 
 
@@ -1351,18 +1348,17 @@ class UpdateEntitySettingsTool(Tool):
         """Update the settings of the entity and return the new settings."""
         settings = self.parameters(tool_input.tool_args)
         entity_id = settings.pop("entity_id")
-        try:
-            entry = _get_entity_entry(hass, entity_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        entry = _get_entity_entry(hass, entity_id)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
-            return _error_result(f"Area '{area_id}' not found.")
+            raise HomeAssistantError(f"Area '{area_id}' not found.")
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
             if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                return _error_result(f"Labels not found: {', '.join(sorted(missing))}")
+                raise HomeAssistantError(
+                    f"Labels not found: {', '.join(sorted(missing))}"
+                )
         if settings.get("disabled_by"):
             settings["disabled_by"] = er.RegistryEntryDisabler.USER
         if settings.get("hidden_by"):
@@ -1377,7 +1373,7 @@ class UpdateEntitySettingsTool(Tool):
         try:
             entry = er.async_get(hass).async_update_entity(entity_id, **settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
 
         result = _format_entity_settings(hass, entry)
         if was_disabled and entry.disabled_by is None:
@@ -1418,16 +1414,13 @@ class RemoveEntityTool(Tool):
     ) -> ToolResult:
         """Remove the entity."""
         entity_id = self.parameters(tool_input.tool_args)["entity_id"]
-        try:
-            _get_entity_entry(hass, entity_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_entity_entry(hass, entity_id)
         # Like the UI, only a restored state shows that the integration no longer
         # provides the entity. A disabled entity has no state at all.
         if (state := hass.states.get(entity_id)) is None or not state.attributes.get(
             ATTR_RESTORED
         ):
-            return _error_result(
+            raise HomeAssistantError(
                 f"Entity '{entity_id}' is still provided by its integration, or is "
                 "disabled. Only entities that their integration no longer provides "
                 "can be removed."
