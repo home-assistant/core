@@ -963,10 +963,11 @@ async def test_filling_levels_polling_stops_without_sensors_after_recovery(
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    calls_after_recovery = mock_miele_client.get_filling_levels.call_count
+
+    assert mock_miele_client.get_filling_levels.call_count == 2
 
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_miele_client.get_filling_levels.call_count == calls_after_recovery
+    assert mock_miele_client.get_filling_levels.call_count == 2
