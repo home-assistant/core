@@ -172,7 +172,7 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await client.device()
             # Updates fail without the status endpoint, so check it too.
             await client.status()
-        except HpPrinterError as err:
-            LOGGER.debug("Cannot connect to HP printer at %s: %s", host, err)
+        except HpPrinterError:
+            LOGGER.debug("Cannot connect to HP printer at %s:", host, exc_info=True)
             return None
         return device
