@@ -309,7 +309,11 @@ class OpenhomeDevice(MediaPlayerEntity):
     ) -> BrowseMedia | None:
         """Find a media item in its parent listing."""
         parsed = MediaSourceItem.from_uri(self.hass, media_content_id, None)
-        if parsed.domain is None or "/" not in parsed.identifier:
+        if (
+            parsed.domain is None
+            or not parsed.identifier
+            or "/" not in parsed.identifier
+        ):
             return None
         parent_id = (
             f"{media_source.URI_SCHEME}{parsed.domain}/"

@@ -405,18 +405,20 @@ async def test_play_media_browse_failure_still_plays(
 
     DLNA servers answer upnp error 710 (No such container) when browsing the
     direct children of a file, so the metadata lookup must not fail play_media.
-    The title and artwork then come from the resolved DIDL metadata.
+    The resolved DIDL metadata is incomplete (no artwork), so browsing is
+    attempted and the title still comes from the resolved DIDL metadata.
     """
     await setup_media_player(hass, mock_config_entry)
 
-    didl = MagicMock(title="NAS Track", album_art_uri="http://nas:5000/art.jpg")
+    didl = MagicMock(title="NAS Track", album_art_uri=None)
     play_item = MagicMock(
         url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
     )
+    browse_mock = AsyncMock(side_effect=BrowseError("Server failure: upnp error 710"))
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
-            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+            browse_mock,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -434,11 +436,13 @@ async def test_play_media_browse_failure_still_plays(
             blocking=True,
         )
 
+    # The item and its parent listing were both browsed and failed.
+    assert browse_mock.call_count == 2
     mock_device.play_media.assert_awaited_once_with(
         {
             "title": "NAS Track",
             "uri": "http://nas:5000/music/track.flac",
-            "albumArtwork": "http://nas:5000/art.jpg",
+            "albumArtwork": "",
         }
     )
 
@@ -451,14 +455,16 @@ async def test_play_media_browse_failure_resolves_relative_artwork(
     """Test relative DIDL artwork URLs are resolved against the media server URL."""
     await setup_media_player(hass, mock_config_entry)
 
-    didl = MagicMock(title="NAS Track", album_art_uri="/upnp/art.jpg")
+    # No DIDL title, so the resolved metadata is incomplete and browsing runs.
+    didl = MagicMock(title=None, album_art_uri="/upnp/art.jpg")
     play_item = MagicMock(
         url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
     )
+    browse_mock = AsyncMock(side_effect=BrowseError("Server failure: upnp error 710"))
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
-            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+            browse_mock,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -476,9 +482,10 @@ async def test_play_media_browse_failure_resolves_relative_artwork(
             blocking=True,
         )
 
+    assert browse_mock.call_count == 2
     mock_device.play_media.assert_awaited_once_with(
         {
-            "title": "NAS Track",
+            "title": "Home Assistant",
             "uri": "http://nas:5000/music/track.flac",
             "albumArtwork": "http://nas:5000/upnp/art.jpg",
         }
@@ -602,7 +609,7 @@ async def test_play_media_metadata_search_is_bounded(
     )
 
 
-async def test_play_media_browse_failure_prefers_normalized_thumbnail(
+async def test_play_media_prefers_normalized_thumbnail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device: MagicMock,
@@ -616,10 +623,11 @@ async def test_play_media_browse_failure_prefers_normalized_thumbnail(
         didl_metadata=didl,
         thumbnail="http://nas:5000/upnp/normalized.jpg",
     )
+    browse_mock = AsyncMock()
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
-            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+            browse_mock,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -637,6 +645,8 @@ async def test_play_media_browse_failure_prefers_normalized_thumbnail(
             blocking=True,
         )
 
+    # Resolved metadata is complete, so no browse request is made.
+    browse_mock.assert_not_called()
     mock_device.play_media.assert_awaited_once_with(
         {
             "title": "NAS Track",
@@ -950,14 +960,17 @@ async def test_play_media_parent_listing_without_match_falls_back_to_didl(
             return parent_listing
         raise BrowseError("Server failure: upnp error 710")
 
-    didl = MagicMock(title="NAS Track", album_art_uri="http://nas:5000/art.jpg")
+    # No artwork in the DIDL metadata, so browsing is attempted: the item
+    # browse fails, then the parent listing is browsed without a match.
+    didl = MagicMock(title="NAS Track", album_art_uri=None)
     play_item = MagicMock(
         url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
     )
+    browse_mock = AsyncMock(side_effect=browse_side_effect)
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
-            AsyncMock(side_effect=browse_side_effect),
+            browse_mock,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -975,11 +988,13 @@ async def test_play_media_parent_listing_without_match_falls_back_to_didl(
             blocking=True,
         )
 
+    # The item and its parent listing were both browsed.
+    assert browse_mock.call_count == 2
     mock_device.play_media.assert_awaited_once_with(
         {
             "title": "NAS Track",
             "uri": "http://nas:5000/music/track.flac",
-            "albumArtwork": "http://nas:5000/art.jpg",
+            "albumArtwork": "",
         }
     )
 
@@ -992,14 +1007,16 @@ async def test_play_media_browse_failure_without_parent_falls_back_to_didl(
     """Test DIDL fallback when the media id has no parent to look up."""
     await setup_media_player(hass, mock_config_entry)
 
-    didl = MagicMock(title="Radio", album_art_uri="http://nas:5000/a.jpg")
+    # No artwork in the DIDL metadata, so browsing is attempted and fails.
+    didl = MagicMock(title="Radio", album_art_uri=None)
     play_item = MagicMock(
         url="http://nas:5000/stream", didl_metadata=didl, thumbnail=None
     )
+    browse_mock = AsyncMock(side_effect=BrowseError("Server failure: upnp error 710"))
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
-            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+            browse_mock,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -1017,11 +1034,13 @@ async def test_play_media_browse_failure_without_parent_falls_back_to_didl(
             blocking=True,
         )
 
+    # Only the item itself was browsed; it has no parent listing.
+    browse_mock.assert_called_once()
     mock_device.play_media.assert_awaited_once_with(
         {
             "title": "Radio",
             "uri": "http://nas:5000/stream",
-            "albumArtwork": "http://nas:5000/a.jpg",
+            "albumArtwork": "",
         }
     )
 
