@@ -6,22 +6,15 @@ from datetime import UTC, datetime
 from typing import Any, override
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
-from homematicip.base.functionalChannels import (
-    FloorTerminalBlockMechanicChannel,
-    FunctionalChannel,
-)
+from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
-    FloorTerminalBlock6,
-    FloorTerminalBlock10,
-    FloorTerminalBlock12,
     RotaryHandleSensor,
     SmokeDetector,
     SoilMoistureSensorInterface,
     TiltVibrationSensor,
     WateringActuator,
-    WiredFloorTerminalBlock12,
 )
 
 from homeassistant.components.sensor import (
@@ -372,6 +365,19 @@ VALVE_POSITION_DESC = HmipSensorDescription(
     unique_id_channel=1,
 )
 
+VALVE_STATE_DESC = HmipSensorDescription(
+    key="ftb_valve_state",
+    translation_key="valve_state",
+    name="Valve state",
+    device_class=SensorDeviceClass.ENUM,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    options=VALVE_STATE_VALUES,
+    value_fn=lambda channel: (
+        channel.valveState.name.lower() if channel.valveState is not None else None
+    ),
+    exists_fn=lambda channel: getattr(channel, "valveState", None) is not None,
+)
+
 PASSAGE_COUNTER_DESC = HmipSensorDescription(
     key="passage_counter",
     value_fn=lambda channel: channel.leftRightCounterDelta,
@@ -437,6 +443,7 @@ SENSOR_DESCRIPTIONS_BY_CHANNEL: dict[
         VALVE_POSITION_DESC,
         TEMPERATURE_DESC,
     ),
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL: (VALVE_STATE_DESC,),
     FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,
@@ -621,22 +628,6 @@ async def async_setup_entry(
         for channel in device.functionalChannels
         if channel.functionalChannelType in FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS
         and getattr(channel, "valvePosition", None) is not None
-    )
-    floor_terminal_blocks = (
-        FloorTerminalBlock6,
-        FloorTerminalBlock10,
-        FloorTerminalBlock12,
-        WiredFloorTerminalBlock12,
-    )
-    entities.extend(
-        HomematicipFloorTerminalBlockMechanicChannelValveState(
-            hap, device, channel=channel.index
-        )
-        for device in hap.home.devices
-        if isinstance(device, floor_terminal_blocks)
-        for channel in device.functionalChannels
-        if isinstance(channel, FloorTerminalBlockMechanicChannel)
-        and getattr(channel, "valveState", None) is not None
     )
 
     # Handle smoke detector extended sensors (e.g., HmIP-SWSD-2)
@@ -883,38 +874,6 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         # thermal actuator channels report no valveState, they need no adaption
         valve_state = getattr(self._valve_channel(), "valveState", None)
         return valve_state is not None and valve_state != ValveState.ADAPTION_DONE
-
-
-class HomematicipFloorTerminalBlockMechanicChannelValveState(
-    HomematicipGenericEntity, SensorEntity
-):
-    """Representation of the HomematicIP floor terminal block valve state."""
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "valve_state"
-    _attr_options = VALVE_STATE_VALUES
-
-    def __init__(
-        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
-    ) -> None:
-        """Initialize the floor terminal block valve state sensor."""
-        super().__init__(
-            hap,
-            device,
-            channel=channel,
-            channel_real_index=channel,
-            is_multi_channel=is_multi_channel,
-            post="Valve State",
-            feature_id="ftb_valve_state",
-        )
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the floor terminal block valve state."""
-        valve_state = self.get_channel_or_raise().valveState
-        return valve_state.name.lower() if valve_state is not None else None
 
 
 class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
