@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast, override
 
-from google_health_api.model import PairedDevice
+from google_health_api.model import ActiveZoneMinutesRollupValue, PairedDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -76,6 +76,23 @@ def _total_active_zone_minutes(data: GoogleHealthActivityData | None) -> int:
         + (azm.sum_in_cardio_heart_zone or 0)
         + (azm.sum_in_peak_heart_zone or 0)
     )
+
+
+def _active_zone_minutes(
+    data: GoogleHealthActivityData | None,
+    getter: Callable[[ActiveZoneMinutesRollupValue], int | None],
+) -> int:
+    """Return daily active zone minutes for a specific heart rate zone."""
+    if data and data.active_zone_minutes:
+        return getter(data.active_zone_minutes) or 0
+    return 0
+
+
+def _sedentary_minutes(data: GoogleHealthActivityData | None) -> float:
+    """Return daily sedentary duration in minutes."""
+    if data and data.sedentary_period and data.sedentary_period.duration_sum:
+        return data.sedentary_period.duration_sum.total_seconds() / 60.0
+    return 0.0
 
 
 def _sleep_stage_minutes(
@@ -183,7 +200,7 @@ ACTIVITY_SENSORS: list[
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: (
             data.altitude.gain_millimeters_sum / 1000.0
-            if data and data.altitude and data.altitude.gain_millimeters_sum is not None
+            if data and data.altitude and data.altitude.gain_millimeters_sum
             else 0.0
         ),
     ),
@@ -226,23 +243,15 @@ ACTIVITY_SENSORS: list[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: (
-            data.sedentary_period.duration_sum.total_seconds() / 60.0
-            if data
-            and data.sedentary_period
-            and data.sedentary_period.duration_sum is not None
-            else 0.0
-        ),
+        value_fn=_sedentary_minutes,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="fat_burn_active_zone_minutes",
         translation_key="fat_burn_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: (
-            data.active_zone_minutes.sum_in_fat_burn_heart_zone or 0
-            if data and data.active_zone_minutes
-            else 0
+        value_fn=lambda data: _active_zone_minutes(
+            data, lambda azm: azm.sum_in_fat_burn_heart_zone
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
@@ -250,10 +259,8 @@ ACTIVITY_SENSORS: list[
         translation_key="cardio_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: (
-            data.active_zone_minutes.sum_in_cardio_heart_zone or 0
-            if data and data.active_zone_minutes
-            else 0
+        value_fn=lambda data: _active_zone_minutes(
+            data, lambda azm: azm.sum_in_cardio_heart_zone
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
@@ -261,10 +268,8 @@ ACTIVITY_SENSORS: list[
         translation_key="peak_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: (
-            data.active_zone_minutes.sum_in_peak_heart_zone or 0
-            if data and data.active_zone_minutes
-            else 0
+        value_fn=lambda data: _active_zone_minutes(
+            data, lambda azm: azm.sum_in_peak_heart_zone
         ),
     ),
 ]

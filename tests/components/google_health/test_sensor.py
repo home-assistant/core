@@ -12,6 +12,7 @@ from google_health_api.model import (
     ActiveMinutesRollupValue,
     ActiveZoneMinutesRollupValue,
     AltitudeRollupValue,
+    DailyRollupDataPoint,
     ListPairedDevicesResult,
     NutrientQuantityRollup,
     NutritionLogRollupValue,
@@ -156,42 +157,35 @@ async def test_sensor_activity_partial_rollup(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test activity sensors when rollups contain only a subset of fields and levels."""
-    altitude_rollup = _rollup_fixture("altitude.json", AltitudeRollupValue, "altitude")
-    assert altitude_rollup is not None
-    altitude_rollup.data = AltitudeRollupValue()
-    mock_google_health_client.altitude.today.return_value = altitude_rollup
-
-    active_minutes_rollup = _rollup_fixture(
-        "active_minutes.json", ActiveMinutesRollupValue, "activeMinutes"
+    mock_google_health_client.altitude.today.return_value = DailyRollupDataPoint(
+        data=AltitudeRollupValue(), civil_start_time=None, civil_end_time=None
     )
-    assert active_minutes_rollup is not None
-    active_minutes_rollup.data = ActiveMinutesRollupValue(
-        active_minutes_rollup_by_activity_level=[
-            ActiveMinutesRollupByActivityLevel(
-                activity_level="MODERATE",
-                active_minutes_sum=20,
-            )
-        ]
+    mock_google_health_client.active_minutes.today.return_value = DailyRollupDataPoint(
+        data=ActiveMinutesRollupValue(
+            active_minutes_rollup_by_activity_level=[
+                ActiveMinutesRollupByActivityLevel(
+                    activity_level="MODERATE",
+                    active_minutes_sum=20,
+                )
+            ]
+        ),
+        civil_start_time=None,
+        civil_end_time=None,
     )
-    mock_google_health_client.active_minutes.today.return_value = active_minutes_rollup
-
-    azm_rollup = _rollup_fixture(
-        "active_zone_minutes.json",
-        ActiveZoneMinutesRollupValue,
-        "activeZoneMinutes",
+    mock_google_health_client.active_zone_minutes.today.return_value = (
+        DailyRollupDataPoint(
+            data=ActiveZoneMinutesRollupValue(sum_in_fat_burn_heart_zone=12),
+            civil_start_time=None,
+            civil_end_time=None,
+        )
     )
-    assert azm_rollup is not None
-    azm_rollup.data = ActiveZoneMinutesRollupValue(sum_in_fat_burn_heart_zone=12)
-    mock_google_health_client.active_zone_minutes.today.return_value = azm_rollup
-
-    sedentary_rollup = _rollup_fixture(
-        "sedentary_period.json",
-        SedentaryPeriodRollupValue,
-        "sedentaryPeriod",
+    mock_google_health_client.sedentary_period.today.return_value = (
+        DailyRollupDataPoint(
+            data=SedentaryPeriodRollupValue(),
+            civil_start_time=None,
+            civil_end_time=None,
+        )
     )
-    assert sedentary_rollup is not None
-    sedentary_rollup.data = SedentaryPeriodRollupValue()
-    mock_google_health_client.sedentary_period.today.return_value = sedentary_rollup
 
     assert await integration_setup()
 
