@@ -3424,6 +3424,41 @@ async def test_update_device_settings_enable_without_entities(
     assert device_registry.async_get(device.id).disabled_by is None
 
 
+async def test_update_device_settings_enable_parent_with_child_entities(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the note when only a child device of the enabled device has entities."""
+    parent, child = _create_parent_and_child(hass, device_registry)
+    entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet_1",
+        config_entry=hass.config_entries.async_get_entry(parent.config_entry_id),
+        device_id=child.id,
+    )
+    device_registry.async_update_device(
+        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get(child.id).disabled_by is (
+        dr.DeviceEntryDisabler.DEVICE
+    )
+    assert entity_registry.async_get(entity.entity_id).disabled_by is (
+        er.RegistryEntryDisabler.DEVICE
+    )
+
+    tool = UpdateDeviceSettingsTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"device_id": parent.id, "disabled_by": None}),
+        llm_context,
+    )
+    assert "note" in result.data["result"]
+
+
 async def test_update_device_settings_enable_disabled_config_entry(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,

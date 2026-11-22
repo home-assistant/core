@@ -2065,11 +2065,18 @@ class UpdateDeviceSettingsTool(Tool):
                     f"The parent device '{device.parent_device_id}' is disabled. "
                     "Enable the parent device first."
                 )
-        # Enabling the device enables these entities, which reloads the integration
+        # Enabling the device enables these entities and the child devices that it
+        # disabled, which reloads the integration
+        device_ids = [device_id] + [
+            child.id
+            for child in dr.async_entries_for_parent_device(registry, device_id)
+            if child.disabled_by is dr.DeviceEntryDisabler.DEVICE
+        ]
         entities_to_enable = enabling and any(
             entity.disabled_by is er.RegistryEntryDisabler.DEVICE
+            for enabled_device_id in device_ids
             for entity in er.async_entries_for_device(
-                er.async_get(hass), device_id, include_disabled_entities=True
+                er.async_get(hass), enabled_device_id, include_disabled_entities=True
             )
         )
         updated: dr.AnyDeviceEntry | None
