@@ -40,10 +40,7 @@ rules:
     status: exempt
     comment: |
       No explicit parallel updates are defined.
-  reauthentication-flow:
-    status: todo
-    comment: |
-      No reauthentication flow is defined. It will be done in a next iteration.
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
