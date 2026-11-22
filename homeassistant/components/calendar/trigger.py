@@ -1,6 +1,7 @@
 """Offer calendar automation rules."""
 
 import asyncio
+from collections import Counter
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import datetime as dt
@@ -398,6 +399,9 @@ class CalendarEventListener:
         now = dt_util.as_local(now_utc)
         _LOGGER.debug("Refresh events @ %s", now)
         async with self._lock:
+            # Detached while waiting for the lock
+            if self._unsub_refresh is None:
+                return
             # Dispatch any eligible events in the boundary case where refresh
             # fires before the calendar event.
             self._dispatch_events(now)
@@ -418,11 +422,7 @@ class CalendarEventListener:
             if self._detached:
                 return
             # Events that fired can have moved into this window
-            self._events.extend(
-                queued_event
-                for queued_event in events
-                if not self._already_fired(queued_event)
-            )
+            self._events.extend(self._drop_already_fired(events))
             self._listen_next_calendar_event()
 
     @callback
@@ -431,9 +431,18 @@ class CalendarEventListener:
         self._pending_refetch.add(entity_id)
         self._entity_debouncers[entity_id].async_schedule_call()
 
-    def _already_fired(self, queued_event: QueuedCalendarEvent) -> bool:
-        """Return if the occurrence of a queued event has already fired."""
-        return queued_event.occurrence_key in self._dispatched
+    def _drop_already_fired(
+        self, events: list[QueuedCalendarEvent]
+    ) -> list[QueuedCalendarEvent]:
+        """Drop fetched events whose occurrence has already fired."""
+        # A key returned more than once can't be matched to one occurrence
+        key_counts = Counter(queued_event.occurrence_key for queued_event in events)
+        return [
+            queued_event
+            for queued_event in events
+            if key_counts[queued_event.occurrence_key] > 1
+            or queued_event.occurrence_key not in self._dispatched
+        ]
 
     async def _async_refetch_entity(self, entity_id: str) -> None:
         """Replace the upcoming queued events of a calendar with fresh ones."""
@@ -464,24 +473,21 @@ class CalendarEventListener:
         self, entity_id: str, events: list[QueuedCalendarEvent]
     ) -> None:
         """Replace the upcoming queued events of a calendar."""
-        # Events due by now are left alone, as they may already have fired
         now_utc = dt_util.utcnow()
+        # Fire what is due first, so a moved version counts it as fired
+        self._dispatch_events(now_utc)
         kept = [
             queued_event
             for queued_event in self._events
             if queued_event.entity_id != entity_id
-            or queued_event.trigger_time_utc <= now_utc
         ]
         kept.extend(
             queued_event
-            for queued_event in events
+            for queued_event in self._drop_already_fired(events)
             if queued_event.trigger_time_utc > now_utc
-            and not self._already_fired(queued_event)
         )
         kept.sort(key=lambda x: x.trigger_time_utc)
         self._events = kept
-        now = dt_util.as_local(now_utc)
-        self._dispatch_events(now)
         self._clear_event_listener()
         self._listen_next_calendar_event()
 

@@ -1010,6 +1010,45 @@ async def test_event_moved_later_after_firing(
     assert calls_data() == expected
 
 
+async def test_events_sharing_uid_fire_once_each(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test events sharing a uid without a recurrence id each fire once."""
+    test_entity._attr_should_poll = False
+    event_data1 = test_entity.create_event(
+        start=_test_time("10:35:00"),
+        end=_test_time("10:36:00"),
+        summary="Stop A",
+        uid="trip",
+    )
+    event_data2 = test_entity.create_event(
+        start=_test_time("10:37:00"),
+        end=_test_time("10:38:00"),
+        summary="Stop B",
+        uid="trip",
+    )
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:36:00"))
+
+        test_entity.async_write_ha_state()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
+    ]
+
+
 class BlockedFetch:
     """Hold the next event fetch of a calendar until released."""
 
@@ -1064,6 +1103,49 @@ async def test_event_moved_during_refetch(
         fake_schedule.freezer.tick(dt.timedelta(seconds=2))
         async_fire_time_changed(hass)
         await asyncio.sleep(0)
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_refetch_finishing_after_old_time(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test a refetch finishing after the old time but before its alarm fires once."""
+    test_entity._attr_should_poll = False
+    event_data = test_entity.create_event(
+        start=_test_time("10:35:00"),
+        end=_test_time("10:36:00"),
+        summary="Departure",
+        uid="departure",
+    )
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:34:00"))
+
+        test_entity.remove_event("Departure")
+        test_entity.create_event(
+            start=_test_time("10:37:00"),
+            end=_test_time("10:38:00"),
+            summary="Departure",
+            uid="departure",
+        )
+        blocked = BlockedFetch(test_entity)
+        test_entity.async_write_ha_state()
+        await blocked.started.wait()
+
+        # The old time passes before the alarm for it runs
+        fake_schedule.freezer.move_to(_test_time("10:35:01"))
         blocked.release.set()
         await hass.async_block_till_done()
 
