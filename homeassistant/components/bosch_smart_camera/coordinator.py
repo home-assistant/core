@@ -99,16 +99,21 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
-        # A response that predates a write must not undo it.
+        # A response that predates a write must not undo it, even when it omits
+        # the state of a camera that is still listed.
+        listed = {camera.id for camera in cameras}
         for (camera_id, field), written in self._written_at.items():
             if (
-                written > started
-                and camera_id in states
-                and (cached := self.account_states.get(camera_id)) is not None
+                written <= started
+                or (cached := self.account_states.get(camera_id)) is None
             ):
+                continue
+            if camera_id in states:
                 states[camera_id] = replace(
                     states[camera_id], **{field: getattr(cached, field)}
                 )
+            elif camera_id in listed:
+                states[camera_id] = cached
         self.account_states = states
         self._written_at = {
             key: written

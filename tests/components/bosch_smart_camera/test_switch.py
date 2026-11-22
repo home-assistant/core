@@ -226,6 +226,38 @@ async def test_poll_during_write_keeps_other_fields_of_the_poll(
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
+async def test_poll_omitting_a_written_camera_keeps_the_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that predates a write and omits the camera keeps the write."""
+    await setup_integration(hass, mock_config_entry)
+    release = asyncio.Event()
+
+    async def slow_states(*args: object, **kwargs: object) -> dict:
+        await release.wait()
+        return {}
+
+    mock_account_states.side_effect = slow_states
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_OFF
+
+
 async def test_camera_removed_during_write(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
