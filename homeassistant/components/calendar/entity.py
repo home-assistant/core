@@ -230,8 +230,7 @@ class CalendarEntity(Entity):
         # Notify websocket subscribers of event changes (debounced)
         if self._event_listeners and self._event_listener_debouncer:
             self._event_listener_debouncer.async_schedule_call()
-        # Calendar triggers re-read their queued events, since events can
-        # change without changing the state.
+        # Events can change without a state change; triggers re-read them
         async_dispatcher_send_internal(
             self.hass, SIGNAL_CALENDAR_STATE_WRITTEN.format(self.entity_id)
         )
