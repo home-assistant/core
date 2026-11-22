@@ -441,13 +441,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 )
             return devices
 
-        if self._post_write_cooldown_remaining() is not None:
-            self.update_interval = _POST_WRITE_COOLDOWN
+        if (remaining := self._post_write_cooldown_remaining()) is not None:
+            self.update_interval = remaining
             if not self.last_update_success:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="refresh_deferred",
-                    retry_after=_POST_WRITE_COOLDOWN.total_seconds(),
+                    retry_after=remaining.total_seconds(),
                 )
         else:
             # Restore the normal polling interval before fetching. If the

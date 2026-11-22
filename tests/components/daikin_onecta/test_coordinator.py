@@ -1222,19 +1222,30 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._async_get_cloud_devices.assert_awaited_once_with()
         assert coordinator.update_interval == timedelta(seconds=30)
 
+    @pytest.mark.parametrize(
+        ("elapsed", "expected_interval"),
+        [
+            pytest.param(1, timedelta(seconds=29), id="near-start"),
+            pytest.param(29, timedelta(seconds=1), id="near-expiry"),
+        ],
+    )
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_recent_write_skips_cloud_polling(
         self,
         mock_utcnow: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        elapsed: int,
+        expected_interval: timedelta,
     ) -> None:
-        """Use the configured cooldown before polling after a recent write."""
+        """Schedule the next poll for the remaining post-write cooldown."""
         mock_utcnow.return_value = datetime(2023, 1, 1, 12, 0)
-        coordinator._last_patch_call = mock_utcnow.return_value - timedelta(seconds=1)
+        coordinator._last_patch_call = mock_utcnow.return_value - timedelta(
+            seconds=elapsed
+        )
         coordinator._async_get_cloud_devices = AsyncMock()
 
         assert await coordinator._async_update_data() == {}
-        assert coordinator.update_interval == timedelta(seconds=30)
+        assert coordinator.update_interval == expected_interval
         coordinator._async_get_cloud_devices.assert_not_awaited()
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")

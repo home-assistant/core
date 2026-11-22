@@ -72,7 +72,7 @@ def _native_unit(unit: str | None, description: SensorEntityDescription) -> str 
         if description.device_class == SensorDeviceClass.TEMPERATURE:
             return UnitOfTemperature(unit)
     except ValueError:
-        return unit
+        return description.native_unit_of_measurement
     return unit
 
 

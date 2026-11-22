@@ -408,18 +408,18 @@ def test_energy_sensor_uses_daikin_unit(
 @pytest.mark.parametrize(
     ("unit", "description", "expected"),
     [
-        ("not-a-unit", SENSOR_DESCRIPTIONS["roomTemperature"], "not-a-unit"),
+        ("not-a-unit", SENSOR_DESCRIPTIONS["roomTemperature"], "°C"),
         (
             "not-a-unit",
             SENSOR_DESCRIPTIONS["HeatingDailyElectricalConsumption"],
-            "not-a-unit",
+            "kWh",
         ),
     ],
 )
-def test_sensor_preserves_unknown_native_unit(
+def test_sensor_falls_back_for_unknown_native_unit(
     unit: str, description: SensorEntityDescription, expected: str
 ) -> None:
-    """Pass through Daikin unit strings that HA does not recognize."""
+    """Use the entity-description unit when Daikin reports an unknown unit."""
     assert _native_unit(unit, description) == expected
 
 
