@@ -985,8 +985,8 @@
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
@@ -1033,8 +1033,8 @@
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',

@@ -178,6 +178,7 @@ async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
     device = SimpleNamespace(
         device=SimpleNamespace(management_points=[management_point]),
         present_in_cloud=True,
+        gateway_online=True,
     )
     coordinator = SimpleNamespace(
         data={"gateway": device},

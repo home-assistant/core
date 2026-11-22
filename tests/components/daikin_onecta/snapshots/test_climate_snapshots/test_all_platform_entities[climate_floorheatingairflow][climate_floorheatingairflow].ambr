@@ -1480,8 +1480,8 @@
             <HVACMode.HEAT_COOL: 'heat_cool'>,
             <HVACMode.DRY: 'dry'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
@@ -1551,8 +1551,8 @@
             <HVACMode.HEAT_COOL: 'heat_cool'>,
             <HVACMode.DRY: 'dry'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
@@ -1608,8 +1608,8 @@
             <HVACMode.HEAT_COOL: 'heat_cool'>,
             <HVACMode.DRY: 'dry'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
@@ -1675,8 +1675,8 @@
             <HVACMode.HEAT_COOL: 'heat_cool'>,
             <HVACMode.DRY: 'dry'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',

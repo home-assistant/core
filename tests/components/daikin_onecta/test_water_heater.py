@@ -372,7 +372,7 @@ async def test_water_heater_rejects_heat_pump_with_read_only_performance_mode(
             blocking=True,
         )
 
-    assert err.value.translation_key == "water_heater_operation_mode_unavailable"
+    assert err.value.translation_key == "not_valid_operation_mode"
     execute.assert_not_awaited()
 
 

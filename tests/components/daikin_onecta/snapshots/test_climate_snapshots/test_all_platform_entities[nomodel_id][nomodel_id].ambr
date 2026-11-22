@@ -642,8 +642,8 @@
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
@@ -688,8 +688,8 @@
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
@@ -719,8 +719,8 @@
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
@@ -765,8 +765,8 @@
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',

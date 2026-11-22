@@ -593,8 +593,8 @@
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20.0,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -634,8 +634,8 @@
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.HEAT: 'heat'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20.0,
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 0>,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
