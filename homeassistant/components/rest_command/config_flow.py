@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PAYLOAD,
@@ -59,7 +60,6 @@ from . import (
     merge_command_config,
 )
 from .const import (
-    CONF_ACTION,
     CONF_CONTENT_TYPE,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
@@ -153,10 +153,6 @@ COMMAND_FIELDS_SCHEMA = {
     ),
 }
 
-USER_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_ACTION): TextSelector(), **COMMAND_FIELDS_SCHEMA}
-)
-
 # Shown in the form texts; braces cannot be used in translations directly
 DESCRIPTION_PLACEHOLDERS = {
     "example_url": "http://192.168.1.10",
@@ -188,7 +184,6 @@ def _validate(
     ):
         return {"base": "invalid_command"}
     config = merge_command_config(server, command or {})
-    config.pop(CONF_ACTION, None)
     try:
         COMMAND_SCHEMA(config)
     except probatio.Invalid:
@@ -253,6 +248,10 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
 class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
     """Flow to add or change a REST command."""
 
+    USER_SCHEMA = probatio.Schema(
+        {probatio.Required(CONF_NAME): TextSelector(), **COMMAND_FIELDS_SCHEMA}
+    )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -268,26 +267,28 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             path = user_input.get(CONF_PATH, "")
             if path and not path.startswith("/"):
                 user_input[CONF_PATH] = f"/{path}"
-            action = user_input[CONF_ACTION] = user_input[CONF_ACTION].strip()
+            name = user_input.pop(CONF_NAME).strip()
+            # The action is made from the name again on setup, see __init__.py
+            action = slugify(name)
             placeholders["action"] = f"{DOMAIN}.{action}"
-            # The action name is used as written, so it must already be a slug
-            if action in ("", "unknown", SERVICE_RELOAD) or action != slugify(action):
-                errors[CONF_ACTION] = "invalid_action"
+            if action in ("", "unknown", SERVICE_RELOAD):
+                errors[CONF_NAME] = "invalid_name"
             elif self.hass.services.has_service(DOMAIN, action) or any(
-                subentry.data[CONF_ACTION] == action
+                slugify(subentry.title) == action
                 for other in self.hass.config_entries.async_entries(DOMAIN)
                 for subentry in other.subentries.values()
             ):
-                errors[CONF_ACTION] = "action_exists"
+                errors[CONF_NAME] = "action_exists"
             else:
                 errors = _validate(dict(entry.data), user_input)
             if not errors:
-                return self.async_create_entry(title=action, data=user_input)
+                return self.async_create_entry(title=name, data=user_input)
+            user_input[CONF_NAME] = name
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                USER_SCHEMA, user_input or {}
+                self.USER_SCHEMA, user_input or {}
             ),
             description_placeholders=placeholders,
             errors=errors,

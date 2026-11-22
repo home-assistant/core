@@ -5,7 +5,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
@@ -20,12 +20,12 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import (
-    CONF_ACTION,
     CONF_CONTENT_TYPE,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
@@ -123,34 +123,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) 
     # The actions this entry registered, so reloading YAML leaves them alone
     entry.runtime_data = set()
     for subentry in entry.subentries.values():
+        # Made from the title, so renaming the command also renames the action
+        name = slugify(subentry.title)
         command_config = merge_command_config(entry.data, subentry.data)
-        name: str = command_config.pop(CONF_ACTION)
+        placeholders = {"action": f"{DOMAIN}.{name}", "server": entry.title}
         issue_id = f"invalid_command_{subentry.subentry_id}"
         try:
             validated = COMMAND_SCHEMA(command_config)
         except probatio.Invalid as err:
             # One broken command must not take the other commands down with it
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                config_entry_id=entry.entry_id,
-                config_subentry_id=subentry.subentry_id,
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="invalid_command",
-                translation_placeholders={
-                    "action": f"{DOMAIN}.{name}",
-                    "server": entry.title,
-                    "error": str(err),
-                },
+            _async_create_issue(
+                hass, entry, subentry, "invalid_command", error=str(err), **placeholders
             )
+            continue
+        if name in ("", "unknown") or hass.services.has_service(DOMAIN, name):
+            _async_create_issue(hass, entry, subentry, "action_in_use", **placeholders)
             continue
         ir.async_delete_issue(hass, DOMAIN, issue_id)
         entry.async_on_unload(async_register_rest_command(hass, name, validated))
         entry.runtime_data.add(name)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+
+@callback
+def _async_create_issue(
+    hass: HomeAssistant,
+    entry: RestCommandConfigEntry,
+    subentry: ConfigSubentry,
+    translation_key: str,
+    **placeholders: str,
+) -> None:
+    """Tell the user a command could not be set up."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"invalid_command_{subentry.subentry_id}",
+        config_entry_id=entry.entry_id,
+        config_subentry_id=subentry.subentry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+    )
 
 
 async def async_unload_entry(

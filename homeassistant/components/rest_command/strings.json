@@ -57,8 +57,8 @@
       "entry_type": "Command",
       "error": {
         "action_exists": "The action {action} already exists. Choose another name.",
-        "invalid_action": "Use only lowercase letters, numbers and underscores. The names reload and unknown are reserved.",
-        "invalid_command": "The command is not valid. Check that the header values are text or valid templates."
+        "invalid_command": "The command is not valid. Check that the header values are text or valid templates.",
+        "invalid_name": "Enter a name with at least one letter or number. The name Reload is reserved."
       },
       "initiate_flow": {
         "user": "Add command"
@@ -66,14 +66,14 @@
       "step": {
         "user": {
           "data": {
-            "action": "Action name",
             "method": "Method",
+            "name": "[%key:common::config_flow::data::name%]",
             "path": "[%key:common::config_flow::data::path%]",
             "payload": "Payload"
           },
           "data_description": {
-            "action": "Name of the action, in lowercase letters, numbers and underscores, for example open_garage_door. You use it in automations as rest_command.open_garage_door. It cannot be changed later.",
             "method": "HTTP method of the request. GET reads data, POST sends data. PUT, PATCH and DELETE are used by some APIs to change or remove something.",
+            "name": "Name of the command, for example Open garage door. The action is made from it, like rest_command.open_garage_door, which you use in automations. Renaming the command later also renames the action.",
             "path": "Added to the server address {url}, for example `{example_path}`. A leading / is added when it is missing. Can be a template. Leave empty to use the server address as it is.",
             "payload": "Body of the request, usually used with POST, PUT or PATCH. Can be a template, for example `{example_payload}`. Leave empty to send no body."
           },
@@ -111,6 +111,10 @@
     }
   },
   "issues": {
+    "action_in_use": {
+      "description": "The command {action} of {server} could not be set up, because another command or a YAML command already uses this action.\n\nGo to Settings > Devices & services > RESTful Command and rename one of the commands.",
+      "title": "RESTful Command action {action} is already in use"
+    },
     "invalid_command": {
       "description": "The command {action} of {server} could not be set up, so the action is not available: {error}.\n\nThis can happen when its saved settings are no longer valid after an update. Go to Settings > Devices & services > RESTful Command, delete the command and add it again.",
       "title": "RESTful Command {action} is not valid"

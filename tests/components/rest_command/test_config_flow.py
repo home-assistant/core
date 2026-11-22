@@ -37,7 +37,7 @@ SERVER_DATA = {
 }
 
 COMMAND_INPUT = {
-    "action": "open_door",
+    "name": "Open door",
     "path": "door/{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
@@ -45,14 +45,13 @@ COMMAND_INPUT = {
 }
 
 COMMAND_DATA = {
-    "action": "open_door",
     "path": "/door/{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
     "additional": {"content_type": "application/json", "skip_url_encoding": False},
 }
 
-NEW_COMMAND_INPUT = {"action": "new_command", "method": "get", "additional": {}}
+NEW_COMMAND_INPUT = {"name": "New command", "method": "get", "additional": {}}
 
 
 @pytest.fixture
@@ -66,7 +65,7 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             ConfigSubentryData(
                 data=COMMAND_DATA,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
-                title="open_door",
+                title="Open door",
             )
         ],
     )
@@ -109,7 +108,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "open_door"
+    assert result["title"] == "Open door"
     assert result["data"] == COMMAND_DATA
     assert result["unique_id"] is None
     assert hass.services.has_service(DOMAIN, "open_door")
@@ -167,10 +166,10 @@ async def test_server_already_configured(
 @pytest.mark.parametrize(
     ("user_input", "errors"),
     [
-        ({"action": " "}, {"action": "invalid_action"}),
-        ({"action": "reload"}, {"action": "invalid_action"}),
-        ({"action": "Open door"}, {"action": "invalid_action"}),
-        ({"action": "open_door"}, {"action": "action_exists"}),
+        ({"name": " "}, {"name": "invalid_name"}),
+        ({"name": "!!"}, {"name": "invalid_name"}),
+        ({"name": "Reload"}, {"name": "invalid_name"}),
+        ({"name": "Open door"}, {"name": "action_exists"}),
         ({"additional": {"headers": ["X-Door"]}}, {"base": "invalid_command"}),
         (
             {"additional": {"headers": {"X-Door": "{{ door"}}},
@@ -230,10 +229,10 @@ async def test_action_from_yaml_exists(
     )
     result = await _start_subentry_flow(hass, entry)
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {**NEW_COMMAND_INPUT, "action": "from_yaml"}
+        result["flow_id"], {**NEW_COMMAND_INPUT, "name": "From YAML"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"action": "action_exists"}
+    assert result["errors"] == {"name": "action_exists"}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], NEW_COMMAND_INPUT

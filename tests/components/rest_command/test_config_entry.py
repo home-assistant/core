@@ -28,7 +28,7 @@ def _entry(
         data={"url": SERVER_URL, **(server or {})},
         subentries_data=[
             ConfigSubentryData(
-                data={"action": action, **command},
+                data=command,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
                 title=action,
             )
@@ -110,9 +110,7 @@ async def test_invalid_stored_command(
     assert not hass.services.has_service(DOMAIN, "broken")
     assert hass.services.has_service(DOMAIN, "working")
     broken = next(
-        subentry
-        for subentry in entry.subentries.values()
-        if subentry.data["action"] == "broken"
+        subentry for subentry in entry.subentries.values() if subentry.title == "broken"
     )
     issue_id = f"invalid_command_{broken.subentry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
@@ -130,9 +128,7 @@ async def test_reload_keeps_ui_commands(hass: HomeAssistant) -> None:
     entry = _entry(from_ui={"path": "/ui"})
     entry.add_to_hass(hass)
     assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: {"from_yaml": {"url": TEST_URL}, "from_ui": {"url": TEST_URL}}},
+        hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
     )
     await hass.async_block_till_done()
 
@@ -170,3 +166,32 @@ async def test_reload_replaces_yaml_command_over_invalid_ui_command(
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
     assert not hass.services.has_service(DOMAIN, "shared")
+
+
+async def test_action_in_use(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a command whose action is already in use raises a repair issue."""
+    entry = _entry(**{"From YAML": {"path": "/ui"}, "Open door": {}})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data == {"open_door"}
+    subentry = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.title == "From YAML"
+    )
+    issue_id = f"invalid_command_{subentry.subentry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "action_in_use"
+
+    # Renaming the command registers the new action and removes the issue
+    hass.config_entries.async_update_subentry(entry, subentry, title="From UI")
+    await hass.async_block_till_done()
+    assert entry.runtime_data == {"open_door", "from_ui"}
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
