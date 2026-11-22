@@ -421,7 +421,10 @@ async def test_unauthenticated_probe_does_not_notify(
     assert response.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
     assert "http-login" not in async_get_persistent_notifications(hass)
-    assert "Login attempt or request with invalid authentication from example.com" in caplog.text
+    assert (
+        "Login attempt or request with invalid authentication from example.com"
+        in caplog.text
+    )
     assert "Requested URL: '/api/config'" in caplog.text
 
 
