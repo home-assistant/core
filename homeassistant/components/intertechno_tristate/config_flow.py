@@ -146,6 +146,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"G {self._device_data[CONF_GROUP]} "
                     f"CH {self._device_data[CONF_CHANNEL]}"
                 )
+                self._async_abort_entries_match(self._device_data)
                 return self.async_create_entry(
                     title=title,
                     data=self._device_data,
@@ -196,6 +197,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
+                    probatio.In(range(ITTristateCommand.MIN_GROUP, ITTristateCommand.MAX_GROUP + 1))
                     probatio.Coerce(int),
                 ),
                 probatio.Required(
@@ -207,6 +209,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
+                    probatio.In(range(ITTristateCommand.MIN_CHANNEL, ITTristateCommand.MAX_CHANNEL + 1)),
                     probatio.Coerce(int),
                 ),
             }
