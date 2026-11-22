@@ -1,6 +1,5 @@
 """LLM tools for the config integration."""
 
-from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
@@ -1203,97 +1202,6 @@ class UpdateCoreConfigTool(Tool):
         return ToolResult(data={"result": _format_core_config(hass)})
 
 
-class _GetRegistrySettingsTool(Tool):
-    """Base LLM Tool to get the settings of a registry item."""
-
-    id_key: str
-    annotations = ToolAnnotations(
-        read_only=True, destructive=False, idempotent=True, open_world=False
-    )
-    integration = DOMAIN
-
-    @abstractmethod
-    def _get_settings(self, hass: HomeAssistant, item_id: str) -> JsonObjectType:
-        """Return the settings of the item.
-
-        Raises HomeAssistantError with a message for the LLM.
-        """
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> ToolResult:
-        """Get the settings."""
-        args = self.parameters(tool_input.tool_args)
-        try:
-            result = self._get_settings(hass, args[self.id_key])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
-        return ToolResult(data={"result": result})
-
-
-class _UpdateRegistrySettingsTool(Tool):
-    """Base LLM Tool to update the settings of a registry item."""
-
-    id_key: str
-    annotations = ToolAnnotations(
-        read_only=False, destructive=True, idempotent=True, open_world=False
-    )
-    integration = DOMAIN
-
-    @abstractmethod
-    def _update_settings(
-        self, hass: HomeAssistant, item_id: str, settings: dict[str, Any]
-    ) -> JsonObjectType:
-        """Update the settings of the item and return the new settings.
-
-        Raises HomeAssistantError with a message for the LLM.
-        """
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> ToolResult:
-        """Update the settings."""
-        args = self.parameters(tool_input.tool_args)
-        item_id = args.pop(self.id_key)
-        try:
-            result = self._update_settings(hass, item_id, args)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
-        return ToolResult(data={"result": result})
-
-
-class _RemoveRegistryItemTool(Tool):
-    """Base LLM Tool to remove a registry item."""
-
-    id_key: str
-    annotations = ToolAnnotations(
-        read_only=False, destructive=True, idempotent=True, open_world=False
-    )
-    integration = DOMAIN
-
-    @abstractmethod
-    def _remove(self, hass: HomeAssistant, item_id: str) -> None:
-        """Remove the item.
-
-        Raises HomeAssistantError with a message for the LLM.
-        """
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> ToolResult:
-        """Remove the item."""
-        args = self.parameters(tool_input.tool_args)
-        item_id = args[self.id_key]
-        try:
-            self._remove(hass, item_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
-        return ToolResult(data={"result": {self.id_key: item_id}})
-
-
 def _get_entity_entry(hass: HomeAssistant, entity_id: str) -> er.RegistryEntry:
     """Return the registry entry of an entity."""
     if (entry := er.async_get(hass).async_get(entity_id)) is None:
@@ -1329,7 +1237,7 @@ def _format_entity_settings(
 _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
 
 
-class GetEntitySettingsTool(_GetRegistrySettingsTool):
+class GetEntitySettingsTool(Tool):
     """LLM Tool to get the settings of an entity."""
 
     name = "config__get_entity_settings"
@@ -1338,16 +1246,26 @@ class GetEntitySettingsTool(_GetRegistrySettingsTool):
         "Get the settings of the entity with the given entity_id. Use "
         "search__search to find the entity_id."
     )
-    id_key = "entity_id"
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
     parameters = probatio.Schema({probatio.Required("entity_id"): _NON_EMPTY_STRING})
 
     @override
-    def _get_settings(self, hass: HomeAssistant, item_id: str) -> JsonObjectType:
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
         """Return the settings of the entity."""
-        return _format_entity_settings(hass, _get_entity_entry(hass, item_id))
+        args = self.parameters(tool_input.tool_args)
+        try:
+            entry = _get_entity_entry(hass, args["entity_id"])
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": _format_entity_settings(hass, entry)})
 
 
-class UpdateEntitySettingsTool(_UpdateRegistrySettingsTool):
+class UpdateEntitySettingsTool(Tool):
     """LLM Tool to update the settings of an entity."""
 
     name = "config__update_entity_settings"
@@ -1356,7 +1274,10 @@ class UpdateEntitySettingsTool(_UpdateRegistrySettingsTool):
         "Update the settings of the entity with the given entity_id. Only the "
         "given settings change. Returns the new settings."
     )
-    id_key = "entity_id"
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
     parameters = probatio.Schema(
         {
             probatio.Required("entity_id"): _NON_EMPTY_STRING,
@@ -1422,21 +1343,24 @@ class UpdateEntitySettingsTool(_UpdateRegistrySettingsTool):
     )
 
     @override
-    def _update_settings(
-        self, hass: HomeAssistant, item_id: str, settings: dict[str, Any]
-    ) -> JsonObjectType:
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
         """Update the settings of the entity and return the new settings."""
-        entry = _get_entity_entry(hass, item_id)
+        settings = self.parameters(tool_input.tool_args)
+        entity_id = settings.pop("entity_id")
+        try:
+            entry = _get_entity_entry(hass, entity_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
-            raise HomeAssistantError(f"Area '{area_id}' not found.")
+            return _error_result(f"Area '{area_id}' not found.")
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
             if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                raise HomeAssistantError(
-                    f"Labels not found: {', '.join(sorted(missing))}"
-                )
+                return _error_result(f"Labels not found: {', '.join(sorted(missing))}")
         if settings.get("disabled_by"):
             settings["disabled_by"] = er.RegistryEntryDisabler.USER
         if settings.get("hidden_by"):
@@ -1449,14 +1373,13 @@ class UpdateEntitySettingsTool(_UpdateRegistrySettingsTool):
 
         was_disabled = entry.disabled_by is not None
         try:
-            entry = er.async_get(hass).async_update_entity(item_id, **settings)
+            entry = er.async_get(hass).async_update_entity(entity_id, **settings)
         except ValueError as err:
-            raise HomeAssistantError(str(err)) from err
+            return _error_result(str(err))
 
         result = _format_entity_settings(hass, entry)
         if was_disabled and entry.disabled_by is None:
-            # The integration adds an enabled entity only when its config entry
-            # reloads
+            # The integration adds an enabled entity only when its config entry reloads
             if not (config_entry_id := entry.config_entry_id) or (
                 (config_entry := hass.config_entries.async_get_entry(config_entry_id))
                 and not config_entry.supports_unload
@@ -1468,10 +1391,10 @@ class UpdateEntitySettingsTool(_UpdateRegistrySettingsTool):
                     f"{config_entries.RELOAD_AFTER_UPDATE_DELAY} seconds to add "
                     "the entity."
                 )
-        return result
+        return ToolResult(data={"result": result})
 
 
-class RemoveEntityTool(_RemoveRegistryItemTool):
+class RemoveEntityTool(Tool):
     """LLM Tool to remove an entity that its integration no longer provides."""
 
     name = "config__remove_entity"
@@ -1481,24 +1404,34 @@ class RemoveEntityTool(_RemoveRegistryItemTool):
         "of a removed device. To stop using an entity that is still provided, "
         "disable it with config__update_entity_settings."
     )
-    id_key = "entity_id"
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
     parameters = probatio.Schema({probatio.Required("entity_id"): _NON_EMPTY_STRING})
 
     @override
-    def _remove(self, hass: HomeAssistant, item_id: str) -> None:
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
         """Remove the entity."""
-        _get_entity_entry(hass, item_id)
+        entity_id = self.parameters(tool_input.tool_args)["entity_id"]
+        try:
+            _get_entity_entry(hass, entity_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
         # Like the UI, only a restored state shows that the integration no longer
         # provides the entity. A disabled entity has no state at all.
-        if (state := hass.states.get(item_id)) is None or not state.attributes.get(
+        if (state := hass.states.get(entity_id)) is None or not state.attributes.get(
             ATTR_RESTORED
         ):
-            raise HomeAssistantError(
-                f"Entity '{item_id}' is still provided by its integration, or is "
+            return _error_result(
+                f"Entity '{entity_id}' is still provided by its integration, or is "
                 "disabled. Only entities that their integration no longer provides "
                 "can be removed."
             )
-        er.async_get(hass).async_remove(item_id)
+        er.async_get(hass).async_remove(entity_id)
+        return ToolResult(data={"result": {"entity_id": entity_id}})
 
 
 @callback
