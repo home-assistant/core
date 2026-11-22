@@ -46,10 +46,10 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: The integration is cloud based and has no discovery.
+    comment: Vitesy devices can't be discovered on the local network.
   discovery:
     status: exempt
-    comment: The integration is cloud based and has no discovery.
+    comment: Vitesy devices can't be discovered on the local network.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

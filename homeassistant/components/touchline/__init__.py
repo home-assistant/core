@@ -2,7 +2,7 @@
 
 import logging
 
-from pytouchline_extended import PyTouchline
+from pytouchline_extended import PyTouchline, TouchlineError
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -20,6 +20,10 @@ def _fetch_devices(py_touchline: PyTouchline, host: str) -> list[PyTouchline]:
     for device_id in range(int(py_touchline.get_number_of_devices())):
         device = PyTouchline(id=device_id, url=host)
         device.update()
+        if device.get_controller_id() is None or device.get_device_id() is None:
+            raise ConfigEntryNotReady(
+                f"Touchline controller at {host} returned no ID for device {device_id}"
+            )
         devices.append(device)
     return devices
 
@@ -33,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) ->
     py_touchline = PyTouchline(url=host)
     try:
         devices = await hass.async_add_executor_job(_fetch_devices, py_touchline, host)
-    except (OSError, ConnectionError, TimeoutError) as err:
+    except TouchlineError as err:
         raise ConfigEntryNotReady(
             f"Error while connecting to Touchline controller at {host}"
         ) from err

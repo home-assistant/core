@@ -26,15 +26,9 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import A01_UPDATE_INTERVAL
-from homeassistant.components.roborock.services import (
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-    SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
-)
+from homeassistant.components.roborock.services import RoborockService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -43,8 +37,9 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    VacuumService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -169,8 +164,8 @@ async def test_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError, match="Invalid fan speed: some-mode"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "some-mode"},
+            VacuumService.SET_FAN_SPEED,
+            {TargetKey.ENTITY_ID: entity_id, "fan_speed": "some-mode"},
             blocking=True,
         )
 
@@ -211,7 +206,7 @@ async def test_resume_cleaning(
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_START,
+        VacuumService.START,
         data,
         blocking=True,
     )
@@ -232,7 +227,7 @@ async def test_failed_user_command(
     ):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            VacuumService.SEND_COMMAND,
             data,
             blocking=True,
         )
@@ -246,8 +241,8 @@ async def test_get_maps(
     """Test that the service for maps correctly outputs rooms with the right name."""
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        RoborockService.GET_MAPS,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -271,8 +266,8 @@ async def test_get_maps_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_MAPS_SERVICE_NAME,
-            {ATTR_ENTITY_ID: entity_id},
+            RoborockService.GET_MAPS,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
         )
@@ -290,7 +285,7 @@ async def test_goto(
     data = {ATTR_ENTITY_ID: ENTITY_ID, "x": 25500, "y": 25500}
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        RoborockService.SET_VACUUM_GOTO_POSITION,
         data,
         blocking=True,
     )
@@ -318,8 +313,8 @@ async def test_goto_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: entity_id, "x": 25500, "y": 25500},
+            RoborockService.SET_VACUUM_GOTO_POSITION,
+            {TargetKey.ENTITY_ID: entity_id, "x": 25500, "y": 25500},
             blocking=True,
         )
 
@@ -332,9 +327,9 @@ async def test_zoned_cleaning(
     """Test cleaning specific zones."""
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "x1": 28582,
             "y1": 21363,
             "x2": 27425,
@@ -367,9 +362,9 @@ async def test_zoned_cleaning_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 "x1": 28582,
                 "y1": 21363,
                 "x2": 27425,
@@ -391,8 +386,8 @@ async def test_get_current_position(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        RoborockService.GET_VACUUM_CURRENT_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -419,8 +414,8 @@ async def test_get_current_position_no_map_data(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -439,8 +434,8 @@ async def test_get_current_position_no_robot_position(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -464,8 +459,8 @@ async def test_get_current_position_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: entity_id},
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
         )
@@ -550,8 +545,8 @@ async def test_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"], **extra_data},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"], **extra_data},
         blocking=True,
     )
 
@@ -588,8 +583,8 @@ async def test_clean_segments_different_map(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
@@ -620,8 +615,8 @@ async def test_clean_segments_mixed_maps(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
@@ -790,8 +785,8 @@ async def test_q7_locate_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_LOCATE,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
     )
     assert q7_vacuum_api.find_me.call_count == 1
@@ -809,8 +804,8 @@ async def test_q7_set_fan_speed_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
         blocking=True,
     )
     assert q7_vacuum_api.set_fan_speed.call_count == 1
@@ -829,8 +824,8 @@ async def test_q7_send_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
+        VacuumService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
         blocking=True,
     )
     assert q7_vacuum_api.send.call_count == 1
@@ -942,8 +937,8 @@ async def test_q7_get_maps(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        RoborockService.GET_MAPS,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -977,8 +972,8 @@ async def test_q7_get_maps_empty(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        RoborockService.GET_MAPS,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -1002,8 +997,8 @@ async def test_q7_get_maps_exception(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_MAPS_SERVICE_NAME,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            RoborockService.GET_MAPS,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -1185,8 +1180,8 @@ async def test_q7_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
         blocking=True,
     )
 
@@ -1221,8 +1216,8 @@ async def test_q7_clean_segments_failed(
     with pytest.raises(HomeAssistantError, match="Error while calling clean_segments"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
     fake_q7_vacuum.b01_q7_properties.map.refresh.assert_awaited()
@@ -1256,8 +1251,8 @@ async def test_q7_clean_segments_refresh_failure(
     ):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
 
@@ -1288,8 +1283,8 @@ async def test_q7_clean_segments_ignores_other_map(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
         blocking=True,
     )
 
@@ -1320,8 +1315,8 @@ async def test_q7_clean_segments_invalid_id(
     with pytest.raises(HomeAssistantError, match="Invalid segment ID format"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
 
@@ -1357,8 +1352,8 @@ async def test_q10_get_current_position(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        RoborockService.GET_VACUUM_CURRENT_POSITION,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -1377,8 +1372,8 @@ async def test_q10_get_current_position_not_available(
     with pytest.raises(HomeAssistantError, match="Robot position not found"):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -1392,9 +1387,9 @@ async def test_q10_zoned_cleaning(
     """Test that Q10 zoned cleaning uses the native zone task."""
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
-            ATTR_ENTITY_ID: Q10_ENTITY_ID,
+            TargetKey.ENTITY_ID: Q10_ENTITY_ID,
             "x1": 28580,
             "y1": 21365,
             "x2": 27425,
@@ -1421,8 +1416,8 @@ async def test_q10_goto(
 
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
+        RoborockService.SET_VACUUM_GOTO_POSITION,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
         blocking=True,
     )
 
@@ -1435,7 +1430,7 @@ async def test_q10_goto(
     ("service", "service_data", "api_method", "error", "expected_exception"),
     [
         pytest.param(
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            RoborockService.SET_VACUUM_GOTO_POSITION,
             {"x": 29900, "y": 28650},
             "goto_position",
             ValueError("invalid coordinate"),
@@ -1443,7 +1438,7 @@ async def test_q10_goto(
             id="goto-validation",
         ),
         pytest.param(
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            RoborockService.SET_VACUUM_GOTO_POSITION,
             {"x": 29900, "y": 28650},
             "goto_position",
             RoborockException(),
@@ -1451,7 +1446,7 @@ async def test_q10_goto(
             id="goto-command",
         ),
         pytest.param(
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
             "clean_zone",
             ValueError("invalid zone"),
@@ -1459,7 +1454,7 @@ async def test_q10_goto(
             id="zone-validation",
         ),
         pytest.param(
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
             "clean_zone",
             RoborockException(),
@@ -1550,8 +1545,8 @@ async def test_q10_locate_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_LOCATE,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
@@ -1569,8 +1564,8 @@ async def test_q10_set_fan_speed_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "quiet"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "quiet"},
         blocking=True,
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
@@ -1597,8 +1592,8 @@ async def test_q10_send_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": command},
+        VacuumService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "command": command},
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
@@ -1617,8 +1612,8 @@ async def test_q10_send_command_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
+            VacuumService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
             blocking=True,
         )
     q10_vacuum_api.vacuum.cancel_goto.assert_not_called()
@@ -1805,8 +1800,8 @@ async def test_q10_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
         blocking=True,
     )
 
@@ -1836,7 +1831,7 @@ async def test_q10_clean_segments_failed(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
             blocking=True,
         )

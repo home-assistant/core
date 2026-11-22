@@ -11,6 +11,8 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
     DataMissingException,
 )
+from systembridgeconnector.http_client import HTTPClient
+from systembridgeconnector.keys import is_client_key
 from systembridgeconnector.models.modules import Module
 from systembridgeconnector.version import Version
 
@@ -31,9 +33,14 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import async_get_key_client
 from .const import AUDIO_MIN_VERSION, DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .services import async_setup_services
@@ -108,12 +115,13 @@ async def async_setup_entry(
             },
         ) from exception
 
+    unsupported_issue_id = f"system_bridge_{entry.entry_id}_unsupported_version"
     # If not supported, create an issue and raise ConfigEntryNotReady
     if not supported:
         async_create_issue(
             hass=hass,
             domain=DOMAIN,
-            issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            issue_id=unsupported_issue_id,
             config_entry_id=entry.entry_id,
             translation_key="unsupported_version",
             translation_placeholders={"host": entry.data[CONF_HOST]},
@@ -128,6 +136,11 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         )
+    # The host has been updated since the issue was raised
+    async_delete_issue(hass, DOMAIN, unsupported_issue_id)
+
+    if not is_client_key(entry.data[CONF_TOKEN]):
+        await _async_exchange_token(hass, entry)
 
     coordinator = SystemBridgeDataUpdateCoordinator(
         hass,
@@ -201,6 +214,52 @@ async def async_setup_entry(
             },
             {},
         )
+    )
+
+
+async def _async_exchange_token(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry
+) -> None:
+    """Trade the shared token from before keys for this Home Assistant's key."""
+    http_client = HTTPClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
+    )
+    try:
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
+            new_key = await http_client.exchange_key(await async_get_key_client(hass))
+    except AuthenticationException as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
+    except ConnectionErrorException as exception:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
+    except TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        ) from exception
+
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_TOKEN: new_key.key}
     )
 
 

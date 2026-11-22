@@ -260,11 +260,38 @@
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
     },
+    "no_electricity_prices": {
+      "message": "The Zonneplan account has no electricity prices"
+    },
     "rate_limited": {
       "message": "The Zonneplan API rate limit was reached"
     },
     "timeout_connect": {
       "message": "Timeout while communicating with the Zonneplan API"
+    }
+  },
+  "selector": {
+    "interval": {
+      "options": {
+        "hour": "Hour",
+        "quarter": "Quarter hour"
+      }
+    }
+  },
+  "services": {
+    "get_electricity_prices": {
+      "description": "Returns the all-in electricity prices from Zonneplan.",
+      "fields": {
+        "config_entry": {
+          "description": "The Zonneplan config entry to get the prices of.",
+          "name": "Config entry"
+        },
+        "interval": {
+          "description": "Whether to return a price per hour or per quarter hour.",
+          "name": "Interval"
+        }
+      },
+      "name": "Get electricity prices"
     }
   }
 }

@@ -466,6 +466,60 @@ async def test_eve_child_lock(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["heiman_motion_sensor_m1_m"])
+async def test_heiman_led_indicator(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the Heiman LED indicator switch entity."""
+    state = hass.states.get("switch.smart_motion_sensor_led_indicator")
+    assert state
+    assert state.state == "on"
+    # test attribute changes
+    set_node_attribute(matter_node, 1, 302775297, 4100, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.smart_motion_sensor_led_indicator")
+    assert state.state == "off"
+    set_node_attribute(matter_node, 1, 302775297, 4100, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.smart_motion_sensor_led_indicator")
+    assert state.state == "on"
+    # test switch service
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.smart_motion_sensor_led_indicator"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.HeimanCluster.Attributes.IndicatorEnable,
+        ),
+        value=0,
+    )
+    assert type(matter_client.write_attribute.call_args_list[0].kwargs["value"]) is int
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.smart_motion_sensor_led_indicator"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.HeimanCluster.Attributes.IndicatorEnable,
+        ),
+        value=1,
+    )
+    assert type(matter_client.write_attribute.call_args_list[1].kwargs["value"]) is int
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_door_lock_one_touch_locking(
     hass: HomeAssistant,

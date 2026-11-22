@@ -1,7 +1,8 @@
 """Test the HP Printer sensor platform."""
 
+from collections.abc import Generator
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiohpprinter import HpPrinterData, HpPrinterStatus
 from freezegun.api import FrozenDateTimeFactory
@@ -14,7 +15,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hp_printer.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,6 +25,13 @@ STATUS = "sensor.hp_officejet_pro_9020_series_status"
 CYAN_LEVEL = "sensor.hp_officejet_pro_9020_series_cyan_level"
 PRINTED_PAGES = "sensor.hp_officejet_pro_9020_series_printed_pages"
 BLACK_PAGES_REMAINING = "sensor.hp_officejet_pro_9020_series_black_pages_remaining"
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Only set up the sensor platform."""
+    with patch("homeassistant.components.hp_printer.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hp_printer")
