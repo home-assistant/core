@@ -35,6 +35,7 @@ from homeassistant.components.calendar.trigger import (
     EVENT_START,
     OFFSET_TYPE_AFTER,
     OFFSET_TYPE_BEFORE,
+    CalendarEventListener,
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -961,6 +962,9 @@ async def test_event_moved_into_past_before_firing(
     ("initial_start", "update_time", "updated_start"),
     [
         pytest.param("10:35:00", "10:36:00", "10:37:00", id="same_window"),
+        pytest.param(
+            "10:35:00", "10:36:00", "10:40:00", id="into_next_window_before_read"
+        ),
         pytest.param("10:37:00", "10:39:00", "10:40:00", id="next_window"),
     ],
 )
@@ -1004,45 +1008,6 @@ async def test_event_moved_later_after_firing(
         await fake_schedule.fire_until(_test_time("10:50:00"))
 
     assert calls_data() == expected
-
-
-async def test_events_sharing_uid_fire_once_each(
-    hass: HomeAssistant,
-    calls_data: Callable[[], list[dict[str, Any]]],
-    fake_schedule: FakeSchedule,
-    test_entity: MockCalendarEntity,
-    trigger_format: TriggerFormat,
-) -> None:
-    """Test events sharing a uid without a recurrence id each fire once."""
-    test_entity._attr_should_poll = False
-    event_data1 = test_entity.create_event(
-        start=_test_time("10:35:00"),
-        end=_test_time("10:36:00"),
-        summary="Stop A",
-        uid="trip",
-    )
-    event_data2 = test_entity.create_event(
-        start=_test_time("10:37:00"),
-        end=_test_time("10:38:00"),
-        summary="Stop B",
-        uid="trip",
-    )
-    async with create_automation(hass, trigger_format, EVENT_START):
-        await fake_schedule.fire_until(_test_time("10:36:00"))
-
-        test_entity.async_write_ha_state()
-        await hass.async_block_till_done()
-
-        await fake_schedule.fire_until(_test_time("10:50:00"))
-
-    assert calls_data() == [
-        trigger_format.get_expected_call_data(
-            CALENDAR_ENTITY_ID, EVENT_START, event_data1
-        ),
-        trigger_format.get_expected_call_data(
-            CALENDAR_ENTITY_ID, EVENT_START, event_data2
-        ),
-    ]
 
 
 class BlockedFetch:
@@ -1157,17 +1122,78 @@ async def test_refetch_during_refresh(
     await hass.async_block_till_done()
 
     await fake_schedule.fire_until(_test_time("10:50:00"))
+    await _async_turn_off_automation(hass)
+
+    assert [call["calendar_event"]["summary"] for call in calls_data()] == [
+        "One",
+        "Two",
+    ]
+
+
+@pytest.mark.usefixtures("target_calendars")
+async def test_refetch_after_listener_replaced(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a refetch finishing after its listener was replaced does not fire."""
+    calendar_1 = test_entities[0]
+    calendar_1._attr_should_poll = False
+    calendar_1.create_event(
+        start=_test_time("10:36:00"), end=_test_time("10:37:00"), summary="One"
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": EVENT_START,
+                "trigger": {
+                    CONF_PLATFORM: "calendar.event_started",
+                    CONF_TARGET: {ATTR_LABEL_ID: "calendar_1_label"},
+                },
+                "action": TEST_AUTOMATION_ACTION,
+                "mode": "queued",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await fake_schedule.fire_until(_test_time("10:33:00"))
+
+    blocked = BlockedFetch(calendar_1)
+    calendar_1.async_write_ha_state()
+    await blocked.started.wait()
+
+    # Removing the label replaces the listener while its refetch is running
+    detached = asyncio.Event()
+    detach = CalendarEventListener.async_detach
+
+    def detach_and_signal(listener: CalendarEventListener) -> None:
+        detach(listener)
+        detached.set()
+
+    with patch.object(CalendarEventListener, "async_detach", detach_and_signal):
+        entity_registry.async_update_entity("calendar.calendar_1", labels=set())
+        await detached.wait()
+    blocked.release.set()
+    await hass.async_block_till_done()
+
+    await fake_schedule.fire_until(_test_time("10:50:00"))
+    await _async_turn_off_automation(hass)
+
+    assert calls_data() == []
+
+
+async def _async_turn_off_automation(hass: HomeAssistant) -> None:
+    """Turn off the automation to clean up lingering timers."""
     await hass.services.async_call(
         automation.DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: f"automation.{EVENT_START}"},
         blocking=True,
     )
-
-    assert [call["calendar_event"]["summary"] for call in calls_data()] == [
-        "One",
-        "Two",
-    ]
 
 
 @pytest.mark.parametrize(

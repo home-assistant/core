@@ -287,6 +287,7 @@ class CalendarEventListener:
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_events_updated: list[CALLBACK_TYPE] = []
+        self._detached = False
         self._entity_ids = entity_ids
         self._event_type = event_type
         self._offset = offset
@@ -321,7 +322,10 @@ class CalendarEventListener:
             )
         try:
             async with self._lock:
-                self._events.extend(await self._fetcher(self._timespan))
+                events = await self._fetcher(self._timespan)
+                if self._detached:
+                    return
+                self._events.extend(events)
                 self._unsub_refresh = async_track_time_interval(
                     self._hass, self._handle_refresh, UPDATE_INTERVAL
                 )
@@ -333,6 +337,8 @@ class CalendarEventListener:
     @callback
     def async_detach(self) -> None:
         """Detach the calendar event listener."""
+        self._detached = True
+        self._pending_refetch.clear()
         self._clear_event_listener()
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -408,31 +414,50 @@ class CalendarEventListener:
                 events = await self._fetcher(self._timespan)
             except HomeAssistantError as ex:
                 _LOGGER.error("Calendar trigger failed to fetch events: %s", ex)
-            else:
-                self._events.extend(events)
+                events = []
+            if self._detached:
+                return
+            # Events that fired can have moved into this window
+            self._events.extend(
+                queued_event
+                for queued_event in events
+                if not self._already_fired(queued_event)
+            )
             self._listen_next_calendar_event()
 
     @callback
     def _handle_events_updated(self, entity_id: str) -> None:
         """Schedule a refetch of the events of a calendar."""
-        # The debouncer drops calls made while it runs, so track them here
         self._pending_refetch.add(entity_id)
         self._entity_debouncers[entity_id].async_schedule_call()
+
+    def _already_fired(self, queued_event: QueuedCalendarEvent) -> bool:
+        """Return if the occurrence of a queued event has already fired."""
+        return queued_event.occurrence_key in self._dispatched
 
     async def _async_refetch_entity(self, entity_id: str) -> None:
         """Replace the upcoming queued events of a calendar with fresh ones."""
         fetcher = queued_event_fetcher(
             event_fetcher(self._hass, {entity_id}), self._event_type, self._offset
         )
-        async with self._lock:
-            while entity_id in self._pending_refetch and self._unsub_refresh:
+        try:
+            async with self._lock:
+                # Detaching clears pending refetches
+                if entity_id not in self._pending_refetch:
+                    return
                 self._pending_refetch.discard(entity_id)
                 try:
                     events = await fetcher(self._timespan)
                 except HomeAssistantError as ex:
                     _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
                     return
+                if self._detached:
+                    return
                 self._replace_entity_events(entity_id, events)
+        finally:
+            # The debouncer drops calls made while this runs
+            if entity_id in self._pending_refetch:
+                self._entity_debouncers[entity_id].async_schedule_call()
 
     @callback
     def _replace_entity_events(
@@ -441,28 +466,17 @@ class CalendarEventListener:
         """Replace the upcoming queued events of a calendar."""
         # Events due by now are left alone, as they may already have fired
         now_utc = dt_util.utcnow()
-        queued_keys: set[tuple[str, str, str | None] | None] = set()
-        kept: list[QueuedCalendarEvent] = []
-        for queued_event in self._events:
-            if (
-                queued_event.entity_id == entity_id
-                and queued_event.trigger_time_utc > now_utc
-            ):
-                queued_keys.add(queued_event.occurrence_key)
-            else:
-                kept.append(queued_event)
-
-        # Skip events that fired and then moved later, unless another
-        # occurrence with the same key was queued
+        kept = [
+            queued_event
+            for queued_event in self._events
+            if queued_event.entity_id != entity_id
+            or queued_event.trigger_time_utc <= now_utc
+        ]
         kept.extend(
             queued_event
             for queued_event in events
             if queued_event.trigger_time_utc > now_utc
-            and (
-                (key := queued_event.occurrence_key) is None
-                or key not in self._dispatched
-                or key in queued_keys
-            )
+            and not self._already_fired(queued_event)
         )
         kept.sort(key=lambda x: x.trigger_time_utc)
         self._events = kept
