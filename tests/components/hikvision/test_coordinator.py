@@ -243,6 +243,69 @@ async def test_a_cancelled_download_that_gets_a_401_still_rejects_the_password(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_download_the_executor_starts_after_the_stream_is_refused_is_not_sent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a request already handed to a busy executor is not sent once refused.
+
+    The download checked the password before handing the request over; the stream
+    had it rejected before the executor started it.
+    """
+    await setup_integration(hass, mock_config_entry)
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
+    refused: list[asyncio.Task] = []
+
+    async def _refused_while_queued(*args: Any, **kwargs: Any) -> Any:
+        refused.append(hass.async_create_task(coordinator.async_stream_rejected()))
+        return await async_run_to_end(*args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.hikvision.coordinator.async_run_to_end",
+            _refused_while_queued,
+        ),
+        pytest.raises(ISAPIAuthError),
+    ):
+        await coordinator.async_diagnostics_request(
+            mock_image_settings.request_raw, "GET", "/ISAPI/System/deviceInfo"
+        )
+    await asyncio.gather(*refused)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_image_settings.request_raw.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_write_waiting_when_the_stream_is_refused_is_not_sent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a write that gets its turn after the stream had the password refused.
+
+    It was waiting before the refusal: it must not send the password again.
+    """
+    await setup_integration(hass, mock_config_entry)
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
+
+    async with coordinator.lock:
+        write = hass.async_create_task(coordinator.async_set_setting(HLC_PATH, "false"))
+        await _wait_for_waiters(coordinator.lock, 1)
+        refused = hass.async_create_task(coordinator.async_stream_rejected())
+        await _wait_for_waiters(coordinator.lock, 2)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await write
+    await refused
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert err.value.translation_key == "invalid_auth"
+    mock_image_settings.set_image_setting.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 async def test_a_refused_write_shows_what_was_switched_off_for_it(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

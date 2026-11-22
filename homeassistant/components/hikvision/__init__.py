@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
@@ -21,7 +22,7 @@ from pyhik.isapi import (
 )
 import requests
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -52,6 +53,7 @@ from .coordinator import (
     async_complete,
     async_run_to_end,
     async_stop_stream,
+    log_credentials_rejected,
 )
 from .identity import (
     ambiguous_identities_issue_id,
@@ -420,6 +422,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         if image_platforms:
             forwarded.extend(image_platforms)
             await hass.config_entries.async_forward_entry_setups(entry, image_platforms)
+
+        entry.async_on_unload(_async_watch_stream_credentials(hass, entry))
     except BaseException:
 
         async def _async_clean_up() -> None:
@@ -447,6 +451,75 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
             # while cleaning up does not replace it.
             _LOGGER.exception("Error while cleaning up after a failed setup")
         raise
+
+
+# What the watch of the credentials is registered for, after the ID of the stream:
+# no event has this name. pyHik calls every callback when its stream changes state.
+STREAM_CREDENTIALS = "stream_credentials"
+
+
+@callback
+def _async_watch_stream_credentials(
+    hass: HomeAssistant, entry: HikvisionConfigEntry
+) -> Callable[[], None]:
+    """Ask for new credentials when the event stream is refused them.
+
+    The stream is the only thing that talks to every device all the time, so it is
+    the first to notice a changed password, also on a device with no image
+    settings, or with all of them disabled. pyHik slows the stream down when it
+    happens, so that the account is not locked by retries, but does not give up: the
+    stream is stopped here, and so are the image settings, which use the same login.
+    Reauthentication reloads the entry, with a new stream. Returns what stops the
+    watch.
+    """
+    data = entry.runtime_data
+    camera = data.camera
+    handled = False
+
+    async def _async_rejected() -> None:
+        if coordinators := data.image_coordinators:
+            # Stops the stream too, and asks for new credentials.
+            await coordinators[0].async_stream_rejected()
+            return
+        try:
+            await async_stop_stream(hass, data)
+        except Exception:
+            # New credentials are asked for all the same: nothing else would.
+            _LOGGER.exception(
+                "Error while stopping the event stream of %s", data.device_name
+            )
+        # Not once the entry is going away, or set up again with a stream of its own.
+        if (
+            hass.is_stopping
+            or entry.state is not ConfigEntryState.LOADED
+            or entry.runtime_data is not data
+        ):
+            return
+        log_credentials_rejected(entry)
+        entry.async_start_reauth(hass)
+
+    @callback
+    def _async_check() -> None:
+        nonlocal handled
+        # Not once the stream is being stopped: on purpose, or by a request that
+        # found the password rejected, which deals with it.
+        if handled or not camera.stream_auth_failed or data.stream_stop is not None:
+            return
+        handled = True
+        entry.async_create_background_task(
+            hass, async_complete(_async_rejected()), f"{DOMAIN} stream credentials"
+        )
+
+    def _changed(_sensor: str) -> None:
+        # From the thread of the stream.
+        with contextlib.suppress(RuntimeError):
+            hass.loop.call_soon_threadsafe(_async_check)
+
+    watch = f"{data.stream_id}.{STREAM_CREDENTIALS}"
+    camera.add_update_callback(_changed, watch)
+    # It may have been refused before this was registered.
+    _async_check()
+    return lambda: camera.remove_update_callback(_changed, watch)
 
 
 async def _async_setup_image_settings(
@@ -553,18 +626,30 @@ class _ImageDiscovery:
         The cameras of an NVR found so far can be reached meanwhile, by the
         diagnostics for one, while the next ones are read. So a request waits for
         theirs, to its end even if the setup is cancelled (the client is closed
-        after it), and is not sent once one of them got the credentials rejected
-        or the client was closed, as it is when Home Assistant stops.
+        after it), and is not sent once one of them, or the event stream, got the
+        credentials rejected, or the client was closed, as it is when Home
+        Assistant stops.
         """
         shared = self._shared
+        camera = self._entry.runtime_data.camera
+
+        def _send() -> _T:
+            # A busy executor can start the job late: the stream may have had the
+            # password rejected meanwhile. Not sent then.
+            if camera.stream_auth_failed:
+                raise ISAPIAuthError("The device rejected the credentials", 401)
+            return job()
+
         async with shared.lock:
-            if shared.credentials_rejected:
+            # The stream runs before the discovery, and may have been refused the
+            # password already: its watch only starts once the setup ends.
+            if shared.credentials_rejected or camera.stream_auth_failed:
                 # Sending them again could lock the account.
                 raise ISAPIAuthError("The device rejected the credentials", 401)
             if shared.closed:
                 raise ConfigEntryNotReady("The image settings client is closed")
             try:
-                return await async_run_to_end(self._hass, job)
+                return await async_run_to_end(self._hass, _send)
             except ISAPIAuthError as err:
                 if err.status_code == 401:
                     shared.credentials_rejected = True
@@ -790,9 +875,13 @@ def _async_retry_image_settings_later(
     def _reload(_now: datetime) -> None:
         # Nor once the password was rejected: a reload would send it again, and
         # cancel the reauthentication that waits for a new one.
-        if hass.is_stopping or any(
-            coordinator.credentials_rejected
-            for coordinator in entry.runtime_data.image_coordinators
+        if (
+            hass.is_stopping
+            or data.camera.stream_auth_failed
+            or any(
+                coordinator.credentials_rejected
+                for coordinator in data.image_coordinators
+            )
         ):
             return
         hass.config_entries.async_schedule_reload(entry.entry_id)

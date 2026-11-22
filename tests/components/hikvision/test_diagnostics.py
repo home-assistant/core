@@ -292,6 +292,38 @@ async def test_a_rejected_password_stops_reading_raw_documents(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_password_the_stream_rejects_meanwhile_is_not_sent_again(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    raw_documents: dict[str, str],
+) -> None:
+    """Test the second document is not asked for once the stream had it rejected.
+
+    The rejection comes while the first document is read.
+    """
+    await setup_integration(hass, mock_config_entry)
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
+
+    def _rejected_meanwhile(method: str, endpoint: str) -> RawResponse:
+        coordinator.credentials_rejected = True
+        return RawResponse(200, raw_documents[endpoint].encode())
+
+    mock_image_settings.request_raw.side_effect = _rejected_meanwhile
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    mock_image_settings.request_raw.assert_called_once_with("GET", CAPABILITIES)
+    assert result["image_settings"]["raw_documents"] == {
+        "capabilities": raw_documents[CAPABILITIES],
+        "values": "error: credentials rejected",
+    }
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 async def test_raw_documents_are_not_read_while_home_assistant_stops(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

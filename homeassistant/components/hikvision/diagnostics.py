@@ -37,30 +37,21 @@ def _raw_endpoints(channel: int | None) -> dict[str, str]:
     return {"capabilities": f"{endpoint}/capabilities", "values": endpoint}
 
 
-def _read_raw_documents(
-    client: ISAPIClient, channel: int | None, documents: dict[str, str]
-) -> None:
-    """Read the camera's image documents into documents, without parsing them.
+def _read_raw_document(client: ISAPIClient, endpoint: str) -> str:
+    """Read one of the camera's image documents, without parsing it.
 
-    Raises ISAPIAuthError on a 401, once every document has its entry, so that the
-    coordinator deals with the rejected password.
+    Raises ISAPIAuthError on a 401, so that the coordinator deals with the rejected
+    password.
     """
-    for name, endpoint in _raw_endpoints(channel).items():
-        try:
-            response = client.request_raw("GET", endpoint)
-        except ISAPIError as err:
-            # The text of the error can hold the address of the camera, which is not
-            # redacted here, so only the kind of error is reported.
-            documents[name] = f"error: {type(err).__name__}"
-            continue
-        documents[name] = (
-            response.text if response.ok else f"error: HTTP {response.status_code}"
-        )
-        if response.status_code == 401:
-            # Do not send the rejected password again for the next document.
-            for other in RAW_DOCUMENTS:
-                documents.setdefault(other, documents[name])
-            raise ISAPIAuthError("The device rejected the credentials", 401)
+    try:
+        response = client.request_raw("GET", endpoint)
+    except ISAPIError as err:
+        # The text of the error can hold the address of the camera, which is not
+        # redacted here, so only the kind of error is reported.
+        return f"error: {type(err).__name__}"
+    if response.status_code == 401:
+        raise ISAPIAuthError("The device rejected the credentials", 401)
+    return response.text if response.ok else f"error: HTTP {response.status_code}"
 
 
 def _bound(value: float | None) -> float | str | None:
@@ -98,22 +89,28 @@ def _setting_to_dict(
 async def _async_read_raw_documents(
     coordinator: HikvisionImageCoordinator,
 ) -> dict[str, str]:
-    """Read the raw documents as the coordinator sends any request."""
+    """Read the raw documents as the coordinator sends any request.
+
+    One request each: the event stream can have the password rejected while the
+    first is sent, and the next one is then not sent with it.
+    """
     documents: dict[str, str] = {}
-    try:
-        await coordinator.async_diagnostics_request(
-            _read_raw_documents, coordinator.client, coordinator.channel, documents
-        )
-    except ISAPIAuthError:
-        # Each document says so already.
-        pass
-    except HomeAssistantError:
-        reason = (
-            "credentials rejected"
-            if coordinator.credentials_rejected
-            else "the image settings client is closing"
-        )
-        return dict.fromkeys(RAW_DOCUMENTS, f"error: {reason}")
+    for name, endpoint in _raw_endpoints(coordinator.channel).items():
+        try:
+            documents[name] = await coordinator.async_diagnostics_request(
+                _read_raw_document, coordinator.client, endpoint
+            )
+        except ISAPIAuthError:
+            reason = "HTTP 401"
+        except HomeAssistantError:
+            reason = (
+                "credentials rejected"
+                if coordinator.credentials_rejected
+                else "the image settings client is closing"
+            )
+        else:
+            continue
+        return {**dict.fromkeys(RAW_DOCUMENTS, f"error: {reason}"), **documents}
     return documents
 
 
