@@ -69,7 +69,6 @@ From the Core repository root:
 uv venv .venv
 . .venv/bin/activate
 script/setup
-uv pip install --no-deps -e packages/home-assistant-sandbox
 deactivate
 ```
 
