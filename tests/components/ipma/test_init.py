@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pyipma import IPMAException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import HomeAssistant
 
 from .test_weather import MockLocation
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant) -> None:

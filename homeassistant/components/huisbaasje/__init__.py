@@ -1,21 +1,18 @@
 """The EnergyFlip integration."""
 
-import logging
-
 from energyflip import EnergyFlip, EnergyFlipException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import FETCH_TIMEOUT, SOURCE_TYPES
+from .const import DOMAIN, FETCH_TIMEOUT, SOURCE_TYPES
 from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Set up EnergyFlip from a config entry."""
     # Create the EnergyFlip client
     energyflip = EnergyFlip(
@@ -29,8 +26,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     try:
         await energyflip.authenticate()
     except EnergyFlipException as exception:
-        _LOGGER.error("Authentication failed: %s", str(exception))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exception
+
+    # Immediately get customer id, since it is required for all api calls
+    try:
+        await energyflip.customer_overview()
+    except EnergyFlipException as exception:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="customer_overview_failed",
+        ) from exception
 
     # Create a coordinator for polling updates
     coordinator = EnergyFlipUpdateCoordinator(hass, entry, energyflip)
@@ -43,10 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     # Offload the loading of entities to the platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Unload a config entry."""
     # Forward the unloading of the entry to the platform
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

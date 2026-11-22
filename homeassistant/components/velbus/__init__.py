@@ -8,12 +8,17 @@ import shutil
 
 from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,6 +32,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
@@ -54,7 +60,8 @@ async def velbus_scan_task(
         await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
-            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)
@@ -70,6 +77,56 @@ async def velbus_scan_task(
             name=f"{module.get_name()} ({module.get_type_name()})",
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
+        )
+    _migrate_via_devices_to_children(hass, entry_id)
+
+
+def _child_name_from_registry(
+    child_name: str | None, parent_name: str | None
+) -> str | None:
+    """Strip a legacy parent prefix from a channel device name."""
+    if child_name and parent_name:
+        prefix = f"{parent_name} - "
+        if child_name.startswith(prefix):
+            return child_name.removeprefix(prefix)
+    return child_name
+
+
+def _is_channel_subdevice_identifier(
+    child_identifiers: set[tuple[str, str]],
+    parent_identifiers: set[tuple[str, str]],
+) -> bool:
+    """Return whether the child identifier denotes a module channel."""
+    if len(child_identifiers) != 1 or len(parent_identifiers) != 1:
+        return False
+    _, child_id = next(iter(child_identifiers))
+    _, parent_id = next(iter(parent_identifiers))
+    if not child_id.startswith(f"{parent_id}-"):
+        return False
+    return bool(child_id.removeprefix(f"{parent_id}-"))
+
+
+def _migrate_via_devices_to_children(hass: HomeAssistant, entry_id: str) -> None:
+    """Convert legacy via_device channel devices to child devices."""
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        if device.via_device_id is None:
+            continue
+        parent = dev_reg.async_get(device.via_device_id)
+        if parent is None or parent.config_entry_id != entry_id:
+            continue
+        if not _is_channel_subdevice_identifier(device.identifiers, parent.identifiers):
+            continue
+        _LOGGER.debug(
+            "Converting channel device %s to child of %s",
+            device.identifiers,
+            parent.identifiers,
+        )
+        dev_reg.async_get_or_create_child(
+            config_entry_id=entry_id,
+            identifiers=device.identifiers,
+            parent_device_id=parent.id,
+            name=_child_name_from_registry(device.name, parent.name),
         )
 
 
@@ -87,13 +144,54 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
+async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure property entity unique_ids use {serial}-{property_key} format."""
+    ent_reg = er.async_get(hass)
+
+    property_key_map = await hass.async_add_executor_job(get_property_key_map)
+    for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if not entry.original_name:
+            continue
+        property_key = property_key_map.get(entry.original_name)
+        if property_key is None:
+            continue
+        # Derive the serial from the entity's own unique_id, not from the device
+        # registry, which another integration could overwrite. The program select
+        # historically used `{serial}-{channel}-program_select`; every other property
+        # uses channel number 0 (`{serial}-0`). Regular channels are always >=1, so a
+        # `-0` suffix and the `-program_select` suffix only ever belong to properties.
+        if entry.unique_id.endswith("-program_select"):
+            serial = entry.unique_id.removesuffix("-program_select").rsplit("-", 1)[0]
+        elif entry.unique_id.endswith("-0"):
+            serial = entry.unique_id.removesuffix("-0")
+        else:
+            continue
+
+        expected_unique_id = f"{serial}-{property_key}"
+        if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
+            # Target unique_id already exists (created by new code) — remove stale entry
+            _LOGGER.debug(
+                "Removing stale entity %s with outdated unique_id %s",
+                entry.entity_id,
+                entry.unique_id,
+            )
+            ent_reg.async_remove(entry.entity_id)
+        else:
+            _LOGGER.debug(
+                "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
+            )
+            ent_reg.async_update_entity(
+                entry.entity_id, new_unique_id=expected_unique_id
+            )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
     async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Establish connection with velbus."""
     controller = Velbus(
         dsn=entry.data[CONF_PORT],
@@ -108,21 +206,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             translation_key="connection_failed",
         ) from error
 
+    _migrate_device_identifiers(hass, entry.entry_id)
+    # Migrate unique ids before the bus scan to preserve entity history
+    await _migrate_property_unique_ids(hass, entry.entry_id)
+
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
 
-    _migrate_device_identifiers(hass, entry.entry_id)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Unload (close) the velbus connection."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.controller.stop()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        await entry.runtime_data.controller.stop()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
@@ -136,7 +235,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow removing a Velbus device and its sub-devices.
 
@@ -144,18 +243,17 @@ async def async_remove_config_entry_device(
     on the bus, it may be recreated when the integration is reloaded or
     started again.
     """
-    if config_entry.entry_id not in device_entry.config_entries:
+    if device_entry.config_entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
-    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-        if sub_device.via_device_id == device_entry.id:
-            dev_reg.async_remove_device(sub_device.id)
+    for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
+        dev_reg.async_remove_device(child.id)
     return True
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.error(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -195,4 +293,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-    return True

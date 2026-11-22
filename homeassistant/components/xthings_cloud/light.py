@@ -186,9 +186,10 @@ class XthingsCloudSwitch(XthingsCloudBaseLight):
         super().__init__(coordinator, device_id, device_data)
         status = device_data["status"]
         if "brightness" in status:
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

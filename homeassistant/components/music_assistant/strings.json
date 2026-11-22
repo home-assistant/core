@@ -3,11 +3,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "app_get_discovery_info_failed": "Failed to get Music Assistant app discovery info.",
+      "app_info_failed": "Failed to get Music Assistant app info.",
+      "app_install_failed": "Failed to install the Music Assistant app.",
+      "app_start_failed": "Failed to start the Music Assistant app.",
       "auth_error": "Authentication error, please try again",
       "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "The Music Assistant server is not the correct version",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "unique_id_mismatch": "The provided URL belongs to a different Music Assistant server.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -15,6 +20,10 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "[%key:component::music_assistant::config::abort::invalid_server_version%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "progress": {
+      "install_app": "Please wait while the Music Assistant app installation finishes. This can take several minutes.",
+      "start_app": "Please wait while the Music Assistant app starts. This may take some seconds."
     },
     "step": {
       "auth_manual": {
@@ -34,17 +43,45 @@
         "description": "Do you want to add the Music Assistant server to Home Assistant?",
         "title": "Discovered Music Assistant app"
       },
-      "reauth_confirm": {
-        "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",
-        "title": "Reauthentication required"
+      "install_app": {
+        "title": "The app installation has started"
       },
-      "user": {
+      "manual": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
           "url": "URL of the Music Assistant server"
         }
+      },
+      "on_supervisor": {
+        "data": {
+          "use_app": "Use the official Music Assistant app"
+        },
+        "data_description": {
+          "use_app": "Home Assistant installs and starts the app for you if needed."
+        },
+        "description": "Do you want to use the official Music Assistant app?\n\nIf you are already running Music Assistant in another app, in a custom container, natively etc., then do not select this option.",
+        "title": "Select connection method"
+      },
+      "onboarding": {
+        "description": "Open Music Assistant and finish its initial setup. Home Assistant continues automatically once the setup is done.",
+        "title": "Finish Music Assistant setup"
+      },
+      "reauth_confirm": {
+        "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",
+        "title": "Reauthentication required"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::music_assistant::config::step::manual::data_description::url%]"
+        }
+      },
+      "start_app": {
+        "title": "Starting app"
       }
     }
   },
@@ -119,6 +156,12 @@
       }
     },
     "number": {
+      "audio_delay": {
+        "name": "Audio delay"
+      },
+      "balance": {
+        "name": "Balance"
+      },
       "bass": {
         "name": "Bass"
       },
@@ -140,8 +183,17 @@
       "equalizer_mid": {
         "name": "Equalizer mid"
       },
+      "music_surround_level": {
+        "name": "Surround level (music)"
+      },
+      "sub_crossover": {
+        "name": "Subwoofer crossover"
+      },
       "subwoofer_volume": {
         "name": "Subwoofer volume"
+      },
+      "surround_level": {
+        "name": "Surround level (TV)"
       },
       "treble": {
         "name": "Treble"
@@ -237,11 +289,29 @@
       "extra_bass": {
         "name": "Extra bass"
       },
+      "ir_repeater": {
+        "name": "IR repeater"
+      },
+      "ir_signal_light": {
+        "name": "IR signal light"
+      },
+      "loudness": {
+        "name": "Loudness"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
       "party_mode": {
         "name": "Party mode"
       },
       "pure_direct": {
         "name": "Pure direct"
+      },
+      "queue_autoplay": {
+        "name": "Autoplay"
+      },
+      "queue_crossfade": {
+        "name": "Crossfade"
       },
       "speaker_a": {
         "name": "Speaker A"
@@ -249,19 +319,81 @@
       "speaker_b": {
         "name": "Speaker B"
       },
+      "speech_enhancement": {
+        "name": "Speech enhancement"
+      },
+      "status_light": {
+        "name": "Status light"
+      },
+      "sub_enabled": {
+        "name": "Subwoofer"
+      },
       "surround_3d": {
         "name": "Surround 3D"
+      },
+      "surround_enabled": {
+        "name": "Surround speakers"
+      },
+      "surround_mode": {
+        "name": "Full-volume surround for music"
+      },
+      "touch_controls": {
+        "name": "Touch controls"
+      },
+      "trueplay": {
+        "name": "Trueplay"
       }
     },
     "text": {
       "network_name": {
         "name": "Network name"
       }
+    },
+    "time": {
+      "sleep_timer": {
+        "name": "Sleep timer"
+      }
     }
   },
   "exceptions": {
+    "app_not_running": {
+      "message": "The {app} app is not running yet."
+    },
+    "dashboard_display_not_available": {
+      "message": "The display {display} is not available."
+    },
+    "dashboard_invalid_media_type": {
+      "message": "Dashboard displays only accept the media content type {expected}, got {media_type}."
+    },
+    "dashboard_media_not_found": {
+      "message": "The media {media_content_id} was not found."
+    },
+    "dashboard_now_playing_requires_player": {
+      "message": "The dashboard {dashboard} requires a player, expected {expected}."
+    },
+    "dashboard_player_not_available": {
+      "message": "The player {player_id} is unknown or not exposed to Home Assistant."
+    },
+    "dashboard_type_not_supported": {
+      "message": "The display {display} does not support the dashboard {dashboard}, expected one of: {valid_ids}."
+    },
+    "dashboard_unknown_type": {
+      "message": "The dashboard {dashboard} is unknown, expected one of: {valid_ids}."
+    },
     "invalid_username": {
-      "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+      "message": "The username {username} does not exist on the Music Assistant server."
+    },
+    "no_active_queue": {
+      "message": "The player is not playing from a Music Assistant queue."
+    },
+    "offset_needs_limit": {
+      "message": "An offset requires a limit greater than 0."
+    },
+    "server_too_old": {
+      "message": "This action requires a newer Music Assistant server version."
+    },
+    "tts_entity_not_available": {
+      "message": "The text-to-speech entity {entity_id} is not available."
     }
   },
   "issues": {
@@ -341,8 +473,8 @@
           "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
         },
         "favorite": {
-          "description": "Filter items so only favorites items are returned.",
-          "name": "Favorites only"
+          "description": "Filter by favorite state. Enable to return only liked items, disable to return only disliked items, or leave the field out to return all items.",
+          "name": "Favorite state"
         },
         "limit": {
           "description": "Maximum number of items to return.",
@@ -377,7 +509,21 @@
       }
     },
     "get_queue": {
-      "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
+      "description": "Retrieves the details and the items of the currently active queue of a Music Assistant player.",
+      "fields": {
+        "limit": {
+          "description": "Maximum number of queue items to return. Leave at 0 to only return the queue details.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::limit::name%]"
+        },
+        "offset": {
+          "description": "Number of queue items to skip. Requires a limit.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::offset::name%]"
+        },
+        "username": {
+          "description": "Music Assistant username used to request the queue items. The request fails when this user may not access the player. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
+        }
+      },
       "name": "Get playerQueue details"
     },
     "play_announcement": {
@@ -387,12 +533,20 @@
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
         },
+        "message": {
+          "description": "Text to announce, spoken by the selected text-to-speech entity. Provide either a message or a URL.",
+          "name": "Message"
+        },
         "pre_announce_url": {
           "description": "URL to the pre-announcement sound.",
           "name": "Pre-announce URL"
         },
+        "tts_entity_id": {
+          "description": "Text-to-speech entity that speaks the message. Required when a message is given.",
+          "name": "Text-to-speech entity"
+        },
         "url": {
-          "description": "URL to the notification sound.",
+          "description": "URL to the notification sound. Provide either a message or a URL.",
           "name": "URL"
         },
         "use_pre_announce": {
@@ -429,8 +583,16 @@
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
         },
+        "shuffle": {
+          "description": "Whether to play the content in randomized order. Only applies when the content starts playing right away. If omitted, the queue's shuffle setting and the type of content decide.",
+          "name": "Shuffle"
+        },
+        "start_item": {
+          "description": "Item to start playback from, instead of the first one. Use `latest` to play a podcast from its newest episode, or give the URI, ID or part of the name (at least 3 characters) of the track or episode to start from.",
+          "name": "Start item"
+        },
         "username": {
-          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
+          "description": "Music Assistant username used for the play media request. This affects the playlog entry and takes the user's provider filters into account. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
           "name": "Username"
         }
       },
@@ -468,7 +630,7 @@
           "name": "Search name"
         },
         "username": {
-          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters.",
+          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
           "name": "Username"
         }
       },

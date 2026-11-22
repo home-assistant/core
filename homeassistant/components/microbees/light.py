@@ -30,6 +30,7 @@ async def async_setup_entry(
 class MBLight(MicroBeesActuatorEntity, LightEntity):
     """Representation of a microBees light."""
 
+    _attr_color_mode = ColorMode.RGBW
     _attr_supported_color_modes = {ColorMode.RGBW}
 
     def __init__(

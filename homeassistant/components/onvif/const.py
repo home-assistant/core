@@ -1,6 +1,7 @@
 """Constants for the onvif component."""
 
 import asyncio
+from datetime import timedelta
 import logging
 
 import aiohttp
@@ -21,14 +22,9 @@ CONF_ENABLE_WEBHOOKS = "enable_webhooks"
 CONF_MORE_OPTIONS = "more_options"
 DEFAULT_ENABLE_WEBHOOKS = True
 
-ATTR_PAN = "pan"
-ATTR_TILT = "tilt"
-ATTR_ZOOM = "zoom"
-ATTR_DISTANCE = "distance"
-ATTR_SPEED = "speed"
-ATTR_MOVE_MODE = "move_mode"
-ATTR_CONTINUOUS_DURATION = "continuous_duration"
-ATTR_PRESET = "preset"
+# Bounds each snapshot auth probe during setup, tighter than the library's
+# default so a camera whose snapshot never completes does not stall setup
+SNAPSHOT_TIMEOUT = timedelta(seconds=10)
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
@@ -44,8 +40,6 @@ RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
 STOP_MOVE = "Stop"
-
-SERVICE_PTZ = "ptz"
 
 
 # Some cameras don't support the GetServiceCapabilities call

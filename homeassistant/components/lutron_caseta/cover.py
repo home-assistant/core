@@ -151,6 +151,34 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
         await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
 
 
+class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
+    """Representation of a Lutron cover with open, close and stop only."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    _attr_is_closed = None
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._smartbridge.raise_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._smartbridge.lower_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._smartbridge.stop_cover(self.device_id)
+
+
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
     "Tilt": LutronCasetaTiltOnlyBlind,
@@ -163,6 +191,7 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
     "SerenaEssentialsRollerShade": LutronCasetaShade,
+    "OpenCloseStop": LutronCasetaOpenCloseStopCover,
 }
 
 

@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -15,7 +15,7 @@ from pyrainbird.async_client import (
 from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.const import CONF_MAC
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,10 +23,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 from .types import RainbirdConfigEntry
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+UPDATE_INTERVAL = dt.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
-CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
+CALENDAR_UPDATE_INTERVAL = dt.timedelta(minutes=15)
 CALENDAR_TIMEOUT_SECONDS = 30
 
 # The valves state are not immediately reflected after issuing a command. We add
@@ -116,7 +116,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         # The unique id is the formatted MAC for current config entries, but was
         # historically the serial number, so derive the connection from the MAC.
         if mac_address := self.config_entry.data.get(CONF_MAC):
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac_address)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, mac_address)}
         return device_info
 
     @override
@@ -172,6 +172,21 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
         )
         self._controller = controller
         self._device_lock = device_lock
+        self._load_started = False
+
+    @callback
+    def async_load(self) -> None:
+        """Load the schedule in the background once an entity needs it.
+
+        The schedule takes a request per program and zone, so it is only
+        loaded once, however many entities are enabled.
+        """
+        if self._load_started:
+            return
+        self._load_started = True
+        self.config_entry.async_create_background_task(
+            self.hass, self.async_refresh(), "rainbird.schedule-refresh"
+        )
 
     @override
     async def _async_update_data(self) -> Schedule:

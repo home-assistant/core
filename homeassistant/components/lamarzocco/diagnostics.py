@@ -6,12 +6,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_USE_BLUETOOTH
+from .const import CONF_USE_BLUETOOTH, TO_REDACT
 from .coordinator import LaMarzoccoConfigEntry
-
-TO_REDACT = {
-    "serial_number",
-}
 
 
 async def async_get_config_entry_diagnostics(

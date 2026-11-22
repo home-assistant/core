@@ -4,21 +4,32 @@ import asyncio
 import logging
 
 from aiohue import HueBridgeV1, HueBridgeV2
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_platform_entity_service,
+    verify_domain_control,
+)
+from homeassistant.helpers.typing import VolDictType
 
 from .bridge import HueBridge, HueConfigEntry
-from .const import (
-    ATTR_DYNAMIC,
-    ATTR_GROUP_NAME,
-    ATTR_SCENE_NAME,
-    ATTR_TRANSITION,
-    DOMAIN,
-    SERVICE_HUE_ACTIVATE_SCENE,
-)
+from .const import DOMAIN, HueService, HueServiceArgument
+
+ACTIVATE_SCENE_SCHEMA: VolDictType = {
+    probatio.Optional(HueServiceArgument.DYNAMIC): probatio.Coerce(bool),
+    probatio.Optional(HueServiceArgument.SPEED): probatio.All(
+        probatio.Coerce(int), probatio.Percentage()
+    ),
+    probatio.Optional(HueServiceArgument.TRANSITION): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=0, max=3600)
+    ),
+    probatio.Optional(HueServiceArgument.BRIGHTNESS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=255)
+    ),
+}
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +41,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
         """Handle activation of Hue scene."""
         # Get parameters
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
-        transition = call.data.get(ATTR_TRANSITION)
-        dynamic = call.data.get(ATTR_DYNAMIC, False)
+        group_name = call.data[HueServiceArgument.GROUP_NAME]
+        scene_name = call.data[HueServiceArgument.SCENE_NAME]
+        transition = call.data.get(HueServiceArgument.TRANSITION)
+        dynamic = call.data.get(HueServiceArgument.DYNAMIC, False)
 
         # Call the set scene function on each bridge
         entries: list[HueConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
@@ -61,16 +72,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
     # Register a local handler for scene activation
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HUE_ACTIVATE_SCENE,
+        HueService.HUE_ACTIVATE_SCENE,
         verify_domain_control(DOMAIN)(hue_activate_scene),
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_GROUP_NAME): cv.string,
-                vol.Required(ATTR_SCENE_NAME): cv.string,
-                vol.Optional(ATTR_TRANSITION): cv.positive_int,
-                vol.Optional(ATTR_DYNAMIC): cv.boolean,
+                probatio.Required(HueServiceArgument.GROUP_NAME): cv.string,
+                probatio.Required(HueServiceArgument.SCENE_NAME): cv.string,
+                probatio.Optional(HueServiceArgument.TRANSITION): cv.positive_int,
+                probatio.Optional(HueServiceArgument.DYNAMIC): cv.boolean,
             }
         ),
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        HueService.ACTIVATE_SCENE,
+        entity_domain=SCENE_DOMAIN,
+        func="_async_activate",
+        schema=ACTIVATE_SCENE_SCHEMA,
     )
 
 
@@ -138,7 +157,7 @@ async def hue_activate_scene_v2(
             "Use of service_call '%s' is deprecated and will be removed "
             "in a future release. Please use scene entities instead"
         ),
-        SERVICE_HUE_ACTIVATE_SCENE,
+        HueService.HUE_ACTIVATE_SCENE,
     )
     api: HueBridgeV2 = bridge.api
     for scene in api.scenes:

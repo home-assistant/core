@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.octoprint.const import (
-    CONF_BAUDRATE,
-    DOMAIN,
-    SERVICE_CONNECT,
+from homeassistant.components.octoprint.const import DOMAIN
+from homeassistant.components.octoprint.services import (
+    OctoPrintService,
+    OctoPrintServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -31,9 +31,9 @@ async def test_connect_default(
     with patch("pyoctoprintapi.OctoprintClient.connect") as connect_command:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CONNECT,
+            OctoPrintService.PRINTER_CONNECT,
             {
-                ATTR_DEVICE_ID: device.id,
+                CommonServiceArgument.DEVICE_ID: device.id,
             },
             blocking=True,
         )
@@ -55,12 +55,12 @@ async def test_connect_all_arguments(
     with patch("pyoctoprintapi.OctoprintClient.connect") as connect_command:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CONNECT,
+            OctoPrintService.PRINTER_CONNECT,
             {
-                ATTR_DEVICE_ID: device.id,
-                CONF_PROFILE_NAME: "Test Profile",
-                CONF_PORT: "VIRTUAL",
-                CONF_BAUDRATE: 9600,
+                CommonServiceArgument.DEVICE_ID: device.id,
+                OctoPrintServiceArgument.PROFILE_NAME: "Test Profile",
+                OctoPrintServiceArgument.PORT: "VIRTUAL",
+                OctoPrintServiceArgument.BAUDRATE: 9600,
             },
             blocking=True,
         )

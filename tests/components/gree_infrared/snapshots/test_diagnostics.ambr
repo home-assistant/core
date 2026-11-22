@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'ac_state': dict({
+      'blow': False,
+      'display': True,
+      'fan': 'auto',
+      'mode': 'cool',
+      'power': False,
+      'swing_h': False,
+      'swing_v': False,
+      'temperature': 16,
+      'turbo': False,
+    }),
+    'entry_data': dict({
+      'hvac_modes': list([
+        'cool',
+        'dry',
+      ]),
+      'infrared_emitter_entity_id': 'infrared.test_ir_emitter',
+      'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+    }),
+  })
+# ---

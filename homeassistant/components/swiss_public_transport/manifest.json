@@ -1,11 +1,13 @@
 {
   "domain": "swiss_public_transport",
   "name": "Swiss public transport",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@fabaff", "@miaucl"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/swiss_public_transport",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["opendata_transport"],
-  "requirements": ["python-opendata-transport==0.5.0"]
+  "requirements": ["python-opendata-transport==0.6.2"]
 }

@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, override
 
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -75,7 +75,7 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
         """Press button."""
         try:
             await self.entity_description.press_fn(self.coordinator)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="button_error",

@@ -246,6 +246,17 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
     ),
     ReolinkSwitchEntityDescription(
+        key="tamper_enabled",
+        cmd_key="763",
+        cmd_id=763,
+        translation_key="tamper_enabled",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "tamper"),
+        value=lambda api, ch: api.baichuan.tamper_enabled(ch) is True,
+        method=lambda api, ch, value: api.baichuan.set_tamper(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="privacy_mode",
         always_available=True,
         translation_key="privacy_mode",

@@ -4,11 +4,10 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from aiohttp import ClientResponseError
+import probatio
 from pybraendstofpriser import Braendstofpriser
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -17,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
+from . import FuelpricesDkConfigEntry
 from .const import CONF_COMPANY, CONF_STATION, DOMAIN, WEBSITE_URL
 
 
@@ -38,7 +38,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: FuelpricesDkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"station": FuelpricesDkStationSubentryFlow}
@@ -82,11 +82,11 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the company selection form."""
         return self.async_show_form(
             step_id="company_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_COMPANY, default=self.company_name): vol.In(
-                        [c["company"] for c in self.companies]
-                    ),
+                    probatio.Required(
+                        CONF_COMPANY, default=self.company_name
+                    ): probatio.In([c["company"] for c in self.companies]),
                 }
             ),
             errors=errors,
@@ -115,9 +115,9 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -180,9 +180,9 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="station_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STATION): vol.In(stations),
+                    probatio.Required(CONF_STATION): probatio.In(stations),
                 }
             ),
         )
@@ -207,20 +207,19 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = _get_api_error_key(exc)
 
             if not errors:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                entry = self._get_reauth_entry()
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -255,16 +254,16 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
         """Show the company selection form."""
         default_company = self.user_input.get(CONF_COMPANY)
         company_field = (
-            vol.Required(CONF_COMPANY, default=default_company)
+            probatio.Required(CONF_COMPANY, default=default_company)
             if default_company
-            else vol.Required(CONF_COMPANY)
+            else probatio.Required(CONF_COMPANY)
         )
 
         return self.async_show_form(
             step_id="company_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    company_field: vol.In([c["company"] for c in self.companies]),
+                    company_field: probatio.In([c["company"] for c in self.companies]),
                 }
             ),
             errors=errors or {},
@@ -339,9 +338,9 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="station_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STATION): vol.In(stations),
+                    probatio.Required(CONF_STATION): probatio.In(stations),
                 }
             ),
             errors=self._errors,

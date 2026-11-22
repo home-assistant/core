@@ -65,7 +65,17 @@ class AxisHub:
         cannot be used with weak references.
         """
         hub = config_entry.runtime_data
-        hub.config = AxisConfig.from_config_entry(config_entry)
+        config = AxisConfig.from_config_entry(config_entry)
+        if (
+            config.username != hub.config.username
+            or config.password != hub.config.password
+            or config.protocol != hub.config.protocol
+            or config.port != hub.config.port
+        ):
+            await hass.config_entries.async_reload(config_entry.entry_id)
+            return
+
+        hub.config = config
         hub.event_source.config_entry = config_entry
         hub.api.config.host = hub.config.host
         async_dispatcher_send(hass, hub.signal_new_address)

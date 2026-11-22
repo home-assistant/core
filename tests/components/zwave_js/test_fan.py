@@ -2,8 +2,8 @@
 
 import copy
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -14,22 +14,20 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
     NotValidPresetModeError,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -188,7 +186,7 @@ async def test_generic_fan(
     # Test setting percentage to 0
     await hass.services.async_call(
         "fan",
-        SERVICE_SET_PERCENTAGE,
+        FanService.SET_PERCENTAGE,
         {"entity_id": entity_id, "percentage": 0},
         blocking=True,
     )
@@ -719,6 +717,76 @@ async def test_leviton_zw4sf_fan(
     assert state.attributes[ATTR_PRESET_MODES] == []
 
 
+async def test_leviton_vrf01_fan(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test a Leviton VRF01 fan with 3 fixed speeds."""
+    node = leviton_vrf01
+    node_id = node.node_id
+    entity_id = "fan.fan"
+
+    async def get_zwave_speed_from_percentage(percentage):
+        """Set the fan to a particular percentage and get the resulting Zwave speed."""
+        client.async_send_command.reset_mock()
+
+        await hass.services.async_call(
+            "fan",
+            "turn_on",
+            {"entity_id": entity_id, "percentage": percentage},
+            blocking=True,
+        )
+
+        assert len(client.async_send_command.call_args_list) == 1
+        args = client.async_send_command.call_args[0][0]
+        assert args["command"] == "node.set_value"
+        assert args["nodeId"] == node_id
+        return args["value"]
+
+    async def get_percentage_from_zwave_speed(zwave_speed):
+        """Set the underlying device speed and get the resulting percentage."""
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": zwave_speed,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+        node.receive_event(event)
+        state = hass.states.get(entity_id)
+        return state.attributes[ATTR_PERCENTAGE]
+
+    # This device has the speeds:
+    # 1 = 1-32, 2 = 33-66, 3 = 67-99
+    percentages_to_zwave_speeds = [
+        [[0], [0]],
+        [range(1, 34), range(1, 33)],
+        [range(34, 67), range(33, 67)],
+        [range(67, 101), range(67, 100)],
+    ]
+
+    for percentages, zwave_speeds in percentages_to_zwave_speeds:
+        for percentage in percentages:
+            actual_zwave_speed = await get_zwave_speed_from_percentage(percentage)
+            assert actual_zwave_speed in zwave_speeds
+        for zwave_speed in zwave_speeds:
+            actual_percentage = await get_percentage_from_zwave_speed(zwave_speed)
+            assert actual_percentage in percentages
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(100 / 3, rel=1e-3)
+    assert state.attributes[ATTR_PRESET_MODES] == []
+
+
 async def test_enbrighten_55258_zw4002_fan(
     hass: HomeAssistant, client, enbrighten_55258_zw4002, integration
 ) -> None:
@@ -904,8 +972,8 @@ async def test_thermostat_fan(
     # Test setting preset mode
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Low"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "Low"},
         blocking=True,
     )
 
@@ -926,8 +994,8 @@ async def test_thermostat_fan(
     with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Turbo"},
+            FanService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "Turbo"},
             blocking=True,
         )
     assert exc.value.translation_key == "not_valid_preset_mode"
@@ -937,8 +1005,8 @@ async def test_thermostat_fan(
     # Test turning off
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -958,8 +1026,8 @@ async def test_thermostat_fan(
     # Test turning on
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1136,8 +1204,8 @@ async def test_thermostat_fan_without_off(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1150,8 +1218,8 @@ async def test_thermostat_fan_without_off(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

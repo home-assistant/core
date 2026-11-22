@@ -5,7 +5,7 @@ import logging
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
-from pydaikin.exceptions import DaikinException
+from pydaikin.exceptions import DaikinException, DaikinUnsupportedError
 from pydaikin.factory import DaikinFactory
 
 from homeassistant.const import (
@@ -16,22 +16,35 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT_SEC
+from .const import DOMAIN, KEY_MAC, TIMEOUT_SEC
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Daikin integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
@@ -57,11 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
+    except DaikinUnsupportedError as err:
+        _LOGGER.debug("Unsupported Daikin device at %s: %s", host, err)
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device",
+        ) from err
     except DaikinException as err:
-        # pydaikin has no subclass hierarchy for transient vs permanent errors.
         # DaikinException during factory/init almost always means the device is not
         # yet ready (e.g. "Empty values." when the unit hasn't finished booting),
-        # so treat all factory-time DaikinExceptions as transient.
+        # so treat remaining factory-time DaikinExceptions as transient.
         _LOGGER.debug("DaikinException from %s: %s", host, err)
         raise ConfigEntryNotReady from err
 
@@ -73,12 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_unique_id(
@@ -127,16 +144,16 @@ async def async_migrate_unique_id(
     ):
         for connection in device_entry.connections:
             if connection[1] == old_unique_id:
-                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
+                mac_connection = {(CONNECTION_NETWORK_MAC, new_mac)}
 
                 _LOGGER.debug(
                     "Migrating device %s connections to %s",
                     device_entry.name,
-                    new_connections,
+                    mac_connection,
                 )
                 dev_reg.async_update_device(
                     device_entry.id,
-                    merge_connections=new_connections,
+                    new_connections=device_entry.connections | mac_connection,
                 )
 
         if device_entry.name is None:

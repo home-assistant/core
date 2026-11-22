@@ -1,11 +1,15 @@
 """Tests for the Google Generative AI Conversation integration."""
 
+from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import attr
+from google.genai import Client
+from google.genai.errors import ClientError, ServerError
 import pytest
-from requests.exceptions import Timeout
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -31,42 +35,109 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
-from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
+from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID, CLIENT_ERROR_BAD_REQUEST
 
-from tests.common import MockConfigEntry
+
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful setup keeps the async client open."""
+    client = await hass.async_add_executor_job(partial(Client, api_key="bla"))
+    with (
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.Client",
+            return_value=client,
+        ),
+        patch.object(client.aio.models, "get", new_callable=AsyncMock),
+        patch.object(client.aio, "aclose", wraps=client.aio.aclose) as mock_aclose,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert mock_config_entry.runtime_data is client
+        mock_aclose.assert_not_awaited()
+
+    await client.aio.aclose()
 
 
 @pytest.mark.parametrize(
     ("side_effect", "state", "reauth"),
     [
-        (
-            API_ERROR_500,
-            ConfigEntryState.SETUP_ERROR,
-            False,
-        ),
-        (
-            Timeout,
+        pytest.param(
+            TimeoutError,
             ConfigEntryState.SETUP_RETRY,
             False,
+            id="timeout",
         ),
-        (
+        pytest.param(
+            aiohttp.ClientConnectionError("Cannot connect"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="client_connection_error",
+        ),
+        pytest.param(
+            API_ERROR_500,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="api_error_500",
+        ),
+        pytest.param(
+            ServerError(
+                503,
+                {"message": "Service Unavailable", "status": "unavailable"},
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="server_error_503",
+        ),
+        pytest.param(
+            ClientError(
+                429,
+                {"message": "Resource exhausted", "status": "resource-exhausted"},
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="rate_limited_429",
+        ),
+        pytest.param(
+            CLIENT_ERROR_BAD_REQUEST,
+            ConfigEntryState.SETUP_ERROR,
+            False,
+            id="bad_request_400",
+        ),
+        pytest.param(
             CLIENT_ERROR_API_KEY_INVALID,
             ConfigEntryState.SETUP_ERROR,
             True,
+            id="invalid_api_key",
         ),
     ],
 )
 async def test_config_entry_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, side_effect, state, reauth
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    state: ConfigEntryState,
+    reauth: bool,
 ) -> None:
     """Test different configuration entry errors."""
-    mock_client = AsyncMock()
-    mock_client.get_model.side_effect = side_effect
-    with patch("google.genai.models.AsyncModels.get", side_effect=side_effect):
+    client = await hass.async_add_executor_job(partial(Client, api_key="bla"))
+    with (
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.Client",
+            return_value=client,
+        ),
+        patch.object(
+            client.aio.models, "get", new_callable=AsyncMock, side_effect=side_effect
+        ),
+        patch.object(client.aio, "aclose", wraps=client.aio.aclose) as mock_aclose,
+    ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config_entry.state == state
+        assert mock_config_entry.state is state
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth
+        mock_aclose.assert_awaited_once()
 
 
 async def test_migration_from_v1(
@@ -136,7 +207,7 @@ async def test_migration_from_v1(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -201,10 +272,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -224,10 +293,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -399,7 +466,7 @@ async def test_migration_from_v1_disabled(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -471,12 +538,8 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -547,7 +610,7 @@ async def test_migration_from_v1_with_multiple_keys(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -582,10 +645,8 @@ async def test_migration_from_v1_with_multiple_keys(
             (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {
-            entry.entry_id: {list(entry.subentries.values())[0].subentry_id}
-        }
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == list(entry.subentries.values())[0].subentry_id
 
 
 async def test_migration_from_v1_with_same_keys(
@@ -655,7 +716,7 @@ async def test_migration_from_v1_with_same_keys(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -720,10 +781,8 @@ async def test_migration_from_v1_with_same_keys(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -743,10 +802,8 @@ async def test_migration_from_v1_with_same_keys(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -859,7 +916,7 @@ async def test_migration_from_v2_1(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -924,10 +981,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -947,10 +1002,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 async def test_devices(
@@ -1001,7 +1054,7 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is True
@@ -1202,17 +1255,20 @@ async def test_migrate_entry_from_v2_3(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=entity_disabled_by,
         device_id=conversation_device.id,
         suggested_object_id="google_generative_ai_conversation",
     )
+    conversation_entity = attr.evolve(
+        conversation_entity, disabled_by=entity_disabled_by
+    )
+    entity_registry.entities[conversation_entity.entity_id] = conversation_entity
 
     # Verify initial state
     assert mock_config_entry.version == 2
@@ -1225,7 +1281,7 @@ async def test_migrate_entry_from_v2_3(
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is setup_result

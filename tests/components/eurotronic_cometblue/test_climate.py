@@ -4,12 +4,17 @@ from unittest.mock import patch
 import uuid
 
 from eurotronic_cometblue_ha import const as cometblue_const
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
@@ -17,22 +22,20 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.eurotronic_cometblue.climate import MAX_TEMP, MIN_TEMP
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.comet_blue_aa_bb_cc_dd_ee_ff"
 
@@ -92,8 +95,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
         blocking=True,
     )
 
@@ -129,8 +132,8 @@ async def test_climate_preset_away_active(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
             blocking=True,
         )
 
@@ -155,8 +158,11 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
+        },
         blocking=True,
     )
     assert (state := hass.states.get(ENTITY_ID))
@@ -165,22 +171,34 @@ async def test_set_preset_mode(
     assert state.state == expected_state
 
 
-@pytest.mark.parametrize("preset_mode", [PRESET_NONE, PRESET_AWAY])
+@pytest.mark.parametrize(
+    ("preset_mode", "exc_translation_key"),
+    [
+        (PRESET_NONE, "display_only_preset"),
+        (PRESET_AWAY, "display_only_preset"),
+        ("unspecified", "not_valid_preset_mode"),  # handled by ClimateEntity
+    ],
+)
 async def test_set_preset_mode_display_only_raises(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     preset_mode: str,
+    exc_translation_key: str,
 ) -> None:
     """Test display-only presets cannot be set."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    with pytest.raises(ServiceValidationError, match="Unable to set preset"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: preset_mode,
+            },
             blocking=True,
         )
+    assert err.value.translation_key == exc_translation_key
 
 
 @pytest.mark.parametrize(
@@ -203,8 +221,8 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
@@ -270,8 +288,8 @@ async def test_set_temperature_errors(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
             blocking=True,
         )
 
@@ -279,6 +297,7 @@ async def test_set_temperature_errors(
 async def test_update_data_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that update data errors are handled and retried."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -292,8 +311,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=TimeoutError(),
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 3
         assert mock_config_entry.runtime_data.last_update_success is False
@@ -306,8 +326,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=OSError(),
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 1
         assert mock_config_entry.runtime_data.last_update_success is False
@@ -323,8 +344,9 @@ async def test_update_data_error_handling(
         "get_temperature_async",
         side_effect=[TimeoutError(), updated_temperatures],
     ) as mock_get_temperature:
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_get_temperature.call_count == 2
         assert mock_config_entry.runtime_data.last_update_success is True

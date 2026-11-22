@@ -158,6 +158,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
     """Base class for all Wolf entities."""
 
     entity_description: WolflinkSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -30,6 +30,9 @@ MQTT = {
         "cloudapp/QBUSMQTTGW/config",
         "cloudapp/QBUSMQTTGW/+/state",
     ],
+    "silla_prism": [
+        "prism/hello",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],

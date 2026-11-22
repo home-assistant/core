@@ -1,17 +1,18 @@
 """Test UniFi Protect diagnostics."""
 
+from collections.abc import Callable, Coroutine
 import re
 from typing import Any
+from unittest.mock import Mock
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import Light
 
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # Pattern for hex IDs (24 char hex strings like device/user IDs)
 HEX_ID_PATTERN = re.compile(r"^[a-f0-9]{24}$")
@@ -32,7 +33,7 @@ PERMISSION_ID_PATTERN = re.compile(r"^(.+:\*:)[a-f0-9]{24}$")
 # Keys that should be redacted for security
 REDACT_KEYS = {"accessKey"}
 # Keys that contain anonymized names (need normalization) - pattern-matched
-NAME_KEYS = {"name", "firstName", "lastName"}
+NAME_KEYS = {"name", "firstName", "lastName", "customMessages"}
 # Keys that always need normalization (not pattern-matched)
 ALWAYS_REDACT_KEYS = {"localUsername"}
 
@@ -51,7 +52,7 @@ def _normalize_diagnostics(data: Any, parent_key: str | None = None) -> Any:
             if k != "repr"  # Remove repr fields with memory addresses
         }
     if isinstance(data, list):
-        return [_normalize_diagnostics(item) for item in data]
+        return [_normalize_diagnostics(item, parent_key) for item in data]
     if isinstance(data, str):
         # Redact sensitive keys
         if parent_key in REDACT_KEYS:
@@ -104,3 +105,52 @@ async def test_diagnostics(
     diag_normalized = _normalize_diagnostics(diag)
 
     assert diag_normalized == snapshot
+
+
+async def test_diagnostics_before_public_fetch(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Diagnostics skip the public cache until it was fetched once."""
+    await init_entry(hass, ufp, [light])
+    ufp.api.has_public_bootstrap = False
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
+
+    assert "bootstrap" in diag
+    assert "public_bootstrap" not in diag
+
+
+async def test_public_only_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Diagnostics for a public-only entry dump the public cache."""
+    await setup_public_only()
+    ufp_public_only.api.public_bootstrap.nvr.unifi_dict = Mock(
+        return_value={"name": "Test NVR", "armMode": {"status": "armed"}}
+    )
+    camera = Mock()
+    camera.unifi_dict = Mock(
+        return_value={
+            "name": "Cam",
+            "rtspsStreams": {"high": "rtsps://10.0.0.2:7441/secret?enableSrtp"},
+        }
+    )
+    ufp_public_only.api.public_bootstrap.cameras = {"cam-id": camera}
+
+    diag = await get_diagnostics_for_config_entry(
+        hass, hass_client, ufp_public_only.entry
+    )
+
+    assert "bootstrap" not in diag
+    # anonymize_data scrambles values; assert the structure, not the content
+    assert "name" in diag["public_bootstrap"]["nvr"]
+    assert diag["public_bootstrap"]["nvr"]["armMode"] == {"status": "armed"}
+    # the stream URLs carry the console host and a secret alias — never leak
+    dumped_camera = diag["public_bootstrap"]["cameras"][0]
+    assert dumped_camera["rtspsStreams"] == "**REDACTED**"

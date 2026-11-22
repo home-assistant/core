@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import ClientConnectionError
 from monzopy import AuthorisationExpiredError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.monzo.application_credentials import (
     OAUTH2_AUTHORIZE,
@@ -13,16 +16,13 @@ from homeassistant.components.monzo.application_credentials import (
 )
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .conftest import CLIENT_ID, USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -82,8 +82,12 @@ async def test_full_flow(
     approval_api.user_account.accounts.side_effect = check_approval
     with (
         patch(
-            "homeassistant.components.monzo.async_setup_entry", return_value=True
+            "homeassistant.components.monzo.async_setup_entry", return_value=None
         ) as mock_setup,
+        patch(
+            "homeassistant.components.monzo.config_flow.async_generate_id",
+            return_value="generated-webhook-id",
+        ),
         patch(
             "homeassistant.components.monzo.config_flow.MonzoAPI",
             return_value=approval_api,
@@ -112,6 +116,7 @@ async def test_full_flow(
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].data[CONF_WEBHOOK_ID] == "generated-webhook-id"
 
 
 @pytest.mark.parametrize(
@@ -168,7 +173,7 @@ async def test_approval_error_retry(
         await approval_granted.wait()
 
     with (
-        patch("homeassistant.components.monzo.async_setup_entry", return_value=True),
+        patch("homeassistant.components.monzo.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.monzo.config_flow.MonzoFlowHandler._async_wait_for_approval",
             side_effect=fail_approval_check,
@@ -195,6 +200,7 @@ async def test_approval_error_retry(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "600"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

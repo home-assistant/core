@@ -21,7 +21,7 @@
     'max_current': 24,
     'max_station_current': 32,
     'name': 'TechnoVE Station',
-    'network_ssid': 'Connecting...',
+    'network_ssid': '**REDACTED**',
     'normal_period_active': False,
     'rssi': -82,
     'status': dict({

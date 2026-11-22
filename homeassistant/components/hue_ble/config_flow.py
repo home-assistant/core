@@ -6,7 +6,7 @@ from typing import Any, override
 
 from bleak.backends.scanner import AdvertisementData
 from HueBLE import ConnectionError, HueBleError, HueBleLight, PairingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.api import (
@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth.api import (
     async_scanner_count,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -113,9 +113,9 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_MAC): vol.In(
+                probatio.Required(CONF_MAC): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"
@@ -166,11 +166,11 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             errors=errors,
             description_placeholders={
-                CONF_NAME: self._discovery_info.name,
-                CONF_MAC: self._discovery_info.address,
+                "name": self._discovery_info.name,
+                "mac": self._discovery_info.address,
                 "url_pairing_mode": URL_PAIRING_MODE,
                 "url_factory_reset": URL_FACTORY_RESET,
             },

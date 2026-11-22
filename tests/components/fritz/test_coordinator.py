@@ -11,14 +11,15 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
-    DEFAULT_SSL,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -50,8 +51,6 @@ from .const import (
     MOCK_STATUS_DEVICE_INFO_DATA,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -124,7 +123,7 @@ async def test_fritzboxtools_class_no_setup(
         port=MOCK_USER_DATA[CONF_PORT],
         username=MOCK_USER_DATA[CONF_USERNAME],
         password=MOCK_USER_DATA[CONF_PASSWORD],
-        use_tls=MOCK_USER_DATA.get(CONF_SSL, DEFAULT_SSL),
+        use_tls=MOCK_USER_DATA[CONF_SSL],
         device_discovery_enabled=MOCK_USER_DATA.get(
             CONF_FEATURE_DEVICE_TRACKING, DEFAULT_CONF_FEATURE_DEVICE_TRACKING
         ),
@@ -154,31 +153,6 @@ async def test_clear_connection_cache(
     fc_class_mock.return_value.clear_cache()
 
     assert "Cleared FritzConnection call action cache" in caplog.text
-
-
-async def test_no_connection(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
-) -> None:
-    """Test no connection established."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
-        return_value=None,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        assert (
-            f"Unable to establish a connection with {MOCK_USER_DATA[CONF_HOST]}"
-            in caplog.text
-        )
 
 
 async def test_no_software_version(
@@ -212,7 +186,14 @@ async def test_no_software_version(
     assert device.sw_version == "string_version_not_number"
 
 
-async def test_connection_cached_call_action() -> None:
+@pytest.mark.parametrize(
+    ("get_action", "set_action"),
+    [
+        pytest.param("GetInfo", "SetEnable", id="standard"),
+        pytest.param("X_AVM-DE_GetInfo", "X_AVM-DE_SetConfig", id="avm_vendor"),
+    ],
+)
+async def test_connection_cached_call_action(get_action: str, set_action: str) -> None:
     """Test call_action cache behavior for get and non-get actions."""
 
     conn = object.__new__(FritzConnectionCached)
@@ -222,18 +203,18 @@ async def test_connection_cached_call_action() -> None:
         autospec=True,
         return_value={"ok": True},
     ) as parent_call:
-        first = conn.call_action("Svc", "GetInfo", arguments={"a": 1})
-        second = conn.call_action("Svc", "GetInfo", arguments={"a": 1})
+        first = conn.call_action("Svc", get_action, arguments={"a": 1})
+        second = conn.call_action("Svc", get_action, arguments={"a": 1})
         assert first == {"ok": True}
         assert second == first
         assert parent_call.call_count == 1
 
         conn.clear_cache()
-        third = conn.call_action("Svc", "GetInfo", arguments={"a": 1})
+        third = conn.call_action("Svc", get_action, arguments={"a": 1})
         assert third == first
         assert parent_call.call_count == 2
 
-        conn.call_action("Svc", "SetEnable", NewEnable="1")
+        conn.call_action("Svc", set_action, NewEnable="1")
         assert parent_call.call_count == 3
 
 
@@ -255,6 +236,43 @@ async def test_async_get_wan_access_success(
 
     fritz_tools.connection.call_action = MagicMock(return_value={"NewDisallow": False})
     assert await fritz_tools._async_get_wan_access("192.168.1.2") is True
+
+
+async def test_setup_ignores_wan_enabled_action_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    patch_fritzconnectioncached_globally: FritzConnectionMock,
+) -> None:
+    """Test WAN capability check falls back when the router reports a call error."""
+
+    mock_config_entry.add_to_hass(hass)
+    coordinator = FritzBoxTools(
+        hass=hass,
+        config_entry=mock_config_entry,
+        password=mock_config_entry.data["password"],
+        port=mock_config_entry.data["port"],
+    )
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
+
+    with (
+        patch.object(
+            FritzStatus,
+            "has_wan_enabled",
+            new_callable=PropertyMock,
+            side_effect=FritzActionError("401 Invalid Action."),
+        ),
+        patch.object(
+            FritzStatus,
+            "has_wan_support",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+    ):
+        await coordinator.async_setup()
+
+    assert coordinator.device_is_router is False
+    assert "assume that device has no wan enabled" in caplog.text
 
 
 async def test_async_update_hosts_info_attributes_branches(
@@ -350,19 +368,6 @@ async def test_async_update_call_deflections_empty_paths(
         return_value={"NewDeflectionList": "<List><Foo>Bar</Foo></List>"}
     )
     assert await fritz_tools.async_update_call_deflections() == {}
-
-
-async def test_async_scan_devices_stopping_returns(
-    hass: HomeAssistant,
-    fritz_tools,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scan devices exits when Home Assistant is stopping."""
-
-    with patch.object(hass, "is_stopping", True):
-        await fritz_tools.async_scan_devices()
-
-    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
 
 
 async def test_async_scan_devices_old_discovery_branch(
@@ -527,6 +532,17 @@ async def test_trigger_methods(
     fritz_tools.fritz_call.hangup.assert_called_once()
 
 
+async def test_trigger_reconnect_reraises_unexpected_error(
+    fritz_tools,
+) -> None:
+    """Test async_trigger_reconnect re-raises errors other than DisconnectInProgress."""
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException("some other error")
+    )
+    with pytest.raises(FritzConnectionException):
+        await fritz_tools.async_trigger_reconnect()
+
+
 async def test_avmwrapper_service_call_branches(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -580,6 +596,7 @@ async def test_avmwrapper_passthrough_methods(
 
     wrapper.device_is_router = False
     assert await wrapper.async_ipv6_active() is False
+    assert await wrapper.async_addon_infos_supported() is False
 
     assert await wrapper.async_set_wlan_configuration(1, True) == {}
     assert await wrapper.async_set_deflection_enable(1, False) == {}
@@ -624,10 +641,14 @@ async def test_async_trigger_cleanup(
 
     # remove printer from host list
     fh_class_mock.get_hosts_attributes.return_value = [MOCK_HOST_FRITZBOX]
+    fh_class_mock.get_hosts_attributes.reset_mock()
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Cleanup reuses the hosts from the scan instead of fetching them again
+    fh_class_mock.get_hosts_attributes.assert_called_once()
 
     # Verify the printer was removed from tracked devices
     assert (
@@ -680,15 +701,10 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     assert fritz_device is not None
 
     # Simulate a host scan that does NOT include the fritz box itself
-    client_hosts = {
+    wrapper.hosts = {
         "AA:BB:CC:DD:EE:01": MagicMock(connected=True),
     }
-    with patch.object(
-        wrapper,
-        "_async_update_hosts_info",
-        AsyncMock(return_value=client_hosts),
-    ):
-        await wrapper.async_trigger_cleanup()
+    await wrapper.async_trigger_cleanup()
 
     # The fritz box device must still be present in the registry
     fritz_device_after = device_registry.async_get_device_by_identifier(

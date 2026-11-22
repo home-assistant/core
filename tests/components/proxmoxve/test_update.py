@@ -1,0 +1,234 @@
+"""Tests for the Proxmox VE update platform."""
+
+from unittest.mock import MagicMock, patch
+
+from aioproxmox.exceptions import ProxmoxConnectionError
+from aioproxmox.model import PVEPermissions
+from aioproxmox.model.pve import AptArchType, NodeAptUpdate, NodeAptUpdateProperty
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import AUDIT_PERMISSIONS, MERGED_PERMISSIONS, setup_integration
+
+ENTITY_ID = "update.pve1_software_update"
+
+
+def _apt_update(package: str, version: str, origin: str = "") -> NodeAptUpdateProperty:
+    """Return an apt update with only the fields relevant for versioning."""
+    return NodeAptUpdateProperty(
+        description="",
+        arch=AptArchType.ALL,
+        package=package,
+        priority="optional",
+        section="admin",
+        title="",
+        version=version,
+        origin=origin,
+    )
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected_latest_version"),
+    [
+        pytest.param(
+            [
+                _apt_update("bind9-host", "1", "Debian"),
+                _apt_update("pve-manager", "9.1.7", "Proxmox"),
+                _apt_update("libpve-common-perl", "9.1.9", "Proxmox"),
+                _apt_update("corosync", "3.1.10", "Proxmox"),
+                _apt_update("pve-firmware", "3.18", "Proxmox"),
+            ],
+            "9.1.7-p4-d1",
+            id="all-entities",
+        ),
+        pytest.param(
+            [_apt_update("ceph-common", "19.2.6", "Proxmox")],
+            "9.1.6-p1-d0",
+            id="higher-ceph-version-is-not-pve-version",
+        ),
+        pytest.param(
+            [_apt_update("libpve-storage-perl", "1+16.1+2+pmx1")],
+            "9.1.6-p1-d0",
+            id="debian-package-version-is-not-parsed",
+        ),
+        pytest.param(
+            [
+                _apt_update("ceph-common", "19.2.6", "Proxmox"),
+                _apt_update("pve-manager", "9.2.21-1"),
+            ],
+            "9.2.21-p2-d0",
+            id="pve-manager-version-is-used",
+        ),
+    ],
+)
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    updates: list[NodeAptUpdateProperty],
+    expected_latest_version: str,
+) -> None:
+    """Test all entities."""
+    # Ensure Sys.Modify permissions to ensure update status can be determined
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(MERGED_PERMISSIONS)
+    )
+    mock_proxmox_client.nodes.return_value.apt.return_value.update.return_value = (
+        NodeAptUpdate(items=updates)
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["latest_version"] == expected_latest_version
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_update_entities_ignored(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updates entities are not created with only auditor permissions."""
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(AUDIT_PERMISSIONS)
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_update_unavailable_on_permission_change(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updates entities are unavailable with only auditor permissions."""
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(MERGED_PERMISSIONS)
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state is not None
+
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(AUDIT_PERMISSIONS)
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the update entity is unavailable while the coordinator update fails."""
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(MERGED_PERMISSIONS)
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    mock_proxmox_client.cluster.resources.side_effect = ProxmoxConnectionError
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_proxmox_client.cluster.resources.side_effect = None
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_update_up_to_date(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that updates are up to date when no updates are pending."""
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(MERGED_PERMISSIONS)
+    )
+    mock_proxmox_client.nodes.return_value.apt.return_value.update.return_value = (
+        NodeAptUpdate(items=[])
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("latest_version") == "9.1.6"
+    assert state.state == STATE_OFF
+
+
+async def test_update_release_notes(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that updates release notes are correctly set."""
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(MERGED_PERMISSIONS)
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {"id": 1, "type": "update/release_notes", "entity_id": ENTITY_ID}
+    )
+    result = await ws_client.receive_json()
+    assert "5 package" in result["result"]["release_notes"]

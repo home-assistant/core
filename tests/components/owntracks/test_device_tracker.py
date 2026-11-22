@@ -9,6 +9,8 @@ from unittest.mock import patch
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import ClientSessionGenerator, MqttMockHAClient
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
@@ -25,9 +27,6 @@ from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import ClientSessionGenerator, MqttMockHAClient
 
 type OwnTracksContextFactory = Callable[[], owntracks.OwnTracksContext]
 

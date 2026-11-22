@@ -3,10 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jellyfin.const import DOMAIN
-from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import load_json_fixture
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -271,6 +270,19 @@ async def test_music_library(
     assert browse.title == "Music"
     assert vars(browse.children[0]) == snapshot
 
+    # Test browsing a music library containing album artists
+    mock_api.get_album_artists.return_value = load_json_fixture("artists.json")
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/MUSIC-COLLECTION-FOLDER-UUID"
+    )
+
+    assert browse.children_media_class == MediaClass.ARTIST
+    assert [child.identifier for child in browse.children] == ["ARTIST-UUID"]
+    mock_api.get_album_artists.assert_called_with(
+        parent_id="MUSIC-COLLECTION-FOLDER-UUID"
+    )
+
     # Test browsing an artist
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("artist.json")
@@ -283,6 +295,16 @@ async def test_music_library(
     assert browse.identifier == "ARTIST-UUID"
     assert browse.title == "ARTIST"
     assert vars(browse.children[0]) == snapshot
+    # Albums are not always below their artist in the folder tree, so they
+    # must be looked up by album artist, not by parent.
+    mock_api.user_items.assert_called_with(
+        "",
+        {
+            "Recursive": "true",
+            "AlbumArtistIds": "ARTIST-UUID",
+            "IncludeItemTypes": "MusicAlbum",
+        },
+    )
 
     # Test browsing an album
     mock_api.get_item.side_effect = None

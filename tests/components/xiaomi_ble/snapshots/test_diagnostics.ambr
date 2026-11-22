@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'bindkey_configured': True,
+    'bindkey_verified': True,
+    'decryption_failed': False,
+    'devices': list([
+      dict({
+        'hw_version': None,
+        'manufacturer': 'Xiaomi',
+        'model': 'T700',
+        'sw_version': None,
+      }),
+    ]),
+    'discovered_event_classes': list([
+    ]),
+    'encryption_scheme': 'mibeacon_4_5',
+    'last_advertisement': dict({
+      'connectable': True,
+      'rssi': -56,
+      'service_uuids': list([
+        '0000fe95-0000-1000-8000-00805f9b34fb',
+      ]),
+    }),
+    'last_update_success': True,
+    'pending': False,
+    'sleepy_device': False,
+    'unhandled': dict({
+      'end time': '2023-06-29T10:50:43',
+    }),
+  })
+# ---

@@ -60,38 +60,6 @@ SENSORS_INFO = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EnergyFlipSensorEntityDescription(
-        translation_key="current_power_peak",
-        sensor_type=SENSOR_TYPE_RATE,
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        key=SOURCE_TYPE_ELECTRICITY_IN,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    EnergyFlipSensorEntityDescription(
-        translation_key="current_power_off_peak",
-        sensor_type=SENSOR_TYPE_RATE,
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    EnergyFlipSensorEntityDescription(
-        translation_key="current_power_out_peak",
-        sensor_type=SENSOR_TYPE_RATE,
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        key=SOURCE_TYPE_ELECTRICITY_OUT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    EnergyFlipSensorEntityDescription(
-        translation_key="current_power_out_off_peak",
-        sensor_type=SENSOR_TYPE_RATE,
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    EnergyFlipSensorEntityDescription(
         translation_key="energy_consumption_peak_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -242,6 +210,7 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         self.entity_description = description
         self._source_type = description.key
         self._sensor_type = description.sensor_type
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )

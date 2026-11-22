@@ -4,15 +4,10 @@ import logging
 from typing import Any, Final, override
 
 from canary.api import Api
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
@@ -22,6 +17,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import CanaryConfigEntry
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -49,7 +45,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: CanaryConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return CanaryOptionsFlowHandler()
 
@@ -83,13 +79,13 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = {
-            vol.Required(CONF_USERNAME, default=default_username): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME, default=default_username): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             errors=errors or {},
         )
 
@@ -105,16 +101,18 @@ class CanaryOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_FFMPEG_ARGUMENTS,
                 default=self.config_entry.options.get(
                     CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
                 ),
             ): str,
-            vol.Optional(
+            probatio.Optional(
                 CONF_TIMEOUT,
                 default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             ): int,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

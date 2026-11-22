@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_alarm_message_event[event.intercom_doorbell_message-alarm_message-eyJzb21lIjogImpzb24iLCAicmFuZG9tIjogImRhdGEifQ==-sp_csr2fqitalj5o0tq]
   ReadOnlyDict({
-    <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
     <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'triggered',
@@ -12,7 +11,6 @@
 # ---
 # name: test_alarm_message_event[event.intercom_doorbell_picture-doorbell_pic-aHR0cHM6Ly9zb21lLXBpY3R1cmUtdXJsLmNvbS9pbWFnZS5qcGc=-sp_csr2fqitalj5o0tq]
   ReadOnlyDict({
-    <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
     <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'triggered',
@@ -34,9 +32,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'fvywp3b5mu4zay8lgkxw')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -95,9 +93,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'fvywp3b5mu4zay8lgkxw')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -157,9 +155,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'g5uso5ajgkxw')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -218,9 +216,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'svjjuwykgijjedurps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -235,7 +233,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -250,7 +248,6 @@
 # name: test_platform_setup_and_discovery[event.burocam_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -278,9 +275,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'fjdyw5ld2f5f5ddsps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -295,7 +292,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -310,7 +307,6 @@
 # name: test_platform_setup_and_discovery[event.c9_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -338,9 +334,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'fjdyw5ld2f5f5ddsps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -355,7 +351,7 @@
     'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell picture',
     'platform': 'tuya',
@@ -370,7 +366,6 @@
 # name: test_platform_setup_and_discovery[event.c9_doorbell_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -398,9 +393,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'o4hpbl5uarjfbzheps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -415,7 +410,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -430,7 +425,6 @@
 # name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -458,9 +452,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'o4hpbl5uarjfbzheps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -475,7 +469,7 @@
     'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell picture',
     'platform': 'tuya',
@@ -490,7 +484,6 @@
 # name: test_platform_setup_and_discovery[event.dolni_vchod_zapad_doorbell_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -518,9 +511,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', '53fnjncm3jywuaznps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -535,7 +528,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -550,7 +543,6 @@
 # name: test_platform_setup_and_discovery[event.garage_camera_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -578,9 +570,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'qt0o5jlatiqf2rscps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -595,7 +587,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -610,7 +602,6 @@
 # name: test_platform_setup_and_discovery[event.intercom_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -638,9 +629,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'qt0o5jlatiqf2rscps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -655,7 +646,7 @@
     'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell picture',
     'platform': 'tuya',
@@ -670,7 +661,6 @@
 # name: test_platform_setup_and_discovery[event.intercom_doorbell_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -698,9 +688,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'i6xywcsymer1kmb6ps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -715,7 +705,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -730,7 +720,6 @@
 # name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -758,9 +747,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'i6xywcsymer1kmb6ps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -775,7 +764,7 @@
     'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell picture',
     'platform': 'tuya',
@@ -790,7 +779,6 @@
 # name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
@@ -818,9 +806,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'xihygtyd0d1faknkps')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -835,7 +823,7 @@
     'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell message',
     'platform': 'tuya',
@@ -850,7 +838,6 @@
 # name: test_platform_setup_and_discovery[event.security_camera_doorbell_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',

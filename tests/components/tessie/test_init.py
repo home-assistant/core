@@ -156,6 +156,18 @@ async def test_aiohttp_client_error_on_live_status_retries(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_fleet_error_on_live_status_retries(hass: HomeAssistant) -> None:
+    """Test that TeslaFleetError during live_status() triggers a translated SETUP_RETRY."""
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.live_status",
+        side_effect=TeslaFleetError,
+    ):
+        entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_domain == DOMAIN
+    assert entry.error_reason_translation_key == "cannot_connect"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wall_connector_via_device_id(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry

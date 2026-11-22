@@ -6,11 +6,9 @@ import logging
 from freezegun.api import FrozenDateTimeFactory
 from holidays import CATHOLIC
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.calendar import (
-    DOMAIN as CALENDAR_DOMAIN,
-    SERVICE_GET_EVENTS,
-)
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN, CalendarService
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
     CONF_PROVINCE,
@@ -21,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -53,7 +49,7 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -91,7 +87,7 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
             "end_date_time": dt_util.now() + timedelta(days=1),
@@ -139,7 +135,7 @@ async def test_default_language(
     # Test French calendar with English language
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -168,7 +164,7 @@ async def test_default_language(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -215,7 +211,7 @@ async def test_no_language(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.albania",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -312,7 +308,7 @@ async def test_language_not_exist(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.norge",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -340,7 +336,7 @@ async def test_language_not_exist(
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.norge",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -389,7 +385,7 @@ async def test_categories(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.germany",
             "end_date_time": dt_util.now() + timedelta(days=2),
@@ -413,7 +409,7 @@ async def test_categories(
     freezer.move_to(datetime(2025, 12, 23, 12, tzinfo=zone))
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.germany",
             "end_date_time": dt_util.now() + timedelta(days=2),

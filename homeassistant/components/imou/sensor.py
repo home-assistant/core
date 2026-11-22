@@ -1,9 +1,14 @@
 """Support for Imou sensor entities."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-from pyimouapi.const import PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
+from pyimouapi.const import (
+    PARAM_STATE,
+    PARAM_STATE_VARIANT,
+    PARAM_STATUS,
+    STATE_VARIANT_NUMERIC,
+)
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.sensor import (
@@ -26,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import PARAM_STATE, PARAM_STATUS, imou_device_identifier
+from .const import imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -100,6 +105,7 @@ SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
         key="switch_cnt",
         translation_key="switch_cnt",
         state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "use_electricity": ImouSensorEntityDescription(
         key="use_electricity",
@@ -114,6 +120,7 @@ SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -173,7 +180,7 @@ class ImouSensor(ImouEntity, SensorEntity):
         """
         value = self.device.sensors[self._entity_type][PARAM_STATE]
         if self.entity_description.device_class == SensorDeviceClass.ENUM:
-            return value
+            return cast(StateType, value)
         if not self._is_numeric_variant:
             return None
-        return value
+        return cast(StateType, value)

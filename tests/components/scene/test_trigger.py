@@ -3,24 +3,31 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.scene.trigger import TRIGGERS
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 async def target_scenes(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple scene entities associated with different targets."""
     return await target_entities(hass, "scene")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "activated": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -44,6 +51,11 @@ async def test_scene_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

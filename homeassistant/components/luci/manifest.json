@@ -1,8 +1,13 @@
 {
   "domain": "luci",
   "name": "OpenWrt (luci)",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": ["@mzdrale"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/luci",
   "integration_type": "hub",
   "iot_class": "local_polling",

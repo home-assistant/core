@@ -332,5 +332,16 @@
         "default": "mdi:speedometer-slow"
       }
     }
+  },
+  "services": {
+    "navigate_to_coordinates": {
+      "service": "mdi:crosshairs-gps"
+    },
+    "navigate_to_destination": {
+      "service": "mdi:map-marker"
+    },
+    "navigate_to_waypoints": {
+      "service": "mdi:map-marker-path"
+    }
   }
 }

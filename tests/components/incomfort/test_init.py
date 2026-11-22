@@ -8,18 +8,17 @@ from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import MOCK_HEATER_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -81,8 +80,8 @@ async def test_stale_devices_cleanup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    old_entries = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    old_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(old_entries) == 3
     old_heater = device_registry.async_get_device_by_identifier(
@@ -103,8 +102,8 @@ async def test_stale_devices_cleanup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    new_entries = device_registry.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    new_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert len(new_entries) == 3
     new_heater = device_registry.async_get_device_by_identifier(

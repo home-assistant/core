@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiohttp import ClientError
 from indevolt_api import IndevoltAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -57,7 +57,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         # Retrieve user input
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -87,7 +87,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_HOST): str}),
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
                 reconfigure_entry.data,
             ),
             errors=errors,
@@ -164,12 +164,11 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Retrieve user confirmation
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_HOST: self._discovered_host,
-                CONF_MODEL: self._discovered_device_data[CONF_MODEL],
+                "host": self._discovered_host,
+                "model": self._discovered_device_data[CONF_MODEL],
             },
         )
 

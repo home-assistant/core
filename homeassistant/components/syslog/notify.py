@@ -3,7 +3,7 @@
 import syslog
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -23,7 +23,7 @@ SYSLOG_FACILITY = {
     "user": "LOG_USER",
     "mail": "LOG_MAIL",
     "daemon": "LOG_DAEMON",
-    "auth": "LOG_KERN",
+    "auth": "LOG_AUTH",
     "LPR": "LOG_LPR",
     "news": "LOG_NEWS",
     "uucp": "LOG_UUCP",
@@ -60,9 +60,15 @@ SYSLOG_PRIORITY = {
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_FACILITY, default="syslog"): vol.In(SYSLOG_FACILITY.keys()),
-        vol.Optional(CONF_OPTION, default="pid"): vol.In(SYSLOG_OPTION.keys()),
-        vol.Optional(CONF_PRIORITY, default=-1): vol.In(SYSLOG_PRIORITY.keys()),
+        probatio.Optional(CONF_FACILITY, default="syslog"): probatio.In(
+            SYSLOG_FACILITY.keys()
+        ),
+        probatio.Optional(CONF_OPTION, default="pid"): probatio.In(
+            SYSLOG_OPTION.keys()
+        ),
+        probatio.Optional(CONF_PRIORITY, default=-1): probatio.In(
+            SYSLOG_PRIORITY.keys()
+        ),
     }
 )
 
@@ -84,7 +90,7 @@ def get_service(
 class SyslogNotificationService(BaseNotificationService):
     """Implement the syslog notification service."""
 
-    def __init__(self, facility, option, priority):
+    def __init__(self, facility, option, priority) -> None:
         """Initialize the service."""
         self._facility = facility
         self._option = option
