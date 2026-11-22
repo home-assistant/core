@@ -179,8 +179,11 @@ async def _async_stream(
     except PyEzvizError as err:
         _LOGGER.warning("%s: live stream failed: %s", serial, err)
     finally:
-        await loop.run_in_executor(executor, _close_stream, stream, serial)
+        # Queue close() before shutting the executor down; queued work still
+        # runs, and the shield keeps a second cancellation from dropping it.
+        closing = loop.run_in_executor(executor, _close_stream, stream, serial)
         executor.shutdown(wait=False)
+        await asyncio.shield(closing)
         _LOGGER.debug("%s: live stream closed", serial)
     return response
 

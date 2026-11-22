@@ -1,6 +1,7 @@
 """Tests for the EZVIZ camera platform."""
 
 import asyncio
+from contextlib import suppress
 import logging
 import threading
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
@@ -47,12 +48,15 @@ class FakeLiveStream:
         read_error: Exception | None = None,
         close_errors: list[Exception] | None = None,
         block: bool = False,
+        close_release: threading.Event | None = None,
     ) -> None:
         """Initialize the fake stream."""
         self._chunks = list(chunks or [])
         self._read_error = read_error
         self._close_errors = list(close_errors or [])
         self._block = block
+        self._close_release = close_release
+        self.closing = threading.Event()
         self.reading = threading.Event()
         self.closed = threading.Event()
         self.close_calls = 0
@@ -73,6 +77,9 @@ class FakeLiveStream:
     def close(self) -> None:
         """Close the stream, like the library does from another thread."""
         self.close_calls += 1
+        self.closing.set()
+        if self._close_release is not None:
+            self._close_release.wait(10)
         self.closed.set()
         if self._close_errors:
             raise self._close_errors.pop(0)
@@ -553,3 +560,29 @@ async def test_vtm_camera_image_skips_encrypted_alarm_picture(
         await async_get_image(hass, ENTITY_ID)
 
     assert aioclient_mock.call_count == 0
+
+
+async def test_vtm_cancelled_during_close_still_closes(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test cancelling the handler while it closes the stream does not stop close."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    release = threading.Event()
+    stream = FakeLiveStream(close_release=release)
+
+    with patch(OPEN_STREAM, return_value=stream):
+        request = asyncio.create_task(client.get(path))
+        assert await hass.async_add_executor_job(stream.closing.wait, 10)
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        release.set()
+        assert await hass.async_add_executor_job(stream.closed.wait, 10)
+        with suppress(ClientError):
+            await (await request).read()
+
+    assert stream.close_calls == 1
