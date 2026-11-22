@@ -538,8 +538,14 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._attr_swing_horizontal_mode = SWING_OFF
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_swing_mode = SWING_OFF
-        if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
-            self._attr_hvac_mode = HVACMode.OFF
+        if (
+            (self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic)
+            and self.hvac_modes
+            and not self.hvac_mode
+        ):
+            self._attr_hvac_mode = (
+                HVACMode.OFF if HVACMode.OFF in self.hvac_modes else self.hvac_modes[0]
+            )
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             presets = []
