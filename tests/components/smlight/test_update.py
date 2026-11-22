@@ -567,15 +567,24 @@ async def test_update_install_command_error(
 
 
 @pytest.mark.parametrize(
-    ("message", "elapsed", "expected_error"),
+    ("reply_after", "message", "remaining", "expected_error"),
     [
         pytest.param(
+            timedelta(minutes=11),
             MOCK_FIRMWARE_PROGRESS,
-            timedelta(minutes=10, seconds=1),
+            timedelta(minutes=2, seconds=1),
             "Firmware update timed out",
-            id="missing-completion",
+            id="pending-request",
         ),
         pytest.param(
+            timedelta(minutes=8),
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=2, seconds=1),
+            "Firmware update timed out",
+            id="delayed-acceptance",
+        ),
+        pytest.param(
+            timedelta(minutes=8),
             MOCK_FIRMWARE_DONE,
             timedelta(minutes=3, seconds=1),
             r"Timeout waiting for .* to reboot after update",
@@ -588,8 +597,9 @@ async def test_update_timeout(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    reply_after: timedelta,
     message: MessageEvent,
-    elapsed: timedelta,
+    remaining: timedelta,
     expected_error: str,
 ) -> None:
     """Report which phase of the firmware install timed out."""
@@ -600,6 +610,11 @@ async def test_update_timeout(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
+    async def accept_request(firmware: Firmware, idx: int) -> bool:
+        await asyncio.sleep(reply_after.total_seconds())
+        return True
+
+    mock_smlight_client.fw_update.side_effect = accept_request
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
@@ -609,20 +624,27 @@ async def test_update_timeout(
         )
     )
     mock_smlight_client.fw_update.assert_awaited_once()
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert not install_task.done()
     event_function = get_mock_event_function(
         mock_smlight_client, SmEvents[message.type]
     )
     event_function(message)
     await asyncio.sleep(0)
 
-    freezer.tick(elapsed)
+    freezer.tick(remaining)
     async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is False
     with pytest.raises(HomeAssistantError, match=expected_error):
         await install_task
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert mock_smlight_client.sse.register_callback.return_value.call_count == 3
 
 
 @pytest.mark.parametrize(
