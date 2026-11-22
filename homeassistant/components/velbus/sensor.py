@@ -2,10 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import override
 
 from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
-from velbusaio.properties import LightValue
+from velbusaio.properties import (
+    BusErrorOff,
+    BusErrorRx,
+    BusErrorTx,
+    LightValue,
+    PSUPower,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -29,11 +37,22 @@ from . import VelbusConfigEntry
 from .entity import VelbusEntity
 from .entity_discovery import async_setup_platform_discovery, discover_sensor_entities
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 0
 
 COUNTER_SENSOR_KEYS = frozenset({"energy", "gas", "water"})
 
-type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
+type VelbusSensorChannel = (
+    ButtonCounter
+    | BusErrorOff
+    | BusErrorRx
+    | BusErrorTx
+    | LightValue
+    | PSUPower
+    | SensorNumber
+    | Temperature
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -88,6 +107,17 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "illuminance": VelbusSensorEntityDescription(
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "bus_error": VelbusSensorEntityDescription(
+        key="bus_error",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "measurement": VelbusSensorEntityDescription(
         key="measurement",
