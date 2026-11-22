@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import Camera, CameraModel
+from bosch_shc_camera_client.cloud import CloudPutResult
+from bosch_shc_camera_client.states import CameraAccountStates
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -49,6 +51,28 @@ def mock_list_cameras() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.list_cameras",
         autospec=True,
         return_value=list(CAMERAS),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_account_states() -> Generator[AsyncMock]:
+    """Mock the account states of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.get_camera_account_states",
+        autospec=True,
+        return_value={CAMERA_ID: CameraAccountStates(False, "FOLLOW_CAMERA_SCHEDULE")},
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_set_privacy_mode() -> Generator[AsyncMock]:
+    """Mock the privacy mode write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.cloud_set_privacy_mode",
+        autospec=True,
+        return_value=CloudPutResult(ok=True, status=204),
     ) as mock:
         yield mock
 
