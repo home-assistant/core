@@ -1,13 +1,24 @@
 """Test MatrixBot._login."""
 
+from copy import deepcopy
 from dataclasses import dataclass
 
 import pytest
 
 from homeassistant.components.matrix import MatrixBot
+from homeassistant.components.matrix.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
+from .conftest import (
+    MOCK_CONFIG_DATA,
+    TEST_DEVICE_ID,
+    TEST_MXID,
+    TEST_PASSWORD,
+    TEST_TOKEN,
+)
 
 
 @dataclass
@@ -97,6 +108,23 @@ async def test_login(
     assert await matrix_bot._login() == params.expected_login_state
     assert matrix_bot._client.logged_in == params.expected_login_state
     assert set(caplog.messages).issuperset(params.expected_caplog_messages)
+
+
+@pytest.mark.usefixtures("mock_client", "mock_save_json")
+async def test_startup_login_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test startup stops when the login fails."""
+    config = deepcopy(MOCK_CONFIG_DATA)
+    config[DOMAIN][CONF_PASSWORD] = "WrongPassword"
+    assert await async_setup_component(hass, DOMAIN, config)
+    matrix_bot = hass.data[DOMAIN]
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert "Login failed, both token and username/password are invalid" in caplog.text
+    assert matrix_bot._listening_rooms == {}
 
 
 async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json) -> None:
