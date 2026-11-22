@@ -12454,7 +12454,7 @@
         "rpi_power": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "local_push",
           "categories": [
             "diy_makers.boards_hardware",
             "computers_network.monitoring"

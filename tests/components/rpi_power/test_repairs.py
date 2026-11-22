@@ -1,5 +1,7 @@
 """Tests for rpi_power repairs."""
 
+from unittest.mock import MagicMock
+
 from pytest_homeassistant.common import MockConfigEntry, patch
 from pytest_homeassistant.components.repairs import (
     process_repair_fix_flow,
@@ -23,7 +25,10 @@ async def test_repair_flow(
 
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.rpi_power.new_under_voltage", get=True):
+    with patch(
+        "homeassistant.components.rpi_power.new_under_voltage",
+        return_value=MagicMock(supports_push=False, get=MagicMock(return_value=True)),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
