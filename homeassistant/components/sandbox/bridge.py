@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -35,7 +35,7 @@ from homeassistant.util import dt as dt_util
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
-from .const import UNIQUE_ID_SEPARATOR
+from .const import DOMAIN
 from .description import SandboxEntityDescription
 from .entry_sync import EntrySync
 from .messages import (
@@ -65,8 +65,6 @@ from .service_forwarder import (
 from .store import SandboxStoreServer, validate_key
 
 _LOGGER = logging.getLogger(__name__)
-
-_REMOTE_PLATFORM_NAME = "sandbox"
 
 # Expire old attribution without retaining every Context for the process lifetime.
 _CONTEXT_TTL = timedelta(minutes=15)
@@ -300,11 +298,31 @@ class SandboxBridge:
             )
             if description.config_subentry_id not in entry.subentries:
                 raise HomeAssistantError("register_entity: unknown config subentry")
-        # Namespace IDs because all proxies share the sandbox platform.
         if description.unique_id is not None:
-            description.unique_id = (
-                f"{entry.domain}{UNIQUE_ID_SEPARATOR}{description.unique_id}"
+            registry = er.async_get(self.hass)
+            old_entity_id = registry.async_get_entity_id(
+                description.domain, DOMAIN, f"{entry.domain}:{description.unique_id}"
             )
+            if (
+                old_entity_id is not None
+                and registry.entities[old_entity_id].config_entry_id == entry.entry_id
+            ):
+                if (
+                    registry.async_get_entity_id(
+                        description.domain, entry.domain, description.unique_id
+                    )
+                    is not None
+                ):
+                    raise HomeAssistantError(
+                        "register_entity: source entity already registered; "
+                        "cannot migrate sandbox entity"
+                    )
+                registry.async_update_entity_platform(
+                    old_entity_id,
+                    entry.domain,
+                    new_config_entry_id=entry.entry_id,
+                    new_unique_id=description.unique_id,
+                )
         # The proxy entity subclasses the domain's *EntityBase* (LightEntity,
         # SwitchEntity, …); for the framework to host it the domain
         # component itself has to be set up so its EntityComponent exists.
@@ -571,7 +589,7 @@ class SandboxBridge:
             hass=self.hass,
             logger=_LOGGER,
             domain=domain,
-            platform_name=_REMOTE_PLATFORM_NAME,
+            platform_name=entry.domain,
             platform=None,
             scan_interval=timedelta(seconds=0),
             entity_namespace=None,

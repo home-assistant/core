@@ -11,9 +11,6 @@ DOMAIN = "sandbox"
 
 DATA_SANDBOX: HassKey[SandboxData] = HassKey(DOMAIN)
 
-# Namespace IDs because integrations share the sandbox platform registry key.
-UNIQUE_ID_SEPARATOR = ":"
-
 # Keep platforms on main when the protocol cannot carry their data.
 SANDBOX_INCOMPATIBLE_PLATFORMS: frozenset[str] = frozenset(
     {

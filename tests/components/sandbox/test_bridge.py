@@ -90,7 +90,7 @@ async def test_register_entity_creates_proxy_and_returns_entity_id(
     assert "light.kitchen" in bridge._entities
 
 
-async def test_register_entity_prefixes_unique_id_with_source_domain(
+async def test_register_entity_uses_source_platform(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -125,14 +125,95 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
         await main_channel.close()
         await sandbox_channel.close()
 
-    # Both proxies landed as distinct entities.
     assert result_a.entity_id != result_b.entity_id
     assert hass.states.get(result_a.entity_id) is not None
     assert hass.states.get(result_b.entity_id) is not None
 
-    # Registry rows carry the domain-prefixed unique_ids, not a bare "1".
-    assert entity_registry.async_get(result_a.entity_id).unique_id == "demo_a:1"
-    assert entity_registry.async_get(result_b.entity_id).unique_id == "demo_b:1"
+    assert entity_registry.async_get(result_a.entity_id).platform == "demo_a"
+    assert entity_registry.async_get(result_b.entity_id).platform == "demo_b"
+    assert entity_registry.async_get(result_a.entity_id).unique_id == "1"
+    assert entity_registry.async_get(result_b.entity_id).unique_id == "1"
+
+
+@pytest.mark.parametrize(
+    ("platform", "unique_id"),
+    [
+        pytest.param("sandbox", "light:bulb", id="sandbox-platform"),
+        pytest.param("light", "bulb", id="source-platform"),
+    ],
+)
+async def test_register_entity_preserves_registry_identity(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    unique_id: str,
+) -> None:
+    """An existing entity keeps its ID and user settings under its source platform."""
+    registered = entity_registry.async_get_or_create(
+        "light", platform, unique_id, config_entry=entry
+    )
+    registered = entity_registry.async_update_entity(
+        registered.entity_id, new_entity_id="light.my_bulb", name="My bulb"
+    )
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    try:
+        result = await sandbox_channel.call(
+            "sandbox/register_entity",
+            make_entity_description(
+                entry_id=entry.entry_id,
+                domain="light",
+                sandbox_entity_id="light.worker_bulb",
+                unique_id="bulb",
+                supported_features=0,
+                capabilities={"supported_color_modes": ["onoff"]},
+                initial_state=STATE_ON,
+                initial_attributes={"color_mode": "onoff"},
+            ),
+        )
+        assert result.entity_id == "light.my_bulb"
+        entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        assert len(entities) == 1
+        assert entities[0].id == registered.id
+        assert entities[0].name == "My bulb"
+        assert entities[0].platform == "light"
+        assert entities[0].unique_id == "bulb"
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+
+async def test_register_entity_migration_rejects_conflict(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Migration cannot replace an existing source integration entity."""
+    original = entity_registry.async_get_or_create(
+        "light", "light", "bulb", config_entry=entry
+    )
+    sandboxed = entity_registry.async_get_or_create(
+        "light", "sandbox", "light:bulb", config_entry=entry
+    )
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    try:
+        with pytest.raises(
+            ChannelRemoteError, match="source entity already registered"
+        ):
+            await sandbox_channel.call(
+                "sandbox/register_entity",
+                make_entity_description(
+                    entry_id=entry.entry_id,
+                    domain="light",
+                    sandbox_entity_id="light.worker_bulb",
+                    unique_id="bulb",
+                ),
+            )
+        assert entity_registry.async_get(original.entity_id) == original
+        assert entity_registry.async_get(sandboxed.entity_id) == sandboxed
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
 
 
 async def test_register_entity_upsert_updates_name_in_place(
