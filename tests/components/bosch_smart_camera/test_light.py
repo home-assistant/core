@@ -327,3 +327,33 @@ async def test_write_after_failed_poll_keeps_working(
     await coordinator.async_set_light(CAMERA_ID, True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_light_unreachable_and_recovery_logged_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unreachable light is logged once, and again when it recovers."""
+    good = mock_get_light.return_value
+    mock_get_light.side_effect = BoschCameraConnectionError
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("is unreachable") == 1
+    assert "is reachable again" not in caplog.text
+
+    mock_get_light.side_effect = None
+    mock_get_light.return_value = good
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("is reachable again") == 1

@@ -69,6 +69,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self.account_states: dict[str, CameraAccountStates] = {}
         self.light_states: dict[str, LightState] = {}
         self._light_writes: defaultdict[str, int] = defaultdict(int)
+        self._light_unreachable: set[str] = set()
         self._write_seq = 0
         self._written_at: dict[str, int] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
@@ -162,8 +163,15 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                     translation_domain=DOMAIN, translation_key="auth_failed"
                 ) from err
             except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                if camera.id not in self._light_unreachable:
+                    self._light_unreachable.add(camera.id)
+                    _LOGGER.info("The light of %s is unreachable", camera.title)
                 _LOGGER.debug("Unable to read the light of a camera", exc_info=True)
                 state = None
+            else:
+                if camera.id in self._light_unreachable:
+                    self._light_unreachable.discard(camera.id)
+                    _LOGGER.info("The light of %s is reachable again", camera.title)
             polled[camera.id] = (writes, state)
         # A write that finished while polling makes the polled state outdated,
         # also for cameras polled before the write.

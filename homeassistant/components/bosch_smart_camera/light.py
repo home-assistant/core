@@ -6,12 +6,10 @@ from bosch_shc_camera_client.cameras import CameraModel
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import BoschCameraConfigEntry, BoschCameraCoordinator
+from .entity import BoschCameraEntity
 
 PARALLEL_UPDATES = 1
 
@@ -43,25 +41,17 @@ async def async_setup_entry(
     _add_new_lights()
 
 
-class BoschCameraLight(CoordinatorEntity[BoschCameraCoordinator], LightEntity):
+class BoschCameraLight(BoschCameraEntity, LightEntity):
     """The light of a camera, switchable on and off."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "camera_light"
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, coordinator: BoschCameraCoordinator, camera_id: str) -> None:
         """Initialize the light."""
-        super().__init__(coordinator)
-        self._camera_id = camera_id
+        super().__init__(coordinator, camera_id)
         self._attr_unique_id = camera_id
-        # Platforms set up concurrently, so either may be first to create the device.
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, camera_id)},
-            manufacturer="Bosch",
-            name=coordinator.data[camera_id].title,
-        )
 
     @property
     @override
