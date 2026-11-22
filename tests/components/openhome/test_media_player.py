@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from openhomedevice.device import Device
 from openhomedevice.exceptions import OpenhomeConnectionError
@@ -19,8 +19,10 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    BrowseError,
     MediaType,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.openhome.const import (
     DOMAIN,
     OpenhomeService,
@@ -186,7 +188,7 @@ ACTIONS = [
         },
         Device.play_media,
         "Playlist",
-        ({"title": "Home Assistant", "uri": MEDIA_ID},),
+        ({"title": "Home Assistant", "uri": MEDIA_ID, "albumArtwork": ""},),
         id="play_media",
     ),
 ]
@@ -281,6 +283,162 @@ async def test_action_error_is_raised(
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == service
     mocked.assert_awaited()
+
+
+async def test_play_media_media_source_keeps_media_metadata(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test a media library item is played with its own title and artwork."""
+    await setup_media_player(hass, mock_config_entry)
+
+    browsed = MagicMock(
+        title="Track Title", thumbnail="http://localhost/art.jpg", can_expand=False
+    )
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(return_value=browsed),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(
+                return_value=PlayMedia(
+                    "http://localhost/media/track.flac", "audio/flac"
+                )
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/music/track.flac",
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "Track Title",
+            "uri": "http://localhost/media/track.flac",
+            "albumArtwork": "http://localhost/art.jpg",
+        }
+    )
+
+
+async def test_play_media_station_found_in_source_listing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test a station browsed as a listing gets its name and icon in the metadata."""
+    await setup_media_player(hass, mock_config_entry)
+
+    station_id = "media-source://radio_browser/station-uuid"
+    station = MagicMock(
+        media_content_id=station_id,
+        title="France Inter",
+        thumbnail="http://localhost/france-inter.ico",
+        can_play=True,
+        can_expand=False,
+    )
+    category = MagicMock(
+        media_content_id="media-source://radio_browser/popular", can_expand=True
+    )
+    category_listing = MagicMock(can_expand=True, children=[station])
+    root_listing = MagicMock(can_expand=True, children=[category])
+
+    async def browse_side_effect(
+        hass: HomeAssistant, media_content_id: str, **kwargs: Any
+    ) -> MagicMock:
+        if media_content_id == category.media_content_id:
+            return category_listing
+        if media_content_id == station_id:
+            # radio_browser returns an empty listing for a station id
+            return MagicMock(can_expand=True, children=[])
+        return root_listing
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=browse_side_effect),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(
+                return_value=PlayMedia(
+                    "http://stream.example/france-inter", "audio/mpeg"
+                )
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: station_id,
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "France Inter",
+            "uri": "http://stream.example/france-inter",
+            "albumArtwork": "http://localhost/france-inter.ico",
+        }
+    )
+
+
+async def test_play_media_browse_failure_still_plays(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test playback still works when browsing the item fails.
+
+    DLNA servers answer upnp error 710 (No such container) when browsing the
+    direct children of a file, so the metadata lookup must not fail play_media.
+    The title and artwork then come from the resolved DIDL metadata.
+    """
+    await setup_media_player(hass, mock_config_entry)
+
+    didl = MagicMock(title="NAS Track", album_art_uri="http://nas:5000/art.jpg")
+    play_item = MagicMock(url="http://nas:5000/music/track.flac", didl_metadata=didl)
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://dlna_dms/nas/:some-object-id",
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "NAS Track",
+            "uri": "http://nas:5000/music/track.flac",
+            "albumArtwork": "http://nas:5000/art.jpg",
+        }
+    )
 
 
 async def test_invoke_pin_calls_device(

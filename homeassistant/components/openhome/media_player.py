@@ -11,6 +11,7 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -18,6 +19,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -211,12 +213,34 @@ class OpenhomeDevice(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
+        track_details = {"title": "Home Assistant", "uri": media_id, "albumArtwork": ""}
+
         if media_source.is_media_source_id(media_id):
             media_type = MediaType.MUSIC
+            media_content_id = media_id
             play_item = await media_source.async_resolve_media(
-                self.hass, media_id, self.entity_id
+                self.hass, media_content_id, self.entity_id
             )
             media_id = play_item.url
+            track_details["uri"] = media_id
+            # Metadata lookup is best-effort: DLNA servers answer upnp error
+            # 710 when browsing the direct children of a file, which must not
+            # fail playback.
+            try:
+                browsed = await self._async_browse_media_item(media_content_id)
+            except (BrowseError, Unresolvable) as err:
+                _LOGGER.debug(
+                    "Could not browse %s for metadata: %s", media_content_id, err
+                )
+                browsed = None
+            # Keep the media's own metadata instead of a generic one.
+            if browsed is not None:
+                track_details["title"] = browsed.title or "Home Assistant"
+                track_details["albumArtwork"] = browsed.thumbnail or ""
+            elif didl := getattr(play_item, "didl_metadata", None):
+                track_details["title"] = didl.title or "Home Assistant"
+                if album_art := getattr(didl, "album_art_uri", None):
+                    track_details["albumArtwork"] = album_art
 
         if media_type != MediaType.MUSIC:
             _LOGGER.error(
@@ -227,9 +251,49 @@ class OpenhomeDevice(MediaPlayerEntity):
             return
 
         media_id = async_process_play_media_url(self.hass, media_id)
+        track_details["uri"] = media_id
 
-        track_details = {"title": "Home Assistant", "uri": media_id}
         await self._device.play_media(track_details)
+
+    async def _async_browse_media_item(
+        self, media_content_id: str
+    ) -> BrowseMedia | None:
+        """Return the browse item for a media_content_id.
+
+        Browsing a leaf id can return a listing instead of the item (e.g.
+        radio_browser returns an empty listing for a station id), so fall back
+        to searching the media source root.
+        """
+        item = await media_source.async_browse_media(self.hass, media_content_id)
+        if not item.can_expand:
+            return item
+        parsed = MediaSourceItem.from_uri(self.hass, media_content_id, None)
+        if parsed.domain is None:
+            return None
+        root = await media_source.async_browse_media(
+            self.hass, f"{media_source.URI_SCHEME}{parsed.domain}"
+        )
+        return await self._async_search_media_tree(root, media_content_id, depth=0)
+
+    async def _async_search_media_tree(
+        self, item: BrowseMedia, media_content_id: str, *, depth: int
+    ) -> BrowseMedia | None:
+        """Search the children of an expandable browse item for a media_content_id."""
+        if depth > 2:
+            return None
+        for child in item.children or []:
+            if child.media_content_id == media_content_id:
+                return child
+            if child.can_expand:
+                sub_item = await media_source.async_browse_media(
+                    self.hass, child.media_content_id
+                )
+                found = await self._async_search_media_tree(
+                    sub_item, media_content_id, depth=depth + 1
+                )
+                if found is not None:
+                    return found
+        return None
 
     @catch_request_errors(SERVICE_MEDIA_PAUSE)
     @override
