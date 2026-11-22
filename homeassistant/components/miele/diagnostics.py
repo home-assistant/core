@@ -32,6 +32,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
+    aux_data = config_entry.runtime_data.aux_coordinator.data_or_none
     miele_data: dict[str, Any] = {
         "devices": redact_identifiers(
             {
@@ -45,7 +46,7 @@ async def async_get_config_entry_diagnostics(
             {
                 device_id: filling_level_data.raw
                 for device_id, filling_level_data in (
-                    config_entry.runtime_data.aux_coordinator.data.filling_levels.items()
+                    aux_data.filling_levels.items() if aux_data is not None else ()
                 )
             }
         ),
@@ -86,15 +87,18 @@ async def async_get_device_diagnostics(
     aux_coordinator = config_entry.runtime_data.aux_coordinator
 
     device_id = cast(str, device.serial_number)
+    filling_levels: dict[str, Any] = {}
+    if (
+        aux_data := aux_coordinator.data_or_none
+    ) is not None and device_id in aux_data.filling_levels:
+        filling_levels[hash_identifier(device_id)] = aux_data.filling_levels[
+            device_id
+        ].raw
     miele_data: dict[str, Any] = {
         "devices": {
             hash_identifier(device_id): coordinator.data.devices[device_id].raw
         },
-        "filling_levels": {
-            hash_identifier(device_id): aux_coordinator.data.filling_levels[
-                device_id
-            ].raw
-        },
+        "filling_levels": filling_levels,
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },

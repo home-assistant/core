@@ -921,14 +921,31 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
     _async_add_devices()
 
-    async_add_entities(
-        MieleAuxSensor(aux_coordinator, device_id, definition.description)
-        for device_id in aux_coordinator.data.filling_levels
-        for definition in POLLED_SENSOR_TYPES
-        if _enabled_aux_sensor(
-            definition, aux_coordinator.data.filling_levels[device_id]
-        )
+    added_aux_entities: set[str] = set()
+
+    def _async_add_aux_sensors() -> None:
+        """Add filling level sensors when auxiliary data is available."""
+        if (aux_data := aux_coordinator.data_or_none) is None:
+            return
+
+        entities: list[MieleAuxSensor] = []
+        for device_id, level in aux_data.filling_levels.items():
+            for definition in POLLED_SENSOR_TYPES:
+                if not _enabled_aux_sensor(definition, level):
+                    continue
+                unique_id = MieleEntity.get_unique_id(device_id, definition.description)
+                if unique_id in added_aux_entities:
+                    continue
+                added_aux_entities.add(unique_id)
+                entities.append(
+                    MieleAuxSensor(aux_coordinator, device_id, definition.description)
+                )
+        async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        aux_coordinator.async_add_listener(_async_add_aux_sensors)
     )
+    _async_add_aux_sensors()
 
 
 APPLIANCE_ICONS = {

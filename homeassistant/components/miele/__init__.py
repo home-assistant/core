@@ -57,7 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
     await _coordinator.async_config_entry_first_refresh()
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
-    await _aux_coordinator.async_config_entry_first_refresh()
+    # Not a first refresh: a failing fillingLevels endpoint (e.g. 503) must not
+    # take down the rest of the integration. Related sensors stay unavailable
+    # until the API recovers.
+    await _aux_coordinator.async_refresh()
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 

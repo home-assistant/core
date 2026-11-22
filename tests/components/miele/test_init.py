@@ -231,6 +231,87 @@ async def test_load_entry_with_action_error(
     assert mock_miele_client.get_actions.call_count == 5
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ClientResponseError(Mock(), Mock(), status=http.HTTPStatus.SERVICE_UNAVAILABLE),
+        TimeoutError,
+    ],
+    ids=[
+        "service_unavailable",
+        "TimeoutError",
+    ],
+)
+async def test_load_entry_with_filling_levels_error(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test integration still loads when fillingLevels endpoint fails."""
+    mock_miele_client.get_filling_levels.side_effect = side_effect
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_miele_client.get_devices.called
+    assert mock_miele_client.get_filling_levels.called
+    # Filling level sensors are not created while the auxiliary API is down.
+    assert hass.states.get("sensor.washing_machine_twindos_1_level") is None
+
+
+async def test_filling_levels_sensors_recover_after_api_error(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    filling_levels_fixture: object,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test filling level sensors appear once the auxiliary API recovers."""
+    mock_miele_client.get_filling_levels.side_effect = ClientResponseError(
+        Mock(), Mock(), status=http.HTTPStatus.SERVICE_UNAVAILABLE
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.washing_machine_twindos_1_level") is None
+
+    mock_miele_client.get_filling_levels.side_effect = None
+    mock_miele_client.get_filling_levels.return_value = filling_levels_fixture
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.washing_machine_twindos_1_level")
+    assert state is not None
+    assert state.state == "63"
+
+
+async def test_filling_levels_sensors_unavailable_on_api_error(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test filling level sensors become unavailable when the API fails later."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.washing_machine_twindos_1_level")
+    assert state is not None
+    assert state.state == "63"
+
+    mock_miele_client.get_filling_levels.side_effect = ClientResponseError(
+        Mock(), Mock(), status=http.HTTPStatus.SERVICE_UNAVAILABLE
+    )
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.washing_machine_twindos_1_level").state == "unavailable"
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
