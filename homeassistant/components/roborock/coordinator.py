@@ -174,6 +174,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
+        # Only try to reload a missing map once per 'no map' episode.
+        self._map_reload_attempted: bool = False
         self._unsubs: list[Callable[[], None]] = []
         self._setup_completed = False
 
@@ -253,6 +255,30 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         else:
             self.last_home_update = dt_util.utcnow()
 
+    async def _async_reload_map_if_missing(self) -> None:
+        """Reload the selected map if the vacuum reports no map loaded.
+
+        The device can report map_present == 0 even though a saved map is
+        selected. Re-selecting that map (LOAD_MULTI_MAP) restores it.
+        """
+        status = self.properties_api.status
+        if status.in_cleaning:
+            return
+        if getattr(status, "map_present", None) != 0:
+            self._map_reload_attempted = False
+            return
+        if self._map_reload_attempted:
+            return
+        if (current_map := self.properties_api.maps.current_map) is None:
+            return
+        self._map_reload_attempted = True
+        _LOGGER.debug("Vacuum reports no map loaded, reloading map %s", current_map)
+        try:
+            await self.properties_api.maps.set_current_map(current_map)
+            await self.update_map()
+        except (RoborockException, HomeAssistantError) as err:
+            _LOGGER.debug("Failed to reload map: %s", err)
+
     async def _verify_api(self) -> None:
         """Verify that the api is reachable."""
         if self._device.is_connected:
@@ -315,6 +341,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                 )
                 return self.data
             raise
+
+        await self._async_reload_map_if_missing()
 
         # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
         # since the last map update, you can update the map.
