@@ -109,16 +109,46 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with mocked_livisi_connect() as connect, mocked_livisi_setup_entry():
+    with mocked_livisi_connect() as connect, mocked_livisi_setup_entry() as setup:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data == {CONF_HOST: "1.1.1.1", CONF_PASSWORD: "new_password"}
     connect.assert_awaited_once_with("1.1.1.1", "new_password")
     connect.return_value.close.assert_awaited_once_with()
+    setup.assert_awaited_once()
+
+
+async def test_reauth_no_controller(hass: HomeAssistant) -> None:
+    """Test reauthentication with a connection without controller data."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with mocked_livisi_connect() as connect:
+        connect.return_value.controller = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert config_entry.data == VALID_CONFIG
+    connect.return_value.close.assert_awaited_once_with()
+
+    with mocked_livisi_connect(), mocked_livisi_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(

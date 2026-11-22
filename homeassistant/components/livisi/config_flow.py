@@ -89,11 +89,14 @@ class LivisiFlowHandler(ConfigFlow, domain=DOMAIN):
             except LivisiException:
                 errors["base"] = "cannot_connect"
             else:
+                controller = connection.controller
                 await connection.close()
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
-                )
+                if controller:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    )
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="reauth_confirm",
