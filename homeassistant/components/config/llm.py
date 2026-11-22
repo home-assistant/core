@@ -2042,6 +2042,36 @@ class UpdateDeviceSettingsTool(Tool):
             settings["disabled_by"] = dr.DeviceEntryDisabler.USER
 
         registry = dr.async_get(hass)
+        enabling = (
+            "disabled_by" in settings
+            and settings["disabled_by"] is None
+            and device.disabled_by is not None
+        )
+        if enabling:
+            if (
+                config_entry := hass.config_entries.async_get_entry(
+                    device.config_entry_id
+                )
+            ) and config_entry.disabled_by:
+                raise HomeAssistantError(
+                    f"The config entry of device '{device_id}' is disabled. Enable "
+                    "the config entry first."
+                )
+            if isinstance(device, dr.ChildDeviceEntry) and (
+                (parent := registry.async_get(device.parent_device_id))
+                and parent.disabled
+            ):
+                raise HomeAssistantError(
+                    f"The parent device '{device.parent_device_id}' is disabled. "
+                    "Enable the parent device first."
+                )
+        # Enabling the device enables these entities, which reloads the integration
+        entities_to_enable = enabling and any(
+            entity.disabled_by is er.RegistryEntryDisabler.DEVICE
+            for entity in er.async_entries_for_device(
+                er.async_get(hass), device_id, include_disabled_entities=True
+            )
+        )
         updated: dr.AnyDeviceEntry | None
         if isinstance(device, dr.ChildDeviceEntry):
             updated = registry.async_update_child_device(device_id, **settings)
@@ -2051,9 +2081,7 @@ class UpdateDeviceSettingsTool(Tool):
             assert updated is not None
 
         result = _format_device_settings(updated)
-        if device.disabled_by is not None and updated.disabled_by is None:
-            # The integration adds the enabled entities only when its config entry
-            # reloads
+        if entities_to_enable and updated.disabled_by is None:
             if (
                 config_entry := hass.config_entries.async_get_entry(
                     updated.config_entry_id

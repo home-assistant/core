@@ -3356,6 +3356,7 @@ async def test_update_device_settings_enable(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     supports_unload: bool,
     note: str,
 ) -> None:
@@ -3378,6 +3379,14 @@ async def test_update_device_settings_enable(
         identifiers={(TEST_DOMAIN, "strip")},
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
+    entity_registry.async_get_or_create(
+        "switch",
+        TEST_DOMAIN,
+        "outlet",
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.DEVICE,
+    )
 
     tool = UpdateDeviceSettingsTool()
     result = await tool.async_call(
@@ -3389,6 +3398,77 @@ async def test_update_device_settings_enable(
     assert result.data["result"]["disabled_by"] is None
     assert result.data["result"]["note"] == note
     assert device_registry.async_get(device.id).disabled_by is None
+
+
+async def test_update_device_settings_enable_without_entities(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that enabling a device without entities to enable gives no note."""
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "strip")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    tool = UpdateDeviceSettingsTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
+        llm_context,
+    )
+    assert "note" not in result.data["result"]
+    assert device_registry.async_get(device.id).disabled_by is None
+
+
+async def test_update_device_settings_enable_disabled_config_entry(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a device of a disabled config entry cannot be enabled."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "strip")},
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(HomeAssistantError, match="Enable the config entry first"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
+            llm_context,
+        )
+
+
+async def test_update_device_settings_enable_disabled_parent(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a child device of a disabled parent cannot be enabled."""
+    parent, child = _create_parent_and_child(hass, device_registry)
+    device_registry.async_update_device(
+        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    assert device_registry.async_get(child.id).disabled_by is not None
+
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(HomeAssistantError, match="Enable the parent device first"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": child.id, "disabled_by": None}),
+            llm_context,
+        )
 
 
 async def test_get_config_entries_flow_capabilities(
