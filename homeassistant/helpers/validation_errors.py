@@ -8,7 +8,7 @@ records together as a ValidationErrors. validation_errors_as_dicts gives the
 errors in the form which is returned to API clients.
 """
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, TypedDict, override
@@ -22,9 +22,14 @@ from homeassistant.exceptions import HomeAssistantError
 _SECRET_MESSAGE = "invalid value"
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True, frozen=True, repr=False)
 class ValidationErrorInfo:
-    """A validation error and the path of the config it is about.
+    """A single validation error and the path of the config it is about.
+
+    A record holds one error, and its path is the whole path: the path of the
+    exception is not used. An exception which holds several errors, which is
+    a ValidationErrors or a MultipleInvalid with errors, can't be put in a
+    record: iter_validation_errors gives a record for each of its errors.
 
     The segments of the path are kept as they are in the config, so the path
     can be used to look up the value. They are not always str or int.
@@ -37,19 +42,43 @@ class ValidationErrorInfo:
     exception: probatio.Invalid | HomeAssistantError
     path: tuple[Any, ...]
 
+    def __post_init__(self) -> None:
+        """Validate the exception and make the path a tuple."""
+        if isinstance(self.exception, ValidationErrors) or (
+            isinstance(self.exception, probatio.MultipleInvalid)
+            and self.exception.errors
+        ):
+            raise ValueError(
+                f"A record can't hold a {type(self.exception).__name__} with "
+                "errors, use iter_validation_errors to get a record for each"
+            )
+        object.__setattr__(self, "path", tuple(self.path))
+
     @property
     def message(self) -> str:
         """Return the error message, without the path.
 
         The message of a secret error may echo the value, it is replaced.
         """
-        if isinstance(self.exception, probatio.Invalid):
-            if self.exception.secret:
-                return _SECRET_MESSAGE
-            if not isinstance(self.exception, probatio.MultipleInvalid):
-                return self.exception.msg
-        # A HomeAssistantError or a MultipleInvalid
-        return str(self.exception)
+        err = self.exception
+        if not isinstance(err, probatio.Invalid):
+            return str(err)
+        if err.secret:
+            return _SECRET_MESSAGE
+        if isinstance(err, probatio.MultipleInvalid) and not err.errors:
+            # It has no msg
+            return str(err)
+        return err.msg
+
+    @override
+    def __repr__(self) -> str:
+        """Return the representation, without the message of a secret error."""
+        err = self.exception
+        if isinstance(err, probatio.Invalid) and err.secret:
+            exception = f"<secret {type(err).__name__}>"
+        else:
+            exception = repr(err)
+        return f"{type(self).__name__}(exception={exception}, path={self.path!r})"
 
     @override
     def __str__(self) -> str:
@@ -62,12 +91,13 @@ class ValidationErrorInfo:
 class ValidationErrors(HomeAssistantError):
     """All validation errors of a config, raised when collecting errors."""
 
-    def __init__(self, errors: Sequence[ValidationErrorInfo]) -> None:
+    def __init__(self, errors: Iterable[ValidationErrorInfo]) -> None:
         """Initialize."""
-        if not errors:
-            raise ValueError("ValidationErrors requires at least one error")
-        super().__init__()
         self.errors = tuple(errors)
+        if not self.errors:
+            raise ValueError("ValidationErrors requires at least one error")
+        # Passed on so the exception can be copied and represented
+        super().__init__(self.errors)
 
     @override
     def __str__(self) -> str:
@@ -82,7 +112,7 @@ class ValidationErrors(HomeAssistantError):
 
 
 def _clear_tracebacks(err: BaseException) -> None:
-    """Clear the traceback of err and of the exceptions it is chained to."""
+    """Clear the traceback of err and of the exceptions it holds or is chained to."""
     seen: set[int] = set()
     pending: list[BaseException | None] = [err]
     while pending:
@@ -92,32 +122,45 @@ def _clear_tracebacks(err: BaseException) -> None:
         seen.add(id(exc))
         exc.__traceback__ = None
         pending += (exc.__cause__, exc.__context__)
+        if isinstance(exc, probatio.MultipleInvalid):
+            pending += exc.errors
+        elif isinstance(exc, ValidationErrors):
+            pending += (info.exception for info in exc.errors)
+        elif isinstance(exc, BaseExceptionGroup):
+            pending += exc.exceptions
+
+
+def _iter_located(
+    err: probatio.Invalid | HomeAssistantError, path: tuple[Any, ...]
+) -> Iterator[ValidationErrorInfo]:
+    """Yield a record for each error in err, located below path."""
+    if isinstance(err, ValidationErrors):
+        for info in err.errors:
+            yield ValidationErrorInfo(info.exception, (*path, *info.path))
+    elif isinstance(err, probatio.MultipleInvalid) and err.errors:
+        for sub_err in err.errors:
+            yield from _iter_located(sub_err, path)
+    elif isinstance(err, probatio.Invalid):
+        # Also a MultipleInvalid without errors: something was rejected
+        yield ValidationErrorInfo(err, (*path, *err.path))
+    else:
+        yield ValidationErrorInfo(err, path)
 
 
 def iter_validation_errors(
     err: probatio.Invalid | HomeAssistantError, path: Sequence[Any] = ()
 ) -> Iterator[ValidationErrorInfo]:
-    """Yield the errors in err, located below path.
+    """Return the errors in err as records, located below path.
 
-    At least one error is yielded. The traceback of err, of each error in it,
-    and of the exceptions they are chained to, is cleared, to not keep the
-    frames which raised them alive.
+    There is one record for each single error, and at least one: a
+    MultipleInvalid and a ValidationErrors are flattened, also when nested.
+
+    The traceback of err, and of every exception it holds or is chained to,
+    is cleared when this is called, to not keep the frames which raised them
+    alive.
     """
     _clear_tracebacks(err)
-    if isinstance(err, ValidationErrors):
-        for info in err.errors:
-            _clear_tracebacks(info.exception)
-            yield ValidationErrorInfo(info.exception, (*path, *info.path))
-    elif isinstance(err, probatio.MultipleInvalid) and err.errors:
-        for sub_err in err.errors:
-            yield from iter_validation_errors(sub_err, path)
-    elif isinstance(err, probatio.MultipleInvalid):
-        # Without errors it is still an error: something was rejected
-        yield ValidationErrorInfo(err, tuple(path))
-    elif isinstance(err, probatio.Invalid):
-        yield ValidationErrorInfo(err, (*path, *err.path))
-    else:
-        yield ValidationErrorInfo(err, tuple(path))
+    return _iter_located(err, tuple(path))
 
 
 class ValidationErrorDict(TypedDict):
@@ -136,20 +179,32 @@ def _json_path(path: tuple[Any, ...]) -> list[str | int]:
     if path and isinstance(path[-1], VirtualPathComponent):
         # A group is not a key of the config, the error is about its parent
         path = path[:-1]
-    return [
-        int(segment)
-        if isinstance(segment, int) and not isinstance(segment, bool)
-        else str(segment)
-        for segment in path
-    ]
+    return [_json_segment(segment) for segment in path]
+
+
+def _json_int(value: int) -> int | str:
+    """Return an int as a JSON value, the encoder only takes 64 bits."""
+    value = int(value)
+    return value if -(2**63) <= value < 2**64 else str(value)
+
+
+def _json_segment(segment: Any) -> str | int:
+    """Return a path segment as a str or an int."""
+    if isinstance(segment, Enum):
+        segment = segment.value
+    if isinstance(segment, int) and not isinstance(segment, bool):
+        return _json_int(segment)
+    return str(segment)
 
 
 def _json_value(value: Any) -> Any:
     """Return a placeholder value as a JSON value."""
     if isinstance(value, Enum):
         value = value.value
-    if value is None or isinstance(value, (bool, int, float, str)):
+    if value is None or isinstance(value, (bool, float, str)):
         return value
+    if isinstance(value, int):
+        return _json_int(value)
     if isinstance(value, (list, tuple, set, frozenset)):
         return [_json_value(item) for item in value]
     return str(value)

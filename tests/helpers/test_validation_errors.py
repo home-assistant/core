@@ -1,6 +1,7 @@
 """Test the helpers to collect, locate and serialize config validation errors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+import copy
 from datetime import timedelta
 from enum import Enum, StrEnum
 import gc
@@ -11,7 +12,11 @@ import probatio
 from probatio import VirtualPathComponent
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.validation_errors import (
@@ -24,6 +29,12 @@ from homeassistant.helpers.validation_errors import (
 
 class _Key(StrEnum):
     """A key of a config."""
+
+    NAME = "name"
+
+
+class _LegacyKey(str, Enum):  # noqa: UP042
+    """A key of a config, which is not a StrEnum."""
 
     NAME = "name"
 
@@ -48,6 +59,336 @@ def _raised[_ExceptionT: Exception](err: _ExceptionT) -> _ExceptionT:
         raise err
     except type(err) as raised:
         return raised
+
+
+_SECRET = "hunter2"
+_SECRET_SCHEMA = probatio.Schema(
+    {probatio.Secret("password"): cv.matches_regex("^a+$")}
+)
+
+
+def _invalid(message: str, path: list[Any] | None = None) -> probatio.Invalid:
+    """Return a raised probatio.Invalid."""
+    return _raised(probatio.Invalid(message, path))
+
+
+def _secret_multiple_invalid() -> probatio.MultipleInvalid:
+    """Return the raised error of a schema with a secret key."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        _SECRET_SCHEMA({"password": _SECRET})
+    assert _SECRET in str(exc_info.value)
+    return exc_info.value
+
+
+def _secret_invalid() -> probatio.Invalid:
+    """Return a raised secret error."""
+    return _secret_multiple_invalid().errors[0]
+
+
+def _multiple_invalid(*errors: probatio.Invalid) -> probatio.MultipleInvalid:
+    """Return a raised MultipleInvalid."""
+    return _raised(probatio.MultipleInvalid(list(errors)))
+
+
+def _validation_errors(
+    *errors: tuple[probatio.Invalid | HomeAssistantError, tuple[Any, ...]],
+) -> ValidationErrors:
+    """Return a raised ValidationErrors with records made by hand."""
+    return _raised(
+        ValidationErrors([ValidationErrorInfo(err, path) for err, path in errors])
+    )
+
+
+def _translated_error() -> HomeAssistantError:
+    """Return a raised translated HomeAssistantError."""
+    return _raised(
+        HomeAssistantError(
+            translation_domain="homeassistant",
+            translation_key="service_not_found",
+            translation_placeholders={"domain": "test", "service": "missing"},
+        )
+    )
+
+
+def _exception_group() -> ConfigValidationError:
+    """Return a raised HomeAssistantError which is an ExceptionGroup."""
+    return _raised(
+        ConfigValidationError(
+            "service_not_found",
+            [_raised(ValueError("member"))],
+            translation_domain="homeassistant",
+            translation_placeholders={"domain": "test", "service": "missing"},
+        )
+    )
+
+
+def _chained(
+    cause: BaseException | None = None,
+    context: BaseException | None = None,
+    *,
+    loop: bool = False,
+) -> probatio.Invalid:
+    """Return a raised probatio.Invalid which is chained to other exceptions."""
+    err = _invalid("bad", ["a"])
+    err.__cause__ = cause
+    err.__context__ = context
+    for chained in filter(None, (cause, context)):
+        chained.__context__ = err if loop else None
+    return err
+
+
+def _held_exceptions(err: BaseException | None) -> list[BaseException]:
+    """Return err and every exception it holds or is chained to."""
+    found: dict[int, BaseException] = {}
+    pending = [err]
+    while pending:
+        exc = pending.pop()
+        if exc is None or id(exc) in found:
+            continue
+        found[id(exc)] = exc
+        pending += [exc.__cause__, exc.__context__]
+        pending += getattr(exc, "exceptions", ())
+        pending += [
+            getattr(sub_err, "exception", sub_err)
+            for sub_err in getattr(exc, "errors", ())
+        ]
+    return list(found.values())
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("make_error", "expected"),
+    [
+        pytest.param(lambda: _invalid("bad"), [("bad", ())], id="invalid"),
+        pytest.param(
+            lambda: _invalid("bad", ["a", 1]),
+            [("bad", ("a", 1))],
+            id="invalid_with_path",
+        ),
+        pytest.param(
+            lambda: _raised(
+                probatio.RangeInvalid(
+                    path=["a"], translation_key="range_min", placeholders={"min": 2}
+                )
+            ),
+            [("value must be at least 2", ("a",))],
+            id="invalid_subclass_without_message",
+        ),
+        pytest.param(
+            _secret_invalid, [("invalid value", ("password",))], id="secret_invalid"
+        ),
+        pytest.param(
+            _multiple_invalid,
+            [("no validation errors", ())],
+            id="empty_multiple_invalid",
+        ),
+        pytest.param(
+            lambda: _multiple_invalid(_invalid("bad", ["a"])),
+            [("bad", ("a",))],
+            id="multiple_invalid_one_error",
+        ),
+        pytest.param(
+            lambda: _multiple_invalid(_invalid("bad", ["a"]), _invalid("other")),
+            [("bad", ("a",)), ("other", ())],
+            id="multiple_invalid_two_errors",
+        ),
+        pytest.param(
+            lambda: _multiple_invalid(
+                _multiple_invalid(_invalid("deep", ["x"]), _multiple_invalid()),
+                _invalid("flat", ["z"]),
+            ),
+            [("deep", ("x",)), ("no validation errors", ()), ("flat", ("z",))],
+            id="nested_multiple_invalid",
+        ),
+        pytest.param(
+            _secret_multiple_invalid,
+            [("invalid value", ("password",))],
+            id="multiple_invalid_secret_first",
+        ),
+        pytest.param(
+            lambda: _multiple_invalid(_invalid("bad", ["a"]), _secret_invalid()),
+            [("bad", ("a",)), ("invalid value", ("password",))],
+            id="multiple_invalid_secret_last",
+        ),
+        pytest.param(
+            lambda: _validation_errors(
+                (_invalid("bad", ["a"]), (1, "a")),
+                (_raised(HomeAssistantError("other")), ()),
+                (_secret_invalid(), ("b", "password")),
+            ),
+            [("bad", (1, "a")), ("other", ()), ("invalid value", ("b", "password"))],
+            id="validation_errors",
+        ),
+        pytest.param(
+            lambda: _raised(
+                ValidationErrors(
+                    list(
+                        iter_validation_errors(
+                            _validation_errors((_invalid("bad", ["a"]), (1, "a"))),
+                            ["then"],
+                        )
+                    )
+                )
+            ),
+            [("bad", ("then", 1, "a"))],
+            id="nested_validation_errors",
+        ),
+        pytest.param(
+            lambda: _raised(HomeAssistantError("Unknown device")),
+            [("Unknown device", ())],
+            id="homeassistant_error",
+        ),
+        pytest.param(
+            lambda: _raised(ServiceValidationError("Not allowed")),
+            [("Not allowed", ())],
+            id="homeassistant_error_subclass",
+        ),
+        pytest.param(
+            _translated_error,
+            [("Action test.missing not found", ())],
+            id="translated_homeassistant_error",
+        ),
+        pytest.param(
+            _exception_group,
+            [("Action test.missing not found", ())],
+            id="homeassistant_error_exception_group",
+        ),
+        pytest.param(
+            lambda: _chained(cause=_raised(ValueError("cause"))),
+            [("bad", ("a",))],
+            id="chained_cause",
+        ),
+        pytest.param(
+            lambda: _chained(context=_raised(ValueError("context"))),
+            [("bad", ("a",))],
+            id="chained_context",
+        ),
+        pytest.param(
+            lambda: _chained(
+                _raised(ValueError("cause")), _raised(TypeError("context")), loop=True
+            ),
+            [("bad", ("a",))],
+            id="chained_in_a_loop",
+        ),
+        pytest.param(
+            lambda: _chained(cause=_multiple_invalid(_invalid("inner", ["x"]))),
+            [("bad", ("a",))],
+            id="chained_to_multiple_invalid",
+        ),
+        pytest.param(
+            lambda: _chained(
+                context=_validation_errors((_invalid("inner", ["x"]), ("x",)))
+            ),
+            [("bad", ("a",))],
+            id="chained_to_validation_errors",
+        ),
+    ],
+)
+def test_records_of_error(
+    make_error: Callable[[], probatio.Invalid | HomeAssistantError],
+    expected: list[tuple[str, tuple[Any, ...]]],
+) -> None:
+    """Test what holds for the records of any error.
+
+    Each case is an error and the message and path of each single error in it.
+    """
+    err = make_error()
+    paths = [(0, "k", *path) for _, path in expected]
+    messages = [message for message, _ in expected]
+    # The text of a probatio.Invalid with the same message and path
+    texts = [
+        str(probatio.Invalid(message, list(path)))
+        for message, path in zip(messages, paths, strict=True)
+    ]
+
+    records = list(iter_validation_errors(err, [0, "k"]))
+    carrier = ValidationErrors(records)
+    dicts = validation_errors_as_dicts(carrier)
+
+    assert [(record.message, record.path) for record in records] == list(
+        zip(messages, paths, strict=True)
+    )
+    assert [str(record) for record in records] == texts
+    assert str(carrier) == texts[0]
+    assert [(item["message"], item["path"]) for item in dicts] == [
+        (message, list(path)) for message, path in zip(messages, paths, strict=True)
+    ]
+    # A record holds a single error, so it can be made again from its fields
+    assert [
+        ValidationErrorInfo(record.exception, record.path) for record in records
+    ] == records
+    # Locating the records again adds to the path and changes nothing else
+    assert list(iter_validation_errors(carrier, ["x"])) == [
+        ValidationErrorInfo(record.exception, ("x", *record.path)) for record in records
+    ]
+    assert carrier.errors == tuple(records)
+    assert [
+        type(exc).__name__
+        for exc in _held_exceptions(err) + _held_exceptions(carrier)
+        if exc.__traceback__ is not None
+    ] == []
+    assert _SECRET not in (
+        f"{records!r} {carrier!r} {carrier} {json_bytes(dicts).decode()}"
+    )
+
+
+@pytest.mark.parametrize(
+    "make_error",
+    [
+        pytest.param(
+            lambda: _multiple_invalid(_invalid("bad", ["a"])), id="multiple_invalid"
+        ),
+        pytest.param(
+            lambda: _multiple_invalid(_multiple_invalid(_invalid("bad"))),
+            id="nested_multiple_invalid",
+        ),
+        pytest.param(_secret_multiple_invalid, id="secret_multiple_invalid"),
+        pytest.param(
+            lambda: _validation_errors((_invalid("bad", ["a"]), ("a",))),
+            id="validation_errors",
+        ),
+    ],
+)
+def test_record_of_several_errors(
+    make_error: Callable[[], probatio.Invalid | HomeAssistantError],
+) -> None:
+    """Test a record can't be made from an exception which holds errors."""
+    with pytest.raises(ValueError, match="use iter_validation_errors"):
+        ValidationErrorInfo(make_error(), (0, "a"))
+
+
+def test_record_of_multiple_invalid_which_gets_errors() -> None:
+    """Test the message has no path when errors are added after the record is made."""
+    err = probatio.MultipleInvalid()
+    record = ValidationErrorInfo(err, (0,))
+
+    err.add(probatio.Invalid("late", ["a"]))
+
+    assert record.message == "late"
+    assert str(record) == "late at '[0]'"
+
+
+def test_record_path_is_a_tuple() -> None:
+    """Test the path of a record made by hand is made a tuple."""
+    err = probatio.Invalid("bad")
+
+    record = ValidationErrorInfo(err, ["a", 0])  # type: ignore[arg-type]
+
+    assert record.path == ("a", 0)
+    assert record == ValidationErrorInfo(err, ("a", 0))
+    assert hash(record) == hash(ValidationErrorInfo(err, ("a", 0)))
+
+
+def test_record_repr() -> None:
+    """Test the representation of a record does not have a secret value."""
+    assert (
+        repr(ValidationErrorInfo(probatio.Invalid("bad"), ("a", 0)))
+        == "ValidationErrorInfo(exception=Invalid('bad'), path=('a', 0))"
+    )
+    assert (
+        repr(ValidationErrorInfo(_secret_invalid(), ("password",)))
+        == "ValidationErrorInfo(exception=<secret Invalid>, path=('password',))"
+    )
 
 
 def test_iter_validation_errors_invalid() -> None:
@@ -174,10 +515,55 @@ def test_validation_errors() -> None:
     assert str(ValidationErrors(err.errors[1:])) == "second"
 
 
-def test_validation_errors_requires_an_error() -> None:
+@pytest.mark.parametrize(
+    "errors",
+    [
+        pytest.param([], id="list"),
+        pytest.param(iter(()), id="iterator"),
+    ],
+)
+def test_validation_errors_requires_an_error(
+    errors: Iterable[ValidationErrorInfo],
+) -> None:
     """Test a ValidationErrors without errors can't be created."""
     with pytest.raises(ValueError, match="requires at least one error"):
-        raise ValidationErrors([])
+        raise ValidationErrors(errors)
+
+
+def test_validation_errors_from_iterator() -> None:
+    """Test a ValidationErrors can be created from an iterator."""
+    err = probatio.Invalid("bad", ["a"])
+
+    carrier = ValidationErrors(iter_validation_errors(err, [0]))
+
+    assert carrier.errors == (ValidationErrorInfo(err, (0, "a")),)
+
+
+def test_validation_errors_copy_and_repr() -> None:
+    """Test a ValidationErrors can be copied and represented."""
+    record = ValidationErrorInfo(HomeAssistantError("bad"), ("a",))
+    carrier = ValidationErrors([record, ValidationErrorInfo(_secret_invalid(), ())])
+
+    assert copy.copy(carrier).errors == carrier.errors
+    assert str(copy.deepcopy(carrier)) == "bad at 'a'"
+    assert repr(carrier) == (
+        "ValidationErrors((ValidationErrorInfo(exception=HomeAssistantError('bad'), "
+        "path=('a',)), ValidationErrorInfo(exception=<secret Invalid>, path=())))"
+    )
+
+
+def test_iter_validation_errors_is_not_lazy() -> None:
+    """Test the tracebacks are cleared and the path is read when called."""
+    first = _invalid("first")
+    second = _invalid("second")
+    path = [0]
+
+    records = iter_validation_errors(_multiple_invalid(first, second), path)
+    path[0] = 1
+
+    assert first.__traceback__ is None
+    assert second.__traceback__ is None
+    assert [record.path for record in records] == [(0,), (0,)]
 
 
 @pytest.mark.usefixtures("hass")
@@ -232,6 +618,28 @@ def test_message_and_text_use_msg() -> None:
         pytest.param(1.5, "1.5", "bad at 'data[1.5]'", id="float"),
         pytest.param(None, "None", "bad at 'data[None]'", id="none"),
         pytest.param(_Key.NAME, "name", "bad at 'data.name'", id="str_enum"),
+        pytest.param(
+            _LegacyKey.NAME,
+            "name",
+            "bad at 'data[<_LegacyKey.NAME: 'name'>]'",
+            id="str_and_enum",
+        ),
+        pytest.param(
+            _Mode.FAST, 2, "bad at 'data[<_Mode.FAST: 2>]'", id="enum_with_int_value"
+        ),
+        pytest.param(2**64 - 1, 2**64 - 1, f"bad at 'data[{2**64 - 1}]'", id="64_bits"),
+        pytest.param(
+            2**64,
+            "18446744073709551616",
+            "bad at 'data[18446744073709551616]'",
+            id="more_than_64_bits",
+        ),
+        pytest.param(
+            -(2**63) - 1,
+            "-9223372036854775809",
+            "bad at 'data[-9223372036854775809]'",
+            id="less_than_64_bits",
+        ),
     ],
 )
 def test_path_segments(
@@ -265,38 +673,6 @@ def test_secret_error_text() -> None:
     assert records[0].message == "invalid value"
     assert str(records[0]) == "invalid value at '[0].outer.password'"
     assert str(ValidationErrors(records)) == "invalid value at '[0].outer.password'"
-
-
-@pytest.mark.parametrize(
-    ("validator", "expected_code"),
-    [
-        pytest.param(probatio.In(["allowed"]), "not_in_list", id="in"),
-        pytest.param(cv.matches_regex("^a+$"), None, id="message_with_value"),
-    ],
-)
-def test_secret_multiple_invalid_record(
-    validator: Any, expected_code: str | None
-) -> None:
-    """Test a record made from a secret MultipleInvalid does not have the value."""
-    schema = probatio.Schema({probatio.Secret("password"): validator})
-    with pytest.raises(probatio.MultipleInvalid) as exc_info:
-        schema({"password": "hunter2"})
-
-    record = ValidationErrorInfo(exc_info.value, ("password",))
-
-    assert record.message == "invalid value"
-    assert str(record) == "invalid value at 'password'"
-    assert str(ValidationErrors([record])) == "invalid value at 'password'"
-    assert validation_errors_as_dicts(ValidationErrors([record])) == [
-        {
-            "message": "invalid value",
-            "path": ["password"],
-            "code": expected_code,
-            "translation_key": None,
-            "translation_domain": None,
-            "translation_placeholders": {},
-        }
-    ]
 
 
 def test_group_segment() -> None:
@@ -430,6 +806,8 @@ def test_validation_errors_as_dicts(
                 translation_placeholders={  # type: ignore[dict-item]
                     "timeout": timedelta(seconds=5),
                     "attempts": 3,
+                    "large": 2**64,
+                    "largest": [2**64 - 1, -(2**63)],
                     "entities": ("light.a", _Unserializable()),
                     "mode": _Mode.FAST,
                     "modes": {_Mode.FAST},
@@ -446,6 +824,8 @@ def test_validation_errors_as_dicts(
                 "translation_placeholders": {
                     "timeout": "0:00:05",
                     "attempts": 3,
+                    "large": "18446744073709551616",
+                    "largest": [2**64 - 1, -(2**63)],
                     "entities": ["light.a", "<unserializable>"],
                     "mode": 2,
                     "modes": [2],
@@ -510,6 +890,42 @@ def _raise_validation_errors_of_raised_error() -> None:
     raise ValidationErrors(errors)
 
 
+def _raise_multiple_invalid_of_raised_error() -> None:
+    """Raise a MultipleInvalid with an error which was raised."""
+    errors: list[probatio.Invalid] = []
+    try:
+        _raise_from()
+    except probatio.Invalid as err:
+        errors.append(err)
+    raise probatio.MultipleInvalid(errors)
+
+
+def _raise_from_multiple_invalid() -> None:
+    """Raise an error from a MultipleInvalid with an error which was raised."""
+    try:
+        _raise_multiple_invalid_of_raised_error()
+    except probatio.MultipleInvalid as err:
+        raise HomeAssistantError("bad") from err
+
+
+def _raise_from_validation_errors() -> None:
+    """Raise an error from a ValidationErrors with a record of a raised error."""
+    try:
+        _raise_validation_errors_of_raised_error()
+    except ValidationErrors as err:
+        raise HomeAssistantError("bad") from err
+
+
+def _raise_exception_group() -> None:
+    """Raise an ExceptionGroup with an error which was raised."""
+    errors: list[Exception] = []
+    try:
+        int("x")
+    except ValueError as err:
+        errors.append(err)
+    raise ConfigValidationError("bad", errors)
+
+
 @pytest.mark.parametrize(
     "validate",
     [
@@ -522,6 +938,9 @@ def _raise_validation_errors_of_raised_error() -> None:
             _raise_validation_errors_of_raised_error,
             id="validation_errors_of_raised_error",
         ),
+        pytest.param(_raise_from_multiple_invalid, id="from_multiple_invalid"),
+        pytest.param(_raise_from_validation_errors, id="from_validation_errors"),
+        pytest.param(_raise_exception_group, id="exception_group"),
     ],
 )
 def test_no_reference_cycles(validate: Callable[[], None]) -> None:
