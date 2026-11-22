@@ -2851,7 +2851,7 @@ python-mystrom==2.5.0
 python-open-router==0.5.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.6.2
+python-opendata-transport==0.6.3
 
 # homeassistant.components.openevse
 python-openevse-http==1.8.0
