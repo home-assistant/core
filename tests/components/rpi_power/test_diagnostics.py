@@ -42,12 +42,42 @@ async def test_diagnostics_new(
     assert result == snapshot
 
 
+async def test_diagnostics_new_read_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics when modern raspberrypi-hwmon read raises an error."""
+    client = UnderVoltageNew("/sys/class/hwmon/hwmon0")
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.rpi_power.new_under_voltage",
+            return_value=client,
+        ),
+        patch.object(UnderVoltageNew, "get", return_value=False),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch.object(
+        UnderVoltageNew,
+        "get",
+        side_effect=RpiBadPowerError("I/O error"),
+    ):
+        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert result == snapshot
+
+
 async def test_diagnostics_legacy(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test diagnostics with legacy get_throttled reader."""
+    """Test diagnostics with legacy get_throttled reader uses a single read."""
     client = UnderVoltageLegacy()
     throttled_status = ThrottledStatus.from_hex("0x50005")
     config_entry = MockConfigEntry(domain=DOMAIN)
@@ -62,12 +92,14 @@ async def test_diagnostics_legacy(
             UnderVoltageLegacy,
             "get_throttled_status",
             return_value=throttled_status,
-        ),
+        ) as mock_get_throttled,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+        mock_get_throttled.reset_mock()
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        mock_get_throttled.assert_called_once()
 
     assert result == snapshot
 
@@ -77,7 +109,7 @@ async def test_diagnostics_read_error(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test diagnostics when reading sysfs raises an error."""
+    """Test diagnostics when legacy get_throttled read raises an error."""
     client = UnderVoltageLegacy()
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -100,7 +132,8 @@ async def test_diagnostics_read_error(
         UnderVoltageLegacy,
         "get_throttled_status",
         side_effect=RpiBadPowerError("I/O error"),
-    ):
+    ) as mock_get_throttled:
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        mock_get_throttled.assert_called_once()
 
     assert result == snapshot

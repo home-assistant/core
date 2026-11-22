@@ -26,6 +26,15 @@
     'under_voltage': False,
   })
 # ---
+# name: test_diagnostics_new_read_error
+  dict({
+    'error': 'I/O error',
+    'reader': 'UnderVoltageNew',
+    'supports_push': True,
+    'sysfs_path': '/sys/class/hwmon/hwmon0/in0_lcrit_alarm',
+    'under_voltage': None,
+  })
+# ---
 # name: test_diagnostics_read_error
   dict({
     'error': 'I/O error',
