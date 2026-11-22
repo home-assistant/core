@@ -834,6 +834,99 @@ async def test_play_media_search_processes_final_permitted_browse(
     )
 
 
+async def test_play_media_skips_browse_when_resolved_metadata_complete(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test no browse request is made when the resolved item has title and artwork."""
+    await setup_media_player(hass, mock_config_entry)
+
+    didl = MagicMock(title="NAS Track", album_art_uri="/upnp/art.jpg")
+    play_item = MagicMock(
+        url="http://nas:5000/music/track.flac",
+        didl_metadata=didl,
+        thumbnail="http://nas:5000/upnp/normalized.jpg",
+    )
+    browse_mock = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            browse_mock,
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://dlna_dms/nas/:some-object-id",
+            },
+            blocking=True,
+        )
+
+    browse_mock.assert_not_called()
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "NAS Track",
+            "uri": "http://nas:5000/music/track.flac",
+            "albumArtwork": "http://nas:5000/upnp/normalized.jpg",
+        }
+    )
+
+
+async def test_play_media_browses_when_resolved_metadata_incomplete(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test browsing still happens when the resolved item lacks artwork."""
+    await setup_media_player(hass, mock_config_entry)
+
+    didl = MagicMock(title="NAS Track", album_art_uri=None)
+    play_item = MagicMock(
+        url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
+    )
+    browsed = MagicMock(
+        title="NAS Track", thumbnail="http://nas:5000/art.jpg", can_expand=False
+    )
+    browse_mock = AsyncMock(return_value=browsed)
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            browse_mock,
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://dlna_dms/nas/:some-object-id",
+            },
+            blocking=True,
+        )
+
+    browse_mock.assert_called_once()
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "NAS Track",
+            "uri": "http://nas:5000/music/track.flac",
+            "albumArtwork": "http://nas:5000/art.jpg",
+        }
+    )
+
+
 async def test_invoke_pin_calls_device(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_device: MagicMock
 ) -> None:

@@ -228,15 +228,27 @@ class OpenhomeDevice(MediaPlayerEntity):
             )
             media_id = play_item.url
             track_details["uri"] = media_id
+            didl = getattr(play_item, "didl_metadata", None)
+            # Skip metadata browsing when the resolved item already carries a
+            # title and artwork: extra browse requests only add latency to the
+            # playback path and can exhaust the search budget.
+            resolved_complete = bool(getattr(didl, "title", None)) and bool(
+                getattr(play_item, "thumbnail", None)
+                or getattr(didl, "album_art_uri", None)
+            )
             # Metadata lookup is best-effort: DLNA servers answer upnp error
             # 710 when browsing the direct children of a file, which must not
             # fail playback.
-            browsed = await self._async_browse_media_item(media_content_id)
+            browsed = (
+                None
+                if resolved_complete
+                else await self._async_browse_media_item(media_content_id)
+            )
             # Keep the media's own metadata instead of a generic one.
             if browsed is not None:
                 track_details["title"] = browsed.title or "Home Assistant"
                 track_details["albumArtwork"] = browsed.thumbnail or ""
-            elif didl := getattr(play_item, "didl_metadata", None):
+            elif didl is not None:
                 track_details["title"] = didl.title or "Home Assistant"
                 if thumbnail := getattr(play_item, "thumbnail", None):
                     # Normalized to an absolute URL by the media source.
