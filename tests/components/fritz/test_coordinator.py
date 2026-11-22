@@ -20,7 +20,6 @@ from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
-    DEFAULT_SSL,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -124,7 +123,7 @@ async def test_fritzboxtools_class_no_setup(
         port=MOCK_USER_DATA[CONF_PORT],
         username=MOCK_USER_DATA[CONF_USERNAME],
         password=MOCK_USER_DATA[CONF_PASSWORD],
-        use_tls=MOCK_USER_DATA.get(CONF_SSL, DEFAULT_SSL),
+        use_tls=MOCK_USER_DATA[CONF_SSL],
         device_discovery_enabled=MOCK_USER_DATA.get(
             CONF_FEATURE_DEVICE_TRACKING, DEFAULT_CONF_FEATURE_DEVICE_TRACKING
         ),
