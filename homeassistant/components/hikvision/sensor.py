@@ -76,24 +76,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hikvision image setting sensors."""
-    coordinator = entry.runtime_data.image_coordinator
-    if coordinator is None:
-        return
-
     entities: list[HikvisionImageSensor] = []
-    for setting in coordinator.settings:
-        if setting.type is not ImageSettingType.SELECT or len(setting.options) != 1:
-            # A setting with several choices is a select.
-            continue
-        if (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower())) is None:
-            continue
-        if (
-            options := image_option_map(setting, description.translate_options)
-        ) is None:
-            continue
-        entities.append(
-            HikvisionImageSensor(coordinator, entry, description, setting, options)
-        )
+    for coordinator in entry.runtime_data.image_coordinators:
+        for setting in coordinator.settings:
+            if setting.type is not ImageSettingType.SELECT or len(setting.options) != 1:
+                # A setting with several choices is a select.
+                continue
+            if (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower())) is None:
+                continue
+            if (
+                options := image_option_map(setting, description.translate_options)
+            ) is None:
+                continue
+            entities.append(
+                HikvisionImageSensor(coordinator, entry, description, setting, options)
+            )
     async_add_entities(entities)
 
 

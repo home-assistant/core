@@ -415,7 +415,7 @@ async def test_a_renamed_entity_is_still_linked(
 
     assert [e.data["entity_id"] for e in events] == ["switch.renamed_hlc"]
     # Removing the renamed entity forgets it.
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     entity_registry.async_remove("switch.renamed_hlc")
     await hass.async_block_till_done()
     assert "hlc/enabled" not in coordinator.entity_ids
@@ -604,7 +604,7 @@ async def test_requests_queued_behind_a_rejected_password_are_not_sent(
     Each attempt with a wrong password counts towards locking the account.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     mock_image_settings.set_image_setting.side_effect = ISAPIAuthError(
         "Invalid credentials", 401
     )
@@ -792,7 +792,7 @@ async def test_a_value_spelled_otherwise_follows_its_setting(
     the setting has one value.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     assert hass.states.get(HLC).state == STATE_ON
     values = {
         path: value

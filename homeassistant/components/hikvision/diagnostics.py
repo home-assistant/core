@@ -5,7 +5,13 @@ from typing import Any
 
 import pyhik
 from pyhik.image import ImageSetting
-from pyhik.isapi import ENDPOINT_IMAGE_CHANNEL, ISAPIAuthError, ISAPIClient, ISAPIError
+from pyhik.isapi import (
+    ENDPOINT_IMAGE_CHANNEL,
+    ENDPOINT_IMAGE_PROXY_CHANNEL,
+    ISAPIAuthError,
+    ISAPIClient,
+    ISAPIError,
+)
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -19,19 +25,27 @@ TO_REDACT = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME, "title", "unique_id"}
 
 # The camera's own documents, as it sends them: they hold image settings only,
 # and are what is needed to report a camera model or add it to pyhik's tests.
-RAW_DOCUMENTS = {
-    "capabilities": f"{ENDPOINT_IMAGE_CHANNEL.format(channel=1)}/capabilities",
-    "values": ENDPOINT_IMAGE_CHANNEL.format(channel=1),
-}
+RAW_DOCUMENTS = ("capabilities", "values")
 
 
-def _read_raw_documents(client: ISAPIClient, documents: dict[str, str]) -> None:
+def _raw_endpoints(channel: int | None) -> dict[str, str]:
+    """Return where each document is read: the camera's, or the NVR's proxy."""
+    if channel is None:
+        endpoint = ENDPOINT_IMAGE_CHANNEL.format(channel=1)
+    else:
+        endpoint = ENDPOINT_IMAGE_PROXY_CHANNEL.format(channel=channel)
+    return {"capabilities": f"{endpoint}/capabilities", "values": endpoint}
+
+
+def _read_raw_documents(
+    client: ISAPIClient, channel: int | None, documents: dict[str, str]
+) -> None:
     """Read the camera's image documents into documents, without parsing them.
 
     Raises ISAPIAuthError on a 401, once every document has its entry, so that the
     coordinator deals with the rejected password.
     """
-    for name, endpoint in RAW_DOCUMENTS.items():
+    for name, endpoint in _raw_endpoints(channel).items():
         try:
             response = client.request_raw("GET", endpoint)
         except ISAPIError as err:
@@ -88,7 +102,7 @@ async def _async_read_raw_documents(
     documents: dict[str, str] = {}
     try:
         await coordinator.async_diagnostics_request(
-            _read_raw_documents, coordinator.client, documents
+            _read_raw_documents, coordinator.client, coordinator.channel, documents
         )
     except ISAPIAuthError:
         # Each document says so already.
@@ -135,33 +149,45 @@ async def async_get_config_entry_diagnostics(
     diagnostics["device_type"] = data.device_type
     diagnostics["channels"] = sorted(data.channels)
 
-    if (coordinator := data.image_coordinator) is not None:
-        values, values_source = await _async_read_values(coordinator)
-        # The flag of a linked mode is part of its setting: pyHik folds it in.
-        discovered = {
-            path.lower()
-            for setting in coordinator.settings
-            for path in (setting.path, setting.linked_enabled_path)
-            if path is not None
-        }
-        values_by_path = {path.lower(): value for path, value in values.items()}
-        diagnostics["image_settings"] = {
-            "values_source": values_source,
-            "settings": {
-                setting.path: _setting_to_dict(
-                    setting,
-                    values_by_path,
-                    coordinator.entity_paths,
-                )
-                for setting in coordinator.settings
-            },
-            # Values the camera reports that no discovered setting describes.
-            "other_values": {
-                path: value
-                for path, value in values.items()
-                if path.lower() not in discovered
-            },
-            "raw_documents": await _async_read_raw_documents(coordinator),
-        }
+    for coordinator in data.image_coordinators:
+        description = await _async_describe(coordinator)
+        if coordinator.channel is None:
+            diagnostics["image_settings"] = description
+        else:
+            # The cameras attached to an NVR, by channel ID.
+            diagnostics.setdefault("channel_image_settings", {})[
+                str(coordinator.channel)
+            ] = description
 
     return diagnostics
+
+
+async def _async_describe(coordinator: HikvisionImageCoordinator) -> dict[str, Any]:
+    """Describe the image settings of one camera."""
+    values, values_source = await _async_read_values(coordinator)
+    # The flag of a linked mode is part of its setting: pyHik folds it in.
+    discovered = {
+        path.lower()
+        for setting in coordinator.settings
+        for path in (setting.path, setting.linked_enabled_path)
+        if path is not None
+    }
+    values_by_path = {path.lower(): value for path, value in values.items()}
+    return {
+        "values_source": values_source,
+        "settings": {
+            setting.path: _setting_to_dict(
+                setting,
+                values_by_path,
+                coordinator.entity_paths,
+            )
+            for setting in coordinator.settings
+        },
+        # Values the camera reports that no discovered setting describes.
+        "other_values": {
+            path: value
+            for path, value in values.items()
+            if path.lower() not in discovered
+        },
+        "raw_documents": await _async_read_raw_documents(coordinator),
+    }

@@ -293,12 +293,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hikvision image setting numbers."""
-    coordinator = entry.runtime_data.image_coordinator
-    if coordinator is None:
-        return
-
     async_add_entities(
         HikvisionImageNumber(coordinator, entry, description, setting)
+        for coordinator in entry.runtime_data.image_coordinators
         for setting in coordinator.settings
         if setting.type is ImageSettingType.NUMBER
         and _usable_range(setting)

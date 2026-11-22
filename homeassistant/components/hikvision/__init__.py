@@ -4,12 +4,14 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 import uuid
 from xml.etree.ElementTree import ParseError
 
-from pyhik.constants import SENSOR_MAP
+from pyhik.constants import NVR_DEVICE, SENSOR_MAP
 from pyhik.hikvision import HikCamera, VideoChannel, get_video_channels
+from pyhik.image import ImageChannelInfo
 from pyhik.isapi import (
     ISAPIAuthError,
     ISAPIClient,
@@ -43,8 +45,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_call_later
 
-from .const import CONF_RANDOM_ID, DOMAIN
+from .const import CONF_RANDOM_ID, CONF_RECORDER, DOMAIN
 from .coordinator import (
+    HikvisionImageClient,
     HikvisionImageCoordinator,
     async_complete,
     async_run_to_end,
@@ -95,13 +98,20 @@ class HikvisionData:
     stream_id: str
     device_name: str
     device_type: str
+    # An NVR, or a recorder that reports the type of a camera: its attached
+    # cameras are read through it, each on a device of its own.
+    is_nvr: bool
     host: str
     username: str
     password: str
     channels: dict[int, VideoChannel] = field(default_factory=dict)
-    image_coordinator: HikvisionImageCoordinator | None = None
+    # A standalone camera has one, an NVR one per attached camera: they share the
+    # client and the login.
+    image_coordinators: list[HikvisionImageCoordinator] = field(default_factory=list)
     # The stop of the event stream, shared by everything that stops it
     stream_stop: asyncio.Task[None] | None = None
+    # Whether a reload is scheduled to read the image settings again
+    image_retry_scheduled: bool = False
     # The settings of the entry this setup connected with
     connection: dict[str, object] = field(default_factory=dict)
 
@@ -265,10 +275,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     device_name = camera.get_name or host
     device_type = camera.get_type or "Camera"
+    is_nvr = device_type == "NVR" or entry.data.get(CONF_RECORDER, False)
+    if is_nvr:
+        # Also a recorder that reports a camera type: pyHik only asks for the video
+        # of each of its cameras by channel once it knows the device is a recorder.
+        camera.device_type = NVR_DEVICE
 
     # For NVRs, fetch video channel information
     channels: dict[int, VideoChannel] = {}
-    if device_type == "NVR":
+    if is_nvr:
         channel_list = await hass.async_add_executor_job(
             get_video_channels, host, port, username, password, ssl, verify_ssl
         )
@@ -281,6 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         stream_id=stream_id,
         device_name=device_name,
         device_type=device_type,
+        is_nvr=is_nvr,
         host=host,
         username=username,
         password=password,
@@ -297,7 +313,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     # For NVRs or devices with no detected events, try to fetch events from ISAPI
     # Use broader notification methods for NVRs since they often use 'record' etc.
-    if device_type == "NVR" or not camera.current_event_states:
+    if is_nvr or not camera.current_event_states:
         nvr_notification_methods = {"center", "HTTP", "record", "email", "beep"}
 
         def fetch_and_inject_nvr_events() -> None:
@@ -384,16 +400,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     try:
         await hass.config_entries.async_forward_entry_setups(entry, event_platforms)
 
-        # Image settings are only read from standalone cameras.
-        if device_type != "NVR":
-            entry.runtime_data.image_coordinator = await _async_setup_image_settings(
-                hass, entry, host, port, username, password, ssl, verify_ssl
-            )
-            if hass.is_stopping:
-                # The stop closed what it found before the discovery ended: the
-                # client is closed here instead, and has no entities.
-                await _async_close_image_settings(entry.runtime_data)
-                entry.runtime_data.image_coordinator = None
+        entry.runtime_data.image_coordinators = await _async_setup_image_settings(
+            hass,
+            entry,
+            host,
+            port,
+            username,
+            password,
+            ssl,
+            verify_ssl,
+            is_nvr,
+        )
+        if hass.is_stopping:
+            # The stop closed what it found before the discovery ended: the client
+            # is closed here instead, and has no entities.
+            await _async_close_image_settings(entry.runtime_data)
+            entry.runtime_data.image_coordinators = []
 
         if image_platforms:
             forwarded.extend(image_platforms)
@@ -436,10 +458,11 @@ async def _async_setup_image_settings(
     password: str,
     ssl: bool,
     verify_ssl: bool,
-) -> HikvisionImageCoordinator | None:
-    """Discover the image settings of a camera.
+    is_nvr: bool,
+) -> list[HikvisionImageCoordinator]:
+    """Discover the image settings of a camera, or of the cameras of an NVR.
 
-    Image settings are an optional extra: a camera that does not offer them, or
+    Image settings are an optional extra: a device that does not offer them, or
     does not allow reading them, simply gets no image entities.
     """
 
@@ -458,18 +481,25 @@ async def _async_setup_image_settings(
         verify_ssl,
         on_result=_async_close_unused,
     )
-    closed = False
+    # Shared with the coordinators: the client is closed once, whichever closes it.
+    shared = HikvisionImageClient(client)
 
     async def _async_close() -> None:
-        """Close the client, once and to its end, whatever path asks first."""
-        nonlocal closed
-        if closed:
+        """Close the client, once and to its end, whatever path asks first.
+
+        Under the lock: the cameras of an NVR found so far can be reached meanwhile,
+        by the diagnostics for one, and the client is not closed under a request
+        that is still running.
+        """
+        if shared.closed:
             return
 
         async def _async_close_now() -> None:
-            nonlocal closed
-            await async_run_to_end(hass, client.close)
-            closed = True
+            async with shared.lock:
+                if shared.closed:
+                    return
+                await async_run_to_end(hass, client.close)
+                shared.closed = True
 
         try:
             await async_complete(_async_close_now())
@@ -479,65 +509,240 @@ async def _async_setup_image_settings(
             # marked closed, so a later path can try again.
             _LOGGER.exception("Error closing the image settings client of %s", host)
 
+    discovery = _ImageDiscovery(hass, entry, host, shared, _async_close)
     try:
-        return await _async_discover_image_settings(
-            hass, entry, host, client, _async_close
-        )
+        if is_nvr:
+            coordinators = await discovery.async_nvr_cameras()
+        else:
+            coordinators = await discovery.async_camera()
     except BaseException:
         # Anything unexpected, or a cancelled setup, must not leave it open. Not
         # closed twice: a path that already closed it is not repeated.
         await _async_close()
         raise
+    if not coordinators:
+        await _async_close()
+    return coordinators
 
 
-async def _async_discover_image_settings(
-    hass: HomeAssistant,
-    entry: HikvisionConfigEntry,
-    host: str,
-    client: ISAPIClient,
-    close: Callable[[], Awaitable[None]],
-) -> HikvisionImageCoordinator | None:
-    """Read the image settings with the client, and close it if there are none."""
-    try:
-        # To its end even if the setup is cancelled: the client is closed after it.
-        settings = await async_run_to_end(hass, client.get_image_settings)
-    except ISAPINotSupportedError:
-        _LOGGER.debug("%s does not support image settings", host)
-    except ISAPIAuthError as err:
-        if err.status_code == 401:
-            # The device rejects the credentials, not just this request. The event
-            # stream would keep using them, so stop it before asking for new ones.
-            await close()
+class _ImageDiscovery:
+    """Read the image settings of a device with a new client.
+
+    The cameras of an NVR are read through its proxy endpoints, with the channel
+    IDs it lists, and share the client.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: HikvisionConfigEntry,
+        host: str,
+        shared: HikvisionImageClient,
+        close: Callable[[], Awaitable[None]],
+    ) -> None:
+        """Initialize the discovery."""
+        self._hass = hass
+        self._entry = entry
+        self._host = host
+        self._shared = shared
+        self._close = close
+
+    async def _async_send[_T](self, job: Callable[[], _T]) -> _T:
+        """Send a discovery request, one at a time on the client.
+
+        The cameras of an NVR found so far can be reached meanwhile, by the
+        diagnostics for one, while the next ones are read. So a request waits for
+        theirs, to its end even if the setup is cancelled (the client is closed
+        after it), and is not sent once one of them got the credentials rejected
+        or the client was closed, as it is when Home Assistant stops.
+        """
+        shared = self._shared
+        async with shared.lock:
+            if shared.credentials_rejected:
+                # Sending them again could lock the account.
+                raise ISAPIAuthError("The device rejected the credentials", 401)
+            if shared.closed:
+                raise ConfigEntryNotReady("The image settings client is closed")
             try:
-                await async_stop_stream(hass, entry.runtime_data)
-            except Exception:
-                # Still ask for new credentials: the clean-up of the failed setup
-                # tries to stop the stream again.
-                _LOGGER.exception("Error stopping the event stream of %s", host)
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        _LOGGER.warning("Not allowed to read the image settings of %s: %s", host, err)
-    except ISAPIError as err:
-        _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
-        if _may_work_later(err):
-            _async_retry_image_settings_later(hass, entry)
-    else:
-        coordinator = HikvisionImageCoordinator(hass, entry, client, settings)
+                return await async_run_to_end(self._hass, job)
+            except ISAPIAuthError as err:
+                if err.status_code == 401:
+                    shared.credentials_rejected = True
+                raise
+
+    async def _async_rejected(self) -> ConfigEntryAuthFailed:
+        """Stop what uses the rejected password, and return the error to raise.
+
+        The device rejects the credentials, not just this request. The event stream
+        would keep using them, so it is stopped before new ones are asked for.
+        """
+        await self._close()
+        try:
+            await async_stop_stream(self._hass, self._entry.runtime_data)
+        except Exception:
+            # Still ask for new credentials: the clean-up of the failed setup
+            # tries to stop the stream again.
+            _LOGGER.exception("Error stopping the event stream of %s", self._host)
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        )
+
+    async def _async_first_refresh(
+        self, coordinator: HikvisionImageCoordinator, what: str
+    ) -> bool:
+        """Read the first values; return whether they could be read."""
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady as err:
             # The events work without the image settings, so do not hold them back.
-            _LOGGER.warning("Unable to read the image values of %s: %s", host, err)
+            _LOGGER.warning("Unable to read the image values of %s: %s", what, err)
             if _may_work_later(err):
-                _async_retry_image_settings_later(hass, entry)
-        except ConfigEntryAuthFailed:
-            await close()
-            raise
-        else:
-            return coordinator
-    await close()
-    return None
+                _async_retry_image_settings_later(self._hass, self._entry)
+            return False
+        return True
+
+    async def async_camera(self) -> list[HikvisionImageCoordinator]:
+        """Discover the image settings of a standalone camera."""
+        host = self._host
+        try:
+            # To its end even if the setup is cancelled: the client is closed after
+            # it.
+            settings = await self._async_send(self._shared.client.get_image_settings)
+        except ISAPIAuthError as err:
+            if err.status_code == 401:
+                raise await self._async_rejected() from err
+            _LOGGER.warning(
+                "Not allowed to read the image settings of %s: %s", host, err
+            )
+            return []
+        except ISAPIConnectionError as err:
+            _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
+            _async_retry_image_settings_later(self._hass, self._entry)
+            return []
+        except ISAPIError as err:
+            # Some recorders report the type of a camera, so the device type cannot
+            # tell them apart. They answer the camera's endpoints with an error, but
+            # list the cameras attached to them on the NVR's.
+            if await self._async_list_image_channels(quiet=True):
+                self._async_set_up_as_a_recorder()
+                return []
+            if isinstance(err, ISAPINotSupportedError):
+                _LOGGER.debug("%s does not support image settings", host)
+            else:
+                _LOGGER.warning(
+                    "Unable to read the image settings of %s: %s", host, err
+                )
+                if _may_work_later(err):
+                    _async_retry_image_settings_later(self._hass, self._entry)
+            return []
+        coordinator = HikvisionImageCoordinator(
+            self._hass, self._entry, self._shared, settings
+        )
+        if not await self._async_first_refresh(coordinator, host):
+            return []
+        return [coordinator]
+
+    @callback
+    def _async_set_up_as_a_recorder(self) -> None:
+        """Record that the device is a recorder, and set it up again as one.
+
+        Everything else was set up as for a camera: its events and its video on
+        the device of the recorder. Set up as an NVR, each attached camera gets a
+        device of its own, with its events, its video and its image settings.
+        """
+        _LOGGER.info(
+            "%s reports the type of a camera but is a recorder: setting it up as an "
+            "NVR",
+            self._host,
+        )
+        self._hass.config_entries.async_update_entry(
+            self._entry, data={**self._entry.data, CONF_RECORDER: True}
+        )
+        # Once this setup ends: a reload waits for it.
+        self._hass.config_entries.async_schedule_reload(self._entry.entry_id)
+
+    async def _async_list_image_channels(
+        self, *, quiet: bool
+    ) -> list[ImageChannelInfo]:
+        """Return the enabled cameras an NVR lists, or none if it cannot list them.
+
+        With ``quiet`` a failure to list them is only logged for debugging, as the
+        device may simply not be an NVR.
+        """
+        host = self._host
+        try:
+            image_channels = await self._async_send(
+                partial(self._shared.client.get_image_channels, proxy=True)
+            )
+        except ISAPIError as err:
+            if isinstance(err, ISAPIAuthError) and err.status_code == 401:
+                raise await self._async_rejected() from err
+            if _may_work_later(err):
+                # Whether it is logged or not: the device may only have been busy.
+                _async_retry_image_settings_later(self._hass, self._entry)
+            if quiet or isinstance(err, ISAPINotSupportedError):
+                _LOGGER.debug("%s does not list image channels: %s", host, err)
+            elif isinstance(err, ISAPIAuthError):
+                _LOGGER.warning(
+                    "Not allowed to read the image settings of %s: %s", host, err
+                )
+            else:
+                _LOGGER.warning(
+                    "Unable to read the image settings of %s: %s", host, err
+                )
+            return []
+        return [
+            image_channel
+            for image_channel in image_channels
+            if image_channel.enabled is not False
+        ]
+
+    async def async_nvr_cameras(self) -> list[HikvisionImageCoordinator]:
+        """Discover the image settings of the cameras attached to an NVR."""
+        host = self._host
+        client = self._shared.client
+        coordinators: list[HikvisionImageCoordinator] = []
+        for image_channel in await self._async_list_image_channels(quiet=False):
+            channel = image_channel.id
+            what = f"channel {channel} of {host}"
+            try:
+                settings = await self._async_send(
+                    partial(client.get_image_settings, channel, proxy=True)
+                )
+            except ISAPINotSupportedError:
+                # The NVR may list a camera that it cannot proxy.
+                _LOGGER.debug("%s has no image settings", what)
+                continue
+            except ISAPIError as err:
+                if isinstance(err, ISAPIAuthError) and err.status_code == 401:
+                    raise await self._async_rejected() from err
+                _LOGGER.warning(
+                    "Unable to read the image settings of %s: %s", what, err
+                )
+                if _may_work_later(err):
+                    _async_retry_image_settings_later(self._hass, self._entry)
+                continue
+            coordinator = HikvisionImageCoordinator(
+                self._hass, self._entry, self._shared, settings, channel
+            )
+            # Before its first refresh: a 401 there stops the others too.
+            self._entry.runtime_data.image_coordinators = [*coordinators, coordinator]
+            if await self._async_first_refresh(coordinator, what):
+                coordinators.append(coordinator)
+        self._entry.runtime_data.image_coordinators = coordinators
+        return coordinators
+
+
+async def _async_close_image_settings(data: HikvisionData) -> None:
+    """Stop the polling of every camera, then close the client they share.
+
+    The client is closed once no request is using it.
+    """
+    coordinators = data.image_coordinators
+    for coordinator in coordinators[1:]:
+        await coordinator.async_shutdown()
+    if coordinators:
+        await coordinators[0].async_close()
 
 
 def _may_work_later(err: BaseException) -> bool:
@@ -572,13 +777,25 @@ def _async_retry_image_settings_later(
 
     The camera may only have been busy or restarting, and without this its image
     entities would be missing until the integration is reloaded by hand. The
-    timer goes with the entry: an unload, or a failed setup, cancels it.
+    timer goes with the entry: an unload, or a failed setup, cancels it. One per
+    setup, whatever failed: each camera of an NVR that fails asks for it, and one
+    reload reads them all again.
     """
+    data = entry.runtime_data
+    if data.image_retry_scheduled:
+        return
+    data.image_retry_scheduled = True
 
     @callback
     def _reload(_now: datetime) -> None:
-        if not hass.is_stopping:
-            hass.config_entries.async_schedule_reload(entry.entry_id)
+        # Nor once the password was rejected: a reload would send it again, and
+        # cancel the reauthentication that waits for a new one.
+        if hass.is_stopping or any(
+            coordinator.credentials_rejected
+            for coordinator in entry.runtime_data.image_coordinators
+        ):
+            return
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_call_later(hass, IMAGE_SETTINGS_RETRY_INTERVAL, _reload)
@@ -594,8 +811,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -
     leave the entry unloading, unable to load again, until a restart. So once it is
     cancelled, the unload reports what the operation did.
     """
-    coordinator = entry.runtime_data.image_coordinator
-    if coordinator is not None:
+    coordinators = list(entry.runtime_data.image_coordinators)
+    for coordinator in coordinators:
         # Before the first await: a request that ends while the platforms unload must
         # not start reauthentication. Not a shutdown yet, as the unload can fail and
         # leave the entry loaded, polling.
@@ -604,15 +821,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -
     async def _async_unload_failed() -> None:
         """Deal with what the unload deferred, the entry staying loaded."""
         _async_ask_for_a_restart(hass, entry)
-        if coordinator is None:
-            return
-        # Without hiding why the unload failed.
-        try:
-            await coordinator.async_unload_failed()
-        except Exception:
-            _LOGGER.exception(
-                "Error while resuming %s after a failed unload", entry.title
-            )
+        for coordinator in coordinators:
+            # Without hiding why the unload failed.
+            try:
+                await coordinator.async_unload_failed()
+            except Exception:
+                _LOGGER.exception(
+                    "Error while resuming %s after a failed unload", entry.title
+                )
 
     unload_error: BaseException | None = None
 
@@ -646,15 +862,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="unload_failed"
         ) from unload_error
-
-
-async def _async_close_image_settings(data: HikvisionData) -> None:
-    """Stop the polling of the image settings, then close their client.
-
-    The client is closed once no request is using it.
-    """
-    if (coordinator := data.image_coordinator) is not None:
-        await coordinator.async_close()
 
 
 def _connection_settings(entry: HikvisionConfigEntry) -> dict[str, object]:

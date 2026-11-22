@@ -49,12 +49,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hikvision image setting switches."""
-    coordinator = entry.runtime_data.image_coordinator
-    if coordinator is None:
-        return
-
     async_add_entities(
         HikvisionImageSwitch(coordinator, entry, description, setting.path)
+        for coordinator in entry.runtime_data.image_coordinators
         for setting in coordinator.settings
         if setting.type is ImageSettingType.SWITCH
         and (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower()))

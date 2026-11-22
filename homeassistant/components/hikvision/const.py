@@ -8,6 +8,10 @@ DOMAIN = "hikvision"
 # own ID is too short. Not known for entries created before it was recorded.
 CONF_RANDOM_ID = "random_id"
 
+# Set once a device that reports the type of a camera is found to be a recorder:
+# it is then set up as an NVR, its cameras each on a device of their own.
+CONF_RECORDER = "recorder"
+
 # Default values
 DEFAULT_PORT = 80
 

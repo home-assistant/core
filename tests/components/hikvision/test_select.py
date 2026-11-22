@@ -552,7 +552,7 @@ async def test_no_link_to_an_entity_this_setup_did_not_add(
     stands in for the name, as the camera's settings spell it.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     entity_registry.async_get_or_create(
         SELECT_DOMAIN,
         "hikvision",
@@ -801,7 +801,7 @@ async def test_a_linked_write_shows_the_mode_and_its_flag(
     changes anyway.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     (setting,) = (s for s in coordinator.settings if s.path == "BLC/BLCMode")
     started = threading.Event()
     finish = threading.Event()
@@ -849,7 +849,7 @@ async def test_a_conflict_on_a_linked_write_is_explained_only_when_it_fits(
 ) -> None:
     """Test the conflict message of a linked write depends on what it writes."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     setting = ImageSetting(
         path,
         ImageSettingType.SELECT,

@@ -48,6 +48,7 @@ def mock_isapi_client() -> Generator[MagicMock]:
     with patch("homeassistant.components.hikvision.ISAPIClient") as isapi_mock:
         client = isapi_mock.return_value
         client.get_image_settings.side_effect = ISAPINotSupportedError("not supported")
+        client.get_image_channels.side_effect = ISAPINotSupportedError("not supported")
         yield isapi_mock
 
 

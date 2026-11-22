@@ -246,7 +246,7 @@ async def test_raw_documents_are_not_read_with_a_rejected_password(
 ) -> None:
     """Test the diagnostics do not send a password the camera already rejected."""
     await setup_integration(hass, mock_config_entry)
-    mock_config_entry.runtime_data.image_coordinator.credentials_rejected = True
+    mock_config_entry.runtime_data.image_coordinators[0].credentials_rejected = True
 
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
@@ -284,7 +284,7 @@ async def test_a_rejected_password_stops_reading_raw_documents(
     }
     # The rejection is dealt with as for any other request.
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert mock_config_entry.runtime_data.image_coordinator.credentials_rejected
+    assert mock_config_entry.runtime_data.image_coordinators[0].credentials_rejected
     mock_hikcamera.return_value.disconnect.assert_called_once()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -325,7 +325,7 @@ async def test_a_cancelled_download_keeps_the_client_until_the_request_ends(
     Another request would otherwise overlap it on the same client.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     started = threading.Event()
     finish = threading.Event()
 
@@ -521,7 +521,7 @@ async def test_current_values_are_read_from_the_camera(
     assert result["image_settings"]["settings"]["Gain/GainLevel"]["value"] == "70"
     assert result["image_settings"]["other_values"] == {}
     # Only the diagnostics got the new values.
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
     assert coordinator.data == {"Gain/GainLevel": "50"}
 
 
