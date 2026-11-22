@@ -132,7 +132,7 @@
         "name": "Today rain"
       },
       "valve_state": {
-        "name": "Valve state",
+        "name": "Valve state {channel}",
         "state": {
           "adaption_done": "Adaptation completed",
           "adaption_in_progress": "Adaptation in progress",

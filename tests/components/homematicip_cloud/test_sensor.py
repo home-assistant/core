@@ -658,28 +658,44 @@ async def test_hmip_floor_terminal_block_mechanic_channel_valve_state(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test FloorTerminalBlockMechanicChannelValveState."""
-    entity_id = "sensor.fussbodenheizungsaktor_valve_state"
+    entity_id = "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_1_og_bad_r"
+    entity_id_ch10 = (
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_10_og_az_rechts"
+    )
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Fußbodenheizungsaktor"]
     )
 
     ha_state = hass.states.get(entity_id)
-    assert ha_state is not None
     assert ha_state.state == "adaption_done"
+    assert (
+        ha_state.attributes["friendly_name"]
+        == "Fußbodenheizungsaktor Valve state Heizkreislauf (1) OG Bad r"
+    )
+    assert hass.states.get(entity_id_ch10).state == "adaption_done"
 
     hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
 
     await async_manipulate_test_data(
-        hass, hmip_device, "valveState", ValveState.ADAPTION_IN_PROGRESS
+        hass,
+        hmip_device,
+        "valveState",
+        ValveState.ADAPTION_IN_PROGRESS,
+        channel=10,
+        channel_real_index=10,
     )
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == "adaption_in_progress"
+    assert hass.states.get(entity_id).state == "adaption_done"
+    assert hass.states.get(entity_id_ch10).state == "adaption_in_progress"
 
     await async_manipulate_test_data(
-        hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
+        hass,
+        hmip_device,
+        "valveState",
+        ValveState.ERROR_POSITION,
+        channel=10,
+        channel_real_index=10,
     )
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == "adaption_done"
+    assert hass.states.get(entity_id_ch10).state == "error_position"
 
 
 async def test_hmip_floor_terminal_block_valve_names_match_their_channel(
@@ -1543,18 +1559,18 @@ async def test_hmip_sensor_unique_ids(
         "sensor.fussbodenheizungsaktor_valve_position_4": "3014F7110000000000BBBBB1_4_ftb_valve_position",
         "sensor.fussbodenheizungsaktor_valve_position_5": "3014F7110000000000BBBBB1_5_ftb_valve_position",
         "sensor.fussbodenheizungsaktor_valve_position_6": "3014F7110000000000BBBBB1_6_ftb_valve_position",
-        "sensor.fussbodenheizungsaktor_valve_state": "3014F7110000000000000049_1_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_2": "3014F7110000000000000049_2_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_3": "3014F7110000000000000049_3_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_4": "3014F7110000000000000049_4_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_5": "3014F7110000000000000049_5_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_6": "3014F7110000000000000049_6_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_7": "3014F7110000000000000049_7_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_8": "3014F7110000000000000049_8_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_9": "3014F7110000000000000049_9_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_10": "3014F7110000000000000049_10_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_11": "3014F7110000000000000049_11_ftb_valve_state",
-        "sensor.fussbodenheizungsaktor_valve_state_12": "3014F7110000000000000049_12_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_1_og_bad_r": "3014F7110000000000000049_1_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_2_og_bad_l": "3014F7110000000000000049_2_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_3_og_wz_rechts": "3014F7110000000000000049_3_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_4_og_wz_mitte_rechts": "3014F7110000000000000049_4_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_5_og_wz_mitte_links": "3014F7110000000000000049_5_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_6_og_wz_links": "3014F7110000000000000049_6_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_7_og_kuche": "3014F7110000000000000049_7_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_8_og_sz_rechts": "3014F7110000000000000049_8_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_9_og_sz_links": "3014F7110000000000000049_9_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_10_og_az_rechts": "3014F7110000000000000049_10_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_11_og_az_links": "3014F7110000000000000049_11_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_12_og_bad_heizkorper": "3014F7110000000000000049_12_ftb_valve_state",
         "sensor.garage_neigungs_und_erschutterungssensor_tilt_angle": "3014F7110TILTVIBRATIONSENSOR_1_tilt_angle",
         "sensor.garage_neigungs_und_erschutterungssensor_tilt_state": "3014F7110TILTVIBRATIONSENSOR_1_tilt_state",
         "sensor.heizkorperthermostat2_heating": "3014F7110000000000000013_1_valve_position",

@@ -125,6 +125,8 @@ class HmipSensorDescription(SensorEntityDescription):
     # sensors that predate the lookup by channel type keep the fixed channel of
     # their unique id, even where the channel sits at another index
     unique_id_channel: int | None = None
+    # one sensor per channel, told apart by the channel label in the name
+    name_by_channel: bool = False
 
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -368,7 +370,6 @@ VALVE_POSITION_DESC = HmipSensorDescription(
 VALVE_STATE_DESC = HmipSensorDescription(
     key="ftb_valve_state",
     translation_key="valve_state",
-    name="Valve state",
     device_class=SensorDeviceClass.ENUM,
     entity_category=EntityCategory.DIAGNOSTIC,
     options=VALVE_STATE_VALUES,
@@ -376,6 +377,7 @@ VALVE_STATE_DESC = HmipSensorDescription(
         channel.valveState.name.lower() if channel.valveState is not None else None
     ),
     exists_fn=lambda channel: getattr(channel, "valveState", None) is not None,
+    name_by_channel=True,
 )
 
 PASSAGE_COUNTER_DESC = HmipSensorDescription(
@@ -1124,6 +1126,10 @@ class HomematicipSensor(HomematicipGenericEntity, SensorEntity):
         self._unique_id_channel = (
             description.unique_id_channel if keep_unique_id_channel else None
         )
+        if description.name_by_channel:
+            self._attr_translation_placeholders = {
+                "channel": channel.label or str(channel.index)
+            }
 
     @property
     @override
