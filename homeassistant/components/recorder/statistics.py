@@ -1682,8 +1682,8 @@ def _generate_statistics_start_end_stmt(
     if metadata_ids is None:
         return lambda_stmt(
             lambda: select(
-                func.min(Statistics.start_ts),
-                func.max(Statistics.start_ts),
+                select(func.min(Statistics.start_ts)).scalar_subquery(),
+                select(func.max(Statistics.start_ts)).scalar_subquery(),
             )
         )
 
