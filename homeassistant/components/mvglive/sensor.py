@@ -94,7 +94,8 @@ async def async_setup_platform(
     if scan_interval := yaml_config.get(CONF_SCAN_INTERVAL):
         yaml_config[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
     configuration = yaml_util.dump(yaml_config)
-    repair_id = f"deprecated_yaml_{sha256(configuration.encode()).hexdigest()}"
+    block_hash = sha256(configuration.encode()).hexdigest()
+    repair_id = f"deprecated_yaml_{block_hash}"
     ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
     results = [
         await hass.config_entries.flow.async_init(
@@ -118,7 +119,10 @@ async def async_setup_platform(
         ):
             all_imported = False
             retry_import |= result["reason"] == "cannot_connect"
-            issue_id = f"deprecated_yaml_import_issue_{result['reason']}_{nextdeparture[CONF_STATION]}"
+            issue_id = (
+                f"deprecated_yaml_import_issue_{result['reason']}"
+                f"_{block_hash}_{nextdeparture[CONF_STATION]}"
+            )
             failed_issues.add(issue_id)
             ir.async_create_issue(
                 hass,
@@ -133,7 +137,8 @@ async def async_setup_platform(
     for nextdeparture in stations:
         for reason in ("cannot_connect", "invalid_station"):
             issue_id = (
-                f"deprecated_yaml_import_issue_{reason}_{nextdeparture[CONF_STATION]}"
+                f"deprecated_yaml_import_issue_{reason}"
+                f"_{block_hash}_{nextdeparture[CONF_STATION]}"
             )
             if issue_id not in failed_issues:
                 ir.async_delete_issue(

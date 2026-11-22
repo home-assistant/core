@@ -36,6 +36,18 @@ from .conftest import TEST_DEPARTURES, TEST_STATION, TEST_STATIONS
 TEST_ENTITY_ID = "sensor.hauptbahnhof"
 
 
+def _import_issues(
+    issue_registry: ir.IssueRegistry, reason: str
+) -> list[ir.IssueEntry]:
+    """Return the YAML import repair issues for a failure reason."""
+    return [
+        issue
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+        and issue.translation_key == f"deprecated_yaml_import_issue_{reason}"
+    ]
+
+
 def test_platform_schema_accepts_deprecated_directions() -> None:
     """Test PLATFORM_SCHEMA still accepts the deprecated `directions` key."""
     PLATFORM_SCHEMA(
@@ -323,12 +335,10 @@ async def test_yaml_invalid_station(
         issue.translation_key == "deprecated_yaml"
         for issue in issue_registry.issues.values()
     )
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
-    )
-    assert issue is not None
-    assert issue.translation_placeholders == {"station": "Missing"}
-    assert issue.breaks_in_ha_version == "2027.5.0"
+    issues = _import_issues(issue_registry, "invalid_station")
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {"station": "Missing"}
+    assert issues[0].breaks_in_ha_version == "2027.5.0"
 
     imported_entries = hass.config_entries.async_entries(DOMAIN)
     mvg_api["station_async"].side_effect = recovery_responses
@@ -342,12 +352,7 @@ async def test_yaml_invalid_station(
         issue.translation_key == "deprecated_yaml"
         for issue in issue_registry.issues.values()
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
-        )
-        is None
-    )
+    assert not _import_issues(issue_registry, "invalid_station")
 
 
 @pytest.mark.parametrize(
@@ -384,9 +389,7 @@ async def test_yaml_import_retry(
         issue.translation_key == "deprecated_yaml"
         for issue in issue_registry.issues.values()
     )
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_Hauptbahnhof"
-    )
+    assert len(_import_issues(issue_registry, "cannot_connect")) == 1
 
     imported_entries = hass.config_entries.async_entries(DOMAIN)
     mvg_api["station_async"].side_effect = None
@@ -400,12 +403,7 @@ async def test_yaml_import_retry(
         issue.translation_key == "deprecated_yaml"
         for issue in issue_registry.issues.values()
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_cannot_connect_Hauptbahnhof"
-        )
-        is None
-    )
+    assert not _import_issues(issue_registry, "cannot_connect")
 
 
 @pytest.mark.parametrize(
@@ -509,12 +507,40 @@ async def test_yaml_import_repairs_identify_successful_blocks(
     assert imported_config == PLATFORM_SCHEMA(
         {"platform": DOMAIN, "nextdeparture": [{"station": "Hauptbahnhof"}]}
     )
-    assert (
-        issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
+    issues = _import_issues(issue_registry, "invalid_station")
+    assert [issue.translation_placeholders for issue in issues] == [
+        {"station": "Missing"}
+    ]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_yaml_import_failure_repair_scoped_to_block(
+    hass: HomeAssistant,
+    mvg_api: dict[str, AsyncMock],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a successful block keeps another block's failure repair."""
+    failing, succeeding = (
+        PLATFORM_SCHEMA(
+            {
+                "platform": DOMAIN,
+                "nextdeparture": [{"station": "Hauptbahnhof", "name": name}],
+            }
         )
-        is not None
+        for name in ("First", "Second")
     )
+    mvg_api["station_async"].side_effect = MvgApiError("offline")
+    with pytest.raises(PlatformNotReady):
+        await async_setup_platform(hass, failing, Mock())
+    mvg_api["station_async"].side_effect = None
+    await async_setup_platform(hass, succeeding, Mock())
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    issues = _import_issues(issue_registry, "cannot_connect")
+    assert [issue.translation_placeholders for issue in issues] == [
+        {"station": "Hauptbahnhof"}
+    ]
 
 
 @pytest.mark.usefixtures("mvg_api", "mock_setup_entry")
