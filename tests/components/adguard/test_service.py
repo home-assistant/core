@@ -12,7 +12,7 @@ from adguardhome import (
 )
 from probatio import Invalid
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.components.adguard.services import (
@@ -21,8 +21,8 @@ from homeassistant.components.adguard.services import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -146,6 +146,24 @@ async def test_pause_protection_invalid_duration(
             AdGuardHomeService.PAUSE_PROTECTION,
             service_call_data,
             blocking=True,
+        )
+
+    mock_adguard.disable_protection.assert_not_called()
+
+
+async def test_pause_protection_requires_admin(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test pausing protection requires an admin user."""
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            AdGuardHomeService.PAUSE_PROTECTION,
+            {AdGuardHomeServiceArgument.DURATION: {"minutes": 30}},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
         )
 
     mock_adguard.disable_protection.assert_not_called()

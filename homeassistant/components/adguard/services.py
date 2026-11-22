@@ -12,6 +12,7 @@ import probatio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
 from .helpers import adguard_exception_handler
@@ -167,7 +168,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, AdGuardHomeService.REFRESH, _refresh, schema=SERVICE_REFRESH_SCHEMA
     )
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         AdGuardHomeService.PAUSE_PROTECTION,
         _pause_protection,
