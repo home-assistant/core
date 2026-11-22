@@ -2442,12 +2442,10 @@ async def test_get_area_settings(
         }
     )
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"area_id": "garage"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Area 'garage' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Area 'garage' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"area_id": "garage"}), llm_context
+        )
 
 
 async def test_update_area_settings(
@@ -2558,10 +2556,9 @@ async def test_update_area_settings_errors(
     area_registry.async_create("Kitchen")
 
     tool = area_tools["config__update_area_settings"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, tool_args), llm_context
-    )
-    assert result == llm.ToolResult(data={"error": error}, error=True)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
 
 
 async def test_create_area(
@@ -2632,10 +2629,9 @@ async def test_create_area_errors(
     area_registry.async_create("Kitchen")
 
     tool = area_tools["config__create_area"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, tool_args), llm_context
-    )
-    assert result == llm.ToolResult(data={"error": error}, error=True)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
     assert len(area_registry.async_list_areas()) == 1
 
 
@@ -2700,12 +2696,10 @@ async def test_delete_area(
     assert area_registry.async_get_area(area.id) is None
     assert entity_registry.async_get("switch.coffee").area_id is None
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"area_id": area.id}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": f"Area '{area.id}' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match=f"Area '{area.id}' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"area_id": area.id}), llm_context
+        )
 
 
 async def test_get_config_entries_flow_capabilities(
