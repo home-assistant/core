@@ -12,20 +12,12 @@ from homeassistant.components.osoenergy.services import (
     OSOEnergyServiceArgument,
 )
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_TEMPERATURE,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-    TargetKey,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -184,8 +176,11 @@ async def test_set_temperature(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_TEMPERATURE: 45},
+        WaterHeaterService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "water_heater.test_device",
+            WaterHeaterServiceArgument.TEMPERATURE: 45,
+        },
         blocking=True,
     )
 
@@ -229,8 +224,8 @@ async def test_turn_on(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        WaterHeaterService.TURN_ON,
+        {TargetKey.ENTITY_ID: "water_heater.test_device"},
         blocking=True,
     )
 
@@ -246,8 +241,8 @@ async def test_turn_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        WaterHeaterService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "water_heater.test_device"},
         blocking=True,
     )
 
@@ -303,8 +298,11 @@ async def test_turn_away_mode_on(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
-        {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "on"},
+        WaterHeaterService.SET_AWAY_MODE,
+        {
+            TargetKey.ENTITY_ID: "water_heater.test_device",
+            WaterHeaterServiceArgument.AWAY_MODE: "on",
+        },
         blocking=True,
     )
 
@@ -320,8 +318,11 @@ async def test_turn_away_mode_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
-        {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "off"},
+        WaterHeaterService.SET_AWAY_MODE,
+        {
+            TargetKey.ENTITY_ID: "water_heater.test_device",
+            WaterHeaterServiceArgument.AWAY_MODE: "off",
+        },
         blocking=True,
     )
 

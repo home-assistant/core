@@ -52,6 +52,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -295,8 +297,8 @@ async def test_running_software_effect_is_reported(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -562,8 +564,8 @@ async def test_stopping_an_effect_to_set_state_can_fail(
     with pytest.raises(HomeAssistantError, match="restore boom"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -1074,8 +1076,8 @@ async def test_stopping_a_firmware_effect_can_fail(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="stop boom"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 178},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 178},
             blocking=True,
         )
     device.set_matrix_colors.assert_not_awaited()
@@ -1136,11 +1138,11 @@ async def test_typed_light_sets_public_hsbk(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_BRIGHTNESS: 128,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -1315,11 +1317,11 @@ async def test_color_is_set_before_fading_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_TRANSITION: 5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -1341,8 +1343,8 @@ async def test_transition_requests_one_postponed_refresh(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.TRANSITION: 5},
         blocking=True,
     )
     device.refresh_state.assert_awaited_once()
@@ -1369,11 +1371,11 @@ async def test_superseding_transition_cancels_old_refresh(
         for brightness in (100, 200):
             await hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
-                    ATTR_ENTITY_ID: ENTITY_ID,
-                    ATTR_BRIGHTNESS: brightness,
-                    ATTR_TRANSITION: 5,
+                    TargetKey.ENTITY_ID: ENTITY_ID,
+                    LightServiceArgument.BRIGHTNESS: brightness,
+                    LightServiceArgument.TRANSITION: 5,
                 },
                 blocking=True,
             )
@@ -1418,8 +1420,8 @@ async def test_multizone_brightness_preserves_zone_colors(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -1467,8 +1469,8 @@ async def test_multizone_full_overwrite_skips_reading_the_strip(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -1560,8 +1562,8 @@ async def test_matrix_reads_the_tiles_before_merging_over_them(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -1578,8 +1580,8 @@ async def test_matrix_without_tile_colors_sets_the_whole_device(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1596,8 +1598,11 @@ async def test_turn_on_with_effect_delegates_to_the_effect_service(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_EFFECT: LIFXService.EFFECT_PULSE},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.EFFECT: LIFXService.EFFECT_PULSE,
+        },
         blocking=True,
     )
     # The effect service is called without waiting for it to finish
@@ -1617,8 +1622,8 @@ async def test_multizone_color_preserves_zone_brightness(hass: HomeAssistant) ->
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1642,8 +1647,8 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1670,11 +1675,11 @@ async def test_matrix_color_uses_public_convenience_api(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_TRANSITION: 1.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.TRANSITION: 1.5,
         },
         blocking=True,
     )
@@ -1713,8 +1718,8 @@ async def test_matrix_color_preserves_tile_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1759,8 +1764,11 @@ async def test_partial_write_is_refused_when_the_state_cannot_be_read(
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            },
             blocking=True,
         )
 
@@ -1776,8 +1784,8 @@ async def test_matrix_color_writes_each_tile_in_the_chain(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1796,8 +1804,8 @@ async def test_matrix_color_stops_at_a_short_color_list(hass: HomeAssistant) -> 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1827,11 +1835,11 @@ async def test_matrix_brightness_preserves_tile_colors(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 128,
-            ATTR_TRANSITION: 1.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 128,
+            LightServiceArgument.TRANSITION: 1.5,
         },
         blocking=True,
     )
