@@ -2437,20 +2437,17 @@ async def test_create_and_get_floor(
     )
     assert result == llm.ToolResult(data={"result": settings})
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"floor_id": "attic"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Floor 'attic' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Floor 'attic' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": "attic"}), llm_context
+        )
 
     tool = floor_tools["config__create_floor"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"name": "basement"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "The name basement (basement) is already in use"}, error=True
-    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"name": "basement"}), llm_context
+        )
+    assert str(exc_info.value) == "The name basement (basement) is already in use"
 
 
 async def test_update_floor_settings(
@@ -2532,10 +2529,9 @@ async def test_update_floor_settings_errors(
     floor_registry.async_create("Ground floor")
 
     tool = floor_tools["config__update_floor_settings"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, tool_args), llm_context
-    )
-    assert result == llm.ToolResult(data={"error": error}, error=True)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
 
 
 @pytest.mark.parametrize(
@@ -2599,12 +2595,10 @@ async def test_delete_floor(
     assert updated_area is not None
     assert updated_area.floor_id is None
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Floor 'first_floor' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Floor 'first_floor' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
+        )
 
 
 async def test_get_config_entries_flow_capabilities(

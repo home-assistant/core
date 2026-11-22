@@ -1488,10 +1488,7 @@ class GetFloorSettingsTool(Tool):
     ) -> ToolResult:
         """Return the settings of the floor."""
         args = self.parameters(tool_input.tool_args)
-        try:
-            floor = _get_floor(hass, args["floor_id"])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        floor = _get_floor(hass, args["floor_id"])
         return ToolResult(data={"result": _format_floor_settings(floor)})
 
 
@@ -1523,16 +1520,13 @@ class UpdateFloorSettingsTool(Tool):
         """Update the settings of the floor and return the new settings."""
         settings = self.parameters(tool_input.tool_args)
         floor_id = settings.pop("floor_id")
-        try:
-            _get_floor(hass, floor_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_floor(hass, floor_id)
         if "aliases" in settings:
             settings["aliases"] = set(settings["aliases"])
         try:
             floor = fr.async_get(hass).async_update(floor_id, **settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_floor_settings(floor)})
 
 
@@ -1561,7 +1555,7 @@ class CreateFloorTool(Tool):
         try:
             floor = fr.async_get(hass).async_create(**settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_floor_settings(floor)})
 
 
@@ -1585,10 +1579,7 @@ class DeleteFloorTool(Tool):
     ) -> ToolResult:
         """Delete the floor."""
         floor_id = self.parameters(tool_input.tool_args)["floor_id"]
-        try:
-            _get_floor(hass, floor_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_floor(hass, floor_id)
         fr.async_get(hass).async_delete(floor_id)
         return ToolResult(data={"result": {"floor_id": floor_id}})
 
