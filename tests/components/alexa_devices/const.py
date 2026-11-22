@@ -388,6 +388,48 @@ TEST_DEVICE_GLOW = AmazonDevice(
     unsupported_features={},
 )
 
+TEST_DEVICE_PLUG_SN = "plug_test_serial_number"
+TEST_DEVICE_PLUG = AmazonDevice(
+    account_name="Smart Plug Test",
+    capabilities=[],
+    device_family="Endpoint Only",
+    device_type="ANH27KST2WA2G",
+    primary_display_category="SMARTPLUG",
+    household_device=False,
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members={TEST_DEVICE_PLUG_SN: None},
+    parent_clusters=[],
+    online=True,
+    serial_number=TEST_DEVICE_PLUG_SN,
+    manufacturer="Amazon",
+    model="Alexa Smart Plug",
+    hardware_version=None,
+    software_version="plug_test_software_version",
+    entity_id="13131313-2424-3535-4646-575757575757",
+    endpoint_id="G1234567890123456789012345678E",
+    notifications_supported=False,
+    media_player_supported=False,
+    communication_settings={},
+    voice_control_supported=False,
+    features={
+        "power": {
+            "": AmazonDeviceFeature(
+                properties=["powerState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"powerState": "plug_power"},
+            )
+        },
+    },
+    unsupported_features={},
+)
+
 TEST_DEVICE_1_SENSORS: dict[str, AmazonDeviceSensor] = {
     "dnd": AmazonDeviceSensor(
         name="dnd",
@@ -562,6 +604,20 @@ TEST_DEVICE_GLOW_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="mode",
         property_name="mode",
         instance="1",
+    ),
+}
+
+TEST_DEVICE_PLUG_SENSORS: dict[str, AmazonDeviceSensor] = {
+    "plug_power": AmazonDeviceSensor(
+        name="plug_power",
+        value="ON",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="power",
+        property_name="powerState",
+        instance="",
     ),
 }
 

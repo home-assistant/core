@@ -1,0 +1,161 @@
+# serializer version: 1
+# name: test_diagnostics[empty]
+  dict({
+    'last_update_success': True,
+    'locations': list([
+      dict({
+        'current_fields': list([
+        ]),
+        'forecasts': dict({
+          'daily': dict({
+            'count': 0,
+          }),
+          'hourly': dict({
+            'count': 0,
+          }),
+          'nowcast': dict({
+            'count': 0,
+          }),
+        }),
+        'timestep': 60,
+      }),
+      dict({
+        'current_fields': list([
+        ]),
+        'forecasts': dict({
+          'daily': dict({
+            'count': 0,
+          }),
+          'hourly': dict({
+            'count': 0,
+          }),
+          'nowcast': dict({
+            'count': 0,
+          }),
+        }),
+        'timestep': 5,
+      }),
+    ]),
+    'update_interval': 3840.0,
+  })
+# ---
+# name: test_diagnostics[full]
+  dict({
+    'last_update_success': True,
+    'locations': list([
+      dict({
+        'current_fields': list([
+          'cloudBase',
+          'cloudCeiling',
+          'cloudCover',
+          'dewPoint',
+          'epaHealthConcern',
+          'epaIndex',
+          'epaPrimaryPollutant',
+          'fireIndex',
+          'grassIndex',
+          'humidity',
+          'mepHealthConcern',
+          'mepIndex',
+          'mepPrimaryPollutant',
+          'particulateMatter10',
+          'particulateMatter25',
+          'pollutantCO',
+          'pollutantNO2',
+          'pollutantO3',
+          'pollutantSO2',
+          'precipitationType',
+          'pressureSeaLevel',
+          'pressureSurfaceLevel',
+          'solarGHI',
+          'temperature',
+          'temperatureApparent',
+          'treeIndex',
+          'uvHealthConcern',
+          'uvIndex',
+          'visibility',
+          'weatherCode',
+          'weedIndex',
+          'windDirection',
+          'windGust',
+          'windSpeed',
+        ]),
+        'forecasts': dict({
+          'daily': dict({
+            'count': 15,
+            'first_start_time': '2021-03-07T11:00:00Z',
+            'last_start_time': '2021-03-21T10:00:00Z',
+          }),
+          'hourly': dict({
+            'count': 108,
+            'first_start_time': '2021-03-07T17:48:00Z',
+            'last_start_time': '2021-03-12T04:48:00Z',
+          }),
+          'nowcast': dict({
+            'count': 72,
+            'first_start_time': '2021-03-07T17:48:00Z',
+            'last_start_time': '2021-03-07T23:43:00Z',
+          }),
+        }),
+        'timestep': 60,
+      }),
+      dict({
+        'current_fields': list([
+          'cloudBase',
+          'cloudCeiling',
+          'cloudCover',
+          'dewPoint',
+          'epaHealthConcern',
+          'epaIndex',
+          'epaPrimaryPollutant',
+          'fireIndex',
+          'grassIndex',
+          'humidity',
+          'mepHealthConcern',
+          'mepIndex',
+          'mepPrimaryPollutant',
+          'particulateMatter10',
+          'particulateMatter25',
+          'pollutantCO',
+          'pollutantNO2',
+          'pollutantO3',
+          'pollutantSO2',
+          'precipitationType',
+          'pressureSeaLevel',
+          'pressureSurfaceLevel',
+          'solarGHI',
+          'temperature',
+          'temperatureApparent',
+          'treeIndex',
+          'uvHealthConcern',
+          'uvIndex',
+          'visibility',
+          'weatherCode',
+          'weedIndex',
+          'windDirection',
+          'windGust',
+          'windSpeed',
+        ]),
+        'forecasts': dict({
+          'daily': dict({
+            'count': 15,
+            'first_start_time': '2021-03-07T11:00:00Z',
+            'last_start_time': '2021-03-21T10:00:00Z',
+          }),
+          'hourly': dict({
+            'count': 108,
+            'first_start_time': '2021-03-07T17:48:00Z',
+            'last_start_time': '2021-03-12T04:48:00Z',
+          }),
+          'nowcast': dict({
+            'count': 72,
+            'first_start_time': '2021-03-07T17:48:00Z',
+            'last_start_time': '2021-03-07T23:43:00Z',
+          }),
+        }),
+        'timestep': 5,
+      }),
+    ]),
+    'update_interval': 3840.0,
+  })
+# ---
