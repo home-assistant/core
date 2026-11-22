@@ -1,5 +1,6 @@
 """Tests for Shelly views."""
 
+import asyncio
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -11,6 +12,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
+from homeassistant.components.shelly.views import MAX_UPSTREAM_REQUESTS
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -228,6 +230,58 @@ async def test_storage_proxy_redirect_not_followed(
     assert "Location" not in response.headers
     session.get.assert_awaited_once()
     assert session.get.call_args.kwargs["allow_redirects"] is False
+
+
+@pytest.mark.usefixtures("mock_camera_storage")
+async def test_storage_proxy_limits_upstream_requests(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test requests above the upstream limit wait for a free slot."""
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
+    client = await hass_client()
+    release = asyncio.Event()
+    saturated = asyncio.Event()
+    in_flight = 0
+    max_in_flight = 0
+
+    async def get(*args: object, **kwargs: object) -> MagicMock:
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        if in_flight == MAX_UPSTREAM_REQUESTS:
+            saturated.set()
+        try:
+            await release.wait()
+        finally:
+            in_flight -= 1
+        return mock_upstream(HTTPStatus.OK, {}, [StopAsyncIteration()]).get.return_value
+
+    session = Mock()
+    session.get = AsyncMock(side_effect=get)
+
+    with patch(
+        "homeassistant.components.shelly.views.async_get_clientsession",
+        return_value=session,
+    ):
+        tasks = [
+            asyncio.create_task(
+                client.get(f"/api/shelly/storage/{entry.entry_id}/{PATH}")
+            )
+            for _ in range(MAX_UPSTREAM_REQUESTS + 1)
+        ]
+        await saturated.wait()
+        # Give the extra request time to reach the device if it were not limited.
+        await asyncio.sleep(0.1)
+        assert session.get.await_count == MAX_UPSTREAM_REQUESTS
+
+        release.set()
+        responses = await asyncio.gather(*tasks)
+
+    assert [response.status for response in responses] == (
+        [HTTPStatus.OK] * (MAX_UPSTREAM_REQUESTS + 1)
+    )
+    assert session.get.await_count == MAX_UPSTREAM_REQUESTS + 1
+    assert max_in_flight == MAX_UPSTREAM_REQUESTS
 
 
 @pytest.mark.parametrize(

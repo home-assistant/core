@@ -1,5 +1,6 @@
 """Shelly HTTP views."""
 
+import asyncio
 from http import HTTPStatus
 import re
 
@@ -30,6 +31,8 @@ FORWARD_RESPONSE_HEADERS = (
 )
 # No total limit, recordings can take long to stream.
 UPSTREAM_TIMEOUT = ClientTimeout(total=None, sock_connect=10, sock_read=30)
+# The camera accepts 6 connections, leave room for Home Assistant's own calls.
+MAX_UPSTREAM_REQUESTS = 4
 
 
 @callback
@@ -55,6 +58,7 @@ class StorageProxyView(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the view."""
         self.hass = hass
+        self._semaphores: dict[str, asyncio.Semaphore] = {}
 
     async def get(
         self, request: web.Request, config_entry_id: str, path: str
@@ -85,43 +89,47 @@ class StorageProxyView(HomeAssistantView):
             for name in FORWARD_REQUEST_HEADERS
             if (value := request.headers.get(name)) is not None
         }
-        try:
-            upstream = await async_get_clientsession(self.hass).get(
-                url,
-                headers=headers,
-                allow_redirects=False,
-                ssl=entry.data.get(CONF_VERIFY_SSL, False),
-                timeout=UPSTREAM_TIMEOUT,
-            )
-        except (ClientError, TimeoutError) as err:
-            LOGGER.debug(
-                "Error fetching storage of %s: %s", entry.title, type(err).__name__
-            )
-            return web.Response(status=HTTPStatus.BAD_GATEWAY)
-
-        async with upstream:
-            response = web.StreamResponse(
-                status=upstream.status,
-                headers={
-                    name: value
-                    for name in FORWARD_RESPONSE_HEADERS
-                    if (value := upstream.headers.get(name)) is not None
-                },
-            )
-            await response.prepare(request)
+        semaphore = self._semaphores.setdefault(
+            config_entry_id, asyncio.Semaphore(MAX_UPSTREAM_REQUESTS)
+        )
+        async with semaphore:
             try:
-                async for chunk in upstream.content.iter_chunked(CHUNK_SIZE):
-                    await response.write(chunk)
+                upstream = await async_get_clientsession(self.hass).get(
+                    url,
+                    headers=headers,
+                    allow_redirects=False,
+                    ssl=entry.data.get(CONF_VERIFY_SSL, False),
+                    timeout=UPSTREAM_TIMEOUT,
+                )
             except (ClientError, TimeoutError) as err:
                 LOGGER.debug(
-                    "Error streaming storage of %s: %s",
-                    entry.title,
-                    type(err).__name__,
+                    "Error fetching storage of %s: %s", entry.title, type(err).__name__
                 )
-                # Abort the connection so the client sees a truncated response.
-                if request.transport is not None:
-                    request.transport.close()
-                return response
+                return web.Response(status=HTTPStatus.BAD_GATEWAY)
+
+            async with upstream:
+                response = web.StreamResponse(
+                    status=upstream.status,
+                    headers={
+                        name: value
+                        for name in FORWARD_RESPONSE_HEADERS
+                        if (value := upstream.headers.get(name)) is not None
+                    },
+                )
+                await response.prepare(request)
+                try:
+                    async for chunk in upstream.content.iter_chunked(CHUNK_SIZE):
+                        await response.write(chunk)
+                except (ClientError, TimeoutError) as err:
+                    LOGGER.debug(
+                        "Error streaming storage of %s: %s",
+                        entry.title,
+                        type(err).__name__,
+                    )
+                    # Abort the connection so the client sees a truncated response.
+                    if request.transport is not None:
+                        request.transport.close()
+                    return response
 
         await response.write_eof()
         return response
