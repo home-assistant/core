@@ -2665,6 +2665,38 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert result_data == data
 
 
+def _message_media_source_id(hass: HomeAssistant, engine: str) -> str:
+    return tts.generate_media_source_id(hass, "beer", engine, None, None, None)
+
+
+def _stream_media_source_id(hass: HomeAssistant, engine: str) -> str:
+    stream = tts.async_create_stream(hass, engine)
+    stream.async_set_message("beer")
+    return stream.media_source_id
+
+
+@pytest.mark.parametrize(
+    "media_source_id_factory",
+    [
+        pytest.param(_message_media_source_id, id="message"),
+        pytest.param(_stream_media_source_id, id="stream"),
+    ],
+)
+async def test_get_media_source_audio(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    media_source_id_factory: Callable[[HomeAssistant, str], str],
+) -> None:
+    """Test getting audio for message and stream media source IDs."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    media_source_id = media_source_id_factory(hass, mock_tts_entity.entity_id)
+
+    extension, data = await tts.async_get_media_source_audio(hass, media_source_id)
+
+    assert extension == "mp3"
+    assert data == MOCK_DATA
+
+
 async def _message_stream() -> AsyncGenerator[str]:
     """Stream a message."""
     yield "beer"

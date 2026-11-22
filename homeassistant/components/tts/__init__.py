@@ -27,6 +27,7 @@ from propcache.api import cached_property
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import (
+    MediaSourceItem,
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -326,7 +327,8 @@ async def async_get_media_source_audio(
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
     manager = hass.data[DATA_TTS_MANAGER]
-    parsed = parse_media_source_id(media_source_id)
+    item = MediaSourceItem.from_uri(hass, media_source_id, None)
+    parsed = parse_media_source_id(item.identifier)
     if "stream" in parsed:
         stream = manager.async_get_result_stream(
             parsed["stream"]  # type: ignore[typeddict-item]
