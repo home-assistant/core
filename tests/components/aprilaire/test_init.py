@@ -105,6 +105,32 @@ def _mock_client(mac_address: str) -> AsyncMock:
     return client
 
 
+async def test_unexpected_device(hass: HomeAssistant) -> None:
+    """Test setup is retried when a different device answers at the host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12:34:56:78:90:ab",
+        data={CONF_HOST: "localhost", CONF_PORT: 7000},
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    client = _mock_client("12:34:56:78:90:cd")
+
+    with patch(
+        "homeassistant.components.aprilaire.coordinator.pyaprilaire.client.AprilaireClient",
+        return_value=client,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == (
+        "Unexpected device found at localhost; expected 12:34:56:78:90:ab,"
+        " found 12:34:56:78:90:cd"
+    )
+    client.stop_listen.assert_called_once()
+
+
 async def _async_setup_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry, mac_address: str
 ) -> None:
