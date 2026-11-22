@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -349,6 +349,15 @@ class ToolResultContent:
 
 
 type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+
+
+def _replace_content[_ContentT: AssistantContent | ToolResultContent](
+    content: _ContentT, **changes: Any
+) -> _ContentT:
+    """Return a copy of content with changes, keeping the time it was added."""
+    copy = replace(content, **changes)
+    object.__setattr__(copy, "created", content.created)
+    return copy
 
 
 class AssistantContentDeltaDict(TypedDict, total=False):
@@ -808,6 +817,13 @@ class ChatLog:
             # providers can cache them. Tool calls use the context of this turn.
             self.llm_api.llm_context = llm_context
             self.llm_input_provided_index = len(self.content)
+            if self._async_name_intent_calls():
+                _async_notify_subscribers(
+                    self.hass,
+                    self.conversation_id,
+                    ChatLogEventType.UPDATED,
+                    {"chat_log": self.as_dict()},
+                )
             self.async_trace(
                 {"messages": list(self.content), "tools": self.llm_api.tools}
             )
@@ -897,6 +913,7 @@ class ChatLog:
         self._llm_api_key = llm_api_key
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
+        self._async_name_intent_calls()
         _async_notify_subscribers(
             self.hass,
             self.conversation_id,
@@ -913,6 +930,54 @@ class ChatLog:
                 "tools": self.llm_api.tools if self.llm_api else None,
             }
         )
+
+    @callback
+    def _async_name_intent_calls(self) -> bool:
+        """Name intents handled outside the LLM after the tools that offer them.
+
+        The default agent logs them under the bare intent type, which is not a
+        tool name, and models copy it from the history.
+        """
+        if self.llm_api is None:
+            return False
+        tool_names: dict[str, str] = {}
+        for tool in sorted(self.llm_api.tools, key=lambda tool: tool.name):
+            offered = tool
+            while isinstance(offered, llm.NamespacedTool):
+                offered = offered.tool
+            if isinstance(offered, llm.IntentTool):
+                tool_names.setdefault(offered.intent_type, tool.name)
+        declared = {tool.name for tool in self.llm_api.tools}
+        # Provider tools are external too and may share a name with an intent.
+        intent_calls = {
+            content.tool_call_id
+            for content in self.content
+            if isinstance(content, ToolResultContent)
+            and isinstance(content.result.data, llm.IntentResponseDict)
+        }
+        renamed: dict[str, str] = {}
+        for index, content in enumerate(self.content):
+            if isinstance(content, AssistantContent) and content.tool_calls:
+                tool_calls = list(content.tool_calls)
+                for call_index, tool_call in enumerate(tool_calls):
+                    if (
+                        tool_call.external
+                        and tool_call.id in intent_calls
+                        and tool_call.tool_name not in declared
+                        and (name := tool_names.get(tool_call.tool_name))
+                    ):
+                        tool_calls[call_index] = replace(tool_call, tool_name=name)
+                        renamed[tool_call.id] = name
+                if tool_calls != content.tool_calls:
+                    self.content[index] = _replace_content(
+                        content, tool_calls=tool_calls
+                    )
+            elif (
+                isinstance(content, ToolResultContent)
+                and (name := renamed.get(content.tool_call_id)) is not None
+            ):
+                self.content[index] = _replace_content(content, tool_name=name)
+        return bool(renamed)
 
     def async_trace_turn(self) -> None:
         """Add the content of the current turn to the conversation trace."""

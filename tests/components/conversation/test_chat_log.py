@@ -12,9 +12,14 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
-from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockUser,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     AssistantContent,
     AssistantContentDeltaDict,
@@ -36,10 +41,11 @@ from homeassistant.components.conversation.trace import (
     ConversationTraceEventType,
     async_conversation_trace,
 )
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import chat_session, llm
+from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -238,6 +244,310 @@ async def test_llm_api_reuse(
     assert (chat_log.content[0] is system_prompt) == (instances == 1)
     assert chat_log.llm_api is not None
     assert chat_log.llm_api.llm_context is llm_context
+
+
+class StartTimerHandler(intent.IntentHandler):
+    """Test intent handler."""
+
+    intent_type = intent.INTENT_START_TIMER
+
+
+class WebSearchHandler(intent.IntentHandler):
+    """Test intent handler sharing its name with a provider tool."""
+
+    intent_type = "web_search"
+
+
+class ToolsAPI(llm.API):
+    """Test API that offers the given tools."""
+
+    def __init__(self, hass: HomeAssistant, tools: list[llm.Tool]) -> None:
+        """Init the class."""
+        super().__init__(hass=hass, id="tools", name="Tools")
+        self.tools = tools
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        return llm.APIInstance(self, "", llm_context, self.tools)
+
+
+def _timer_tool(name: str) -> llm.IntentTool:
+    return llm.IntentTool(name, StartTimerHandler())
+
+
+def _intent_result() -> llm.ToolResult:
+    return llm.ToolResult(
+        data=llm.IntentResponseDict(intent.IntentResponse(language="en"))
+    )
+
+
+@pytest.mark.parametrize(
+    ("tools", "external", "result", "tool_name"),
+    [
+        pytest.param(
+            [_timer_tool("intent__HassStartTimer")],
+            True,
+            _intent_result(),
+            "intent__HassStartTimer",
+            id="offered",
+        ),
+        pytest.param(
+            [llm.NamespacedTool("assist", _timer_tool("intent__HassStartTimer"))],
+            True,
+            _intent_result(),
+            "assist__intent__HassStartTimer",
+            id="namespaced",
+        ),
+        pytest.param(
+            [_timer_tool("timer__start"), _timer_tool("intent__HassStartTimer")],
+            True,
+            _intent_result(),
+            "intent__HassStartTimer",
+            id="offered_twice",
+        ),
+        # The model is not offered the intent; there is no tool to name it after.
+        pytest.param([], True, _intent_result(), "HassStartTimer", id="not_offered"),
+        pytest.param(
+            [_timer_tool("intent__HassStartTimer")],
+            False,
+            _intent_result(),
+            "HassStartTimer",
+            id="called_by_llm",
+        ),
+        pytest.param(
+            [_timer_tool("intent__HassStartTimer")],
+            True,
+            llm.ToolResult(data={}),
+            "HassStartTimer",
+            id="provider_tool",
+        ),
+    ],
+)
+async def test_local_intent_named_after_tool(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    tools: list[llm.Tool],
+    external: bool,
+    result: llm.ToolResult,
+    tool_name: str,
+) -> None:
+    """Test an intent handled outside the LLM is named after the tool it is offered."""
+    llm.async_register_api(hass, ToolsAPI(hass, tools))
+    tool_call = llm.ToolInput(
+        tool_name="HassStartTimer", tool_args={"minutes": 3}, external=external
+    )
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        # The LLM's own calls cannot be added without running them.
+        chat_log.content.append(
+            AssistantContent(agent_id="mock-agent-id", tool_calls=[tool_call])
+        )
+        chat_log.content.append(
+            ToolResultContent(
+                agent_id="mock-agent-id",
+                tool_call_id=tool_call.id,
+                tool_name="HassStartTimer",
+                result=result,
+            )
+        )
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api="tools",
+        )
+
+    assert chat_log.content[-2].tool_calls[0].tool_name == tool_name
+    assert chat_log.content[-1].tool_name == tool_name
+
+
+async def test_local_intent_named_beside_provider_tool(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a provider tool sharing a name with an offered intent keeps its name."""
+    llm.async_register_api(
+        hass,
+        ToolsAPI(
+            hass,
+            [
+                _timer_tool("intent__HassStartTimer"),
+                llm.IntentTool("intent_script__web_search", WebSearchHandler()),
+            ],
+        ),
+    )
+    local_call = llm.ToolInput(tool_name="HassStartTimer", tool_args={}, external=True)
+    provider_call = llm.ToolInput(
+        tool_name="web_search", tool_args={"query": "koala"}, external=True
+    )
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id", tool_calls=[local_call, provider_call]
+            )
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id="mock-agent-id",
+                tool_call_id=local_call.id,
+                tool_name="HassStartTimer",
+                result=_intent_result(),
+            )
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id="mock-agent-id",
+                tool_call_id=provider_call.id,
+                tool_name="web_search",
+                result=llm.ToolResult(data={"content": []}),
+            )
+        )
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api="tools",
+        )
+
+    assert [tool_call.tool_name for tool_call in chat_log.content[-3].tool_calls] == [
+        "intent__HassStartTimer",
+        "web_search",
+    ]
+    assert [content.tool_name for content in chat_log.content[-2:]] == [
+        "intent__HassStartTimer",
+        "web_search",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("tools", "tool_name", "events"),
+    [
+        pytest.param(
+            [_timer_tool("intent__HassStartTimer")],
+            "intent__HassStartTimer",
+            [ChatLogEventType.UPDATED],
+            id="offered",
+        ),
+        pytest.param([], "HassStartTimer", [], id="not_offered"),
+    ],
+)
+async def test_local_intent_named_after_reused_tool(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    tools: list[llm.Tool],
+    tool_name: str,
+    events: list[ChatLogEventType],
+) -> None:
+    """Test an intent handled locally between LLM turns is named after the tool.
+
+    The trace of the local turn keeps the call as it was made.
+    """
+    llm.async_register_api(hass, ToolsAPI(hass, tools))
+    tool_call = llm.ToolInput(tool_name="HassStartTimer", tool_args={}, external=True)
+    local_call = AssistantContent(agent_id="mock-agent-id", tool_calls=[tool_call])
+    local_result = ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id=tool_call.id,
+        tool_name="HassStartTimer",
+        result=_intent_result(),
+    )
+    received: list[ChatLogEventType] = []
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="tools",
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+            llm_api = chat_log.llm_api
+
+        with (
+            async_conversation_trace() as local_trace,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(local_call)
+            chat_log.async_add_assistant_content_without_tools(local_result)
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Timer started")
+            )
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            unsubscribe = async_subscribe_chat_logs(
+                hass, lambda _conversation_id, event, _data: received.append(event)
+            )
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="tools",
+            )
+            unsubscribe()
+            call, result = chat_log.content[-4:-2]
+
+    assert chat_log.llm_api is llm_api
+    assert call.tool_calls[0].tool_name == tool_name
+    assert call.tool_calls[0].id == tool_call.id
+    assert call.created == local_call.created
+    assert result.tool_name == tool_name
+    assert result.created == local_result.created
+    assert received == events
+    (turn,) = local_trace.as_dict()["events"]
+    assert turn["data"]["content"][1]["tool_calls"][0]["tool_name"] == "HassStartTimer"
+    assert turn["data"]["content"][2]["tool_name"] == "HassStartTimer"
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_local_intent_named_after_assist_tool(hass: HomeAssistant) -> None:
+    """Test a sentence the default agent handles is named after the Assist API tool."""
+    hass.states.async_set("light.kitchen", "off", {"friendly_name": "Kitchen light"})
+    async_expose_entity(hass, conversation.DOMAIN, "light.kitchen", True)
+    async_mock_service(hass, "light", "turn_on")
+
+    def user_input(text: str, conversation_id: str) -> ConversationInput:
+        return ConversationInput(
+            text=text,
+            context=Context(),
+            conversation_id=conversation_id,
+            device_id=None,
+            satellite_id=None,
+            language="en",
+            agent_id="conversation.llm",
+        )
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        llm_input = user_input("Hello", session.conversation_id)
+        with async_get_chat_log(hass, session, llm_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                llm_input.as_llm_context("test"), user_llm_hass_api="assist"
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id=llm_input.agent_id, content="Hi")
+            )
+
+        local_input = user_input("turn on kitchen light", session.conversation_id)
+        with async_get_chat_log(hass, session, local_input) as chat_log:
+            response = await conversation.async_handle_intents(
+                hass, local_input, chat_log
+            )
+            assert response is not None
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id=local_input.agent_id,
+                    content=response.speech["plain"]["speech"],
+                )
+            )
+
+        llm_input = user_input("Thanks", session.conversation_id)
+        with async_get_chat_log(hass, session, llm_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                llm_input.as_llm_context("test"), user_llm_hass_api="assist"
+            )
+            call, result = chat_log.content[-4:-2]
+
+    assert call.tool_calls[0].tool_name == "intent__HassTurnOn"
+    assert result.tool_name == "intent__HassTurnOn"
 
 
 async def test_llm_api_cleared(
