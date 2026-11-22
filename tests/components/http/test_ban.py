@@ -703,9 +703,7 @@ async def test_ban_applies_when_the_ban_file_cannot_be_written(
         create=True,
     ):
         client = await aiohttp_client(app)
-        resp = await client.get(
-            "/example", headers={"Authorization": "Bearer invalid"}
-        )
+        resp = await client.get("/example", headers={"Authorization": "Bearer invalid"})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
