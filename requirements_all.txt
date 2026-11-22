@@ -3577,7 +3577,7 @@ xiaomi-weather==0.1.0
 xknx==4.1.1
 
 # homeassistant.components.knx
-xknxproject==3.10.0
+xknxproject==3.11.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
