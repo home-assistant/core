@@ -195,7 +195,7 @@ async def test_setup_connection_failed(
 async def _start_scan(
     hass: HomeAssistant,
     *,
-    scan_partitions: bool = True,
+    scan_partitions: bool = False,
     scan_zones: bool = False,
     scan_outputs: bool = False,
 ) -> ConfigFlowResult:
@@ -220,10 +220,10 @@ async def _start_scan(
     )
 
 
-async def test_setup_adds_all_discovered_partitions(
+async def test_setup_adds_discovered_partitions(
     hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Add all scanned partitions before setting up the entry."""
+    """Save all scanned partitions with their names and defaults."""
     mock_satel.scan_partitions.return_value = [
         SatelPartitionInfo(
             device_number=2, name="House", type_code=0, object_assignment=1
@@ -231,7 +231,7 @@ async def test_setup_adds_all_discovered_partitions(
         SatelPartitionInfo(device_number=5, name="", type_code=0, object_assignment=1),
     ]
 
-    result = await _start_scan(hass)
+    result = await _start_scan(hass, scan_partitions=True)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
@@ -265,21 +265,16 @@ async def test_setup_adds_all_discovered_partitions(
     mock_satel.start.assert_awaited_once_with(enable_monitoring=False)
     mock_satel.scan_partitions.assert_awaited_once()
     mock_satel.scan_zones.assert_not_called()
+    mock_satel.scan_outputs.assert_not_called()
     mock_setup_entry.assert_awaited_once_with(hass, entry)
 
 
-@pytest.mark.parametrize("scan_partitions", [False, True])
 async def test_setup_adds_discovered_zones(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
-    scan_partitions: bool,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Add configured zones without inferring detector type or temperature support."""
-    mock_satel.scan_partitions.return_value = [
-        SatelPartitionInfo(
-            device_number=2, name="House", type_code=0, object_assignment=1
-        )
-    ]
     mock_satel.scan_zones.return_value = [
         SatelZoneInfo(
             device_number=6, name="Zone 6", type_code=0, partition_assignment=2
@@ -288,7 +283,7 @@ async def test_setup_adds_discovered_zones(
             device_number=7, name="Spare", type_code=1, partition_assignment=None
         ),
     ]
-    result = await _start_scan(hass, scan_partitions=scan_partitions, scan_zones=True)
+    result = await _start_scan(hass, scan_zones=True)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
@@ -304,18 +299,15 @@ async def test_setup_adds_discovered_zones(
         CONF_NAME: "Zone 6",
         CONF_ENABLE_TEMPERATURE_SENSOR: False,
     }
-    assert len(entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION)) == int(
-        scan_partitions
-    )
-    assert mock_satel.scan_partitions.await_count == int(scan_partitions)
+    mock_satel.scan_partitions.assert_not_called()
     mock_satel.scan_zones.assert_awaited_once()
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+    mock_satel.scan_outputs.assert_not_called()
     mock_satel.read_temperature.assert_not_called()
+    mock_setup_entry.assert_awaited_once_with(hass, entry)
 
 
-async def test_setup_classifies_discovered_outputs(
-    hass: HomeAssistant, mock_satel: AsyncMock
+async def test_setup_adds_discovered_outputs(
+    hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Expose only verified output functions as switches without sending commands."""
     mock_satel.scan_outputs.return_value = [
@@ -326,7 +318,7 @@ async def test_setup_classifies_discovered_outputs(
         SatelOutputInfo(device_number=6, name="Shutter up", type_code=105),
         SatelOutputInfo(device_number=7, name="Shutter down", type_code=106),
     ]
-    result = await _start_scan(hass, scan_partitions=False, scan_outputs=True)
+    result = await _start_scan(hass, scan_outputs=True)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
@@ -361,9 +353,50 @@ async def test_setup_classifies_discovered_outputs(
     mock_satel.scan_partitions.assert_not_called()
     mock_satel.scan_zones.assert_not_called()
     mock_satel.scan_outputs.assert_awaited_once()
-    await hass.async_block_till_done()
     mock_satel.set_output.assert_not_called()
+    mock_setup_entry.assert_awaited_once_with(hass, entry)
+
+
+async def test_setup_adds_discovered_resources_from_all_categories(
+    hass: HomeAssistant, mock_satel: AsyncMock
+) -> None:
+    """Load one entry and create entities for all scanned categories."""
+    mock_satel.scan_partitions.return_value = [
+        SatelPartitionInfo(
+            device_number=2, name="House", type_code=0, object_assignment=1
+        )
+    ]
+    mock_satel.scan_zones.return_value = [
+        SatelZoneInfo(device_number=6, name="Hall", type_code=0, partition_assignment=2)
+    ]
+    mock_satel.scan_outputs.return_value = [
+        SatelOutputInfo(device_number=3, name="Alarm status", type_code=3),
+        SatelOutputInfo(device_number=5, name="Light relay", type_code=25),
+    ]
+
+    result = await _start_scan(
+        hass, scan_partitions=True, scan_zones=True, scan_outputs=True
+    )
+    assert result.get("type") is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    entry = result.get("result")
+    assert entry is not None
+    assert {
+        subentry.unique_id: subentry.subentry_type
+        for subentry in entry.subentries.values()
+    } == {
+        "partition_2": SUBENTRY_TYPE_PARTITION,
+        "zone_6": SUBENTRY_TYPE_ZONE,
+        "output_3": SUBENTRY_TYPE_OUTPUT,
+        "switchable_output_5": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+    }
+
+    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("alarm_control_panel.house") is not None
+    assert hass.states.get("binary_sensor.hall") is not None
     assert hass.states.get("binary_sensor.alarm_status") is not None
     assert hass.states.get("switch.light_relay") is not None
 
@@ -390,7 +423,9 @@ async def test_setup_can_continue_without_discovery_results(
             )
         ]
         mock_satel.scan_zones.side_effect = SatelNoResponseError
-    result = await _start_scan(hass, scan_zones=failed_scan == "zones")
+    result = await _start_scan(
+        hass, scan_partitions=True, scan_zones=failed_scan == "zones"
+    )
     await hass.async_block_till_done()
     assert mock_satel.close.await_count == 2
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -426,7 +461,7 @@ async def test_cancel_partition_scan_closes_connection(
 
     hass.bus.async_listen(EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE, report_progress)
     mock_satel.scan_partitions.side_effect = scan
-    result = await _start_scan(hass)
+    result = await _start_scan(hass, scan_partitions=True)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     try:
         await asyncio.wait_for(progress.wait(), timeout=1)
