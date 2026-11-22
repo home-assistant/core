@@ -27,7 +27,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
 
 from . import get_subentry_id, setup_integration
-from .conftest import TEST_URL, models_response
+from .conftest import TEST_URL
 
 CONVERSATION_MODEL_OPTIONS = [
     {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},
@@ -433,30 +433,86 @@ async def test_create_conversation_agent_no_control(
     }
 
 
-async def test_conversation_agent_model_options(
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+@pytest.mark.parametrize(
+    "proxy_models",
+    [("gpt-4o", "whisper-1", "text-embedding-3-small", "kokoro", "gpt-4o-alias")],
+)
+@pytest.mark.parametrize(
+    "proxy_model_modes",
+    [
+        {
+            "gpt-4o": "chat",
+            "whisper-1": "audio_transcription",
+            "text-embedding-3-small": "embedding",
+            "kokoro": None,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("subentry_type", "expected_models"),
+    [
+        pytest.param(
+            "conversation", ["gpt-4o", "kokoro", "gpt-4o-alias"], id="conversation"
+        ),
+        pytest.param("stt", ["whisper-1", "kokoro", "gpt-4o-alias"], id="stt"),
+    ],
+)
+async def test_subentry_model_options_by_mode(
     hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    expected_models: list[str],
 ) -> None:
-    """Test the model dropdown is populated from the proxy's model list."""
+    """Test the model dropdown lists the models of the subentry's modes.
+
+    Models without a mode, or missing from `/model/info`, stay in every list.
+    """
     await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
-    ) as mock_client:
-        mock_client.return_value.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response("gpt-4o", "gpt-5")
-        )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": SOURCE_USER},
+    )
 
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": SOURCE_USER},
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"].schema["model"].config["options"] == [
+        {"value": model, "label": model} for model in expected_models
+    ]
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+@pytest.mark.parametrize("proxy_models", [("gpt-4o", "whisper-1")])
+@pytest.mark.parametrize("proxy_model_modes", [{"whisper-1": "audio_transcription"}])
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(_status_error(AuthenticationError, 401), id="auth"),
+        pytest.param(
+            APIConnectionError(request=httpx2.Request("GET", TEST_URL)),
+            id="connection",
+        ),
+    ],
+)
+async def test_subentry_model_options_without_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_models: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Test the model dropdown lists every model when `/model/info` fails."""
+    await setup_integration(hass, mock_config_entry)
+    mock_models.get.side_effect = side_effect
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "gpt-4o", "label": "gpt-4o"},
-        {"value": "gpt-5", "label": "gpt-5"},
+        {"value": "whisper-1", "label": "whisper-1"},
     ]
 
 
