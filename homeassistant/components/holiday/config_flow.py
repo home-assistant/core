@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     SelectOptionDict,
@@ -24,7 +25,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_PROVINCE, COUNTRY_OPTIONS, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
@@ -65,6 +66,42 @@ def get_optional_categories(country: str) -> list[str]:
     ]
 
 
+def get_country_options_schema(country: str) -> dict[probatio.Optional, Any]:
+    """Return the schema for the country specific options of the holidays library."""
+    supported_options = country_holidays(country).get_supported_options()
+    return {
+        probatio.Optional(option, default=supported_options[option]): BooleanSelector()
+        for option in COUNTRY_OPTIONS
+        if option in supported_options
+    }
+
+
+def get_categories_schema(country: str) -> dict[probatio.Optional, Any]:
+    """Return the schema for the additional categories."""
+    if not (categories := get_optional_categories(country)):
+        return {}
+    return {
+        probatio.Optional(CONF_CATEGORIES): SelectSelector(
+            SelectSelectorConfig(
+                options=categories,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="categories",
+            )
+        )
+    }
+
+
+def get_entry_options(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the config entry options from the user input."""
+    options: dict[str, Any] = {
+        option: user_input[option] for option in COUNTRY_OPTIONS if option in user_input
+    }
+    if categories := user_input.get(CONF_CATEGORIES):
+        options[CONF_CATEGORIES] = categories
+    return options
+
+
 def get_options_schema(country: str) -> probatio.Schema:
     """Return the options schema."""
     schema = {}
@@ -75,16 +112,20 @@ def get_options_schema(country: str) -> probatio.Schema:
                 mode=SelectSelectorMode.DROPDOWN,
             )
         )
-    if categories := get_optional_categories(country):
-        schema[probatio.Optional(CONF_CATEGORIES)] = SelectSelector(
-            SelectSelectorConfig(
-                options=categories,
-                multiple=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="categories",
-            )
-        )
-    return probatio.Schema(schema)
+    return probatio.Schema(
+        {
+            **schema,
+            **get_categories_schema(country),
+            **get_country_options_schema(country),
+        }
+    )
+
+
+def get_options_flow_schema(country: str) -> probatio.Schema:
+    """Return the schema of the options flow."""
+    return probatio.Schema(
+        {**get_categories_schema(country), **get_country_options_schema(country)}
+    )
 
 
 def get_entry_name(language: str, country: str, province: str | None) -> str:
@@ -104,6 +145,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -164,13 +206,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = self.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
                 data[CONF_PROVINCE] = province
-            if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+            options = get_entry_options(user_input)
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            self._async_abort_entries_match({**data, **options})
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -195,13 +235,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = reconfigure_entry.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
                 data[CONF_PROVINCE] = province
-            if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+            options = get_entry_options(user_input)
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            self._async_abort_entries_match({**data, **options})
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -221,7 +259,10 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=options_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema,
+                {**reconfigure_entry.data, **reconfigure_entry.options},
+            ),
             description_placeholders={"country": reconfigure_entry.data[CONF_COUNTRY]},
         )
 
@@ -234,30 +275,16 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage Holiday options."""
         if user_input is not None:
-            match_dict = dict(self.config_entry.data)
-            if categories := user_input.get(CONF_CATEGORIES):
-                match_dict[CONF_CATEGORIES] = categories
-            self._async_abort_entries_match(match_dict)
+            self._async_abort_entries_match(
+                {**self.config_entry.data, **get_entry_options(user_input)}
+            )
             return self.async_create_entry(data=user_input)
 
-        categories = await self.hass.async_add_executor_job(
-            get_optional_categories, self.config_entry.data[CONF_COUNTRY]
+        schema = await self.hass.async_add_executor_job(
+            get_options_flow_schema, self.config_entry.data[CONF_COUNTRY]
         )
-        if not categories:
+        if not schema.schema:
             return self.async_abort(reason="no_categories")
-
-        schema = probatio.Schema(
-            {
-                probatio.Optional(CONF_CATEGORIES): SelectSelector(
-                    SelectSelectorConfig(
-                        options=categories,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="categories",
-                    )
-                )
-            }
-        )
 
         return self.async_show_form(
             step_id="init",
