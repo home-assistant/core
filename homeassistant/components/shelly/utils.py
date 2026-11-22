@@ -691,6 +691,15 @@ def get_device_url(data: Mapping[str, Any]) -> str:
     )
 
 
+def get_storage_coordinator(entry: ShellyConfigEntry) -> ShellyRpcCoordinator | None:
+    """Return the RPC coordinator of a device that can have storage."""
+    coordinator = entry.runtime_data.rpc
+    if coordinator is None or coordinator.sleep_period:
+        return None
+
+    return coordinator
+
+
 @callback
 def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]

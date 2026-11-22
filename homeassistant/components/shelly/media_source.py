@@ -2,7 +2,6 @@
 
 from operator import itemgetter
 from typing import NamedTuple, override
-from urllib.parse import urljoin
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device.models import ShellyStorageItem
@@ -24,7 +23,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import get_device_url
+from .utils import get_storage_coordinator
+from .views import async_generate_storage_proxy_url
 
 MAX_ITEMS = 500
 STORAGE_ID = 0
@@ -48,15 +48,6 @@ MEDIA_KINDS: dict[str, MediaKind] = {
 async def async_get_media_source(hass: HomeAssistant) -> ShellyStorageMediaSource:
     """Set up Shelly storage media source."""
     return ShellyStorageMediaSource(hass)
-
-
-def _get_storage_coordinator(entry: ShellyConfigEntry) -> ShellyRpcCoordinator | None:
-    """Return the RPC coordinator of a device that can have storage."""
-    coordinator = entry.runtime_data.rpc
-    if coordinator is None or coordinator.sleep_period:
-        return None
-
-    return coordinator
 
 
 def _has_active_storage(coordinator: ShellyRpcCoordinator) -> bool:
@@ -83,16 +74,20 @@ class ShellyStorageMediaSource(MediaSource):
         entry, items = await self._async_get_items(
             item.identifier, item.identifier, BrowseError
         )
-        base_url = get_device_url(entry.data)
         stored_items = sorted(
-            (stored for stored in items if stored["type"] in MEDIA_KINDS),
+            (
+                stored
+                for stored in items
+                if stored["type"] in MEDIA_KINDS
+                and async_generate_storage_proxy_url(entry.entry_id, stored["url"])
+            ),
             key=itemgetter("ts"),
             reverse=True,
         )
         return self._async_storage_folder(
             entry,
             [
-                self._async_storage_child(entry, stored, base_url)
+                self._async_storage_child(entry, stored)
                 for stored in stored_items[:MAX_ITEMS]
             ],
         )
@@ -110,10 +105,17 @@ class ShellyStorageMediaSource(MediaSource):
             )
         entry, items = await self._async_get_items(entry_id, identifier, Unresolvable)
         for stored in items:
-            if stored["media_id"] == media_id and stored["type"] in MEDIA_KINDS:
+            if (
+                stored["media_id"] == media_id
+                and stored["type"] in MEDIA_KINDS
+                and (
+                    url := async_generate_storage_proxy_url(
+                        entry.entry_id, stored["url"]
+                    )
+                )
+            ):
                 return PlayMedia(
-                    url=urljoin(get_device_url(entry.data), stored["url"]),
-                    mime_type=MEDIA_KINDS[stored["type"]].mime_type,
+                    url=url, mime_type=MEDIA_KINDS[stored["type"]].mime_type
                 )
         raise Unresolvable(
             translation_domain=DOMAIN,
@@ -135,7 +137,7 @@ class ShellyStorageMediaSource(MediaSource):
             entry is None
             or entry.domain != DOMAIN
             or entry.state is not ConfigEntryState.LOADED
-            or (coordinator := _get_storage_coordinator(entry)) is None
+            or (coordinator := get_storage_coordinator(entry)) is None
         ):
             raise error_cls(
                 translation_domain=DOMAIN,
@@ -178,7 +180,7 @@ class ShellyStorageMediaSource(MediaSource):
             children=[
                 self._async_storage_folder(entry)
                 for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
-                if (coordinator := _get_storage_coordinator(entry)) is not None
+                if (coordinator := get_storage_coordinator(entry)) is not None
                 and _has_active_storage(coordinator)
             ],
         )
@@ -210,7 +212,7 @@ class ShellyStorageMediaSource(MediaSource):
         return None
 
     def _async_storage_child(
-        self, entry: ShellyConfigEntry, stored: ShellyStorageItem, base_url: str
+        self, entry: ShellyConfigEntry, stored: ShellyStorageItem
     ) -> BrowseMediaSource:
         """Return BrowseMedia node for a single storage item."""
         kind = MEDIA_KINDS[stored["type"]]
@@ -228,7 +230,7 @@ class ShellyStorageMediaSource(MediaSource):
             media_content_type=kind.media_type,
             title=title,
             thumbnail=(
-                urljoin(base_url, thumbnail_url)
+                async_generate_storage_proxy_url(entry.entry_id, thumbnail_url)
                 if (thumbnail_url := stored.get("thumbnail_url"))
                 else None
             ),
