@@ -4,11 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from iotawattpy.sensor import Sensor
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -90,6 +92,57 @@ async def test_sensor_type_output(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.my_watthour_sensor") is None
+
+
+def _period_total_sensor(value: float, begin: str) -> Sensor:
+    """Return an energy sensor integrated since the start of the period."""
+    return Sensor(
+        channel="N/A",
+        base_name="My WattHour Sensor",
+        suffix=None,
+        io_type="Output",
+        unit="WattHours",
+        value=value,
+        begin=begin,
+        mac_addr="mock-mac",
+        fromStart=True,
+    )
+
+
+async def test_last_reset_set_on_first_state(
+    hass: HomeAssistant, mock_iotawatt: MagicMock
+) -> None:
+    """Test the first state written at startup already has last_reset."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
+        _period_total_sensor(243, "2026-11-14T00:00:00")
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_watthour_sensor")
+    assert state is not None
+    assert state.attributes[ATTR_LAST_RESET] == "2026-11-14T00:00:00"
+
+
+async def test_last_reset_follows_new_period(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+) -> None:
+    """Test last_reset moves to the start of a new period on update."""
+    sensor = _period_total_sensor(243, "2026-11-14T00:00:00")
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = sensor
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    sensor.setValue(5)
+    sensor.setBegin("2026-11-15T00:00:00")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_watthour_sensor")
+    assert state is not None
+    assert state.state == "5"
+    assert state.attributes[ATTR_LAST_RESET] == "2026-11-15T00:00:00"
 
 
 async def test_output_sensor_not_attached_to_device(

@@ -193,8 +193,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                         )
                     if unique_id in sites:
                         config_data[CONF_SITE_ID] = sites[unique_id].name
-                        if config_entry.state is ConfigEntryState.LOADED:
-                            # The update listener reloads a loaded entry on data changes
+                        if config_entry.update_listeners:
+                            # The update listener reloads an entry when its data changes.
                             if config_data.items() <= config_entry.data.items():
                                 self.hass.config_entries.async_schedule_reload(
                                     config_entry.entry_id

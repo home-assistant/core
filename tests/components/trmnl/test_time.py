@@ -19,7 +19,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -71,7 +71,7 @@ async def test_set_value(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             TimeServiceArgument.TIME: new_value,
         },
         blocking=True,
@@ -96,7 +96,7 @@ async def test_action_error(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "time.test_trmnl_sleep_start_time",
+                TargetKey.ENTITY_ID: "time.test_trmnl_sleep_start_time",
                 TimeServiceArgument.TIME: time(22, 0),
             },
             blocking=True,

@@ -19,7 +19,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -47,7 +47,7 @@ async def test_adam_change_select_entity(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.woonkamer_thermostat_schedule",
+            TargetKey.ENTITY_ID: "select.woonkamer_thermostat_schedule",
             SelectServiceArgument.OPTION: "Badkamer Schema",
         },
         blocking=True,
@@ -91,7 +91,7 @@ async def test_adam_select_regulation_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.adam_regulation_mode",
+            TargetKey.ENTITY_ID: "select.adam_regulation_mode",
             SelectServiceArgument.OPTION: "heating",
         },
         blocking=True,
@@ -108,7 +108,7 @@ async def test_adam_select_regulation_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.adam_gateway_mode",
+            TargetKey.ENTITY_ID: "select.adam_gateway_mode",
             SelectServiceArgument.OPTION: "vacation",
         },
         blocking=True,
@@ -134,7 +134,7 @@ async def test_adam_select_zone_profile(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.living_room_zone_profile",
+            TargetKey.ENTITY_ID: "select.living_room_zone_profile",
             SelectServiceArgument.OPTION: "passive",
         },
         blocking=True,
@@ -171,7 +171,7 @@ async def test_anna_select_unavailable_schedule_mode(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.anna_thermostat_schedule",
+                TargetKey.ENTITY_ID: "select.anna_thermostat_schedule",
                 SelectServiceArgument.OPTION: "Winter",
             },
             blocking=True,
@@ -208,7 +208,7 @@ async def test_anna_select_dhw_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            TargetKey.ENTITY_ID: "select.opentherm_dhw_mode",
             SelectServiceArgument.OPTION: "boost",
         },
         blocking=True,
@@ -234,7 +234,7 @@ async def test_anna_select_dhw_mode_with_two_options(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            TargetKey.ENTITY_ID: "select.opentherm_dhw_mode",
             SelectServiceArgument.OPTION: "comfort",
         },
         blocking=True,
@@ -257,7 +257,7 @@ async def test_anna_select_dhw_mode_select_with_two_options(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            TargetKey.ENTITY_ID: "select.opentherm_dhw_mode",
             SelectServiceArgument.OPTION: "eco",
         },
         blocking=True,

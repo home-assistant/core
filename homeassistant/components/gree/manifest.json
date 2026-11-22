@@ -6,6 +6,29 @@
   "config_flow": true,
   "connectivity": ["network"],
   "dependencies": ["network"],
+  "dhcp": [
+    {
+      "macaddress": "0447CA*"
+    },
+    {
+      "macaddress": "502CC6*"
+    },
+    {
+      "macaddress": "580D0D*"
+    },
+    {
+      "macaddress": "7CB8E6*"
+    },
+    {
+      "macaddress": "9424B8*"
+    },
+    {
+      "macaddress": "C03937*"
+    },
+    {
+      "macaddress": "F4911E*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/gree",
   "iot_class": "local_polling",
   "loggers": ["greeclimate"],

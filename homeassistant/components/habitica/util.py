@@ -34,6 +34,8 @@ def next_due_date(task: TaskData, today: dt.datetime) -> dt.date | None:
 
     if TYPE_CHECKING:
         assert task.startDate
+        assert task.nextDue[0]
+        assert task.nextDue[1]
 
     if task.isDue is True and not task.completed:
         return dt_util.as_local(today).date()
