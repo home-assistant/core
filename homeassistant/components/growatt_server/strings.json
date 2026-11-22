@@ -590,9 +590,6 @@
     }
   },
   "exceptions": {
-    "api_error": {
-      "message": "Growatt API error: {error}"
-    },
     "api_error_with_code": {
       "message": "API error: {error} (Code: {code})"
     },

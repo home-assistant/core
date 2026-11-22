@@ -79,6 +79,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the printer"
+    },
     "invalid_response": {
       "message": "Invalid response received from the printer"
     }

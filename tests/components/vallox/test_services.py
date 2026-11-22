@@ -7,10 +7,8 @@ from vallox_websocket_api import Profile, ValloxApiException
 
 from homeassistant.components.vallox.const import DOMAIN, PROFILE_DURATION_INDEFINITE
 from homeassistant.components.vallox.services import (
-    ATTR_DURATION,
-    ATTR_PROFILE,
-    ATTR_PROFILE_FAN_SPEED,
     ValloxService,
+    ValloxServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -35,7 +33,7 @@ async def test_set_profile_fan_speed(
 ) -> None:
     """Test the services for setting the fan speed of a profile."""
     await hass.services.async_call(
-        DOMAIN, service, {ATTR_PROFILE_FAN_SPEED: 30}, blocking=True
+        DOMAIN, service, {ValloxServiceArgument.FAN_SPEED: 30}, blocking=True
     )
 
     mock_vallox_client.set_fan_speed.assert_called_once_with(profile, 30)
@@ -61,7 +59,7 @@ async def test_set_profile_fan_speed_clamped(
     await hass.services.async_call(
         DOMAIN,
         ValloxService.SET_PROFILE_FAN_SPEED_HOME,
-        {ATTR_PROFILE_FAN_SPEED: fan_speed},
+        {ValloxServiceArgument.FAN_SPEED: fan_speed},
         blocking=True,
     )
 
@@ -86,7 +84,7 @@ async def test_set_profile_fan_speed_clamped(
     ("duration_data", "duration"),
     [
         pytest.param({}, None, id="no_duration"),
-        pytest.param({ATTR_DURATION: 15}, 15, id="15_minutes"),
+        pytest.param({ValloxServiceArgument.DURATION: 15}, 15, id="15_minutes"),
     ],
 )
 async def test_set_profile(
@@ -101,7 +99,7 @@ async def test_set_profile(
     await hass.services.async_call(
         DOMAIN,
         ValloxService.SET_PROFILE,
-        {ATTR_PROFILE: profile_key} | duration_data,
+        {ValloxServiceArgument.PROFILE: profile_key} | duration_data,
         blocking=True,
     )
 
@@ -130,7 +128,10 @@ async def test_set_profile_duration_clamped(
     await hass.services.async_call(
         DOMAIN,
         ValloxService.SET_PROFILE,
-        {ATTR_PROFILE: "boost", ATTR_DURATION: duration},
+        {
+            ValloxServiceArgument.PROFILE: "boost",
+            ValloxServiceArgument.DURATION: duration,
+        },
         blocking=True,
     )
 
@@ -161,7 +162,7 @@ async def test_set_profile_fan_speed_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, service, {ATTR_PROFILE_FAN_SPEED: 30}, blocking=True
+            DOMAIN, service, {ValloxServiceArgument.FAN_SPEED: 30}, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
@@ -179,49 +180,61 @@ async def test_set_profile_fan_speed_error(
     ("service_data", "translation_key", "translation_placeholders"),
     [
         pytest.param(
-            {ATTR_PROFILE: "home"},
+            {ValloxServiceArgument.PROFILE: "home"},
             "failed_to_set_profile",
             {"profile": "home"},
             id="home",
         ),
         pytest.param(
-            {ATTR_PROFILE: "home", ATTR_DURATION: PROFILE_DURATION_INDEFINITE},
+            {
+                ValloxServiceArgument.PROFILE: "home",
+                ValloxServiceArgument.DURATION: PROFILE_DURATION_INDEFINITE,
+            },
             "failed_to_set_profile",
             {"profile": "home"},
             id="home_indefinite",
         ),
         pytest.param(
-            {ATTR_PROFILE: "boost"},
+            {ValloxServiceArgument.PROFILE: "boost"},
             "failed_to_set_profile",
             {"profile": "boost"},
             id="boost",
         ),
         pytest.param(
-            {ATTR_PROFILE: "boost", ATTR_DURATION: PROFILE_DURATION_INDEFINITE},
+            {
+                ValloxServiceArgument.PROFILE: "boost",
+                ValloxServiceArgument.DURATION: PROFILE_DURATION_INDEFINITE,
+            },
             "failed_to_set_profile",
             {"profile": "boost"},
             id="boost_indefinite",
         ),
         pytest.param(
-            {ATTR_PROFILE: "extra"},
+            {ValloxServiceArgument.PROFILE: "extra"},
             "failed_to_set_profile",
             {"profile": "extra"},
             id="extra",
         ),
         pytest.param(
-            {ATTR_PROFILE: "home", ATTR_DURATION: 15},
+            {ValloxServiceArgument.PROFILE: "home", ValloxServiceArgument.DURATION: 15},
             "failed_to_set_profile_for_duration",
             {"profile": "home", "duration": "15"},
             id="home_15_minutes",
         ),
         pytest.param(
-            {ATTR_PROFILE: "boost", ATTR_DURATION: 20},
+            {
+                ValloxServiceArgument.PROFILE: "boost",
+                ValloxServiceArgument.DURATION: 20,
+            },
             "failed_to_set_profile_for_duration",
             {"profile": "boost", "duration": "20"},
             id="boost_20_minutes",
         ),
         pytest.param(
-            {ATTR_PROFILE: "fireplace", ATTR_DURATION: 10},
+            {
+                ValloxServiceArgument.PROFILE: "fireplace",
+                ValloxServiceArgument.DURATION: 10,
+            },
             "failed_to_set_profile_for_duration",
             {"profile": "fireplace", "duration": "10"},
             id="fireplace_10_minutes",

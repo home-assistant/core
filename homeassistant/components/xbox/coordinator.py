@@ -309,7 +309,8 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
 
         prev_dt = (
             prev_data.last_seen_date_time_utc
-            if self.data and (prev_data := self.data.presence.get(person.xuid))
+            if (data := self.data_or_none) is not None
+            and (prev_data := data.presence.get(person.xuid))
             else None
         )
         cur_dt = person.last_seen_date_time_utc
