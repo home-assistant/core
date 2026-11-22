@@ -208,7 +208,7 @@ async def async_setup_entry(
     def _add_new_sensors() -> None:
         """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
         entities: list[SensorEntity] = []
-        for raw, _ in runtime.garage_coordinator.data:
+        for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
             tlm = telemetry_coordinator.data.get(vehicle_id)
             if tlm is None:

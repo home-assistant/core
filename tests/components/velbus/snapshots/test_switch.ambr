@@ -24,7 +24,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'velbus',
@@ -39,7 +39,8 @@
 # name: test_entities[switch.kitchen_vmb2ble_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_vmb2ble_relayname',
@@ -74,7 +75,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'velbus',
@@ -89,7 +90,8 @@
 # name: test_switch_disabled[switch.kitchen_vmb2ble_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room RelayName',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kitchen_vmb2ble_relayname',

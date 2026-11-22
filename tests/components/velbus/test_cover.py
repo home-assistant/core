@@ -6,15 +6,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-    Platform,
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
 )
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,22 +51,22 @@ async def test_actions(
     entity = config_entry.runtime_data.controller.get_all_cover()[entity_num]
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.close.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.open.assert_called_once()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     entity.stop.assert_called_once()
@@ -86,10 +83,10 @@ async def test_position(
     entity_id = get_entity_id(entity_registry, COVER_DOMAIN, "1234-9")
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
+        CoverService.SET_POSITION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_POSITION: 25,
+            TargetKey.ENTITY_ID: "cover.basement_covername",
+            CoverServiceArgument.POSITION: 25,
         },
         blocking=True,
     )

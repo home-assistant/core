@@ -17,23 +17,14 @@ from homeassistant.components.hyperion.const import (
     HYPERION_MODEL_NAME,
 )
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_TOKEN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -260,7 +251,10 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     # On (=), 100% (=), solid (=), [255,255,255] (=)
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
     )
 
     assert client.async_send_set_color.call_args == call(
@@ -279,8 +273,11 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     client.adjustment = [{const.KEY_ID: TEST_ID}]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.BRIGHTNESS: brightness,
+        },
         blocking=True,
     )
 
@@ -300,8 +297,11 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     client.adjustment = [{const.KEY_ID: TEST_ID}]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.BRIGHTNESS: brightness,
+        },
         blocking=True,
     )
 
@@ -318,8 +318,11 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: hs_color},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.HS_COLOR: hs_color,
+        },
         blocking=True,
     )
 
@@ -355,8 +358,11 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.BRIGHTNESS: brightness,
+        },
         blocking=True,
     )
 
@@ -383,8 +389,8 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: effect},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1, LightServiceArgument.EFFECT: effect},
         blocking=True,
     )
 
@@ -414,8 +420,11 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: hs_color},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.HS_COLOR: hs_color,
+        },
         blocking=True,
     )
 
@@ -449,7 +458,10 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
     client.async_send_set_effect = AsyncMock(return_value=True)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
     )
 
     assert not client.async_send_clear.called
@@ -467,8 +479,11 @@ async def test_light_async_turn_on_fail_async_send_set_effect(
     await setup_test_config_entry(hass, hyperion_client=client)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: "Warm Mood Blobs"},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.EFFECT: "Warm Mood Blobs",
+        },
         blocking=True,
     )
     assert client.method_calls[-1] == call.async_send_set_effect(
@@ -487,8 +502,11 @@ async def test_light_async_turn_on_fail_async_send_set_color(
     await setup_test_config_entry(hass, hyperion_client=client)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: (240.0, 100.0)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID_1,
+            LightServiceArgument.HS_COLOR: (240.0, 100.0),
+        },
         blocking=True,
     )
     assert client.method_calls[-1] == call.async_send_set_color(
@@ -506,8 +524,8 @@ async def test_light_async_turn_off_fail_async_send_send_clear(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1},
         blocking=True,
     )
     assert client.method_calls[-1] == call.async_send_clear(priority=TEST_PRIORITY)
@@ -521,8 +539,8 @@ async def test_light_async_turn_off(hass: HomeAssistant) -> None:
     client.async_send_clear = AsyncMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1},
         blocking=True,
     )
 

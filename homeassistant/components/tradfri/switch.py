@@ -64,22 +64,16 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        if not self._device_data:
-            return False
         return self._device_data.state
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(False))
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(True))

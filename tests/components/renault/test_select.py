@@ -12,7 +12,7 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -125,7 +125,7 @@ async def test_select_charge_mode(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            SELECT_DOMAIN, SERVICE_SELECT_OPTION, service_data=data, blocking=True
+            SELECT_DOMAIN, SelectService.SELECT_OPTION, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ("always",)

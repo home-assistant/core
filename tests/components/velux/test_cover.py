@@ -20,28 +20,19 @@ from pyvlx.opening_device import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_SPEED,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
+    CoverService,
+    CoverServiceArgument,
 )
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -176,17 +167,17 @@ async def test_window_open_close_stop_services_no_speed(
     entity_id = "cover.test_window"
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": entity_id}, blocking=True
     )
     mock_window.open.assert_awaited_once_with(velocity=None, wait_for_completion=False)
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": entity_id}, blocking=True
     )
     mock_window.close.assert_awaited_once_with(velocity=None, wait_for_completion=False)
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.STOP, {"entity_id": entity_id}, blocking=True
     )
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
 
@@ -211,8 +202,8 @@ async def test_window_services_with_speed(
     entity_id = "cover.test_window"
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: speed},
+        CoverService.OPEN,
+        {"entity_id": entity_id, CoverServiceArgument.SPEED: speed},
         blocking=True,
     )
     mock_window.open.assert_awaited_once_with(
@@ -221,8 +212,8 @@ async def test_window_services_with_speed(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: speed},
+        CoverService.CLOSE,
+        {"entity_id": entity_id, CoverServiceArgument.SPEED: speed},
         blocking=True,
     )
     mock_window.close.assert_awaited_once_with(
@@ -231,8 +222,12 @@ async def test_window_services_with_speed(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_SPEED: speed, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {
+            "entity_id": entity_id,
+            CoverServiceArgument.SPEED: speed,
+            CoverServiceArgument.POSITION: 50,
+        },
         blocking=True,
     )
     mock_window.set_position.assert_awaited_once_with(
@@ -253,8 +248,8 @@ async def test_deprecated_speed_issue(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        CoverService.OPEN,
+        {"entity_id": "cover.test_window", CoverServiceArgument.SPEED: speed},
         blocking=True,
     )
 
@@ -276,8 +271,8 @@ async def test_standard_speed_no_issue(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        CoverService.OPEN,
+        {"entity_id": "cover.test_window", CoverServiceArgument.SPEED: speed},
         blocking=True,
     )
 
@@ -294,8 +289,8 @@ async def test_window_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -393,7 +388,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Open upper part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": upper_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": upper_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
         curtain="upper", velocity=None, wait_for_completion=False
@@ -401,7 +396,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Open lower part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": lower_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": lower_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
         curtain="lower", velocity=None, wait_for_completion=False
@@ -409,7 +404,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Open dual
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": dual_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": dual_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
         curtain="dual", velocity=None, wait_for_completion=False
@@ -417,7 +412,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Close upper part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": upper_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": upper_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
         curtain="upper", velocity=None, wait_for_completion=False
@@ -425,7 +420,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Close lower part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": lower_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": lower_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
         curtain="lower", velocity=None, wait_for_completion=False
@@ -433,7 +428,7 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Close dual
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": dual_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": dual_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
         curtain="dual", velocity=None, wait_for_completion=False
@@ -449,8 +444,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -465,8 +460,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -481,8 +476,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -552,7 +547,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
+        CoverService.OPEN_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -560,7 +555,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
+        CoverService.CLOSE_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -568,7 +563,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
+        CoverService.STOP_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -584,8 +579,8 @@ async def test_blind_set_cover_tilt_position_inversion(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {"entity_id": entity_id, ATTR_TILT_POSITION: 25},
+        CoverService.SET_TILT_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.TILT_POSITION: 25},
         blocking=True,
     )
 
@@ -717,7 +712,7 @@ async def test_cover_command_exception_handling(
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )

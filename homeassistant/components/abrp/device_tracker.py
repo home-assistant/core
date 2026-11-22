@@ -28,7 +28,7 @@ async def async_setup_entry(
     @callback
     def _add_new_trackers() -> None:
         entities: list[AbrpDeviceTracker] = []
-        for raw, _ in runtime.garage_coordinator.data:
+        for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
             if vehicle_id in added:
                 continue
