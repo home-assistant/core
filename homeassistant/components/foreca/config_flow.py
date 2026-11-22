@@ -128,7 +128,15 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config.longitude,
             )
             if not errors:
-                return self.async_update_reload_and_abort(
+                # The update listener reloads a loaded entry when the key changes
+                if (
+                    not reauth_entry.update_listeners
+                    or reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                ):
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return self.async_update_and_abort(
                     reauth_entry,
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )

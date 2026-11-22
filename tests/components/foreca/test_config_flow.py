@@ -11,7 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -20,6 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import init_integration
 
 USER_INPUT = {CONF_API_KEY: "test-key"}
 LOCATION_INPUT = {CONF_LOCATION: {CONF_LATITUDE: 60.17, CONF_LONGITUDE: 24.94}}
@@ -226,6 +228,32 @@ async def test_reauth(
     assert mock_config_entry.data == {CONF_API_KEY: "new-key"}
     mock_foreca_client.current.assert_awaited_once()
     mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.parametrize("api_key", ["new-key", "test-key"], ids=["new", "same"])
+async def test_reauth_loaded_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    api_key: str,
+) -> None:
+    """Test reauth reloads an entry that is loaded with its update listener."""
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_foreca_client.current.reset_mock()
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: api_key}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: api_key}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # One call checks the key, the others come from the reloaded coordinators
+    assert mock_foreca_client.current.await_count > 1
 
 
 @pytest.mark.parametrize(
