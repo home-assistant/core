@@ -10,8 +10,10 @@ from typing import Any
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    MockModule,
     async_capture_events,
     flush_store,
+    mock_integration,
 )
 
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
@@ -684,6 +686,46 @@ async def test_create_issue_config_entry_other_domain(
 
     issue = issue_registry.async_get_issue("test", "issue_1")
     assert issue.config_entry_id == entry.entry_id
+
+
+OWNER_CHANGE_WARNING = (
+    "Detected that integration 'test' re-creates repair issue 'issue_1' with a "
+    "different config entry than the one it is linked to, which moves the issue "
+    "to the new config entry; issue ids must be unique per config entry"
+)
+
+
+@pytest.mark.parametrize(
+    ("owners", "expected_warnings"),
+    [
+        pytest.param(["a", "b"], 1, id="a_to_b"),
+        pytest.param(["a", "b", "a", "b"], 1, id="a_to_b_to_a_to_b"),
+        pytest.param([None, "a"], 0, id="none_to_a"),
+        pytest.param(["a", "a"], 0, id="a_to_a"),
+        pytest.param(["a", None], 0, id="a_to_none"),
+        pytest.param([None, None], 0, id="none_to_none"),
+    ],
+)
+async def test_recreate_issue_with_other_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+    owners: list[str | None],
+    expected_warnings: int,
+) -> None:
+    """Test moving an issue to another config entry warns once but still moves it."""
+    mock_integration(hass, MockModule("test"))
+    entries = {key: MockConfigEntry(domain="test") for key in ("a", "b")}
+    for entry in entries.values():
+        entry.add_to_hass(hass)
+    entry_ids = [None if owner is None else entries[owner].entry_id for owner in owners]
+
+    for entry_id in entry_ids:
+        _create_issue(hass, "issue_1", config_entry_id=entry_id)
+
+    assert caplog.text.count(OWNER_CHANGE_WARNING) == expected_warnings
+    issue = issue_registry.async_get_issue("test", "issue_1")
+    assert issue.config_entry_id == entry_ids[-1]
 
 
 async def test_remove_config_entry_deletes_issues(

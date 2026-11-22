@@ -4,10 +4,15 @@ from datetime import timedelta
 from typing import Any, override
 
 from jellyfin_apiclient_python import JellyfinClient
+from jellyfin_apiclient_python.exceptions import HTTPException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
 
@@ -49,9 +54,21 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from Jellyfin."""
-        sessions = await self.hass.async_add_executor_job(
-            self.api_client.jellyfin.sessions
-        )
+        try:
+            sessions = await self.hass.async_add_executor_job(
+                self.api_client.jellyfin.sessions
+            )
+        except HTTPException as err:
+            if err.status == "ServerUnreachable":
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="server_unreachable",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err.status)},
+            ) from err
 
         if sessions is None:
             return {}

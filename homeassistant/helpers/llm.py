@@ -609,7 +609,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
+        return probatio.to_openapi(probatio.Schema([cv.CONDITION_SCHEMA]))
 
     if isinstance(schema, selector.ConstantSelector):
         return probatio.to_openapi(probatio.Schema(schema.config["value"]))

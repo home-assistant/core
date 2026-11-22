@@ -385,7 +385,7 @@
       "name": "News & social media"
     },
     "other_ecosystems": {
-      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Home and other platforms.",
       "name": "Other ecosystems"
     },
     "pets": {

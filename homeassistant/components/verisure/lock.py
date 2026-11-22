@@ -168,7 +168,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
     def _update_lock_attributes(self) -> None:
         """Update lock state, changed by, and method from coordinator data."""
-        lock_data = self.coordinator.data["locks"][self.serial_number]
+        if (
+            lock_data := self.coordinator.data["locks"].get(self.serial_number)
+        ) is None:
+            return
         self._attr_is_locked = lock_data["lockStatus"] == "LOCKED"
         self._attr_changed_by = lock_data.get("user", {}).get("name")
         self._changed_method = lock_data["lockMethod"]

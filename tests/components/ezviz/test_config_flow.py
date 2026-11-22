@@ -23,8 +23,13 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
+    CONF_CODE,
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -290,7 +295,6 @@ async def test_options_flow_cloud_has_no_encryption_password(
     [
         (InvalidURL, "invalid_host"),
         (InvalidHost, "cannot_connect"),
-        (EzvizAuthVerificationCode, "mfa_required"),
         (PyEzvizError, "invalid_auth"),
     ],
 )
@@ -382,7 +386,6 @@ async def test_user_flow_unknown_exception(
     [
         (InvalidURL, "invalid_host"),
         (InvalidHost, "cannot_connect"),
-        (EzvizAuthVerificationCode, "mfa_required"),
         (PyEzvizError, "invalid_auth"),
     ],
 )
@@ -642,7 +645,6 @@ async def test_camera_unknown_error(
     [
         (InvalidURL, "invalid_host"),
         (InvalidHost, "invalid_host"),
-        (EzvizAuthVerificationCode, "mfa_required"),
         (PyEzvizError, "invalid_auth"),
     ],
 )
@@ -762,7 +764,6 @@ async def test_reconfigure(
     [
         pytest.param(InvalidURL, "invalid_host", id="invalid_url"),
         pytest.param(InvalidHost, "cannot_connect", id="invalid_host"),
-        pytest.param(EzvizAuthVerificationCode, "mfa_required", id="mfa_required"),
         pytest.param(PyEzvizError, "invalid_auth", id="invalid_auth"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
@@ -812,3 +813,239 @@ async def test_reconfigure_camera_not_supported(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_camera_not_supported"
+
+
+async def _start_user_flow_until_mfa(
+    hass: HomeAssistant, mock_ezviz_client: MagicMock
+) -> ConfigFlowResult:
+    """Start the user flow for an account with 2FA enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_ezviz_client.login.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_URL: "apiieu.ezvizlife.com",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == {}
+
+    mock_ezviz_client.login.side_effect = None
+    return result
+
+
+async def test_user_flow_mfa(
+    hass: HomeAssistant,
+    mock_ezviz_client_class: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the user flow of an account with 2FA enabled."""
+    mock_ezviz_client = mock_ezviz_client_class.return_value
+    result = await _start_user_flow_until_mfa(hass, mock_ezviz_client)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: " 123456 "}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {
+        CONF_SESSION_ID: "fake_token",
+        CONF_RFSESSION_ID: "fake_rf_token",
+        CONF_URL: "apiieu.ezvizlife.com",
+        CONF_TYPE: ATTR_TYPE_CLOUD,
+    }
+    assert result["result"].unique_id == "test-username"
+    # The code must be sent with the client that requested it.
+    mock_ezviz_client_class.assert_called_once()
+    mock_ezviz_client.login.assert_called_with(sms_code=123456)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_custom_url_mfa(
+    hass: HomeAssistant, mock_ezviz_client: MagicMock
+) -> None:
+    """Test the custom url flow of an account with 2FA enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_URL: CONF_CUSTOMIZE,
+        },
+    )
+
+    mock_ezviz_client.login.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "test-user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    mock_ezviz_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["result"].unique_id == "test-username"
+
+
+@pytest.mark.parametrize(
+    ("exception", "code", "error"),
+    [
+        pytest.param(PyEzvizError, "123456", "invalid_mfa_code", id="invalid_code"),
+        pytest.param(
+            EzvizAuthVerificationCode, "123456", "invalid_mfa_code", id="expired_code"
+        ),
+        pytest.param(None, "abc123", "invalid_mfa_code", id="not_numeric"),
+        pytest.param(InvalidURL, "123456", "invalid_host", id="invalid_url"),
+        pytest.param(InvalidHost, "123456", "cannot_connect", id="invalid_host"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_mfa_errors(
+    hass: HomeAssistant,
+    mock_ezviz_client: MagicMock,
+    exception: type[Exception] | None,
+    code: str,
+    error: str,
+) -> None:
+    """Test the verification code step recovers from errors."""
+    result = await _start_user_flow_until_mfa(hass, mock_ezviz_client)
+
+    mock_ezviz_client.login.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: code}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == {"base": error}
+
+    mock_ezviz_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "test-username"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_mfa_unknown_exception(
+    hass: HomeAssistant, mock_ezviz_client: MagicMock
+) -> None:
+    """Test the verification code step aborts on an unexpected error."""
+    result = await _start_user_flow_until_mfa(hass, mock_ezviz_client)
+
+    mock_ezviz_client.login.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_mfa_cloud_account_added_meanwhile(
+    hass: HomeAssistant,
+    mock_ezviz_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the verification code step aborts if a cloud account was added."""
+    result = await _start_user_flow_until_mfa(hass, mock_ezviz_client)
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_account"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_mfa(
+    hass: HomeAssistant,
+    mock_ezviz_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication of an account with 2FA enabled."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_ezviz_client.login.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    mock_ezviz_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_SESSION_ID: "fake_token",
+        CONF_RFSESSION_ID: "fake_rf_token",
+        CONF_URL: "apiieu.ezvizlife.com",
+        CONF_TYPE: ATTR_TYPE_CLOUD,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_mfa(
+    hass: HomeAssistant,
+    mock_ezviz_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an account with 2FA enabled."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_ezviz_client.login.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password", CONF_URL: "apiieu.ezvizlife.com"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    mock_ezviz_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_SESSION_ID] == "fake_token"

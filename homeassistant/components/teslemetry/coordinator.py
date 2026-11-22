@@ -8,7 +8,6 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
@@ -26,6 +25,11 @@ from tesla_fleet_api.router import (
     merge_live_status,
     merge_site_info,
 )
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallClient,
+    PowerwallEnergySite,
+    PowerwallError,
+)
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
@@ -36,11 +40,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
-
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
+
+if TYPE_CHECKING:
+    from .models import TeslemetryConfigEntry
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -304,7 +308,11 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 if not self._local_reached:
                     self._local_reached = True
                     ir.async_delete_issue(
-                        self.hass, DOMAIN, gateway_issue_id(self.api.energy_site_id)
+                        self.hass,
+                        DOMAIN,
+                        gateway_issue_id(
+                            self.config_entry.entry_id, self.api.energy_site_id
+                        ),
                     )
             self.data = self._merged()
             # Not async_set_updated_data: availability stays with the stream.

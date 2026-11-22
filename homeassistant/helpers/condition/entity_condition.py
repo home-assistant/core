@@ -53,10 +53,10 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import BaseUnitConverter
 
+from .models import Condition, ConditionCheckParams, ConditionConfig
+
 if TYPE_CHECKING:
     from homeassistant.components.recorder import Recorder
-
-from .models import Condition, ConditionCheckParams, ConditionConfig
 
 _LOGGER = logging.getLogger(__name__)
 

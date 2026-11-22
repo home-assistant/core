@@ -1,5 +1,6 @@
 """Test the System Bridge integration."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 import logging
@@ -9,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -16,12 +18,16 @@ from systembridgeconnector.exceptions import (
     DataMissingException,
 )
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.keys import KeyClient, NewKey
 from systembridgeconnector.models.modules import GetData, Module, ModulesData
+from systembridgeconnector.models.modules.system import DeviceInfo
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN, GET_DATA_WAIT_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -31,10 +37,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
-from . import FIXTURE_USER_INPUT, FIXTURE_UUID
+from . import FIXTURE_KEY, FIXTURE_OLD_TOKEN, FIXTURE_USER_INPUT, FIXTURE_UUID
 
 
 @pytest.mark.usefixtures("mock_version")
@@ -57,6 +67,73 @@ async def test_entry_setup_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_websocket_client.close.assert_awaited_once()
+
+
+async def _setup_with_old_token(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up an entry that still holds the token from before keys."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_TOKEN: FIXTURE_OLD_TOKEN},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchanges_old_token(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry with the token from before keys trades it for a key."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        return_value=NewKey(
+            key=FIXTURE_KEY,
+            client=KeyClient(id="ha", name="Home", kind="home-assistant"),
+        ),
+    ) as mock_exchange:
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_KEY
+    assert mock_exchange.call_args.args[0].kind == "home-assistant"
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchange_refused(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a token System Bridge turns away asks to sign in again."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        side_effect=AuthenticationException,
+    ):
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+
+
+@pytest.mark.parametrize("side_effect", [ConnectionErrorException, TimeoutError])
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_setup_exchange_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+) -> None:
+    """Test an exchange that can't reach System Bridge is tried again."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient.exchange_key",
+        side_effect=side_effect,
+    ):
+        await _setup_with_old_token(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_OLD_TOKEN
 
 
 @pytest.mark.parametrize(
@@ -113,6 +190,41 @@ async def test_setup_without_audio_data(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "device_info",
+    [
+        pytest.param(FIXTURE_SYSTEM.device_info, id="dmi"),
+        pytest.param(replace(FIXTURE_SYSTEM.device_info, model=None), id="board"),
+        pytest.param(None, id="no_dmi"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    device_info: DeviceInfo | None,
+) -> None:
+    """Test the device's manufacturer, model and hardware version come from DMI."""
+    system = replace(FIXTURE_SYSTEM, device_info=device_info)
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, system=system
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    # The mocked listener sends the system data again before the platforms load
+    with patch("tests.components.system_bridge.FIXTURE_SYSTEM", system):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_UUID), mock_config_entry.entry_id
+    )
+    assert device == snapshot
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
@@ -315,23 +427,28 @@ async def test_version_check_failure(
     assert mock_config_entry.state is expected_state
 
 
-async def test_unsupported_version_creates_issue(
+@pytest.mark.usefixtures("mock_websocket_client")
+async def test_unsupported_version_issue_deleted_once_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test an issue is raised when the System Bridge version is unsupported."""
+    """Test the unsupported version issue goes once the host is updated."""
+    issue_id = f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
     mock_version.check_supported.return_value = False
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
-    )
+    mock_version.check_supported.return_value = True
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("mock_version")
@@ -512,6 +629,275 @@ async def test_reconnect_backoff_and_logging(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert register.await_count == calls + 7
+
+
+@pytest.mark.parametrize(
+    "power_state",
+    [
+        pytest.param(PowerState.SLEEPING, id="sleeping"),
+        pytest.param(PowerState.SHUTTING_DOWN, id="shutting_down"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    power_state: PowerState,
+) -> None:
+    """Test the host going to sleep or shutting down is unavailable at once."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=power_state))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_websocket_client.close.assert_awaited_once()
+
+    # A repeated event during the same outage isn't logged again
+    await power_state_callback(PowerStateEvent(state=power_state))
+    await hass.async_block_till_done()
+    assert f"TestSystem is unavailable: {power_state}" in caplog.text
+
+    # Asking for an update before the host has gone doesn't reconnect
+    assert await async_setup_component(hass, "homeassistant", {})
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "update.hostname"},
+        blocking=True,
+    )
+    assert register.await_count == calls
+
+    # Reconnects fail quietly while the host is away
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
+    mock_websocket_client.register_data_listener.side_effect = ConnectionErrorException
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
+    mock_websocket_client.connect.side_effect = None
+    mock_websocket_client.register_data_listener.side_effect = None
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert caplog.text.count("TestSystem is available again") == 1
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_during_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a sleep event while registering doesn't report the host as back."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    mock_websocket_client.connected = False
+
+    async def register_then_sleep(*args: Any) -> None:
+        await coordinator.async_handle_power_state(
+            PowerStateEvent(state=PowerState.SLEEPING)
+        )
+
+    mock_websocket_client.register_data_listener.side_effect = register_then_sleep
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "TestSystem is available again" not in caplog.text
+
+    # The next attempt backs off to 60 seconds
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 1
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_while_fetching_commands(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a sleep event while fetching commands doesn't report the host as back."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    fetching = asyncio.Event()
+    slept = asyncio.Event()
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        notification_event_callback: Any = None,
+        power_state_callback: Any = None,
+        settings_callback: Any = None,
+    ) -> None:
+        await fetching.wait()
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        slept.set()
+        await asyncio.Event().wait()
+
+    async def fetch_until_closed() -> None:
+        fetching.set()
+        await slept.wait()
+        raise ConnectionClosedException("Connection closed")
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.get_commands.side_effect = fetch_until_closed
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "TestSystem is available again" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_while_waiting_for_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sleep event stops a registration still waiting for its response."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registering = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def register_without_response(*args: Any) -> None:
+        registering.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        notification_event_callback: Any = None,
+        power_state_callback: Any = None,
+        settings_callback: Any = None,
+    ) -> None:
+        await registering.wait()
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        await asyncio.Event().wait()
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.register_data_listener.side_effect = register_without_response
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert cancelled.is_set()
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_from_running_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sleep event from the listener closes the socket after it cancels."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        notification_event_callback: Any = None,
+        power_state_callback: Any = None,
+        settings_callback: Any = None,
+    ) -> None:
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        await asyncio.Event().wait()
+
+    closed = asyncio.Event()
+
+    async def close() -> None:
+        # Yield so closing from the cancelled listener itself would be interrupted
+        await asyncio.sleep(0)
+        closed.set()
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.close.side_effect = close
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.listen_task.cancelled()
+    assert closed.is_set()
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_power_state_resumed_ignored(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the host waking while connected changes nothing."""
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=PowerState.RESUMED))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    mock_websocket_client.close.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("init_integration")

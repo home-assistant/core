@@ -19,6 +19,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
+from .frame import ReportBehavior, report_usage
 from .registry import BaseRegistry
 from .singleton import singleton
 from .storage import Store
@@ -338,6 +339,20 @@ class IssueRegistry(BaseRegistry):
                 ),
             )
         else:
+            if (
+                issue.config_entry_id is not None
+                and config_entry_id is not None
+                and config_entry_id != issue.config_entry_id
+            ):
+                # Entry ids are kept out of the message so report_usage dedupes
+                # per issue
+                report_usage(
+                    f"re-creates repair issue '{issue_id}' with a different config "
+                    "entry than the one it is linked to, which moves the issue to "
+                    "the new config entry; issue ids must be unique per config entry",
+                    core_behavior=ReportBehavior.LOG,
+                    integration_domain=domain,
+                )
             replacement = dataclasses.replace(
                 issue,
                 active=True,

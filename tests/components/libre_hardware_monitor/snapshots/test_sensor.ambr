@@ -93,7 +93,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'load',
     'unique_id': 'test_entry_id_amdcpu-0-load-0',
     'unit_of_measurement': '%',
   })
@@ -509,7 +509,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-0',
     'unit_of_measurement': 'RPM',
   })
@@ -625,7 +625,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-1',
     'unit_of_measurement': 'RPM',
   })
@@ -681,7 +681,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': 'test_entry_id_lpc-nct6687d-0-fan-2',
     'unit_of_measurement': None,
   })
@@ -916,7 +916,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'load',
     'unique_id': 'test_entry_id_gpu-nvidia-0-load-0',
     'unit_of_measurement': '%',
   })
@@ -1032,7 +1032,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': 'test_entry_id_gpu-nvidia-0-fan-1',
     'unit_of_measurement': 'RPM',
   })
@@ -1088,7 +1088,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': 'test_entry_id_gpu-nvidia-0-fan-2',
     'unit_of_measurement': 'RPM',
   })
@@ -1264,7 +1264,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'load',
     'unique_id': 'test_entry_id_gpu-nvidia-0-load-1',
     'unit_of_measurement': '%',
   })
@@ -1443,7 +1443,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'load',
     'unique_id': 'test_entry_id_gpu-nvidia-0-load-2',
     'unit_of_measurement': '%',
   })

@@ -1,0 +1,72 @@
+"""Fixtures for the MeteoAlarm integration."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.meteoalarm.const import CONF_PROVINCE, DOMAIN
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
+
+ALERT = {
+    "language": "en-GB",
+    "category": "Met",
+    "event": "Moderate wind warning",
+    "responseType": "Monitor",
+    "urgency": "Future",
+    "severity": "Moderate",
+    "certainty": "Likely",
+    "effective": "2026-01-01T08:00:00+00:00",
+    "onset": "2026-01-01T10:00:00+00:00",
+    "expires": "2026-01-01T18:00:00+00:00",
+    "senderName": "Test weather service",
+    "headline": "Moderate wind warning. Test province",
+    "description": "Maximum gusts of 70 km/h.",
+    "instruction": "Be prepared.",
+    "awareness_level": "2; yellow; Moderate",
+    "awareness_type": "1; Wind",
+    "identifier": "2.49.0.0.528.0.TEST.20260101080000.1",
+    "message_type": "Alert",
+    "references": None,
+    "sent": "2026-01-01T08:00:00+00:00",
+}
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.meteoalarm.async_setup_entry", return_value=None
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Test province",
+        unique_id="netherlands_test province_en-gb",
+        data={
+            CONF_COUNTRY: "netherlands",
+            CONF_PROVINCE: "Test province",
+            CONF_LANGUAGE: "en-GB",
+        },
+    )
+
+
+@pytest.fixture
+def mock_meteoalert() -> Generator[MagicMock]:
+    """Mock the Meteoalert client with an alert that is still valid."""
+    with (
+        patch(
+            "homeassistant.components.meteoalarm.Meteoalert", autospec=True
+        ) as mock_class,
+        patch(
+            "homeassistant.components.meteoalarm.config_flow.Meteoalert", new=mock_class
+        ),
+    ):
+        mock_class.return_value.get_alert.return_value = dict(ALERT)
+        yield mock_class

@@ -6,8 +6,6 @@ from datetime import time
 import logging
 from typing import Any, override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
@@ -96,9 +94,7 @@ def _build_entities(
 
     return [
         ViCareWater(
-            device.serial,
-            device.config,
-            device.api,
+            device,
             circuit,
         )
         for device in device_list
@@ -135,13 +131,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def __init__(
         self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(circuit.id, device_serial, device_config, device)
+        super().__init__(circuit.id, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
 

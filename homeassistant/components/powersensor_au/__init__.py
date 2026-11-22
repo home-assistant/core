@@ -50,7 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) 
     # ConfigEntryNotReady above cannot leave a stale platform registered.
     # Anything discovered before sensor.py connects its listeners is seeded
     # from dispatcher.plugs / dispatcher.sensors when it loads.
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        await devices.stop()
+        raise
 
 
 async def async_unload_entry(

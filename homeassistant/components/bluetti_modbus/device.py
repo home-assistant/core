@@ -26,6 +26,16 @@ def restricted_device(unit: ModbusUnit) -> Balco260:
     return device
 
 
+def bms_device(unit: ModbusUnit) -> Balco260:
+    """Return the power station restricted to its battery's BMS version.
+
+    Read once at setup: it only goes into the device's software version.
+    """
+    device = Balco260(unit)
+    device.restrict_fields({"b_ver_count", "b_ver_1"})
+    return device
+
+
 def pack_summary(unit: ModbusUnit) -> Balco260:
     """Return the pack summary read at the aggregate unit ID, 250.
 
