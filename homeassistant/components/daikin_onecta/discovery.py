@@ -87,10 +87,10 @@ def scalar_platform_for_point(
     if name == "onOffMode" and point.management_point_type == "climateControl":
         if point.air_purification is not None:
             return None
-        if characteristic.settable and set(characteristic.values or []) == {
-            "on",
-            "off",
-        }:
+        if not gateway_online or (
+            characteristic.settable
+            and set(characteristic.values or []) == {"on", "off"}
+        ):
             return Platform.SWITCH
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.

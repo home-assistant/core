@@ -147,15 +147,27 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("name", "settable", "expected_platform"),
+    ("name", "settable", "gateway_online", "expected_platform"),
     [
-        pytest.param("onOffMode", False, Platform.BINARY_SENSOR, id="read-only-power"),
-        pytest.param("onOffMode", True, Platform.SWITCH, id="writable-power"),
-        pytest.param("powerfulMode", False, Platform.SENSOR, id="boost"),
+        pytest.param(
+            "onOffMode",
+            False,
+            True,
+            Platform.BINARY_SENSOR,
+            id="read-only-power-online",
+        ),
+        pytest.param(
+            "onOffMode", False, False, Platform.SWITCH, id="read-only-power-offline"
+        ),
+        pytest.param("onOffMode", True, True, Platform.SWITCH, id="writable-power"),
+        pytest.param("powerfulMode", False, True, Platform.SENSOR, id="boost"),
     ],
 )
 def test_climate_control_without_supported_setpoint_is_exposed(
-    name: str, settable: bool, expected_platform: Platform
+    name: str,
+    settable: bool,
+    gateway_online: bool,
+    expected_platform: Platform,
 ) -> None:
     """Expose controls when no climate entity can own them."""
     point = ManagementPoint(
@@ -168,7 +180,12 @@ def test_climate_control_without_supported_setpoint_is_exposed(
     characteristic = point.scalar_characteristic(name)
     assert characteristic is not None
 
-    assert scalar_platform_for_point(point, name, characteristic) is expected_platform
+    assert (
+        scalar_platform_for_point(
+            point, name, characteristic, gateway_online=gateway_online
+        )
+        is expected_platform
+    )
 
 
 def test_settable_climate_power_without_setpoint_has_switch_description() -> None:
