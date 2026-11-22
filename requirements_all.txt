@@ -494,7 +494,7 @@ aiotedee==0.3.0
 aiothreema==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==2.1.0
+aiotractive==2.1.1
 
 # homeassistant.components.trimlight
 aiotrimlight==0.4.0
@@ -3090,7 +3090,7 @@ roonapi==0.1.6
 rova==0.4.1
 
 # homeassistant.components.rpi_power
-rpi-bad-power-ng==0.2.0
+rpi-bad-power==0.1.0
 
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.4.0
