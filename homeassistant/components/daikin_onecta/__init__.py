@@ -1,7 +1,5 @@
 """Platform for the Daikin AC."""
 
-from daikin_onecta import OnectaAccessTokenError, get_account_id
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -32,23 +30,6 @@ PLATFORMS = [
     Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
-
-
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
-) -> bool:
-    """Migrate older config entries to include their Daikin account ID."""
-    if config_entry.version == 1 and config_entry.minor_version == 1:
-        try:
-            unique_id = get_account_id(config_entry.data["token"]["access_token"])
-        except KeyError, OnectaAccessTokenError:
-            return False
-        hass.config_entries.async_update_entry(
-            config_entry,
-            minor_version=2,
-            unique_id=unique_id,
-        )
-    return True
 
 
 async def async_setup_entry(

@@ -12,7 +12,6 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.daikin_onecta import async_migrate_entry
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -27,28 +26,6 @@ _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER = (
     DOMAIN,
     "00000000-0000-4000-8000-000000000105_domesticHotWaterTank",
 )
-
-
-async def test_migrate_entry_adds_account_id_from_expired_token(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Migrate the account ID without requiring an unexpired access token."""
-    expired_data = {
-        **config_entry.data,
-        "token": {**config_entry.data["token"], "expires_at": 0},
-    }
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data=expired_data,
-        minor_version=1,
-        unique_id=None,
-        version=1,
-    )
-
-    assert await async_migrate_entry(hass, config_entry)
-
-    assert config_entry.unique_id == "1234567890"
-    assert config_entry.minor_version == 2
 
 
 async def test_setup_with_gateway_missing_management_points(
