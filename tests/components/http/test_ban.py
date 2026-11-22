@@ -428,6 +428,46 @@ async def test_unauthenticated_probe_does_not_notify(
     assert "Requested URL: '/api/config'" in caplog.text
 
 
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+async def test_unauthenticated_probe_still_triggers_ip_ban(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    method: str,
+) -> None:
+    """Anonymous read probes can be banned without generating login notifications."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        raise HTTPUnauthorized
+
+    app.router.add_get("/api/config", unauth_handler)
+    setup_bans(hass, app, 2)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)(str(remote_ip))
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    with patch("homeassistant.components.http.ban.open", mock_open(), create=True):
+        for _ in range(2):
+            response = await client.request(method, "/api/config")
+            assert response.status == HTTPStatus.UNAUTHORIZED
+
+        response = await client.request(method, "/api/config")
+        assert response.status == HTTPStatus.FORBIDDEN
+
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+    assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
+
+    notifications = async_get_persistent_notifications(hass)
+    assert "ip-ban" in notifications
+    assert "http-login" not in notifications
+
+
 @pytest.mark.parametrize(
     ("method", "headers", "path"),
     [
