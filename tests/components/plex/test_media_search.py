@@ -7,15 +7,14 @@ import pytest
 import requests_mock
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.components.plex.errors import MediaNotFound
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -33,11 +32,11 @@ async def test_media_lookups(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player_id,
-            ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
-            ATTR_MEDIA_CONTENT_ID: 1,
+            TargetKey.ENTITY_ID: media_player_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: DOMAIN,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: 1,
         },
         True,
     )
@@ -47,11 +46,11 @@ async def test_media_lookups(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
-                ATTR_MEDIA_CONTENT_ID: 123,
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: DOMAIN,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: 123,
             },
             True,
         )
@@ -71,11 +70,11 @@ async def test_media_lookups(
         plex_account_user.return_value.get_token.return_value = "token"
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "TV Shows",'
                     ' "show_name": "TV Show",'
                     ' "username": "Kids"}'
@@ -90,11 +89,11 @@ async def test_media_lookups(
     with pytest.raises(MediaNotFound) as excinfo:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Not a Library", "show_name": "TV Show"}'
                 ),
             },
@@ -108,11 +107,11 @@ async def test_media_lookups(
     ) as search:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "TV Shows", "show_name": "TV Show"}'
                 ),
             },
@@ -122,11 +121,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "TV Shows", "episode_name": "An Episode"}'
                 ),
             },
@@ -138,11 +137,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "TV Shows",'
                     ' "show_name": "TV Show",'
                     ' "season_number": 1}'
@@ -156,11 +155,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.EPISODE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.EPISODE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "TV Shows",'
                     ' "show_name": "TV Show",'
                     ' "season_number": 1,'
@@ -180,11 +179,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music", "artist_name": "Artist"}'
                 ),
             },
@@ -194,11 +193,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music", "album_name": "Album"}'
                 ),
             },
@@ -208,11 +207,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music",'
                     ' "artist_name": "Artist",'
                     ' "track_name": "Track 3"}'
@@ -226,11 +225,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music",'
                     ' "artist_name": "Artist",'
                     ' "album_name": "Album"}'
@@ -244,11 +243,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music",'
                     ' "artist_name": "Artist",'
                     ' "album_name": "Album",'
@@ -268,11 +267,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Music",'
                     ' "artist_name": "Artist",'
                     ' "album_name": "Album",'
@@ -293,11 +292,11 @@ async def test_media_lookups(
         # Movie searches
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Movies", "video_name": "Movie 1"}'
                 ),
             },
@@ -307,11 +306,11 @@ async def test_media_lookups(
 
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie 1"}',
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie 1"}',
             },
             True,
         )
@@ -320,11 +319,11 @@ async def test_media_lookups(
     with pytest.raises(MediaNotFound) as excinfo:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
-                ATTR_MEDIA_CONTENT_ID: '{"title": "Movie 1"}',
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"title": "Movie 1"}',
             },
             True,
         )
@@ -340,11 +339,11 @@ async def test_media_lookups(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Movies", "title": "Not a Movie"}'
                 ),
             },
@@ -355,11 +354,11 @@ async def test_media_lookups(
     # Playlist searches
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player_id,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-            ATTR_MEDIA_CONTENT_ID: '{"playlist_name": "Playlist 1"}',
+            TargetKey.ENTITY_ID: media_player_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"playlist_name": "Playlist 1"}',
         },
         True,
     )
@@ -367,11 +366,11 @@ async def test_media_lookups(
     with pytest.raises(MediaNotFound) as excinfo:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: '{"playlist_name": "Not a Playlist"}',
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"playlist_name": "Not a Playlist"}',
             },
             True,
         )
@@ -380,11 +379,11 @@ async def test_media_lookups(
     with pytest.raises(MediaNotFound) as excinfo:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: "{}",
+                TargetKey.ENTITY_ID: media_player_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "{}",
             },
             True,
         )

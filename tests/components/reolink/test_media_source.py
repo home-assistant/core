@@ -1,10 +1,13 @@
 """Tests for the Reolink media_source platform."""
 
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from reolink_aio.baichuan.media_decoder import HLS_PLAYLIST
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.typings import VOD_trigger
 
@@ -18,7 +21,6 @@ from homeassistant.components.media_source import (
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.reolink.media_source import VOD_SPLIT_TIME
-from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -58,21 +60,16 @@ TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
 TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000005"
 TEST_THUMBNAIL_TIME_BATTERY = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000000"
-TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
-TEST_MIME_TYPE_MP4 = "video/mp4"
-TEST_URL = "http:test_url&user=admin&password=test"
-TEST_URL2 = "http:test_url&token=test"
 
 
 @pytest.fixture(autouse=True)
 async def setup_component(hass: HomeAssistant) -> None:
     """Set up component."""
     assert await async_setup_component(hass, MEDIA_SOURCE_DOMAIN, {})
-    assert await async_setup_component(hass, MEDIA_STREAM_DOMAIN, {})
 
 
 async def test_platform_loads_before_config_entry(
@@ -90,7 +87,6 @@ async def test_resolve(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -100,41 +96,27 @@ async def test_resolve(
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
         f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
     )
-    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
-    play_media = await async_resolve_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
-    )
-    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+    async def stream_hls(*args: Any) -> AsyncGenerator[tuple[str, bytes]]:
+        yield HLS_PLAYLIST, b"playlist"
 
-    file_id = (
-        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-        f"|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
-    )
-    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
-
-    play_media = await async_resolve_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
-    )
-    assert play_media.mime_type == TEST_MIME_TYPE_MP4
-
-    reolink_host.is_nvr = False
-
-    play_media = await async_resolve_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
-    )
-    assert play_media.mime_type == TEST_MIME_TYPE_MP4
-
-    file_id = (
-        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
-    )
-    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    reolink_host.baichuan.stream_hls = MagicMock(side_effect=stream_hls)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
     )
     assert play_media.mime_type == TEST_MIME_TYPE
+    playback = config_entry.runtime_data.host.hls_playback
+    assert play_media.url == (
+        f"/api/reolink/hls/{config_entry.entry_id}/{playback.token}/{HLS_PLAYLIST}"
+    )
+    reolink_host.baichuan.stream_hls.assert_called_once_with(
+        int(TEST_CHANNEL),
+        datetime.strptime(TEST_START, "%Y%m%d%H%M%S"),
+        datetime.strptime(TEST_END, "%Y%m%d%H%M%S"),
+        TEST_STREAM,
+        "ffmpeg",
+    )
 
 
 async def test_browsing(
