@@ -38,6 +38,7 @@ from .const import (
     ATTR_AVAILABLE_SENSORS,
     DOMAIN,
     ECOBEE_AUX_HEAT_ONLY,
+    ECOBEE_HVAC_MODES,
     ECOBEE_MODEL_TO_NAME,
     LOGGER,
     MANUFACTURER,
@@ -59,10 +60,16 @@ HUMIDIFIER_MANUAL_MODE = "manual"
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
-        ("heat", HVACMode.HEAT),
-        ("cool", HVACMode.COOL),
-        ("auto", HVACMode.HEAT_COOL),
-        ("off", HVACMode.OFF),
+        (mode, hass_mode)
+        for mode, hass_mode in (
+            ("heat", HVACMode.HEAT),
+            ("cool", HVACMode.COOL),
+            ("auto", HVACMode.HEAT_COOL),
+            ("off", HVACMode.OFF),
+        )
+        if mode in ECOBEE_HVAC_MODES
+    ]
+    + [
         (ECOBEE_AUX_HEAT_ONLY, HVACMode.HEAT),
     ]
 )

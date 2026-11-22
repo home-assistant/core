@@ -12,13 +12,12 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from . import EcobeeConfigEntry, EcobeeData
-from .const import ECOBEE_AUX_HEAT_ONLY
+from .const import ECOBEE_AUX_HEAT_ONLY, ECOBEE_HVAC_MODES
 from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-ECOBEE_HVAC_MODES = frozenset({"auto", "cool", "heat", "off"})
 
 
 async def async_setup_entry(
@@ -117,9 +116,9 @@ class EcobeeAuxHeatOnlyExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize restored auxiliary heat data."""
-        if (
-            hvac_mode := restored.get("hvac_mode_before_aux_heat")
-        ) not in ECOBEE_HVAC_MODES:
+        if not isinstance(hvac_mode := restored.get("hvac_mode_before_aux_heat"), str):
+            return None
+        if hvac_mode not in ECOBEE_HVAC_MODES:
             return None
         return cls(hvac_mode)
 
@@ -139,15 +138,13 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
         self._attr_unique_id = f"{self.base_unique_id}_aux_heat_only"
 
         self._last_hvac_mode_before_aux_heat: str | None = None
-        self._is_aux_heat_only = False
         self.update_without_throttle = False
 
     @override
     async def async_added_to_hass(self) -> None:
         """Restore the previous HVAC mode when auxiliary heat was active."""
         await super().async_added_to_hass()
-        self._is_aux_heat_only = self.is_on
-        if not self._is_aux_heat_only:
+        if not self.is_on:
             return
         if not (extra_data := await self.async_get_last_extra_data()):
             _LOGGER.warning(
@@ -176,25 +173,31 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
-        if self._is_aux_heat_only:
+        if self.is_on:
             return
         hvac_mode = self.thermostat["settings"]["hvacMode"]
-        if hvac_mode != ECOBEE_AUX_HEAT_ONLY:
-            self._last_hvac_mode_before_aux_heat = hvac_mode
+        if hvac_mode == ECOBEE_AUX_HEAT_ONLY:
+            return
+        self._last_hvac_mode_before_aux_heat = hvac_mode
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
         self.update_without_throttle = True
-        self._is_aux_heat_only = True
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
-        if not self._is_aux_heat_only or self._last_hvac_mode_before_aux_heat is None:
+        if not self.is_on:
             return
-        self.data.ecobee.set_hvac_mode(
-            self.thermostat_index, self._last_hvac_mode_before_aux_heat
-        )
+        hvac_mode = self._last_hvac_mode_before_aux_heat
+        if hvac_mode is None:
+            hvac_mode = "auto"
+            _LOGGER.warning(
+                "No previous HVAC mode saved for %s; falling back to %s",
+                self.entity_id,
+                hvac_mode,
+            )
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, hvac_mode)
         self.update_without_throttle = True
-        self._is_aux_heat_only = False
+        self._last_hvac_mode_before_aux_heat = None
 
     async def async_update(self) -> None:
         """Update the switch state from the thermostat."""
@@ -203,11 +206,6 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity, RestoreEntity):
             self.update_without_throttle = False
         else:
             await self.data.update()
-        if self.is_on:
-            self._is_aux_heat_only = True
-            return
-        self._is_aux_heat_only = False
-        self._last_hvac_mode_before_aux_heat = None
 
     @property
     @override
