@@ -105,7 +105,9 @@ async def async_setup_entry(
 
     device_coordinator = None
     if all(scope in scopes for scope in api_client.paired_devices.required_read_scopes):
-        device_coordinator = GoogleHealthDeviceCoordinator(hass, entry, api_client)
+        device_coordinator = GoogleHealthDeviceCoordinator(
+            hass, entry, api_client, semaphore
+        )
         await device_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GoogleHealthData(

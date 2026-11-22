@@ -65,6 +65,63 @@ class GoogleHealthActivityData:
     active_zone_minutes: ActiveZoneMinutesRollupValue | None = None
     sedentary_period: SedentaryPeriodRollupValue | None = None
 
+    @property
+    def elevation_meters(self) -> float:
+        """Return daily elevation gain in meters."""
+        if self.altitude and self.altitude.gain_millimeters_sum:
+            return self.altitude.gain_millimeters_sum / 1000.0
+        return 0.0
+
+    def active_minutes_for(self, level: str) -> int:
+        """Return daily active duration in minutes for an activity level."""
+        if not self.active_minutes:
+            return 0
+        return next(
+            (
+                item.active_minutes_sum
+                for item in self.active_minutes.active_minutes_rollup_by_activity_level
+                if item.activity_level == level and item.active_minutes_sum is not None
+            ),
+            0,
+        )
+
+    @property
+    def fat_burn_active_zone_minutes(self) -> int:
+        """Return daily fat burn active zone minutes."""
+        if self.active_zone_minutes:
+            return self.active_zone_minutes.sum_in_fat_burn_heart_zone or 0
+        return 0
+
+    @property
+    def cardio_active_zone_minutes(self) -> int:
+        """Return daily cardio active zone minutes."""
+        if self.active_zone_minutes:
+            return self.active_zone_minutes.sum_in_cardio_heart_zone or 0
+        return 0
+
+    @property
+    def peak_active_zone_minutes(self) -> int:
+        """Return daily peak active zone minutes."""
+        if self.active_zone_minutes:
+            return self.active_zone_minutes.sum_in_peak_heart_zone or 0
+        return 0
+
+    @property
+    def total_active_zone_minutes(self) -> int:
+        """Return total daily active zone minutes across all heart rate zones."""
+        return (
+            self.fat_burn_active_zone_minutes
+            + self.cardio_active_zone_minutes
+            + self.peak_active_zone_minutes
+        )
+
+    @property
+    def sedentary_minutes(self) -> float:
+        """Return daily sedentary duration in minutes."""
+        if self.sedentary_period and self.sedentary_period.duration_sum:
+            return self.sedentary_period.duration_sum.total_seconds() / 60.0
+        return 0.0
+
 
 @dataclass
 class GoogleHealthBodyData:
@@ -86,11 +143,11 @@ class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         update_interval: timedelta,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore | None = None,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         self.api = api_client
-        self._semaphore = semaphore or asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+        self._semaphore = semaphore
         super().__init__(
             hass,
             logger,
@@ -135,7 +192,7 @@ class GoogleHealthActivityCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore | None = None,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -227,7 +284,7 @@ class GoogleHealthBodyCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore | None = None,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -281,6 +338,7 @@ class GoogleHealthDeviceCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -290,6 +348,7 @@ class GoogleHealthDeviceCoordinator(
             update_interval=DEVICE_POLLING_INTERVAL,
             entry=entry,
             api_client=api_client,
+            semaphore=semaphore,
         )
 
     @override
@@ -321,7 +380,7 @@ class GoogleHealthSleepCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore | None = None,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -368,7 +427,7 @@ class GoogleHealthNutritionCoordinator(
         hass: HomeAssistant,
         entry: GoogleHealthConfigEntry,
         api_client: GoogleHealthApi,
-        semaphore: asyncio.Semaphore | None = None,
+        semaphore: asyncio.Semaphore,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
