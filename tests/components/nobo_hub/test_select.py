@@ -22,7 +22,7 @@ from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
 
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"
-PROFILE_ENTITY = "select.living_room_living_room_week_profile"
+PROFILE_ENTITY = "select.living_room_heating_week_profile"
 
 
 @pytest.fixture

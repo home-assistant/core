@@ -77,6 +77,26 @@
       ]),
       'type': 'object',
     }),
+    'config__get_flows_in_progress': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': 'Filter in-progress flows by integration domain.',
+        }),
+      }),
+      'type': 'object',
+    }),
     'config__reload_config_entry': dict({
       'additionalProperties': False,
       'properties': dict({

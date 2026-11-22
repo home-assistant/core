@@ -629,11 +629,11 @@ async def test_reconfigure_flow_success(
 async def test_reconfigure_flow_config_unchanged_loaded(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure skips connection testing if loaded config is unchanged."""
     await setup_integration(hass, mock_config_entry)
+    mock_satel.connect.reset_mock()  # Setup already called connect, reset the mock to check for new calls
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -648,10 +648,8 @@ async def test_reconfigure_flow_config_unchanged_loaded(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == MOCK_CONFIG_DATA
-    assert mock_satel.connect.call_count == 0
-
     await hass.async_block_till_done()
-    assert mock_setup_entry.call_count == 1
+    mock_satel.connect.assert_not_called()
 
 
 async def test_reconfigure_flow_config_unchanged_not_loaded(
@@ -678,6 +676,28 @@ async def test_reconfigure_flow_config_unchanged_not_loaded(
     assert mock_config_entry.data == MOCK_CONFIG_DATA
     assert mock_satel.connect.call_count == 1
     assert mock_setup_entry.call_count == 1
+
+
+async def test_reconfigure_flow_uses_update_listener(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Changed configuration notifies the registered update listener."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    new_data = {**mock_config_entry.data, CONF_PORT: 4321}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], new_data)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == new_data
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
