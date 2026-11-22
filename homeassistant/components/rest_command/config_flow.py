@@ -169,9 +169,9 @@ def _is_server_url(url: str) -> bool:
         cv.url(url)
     except probatio.Invalid, ValueError:
         return False
-    parsed = urlparse(url)
+    # The path is appended, so even an empty query or fragment would swallow it.
     # Credentials belong in the authentication section, not in the entry title
-    return not (parsed.query or parsed.fragment or "@" in parsed.netloc)
+    return not ("?" in url or "#" in url or "@" in urlparse(url).netloc)
 
 
 def _validate(
