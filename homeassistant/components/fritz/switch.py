@@ -101,6 +101,10 @@ async def _migrate_to_new_unique_id(
         new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{network['switch_name']}"
 
         if old_unique_id == new_unique_id:
+            LOGGER.debug(
+                "Skip migration of Wi-Fi switch for %s, as it already fits the new id",
+                description,
+            )
             continue
 
         entity_id = entity_registry.async_get_entity_id(
