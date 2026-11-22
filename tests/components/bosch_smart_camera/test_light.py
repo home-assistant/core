@@ -357,3 +357,23 @@ async def test_light_unreachable_and_recovery_logged_once(
     await hass.async_block_till_done()
 
     assert caplog.text.count("is reachable again") == 1
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_removed_cameras_are_forgotten_by_the_light_tracking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator._light_unreachable.add("removed")
+    coordinator._light_writes["removed"] = 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "removed" not in coordinator._light_unreachable
+    assert "removed" not in coordinator._light_writes

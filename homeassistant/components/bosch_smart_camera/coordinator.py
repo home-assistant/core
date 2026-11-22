@@ -147,6 +147,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def _async_update_light_states(self, cameras: list[Camera]) -> None:
         """Poll the light of each Gen1 outdoor camera, isolating failures."""
+        # Forget removed cameras so a camera that comes back is logged again.
+        listed = {camera.id for camera in cameras}
+        self._light_unreachable &= listed
+        for camera_id in self._light_writes.keys() - listed:
+            del self._light_writes[camera_id]
         polled: dict[str, tuple[int, LightState | None]] = {}
         for camera in cameras:
             if camera.model is not CameraModel.EYES_OUTDOOR:
