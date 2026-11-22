@@ -2357,6 +2357,46 @@ async def test_climate_temperature_rounding_is_anchored_to_minimum(
     )
 
 
+async def test_climate_negative_half_step_rounds_away_from_zero(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Round negative half-step targets away from zero with a native minimum."""
+    (
+        entity_id,
+        gateway_id,
+        point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert point.climate_control is not None
+    setpoint = point.climate_control.setpoint("roomTemperature", "heating")
+    assert setpoint is not None
+    setpoint.min_value = -10
+    setpoint.step_value = 1
+    setpoint.value = -4
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    mock_onecta_client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, "temperature": -2.5},
+        blocking=True,
+    )
+
+    assert setpoint.value == -3
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway_id,
+        point.embedded_id,
+        "temperatureControl",
+        -3,
+        path="/operationModes/heating/setpoints/roomTemperature",
+    )
+
+
 async def test_humidification_is_not_reported_as_dry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
