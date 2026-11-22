@@ -45,7 +45,11 @@ async def test_call_command_from_entry(
     entry = _entry(
         {
             "additional": {
-                "headers": {"Authorization": "Bearer token", "X-Api-Version": "1"}
+                "headers": {
+                    "Authorization": "Bearer token",
+                    "X-Api-Version": "1",
+                    "content-type": "text/plain",
+                }
             }
         },
         open_door={
@@ -82,6 +86,7 @@ async def test_call_command_from_entry(
     assert headers["X-Door"] == "front"
     assert headers["Authorization"] == "Bearer token"
     assert CIMultiDict(headers).getall("X-Api-Version") == ["2"]
+    assert CIMultiDict(headers).getall("Content-Type") == ["application/json"]
 
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:

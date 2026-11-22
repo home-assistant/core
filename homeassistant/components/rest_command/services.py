@@ -108,6 +108,12 @@ def async_register_rest_command(
             )
 
         if content_type:
+            # Wins over a Content-Type header in any case, like from the server
+            headers = {
+                name: value
+                for name, value in headers.items()
+                if name.lower() != hdrs.CONTENT_TYPE.lower()
+            }
             headers[hdrs.CONTENT_TYPE] = content_type
 
         _LOGGER.debug(
