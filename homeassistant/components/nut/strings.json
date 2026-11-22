@@ -102,7 +102,7 @@
       "test_system_start": "Start a system test"
     },
     "extra_fields": {
-      "value": "Value"
+      "parameter": "Optional parameter"
     }
   },
   "entity": {

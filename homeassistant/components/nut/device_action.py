@@ -14,14 +14,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 from .coordinator import NutConfigEntry, NutRuntimeData
 
-CONF_VALUE = "value"
+CONF_PARAM = "parameter"
 
 ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
-        probatio.Optional(CONF_VALUE): cv.string,
+        probatio.Optional(CONF_PARAM): cv.string,
     }
 )
 
@@ -46,7 +46,7 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, probatio.Schema]:
     """List action capabilities."""
-    return {"extra_fields": probatio.Schema({probatio.Optional(CONF_VALUE): cv.string})}
+    return {"extra_fields": probatio.Schema({probatio.Optional(CONF_PARAM): cv.string})}
 
 
 async def async_call_action_from_config(
@@ -63,7 +63,7 @@ async def async_call_action_from_config(
     if runtime_data := _get_runtime_data_from_device_id_exception_on_failure(
         hass, device_id
     ):
-        await runtime_data.data.async_run_command(command_name, config.get(CONF_VALUE))
+        await runtime_data.data.async_run_command(command_name, config.get(CONF_PARAM))
 
 
 def _get_device_action_name(command_name: str) -> str:
