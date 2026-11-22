@@ -1829,6 +1829,16 @@ async def test_climate_platform_services_and_management_points(
             id="step-anchored-to-native-minimum",
         ),
         pytest.param(
+            METRIC_SYSTEM,
+            -2.5,
+            1,
+            -10,
+            -4,
+            -3,
+            True,
+            id="negative-halfway-with-native-minimum",
+        ),
+        pytest.param(
             METRIC_SYSTEM, 24.4, None, None, 20, 24.5, True, id="default-step"
         ),
         pytest.param(METRIC_SYSTEM, 10.4, 3, None, 20, 10, True, id="clamp-to-minimum"),
