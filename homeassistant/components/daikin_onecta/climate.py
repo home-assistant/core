@@ -220,9 +220,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 self._raise_service_validation_error(unavailable_key)
             if not await self._async_execute_climate_command(set_mode):
                 return False
-            if (state := get_state()) is None:
-                return True
-            current_mode, fixed = state
             current_mode.value = FANMODE_FIXED
             # Keep the confirmed mode if the subsequent position write fails.
             self._publish_write_update()
