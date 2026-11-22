@@ -5,7 +5,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
 
-from aioanylist import AuthenticationError, TransportError
+from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -151,6 +151,12 @@ async def test_reauth_flow(
 ) -> None:
     """Test reauthentication updates the tokens of the entry."""
     mock_config_entry.add_to_hass(hass)
+    mock_anylist_client.sign_in.return_value = AuthTokens(
+        user_id=USER_ID,
+        access_token="new-access-token",
+        refresh_token="new-refresh-token",
+        user_locale="de-DE",
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -166,9 +172,9 @@ async def test_reauth_flow(
     assert mock_config_entry.data == {
         CONF_EMAIL: EMAIL,
         CONF_CLIENT_ID: CLIENT_ID,
-        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-        CONF_REFRESH_TOKEN: REFRESH_TOKEN,
-        CONF_USER_LOCALE: USER_LOCALE,
+        CONF_ACCESS_TOKEN: "new-access-token",
+        CONF_REFRESH_TOKEN: "new-refresh-token",
+        CONF_USER_LOCALE: "de-DE",
     }
     mock_anylist_client.sign_in.assert_awaited_once_with(EMAIL, PASSWORD)
     mock_anylist_client.close.assert_awaited_once()
