@@ -106,11 +106,7 @@ class FuelpricesDkSensor(CoordinatorEntity[FuelPricesDKCoordinator], RestoreSens
     @override
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return (
-            super().available
-            and (station := self.coordinator.data.get(self._station_id)) is not None
-            and self._product_key in station.prices
-        )
+        return super().available and self._station_id in self.coordinator.data
 
     @property
     @override
