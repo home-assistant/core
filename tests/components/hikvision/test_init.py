@@ -1,24 +1,30 @@
 """Test Hikvision integration setup and unload."""
 
 import logging
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import uuid
 from xml.etree.ElementTree import ParseError
 
 from freezegun.api import FrozenDateTimeFactory
+from pyhik.isapi import ISAPIAuthError, ISAPIError, ISAPINotSupportedError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests
 
+from homeassistant.components.hikvision import EVENT_PLATFORMS, PLATFORMS
 from homeassistant.components.hikvision.const import CONF_RANDOM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
 from homeassistant.helpers import (
@@ -29,6 +35,8 @@ from homeassistant.helpers import (
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID, TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
+
+HLC_SWITCH = "switch.front_camera_highlight_compensation"
 
 
 async def test_setup_and_unload_entry(
@@ -65,6 +73,97 @@ async def test_stream_stopped_on_shutdown(
     await hass.async_block_till_done()
 
     mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_unload_after_shutdown_logs_no_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an entry unloaded once Home Assistant stopped removes its listener cleanly.
+
+    A setup that fails or is cancelled while Home Assistant stops is unloaded after
+    the stop listener has run.
+    """
+    await setup_integration(hass, mock_config_entry)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert "Unable to remove unknown job listener" not in caplog.text
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_image_settings_client_closed_on_shutdown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the image settings client is closed when Home Assistant stops.
+
+    Home Assistant does not unload the entry when it stops.
+    """
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.image_coordinator
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+    mock_image_settings.close.assert_called_once()
+    assert coordinator.closed
+
+
+async def test_image_settings_discovered_while_shutting_down_are_closed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a client that the stop did not find yet is closed once discovered."""
+    read = mock_image_settings.get_image_settings.side_effect
+    settings = mock_image_settings.get_image_settings.return_value
+
+    def _stop_meanwhile(*args: object, **kwargs: object) -> object:
+        hass.loop.call_soon_threadsafe(hass.set_state, CoreState.stopping)
+        return settings if read is None else read(*args, **kwargs)
+
+    mock_image_settings.get_image_settings.side_effect = _stop_meanwhile
+    await setup_integration(hass, mock_config_entry)
+    hass.set_state(CoreState.running)
+
+    assert mock_config_entry.runtime_data.image_coordinator is None
+    mock_image_settings.close.assert_called_once()
+
+
+async def test_image_settings_read_while_shutting_down_are_closed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+    image_values: dict[str, str],
+) -> None:
+    """Test a client whose first values came in as the stop began is closed.
+
+    The stop found nothing to close then, and no entity is set up for it.
+    """
+
+    def _stop_meanwhile(*args: object, **kwargs: object) -> dict[str, str]:
+        hass.loop.call_soon_threadsafe(hass.set_state, CoreState.stopping)
+        return image_values
+
+    mock_image_settings.get_image_values.side_effect = _stop_meanwhile
+    await setup_integration(hass, mock_config_entry)
+    hass.set_state(CoreState.running)
+
+    assert mock_config_entry.runtime_data.image_coordinator is None
+    mock_image_settings.close.assert_called_once()
+    assert not hass.states.async_entity_ids("switch")
 
 
 async def test_stream_stopped_when_shutdown_starts_during_setup(
@@ -347,6 +446,358 @@ async def test_setup_unreachable_device_is_retried(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_image_settings_are_not_read_from_an_nvr(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test that no image settings client is created for an NVR."""
+    mock_hikcamera.return_value.get_type = "NVR"
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_isapi_client.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+@pytest.mark.parametrize(
+    ("ssl", "verify_ssl"), [(False, True), (True, True), (True, False)]
+)
+async def test_image_settings_client_uses_the_entry_settings(
+    hass: HomeAssistant,
+    mock_isapi_client: MagicMock,
+    ssl: bool,
+    verify_ssl: bool,
+) -> None:
+    """Test that the image settings client connects like the camera does."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: 8080,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: ssl,
+            CONF_VERIFY_SSL: verify_ssl,
+        },
+        unique_id=TEST_DEVICE_ID,
+    )
+
+    await setup_integration(hass, entry)
+
+    mock_isapi_client.assert_called_once_with(
+        TEST_HOST, 8080, TEST_USERNAME, TEST_PASSWORD, ssl, verify_ssl
+    )
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+@pytest.mark.parametrize(
+    ("error", "warnings"),
+    [
+        pytest.param(ISAPINotSupportedError("not supported"), [], id="not_supported"),
+        pytest.param(
+            ISAPIAuthError("Insufficient permissions"),
+            [
+                f"Not allowed to read the image settings of {TEST_HOST}: Insufficient permissions"
+            ],
+            id="not_allowed",
+        ),
+        pytest.param(
+            ISAPIError("Request failed with status 500"),
+            [
+                f"Unable to read the image settings of {TEST_HOST}: Request failed with status 500"
+            ],
+            id="error",
+        ),
+    ],
+)
+async def test_camera_without_readable_image_settings_still_loads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: ISAPIError,
+    warnings: list[str],
+) -> None:
+    """Test that failing to read image settings never stops the camera loading."""
+    mock_isapi_client.return_value.get_image_settings.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.image_coordinator is None
+    mock_isapi_client.return_value.close.assert_called_once()
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "homeassistant.components.hikvision"
+        and record.levelno == logging.WARNING
+    ] == warnings
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_unreadable_image_values_do_not_stop_the_camera_loading(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing first read of the values never stops the camera loading."""
+    mock_image_settings.get_image_values.side_effect = ISAPIError("timeout")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.image_coordinator is None
+    mock_image_settings.close.assert_called_once()
+    assert "Unable to read the image values" in caplog.text
+    assert hass.states.async_entity_ids("binary_sensor")
+
+
+async def test_rejected_password_while_reading_image_values_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a rejected password on the first read of the values asks for new credentials."""
+    mock_image_settings.get_image_values.side_effect = ISAPIAuthError(
+        "Invalid credentials", 401
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_image_settings.close.assert_called_once()
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_a_failed_stream_stop_after_a_rejected_first_read_still_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an error stopping the stream does not turn a 401 into events-only.
+
+    The clean-up of the failed setup tries the stop again.
+    """
+    mock_image_settings.get_image_values.side_effect = ISAPIAuthError(
+        "Invalid credentials", 401
+    )
+    mock_hikcamera.return_value.disconnect.side_effect = RuntimeError("stuck")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert "Error stopping the event stream after rejected credentials" in caplog.text
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert mock_hikcamera.return_value.disconnect.call_count == 2
+
+
+async def test_rejected_password_while_discovering_image_settings_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test a rejected password on the image settings discovery asks for new credentials."""
+    mock_isapi_client.return_value.get_image_settings.side_effect = ISAPIAuthError(
+        "Invalid credentials", 401
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_isapi_client.return_value.close.assert_called_once()
+    # The stream would otherwise keep retrying the rejected password.
+    mock_hikcamera.return_value.disconnect.assert_called()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_image_settings_client_closed_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test that the image settings client is closed when the entry unloads."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = None
+    client.get_image_settings.return_value = []
+    client.get_image_values.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+    client.close.assert_not_called()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    client.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_the_event_platforms_do_not_wait_for_the_image_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the entities of the events exist before the image settings are read."""
+    steps: list[tuple[str, set[Platform]]] = []
+    forward = hass.config_entries.async_forward_entry_setups
+    discover = mock_image_settings.get_image_settings.return_value
+
+    async def _forward(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        steps.append(("forward", set(platforms)))
+        await forward(entry, platforms)
+
+    def _read(*args: object, **kwargs: object) -> object:
+        steps.append(("read", set()))
+        return discover
+
+    mock_image_settings.get_image_settings.side_effect = _read
+    with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
+        await setup_integration(hass, mock_config_entry)
+
+    assert steps[:2] == [
+        ("forward", {p for p in PLATFORMS if p in EVENT_PLATFORMS}),
+        ("read", set()),
+    ]
+    assert steps[2] == (
+        "forward",
+        {p for p in PLATFORMS if p not in EVENT_PLATFORMS},
+    )
+    assert len(steps) == 3
+
+
+async def test_a_setup_that_fails_while_reading_the_image_settings_leaves_nothing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test nothing the setup started stays behind when it fails after the events.
+
+    A setup that fails does not call async_unload_entry.
+    """
+    mock_image_settings.get_image_settings.side_effect = RuntimeError("boom")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # The entities were unloaded: what is left is what Home Assistant shows for
+    # an entry that is not loaded, not entities that are still running.
+    states = [
+        hass.states.get(entity_id)
+        for domain in ("binary_sensor", "camera")
+        for entity_id in hass.states.async_entity_ids(domain)
+    ]
+    assert states
+    assert all(state.state == STATE_UNAVAILABLE for state in states)
+    # The client is closed, and the stream is stopped.
+    mock_image_settings.close.assert_called_once()
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_a_setup_that_fails_after_reading_the_image_settings_leaves_nothing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the client and the stream are released when the image platforms fail."""
+    forward = hass.config_entries.async_forward_entry_setups
+    calls = 0
+
+    async def _forward(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("boom")
+        await forward(entry, platforms)
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_image_settings.close.assert_called_once()
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_image_platforms_set_up_before_a_failure_are_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the next setup works after one that failed once the switches were set up.
+
+    A failed setup does not remove its entity platforms: one left behind would make
+    the next setup fail with "has already been setup".
+    """
+    forward = hass.config_entries.async_forward_entry_setups
+    calls = 0
+
+    async def _forward(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        nonlocal calls
+        calls += 1
+        await forward(entry, platforms)
+        if calls == 2:
+            raise RuntimeError("boom")
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
+        await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert hass.states.get(HLC_SWITCH).state == STATE_UNAVAILABLE
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(HLC_SWITCH).state == STATE_ON
+
+
+async def test_a_setup_that_fails_while_setting_up_the_event_platforms_leaves_nothing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the event platforms and the stream are stopped when their setup fails.
+
+    A failed setup does not call async_unload_entry, so the stream would keep
+    running, and a platform left behind would make the next setup fail.
+    """
+    forward = hass.config_entries.async_forward_entry_setups
+
+    async def _forward(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        await forward(entry, platforms)
+        raise RuntimeError("boom")
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups", _forward):
+        await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_hikcamera.return_value.disconnect.assert_called_once()
+    states = [
+        hass.states.get(entity_id)
+        for entity_id in hass.states.async_entity_ids("binary_sensor")
+    ]
+    assert states
+    assert all(state.state == STATE_UNAVAILABLE for state in states)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 def _identities(
@@ -950,3 +1401,46 @@ async def test_a_device_with_its_own_id_uses_it(
         for call in mock_hikcamera.return_value.add_update_callback.call_args_list
     }
     assert all(callback.startswith(f"{device_id}.") for callback in callbacks)
+
+
+@pytest.mark.parametrize(
+    ("failing", "closes", "stops"),
+    [
+        # A close that failed is tried again by the clean-up of the setup...
+        ("client_close", 2, 1),
+        # ...and so is a stream stop that failed.
+        ("stream_stop", 1, 2),
+    ],
+)
+async def test_a_failed_close_after_a_rejected_discovery_still_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_isapi_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    failing: str,
+    closes: int,
+    stops: int,
+) -> None:
+    """Test an error while closing after a 401 at discovery does not hide the 401.
+
+    The entry must still ask for new credentials, and the clean-up tries again.
+    """
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = ISAPIAuthError("Invalid credentials", 401)
+    {
+        "client_close": client.close,
+        "stream_stop": mock_hikcamera.return_value.disconnect,
+    }[failing].side_effect = RuntimeError("close failed")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert "close failed" in caplog.text
+    # The failed one is tried by the 401's teardown, then once more by the clean-up
+    # of the setup; the one that worked is not tried again.
+    assert client.close.call_count == closes
+    assert mock_hikcamera.return_value.disconnect.call_count == stops
