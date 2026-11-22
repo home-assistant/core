@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientError, ClientPayloadError
 from pyezvizapi.exceptions import PyEzvizError
+from pyezvizapi.streaming.live import LiveStreamShutdownTimeout
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -19,7 +20,7 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.ezviz.vtm import DATA_VTM, STARTUP_TIMEOUT
+from homeassistant.components.ezviz.vtm import CLOSE_ATTEMPTS, DATA_VTM, STARTUP_TIMEOUT
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
 from homeassistant.components.stream import redact_credentials
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
@@ -44,19 +45,22 @@ class FakeLiveStream:
         chunks: list[bytes] | None = None,
         *,
         read_error: Exception | None = None,
-        close_error: Exception | None = None,
+        close_errors: list[Exception] | None = None,
         block: bool = False,
     ) -> None:
         """Initialize the fake stream."""
         self._chunks = list(chunks or [])
         self._read_error = read_error
-        self._close_error = close_error
+        self._close_errors = list(close_errors or [])
         self._block = block
         self.reading = threading.Event()
         self.closed = threading.Event()
+        self.close_calls = 0
+        self.read_threads: set[str] = set()
 
     def read(self, size: int) -> bytes:
         """Return the next chunk, then fail, block until closed, or end."""
+        self.read_threads.add(threading.current_thread().name)
         self.reading.set()
         if self._chunks:
             return self._chunks.pop(0)
@@ -68,9 +72,10 @@ class FakeLiveStream:
 
     def close(self) -> None:
         """Close the stream, like the library does from another thread."""
+        self.close_calls += 1
         self.closed.set()
-        if self._close_error is not None:
-            raise self._close_error
+        if self._close_errors:
+            raise self._close_errors.pop(0)
 
 
 @pytest.fixture(autouse=True)
@@ -147,16 +152,18 @@ async def test_rtsp_camera_without_credentials_uses_vtm(
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
+@pytest.mark.parametrize("reported_port", [554, 0])
 async def test_rtsp_camera_not_exposed_through_vtm_view(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_camera_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
+    reported_port: int,
 ) -> None:
-    """Test cameras streaming over RTSP are not registered for the view."""
+    """Test configured RTSP cameras keep RTSP, even when the cloud reports port 0."""
     mock_camera_config_entry.add_to_hass(hass)
     mock_ezviz_client.load_cameras.return_value = {
-        "C666666": _mock_camera_data(reported_local_rtsp_port=554)
+        "C666666": _mock_camera_data(reported_local_rtsp_port=reported_port)
     }
     await setup_integration(hass, mock_config_entry)
 
@@ -207,6 +214,9 @@ async def test_vtm_view_streams_live_mpegts(
     assert source.mode == "cloud"
     assert source.timeout == STARTUP_TIMEOUT
     assert stream.closed.is_set()
+    # Blocking reads run on the stream's own threads, not the shared executor.
+    assert stream.read_threads
+    assert all(name.startswith(f"ezviz_live_{SERIAL}") for name in stream.read_threads)
 
 
 async def test_vtm_view_open_failure(
@@ -260,13 +270,44 @@ async def test_vtm_view_close_failure(
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
     path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
     client = await hass_client_no_auth()
-    stream = FakeLiveStream(close_error=PyEzvizError("shutdown timed out"))
+    stream = FakeLiveStream(close_errors=[PyEzvizError("cleanup unverified")])
 
     with patch(OPEN_STREAM, return_value=stream):
         response = await client.get(path)
         assert await response.read() == b""
 
-    assert "live stream cleanup failed: shutdown timed out" in caplog.text
+    assert "live stream cleanup failed: cleanup unverified" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("timeouts", "close_calls", "gave_up"),
+    [(1, 2, False), (CLOSE_ATTEMPTS, CLOSE_ATTEMPTS, True)],
+    ids=["recovers", "gives_up"],
+)
+async def test_vtm_view_retries_close_after_shutdown_timeout(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    timeouts: int,
+    close_calls: int,
+    gave_up: bool,
+) -> None:
+    """Test close() is retried after a shutdown timeout, as the library asks."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    stream = FakeLiveStream(
+        close_errors=[LiveStreamShutdownTimeout("timed out")] * timeouts
+    )
+
+    with patch(OPEN_STREAM, return_value=stream):
+        response = await client.get(path)
+        assert await response.read() == b""
+
+    assert stream.close_calls == close_calls
+    assert ("did not shut down" in caplog.text) is gave_up
 
 
 @pytest.mark.parametrize(
@@ -492,37 +533,23 @@ async def test_vtm_camera_image_unavailable(
         await async_get_image(hass, ENTITY_ID)
 
 
-@pytest.mark.parametrize(
-    ("decrypt_side_effect", "expected"),
-    [(None, b"decrypted"), (PyEzvizError("wrong key"), b"encrypted")],
-)
-async def test_vtm_camera_image_decrypts_alarm_picture(
+async def test_vtm_camera_image_skips_encrypted_alarm_picture(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_camera_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
-    decrypt_side_effect: Exception | None,
-    expected: bytes,
 ) -> None:
-    """Test encrypted alarm pictures are decrypted with the camera password."""
+    """Test encrypted alarm pictures are not served without a key."""
     aioclient_mock.get(ALARM_PIC_URL, content=b"encrypted")
-    mock_camera_config_entry.add_to_hass(hass)
-    mock_ezviz_client.load_cameras.return_value = {
-        "C666666": _mock_camera_data(
-            reported_local_rtsp_port=0,
-            encrypted=True,
-            last_alarm_pic=ALARM_PIC_URL,
-        )
-    }
-    await setup_integration(hass, mock_config_entry)
+    await _setup_vtm_camera(
+        hass,
+        mock_config_entry,
+        mock_ezviz_client,
+        encrypted=True,
+        last_alarm_pic=ALARM_PIC_URL,
+    )
 
-    with patch(
-        "homeassistant.components.ezviz.camera.decrypt_image",
-        return_value=b"decrypted",
-        side_effect=decrypt_side_effect,
-    ) as mock_decrypt:
-        image = await async_get_image(hass, ENTITY_ID)
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, ENTITY_ID)
 
-    mock_decrypt.assert_called_once_with(b"encrypted", "test-password")
-    assert image.content == expected
+    assert aioclient_mock.call_count == 0

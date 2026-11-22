@@ -13,6 +13,7 @@ streams that are still running.
 """
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from functools import partial
 import hmac
@@ -23,7 +24,11 @@ from aiohttp import web
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import PyEzvizError
 from pyezvizapi.streaming.capture import AutoClipSource
-from pyezvizapi.streaming.live import LiveMpegtsStream, open_live_mpegts_stream
+from pyezvizapi.streaming.live import (
+    LiveMpegtsStream,
+    LiveStreamShutdownTimeout,
+    open_live_mpegts_stream,
+)
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -40,6 +45,8 @@ VTM_URL = "/api/ezviz/vtm/{serial}.ts"
 READ_CHUNK = 65536
 # Battery devices need about 10 s to wake up before the first media arrives.
 STARTUP_TIMEOUT = 30.0
+# The library asks callers to retry close() after a shutdown timeout.
+CLOSE_ATTEMPTS = 3
 
 
 @dataclass
@@ -131,22 +138,31 @@ async def _async_stream(
     hass: HomeAssistant, request: web.Request, camera: VtmCamera, serial: str
 ) -> web.StreamResponse:
     """Open the live stream and write it to the HTTP response."""
+    # Reads block for as long as the viewer watches, so they get their own
+    # threads instead of the shared executor. The second thread stays free for
+    # close(), which interrupts a blocked read.
+    executor = ThreadPoolExecutor(
+        max_workers=2, thread_name_prefix=f"ezviz_live_{serial}"
+    )
+    loop = asyncio.get_running_loop()
     try:
-        opening = hass.async_add_executor_job(
+        opening = loop.run_in_executor(
+            executor,
             partial(
                 open_live_mpegts_stream,
                 camera.client,
                 serial,
                 ffmpeg_path=get_ffmpeg_manager(hass).binary,
                 source=AutoClipSource(mode="cloud", timeout=STARTUP_TIMEOUT),
-            )
+            ),
         )
         stream = await asyncio.shield(opening)
     except asyncio.CancelledError:
         # Cancelled while opening: close the stream once the open finishes.
-        opening.add_done_callback(partial(_close_opened_stream, hass, serial))
+        opening.add_done_callback(partial(_close_opened_stream, executor, serial))
         raise
     except PyEzvizError as err:
+        executor.shutdown(wait=False)
         _LOGGER.warning("%s: cannot open live stream: %s", serial, err)
         raise web.HTTPServiceUnavailable from err
 
@@ -156,31 +172,40 @@ async def _async_stream(
     _LOGGER.debug("%s: live stream opened", serial)
     try:
         await response.prepare(request)
-        while chunk := await hass.async_add_executor_job(stream.read, READ_CHUNK):
+        while chunk := await loop.run_in_executor(executor, stream.read, READ_CHUNK):
             await response.write(chunk)
     except ConnectionResetError:
         pass
     except PyEzvizError as err:
         _LOGGER.warning("%s: live stream failed: %s", serial, err)
     finally:
-        # close() interrupts a read still running in the executor.
-        await hass.async_add_executor_job(_close_stream, stream, serial)
+        await loop.run_in_executor(executor, _close_stream, stream, serial)
+        executor.shutdown(wait=False)
         _LOGGER.debug("%s: live stream closed", serial)
     return response
 
 
-@callback
 def _close_opened_stream(
-    hass: HomeAssistant, serial: str, opening: asyncio.Future[LiveMpegtsStream]
+    executor: ThreadPoolExecutor,
+    serial: str,
+    opening: asyncio.Future[LiveMpegtsStream],
 ) -> None:
     """Close a stream whose request was cancelled while it was opening."""
     if not opening.cancelled() and opening.exception() is None:
-        hass.async_add_executor_job(_close_stream, opening.result(), serial)
+        executor.submit(_close_stream, opening.result(), serial)
+    executor.shutdown(wait=False)
 
 
 def _close_stream(stream: LiveMpegtsStream, serial: str) -> None:
-    """Close the stream and log a teardown the library could not confirm."""
-    try:
-        stream.close()
-    except PyEzvizError as err:
-        _LOGGER.warning("%s: live stream cleanup failed: %s", serial, err)
+    """Close the stream, retrying while the library reports a shutdown timeout."""
+    for _ in range(CLOSE_ATTEMPTS):
+        try:
+            stream.close()
+        except LiveStreamShutdownTimeout:
+            continue
+        except PyEzvizError as err:
+            _LOGGER.warning("%s: live stream cleanup failed: %s", serial, err)
+        return
+    _LOGGER.warning(
+        "%s: live stream did not shut down after %s attempts", serial, CLOSE_ATTEMPTS
+    )

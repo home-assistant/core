@@ -5,7 +5,6 @@ from typing import override
 
 import aiohttp
 from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError
-from pyezvizapi.utils import decrypt_image
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -94,14 +93,16 @@ async def async_setup_entry(
             camera_rtsp_stream = ""
 
         else:
-            # No RTSP on the device: live view comes from pyezvizapi through
-            # the EZVIZ cloud, which needs no camera credentials.
+            # The cloud reports no RTSP port, so don't ask for RTSP credentials.
             ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
             camera_username = DEFAULT_CAMERA_USERNAME
             camera_password = None
             camera_rtsp_stream = None
 
-        use_vtm = camera_password is None or _reports_no_rtsp(value)
+        # Configured RTSP credentials are an explicit choice and win over the
+        # reported port, which is only a hint. Without them, live view comes
+        # from pyezvizapi through the EZVIZ cloud.
+        use_vtm = camera_password is None
         if use_vtm:
             async_register_vtm_camera(hass, entry, camera, coordinator.ezviz_client)
 
@@ -208,10 +209,12 @@ class EzvizCamera(EzvizEntity, Camera):
     ) -> bytes | None:
         """Return a still image without waking a sleeping device.
 
-        Opening the relay just for a snapshot would wake battery devices on
+        Opening the stream just for a snapshot would wake battery devices on
         every dashboard refresh, so use the stream only while it has active
         outputs (async_get_image would restart a stopped one) and the last
-        alarm picture otherwise.
+        alarm picture otherwise. Cloud streaming is only used for cameras
+        without a camera config entry, so there is no key for encrypted
+        pictures; the image entity decrypts them for configured cameras.
         """
         if (
             self.stream is not None
@@ -221,21 +224,15 @@ class EzvizCamera(EzvizEntity, Camera):
             return image
 
         url = self.data.get("last_alarm_pic")
-        if not isinstance(url, str) or not url:
+        if not isinstance(url, str) or not url or self.data.get("encrypted"):
             return None
         try:
             response = await async_get_clientsession(self.hass).get(url)
             response.raise_for_status()
-            image = await response.read()
+            return await response.read()
         except aiohttp.ClientError as err:
             _LOGGER.debug("%s: cannot fetch last alarm picture: %s", self._serial, err)
             return None
-        if self.data.get("encrypted") and self._password is not None:
-            try:
-                image = decrypt_image(image, self._password)
-            except PyEzvizError:
-                _LOGGER.debug("%s: cannot decrypt last alarm picture", self._serial)
-        return image
 
     @override
     async def stream_source(self) -> str | None:
