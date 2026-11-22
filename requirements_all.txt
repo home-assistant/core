@@ -218,7 +218,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==3.1.0
+aioautomower==3.2.0
 
 # homeassistant.components.axle_energy
 aioaxlevpp==0.2.0
