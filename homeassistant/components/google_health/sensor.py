@@ -162,7 +162,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("LIGHT") or 0,
+        value_fn=lambda data: data.light_activity_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="moderate_activity",
@@ -170,7 +170,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("MODERATE") or 0,
+        value_fn=lambda data: data.moderate_activity_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="vigorous_activity",
@@ -178,7 +178,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("VIGOROUS") or 0,
+        value_fn=lambda data: data.vigorous_activity_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="active_zone_minutes",

@@ -68,7 +68,7 @@ class GoogleHealthActivityData:
         """Return daily elevation gain in millimeters."""
         return self.altitude.gain_millimeters_sum if self.altitude else None
 
-    def active_minutes_for(self, level: str) -> int | None:
+    def _active_minutes_for(self, level: str) -> int | None:
         """Return daily active duration in minutes for an activity level."""
         if not self.active_minutes:
             return None
@@ -80,6 +80,21 @@ class GoogleHealthActivityData:
             ),
             None,
         )
+
+    @property
+    def light_activity_minutes(self) -> int | None:
+        """Return daily light activity duration in minutes."""
+        return self._active_minutes_for("LIGHT")
+
+    @property
+    def moderate_activity_minutes(self) -> int | None:
+        """Return daily moderate activity duration in minutes."""
+        return self._active_minutes_for("MODERATE")
+
+    @property
+    def vigorous_activity_minutes(self) -> int | None:
+        """Return daily vigorous activity duration in minutes."""
+        return self._active_minutes_for("VIGOROUS")
 
     @property
     def fat_burn_active_zone_minutes(self) -> int | None:
