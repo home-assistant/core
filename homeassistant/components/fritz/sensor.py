@@ -10,6 +10,7 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -24,13 +25,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import CONNECTION_TYPE_WLAN, DSL_CONNECTION, LOGGER
+from .const import CONNECTION_TYPE_WLAN, DOMAIN, DSL_CONNECTION, LOGGER
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import (
     FritzBoxBaseCoordinatorEntity,
@@ -63,9 +65,11 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     return status.external_ip  # type: ignore[no-any-return]
 
 
-def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_external_ipv6_state(
+    status: FritzStatus, last_value: str | None
+) -> str | None:
     """Return external ipv6 from device."""
-    return str(status.external_ipv6)
+    return str(status.external_ipv6) or None
 
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
@@ -141,9 +145,13 @@ def _retrieve_cpu_temperature_state(
 ) -> float | None:
     """Return the first CPU temperature value."""
     try:
-        return status.get_cpu_temperatures()[0]  # type: ignore[no-any-return]
-    except RequestException:
+        cpu_temp: float = status.get_cpu_temperatures()[0]
+    except RequestException, IndexError, FritzConnectionException:
         return None
+    # Reported while the device is still booting
+    if cpu_temp == 0:
+        return None
+    return cpu_temp
 
 
 def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
@@ -381,25 +389,40 @@ LINK_SENSOR_TYPES: tuple[FritzLinkSensorEntityDescription, ...] = (
 )
 
 
+@callback
+def _async_registered_keys(avm_wrapper: AvmWrapper) -> set[str]:
+    """Return keys of sensors already registered, kept while the device boots."""
+    entity_registry = er.async_get(avm_wrapper.hass)
+    return {
+        description.key
+        for description in (*CONNECTION_SENSOR_TYPES, *DEVICE_SENSOR_TYPES)
+        if entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{avm_wrapper.unique_id}-{description.key}"
+        )
+    }
+
+
 async def _async_connection_sensors(
-    avm_wrapper: AvmWrapper, device_friendly_name: str
+    avm_wrapper: AvmWrapper, device_friendly_name: str, registered_keys: set[str]
 ) -> list[FritzBoxSensor]:
     connection_info = await avm_wrapper.async_get_connection_info()
     return [
         FritzBoxSensor(avm_wrapper, device_friendly_name, description)
         for description in CONNECTION_SENSOR_TYPES
-        if description.is_suitable(connection_info)
+        if description.key in registered_keys
+        or description.is_suitable(connection_info)
     ]
 
 
 async def _async_device_sensors(
-    avm_wrapper: AvmWrapper, device_friendly_name: str
+    avm_wrapper: AvmWrapper, device_friendly_name: str, registered_keys: set[str]
 ) -> list[FritzBoxSensor]:
     def _generate_device_sensors() -> list[FritzBoxSensor]:
         return [
             FritzBoxSensor(avm_wrapper, device_friendly_name, description)
             for description in DEVICE_SENSOR_TYPES
-            if description.is_suitable(avm_wrapper.fritz_status)
+            if description.key in registered_keys
+            or description.is_suitable(avm_wrapper.fritz_status)
         ]
 
     return await avm_wrapper.hass.async_add_executor_job(_generate_device_sensors)
@@ -443,10 +466,15 @@ async def async_all_entities_list(
     data_fritz: FritzData,
 ) -> list[Entity]:
     """Get a list of all entities."""
+    registered_keys = _async_registered_keys(avm_wrapper)
 
     return [
-        *await _async_connection_sensors(avm_wrapper, device_friendly_name),
-        *await _async_device_sensors(avm_wrapper, device_friendly_name),
+        *await _async_connection_sensors(
+            avm_wrapper, device_friendly_name, registered_keys
+        ),
+        *await _async_device_sensors(
+            avm_wrapper, device_friendly_name, registered_keys
+        ),
         *_async_link_sensors(avm_wrapper, data_fritz),
     ]
 
