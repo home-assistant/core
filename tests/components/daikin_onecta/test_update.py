@@ -139,6 +139,54 @@ async def test_firmware_install_executes_command(
     )
 
 
+async def test_firmware_pending_install_survives_missing_installed_version(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep an install pending when a poll omits the installed version."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    entity_id = LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID
+    entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert entity._pending_install is not None
+
+    gateways = _load_gateway_devices("dx4_firmwareavailable")
+    gateway_embedded_id = gateways[0].gateway_embedded_id
+    assert gateway_embedded_id is not None
+    point = gateways[0].management_point(gateway_embedded_id)
+    assert point is not None
+    point.firmware_version = None
+    point.software_version = None
+    mock_onecta_client.get_gateway_devices.return_value = gateways
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity._pending_install is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+
+    point.firmware_version = Characteristic(value="new-version")
+    point.software_version = Characteristic(value="new-version")
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity._pending_install is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+
+
 async def test_firmware_entity_available_without_installed_version(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
