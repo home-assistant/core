@@ -16,11 +16,15 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import JsonValueType
 
+from .const import DOMAIN
 from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
+from .utils import current_radar_frame
 
 
 async def async_setup_entry(
@@ -177,3 +181,27 @@ class IrmKmiWeather(
             ]
 
         return [f for f in data if f.get("is_daytime")]
+
+    async def async_get_forecasts_radar(
+        self, include_past_forecasts: bool
+    ) -> ServiceResponse:
+        """Return the rain radar forecast, which only carries precipitation."""
+        if not (radar_forecast := self.coordinator.data.radar_forecast):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_radar_forecast",
+            )
+
+        start = 0 if include_past_forecasts else current_radar_frame(radar_forecast)
+        forecast: list[JsonValueType] = [
+            {
+                "datetime": frame["datetime"],
+                "precipitation": frame["native_precipitation"],
+                "rain_forecast_max": frame["rain_forecast_max"],
+                "rain_forecast_min": frame["rain_forecast_min"],
+                "might_rain": frame["might_rain"],
+                "unit": frame["unit"],
+            }
+            for frame in radar_forecast[start:]
+        ]
+        return {"forecast": forecast}

@@ -406,6 +406,9 @@ aiopegelonline==0.1.1
 # homeassistant.components.opnsense
 aiopnsense==1.0.10
 
+# homeassistant.components.proxmoxve
+aioproxmox==0.1.5
+
 # homeassistant.components.ptdevices
 aioptdevices==2026.11.1
 
@@ -491,7 +494,7 @@ aiotedee==0.3.0
 aiothreema==0.3.0
 
 # homeassistant.components.tractive
-aiotractive==2.1.0
+aiotractive==2.1.1
 
 # homeassistant.components.trimlight
 aiotrimlight==0.4.0
@@ -536,7 +539,7 @@ airgradient==0.11.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.14
+airos==0.6.15
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1784,7 +1787,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==5.2.0
+nextdns==5.3.0
 
 # homeassistant.components.niko_home_control
 nhc==0.8.1
@@ -2003,9 +2006,6 @@ prometheus-client==0.21.0
 
 # homeassistant.components.prowl
 prowlpy==1.1.5
-
-# homeassistant.components.proxmoxve
-proxmoxer==2.3.0
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
@@ -3090,7 +3090,7 @@ roonapi==0.1.6
 rova==0.4.1
 
 # homeassistant.components.rpi_power
-rpi-bad-power-ng==0.2.0
+rpi-bad-power==0.1.0
 
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.4.0
