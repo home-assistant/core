@@ -36,8 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .climate_entity_descriptions import CLIMATE_ENTITY_DESCRIPTIONS
-from .const import FANMODE_FIXED
+from .const import CLIMATE_ENTITY_DESCRIPTIONS, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
@@ -227,11 +226,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             current_mode.value = FANMODE_FIXED
             # Keep the confirmed mode if the subsequent position write fails.
             self._publish_write_update()
-            if (state := get_state()) is None:
-                return True
-            current_mode, fixed = state
-            if fixed is None:
-                return True
 
         if fixed.value != target:
             if not await self._async_execute_climate_command(

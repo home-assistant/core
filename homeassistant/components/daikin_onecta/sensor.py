@@ -16,7 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import ENERGY_AGGREGATE_PERIODS
+from .const import (
+    ENERGY_AGGREGATE_PERIODS,
+    ENTITY_METADATA,
+    SENSOR_KEYS,
+    entity_description_kwargs,
+)
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import energy_description_key, scalar_characteristics_for_platform
@@ -28,7 +33,6 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .entity_metadata import ENTITY_METADATA, SENSOR_KEYS, entity_description_kwargs
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
@@ -145,7 +149,7 @@ def add_simple_sensors(
     for value, _characteristic in scalar_characteristics_for_platform(
         management_point,
         Platform.SENSOR,
-        gateway_online=getattr(device.device, "available", True),
+        gateway_online=device.gateway_online,
     ):
         unique_id = _value_sensor_unique_id(
             device.id, management_point.embedded_id, None, value

@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ENTITY_METADATA, SWITCH_TRANSLATION_KEYS, entity_description_kwargs
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform
@@ -16,11 +17,6 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
     present_devices,
-)
-from .entity_metadata import (
-    ENTITY_METADATA,
-    SWITCH_TRANSLATION_KEYS,
-    entity_description_kwargs,
 )
 
 PARALLEL_UPDATES = 1
@@ -62,7 +58,7 @@ def _create_switches(
             for value, _characteristic in scalar_characteristics_for_platform(
                 management_point,
                 Platform.SWITCH,
-                gateway_online=getattr(device.device, "available", True),
+                gateway_online=device.gateway_online,
             ):
                 unique_id = management_point_unique_id(
                     device.id, management_point.embedded_id, value
@@ -120,8 +116,13 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return whether the characteristic still exposes writable on/off values."""
-        return super().available and self._characteristic_exposed_on(
-            self._value, Platform.SWITCH
+        characteristic = self._characteristic(self._value)
+        return (
+            super().available
+            and self._characteristic_exposed_on(self._value, Platform.SWITCH)
+            and characteristic is not None
+            and characteristic.settable
+            and set(characteristic.values or []) == {"on", "off"}
         )
 
     @override

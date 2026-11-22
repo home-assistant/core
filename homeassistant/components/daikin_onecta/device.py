@@ -24,6 +24,11 @@ class DaikinOnectaDevice:
         """Return whether the device is connected to the Daikin cloud."""
         return self._is_present_in_cloud and self.device.available
 
+    @property
+    def gateway_online(self) -> bool:
+        """Return whether the gateway reports an active cloud connection."""
+        return getattr(self.device, "available", True)
+
     def management_point(self, embedded_id: str) -> ManagementPoint | None:
         """Return a management point by embedded id."""
         return self.device.management_point(embedded_id)

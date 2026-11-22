@@ -140,6 +140,10 @@ async def _async_gateway_or_point_confirmed_absent(
     # Polling may restore the gateway while the Sites request is in flight.
     device = (coordinator.data or {}).get(gateway_id)
     if device is not None and device.present_in_cloud:
+        if embedded_id is not None and (
+            not device.available or not device.device.management_points
+        ):
+            return False
         return _management_point_is_absent(device, embedded_id)
     return True
 

@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ENTITY_METADATA, entity_description_kwargs
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
@@ -25,7 +26,6 @@ from .entity import (
     management_point_unique_id,
     present_devices,
 )
-from .entity_metadata import ENTITY_METADATA, entity_description_kwargs
 
 PARALLEL_UPDATES = 1
 

@@ -42,10 +42,10 @@ from homeassistant.components.daikin_onecta.climate import (
     DaikinClimate,
     _create_climate_entities,
 )
-from homeassistant.components.daikin_onecta.climate_entity_descriptions import (
+from homeassistant.components.daikin_onecta.const import (
     CLIMATE_ENTITY_DESCRIPTIONS,
+    FANMODE_FIXED,
 )
-from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )

@@ -16,17 +16,17 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
-from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.const import (
+    BINARY_SENSOR_KEYS,
+    DOMAIN,
+    SENSOR_KEYS,
+    SWITCH_KEYS,
+    UPDATE_KEYS,
+)
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
     scalar_platform,
     scalar_platform_for_point,
-)
-from homeassistant.components.daikin_onecta.entity_metadata import (
-    BINARY_SENSOR_KEYS,
-    SENSOR_KEYS,
-    SWITCH_KEYS,
-    UPDATE_KEYS,
 )
 from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
 from homeassistant.config_entries import ConfigEntryState

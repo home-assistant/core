@@ -11,6 +11,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import (
+    BINARY_SENSOR_TRANSLATION_KEYS,
+    ENTITY_METADATA,
+    entity_description_kwargs,
+)
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform
@@ -20,11 +25,6 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
     present_devices,
-)
-from .entity_metadata import (
-    BINARY_SENSOR_TRANSLATION_KEYS,
-    ENTITY_METADATA,
-    entity_description_kwargs,
 )
 
 PARALLEL_UPDATES = 1
@@ -69,7 +69,7 @@ def _create_binary_sensors(
             for value, _characteristic in scalar_characteristics_for_platform(
                 management_point,
                 Platform.BINARY_SENSOR,
-                gateway_online=getattr(device.device, "available", True),
+                gateway_online=device.gateway_online,
             ):
                 unique_id = management_point_unique_id(
                     device.id, management_point.embedded_id, value

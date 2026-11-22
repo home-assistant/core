@@ -6,9 +6,13 @@ from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoin
 
 from homeassistant.const import Platform
 
-from .climate_entity_descriptions import CLIMATE_SETPOINT_TYPES
-from .const import ENERGY_AGGREGATE_PERIODS
-from .entity_metadata import BINARY_SENSOR_KEYS, SENSOR_KEYS, SWITCH_KEYS
+from .const import (
+    BINARY_SENSOR_KEYS,
+    CLIMATE_SETPOINT_TYPES,
+    ENERGY_AGGREGATE_PERIODS,
+    SENSOR_KEYS,
+    SWITCH_KEYS,
+)
 from .utils import is_read_only_on_off_value
 
 
@@ -66,15 +70,6 @@ def scalar_platform_for_point(
         characteristic = point.scalar_characteristic(name)
     if characteristic is None:
         return None
-    # An offline climate-control point can report onOffMode as read-only. Wait
-    # for fresh connectivity data before classifying it to avoid an orphaned
-    # entity on a scalar platform.
-    if (
-        name == "onOffMode"
-        and point.management_point_type == "climateControl"
-        and not gateway_online
-    ):
-        return None
     if (
         name == "airPurificationMode"
         and point.management_point_type == "climateControl"
@@ -89,14 +84,8 @@ def scalar_platform_for_point(
         and has_climate_entity(point)
     ):
         return None
-    if (
-        name == "onOffMode"
-        and point.management_point_type == "climateControl"
-        and characteristic.settable
-        and set(characteristic.values or []) == {"on", "off"}
-        and not has_air_purifier_power_control(point)
-    ):
-        return Platform.SWITCH
+    if name == "onOffMode" and point.management_point_type == "climateControl":
+        return Platform.SWITCH if point.air_purification is None else None
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.
     if name in {"onOffMode", "powerfulMode"} and (

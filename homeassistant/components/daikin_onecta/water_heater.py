@@ -297,25 +297,35 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             states.append(STATE_PERFORMANCE)
         return states
 
-    def _requested_modes(self, operation_mode: str) -> tuple[str, str]:
+    def _requested_modes(self, operation_mode: str) -> tuple[str | None, str | None]:
         """Return the required on/off and powerful-mode values."""
-        on_off_mode = ""
-        powerful_mode = ""
+        on_off_mode = None
+        powerful_mode = None
         if operation_mode == STATE_OFF:
-            on_off_mode = "off" if self.current_operation != STATE_OFF else ""
+            on_off_mode = "off" if self.current_operation != STATE_OFF else None
         elif operation_mode == STATE_PERFORMANCE:
             hot_water = self._hot_water
             power_mode = hot_water.powerful_mode if hot_water is not None else None
             if power_mode is not None and power_mode.value != "on":
                 powerful_mode = "on"
-            on_off_mode = "on" if self.current_operation == STATE_OFF else ""
+            on_off_mode = "on" if self.current_operation == STATE_OFF else None
         elif operation_mode == STATE_HEAT_PUMP:
             hot_water = self._hot_water
             power_mode = hot_water.powerful_mode if hot_water is not None else None
             if power_mode is not None and power_mode.value == "on":
                 powerful_mode = "off"
-            on_off_mode = "on" if self.current_operation == STATE_OFF else ""
+            on_off_mode = "on" if self.current_operation == STATE_OFF else None
         return on_off_mode, powerful_mode
+
+    async def _async_set_power(self, on: bool, translation_key: str) -> None:
+        """Write and publish the water-heater power state."""
+        await self._async_execute_hot_water_command(
+            lambda hot_water: hot_water.set_power(on), translation_key
+        )
+        hot_water = self._hot_water
+        if hot_water is not None and hot_water.power is not None:
+            hot_water.power.value = "on" if on else "off"
+        self._publish_write_update()
 
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
@@ -341,17 +351,15 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 )
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
 
-        if on_off_mode != "":
-            await self._async_execute_hot_water_command(
-                lambda hot_water: hot_water.set_power(on_off_mode == "on"),
+        if on_off_mode is not None:
+            await self._async_set_power(
+                on_off_mode == "on",
                 "water_heater_set_operation_mode_failed",
             )
-            hot_water = self._hot_water
-            if hot_water is not None and hot_water.power is not None:
-                hot_water.power.value = on_off_mode
-            self._publish_write_update()
 
-        if powerful_mode != "" and STATE_PERFORMANCE in (self.operation_list or []):
+        if powerful_mode is not None and STATE_PERFORMANCE in (
+            self.operation_list or []
+        ):
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_powerful_mode(powerful_mode == "on"),
                 "water_heater_set_operation_mode_failed",
@@ -370,14 +378,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if self.current_operation == STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
-            await self._async_execute_hot_water_command(
-                lambda hot_water: hot_water.set_power(True),
-                "water_heater_turn_on_failed",
-            )
-            hot_water = self._hot_water
-            if hot_water is not None and hot_water.power is not None:
-                hot_water.power.value = "on"
-            self._publish_write_update()
+            await self._async_set_power(True, "water_heater_turn_on_failed")
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -387,11 +388,4 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if self.current_operation != STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
-            await self._async_execute_hot_water_command(
-                lambda hot_water: hot_water.set_power(False),
-                "water_heater_turn_off_failed",
-            )
-            hot_water = self._hot_water
-            if hot_water is not None and hot_water.power is not None:
-                hot_water.power.value = "off"
-            self._publish_write_update()
+            await self._async_set_power(False, "water_heater_turn_off_failed")

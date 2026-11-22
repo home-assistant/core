@@ -266,7 +266,7 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
                 point,
                 name,
                 characteristic,
-                gateway_online=self._device.device.cloud_connection.value is True,
+                gateway_online=self._device.gateway_online,
             )
             is platform
         )
