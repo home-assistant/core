@@ -154,7 +154,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.elevation_meters,
+        value_fn=lambda data: (data.altitude_gain_millimeters or 0) / 1000.0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="light_activity",
@@ -162,7 +162,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("LIGHT"),
+        value_fn=lambda data: data.active_minutes_for("LIGHT") or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="moderate_activity",
@@ -170,7 +170,7 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("MODERATE"),
+        value_fn=lambda data: data.active_minutes_for("MODERATE") or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="vigorous_activity",
@@ -178,45 +178,47 @@ ACTIVITY_SENSORS: list[
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.active_minutes_for("VIGOROUS"),
+        value_fn=lambda data: data.active_minutes_for("VIGOROUS") or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="active_zone_minutes",
         translation_key="active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_active_zone_minutes,
+        value_fn=lambda data: data.total_active_zone_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
         key="sedentary_time",
         translation_key="sedentary_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.sedentary_minutes,
+        value_fn=lambda data: (
+            data.sedentary_duration.total_seconds() if data.sedentary_duration else 0.0
+        ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="fat_burn_active_zone_minutes",
         translation_key="fat_burn_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.fat_burn_active_zone_minutes,
+        value_fn=lambda data: data.fat_burn_active_zone_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="cardio_active_zone_minutes",
         translation_key="cardio_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.cardio_active_zone_minutes,
+        value_fn=lambda data: data.cardio_active_zone_minutes or 0,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="peak_active_zone_minutes",
         translation_key="peak_active_zone_minutes",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.peak_active_zone_minutes,
+        value_fn=lambda data: data.peak_active_zone_minutes or 0,
     ),
 ]
 

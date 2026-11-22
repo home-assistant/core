@@ -64,61 +64,65 @@ class GoogleHealthActivityData:
     sedentary_period: SedentaryPeriodRollupValue | None = None
 
     @property
-    def elevation_meters(self) -> float:
-        """Return daily elevation gain in meters."""
-        if self.altitude and self.altitude.gain_millimeters_sum:
-            return self.altitude.gain_millimeters_sum / 1000.0
-        return 0.0
+    def altitude_gain_millimeters(self) -> int | None:
+        """Return daily elevation gain in millimeters."""
+        return self.altitude.gain_millimeters_sum if self.altitude else None
 
-    def active_minutes_for(self, level: str) -> int:
+    def active_minutes_for(self, level: str) -> int | None:
         """Return daily active duration in minutes for an activity level."""
         if not self.active_minutes:
-            return 0
+            return None
         return next(
             (
                 item.active_minutes_sum
                 for item in self.active_minutes.active_minutes_rollup_by_activity_level
                 if item.activity_level == level and item.active_minutes_sum is not None
             ),
-            0,
+            None,
         )
 
     @property
-    def fat_burn_active_zone_minutes(self) -> int:
+    def fat_burn_active_zone_minutes(self) -> int | None:
         """Return daily fat burn active zone minutes."""
-        if self.active_zone_minutes:
-            return self.active_zone_minutes.sum_in_fat_burn_heart_zone or 0
-        return 0
-
-    @property
-    def cardio_active_zone_minutes(self) -> int:
-        """Return daily cardio active zone minutes."""
-        if self.active_zone_minutes:
-            return self.active_zone_minutes.sum_in_cardio_heart_zone or 0
-        return 0
-
-    @property
-    def peak_active_zone_minutes(self) -> int:
-        """Return daily peak active zone minutes."""
-        if self.active_zone_minutes:
-            return self.active_zone_minutes.sum_in_peak_heart_zone or 0
-        return 0
-
-    @property
-    def total_active_zone_minutes(self) -> int:
-        """Return total daily active zone minutes across all heart rate zones."""
         return (
-            self.fat_burn_active_zone_minutes
-            + self.cardio_active_zone_minutes
-            + self.peak_active_zone_minutes
+            self.active_zone_minutes.sum_in_fat_burn_heart_zone
+            if self.active_zone_minutes
+            else None
         )
 
     @property
-    def sedentary_minutes(self) -> float:
-        """Return daily sedentary duration in minutes."""
-        if self.sedentary_period and self.sedentary_period.duration_sum:
-            return self.sedentary_period.duration_sum.total_seconds() / 60.0
-        return 0.0
+    def cardio_active_zone_minutes(self) -> int | None:
+        """Return daily cardio active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_cardio_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def peak_active_zone_minutes(self) -> int | None:
+        """Return daily peak active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_peak_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def total_active_zone_minutes(self) -> int | None:
+        """Return total daily active zone minutes across all heart rate zones."""
+        if self.active_zone_minutes is None:
+            return None
+        return (
+            (self.fat_burn_active_zone_minutes or 0)
+            + (self.cardio_active_zone_minutes or 0)
+            + (self.peak_active_zone_minutes or 0)
+        )
+
+    @property
+    def sedentary_duration(self) -> timedelta | None:
+        """Return daily sedentary duration."""
+        return self.sedentary_period.duration_sum if self.sedentary_period else None
 
 
 @dataclass
