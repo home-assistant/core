@@ -133,6 +133,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::fixed%]",
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
@@ -169,6 +170,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::fixed%]",
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
@@ -205,6 +207,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::fixed%]",
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
@@ -241,6 +244,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "fixed": "Fixed",
               "quiet": "Quiet"
             }
           },
