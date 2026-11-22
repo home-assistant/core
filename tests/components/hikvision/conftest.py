@@ -75,6 +75,7 @@ async def mock_image_settings(
     )
     client.get_image_values.return_value = image_values
     client.set_image_setting.return_value = ImageWriteResult(True, 200, "ok")
+    client.set_image_linked_setting.return_value = ImageWriteResult(True, 200, "ok")
     return client
 
 

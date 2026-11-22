@@ -265,6 +265,245 @@
         "name": "White light brightness limit"
       }
     },
+    "select": {
+      "backlight_compensation": {
+        "name": "Backlight compensation",
+        "state": {
+          "false": "Off",
+          "ture": "On"
+        }
+      },
+      "backlight_compensation_mode": {
+        "name": "Backlight compensation mode",
+        "state": {
+          "auto": "Auto",
+          "center": "Center",
+          "close": "Off",
+          "down": "Down",
+          "left": "Left",
+          "region": "Region",
+          "right": "Right",
+          "up": "Up"
+        }
+      },
+      "capture_mode": {
+        "name": "Capture mode",
+        "state": {
+          "1920_1080_30fps": "1920×1080 @ 30 fps",
+          "close": "Off"
+        }
+      },
+      "color_mode": {
+        "name": "Color mode",
+        "state": {
+          "auto": "Auto",
+          "black_white": "Black and white",
+          "color": "Color",
+          "indoor": "Indoor",
+          "outdoor": "Outdoor"
+        }
+      },
+      "day_night_mode": {
+        "name": "Day/night mode",
+        "state": {
+          "auto": "Auto",
+          "day": "Day",
+          "eventtrigger": "Event trigger",
+          "night": "Night",
+          "schedule": "Schedule"
+        }
+      },
+      "day_night_schedule_type": {
+        "name": "Day/night schedule type",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      },
+      "defog": {
+        "name": "Defog",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "manual": "Manual",
+          "open": "On"
+        }
+      },
+      "digital_slow_shutter_level": {
+        "name": "Digital slow shutter level",
+        "state": {
+          "1_25": "×1.25",
+          "1_5": "×1.5",
+          "2": "×2",
+          "3": "×3",
+          "4": "×4",
+          "6": "×6",
+          "8": "×8",
+          "auto": "Auto"
+        }
+      },
+      "event_intelligence_brightness_mode": {
+        "name": "Event intelligence brightness mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "exposure_mode": {
+        "name": "Exposure mode",
+        "state": {
+          "auto": "Auto",
+          "irisfirst": "Iris priority",
+          "manual": "Manual",
+          "piris_general": "P-Iris",
+          "shutterfirst": "Shutter priority"
+        }
+      },
+      "flip_direction": {
+        "name": "Flip direction",
+        "state": {
+          "center": "Center",
+          "leftright": "Left-right",
+          "updown": "Up-down"
+        }
+      },
+      "focus_distance_mode": {
+        "name": "Focus distance mode",
+        "state": {
+          "compatible": "Compatible",
+          "manual": "Manual"
+        }
+      },
+      "focus_limit_mode": {
+        "name": "Focus limit mode"
+      },
+      "focus_mode": {
+        "name": "Focus mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "semiautomatic": "Semi-automatic"
+        }
+      },
+      "highlight_compensation_mode": {
+        "name": "Highlight compensation mode",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "open": "On"
+        }
+      },
+      "ir_light_mode": {
+        "name": "IR light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "iris_level": {
+        "name": "Iris level"
+      },
+      "light_brightness_mode": {
+        "name": "Light brightness mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "max_shutter_speed": {
+        "name": "Maximum shutter speed"
+      },
+      "min_shutter_speed": {
+        "name": "Minimum shutter speed"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction": {
+        "name": "Noise reduction",
+        "state": {
+          "advanced": "Advanced",
+          "close": "Off",
+          "general": "Normal"
+        }
+      },
+      "p_iris_mode": {
+        "name": "P-Iris mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "scene_mode": {
+        "name": "Scene mode",
+        "state": {
+          "indoor": "Indoor",
+          "outdoor": "Outdoor"
+        }
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_supplement_light_mode": {
+        "name": "Smart supplement light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "supplement_light": {
+        "name": "Supplement light",
+        "state": {
+          "close": "Off",
+          "colorvuwhitelight": "White light",
+          "eventintelligence": "Event intelligence",
+          "irlight": "IR"
+        }
+      },
+      "supplement_light_mode": {
+        "name": "Supplement light mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual"
+        }
+      },
+      "video_standard": {
+        "name": "Video standard",
+        "state": {
+          "50hz": "PAL (50 Hz)",
+          "60hz": "NTSC (60 Hz)"
+        }
+      },
+      "wdr": {
+        "name": "WDR",
+        "state": {
+          "auto": "Auto",
+          "close": "Off",
+          "open": "On"
+        }
+      },
+      "white_balance": {
+        "name": "White balance",
+        "state": {
+          "auto": "Auto",
+          "auto1": "Auto 1",
+          "auto2": "Auto 2",
+          "autotrace": "Auto trace",
+          "daylightlamp": "Fluorescent",
+          "incandescentlight": "Incandescent",
+          "indoor": "Indoor",
+          "locked": "Locked",
+          "manual": "Manual",
+          "naturallight": "Natural light",
+          "outdoor": "Outdoor",
+          "sodiumlight": "Sodium lamp",
+          "warmlight": "Warm light"
+        }
+      },
+      "zoom_limit_ratio": {
+        "name": "Zoom limit ratio"
+      }
+    },
     "switch": {
       "backlight_compensation": {
         "name": "Backlight compensation"
