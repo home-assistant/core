@@ -3,6 +3,7 @@
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -10,9 +11,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 
-from homeassistant.components.velbus.config_flow import format_manager_dsn
+from homeassistant.components.velbus.config_flow import (
+    VelbusConfigFlow,
+    format_manager_dsn,
+)
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
-from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USB, SOURCE_USER, ConfigFlow
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -192,6 +196,64 @@ async def test_user_manager_connect_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
+async def test_user_manager_aborts_on_duplicate(hass: HomeAssistant) -> None:
+    """Test manager setup aborts when an entry for the DSN already exists."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={CONF_PORT: "manager://127.0.0.1:4201", CONF_ACCESS_TOKEN: "existing"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "manager"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201, CONF_ACCESS_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_manager_duplicate_check_runs_after_connect(hass: HomeAssistant) -> None:
+    """Test the duplicate DSN check runs only after connection validation."""
+    events: list[str] = []
+
+    async def _track_test(self, *, error_field: str = CONF_HOST) -> str | None:
+        events.append("connect")
+        return None
+
+    def _track_abort(self, match: dict[str, Any]) -> None:
+        events.append("duplicate")
+        return ConfigFlow._async_abort_entries_match(self, match)
+
+    with (
+        patch("velbusaio.controller.Velbus", return_value=AsyncMock()),
+        patch.object(VelbusConfigFlow, "_test_connection", _track_test),
+        patch.object(VelbusConfigFlow, "_async_abort_entries_match", _track_abort),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "manager"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert events == ["connect", "duplicate"]
+
+
+@pytest.mark.usefixtures("controller")
 async def test_manager_reconfigure_ipv6(hass: HomeAssistant) -> None:
     """Reconfiguring a manager entry keeps IPv6 hosts bracketed in the DSN."""
     entry = MockConfigEntry(
@@ -317,6 +379,11 @@ async def test_reauth_manager_cannot_connect(hass: HomeAssistant) -> None:
         {CONF_ACCESS_TOKEN: "new-token"},
     )
     assert result.get("errors") == {"base": "cannot_connect"}
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values[CONF_ACCESS_TOKEN] == "new-token"
 
     with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
         result = await hass.config_entries.flow.async_configure(
@@ -469,7 +536,6 @@ async def test_manager_reconfigure_clears_access_token(
     assert entry.data[CONF_PORT] == manager_dsn
 
 
-@pytest.mark.usefixtures("controller")
 async def test_manager_reconfigure_keeps_token_when_unchanged(
     hass: HomeAssistant,
 ) -> None:
@@ -485,10 +551,26 @@ async def test_manager_reconfigure_keeps_token_when_unchanged(
     entry.add_to_hass(hass)
     result = await entry.start_reconfigure_flow(hass)
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.0.10", CONF_PORT: 4201},
-    )
+    created: list[MagicMock] = []
+
+    def _capture_velbus(*args: Any, **kwargs: Any) -> MagicMock:
+        controller = MagicMock()
+        controller.connect = AsyncMock()
+        controller.stop = AsyncMock()
+        controller.__init_kwargs__ = kwargs
+        created.append(controller)
+        return controller
+
+    with patch(
+        "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
+        side_effect=_capture_velbus,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.10", CONF_PORT: 4201},
+        )
+    assert len(created) == 1
+    assert created[0].__init_kwargs__["access_token"] == "keep-me"
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_ACCESS_TOKEN] == "keep-me"

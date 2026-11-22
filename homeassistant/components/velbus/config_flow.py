@@ -184,9 +184,15 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
             self._device = format_manager_dsn(host, port)
-            token = user_input.get(CONF_ACCESS_TOKEN)
-            self._access_token = token or None
-            self._async_abort_entries_match({CONF_PORT: self._device})
+            if self.source == SOURCE_RECONFIGURE:
+                if CONF_ACCESS_TOKEN in user_input:
+                    self._access_token = user_input[CONF_ACCESS_TOKEN] or None
+                else:
+                    self._access_token = self._get_reconfigure_entry().data.get(
+                        CONF_ACCESS_TOKEN
+                    )
+            else:
+                self._access_token = user_input.get(CONF_ACCESS_TOKEN) or None
             if connect_error := await self._test_connection():
                 step_errors[connect_error] = (
                     "invalid_access_token"
@@ -194,6 +200,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     else "cannot_connect"
                 )
             else:
+                self._async_abort_entries_match({CONF_PORT: self._device})
                 self._vlp_file = None
                 if self.source == SOURCE_RECONFIGURE:
                     old_entry = self._get_reconfigure_entry()
@@ -379,7 +386,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         suggested_input: dict[str, Any] = {}
-        if token := reauth_entry.data.get(CONF_ACCESS_TOKEN):
+        if user_input is not None and CONF_ACCESS_TOKEN in user_input:
+            suggested_input[CONF_ACCESS_TOKEN] = user_input[CONF_ACCESS_TOKEN]
+        elif token := reauth_entry.data.get(CONF_ACCESS_TOKEN):
             suggested_input[CONF_ACCESS_TOKEN] = token
 
         return self.async_show_form(
