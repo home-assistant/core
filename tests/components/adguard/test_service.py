@@ -1,6 +1,7 @@
 """Tests for the AdGuard Home sensor entities."""
 
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -9,6 +10,7 @@ from adguardhome import (
     AdGuardHomeConnectionError,
     AdGuardHomeError,
 )
+from probatio import Invalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -37,8 +39,9 @@ async def test_service_registration(
     """Test the adguard services be registered."""
     services = hass.services.async_services_for_domain(DOMAIN)
 
-    assert len(services) == 5
+    assert len(services) == 6
     assert AdGuardHomeService.ADD_URL in services
+    assert AdGuardHomeService.PAUSE_PROTECTION in services
     assert AdGuardHomeService.DISABLE_URL in services
     assert AdGuardHomeService.ENABLE_URL in services
     assert AdGuardHomeService.REFRESH in services
@@ -55,6 +58,13 @@ async def test_service_registration(
                 AdGuardHomeServiceArgument.URL: "https://example.com/1.txt",
             },
             lambda mock: mock.filtering.blocklists.add.assert_called_once(),
+        ),
+        (
+            AdGuardHomeService.PAUSE_PROTECTION,
+            {AdGuardHomeServiceArgument.DURATION: {"minutes": 30}},
+            lambda mock: mock.disable_protection.assert_called_once_with(
+                timedelta(minutes=30)
+            ),
         ),
         (
             AdGuardHomeService.DISABLE_URL,
@@ -94,6 +104,51 @@ async def test_service(
     )
 
     call_assertion(mock_adguard)
+
+
+async def test_pause_protection_refreshes_state(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+) -> None:
+    """Test pausing protection refreshes the protection state."""
+    mock_adguard.status.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        AdGuardHomeService.PAUSE_PROTECTION,
+        {AdGuardHomeServiceArgument.DURATION: {"minutes": 30}},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_adguard.status.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "service_call_data",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({AdGuardHomeServiceArgument.DURATION: {"seconds": 0}}, id="zero"),
+        pytest.param(
+            {AdGuardHomeServiceArgument.DURATION: {"seconds": -10}}, id="negative"
+        ),
+    ],
+)
+async def test_pause_protection_invalid_duration(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+    service_call_data: dict[str, dict[str, int]],
+) -> None:
+    """Test pausing protection requires a positive duration."""
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            AdGuardHomeService.PAUSE_PROTECTION,
+            service_call_data,
+            blocking=True,
+        )
+
+    mock_adguard.disable_protection.assert_not_called()
 
 
 @pytest.mark.parametrize(

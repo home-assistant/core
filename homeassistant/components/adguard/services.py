@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -27,6 +28,7 @@ class AdGuardHomeService(StrEnum):
     ENABLE_URL = "enable_url"
     DISABLE_URL = "disable_url"
     REFRESH = "refresh"
+    PAUSE_PROTECTION = "pause_protection"
 
 
 class AdGuardHomeServiceArgument(StrEnum):
@@ -35,6 +37,7 @@ class AdGuardHomeServiceArgument(StrEnum):
     NAME = "name"
     URL = "url"
     FORCE = "force"
+    DURATION = "duration"
 
 
 SERVICE_URL_SCHEMA = probatio.Schema(
@@ -50,6 +53,14 @@ SERVICE_ADD_URL_SCHEMA = probatio.Schema(
 )
 SERVICE_REFRESH_SCHEMA = probatio.Schema(
     {probatio.Optional(AdGuardHomeServiceArgument.FORCE, default=False): cv.boolean}
+)
+
+SERVICE_PAUSE_PROTECTION_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(AdGuardHomeServiceArgument.DURATION): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(seconds=1))
+        )
+    }
 )
 
 
@@ -126,6 +137,17 @@ async def _refresh(call: ServiceCall) -> None:
             await entry.runtime_data.client.filtering.blocklists.refresh()
 
 
+@adguard_exception_handler
+async def _pause_protection(call: ServiceCall) -> None:
+    """Service call to pause protection in AdGuard Home for a duration."""
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.disable_protection(
+                call.data[AdGuardHomeServiceArgument.DURATION]
+            )
+        await entry.runtime_data.state.async_request_refresh()
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the AdGuard Home integration."""
@@ -144,4 +166,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, AdGuardHomeService.REFRESH, _refresh, schema=SERVICE_REFRESH_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        AdGuardHomeService.PAUSE_PROTECTION,
+        _pause_protection,
+        schema=SERVICE_PAUSE_PROTECTION_SCHEMA,
     )
