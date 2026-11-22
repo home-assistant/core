@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
 )
 from homeassistant.helpers.llm import (
@@ -128,6 +129,12 @@ def _areas(hass: HomeAssistant) -> Iterator[_Item]:
         yield area.id, area.name, (area.name,), area.aliases, ()
 
 
+def _floors(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the floors."""
+    for floor in fr.async_get(hass).async_list_floors():
+        yield floor.floor_id, floor.name, (floor.name,), floor.aliases, ()
+
+
 def _labels(hass: HomeAssistant) -> Iterator[_Item]:
     """Yield the labels."""
     for label in lr.async_get(hass).async_list_labels():
@@ -145,6 +152,7 @@ _ITEMS: dict[str, Callable[[HomeAssistant], Iterator[_Item]]] = {
     "entity": _entities,
     "device": _devices,
     "area": _areas,
+    "floor": _floors,
     "label": _labels,
     "automation": partial(_domain_entities, AUTOMATION_DOMAIN),
     "script": partial(_domain_entities, SCRIPT_DOMAIN),
@@ -178,8 +186,8 @@ class SearchTool(Tool):
     name = "search__search"
     title = "Search Home Assistant"
     description = (
-        "Search entities, devices, areas, labels, automations, scripts and scenes "
-        "by name. Returns the ID and name of each match, grouped by type."
+        "Search entities, devices, areas, floors, labels, automations, scripts and "
+        "scenes by name. Returns the ID and name of each match, grouped by type."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
