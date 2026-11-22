@@ -50,7 +50,7 @@ async def test_select_program(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            TargetKey.ENTITY_ID: "select.kitchen_program",
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: set_program,
         },
         blocking=True,
