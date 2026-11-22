@@ -24,6 +24,10 @@ from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
     DOMAIN,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -46,6 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 TEST_HC_APP = ApplianceType.HOOD
 
@@ -232,6 +237,128 @@ async def test_light_availability(
         state = hass.states.get(entity_id)
         assert state
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "settings", "expected_state", "expected_color"),
+    [
+        (
+            "light.hood_functional_light",
+            {
+                SettingKey.COOKING_COMMON_LIGHTING: False,
+                SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS: 25,
+            },
+            STATE_OFF,
+            None,
+        ),
+        (
+            "light.hood_ambient_light",
+            {
+                SettingKey.BSH_COMMON_AMBIENT_LIGHT_ENABLED: True,
+                SettingKey.BSH_COMMON_AMBIENT_LIGHT_BRIGHTNESS: 80,
+                SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR: (
+                    BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR
+                ),
+                SettingKey.BSH_COMMON_AMBIENT_LIGHT_CUSTOM_COLOR: "#ff0000",
+            },
+            STATE_ON,
+            (255, 0, 0),
+        ),
+    ],
+    ids=["brightness light", "color light"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
+async def test_light_async_update_fetches_all_used_settings(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    settings: dict[SettingKey, bool | int | str],
+    expected_state: str,
+    expected_color: tuple[int, int, int] | None,
+) -> None:
+    """Test manual updates fetch each setting used by the light."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    client.get_setting = AsyncMock(
+        side_effect=lambda ha_id, setting_key: GetSetting(
+            setting_key, setting_key.value, settings[setting_key]
+        )
+    )
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    client.get_setting.assert_has_awaits(
+        [call(appliance.ha_id, setting_key=setting_key) for setting_key in settings]
+    )
+    assert client.get_setting.await_count == len(settings)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    if expected_color is not None:
+        assert state.attributes[ATTR_RGB_COLOR] == expected_color
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)
+async def test_light_async_update_skips_missing_brightness_setting(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test manual updates skip an optional setting missing from the appliance."""
+    original_get_settings_side_effect = client.get_settings.side_effect
+    assert original_get_settings_side_effect
+
+    async def get_settings_without_brightness(ha_id: str) -> ArrayOfSettings:
+        settings = await original_get_settings_side_effect(ha_id)
+        if ha_id != appliance.ha_id:
+            return settings
+        return ArrayOfSettings(
+            [
+                setting
+                for setting in settings.settings
+                if setting.key != SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_without_brightness)
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    client.get_setting = AsyncMock(
+        return_value=GetSetting(
+            SettingKey.COOKING_COMMON_LIGHTING,
+            SettingKey.COOKING_COMMON_LIGHTING.value,
+            False,
+        )
+    )
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: "light.hood_functional_light"},
+        blocking=True,
+    )
+
+    client.get_setting.assert_awaited_once_with(
+        appliance.ha_id, setting_key=SettingKey.COOKING_COMMON_LIGHTING
+    )
+    state = hass.states.get("light.hood_functional_light")
+    assert state
+    assert state.state == STATE_OFF
+    assert ATTR_BRIGHTNESS not in state.attributes
 
 
 @pytest.mark.parametrize(

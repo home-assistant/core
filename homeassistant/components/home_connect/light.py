@@ -142,6 +142,25 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self._attr_supported_color_modes = {ColorMode.HS, ColorMode.RGB}
 
     @override
+    async def async_update(self) -> None:
+        """Fetch all settings used by the light."""
+        if not self.enabled:
+            return
+
+        setting_keys = (
+            SettingKey(self.bsh_key),
+            self._brightness_key,
+            self._color_key,
+            self._custom_color_key,
+        )
+        try:
+            for setting_key in setting_keys:
+                if setting_key is not None:
+                    await self.coordinator.update_setting(setting_key)
+        except HomeConnectError as err:
+            raise self._create_fetch_entity_error(err) from err
+
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
         try:
