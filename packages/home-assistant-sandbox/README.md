@@ -132,7 +132,7 @@ The generator uses a temporary environment with pinned compiler dependencies. Do
 - Streaming, voice, camera, and subscription APIs need additional protocol support. A typed proxy does not establish full platform compatibility.
 - General options flows, worker-initiated reauth, progress/external flow steps, and registry rename/disable parity remain incomplete. Initial entry setup failures require manual reload.
 - Stdio and Unix sockets are implemented. Remote WebSocket transport and importing entities from an independent Home Assistant are proposals, not implemented features.
-- The Dockerfile packages matching host libraries and worker code. The Compose example depends on host listener options that are not implemented. It is not a complete deployment recipe.
+- Container deployment is outside v1.
 
 ## Work together
 
