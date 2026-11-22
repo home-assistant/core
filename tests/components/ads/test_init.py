@@ -77,7 +77,7 @@ async def test_setup_connection_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a connection error leaves the component unset up."""
-    mock_pyads_connection.return_value.open.side_effect = pyads.ADSError(text="timeout")
+    mock_pyads_connection.return_value.open.side_effect = pyads.ADSError(err_code=1861)
 
     assert not await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
     await hass.async_block_till_done()
@@ -108,11 +108,9 @@ async def test_shutdown_close_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failure to close the connection is logged, not raised."""
-    mock_pyads_connection.return_value.close.side_effect = pyads.ADSError(
-        text="port closed"
-    )
+    mock_pyads_connection.return_value.close.side_effect = pyads.ADSError(err_code=1864)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert "port closed" in caplog.text
+    assert "ads-port not opened (1864)" in caplog.text

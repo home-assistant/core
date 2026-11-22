@@ -85,7 +85,7 @@ async def test_write_data_by_name_error(
 ) -> None:
     """Test a failing write is logged instead of raised at the caller."""
     mock_pyads_connection.return_value.write_by_name.side_effect = pyads.ADSError(
-        text="timeout"
+        err_code=1861
     )
 
     await hass.services.async_call(
