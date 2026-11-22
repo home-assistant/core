@@ -57,7 +57,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: Tiles owned by other people are common, so Tiles are added through the user flow instead of discovery.
