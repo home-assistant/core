@@ -245,7 +245,11 @@ class SamsungTVBridge(ABC):
     async def async_power_off(self) -> None:
         """Send power off command to remote and close."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
-        await self._async_send_power_off()
+        try:
+            await self._async_send_power_off()
+        except BaseException:
+            self._end_of_power_off = None
+            raise
         # Force closing of remote session to provide instant UI feedback
         await self.async_close_remote()
 

@@ -96,14 +96,17 @@ async def test_turn_off_already_off(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
 
-    remote_encrypted_websocket.send_commands.reset_mock()
+        remote_encrypted_websocket.send_commands.reset_mock()
 
-    await hass.services.async_call(
-        REMOTE_DOMAIN, RemoteService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
-    )
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            RemoteService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
 
     # KEY_POWEROFF/KEY_POWER toggle the TV, so they must not be sent when already off
     remote_encrypted_websocket.send_commands.assert_not_called()

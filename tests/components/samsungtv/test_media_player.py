@@ -805,19 +805,79 @@ async def test_turn_off_websocket_already_off(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        remote_websocket.send_commands.reset_mock()
+
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    # KEY_POWER toggles the TV, so it must not be sent when already off
+    remote_websocket.send_commands.assert_not_called()
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
 
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_stale_off_state(
+    hass: HomeAssistant, remote_websocket: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test turn_off refreshes a cached off state and sends KEY_POWER if the TV is on."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with patch.object(remote_websocket, "is_alive", return_value=False):
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The TV was turned on outside Home Assistant since the last poll
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     remote_websocket.send_commands.reset_mock()
 
     await hass.services.async_call(
         MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
 
-    # KEY_POWER toggles the TV, so it must not be sent when already off
-    remote_websocket.send_commands.assert_not_called()
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+    assert remote_websocket.send_commands.call_count == 1
+    commands = remote_websocket.send_commands.call_args_list[0].args[0]
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_retry_after_send_failure(
+    hass: HomeAssistant, remote_websocket: Mock
+) -> None:
+    """Test a failed power off does not block the next turn_off."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+    remote_websocket.send_commands.reset_mock()
+
+    with (
+        patch.object(
+            remote_websocket,
+            "send_commands",
+            side_effect=WebSocketException("Boom"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
+    )
+
+    assert remote_websocket.send_commands.call_count == 1
+    commands = remote_websocket.send_commands.call_args_list[0].args[0]
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
 
 
 @pytest.mark.usefixtures("rest_api")
