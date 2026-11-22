@@ -187,10 +187,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.source == SOURCE_RECONFIGURE:
                 if CONF_ACCESS_TOKEN in user_input:
                     self._access_token = user_input[CONF_ACCESS_TOKEN] or None
-                else:
-                    self._access_token = self._get_reconfigure_entry().data.get(
-                        CONF_ACCESS_TOKEN
-                    )
             else:
                 self._access_token = user_input.get(CONF_ACCESS_TOKEN) or None
             if connect_error := await self._test_connection():
@@ -209,19 +205,21 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     data[CONF_VLP_FILE] = None
                     if self._access_token:
                         data[CONF_ACCESS_TOKEN] = self._access_token
-                    elif CONF_ACCESS_TOKEN in user_input:
+                    else:
                         data.pop(CONF_ACCESS_TOKEN, None)
                     return self.async_update_reload_and_abort(old_entry, data=data)
                 return self._create_device()
         elif self.source == SOURCE_RECONFIGURE:
-            current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
+            reconfigure_entry = self._get_reconfigure_entry()
+            current = reconfigure_entry.data.get(CONF_PORT, "")
             host, port = manager_dsn_to_host_port(current)
+            self._access_token = reconfigure_entry.data.get(CONF_ACCESS_TOKEN)
             user_input = {
                 CONF_HOST: host,
                 CONF_PORT: port,
             }
-            if token := self._get_reconfigure_entry().data.get(CONF_ACCESS_TOKEN):
-                user_input[CONF_ACCESS_TOKEN] = token
+            if self._access_token:
+                user_input[CONF_ACCESS_TOKEN] = self._access_token
         else:
             user_input = {
                 CONF_HOST: "manager" if is_hassio(self.hass) else "127.0.0.1",
