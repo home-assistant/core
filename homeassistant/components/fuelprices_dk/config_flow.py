@@ -14,10 +14,16 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from . import FuelpricesDkConfigEntry
-from .const import CONF_COMPANY, CONF_STATION, DOMAIN, WEBSITE_URL
+from .const import (
+    CONF_COMPANY,
+    CONF_STATION,
+    DOMAIN,
+    SUBENTRY_TYPE_STATION,
+    WEBSITE_URL,
+)
 
 
 def _get_api_error_key(exc: ClientResponseError) -> str:
@@ -27,6 +33,16 @@ def _get_api_error_key(exc: ClientResponseError) -> str:
     if exc.status == 429:
         return "rate_limit_exceeded"
     return "cannot_connect"
+
+
+@callback
+def _async_station_is_configured(hass: HomeAssistant, station_id: int) -> bool:
+    """Return whether this station is configured under any API key."""
+    return any(
+        subentry.data[CONF_STATION]["id"] == station_id
+        for entry in hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_STATION)
+    )
 
 
 class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -147,11 +163,14 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             self.stations = stations
 
         if user_input is not None:
+            entry_data = {CONF_API_KEY: self.user_input[CONF_API_KEY]}
+            self._async_abort_entries_match(entry_data)
             user_input[CONF_STATION] = self.stations.find(
                 "name", user_input[CONF_STATION]
             )
+            if _async_station_is_configured(self.hass, user_input[CONF_STATION]["id"]):
+                return self.async_abort(reason="station_already_configured")
 
-            # Create the main config entry with the first station subentry
             self.user_input.update(user_input)
             unique_id = (
                 f"{self.user_input[CONF_COMPANY]}_{self.user_input[CONF_STATION]['id']}"
@@ -162,7 +181,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_create_entry(
                 title="Fuelprices.dk",
-                data={CONF_API_KEY: self.user_input[CONF_API_KEY]},
+                data=entry_data,
                 subentries=[
                     {
                         "subentry_type": "station",
@@ -207,6 +226,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = _get_api_error_key(exc)
 
             if not errors:
+                self._async_abort_entries_match(user_input)
                 entry = self._get_reauth_entry()
                 self.hass.config_entries.async_update_entry(
                     entry,
@@ -321,16 +341,9 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
                 "name", user_input[CONF_STATION]
             )
 
-            # Set UniqueID and abort if already existing
-            unique_id = (
-                f"{self.user_input[CONF_COMPANY]}_{user_input[CONF_STATION]['id']}"
-            )
-            entry = self._get_entry()
-            for subentry in entry.subentries.values():
-                if subentry.unique_id == unique_id:
-                    return self.async_abort(reason="station_already_configured")
+            if _async_station_is_configured(self.hass, user_input[CONF_STATION]["id"]):
+                return self.async_abort(reason="station_already_configured")
 
-            # Process the user input and show next selection form
             self.user_input.update(user_input)
             return await self._async_create_or_update_subentry()
 
