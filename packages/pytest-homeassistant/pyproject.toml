@@ -28,7 +28,7 @@ dependencies = [
   "pytest-xdist==3.8.0",
   "requests-mock==1.12.1",
   "respx==0.23.1",
-  "syrupy==7.0.0",
+  "syrupy==7.0.1",
 ]
 
 [project.entry-points.pytest11]
