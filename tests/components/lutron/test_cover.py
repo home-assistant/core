@@ -153,13 +153,10 @@ def _mock_output(name: str, output_id: int, output_type: str) -> MagicMock:
     return output
 
 
-async def test_sivoia_qed_cover_services(
+async def test_sivoia_qed_is_not_a_cover(
     hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Any output pylutron parses as a Shade is a position-capable cover.
-
-    pylutron classifies SIVOIA_QED outputs as Shade (like SYSTEM_SHADE).
-    """
+    """SIVOIA_QED outputs are not covers yet; they stay lights for now."""
     mock_config_entry.add_to_hass(hass)
     qed = _mock_output("Test QED Shade", 10, "SIVOIA_QED")
     mock_lutron.areas[0].outputs.append(qed)
@@ -167,41 +164,7 @@ async def test_sivoia_qed_cover_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_area_test_qed_shade"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_CLOSED
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
-    # and it is NOT a light any more
-    assert hass.states.get("light.test_area_test_qed_shade") is None
-
-    await hass.services.async_call(
-        COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: entity_id}, blocking=True
-    )
-    qed.start_raise.assert_called_once()
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        CoverService.SET_POSITION,
-        {TargetKey.ENTITY_ID: entity_id, "position": 40},
-        blocking=True,
-    )
-    assert qed.level == 40
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        CoverService.CLOSE,
-        {TargetKey.ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    qed.start_lower.assert_called_once()
-    await hass.services.async_call(
-        COVER_DOMAIN, CoverService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
-    )
-    qed.stop.assert_called_once()
+    assert hass.states.get("cover.test_area_test_qed_shade") is None
 
 
 async def test_motor_cover_services(

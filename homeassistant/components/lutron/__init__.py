@@ -168,7 +168,8 @@ def _setup_output(
         # raise/lower/stop only - separate entity class on the cover platform
         entry_data.motors.append((area_name, output))
         platform = Platform.COVER
-    elif isinstance(output, Shade):
+    elif isinstance(output, Shade) and output.type == "SYSTEM_SHADE":
+        # SIVOIA_QED shades stay lights until their light entities are deprecated
         entry_data.covers.append((area_name, output))
         platform = Platform.COVER
     elif output.type == "CEILING_FAN_TYPE":
