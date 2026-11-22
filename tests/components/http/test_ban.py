@@ -609,7 +609,8 @@ async def test_failed_login_reverse_dns_failure(
             reverse_dns_timeout,
         ),
     ):
-        resp = await client.get("/")
+        # Explicit invalid credentials must still produce a login notification.
+        resp = await client.get("/", headers={"Authorization": "Bearer invalid"})
     release_lookup.set()
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -725,7 +726,8 @@ async def test_ban_applies_when_the_ban_file_cannot_be_written(
         in caplog.text
     )
     notifications = async_get_persistent_notifications(hass)
-    assert "http-login" in notifications
+    # Anonymous requests still count toward an IP ban, but do not notify as a login.
+    assert "http-login" not in notifications
     assert "ip-ban" in notifications
 
 
