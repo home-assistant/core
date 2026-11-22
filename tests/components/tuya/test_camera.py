@@ -1,5 +1,6 @@
 """Test Tuya camera platform."""
 
+from threading import Thread
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -13,6 +14,9 @@ from homeassistant.components.camera import (
     CameraService,
     get_camera_from_entity_id,
 )
+from homeassistant.components.camera.prefs import DynamicStreamSettings
+from homeassistant.components.stream import Stream
+from homeassistant.components.stream.core import StreamSettings
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -99,56 +103,122 @@ async def test_action(
     )
 
 
+def _test_stream(hass: HomeAssistant, source: str, *, preload: bool = False) -> Stream:
+    """Create a real stream without starting a media worker."""
+    return Stream(
+        hass,
+        source,
+        pyav_options={},
+        stream_settings=StreamSettings(
+            ll_hls=True,
+            min_segment_duration=2,
+            part_target_duration=0.5,
+            hls_advance_part_limit=3,
+            hls_part_timeout=10,
+        ),
+        dynamic_stream_settings=DynamicStreamSettings(preload_stream=preload),
+    )
+
+
 @pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
 @pytest.mark.parametrize(
-    ("outputs", "available", "expect_new_source"),
+    ("outputs", "available", "expected_allocations"),
     [
-        ({"hls": object()}, True, False),
-        ({}, True, True),
-        ({"hls": object()}, False, True),
+        ({"hls": object()}, True, 1),
+        ({}, True, 2),
+        ({"hls": object()}, False, 2),
     ],
 )
-async def test_stream_source_reallocated_after_idle_or_failure(
+async def test_stream_source_refresh_reuses_registered_stream(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     outputs: dict[str, object],
     available: bool,
-    expect_new_source: bool,
+    expected_allocations: int,
 ) -> None:
-    """Keep working viewers but obtain a fresh Tuya allocation on a new start."""
+    """Reuse the same Stream on reopen, keeping its registry size bounded."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/first",
+        "rtsps://example.com/second",
+        "rtsps://example.com/third",
+    ]
+    created: list[Stream] = []
+
+    def create_test_stream(hass: HomeAssistant, source: str, **_kwargs: Any) -> Stream:
+        stream = _test_stream(hass, source)
+        created.append(stream)
+        return stream
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream",
+        side_effect=create_test_stream,
+    ):
+        stream = await camera.async_create_stream()
+        assert stream is not None
+        stream._outputs.update(outputs)
+        stream._available = available
+        assert await camera.async_create_stream() is stream
+
+        if expected_allocations == 2:
+            assert stream.source == "rtsps://example.com/second"
+            # Multiple idle reopens must never add more Stream objects.
+            stream._outputs.clear()
+            assert await camera.async_create_stream() is stream
+            assert stream.source == "rtsps://example.com/third"
+        else:
+            assert stream.source == "rtsps://example.com/first"
+
+    assert len(created) == 1
+    assert mock_manager.get_device_stream_allocate.call_count == (
+        3 if expected_allocations == 2 else 1
+    )
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_failed_preloaded_stream_worker_is_stopped_before_refresh(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Stop the actual worker even if Stream.stop would keep it running."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     camera = get_camera_from_entity_id(hass, "camera.burocam")
     mock_manager.get_device_stream_allocate.side_effect = [
         "rtsps://example.com/first",
         "rtsps://example.com/second",
     ]
-    first_stream = MagicMock()
-    first_stream.outputs.return_value = outputs
-    first_stream.available = available
-    first_stream.stop = AsyncMock()
-    second_stream = MagicMock()
-    second_stream.stop = AsyncMock()
+    stream = _test_stream(hass, "rtsps://example.com/first", preload=True)
 
     with patch(
         "homeassistant.components.camera.entity.create_stream",
-        side_effect=[first_stream, second_stream],
-    ) as create_stream:
-        assert await camera.async_create_stream() is first_stream
-        result = await camera.async_create_stream()
+        return_value=stream,
+    ):
+        assert await camera.async_create_stream() is stream
 
-    if expect_new_source:
-        assert result is second_stream
-        first_stream.stop.assert_awaited_once()
-        assert create_stream.call_count == 2
-        assert create_stream.call_args.args[1] == "rtsps://example.com/second"
-        assert mock_manager.get_device_stream_allocate.call_count == 2
-    else:
-        assert result is first_stream
-        first_stream.stop.assert_not_awaited()
-        assert create_stream.call_count == 1
-        assert mock_manager.get_device_stream_allocate.call_count == 1
+        # A preloaded stream may have an active worker retrying an expired URL.
+        # Run a real thread that waits for the worker's shutdown signal.
+        stream._outputs["hls"] = MagicMock()
+        worker = Thread(target=stream._thread_quit.wait, daemon=True)
+        stream._thread = worker
+        worker.start()
+        stream._available = False
+
+        try:
+            assert await camera.async_create_stream() is stream
+            assert not worker.is_alive()
+            assert stream._thread is None
+            assert stream.source == "rtsps://example.com/second"
+            assert stream.dynamic_stream_settings.preload_stream
+        finally:
+            stream._thread_quit.set()
+            await hass.async_add_executor_job(worker.join)
+
+    assert mock_manager.get_device_stream_allocate.call_count == 2
 
 
 @pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])

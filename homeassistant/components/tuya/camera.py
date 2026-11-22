@@ -108,16 +108,21 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     @override
     async def async_create_stream(self) -> Stream | None:
-        """Allocate a new source if the previous stream has stopped or failed."""
+        """Refresh an idle or failed stream without replacing its Stream object."""
         async with self._stream_creation_lock:
-            if (stream := self.stream) is not None and (
-                not stream.outputs() or not stream.available
-            ):
-                # Tuya allocations can only be opened once. The cached stream
-                # keeps that URL even after all viewers have left.
-                self.stream = None
-                await stream.stop()
-            return await super().async_create_stream()
+            if (stream := self.stream) is None:
+                return await super().async_create_stream()
+
+            if stream.outputs() and stream.available:
+                return stream
+
+            if source := await self.stream_source():
+                # A Tuya URL is valid for a single session. Stop the old
+                # worker before updating its source, including when preloading
+                # is enabled (Stream.stop() keeps preloaded workers running).
+                await stream._stop()  # noqa: SLF001
+                stream.update_source(source)
+            return stream
 
     @override
     async def stream_source(self) -> str | None:
