@@ -67,11 +67,13 @@ class FlowHandler(
         access_token = cast("str", data["token"]["access_token"])
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            reauth_entry = self._get_reauth_entry()
+            if reauth_entry.unique_id is not None:
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
             if reason := await self._async_test_api_access(access_token):
                 return self.async_abort(reason=reason)
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+                reauth_entry, unique_id=unique_id, data=data
             )
 
         self._abort_if_unique_id_configured()

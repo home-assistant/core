@@ -137,11 +137,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             "ratelimit_reset": rate_limit.reset,
         }
 
-    @property
-    def last_patch_call(self) -> datetime | None:
-        """Return when the last successful cloud write completed."""
-        return self._last_patch_call
-
     async def async_get_access_token(self) -> str:
         """Return a valid OAuth access token."""
         await self.session.async_ensure_token_valid()

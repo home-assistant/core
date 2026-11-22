@@ -23,6 +23,7 @@ from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_platform_for_point
+from .utils import account_identifier
 
 EntityIdChecker = Callable[[Platform, str], bool]
 
@@ -199,9 +200,7 @@ class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
     def __init__(self, coordinator: OnectaDataUpdateCoordinator) -> None:
         """Initialize shared account state."""
         super().__init__(coordinator)
-        self._account_id = (
-            coordinator.config_entry.unique_id or coordinator.config_entry.entry_id
-        )
+        self._account_id = account_identifier(coordinator.config_entry)
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"account_{self._account_id}")},

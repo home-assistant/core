@@ -499,7 +499,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
-        assert coordinator.last_patch_call is None
+        assert coordinator._last_patch_call is None
 
     async def test_command_token_connection_error_returns_failure(
         self, coordinator: OnectaDataUpdateCoordinator, caplog: pytest.LogCaptureFixture
@@ -512,7 +512,7 @@ class TestOnectaDataUpdateCoordinator:
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
 
         coordinator.config_entry.async_start_reauth.assert_not_called()
-        assert coordinator.last_patch_call is None
+        assert coordinator._last_patch_call is None
         assert "OAuth2TokenRequestConnectionError" in caplog.text
 
     @pytest.mark.parametrize(
@@ -543,7 +543,7 @@ class TestOnectaDataUpdateCoordinator:
             == expected_reauth_calls
         )
         assert coordinator.hass.config_entries.flow.async_progress() == []
-        assert coordinator.last_patch_call is None
+        assert coordinator._last_patch_call is None
 
     def test_polling_intervals_use_reported_daily_limit(
         self, coordinator: OnectaDataUpdateCoordinator

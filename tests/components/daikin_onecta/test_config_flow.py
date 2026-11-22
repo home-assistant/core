@@ -256,18 +256,26 @@ async def test_reauth_confirm_form(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.parametrize(
+    "existing_unique_id",
+    [
+        pytest.param(None, id="missing-unique-id"),
+        pytest.param("1234567890", id="existing-unique-id"),
+    ],
+)
 async def test_reauth_oauth_create_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    existing_unique_id: str | None,
 ) -> None:
     """Update the existing entry after successful reauthentication."""
     assert await async_setup_component(hass, DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET)
     )
-    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    hass.config_entries.async_update_entry(config_entry, unique_id=existing_unique_id)
     config_entry.add_to_hass(hass)
     result = await async_reauth_external_step(hass, config_entry, hass_client_no_auth)
     aioclient_mock.post(
@@ -288,6 +296,7 @@ async def test_reauth_oauth_create_entry(
     assert result["reason"] == "reauth_successful"
     assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
     assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+    assert config_entry.unique_id == "1234567890"
     reload_entry.assert_called_once_with(config_entry.entry_id)
 
 

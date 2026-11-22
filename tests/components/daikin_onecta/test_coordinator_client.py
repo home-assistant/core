@@ -163,7 +163,7 @@ async def test_write_success(
 
     assert await api.async_execute_command(command)
     command.assert_awaited_once_with(api.client)
-    assert api.last_patch_call is not None
+    assert api._last_patch_call is not None
 
 
 @pytest.mark.parametrize(
@@ -199,7 +199,7 @@ async def test_write_authentication_error(
 
     assert start_reauth.call_args_list == [call(hass)] * expected_reauth_count
     assert hass.config_entries.flow.async_progress() == []
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert (
         f"Daikin request PATCH /v1/management-points/point {expected_log} "
         f"with HTTP {status}" in caplog.text
@@ -231,7 +231,7 @@ async def test_write_preserves_oauth_token_rejection(
 
     token_provider.assert_awaited_once_with()
     session.request.assert_not_called()
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
 
 
 async def test_write_api_error(
@@ -248,7 +248,7 @@ async def test_write_api_error(
     )
 
     assert not await api.async_execute_command(command)
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point failed with HTTP 500"
         in caplog.text
@@ -271,7 +271,7 @@ async def test_write_connection_error(
     )
 
     assert not await api.async_execute_command(command)
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point failed to connect: "
         "network unavailable" in caplog.text
@@ -294,7 +294,7 @@ async def test_write_rate_limit(
     )
 
     assert not await api.async_execute_command(command)
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point was rate limited; "
         "retry after 60 seconds" in caplog.text
@@ -311,7 +311,7 @@ async def test_write_token_connection_error(
     command = AsyncMock(side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN))
 
     assert not await api.async_execute_command(command)
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert "OAuth2TokenRequestConnectionError" in caplog.text
 
 
@@ -325,7 +325,7 @@ async def test_write_timeout(
     command = AsyncMock(side_effect=TimeoutError)
 
     assert not await api.async_execute_command(command)
-    assert api.last_patch_call is None
+    assert api._last_patch_call is None
     assert "Daikin request timed out" in caplog.text
 
 

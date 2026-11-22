@@ -5,7 +5,13 @@ import re
 
 from daikin_onecta.models import FanDirectionMode, FanSpeedMode
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
+
+
+def account_identifier(entry: ConfigEntry) -> str:
+    """Return the stable account identifier used for registry entries."""
+    return entry.unique_id or entry.entry_id
 
 
 def temperature_unit_or_celsius(unit: str | None) -> UnitOfTemperature:

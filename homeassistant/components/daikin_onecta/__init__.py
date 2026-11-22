@@ -17,6 +17,7 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEnt
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
+from .utils import account_identifier
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -84,7 +85,7 @@ async def async_remove_config_entry_device(
     if config_entry.state is not ConfigEntryState.LOADED:
         return False
     gateway_id = _daikin_device_identifier(device_entry)
-    account_id = config_entry.unique_id or config_entry.entry_id
+    account_id = account_identifier(config_entry)
     if gateway_id is None or gateway_id == f"account_{account_id}":
         return False
 
@@ -122,13 +123,10 @@ async def _async_gateway_or_point_confirmed_absent(
     if not coordinator.last_update_success:
         return False
 
-    device = (coordinator.data or {}).get(gateway_id)
-    if device is not None and device.present_in_cloud:
-        if embedded_id is not None and (
-            not device.available or not device.device.management_points
-        ):
-            return False
-        return _management_point_is_absent(device, embedded_id)
+    if (
+        result := _cached_device_removal_result(coordinator, gateway_id, embedded_id)
+    ) is not None:
+        return result
 
     site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
     if (
@@ -138,14 +136,27 @@ async def _async_gateway_or_point_confirmed_absent(
         return False
 
     # Polling may restore the gateway while the Sites request is in flight.
-    device = (coordinator.data or {}).get(gateway_id)
-    if device is not None and device.present_in_cloud:
-        if embedded_id is not None and (
-            not device.available or not device.device.management_points
-        ):
-            return False
-        return _management_point_is_absent(device, embedded_id)
+    if (
+        result := _cached_device_removal_result(coordinator, gateway_id, embedded_id)
+    ) is not None:
+        return result
     return True
+
+
+def _cached_device_removal_result(
+    coordinator: OnectaDataUpdateCoordinator,
+    gateway_id: str,
+    embedded_id: str | None,
+) -> bool | None:
+    """Return a removal result when the gateway is present in the latest poll."""
+    device = (coordinator.data or {}).get(gateway_id)
+    if device is None or not device.present_in_cloud:
+        return None
+    if embedded_id is not None and (
+        not device.available or not device.device.management_points
+    ):
+        return False
+    return _management_point_is_absent(device, embedded_id)
 
 
 def _management_point_is_absent(
