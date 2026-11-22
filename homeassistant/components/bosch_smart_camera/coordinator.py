@@ -15,6 +15,7 @@ from bosch_shc_camera_client.cameras import (
     Camera,
 )
 from bosch_shc_camera_client.client import BoschCameraClient
+from bosch_shc_camera_client.settings import AudioSettings
 from bosch_shc_camera_client.states import CameraAccountStates
 
 from homeassistant.config_entries import ConfigEntry
@@ -63,6 +64,9 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self.account_states: dict[str, CameraAccountStates] = {}
         self._write_seq = 0
         self._written_at: dict[str, int] = {}
+        self.audio_settings: dict[str, AudioSettings] = {}
+        self._audio_writes: defaultdict[str, int] = defaultdict(int)
+        self._audio_unreachable: set[str] = set()
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -110,6 +114,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             if written > started
         }
         data = {camera.id: camera for camera in cameras}
+        await self._async_update_audio_settings(cameras)
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
@@ -134,6 +139,65 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
+
+    async def _async_update_audio_settings(self, cameras: list[Camera]) -> None:
+        """Poll the audio settings of each camera, isolating failures."""
+        polled: dict[str, tuple[int, AudioSettings | None]] = {}
+        for camera in cameras:
+            writes = self._audio_writes[camera.id]
+            try:
+                settings = await self._client.get_audio_settings(camera.id)
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                if camera.id not in self._audio_unreachable:
+                    self._audio_unreachable.add(camera.id)
+                    _LOGGER.info(
+                        "The audio settings of %s are unreachable", camera.title
+                    )
+                _LOGGER.debug("Unable to read the audio settings", exc_info=True)
+                settings = None
+            else:
+                if camera.id in self._audio_unreachable:
+                    self._audio_unreachable.discard(camera.id)
+                    _LOGGER.info(
+                        "The audio settings of %s are reachable again", camera.title
+                    )
+            polled[camera.id] = (writes, settings)
+        # A write that finished while polling makes the polled state outdated,
+        # also for cameras polled before the write.
+        current: dict[str, AudioSettings] = {}
+        for camera_id, (writes, settings) in polled.items():
+            if writes != self._audio_writes[camera_id]:
+                settings = self.audio_settings.get(camera_id)
+            if settings is not None:
+                current[camera_id] = settings
+        self.audio_settings = current
+
+    async def async_set_speaker_level(self, camera_id: str, level: int) -> None:
+        """Set the speaker level of a camera and update the cached settings."""
+        try:
+            await self._client.set_audio_settings(camera_id, speaker_level=level)
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="speaker_level_failed"
+            ) from err
+        # The camera may have been removed while the write was running.
+        if camera_id not in self.data:
+            return
+        self._audio_writes[camera_id] += 1
+        known = self.audio_settings.get(camera_id) or AudioSettings(
+            None, None, None, {}
+        )
+        self.audio_settings[camera_id] = replace(known, speaker_level=level)
+        self.async_update_listeners()
 
     async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
         """Switch the privacy mode of a camera and update the cached state."""

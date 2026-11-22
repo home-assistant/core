@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "number": {
+      "speaker_level": {
+        "name": "Speaker level"
+      }
+    },
     "switch": {
       "privacy_mode": {
         "name": "Privacy mode"
@@ -35,11 +40,17 @@
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
     },
+    "invalid_speaker_level": {
+      "message": "The speaker level must be a number between 0 and 100."
+    },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."
+    },
+    "speaker_level_failed": {
+      "message": "Unable to change the speaker level at Bosch."
     }
   }
 }
