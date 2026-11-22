@@ -731,6 +731,37 @@ async def test_subentry_reconfigure(
     ) == ConfigSubentry(**subentry_result)
 
 
+@pytest.mark.parametrize(
+    "subentry", [MOCK_ZONE_SUBENTRY, MOCK_OUTPUT_SUBENTRY], ids=["zone", "output"]
+)
+async def test_subentry_reconfigure_clears_device_class(
+    hass: HomeAssistant,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    subentry: ConfigSubentry,
+) -> None:
+    """Clear the existing device class when the form omits it."""
+    entry = mock_config_entry_with_subentries
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, subentry.subentry_type),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_NAME: subentry.data[CONF_NAME]}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry.subentry_id].data == {
+        **subentry.data,
+        CONF_ZONE_TYPE: None,
+    }
+
+
 async def test_zone_temperature_sensor_validation_on_reconfigure(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
