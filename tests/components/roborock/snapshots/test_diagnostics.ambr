@@ -46,7 +46,9 @@
             '133': 1,
           }),
           'duid': '******bc123',
-          'extra': '{"RRPhotoPrivacyVersion": "1"}',
+          'extra': dict({
+            'RRPhotoPrivacyVersion': '1',
+          }),
           'featureSet': '2234201184108543',
           'fv': '02.56.02',
           'iconUrl': '',
@@ -90,7 +92,10 @@
               'id': '120',
               'mode': 'ro',
               'name': '错误代码',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -98,7 +103,10 @@
               'id': '121',
               'mode': 'ro',
               'name': '设备状态',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -106,7 +114,10 @@
               'id': '122',
               'mode': 'ro',
               'name': '设备电量',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -114,7 +125,10 @@
               'id': '123',
               'mode': 'rw',
               'name': '清扫模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -122,7 +136,10 @@
               'id': '124',
               'mode': 'rw',
               'name': '拖地模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -130,7 +147,13 @@
               'id': '125',
               'mode': 'rw',
               'name': '主刷寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -138,7 +161,13 @@
               'id': '126',
               'mode': 'rw',
               'name': '边刷寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -146,7 +175,13 @@
               'id': '127',
               'mode': 'rw',
               'name': '滤网寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -269,7 +304,9 @@
             '133': 1,
           }),
           'duid': '******ice_2',
-          'extra': '{"RRPhotoPrivacyVersion": "1"}',
+          'extra': dict({
+            'RRPhotoPrivacyVersion': '1',
+          }),
           'featureSet': '2234201184108543',
           'fv': '02.56.02',
           'iconUrl': '',
@@ -313,7 +350,10 @@
               'id': '120',
               'mode': 'ro',
               'name': '错误代码',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -321,7 +361,10 @@
               'id': '121',
               'mode': 'ro',
               'name': '设备状态',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -329,7 +372,10 @@
               'id': '122',
               'mode': 'ro',
               'name': '设备电量',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -337,7 +383,10 @@
               'id': '123',
               'mode': 'rw',
               'name': '清扫模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -345,7 +394,10 @@
               'id': '124',
               'mode': 'rw',
               'name': '拖地模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -353,7 +405,13 @@
               'id': '125',
               'mode': 'rw',
               'name': '主刷寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -361,7 +419,13 @@
               'id': '126',
               'mode': 'rw',
               'name': '边刷寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -369,7 +433,13 @@
               'id': '127',
               'mode': 'rw',
               'name': '滤网寿命',
-              'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+              'property': dict({
+                'max': 100,
+                'min': 0,
+                'scale': 1,
+                'step': 1,
+                'unit': None,
+              }),
               'type': 'VALUE',
             }),
             dict({
@@ -480,11 +550,25 @@
         'device': dict({
           'activeTime': 1700754026,
           'deviceStatus': dict({
-            '10001': '{"f":"t"}',
+            '10001': dict({
+              'f': 't',
+            }),
             '10002': '',
-            '10004': '{"sid_in_use":25,"sid_version":5,"location":"de","bom":"A.03.0291","language":"en"}',
+            '10004': dict({
+              'bom': 'A.03.0291',
+              'language': 'en',
+              'location': 'de',
+              'sid_in_use': 25,
+              'sid_version': 5,
+            }),
             '10005': '{"sn":"dyad_sn","ssid":"dyad_ssid","timezone":"Europe/Stockholm","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"1.123.12.1","mac":"b0:4a:33:33:33:33","oba":{"language":"en","name":"A.03.0291_CE","bom":"A.03.0291","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","featureset":"0"}"}',
-            '10007': '{"mqttOtaData":{"mqttOtaStatus":{"status":"IDLE"}}}',
+            '10007': dict({
+              'mqttOtaData': dict({
+                'mqttOtaStatus': dict({
+                  'status': 'IDLE',
+                }),
+              }),
+            }),
             '200': 0,
             '201': 3,
             '202': 0,
@@ -832,14 +916,45 @@
             }),
           ]),
         }),
+        'traits': dict({
+          '__type': "<class 'coroutine'>",
+          'repr': '<coroutine object AsyncMockMixin._execute_mock_call at 0x11b5dee40>',
+        }),
       }),
       '**REDACTED-3**': dict({
         'device': dict({
           'activeTime': 1699964128,
           'deviceStatus': dict({
-            '10001': '{"f":"t"}',
-            '10005': '{"sn":"zeo_sn","ssid":"internet","timezone":"Europe/Berlin","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"192.111.11.11","mac":"b0:4a:00:00:00:00","rssi":-57,"oba":{"language":"en","name":"A.03.0403_CE","bom":"A.03.0403","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","loglevel":"4","featureset":"0"}}',
-            '10007': '{"mqttOtaData":{"mqttOtaStatus":{"status":"IDLE"}}}',
+            '10001': dict({
+              'f': 't',
+            }),
+            '10005': dict({
+              'ip': '**REDACTED**',
+              'mac': '**REDACTED**',
+              'oba': dict({
+                'bom': 'A.03.0403',
+                'featureset': '0',
+                'language': 'en',
+                'location': 'de',
+                'loglevel': '4',
+                'logserver': 'awsde0',
+                'name': '**REDACTED**',
+                'timezone': 'CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin',
+                'wifiplan': 'EU',
+              }),
+              'posix_timezone': 'CET-1CEST,M3.5.0,M10.5.0/3',
+              'rssi': -57,
+              'sn': '**REDACTED**',
+              'ssid': '**REDACTED**',
+              'timezone': 'Europe/Berlin',
+            }),
+            '10007': dict({
+              'mqttOtaData': dict({
+                'mqttOtaStatus': dict({
+                  'status': 'IDLE',
+                }),
+              }),
+            }),
             '200': 1,
             '201': 0,
             '202': 1,
@@ -1175,6 +1290,10 @@
             }),
           ]),
         }),
+        'traits': dict({
+          '__type': "<class 'coroutine'>",
+          'repr': '<coroutine object AsyncMockMixin._execute_mock_call at 0x11b5dd040>',
+        }),
       }),
       '**REDACTED-4**': dict({
         'device': dict({
@@ -1199,7 +1318,12 @@
             '142': 0,
           }),
           'duid': '******_duid',
-          'extra': '{"1749518432": "0", "1753581557": "0", "clean_finish": "{}"}',
+          'extra': dict({
+            '1749518432': '0',
+            '1753581557': '0',
+            'clean_finish': dict({
+            }),
+          }),
           'f': False,
           'fv': '03.01.71',
           'iconUrl': '',
@@ -1244,7 +1368,10 @@
               'id': 120,
               'mode': 'ro',
               'name': '错误代码',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1260,7 +1387,10 @@
               'id': 122,
               'mode': 'ro',
               'name': '设备电量',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1268,7 +1398,10 @@
               'id': 123,
               'mode': 'rw',
               'name': '吸力档位',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1284,7 +1417,10 @@
               'id': 125,
               'mode': 'ro',
               'name': '主刷寿命',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1292,7 +1428,10 @@
               'id': 126,
               'mode': 'ro',
               'name': '边刷寿命',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1300,7 +1439,10 @@
               'id': 127,
               'mode': 'ro',
               'name': '滤网寿命',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1308,7 +1450,10 @@
               'id': 135,
               'mode': 'ro',
               'name': '离线原因',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1316,7 +1461,10 @@
               'id': 136,
               'mode': 'rw',
               'name': '清洁次数',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1324,7 +1472,10 @@
               'id': 137,
               'mode': 'rw',
               'name': '扫拖模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1332,7 +1483,10 @@
               'id': 138,
               'mode': 'ro',
               'name': '清洁任务类型',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1340,7 +1494,10 @@
               'id': 139,
               'mode': 'ro',
               'name': '返回基站类型',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1348,7 +1505,10 @@
               'id': 141,
               'mode': 'ro',
               'name': '清洁进度',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1364,7 +1524,10 @@
               'id': 201,
               'mode': 'wo',
               'name': '启动清洁任务',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1372,7 +1535,10 @@
               'id': 202,
               'mode': 'wo',
               'name': '返回基站任务',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1380,7 +1546,10 @@
               'id': 203,
               'mode': 'wo',
               'name': '启动基站任务',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1494,7 +1663,10 @@
               'id': 121,
               'mode': 'ro',
               'name': '设备状态',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1502,7 +1674,10 @@
               'id': 122,
               'mode': 'ro',
               'name': '设备电量',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
             dict({
@@ -1510,7 +1685,10 @@
               'id': 123,
               'mode': 'rw',
               'name': '清扫模式',
-              'property': '{"range": []}',
+              'property': dict({
+                'range': list([
+                ]),
+              }),
               'type': 'ENUM',
             }),
           ]),
