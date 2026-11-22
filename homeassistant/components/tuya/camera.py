@@ -16,7 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.components.camera.const import CAMERA_STREAM_SOURCE_TIMEOUT
+from homeassistant.components.camera.const import CAMERA_STREAM_SOURCE_TIMEOUT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.stream import Stream
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

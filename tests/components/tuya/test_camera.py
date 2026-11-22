@@ -13,11 +13,10 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
     CameraService,
+    DynamicStreamSettings,
     get_camera_from_entity_id,
 )
-from homeassistant.components.camera.prefs import DynamicStreamSettings
-from homeassistant.components.stream import Stream
-from homeassistant.components.stream.core import StreamSettings
+from homeassistant.components.stream import Stream, StreamSettings
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
