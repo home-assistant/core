@@ -14,6 +14,8 @@ from homeassistant.components.intertechno_tristate.const import (
     CONF_HOUSECODE,
     CONF_TRANSMITTER,
     DOMAIN,
+)
+from rf_protocols.commands.pt2262.ITTristateCommand import (
     MAX_CHANNEL,
     MAX_GROUP,
 )

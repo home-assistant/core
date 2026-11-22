@@ -22,6 +22,12 @@ from .const import (
     DOMAIN,
     REPEAT_COUNT_LEARN
 )
+from rf_protocols.commands.pt2262.ITTristateCommand import (
+    MIN_CHANNEL,
+    MIN_GROUP,
+    MAX_CHANNEL,
+    MAX_GROUP,
+)
 
 _SAMPLE_COMMAND = ITTristateCommand(
     housecode="A", group=1, channel=1, on=True
@@ -68,14 +74,14 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=self._async_user_schema(transmitters, user_input),
                     errors={CONF_HOUSECODE: "invalid_housecode"},
                 )
-            if not (ITTristateCommand.MIN_GROUP <= group <= ITTristateCommand.MAX_GROUP):
+            if not (MIN_GROUP <= group <= MAX_GROUP):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._async_user_schema(transmitters, user_input),
                     errors={CONF_GROUP: "invalid_group"},
                 )
 
-            if not (ITTristateCommand.MIN_CHANNEL <= channel <= ITTristateCommand.MAX_CHANNEL):
+            if not (MIN_CHANNEL <= channel <= MAX_CHANNEL):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._async_user_schema(transmitters, user_input),
@@ -194,12 +200,12 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): probatio.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=ITTristateCommand.MIN_GROUP,
-                            max=ITTristateCommand.MAX_GROUP,
+                            min=MIN_GROUP,
+                            max=MAX_GROUP,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                    probatio.In(range(ITTristateCommand.MIN_GROUP, ITTristateCommand.MAX_GROUP + 1)),
+                    probatio.In(range(MIN_GROUP, MAX_GROUP + 1)),
                     probatio.Coerce(int),
                 ),
                 probatio.Required(
@@ -208,12 +214,12 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): probatio.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=ITTristateCommand.MIN_CHANNEL,
-                            max=ITTristateCommand.MAX_CHANNEL,
+                            min=MIN_CHANNEL,
+                            max=MAX_CHANNEL,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                    probatio.In(range(ITTristateCommand.MIN_CHANNEL, ITTristateCommand.MAX_CHANNEL + 1)),
+                    probatio.In(range(MIN_CHANNEL, MAX_CHANNEL + 1)),
                     probatio.Coerce(int),
                 ),
             }
