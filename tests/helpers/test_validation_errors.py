@@ -211,15 +211,16 @@ def test_validation_errors_text_is_lazy() -> None:
     ]
 
 
-def test_text_uses_msg_and_message_uses_error_message() -> None:
-    """Test the text is the one of probatio.Invalid, the message is for clients."""
-    err = probatio.Invalid("the text", ["a"], "the message")
+def test_message_and_text_use_msg() -> None:
+    """Test the message and the text are the msg of a probatio.Invalid."""
+    err = probatio.Invalid("the text", ["a"], "another text")
 
     record = next(iter_validation_errors(err, [0]))
 
-    assert record.message == "the message"
+    assert record.message == "the text"
     assert str(record) == "the text at '[0].a'"
     assert str(ValidationErrors([record])) == str(record)
+    assert validation_errors_as_dicts(err)[0]["message"] == "the text"
 
 
 @pytest.mark.parametrize(

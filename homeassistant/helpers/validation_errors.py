@@ -48,24 +48,16 @@ class ValidationErrorInfo:
         ):
             if self.exception.secret:
                 return _SECRET_MESSAGE
-            return self.exception.error_message
+            return self.exception.msg
         # A HomeAssistantError, or a MultipleInvalid without errors
         return str(self.exception)
 
     @override
     def __str__(self) -> str:
         """Return the error message with the path, like probatio.Invalid."""
-        if (
-            isinstance(self.exception, probatio.Invalid)
-            and not isinstance(self.exception, probatio.MultipleInvalid)
-            and not self.exception.secret
-        ):
-            message = self.exception.msg
-        else:
-            message = self.message
         if not self.path:
-            return message
-        return f"{message} at '{render_path(list(self.path))}'"
+            return self.message
+        return f"{self.message} at '{render_path(list(self.path))}'"
 
 
 class ValidationErrors(HomeAssistantError):
