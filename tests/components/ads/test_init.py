@@ -1,17 +1,18 @@
 """Test the ADS component setup."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pyads
 import pytest
 
 from homeassistant.components.ads.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import ADS_CONFIG
+from . import ADS_CONFIG, MockAdsDevice, setup_ads_platform
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
 
 
@@ -114,3 +115,55 @@ async def test_shutdown_close_error(
     await hass.async_block_till_done()
 
     assert "ads-port not opened (1864)" in caplog.text
+
+
+async def test_shutdown_deletes_the_notifications(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test stopping deletes every notification before closing the connection."""
+    mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
+    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    client = mock_pyads_connection.return_value
+    client.del_device_notification.assert_called_once_with(1, 1)
+    assert client.mock_calls.index(call.del_device_notification(1, 1)) < (
+        client.mock_calls.index(call.close())
+    )
+
+
+async def test_shutdown_notification_delete_error(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a notification that cannot be deleted still lets the connection close."""
+    mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
+    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+    client = mock_pyads_connection.return_value
+    client.del_device_notification.side_effect = pyads.ADSError(err_code=1861)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert "timeout elapsed (1861)" in caplog.text
+    client.close.assert_called_once()
+
+
+async def test_notification_for_an_unknown_handle(
+    hass: HomeAssistant,
+    mock_ads_device: MockAdsDevice,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a notification nobody subscribed to is logged and dropped."""
+    mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
+    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+
+    await mock_ads_device.async_push_unknown(hass, b"\x00\x00")
+
+    assert "Unknown device notification handle: 2" in caplog.text
