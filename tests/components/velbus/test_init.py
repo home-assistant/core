@@ -770,6 +770,58 @@ async def test_removed_module_entities_are_not_rediscovered(
     )
 
 
+async def test_stale_module_removal_clears_child_entities_for_rediscovery(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Removing a sub-device module clears child discovery keys so entities can return."""
+    await init_integration(hass, config_entry)
+
+    climate_unique_id = "asdfghjk-3"
+    switch_unique_id = "qwerty123-55"
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is not None
+    )
+    assert "climate:asdfghjk-3" in config_entry.runtime_data.known_unique_ids
+    assert "switch:qwerty123-55" in config_entry.runtime_data.known_unique_ids
+
+    addresses_without_88 = {
+        address
+        for address in config_entry.runtime_data.scanned_module_addresses or set()
+        if address != 88
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=addresses_without_88)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("switch", DOMAIN, switch_unique_id) is None
+    )
+    assert "climate:asdfghjk-3" not in config_entry.runtime_data.known_unique_ids
+    assert "switch:qwerty123-55" not in config_entry.runtime_data.known_unique_ids
+
+    restored_addresses = {
+        *config_entry.runtime_data.scanned_module_addresses,
+        88,
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=restored_addresses)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id("switch", DOMAIN, switch_unique_id)
+        is not None
+    )
+
+
 async def test_module_found_adds_new_switch_entity(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,

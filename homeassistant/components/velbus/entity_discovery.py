@@ -137,4 +137,4 @@ async def async_setup_platform_discovery(
         async_add_entities(new_entities)
 
     entry.runtime_data.discoverers.append(_add_discovered)
-    _add_discovered()
+    _add_discovered(entry.runtime_data.scanned_module_addresses)

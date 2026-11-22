@@ -80,8 +80,12 @@ def _remove_stale_devices(
                 break
 
     for device_id in stale_device_ids:
+        removal_device_ids = {device_id}
+        removal_device_ids.update(
+            child.id for child in dr.async_entries_for_parent_device(dev_reg, device_id)
+        )
         for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-            if entity.device_id != device_id:
+            if entity.device_id not in removal_device_ids:
                 continue
             if entity.unique_id:
                 data.known_unique_ids.discard(
