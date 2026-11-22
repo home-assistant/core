@@ -14,6 +14,8 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -46,6 +48,12 @@ from .entity import (
 from .utils import get_device_entry_gen, get_release_url, get_version_from_fw_id
 
 PARALLEL_UPDATES = 0
+
+RELEASE_NOTES_MESSAGE_DO_NOT_UNPLUG = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="do_not_unplug",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -510,7 +518,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     """Represent a RPC update entity."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     entity_description: RpcUpdateDescription
 
@@ -584,6 +594,24 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     def update_percentage(self) -> int | None:
         """Update installation progress."""
         return self._ota_progress_percentage
+
+    @property
+    @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        installed_version = AwesomeVersion(
+            self.coordinator.device.shelly["ver"],
+            find_first_match=True,
+            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+        )
+        if installed_version.section(0) >= 2:
+            return (RELEASE_NOTES_MESSAGE_DO_NOT_UNPLUG,)
+        return ()
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return no release notes, Shelly only provides a release URL."""
+        return None
 
     @override
     async def async_install(

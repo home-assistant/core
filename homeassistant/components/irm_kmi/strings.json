@@ -132,6 +132,9 @@
   "exceptions": {
     "api_error": {
       "message": "An error occurred while communicating with the API: {error}"
+    },
+    "no_radar_forecast": {
+      "message": "The rain radar reported no forecast for this location."
     }
   },
   "options": {
@@ -156,6 +159,18 @@
         "nl": "Dutch",
         "none": "Follow Home Assistant server language"
       }
+    }
+  },
+  "services": {
+    "get_forecasts_radar": {
+      "description": "Retrieves the available rain radar forecast.",
+      "fields": {
+        "include_past_forecasts": {
+          "description": "Whether to also return past radar frames. The current frame is always returned.",
+          "name": "Include past forecasts"
+        }
+      },
+      "name": "Get radar forecasts"
     }
   },
   "title": "Royal Meteorological Institute of Belgium"
