@@ -75,21 +75,21 @@ deactivate
 
 `script/setup` installs integration requirements for Core development. The host starts workers with its own Python interpreter. The worker disables automatic requirement installation, so that environment must contain the selected integration's dependencies.
 
-Add explicit domains to the development configuration:
+Start with the `random` integration, which needs no external device or service. Add it to the development configuration:
 
 ```yaml
 sandbox:
   integrations:
-    - example_domain
+    - random
 ```
 
-Replace `example_domain` with the domain of a config-entry integration under test. Start the host from the repository root:
+Start the host from the repository root:
 
 ```sh
 uv run --no-sync hass -c config
 ```
 
-Create or load its config entry through Home Assistant. The host launches the worker when needed. Running the worker module alone does not connect it to a host.
+In Home Assistant, go to **Settings → Devices & services → Helpers**, select **Create helper**, and choose **Random**. Create a sensor or binary sensor. Its config flow and entity run in the worker. The host launches the worker when needed. Running the worker module alone does not connect it to a host.
 
 Selection is not a compatibility allowlist. A missing or empty list leaves routing inactive. For selected domains, the host skips both `async_setup` and synchronous `setup`, even when YAML is present. Only config entries run in the worker. YAML-created instances are outside scope. Startup or setup failure leaves the entry in error, without local fallback.
 
