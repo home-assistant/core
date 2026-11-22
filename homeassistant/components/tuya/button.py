@@ -41,6 +41,11 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             translation_key="manual_clean",
             entity_category=EntityCategory.CONFIG,
         ),
+        ButtonEntityDescription(
+            key=DPCode.START,
+            translation_key="manual_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SD: (
         ButtonEntityDescription(

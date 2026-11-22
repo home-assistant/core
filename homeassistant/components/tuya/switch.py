@@ -513,6 +513,16 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="auto_clean",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SLEEP,
+            translation_key="sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            translation_key="uv_sterilization",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.MZJ: (
         SwitchEntityDescription(
