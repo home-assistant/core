@@ -78,11 +78,13 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         """Return the BSH key."""
         return self.entity_description.key
 
-    def _handle_update_error(self, err: HomeConnectError) -> HomeAssistantError:
+    def _handle_update_error(
+        self, err: HomeConnectError, *, update_availability: bool = True
+    ) -> HomeAssistantError:
         """Create a translated fetch error and start reauth if required."""
         if isinstance(err, UnauthorizedError):
             self.coordinator.async_start_reauth()
-        if isinstance(err, ConflictError):
+        if update_availability and isinstance(err, ConflictError):
             if err.key in (
                 "SDK.Error.UnsupportedStatus",
                 "SDK.Error.UnsupportedSetting",

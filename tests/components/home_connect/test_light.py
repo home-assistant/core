@@ -373,14 +373,17 @@ async def test_light_async_update_additional_unauthorized_error_starts_reauth(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test unauthorized additional setting updates start reauth and stop fetching."""
+    """Test unauthorized updates start reauth and still fetch all light settings."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     await async_setup_component(hass, HA_DOMAIN, {})
 
     primary_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_ENABLED
     brightness_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_BRIGHTNESS
+    color_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR
+    custom_color_setting = SettingKey.BSH_COMMON_AMBIENT_LIGHT_CUSTOM_COLOR
 
     async def get_setting(ha_id: str, setting_key: SettingKey) -> GetSetting:
         if setting_key == brightness_setting:
@@ -400,7 +403,10 @@ async def test_light_async_update_additional_unauthorized_error_starts_reauth(
     assert client.get_setting.await_args_list == [
         call(appliance.ha_id, setting_key=primary_setting),
         call(appliance.ha_id, setting_key=brightness_setting),
+        call(appliance.ha_id, setting_key=color_setting),
+        call(appliance.ha_id, setting_key=custom_color_setting),
     ]
+    assert "Error fetching state of light.hood_ambient_light" in caplog.text
     flows_in_progress = hass.config_entries.flow.async_progress()
     assert len(flows_in_progress) == 1
     assert flows_in_progress[0]["context"]["entry_id"] == config_entry.entry_id
@@ -421,9 +427,9 @@ async def test_light_async_update_availability_uses_primary_setting(
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
     failed_setting: SettingKey,
     expected_state: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test only a failure updating the primary setting marks the light unavailable."""
     assert await integration_setup(client)
@@ -446,6 +452,7 @@ async def test_light_async_update_availability_uses_primary_setting(
     await hass.async_block_till_done()
 
     assert hass.states.is_state("light.hood_functional_light", expected_state)
+    assert "Error fetching state of light.hood_functional_light" in caplog.text
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.HOOD], indirect=True)

@@ -152,6 +152,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         except HomeConnectError as err:
             raise self._handle_update_error(err) from err
 
+        update_errors: list[HomeConnectError] = []
         for setting_key in (
             self._brightness_key,
             self._color_key,
@@ -161,15 +162,21 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 continue
             try:
                 await self.coordinator.update_setting(setting_key)
-            except UnauthorizedError:
-                self.coordinator.async_start_reauth()
-                break
-            except HomeConnectError:
-                _LOGGER.exception(
-                    "Failed to update light additional setting %s for %s",
-                    setting_key,
-                    self.entity_id,
-                )
+            except HomeConnectError as err:
+                update_errors.append(err)
+
+        if update_errors:
+            update_error = next(
+                (
+                    error
+                    for error in update_errors
+                    if isinstance(error, UnauthorizedError)
+                ),
+                update_errors[0],
+            )
+            raise self._handle_update_error(
+                update_error, update_availability=False
+            ) from update_error
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
