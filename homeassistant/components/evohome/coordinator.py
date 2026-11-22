@@ -86,9 +86,7 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
             return
 
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
+        await self._async_refresh(log_failures=False)
 
 
 class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
