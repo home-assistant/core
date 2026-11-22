@@ -161,10 +161,14 @@ async def test_sivoia_qed_is_not_a_cover(
     qed = _mock_output("Test QED Shade", 10, "SIVOIA_QED")
     mock_lutron.areas[0].outputs.append(qed)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.lutron.PLATFORMS", [Platform.COVER, Platform.LIGHT]
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_area_test_qed_shade") is None
+    assert hass.states.get("light.test_area_test_qed_shade") is not None
 
 
 async def test_motor_cover_services(
