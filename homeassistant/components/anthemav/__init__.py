@@ -1,5 +1,6 @@
 """The Anthem A/V Receivers integration."""
 
+from datetime import datetime
 import logging
 
 import anthemav
@@ -19,8 +20,16 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import ANTHEMAV_UPDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+    MANUFACTURER,
+    POLL_INTERVAL,
+    POLL_MODELS,
+)
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
 
@@ -74,6 +83,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
     )
+
+    if entry.data[CONF_MODEL].strip() in POLL_MODELS:
+
+        @callback
+        def poll_zones(now: datetime) -> None:
+            # Replies arrive through the update callback like pushed changes.
+            if avr.protocol.transport is None:
+                return
+            for zone in avr.protocol.zones.values():
+                zone.query("POW")
+                if zone.power:
+                    zone.query("VOL")
+                    zone.query("MUT")
+
+        entry.async_on_unload(
+            async_track_time_interval(hass, poll_zones, POLL_INTERVAL)
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> None:
