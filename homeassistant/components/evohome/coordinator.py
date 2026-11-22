@@ -360,7 +360,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 raise
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
             return  # the GET failed, so retry it at the next poll
-        except ec2.InvalidScheduleError as err:
+        except ec2.InvalidGetScheduleError as err:
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
         else:
             self.logger.debug("%s: Schedule = %s", child, schedule)
