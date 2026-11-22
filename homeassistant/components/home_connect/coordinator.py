@@ -910,15 +910,28 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.data.info.ha_id,
             )
 
+        current_program_key = updated_program.key
+        program_options = updated_program.options
+        if current_program_key in FAVORITE_PROGRAMS and program_options:
+            for option in program_options:
+                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
+                    event_key = EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
+                    self.data.events[event_key] = Event(
+                        event_key,
+                        event_key.value,
+                        0,
+                        "",
+                        "",
+                        option.value,
+                    )
+
         self.data.events[key] = Event(
             key,
             key.value,
             0,
             "",
             "",
-            str(program_key)
-            if (program_key := updated_program.key) is not None
-            else None,
+            str(current_program_key) if current_program_key is not None else None,
         )
 
         for listener in self._get_listeners_for_event_key(key):

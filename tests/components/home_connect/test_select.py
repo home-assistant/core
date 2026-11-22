@@ -483,6 +483,64 @@ async def test_program_select_async_update(
         ("select.dishwasher_active_program", "get_active_program"),
         ("select.dishwasher_selected_program", "get_selected_program"),
     ],
+    ids=["active program", "selected program"],
+)
+@pytest.mark.parametrize(
+    ("options", "expected_state"),
+    [
+        (None, STATE_UNKNOWN),
+        (
+            [
+                Option(
+                    OptionKey.BSH_COMMON_BASE_PROGRAM,
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                )
+            ],
+            "dishcare_dishwasher_program_eco_50",
+        ),
+    ],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_favorite_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+    options: list[Option] | None,
+    expected_state: str,
+) -> None:
+    """Test manual updates resolve favorite programs to their base program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    assert not hass.states.is_state(entity_id, expected_state)
+
+    method = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001, options=options)
+    )
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    assert hass.states.is_state(entity_id, expected_state)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method"),
+    [
+        ("select.dishwasher_active_program", "get_active_program"),
+        ("select.dishwasher_selected_program", "get_selected_program"),
+    ],
 )
 @pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_program_select_async_update_error(
