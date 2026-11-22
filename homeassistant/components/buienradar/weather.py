@@ -9,6 +9,7 @@ from buienradar.constants import (
     DATETIME,
     MAX_TEMP,
     MIN_TEMP,
+    NIGHTTIME,
     RAIN,
     RAIN_CHANCE,
     WINDAZIMUTH,
@@ -16,6 +17,7 @@ from buienradar.constants import (
 )
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -173,7 +175,10 @@ class BrWeather(WeatherEntity):
     def _calc_condition(self, data: BrData):
         """Return the current condition."""
         if data.condition and (ccode := data.condition.get(CONDCODE)):
-            return CONDITION_MAP.get(ccode)
+            condition = CONDITION_MAP.get(ccode)
+            if condition == ATTR_CONDITION_SUNNY and data.condition.get(NIGHTTIME):
+                return ATTR_CONDITION_CLEAR_NIGHT
+            return condition
         return None
 
     def _calc_forecast(self, data: BrData):
