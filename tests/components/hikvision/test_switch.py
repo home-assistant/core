@@ -360,6 +360,63 @@ async def test_other_settings_changed_to_make_room_are_logged(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+@pytest.mark.parametrize(
+    "error",
+    [
+        ISAPIConnectionError("Cannot connect"),
+        ISAPIError("Request failed with status 500", 500),
+    ],
+    ids=["connection_error", "http_error"],
+)
+async def test_other_settings_are_logged_when_the_request_after_them_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    error: ISAPIError,
+) -> None:
+    """Test a blocker that was switched off is reported when the retry raised."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    error.also_changed = {"HLC/enabled": "false"}
+    mock_image_settings.set_image_setting.side_effect = error
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SMART_LIGHT}, blocking=True
+        )
+
+    assert [(e.data["name"], e.data.get("entity_id")) for e in events] == [
+        ("Front Camera Highlight compensation", HLC)
+    ]
+    assert hass.states.get(HLC).state == STATE_OFF
+    # The switch that was asked for did not change.
+    assert hass.states.get(SMART_LIGHT).state != STATE_ON
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_other_settings_are_logged_when_the_password_is_rejected_after_them(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the blocker is reported, and a new password is still asked for."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    error = ISAPIAuthError("Invalid credentials", 401)
+    error.also_changed = {"HLC/enabled": "false"}
+    mock_image_settings.set_image_setting.side_effect = error
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SMART_LIGHT}, blocking=True
+        )
+
+    assert [e.data["name"] for e in events] == ["Front Camera Highlight compensation"]
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 async def test_a_change_that_needs_a_restart_is_logged(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

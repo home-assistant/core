@@ -13,10 +13,14 @@ from freezegun.api import FrozenDateTimeFactory
 from pyhik.image import ImageWriteResult
 from pyhik.isapi import ISAPIAuthError, ISAPIConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.hikvision import _async_setup_image_settings
-from homeassistant.components.hikvision.const import DOMAIN
+from homeassistant.components.hikvision.const import DOMAIN, EVENT_IMAGE_SETTING_CHANGED
 from homeassistant.components.hikvision.coordinator import (
     SCAN_INTERVAL,
     async_complete,
@@ -38,7 +42,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -1058,6 +1062,48 @@ async def test_a_cancelled_write_still_shows_what_it_changed(
         assert coordinator.data[path] == value
     refreshed = mock_image_settings.get_image_values.call_count > polls
     assert refreshed is result.success
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_cancelled_write_that_fails_still_shows_what_it_switched_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a blocker switched off before a failed request is shown, and logged.
+
+    Also when the action was cancelled while the request ran: the camera is in that
+    state anyway.
+    """
+    await setup_integration(hass, mock_config_entry)
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
+    events = async_capture_events(hass, EVENT_IMAGE_SETTING_CHANGED)
+    started = threading.Event()
+    finish = threading.Event()
+
+    def _slow_failing_write(path: str, value: str) -> ImageWriteResult:
+        started.set()
+        finish.wait(5)
+        error = ISAPIConnectionError("Cannot connect")
+        error.also_changed = {"hlc/ENABLED": "false"}
+        raise error
+
+    mock_image_settings.set_image_setting = _slow_failing_write
+    write = hass.async_create_task(
+        coordinator.async_set_setting("WDR/mode", "open", Context())
+    )
+    await hass.async_add_executor_job(started.wait, 5)
+
+    write.cancel()
+    await asyncio.sleep(0)
+    finish.set()
+    with pytest.raises(asyncio.CancelledError):
+        await write
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Stored under the setting's own spelling.
+    assert coordinator.data[HLC_PATH] == "false"
+    assert [e.data["name"] for e in events] == ["Front Camera Highlight compensation"]
 
 
 @pytest.mark.usefixtures("mock_hikcamera")

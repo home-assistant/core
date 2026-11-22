@@ -515,6 +515,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         job: Callable[..., _T],
         *args: Any,
         on_result: Callable[[_T], Awaitable[None]] | None = None,
+        on_error: Callable[[BaseException], Awaitable[None]] | None = None,
     ) -> _T:
         """Send a request to the camera. The caller holds the lock.
 
@@ -539,7 +540,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 self.hass,
                 _send,
                 *args,
-                on_error=self._async_cancelled_request_failed,
+                on_error=on_error or self._async_cancelled_request_failed,
                 on_result=on_result,
             )
         except ISAPIAuthError as err:
@@ -799,14 +800,42 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                     on_result=partial(
                         self._async_cancelled_write_done, path, updates, context
                     ),
+                    on_error=partial(self._async_cancelled_write_failed, path, context),
                 )
         except ISAPIError as err:
+            self._async_store_changed_before(path, err, context)
             raise await self._async_write_error(err) from err
         if error := self._apply_write_result(path, updates, context, result):
             raise error
         if not self._stopping:
             # Not while unloading: the poll would only be refused.
             await self.async_request_refresh()
+
+    async def _async_cancelled_write_failed(
+        self, path: str, context: Context | None, err: BaseException
+    ) -> None:
+        """Deal with the error of a write whose action was cancelled while it ran."""
+        if isinstance(err, ISAPIError):
+            self._async_store_changed_before(path, err, context)
+        await self._async_cancelled_request_failed(err)
+
+    @callback
+    def _async_store_changed_before(
+        self, path: str, err: ISAPIError, context: Context | None
+    ) -> None:
+        """Show, and tell the user about, what a failed write changed first.
+
+        The camera may have switched other settings off to make room, before the
+        request that failed: it is in that state, whether the write worked or not.
+        """
+        if not err.also_changed:
+            return
+        others = self._as_settings_spell(err.also_changed)
+        self._async_log_also_changed(path, others, context)
+        # Only these are known: not async_set_updated_data, which would count the
+        # write as a successful refresh.
+        self.data = {**self.data, **others}
+        self.async_update_listeners()
 
     async def _async_cancelled_write_done(
         self,
