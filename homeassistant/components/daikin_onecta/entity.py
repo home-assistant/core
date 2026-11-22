@@ -242,6 +242,8 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
     @override
     def _error_device_name(self) -> str:
         """Return the management-point child name when it has one."""
+        if self._device.ha_device_id is None:
+            return self._device.name
         child_device = dr.async_get(self.hass).async_get_child_device_by_identifier(
             (
                 DOMAIN,

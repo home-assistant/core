@@ -91,6 +91,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     def update_state(self) -> None:
         """Refresh all state attributes from the device."""
+        self._attr_current_operation = self.get_current_operation()
         operation_list = self.get_operation_list()
         self._attr_supported_features = self.get_supported_features(operation_list)
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
@@ -117,7 +118,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             else 1.0
         )
         self._attr_operation_list = operation_list
-        self._attr_current_operation = self.get_current_operation()
 
     def _get_native_temperature_unit(self) -> UnitOfTemperature:
         """Return the Daikin temperature unit, defaulting to Celsius."""

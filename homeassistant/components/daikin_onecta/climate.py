@@ -202,7 +202,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if (state := get_state()) is None:
             self._raise_service_validation_error(unavailable_key)
         current_mode, fixed = state
-        if fixed is None or not fixed.settable:
+        if fixed is None:
+            self._raise_service_validation_error(unavailable_key)
+        if current_mode.value == FANMODE_FIXED and fixed.value == target:
+            return
+        if not fixed.settable:
             self._raise_service_validation_error(unavailable_key)
 
         if current_mode.value != FANMODE_FIXED:
@@ -216,6 +220,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             # Keep the confirmed mode if the subsequent position write fails.
             self._publish_write_update()
 
+        if (state := get_state()) is None or (fixed := state[1]) is None:
+            self._raise_service_validation_error(unavailable_key)
         if fixed.value != target:
             await self._async_execute_sub_client_command(
                 OnectaClient.climate_control,

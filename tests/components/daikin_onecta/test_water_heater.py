@@ -46,7 +46,12 @@ from .platform_helpers import (
 @pytest.mark.parametrize(
     ("power_settable", "expected_features", "expected_operation_list"),
     [
-        pytest.param(False, WaterHeaterEntityFeature(0), [], id="read-only"),
+        pytest.param(
+            False,
+            WaterHeaterEntityFeature.OPERATION_MODE,
+            [STATE_HEAT_PUMP],
+            id="read-only",
+        ),
         pytest.param(
             True,
             WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE,
@@ -109,7 +114,13 @@ async def test_water_heater_rejects_read_only_power(
             [STATE_HEAT_PUMP, STATE_PERFORMANCE],
             id="on",
         ),
-        pytest.param("off", WaterHeaterEntityFeature.TARGET_TEMPERATURE, [], id="off"),
+        pytest.param(
+            "off",
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE
+            | WaterHeaterEntityFeature.OPERATION_MODE,
+            [STATE_OFF],
+            id="off",
+        ),
     ],
 )
 def test_water_heater_read_only_power_keeps_writable_boost(
@@ -126,6 +137,25 @@ def test_water_heater_read_only_power_keeps_writable_boost(
 
     assert entity.supported_features == expected_features
     assert entity.operation_list == expected_operation_list
+
+
+def test_water_heater_initial_state_includes_read_only_current_operation() -> None:
+    """Include the active operation when power and boost are read-only."""
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
+    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.power is not None
+    assert point.domestic_hot_water.powerful_mode is not None
+    point.domestic_hot_water.power.value = "on"
+    point.domestic_hot_water.power.settable = False
+    point.domestic_hot_water.powerful_mode.value = "on"
+    point.domestic_hot_water.powerful_mode.settable = False
+
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
+
+    assert entity.current_operation == STATE_PERFORMANCE
+    assert entity.operation_list == [STATE_PERFORMANCE]
+    assert entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
 
 
 def test_water_heater_handles_missing_temperature_values() -> None:
