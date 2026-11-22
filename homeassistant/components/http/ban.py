@@ -11,6 +11,7 @@ import logging
 from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
+from aiohttp import hdrs
 from aiohttp.web import (
     AppKey,
     Application,
@@ -90,7 +91,14 @@ async def ban_middleware(
     try:
         return await handler(request)
     except HTTPUnauthorized:
-        await process_wrong_login(request)
+        # Anonymous read probes (e.g. device discovery) are not login attempts.
+        # Keep failed-authentication tracking and IP ban checks for all requests.
+        anonymous_read = (
+            request.method in ("GET", "HEAD")
+            and hdrs.AUTHORIZATION not in request.headers
+            and "authSig" not in request.query
+        )
+        await process_wrong_login(request, notify=not anonymous_read)
         raise
 
 
@@ -111,11 +119,11 @@ def log_invalid_auth[_HassViewT: HomeAssistantView, **_P](
     return handle_req
 
 
-async def process_wrong_login(request: Request) -> None:
-    """Process a wrong login attempt.
+async def process_wrong_login(request: Request, *, notify: bool = True) -> None:
+    """Handle unauthorized requests and failed logins.
 
-    Increase failed login attempts counter for remote IP address.
-    Add ip ban entry if failed login attempts exceeds threshold.
+    Count requests towards the IP ban threshold, even if no login notification
+    is created for a request lacking authentication credentials.
     """
     hass = request.app[KEY_HASS]
 
@@ -132,25 +140,30 @@ async def process_wrong_login(request: Request) -> None:
                 gethostbyaddr, request.remote
             )
 
-    base_msg = (
-        "Login attempt or request with invalid authentication from"
-        f" {remote_host} ({remote_addr})."
-    )
+    if notify:
+        base_msg = (
+            "Login attempt or request with invalid authentication from"
+            f" {remote_host} ({remote_addr})."
+        )
+    else:
+        base_msg = f"Unauthenticated request from {remote_host} ({remote_addr})."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
     log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. ({user_agent})"
-
-    notification_msg = f"{base_msg} See the log for details."
 
     _LOGGER.warning(log_msg)
 
     # Circular import with websocket_api
     from homeassistant.components import persistent_notification  # noqa: PLC0415
 
-    persistent_notification.async_create(
-        hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
-    )
+    if notify:
+        persistent_notification.async_create(
+            hass,
+            f"{base_msg} See the log for details.",
+            "Login attempt failed",
+            NOTIFICATION_ID_LOGIN,
+        )
 
     if banned:
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)

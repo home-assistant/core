@@ -361,19 +361,21 @@ async def test_ip_bans_file_creation(
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
-        resp = await client.get("/example")
+        # An explicit invalid token should still trigger the login notification.
+        invalid_auth = {"Authorization": "Bearer invalid"}
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
         assert m_open.call_count == 0
 
-        resp = await client.get("/example")
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS) + 1
         m_open.assert_called_once_with(
             hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
         )
 
-        resp = await client.get("/example")
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
@@ -391,6 +393,89 @@ async def test_ip_bans_file_creation(
             " from example.com (200.201.202.204)."
             " Requested URL: '/example'." in caplog.text
         )
+
+
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+async def test_unauthenticated_probe_does_not_notify(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Anonymous API probes stay logged and counted without login notifications."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        raise HTTPUnauthorized
+
+    app.router.add_get("/api/config", unauth_handler)
+    setup_bans(hass, app, 5)
+    remote_ip = ip_address("192.168.10.179")
+    mock_real_ip(app)(str(remote_ip))
+    client = await aiohttp_client(app)
+
+    response = await client.request(
+        method, "/api/config", headers={"User-Agent": "Dart/3.13 (dart:io)"}
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+    assert "Unauthenticated request from example.com" in caplog.text
+    assert "Requested URL: '/api/config'" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("headers", "path"),
+    [
+        pytest.param(
+            {"Authorization": "Bearer invalid"},
+            "/api/config",
+            id="bearer-token",
+        ),
+        pytest.param({}, "/api/config?authSig=invalid", id="signed-url"),
+    ],
+)
+async def test_unauthorized_request_with_credentials_notifies(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    headers: dict[str, str],
+    path: str,
+) -> None:
+    """Failed requests presenting credentials still trigger login notifications."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        raise HTTPUnauthorized
+
+    app.router.add_get("/api/config", unauth_handler)
+    setup_bans(hass, app, 5)
+    client = await aiohttp_client(app)
+
+    response = await client.get(path, headers=headers)
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert "http-login" in async_get_persistent_notifications(hass)
+
+
+async def test_unauthenticated_write_request_notifies(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """An anonymous write request still generates a security notification."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        raise HTTPUnauthorized
+
+    app.router.add_post("/api/config", unauth_handler)
+    setup_bans(hass, app, 5)
+    client = await aiohttp_client(app)
+
+    response = await client.post("/api/config")
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert "http-login" in async_get_persistent_notifications(hass)
 
 
 async def test_failed_login_attempts_counter(
