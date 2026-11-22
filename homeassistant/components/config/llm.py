@@ -38,6 +38,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -47,6 +48,7 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
+from .label_registry import SUPPORTED_LABEL_THEME_COLORS
 
 _SEARCH_LIMIT = 15
 _STATUS_VALUES = ["loaded", "error", "not_loaded"]
@@ -1434,6 +1436,171 @@ class RemoveEntityTool(Tool):
         return ToolResult(data={"result": {"entity_id": entity_id}})
 
 
+def _get_label_entry(hass: HomeAssistant, label_id: str) -> lr.LabelEntry:
+    """Return the registry entry of a label."""
+    if (entry := lr.async_get(hass).async_get_label(label_id)) is None:
+        raise HomeAssistantError(f"Label '{label_id}' not found.")
+    return entry
+
+
+def _format_label_settings(entry: lr.LabelEntry) -> JsonObjectType:
+    """Format the settings of a label for LLM consumption."""
+    return {
+        "label_id": entry.label_id,
+        "name": entry.name,
+        "color": entry.color,
+        "icon": entry.icon,
+        "description": entry.description,
+    }
+
+
+def _label_color(value: str) -> str:
+    """Validate a theme color or a hex color."""
+    if value in SUPPORTED_LABEL_THEME_COLORS:
+        return value
+    return cv.color_hex(value)
+
+
+_LABEL_SETTINGS: VolDictType = {
+    probatio.Optional(
+        "color",
+        description=(
+            "A hex color like '#ff0000', or a theme color: "
+            f"{', '.join(sorted(SUPPORTED_LABEL_THEME_COLORS))}. null removes it."
+        ),
+    ): probatio.Any(None, probatio.All(str, _label_color)),
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:tag'. null removes it."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "description", description="What the label is for. null removes it."
+    ): probatio.Any(None, str),
+}
+
+
+class GetLabelSettingsTool(Tool):
+    """LLM Tool to get the settings of a label."""
+
+    name = "config__get_label_settings"
+    title = "Get label settings"
+    description = (
+        "Get the settings of the label with the given label_id. Use search__search "
+        "to find the label_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the label."""
+        args = self.parameters(tool_input.tool_args)
+        try:
+            entry = _get_label_entry(hass, args["label_id"])
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class UpdateLabelSettingsTool(Tool):
+    """LLM Tool to update the settings of a label."""
+
+    name = "config__update_label_settings"
+    title = "Update label settings"
+    description = (
+        "Update the settings of the label with the given label_id. Only the given "
+        "settings change. Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("label_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_LABEL_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the label and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        label_id = settings.pop("label_id")
+        try:
+            _get_label_entry(hass, label_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        try:
+            entry = lr.async_get(hass).async_update(label_id, **settings)
+        except ValueError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class CreateLabelTool(Tool):
+    """LLM Tool to create a label."""
+
+    name = "config__create_label"
+    title = "Create label"
+    description = "Create a label. Returns the settings of the new label."
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_LABEL_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the label and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        try:
+            entry = lr.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            return _error_result(str(err))
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class DeleteLabelTool(Tool):
+    """LLM Tool to delete a label."""
+
+    name = "config__delete_label"
+    title = "Delete label"
+    description = (
+        "Delete the label with the given label_id. It is removed from everything "
+        "that has it."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the label."""
+        label_id = self.parameters(tool_input.tool_args)["label_id"]
+        try:
+            _get_label_entry(hass, label_id)
+        except HomeAssistantError as err:
+            return _error_result(str(err))
+        lr.async_get(hass).async_delete(label_id)
+        return ToolResult(data={"result": {"label_id": label_id}})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -1455,5 +1622,9 @@ def async_get_tools(
             GetEntitySettingsTool(),
             UpdateEntitySettingsTool(),
             RemoveEntityTool(),
+            GetLabelSettingsTool(),
+            UpdateLabelSettingsTool(),
+            CreateLabelTool(),
+            DeleteLabelTool(),
         ]
     )

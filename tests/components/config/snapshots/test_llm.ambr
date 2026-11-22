@@ -30,6 +30,47 @@
       ]),
       'type': 'object',
     }),
+    'config__create_label': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'color': dict({
+          'description': "A hex color like '#ff0000', or a theme color: accent, amber, black, blue, blue-grey, brown, cyan, dark-grey, deep-orange, deep-purple, disabled, green, grey, indigo, light-blue, light-green, light-grey, lime, orange, pink, primary, purple, red, teal, white, yellow. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'description': dict({
+          'description': 'What the label is for. null removes it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:tag'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_label': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -95,6 +136,19 @@
           'description': 'Filter in-progress flows by integration domain.',
         }),
       }),
+      'type': 'object',
+    }),
+    'config__get_label_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
+      ]),
       'type': 'object',
     }),
     'config__reload_config_entry': dict({
@@ -341,6 +395,38 @@
       }),
       'required': list([
         'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_label_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'color': dict({
+          'description': "A hex color like '#ff0000', or a theme color: accent, amber, black, blue, blue-grey, brown, cyan, dark-grey, deep-orange, deep-purple, disabled, green, grey, indigo, light-blue, light-green, light-grey, lime, orange, pink, primary, purple, red, teal, white, yellow. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'description': dict({
+          'description': 'What the label is for. null removes it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:tag'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
       ]),
       'type': 'object',
     }),

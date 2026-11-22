@@ -21,16 +21,20 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
+    CreateLabelTool,
+    DeleteLabelTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
     GetEntitySettingsTool,
     GetFlowsInProgressTool,
+    GetLabelSettingsTool,
     ReloadConfigEntryTool,
     RemoveEntityTool,
     SearchIntegrationsTool,
     StartFlowTool,
     UpdateCoreConfigTool,
     UpdateEntitySettingsTool,
+    UpdateLabelSettingsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -121,6 +125,10 @@ async def test_async_get_tools(
         "config__get_entity_settings",
         "config__update_entity_settings",
         "config__remove_entity",
+        "config__get_label_settings",
+        "config__update_label_settings",
+        "config__create_label",
+        "config__delete_label",
     ]
     assert ha_tools.prompt is None
 
@@ -138,6 +146,10 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         GetEntitySettingsTool(),
         UpdateEntitySettingsTool(),
         RemoveEntityTool(),
+        GetLabelSettingsTool(),
+        UpdateLabelSettingsTool(),
+        CreateLabelTool(),
+        DeleteLabelTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -2372,6 +2384,221 @@ async def test_remove_entity(
         hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
     )
     assert result.error
+
+
+@pytest.fixture
+def label_tools() -> dict[str, llm.Tool]:
+    """Return the label registry tools by name."""
+    return {
+        tool.name: tool
+        for tool in (
+            GetLabelSettingsTool(),
+            UpdateLabelSettingsTool(),
+            CreateLabelTool(),
+            DeleteLabelTool(),
+        )
+    }
+
+
+async def test_get_label_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test getting the settings of a label."""
+    label_registry.async_create(
+        "Energy", color="green", icon="mdi:flash", description="Uses power"
+    )
+
+    tool = label_tools["config__get_label_settings"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "label_id": "energy",
+                "name": "Energy",
+                "color": "green",
+                "icon": "mdi:flash",
+                "description": "Uses power",
+            }
+        }
+    )
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "unknown"}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={"error": "Label 'unknown' not found."}, error=True
+    )
+
+
+async def test_update_label_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test updating the settings of a label."""
+    label_registry.async_create("Energy", color="green", icon="mdi:flash")
+
+    tool = label_tools["config__update_label_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "label_id": "energy",
+                "name": "Power",
+                "color": "#ff0000",
+                "description": "Uses power",
+            },
+        ),
+        llm_context,
+    )
+    expected = {
+        "label_id": "energy",
+        "name": "Power",
+        "color": "#ff0000",
+        "icon": "mdi:flash",
+        "description": "Uses power",
+    }
+    assert result == llm.ToolResult(data={"result": expected})
+    entry = label_registry.async_get_label("energy")
+    assert entry is not None
+    assert entry.name == "Power"
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {"label_id": "energy", "color": None, "icon": None, "description": None},
+        ),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={"result": {**expected, "color": None, "icon": None, "description": None}}
+    )
+
+
+async def test_update_label_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test errors when updating the settings of a label."""
+    label_registry.async_create("Energy")
+    label_registry.async_create("Power")
+
+    tool = label_tools["config__update_label_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"label_id": "unknown", "name": "Water"}),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={"error": "Label 'unknown' not found."}, error=True
+    )
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"label_id": "energy", "name": "power"}),
+        llm_context,
+    )
+    assert result.error
+    assert "already in use" in result.data["error"]
+
+
+async def test_create_label(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test creating a label."""
+    tool = label_tools["config__create_label"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"name": "Energy", "color": "amber"}),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "label_id": "energy",
+                "name": "Energy",
+                "color": "amber",
+                "icon": None,
+                "description": None,
+            }
+        }
+    )
+    assert label_registry.async_get_label("energy") is not None
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"name": "energy"}), llm_context
+    )
+    assert result.error
+    assert "already in use" in result.data["error"]
+
+
+async def test_delete_label(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test deleting a label."""
+    label_registry.async_create("Energy")
+
+    tool = label_tools["config__delete_label"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"label_id": "energy"}})
+    assert label_registry.async_get_label("energy") is None
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={"error": "Label 'energy' not found."}, error=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "invalid_args"),
+    [
+        pytest.param("config__get_label_settings", {}, id="get_missing_label_id"),
+        pytest.param("config__create_label", {}, id="create_missing_name"),
+        pytest.param("config__create_label", {"name": " "}, id="create_empty_name"),
+        pytest.param("config__create_label", {"name": "Energy", "color": "rainbow"}),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "color": "#ff00"}
+        ),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "icon": "flash"}
+        ),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "name": None}
+        ),
+        pytest.param("config__delete_label", {"label_id": ""}),
+    ],
+)
+async def test_label_tools_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_tools: dict[str, llm.Tool],
+    tool_name: str,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = label_tools[tool_name]
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
 
 
 async def test_get_config_entries_flow_capabilities(
