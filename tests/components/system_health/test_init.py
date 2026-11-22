@@ -203,6 +203,7 @@ async def test_check_can_reach_url_session(
 ) -> None:
     """Test the reachability check uses the session passed to it."""
     session = AsyncMock()
+    session.get.return_value = Mock()
 
     assert (
         await system_health.async_check_can_reach_url(
