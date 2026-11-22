@@ -385,6 +385,117 @@ async def test_manager_reconfigure_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_suggests_stored_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure pre-fills a stored access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "saved-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values[CONF_ACCESS_TOKEN] == "saved-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_replaces_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure can replace a stored access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "new-token",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_clears_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure can remove a stored access token."""
+    manager_dsn = "manager://127.0.0.1:4201"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: manager_dsn,
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.data[CONF_PORT] == manager_dsn
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_keeps_token_when_unchanged(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure keeps the token when it is not resubmitted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "keep-me",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.10", CONF_PORT: 4201},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "keep-me"
+    assert entry.data[CONF_PORT] == "manager://192.168.0.10:4201"
+
+
+@pytest.mark.usefixtures("controller")
 @pytest.mark.parametrize(
     ("inputParams", "expected"),
     [

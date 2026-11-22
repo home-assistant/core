@@ -197,12 +197,13 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._vlp_file = None
                 if self.source == SOURCE_RECONFIGURE:
                     old_entry = self._get_reconfigure_entry()
-                    data: dict[str, Any] = {
-                        CONF_PORT: self._device,
-                        CONF_VLP_FILE: None,
-                    }
+                    data = dict(old_entry.data)
+                    data[CONF_PORT] = self._device
+                    data[CONF_VLP_FILE] = None
                     if self._access_token:
                         data[CONF_ACCESS_TOKEN] = self._access_token
+                    elif CONF_ACCESS_TOKEN in user_input:
+                        data.pop(CONF_ACCESS_TOKEN, None)
                     return self.async_update_reload_and_abort(old_entry, data=data)
                 return self._create_device()
         elif self.source == SOURCE_RECONFIGURE:
