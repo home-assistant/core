@@ -17,7 +17,7 @@ from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_integration
+from . import entity_callbacks, setup_integration
 from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME
 
 
@@ -75,7 +75,7 @@ async def test_binary_sensor_callback_registered(
     await setup_integration(hass, mock_config_entry)
 
     # Verify callback was registered for each sensor
-    assert mock_hikcamera.return_value.add_update_callback.call_count == 2
+    assert len(entity_callbacks(mock_hikcamera.return_value)) == 2
 
 
 async def test_binary_sensor_no_sensors(
@@ -267,10 +267,7 @@ async def test_binary_sensor_update_callback(
     )
 
     # Get the registered callback and call it
-    add_callback_call = mock_hikcamera.return_value.add_update_callback.call_args_list[
-        0
-    ]
-    callback_func = add_callback_call[0][0]
+    callback_func = entity_callbacks(mock_hikcamera.return_value)[0]
     callback_func("motion detected")
 
     # Wait for the event loop to process the scheduled state update
@@ -298,7 +295,7 @@ async def test_binary_sensor_unavailable_when_stream_disconnected(
 
     # pyhik notifies every registered callback when the stream drops
     camera.stream_connected = False
-    callback_func = camera.add_update_callback.call_args_list[0][0][0]
+    callback_func = entity_callbacks(camera)[0]
     callback_func("stream disconnected")
     await hass.async_block_till_done()
 

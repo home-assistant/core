@@ -1,6 +1,7 @@
 """Test Hikvision integration setup and unload."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from unittest.mock import MagicMock, patch
@@ -23,6 +24,7 @@ from homeassistant.components.hikvision import (
     EVENT_PLATFORMS,
     IMAGE_SETTINGS_RETRY_INTERVAL,
     PLATFORMS,
+    STREAM_WATCH,
 )
 from homeassistant.components.hikvision.const import CONF_RANDOM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -85,6 +87,125 @@ async def test_stream_stopped_on_shutdown(
     await hass.async_block_till_done()
 
     mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+def _stream_watch(camera: MagicMock) -> Callable[[str], None]:
+    """Return the callback the setup registered to watch the event stream."""
+    (watch,) = (
+        call.args[0]
+        for call in camera.add_update_callback.call_args_list
+        if call.args[1] == f"{TEST_DEVICE_ID}.{STREAM_WATCH}"
+    )
+    return watch
+
+
+def _stream_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """Return what the integration logged about the event stream."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "homeassistant.components.hikvision"
+        and "event stream of" in record.getMessage()
+    ]
+
+
+async def test_a_lost_stream_is_logged_once_and_its_return_once(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the event stream dropping is logged once, and so is it coming back.
+
+    pyHik calls the watch from the thread of the stream, for each change.
+    """
+    camera = mock_hikcamera.return_value
+    caplog.set_level(logging.INFO, logger="homeassistant.components.hikvision")
+    await setup_integration(hass, mock_config_entry)
+    watch = _stream_watch(camera)
+    assert not _stream_messages(caplog)
+
+    camera.stream_connected = False
+    for _ in range(2):
+        await hass.async_add_executor_job(watch, "")
+        await hass.async_block_till_done()
+    assert _stream_messages(caplog) == [
+        "The event stream of Front Camera is unavailable"
+    ]
+    assert all(
+        record.levelno == logging.INFO
+        for record in caplog.records
+        if "event stream of" in record.getMessage()
+    )
+
+    camera.stream_connected = True
+    for _ in range(2):
+        await hass.async_add_executor_job(watch, "")
+        await hass.async_block_till_done()
+    assert _stream_messages(caplog) == [
+        "The event stream of Front Camera is unavailable",
+        "The event stream of Front Camera is back online",
+    ]
+
+
+async def test_a_drop_and_a_return_heard_together_are_both_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test a stream that drops and comes back before the loop runs logs both.
+
+    Each change is handled with the state the stream had when it called the watch.
+    """
+    camera = mock_hikcamera.return_value
+    caplog.set_level(logging.INFO, logger="homeassistant.components.hikvision")
+    await setup_integration(hass, mock_config_entry)
+    watch = _stream_watch(camera)
+
+    def _drop_and_return() -> None:
+        camera.stream_connected = False
+        watch("")
+        camera.stream_connected = True
+        watch("")
+
+    await hass.async_add_executor_job(_drop_and_return)
+    await hass.async_block_till_done()
+
+    assert _stream_messages(caplog) == [
+        "The event stream of Front Camera is unavailable",
+        "The event stream of Front Camera is back online",
+    ]
+
+
+async def test_a_stream_stopped_on_purpose_is_not_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the unload, which stops the stream, is not reported as a lost stream.
+
+    The watch is gone once the entry is unloaded.
+    """
+    camera = mock_hikcamera.return_value
+    caplog.set_level(logging.INFO, logger="homeassistant.components.hikvision")
+    await setup_integration(hass, mock_config_entry)
+    watch = _stream_watch(camera)
+
+    def _disconnect() -> None:
+        # As pyHik does: the watch hears the stream stop.
+        camera.stream_connected = False
+        watch("")
+
+    camera.disconnect.side_effect = _disconnect
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not _stream_messages(caplog)
+    camera.remove_update_callback.assert_any_call(
+        watch, f"{TEST_DEVICE_ID}.{STREAM_WATCH}"
+    )
 
 
 async def test_unload_after_shutdown_logs_no_error(

@@ -1,7 +1,11 @@
 """Common test tools for the Hikvision integration."""
 
+from collections.abc import Callable
+from unittest.mock import MagicMock
+
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.hikvision import STREAM_WATCH
 from homeassistant.core import HomeAssistant
 
 
@@ -27,3 +31,15 @@ def image_channel_with(path: str, element: str) -> str:
         '<ImageChannel version="2.0" '
         f'xmlns="http://www.hikvision.com/ver20/XMLSchema">{document}</ImageChannel>'
     )
+
+
+def entity_callbacks(camera: MagicMock) -> list[Callable[[str], None]]:
+    """Return the callbacks the entities registered with pyHik, in order.
+
+    Not the watch of the stream, which every setup registers first.
+    """
+    return [
+        call.args[0]
+        for call in camera.add_update_callback.call_args_list
+        if not call.args[1].endswith(f".{STREAM_WATCH}")
+    ]

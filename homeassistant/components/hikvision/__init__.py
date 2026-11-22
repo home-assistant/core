@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
@@ -353,6 +354,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
         await hass.async_add_executor_job(fetch_and_inject_nvr_events)
 
+    # Before the stream starts: its first drop must be heard.
+    entry.async_on_unload(_async_log_stream_availability(hass, entry))
+
     # Start the event stream
     await hass.async_add_executor_job(camera.start_stream)
 
@@ -447,6 +451,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
             # while cleaning up does not replace it.
             _LOGGER.exception("Error while cleaning up after a failed setup")
         raise
+
+
+# What the watch of the stream is registered for: no event has this name. pyHik
+# calls every callback when its stream connects or drops, and a callback only for
+# the events of its own sensor otherwise.
+STREAM_WATCH = "stream"
+
+
+@callback
+def _async_log_stream_availability(
+    hass: HomeAssistant, entry: HikvisionConfigEntry
+) -> Callable[[], None]:
+    """Log once when the event stream drops, and once when it is back.
+
+    The entities of the events are unavailable meanwhile. A stream stopped on
+    purpose (an unload, a rejected password, Home Assistant stopping) is not
+    reported. Returns what stops the watch.
+    """
+    data = entry.runtime_data
+    camera = data.camera
+    lost = False
+
+    @callback
+    def _async_changed(connected: bool) -> None:
+        nonlocal lost
+        if data.stream_stop is not None:
+            return
+        if connected:
+            if lost:
+                lost = False
+                _LOGGER.info("The event stream of %s is back online", entry.title)
+        elif not lost:
+            lost = True
+            _LOGGER.info("The event stream of %s is unavailable", entry.title)
+
+    def _changed(_sensor: str) -> None:
+        # From the thread of the stream. The state is read here: a drop and a return
+        # both queued before the loop runs them must each be heard.
+        with contextlib.suppress(RuntimeError):
+            hass.loop.call_soon_threadsafe(_async_changed, camera.stream_connected)
+
+    watch = f"{data.stream_id}.{STREAM_WATCH}"
+    camera.add_update_callback(_changed, watch)
+    return lambda: camera.remove_update_callback(_changed, watch)
 
 
 async def _async_setup_image_settings(

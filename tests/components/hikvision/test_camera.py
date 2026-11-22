@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_integration
+from . import entity_callbacks, setup_integration
 from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST
 
 
@@ -225,7 +225,7 @@ async def test_camera_unavailable_when_stream_disconnected(
 
     # pyhik notifies every registered callback when the stream drops
     camera.stream_connected = False
-    callback_func = camera.add_update_callback.call_args_list[0][0][0]
+    callback_func = entity_callbacks(camera)[0]
     callback_func("stream disconnected")
     await hass.async_block_till_done()
 
