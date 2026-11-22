@@ -3,7 +3,13 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
+from pyforeca import (
+    CurrentWeather,
+    DailyForecast,
+    HourlyForecast,
+    Location,
+    Observation,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
@@ -123,6 +129,29 @@ LOCATION = Location(
 )
 
 
+OBSERVATION = Observation.from_api(
+    {
+        "station": "Helsinki Kaisaniemi",
+        "distance": "1 km N",
+        "time": "2026-11-05T10:40:00+02:00",
+        "temperature": 8,
+        "feelsLikeTemp": 4,
+        "symbol": "d000",
+        "windDirString": "NW",
+        "windDir": 306,
+        "windSpeed": 6,
+        "windGust": 9,
+        "pressure": 1018.8,
+        "relHumidity": 69,
+        "visibility": 20000,
+        "snowDepth": None,
+        "longitude": 24.94,
+        "latitude": 60.18,
+        "elevation": 4,
+    }
+)
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -158,6 +187,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
                 ]
             ]
         )
+        client.observation_latest = AsyncMock(return_value=OBSERVATION)
         yield client
 
 
