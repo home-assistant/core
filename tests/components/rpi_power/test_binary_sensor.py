@@ -11,6 +11,7 @@ from pytest_homeassistant.common import (
     patch,
     snapshot_platform,
 )
+from rpi_bad_power import RpiBadPowerError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rpi_power import binary_sensor
@@ -18,9 +19,9 @@ from homeassistant.components.rpi_power.binary_sensor import (
     DESCRIPTION_NORMALIZED,
     DESCRIPTION_UNDER_VOLTAGE,
 )
-from homeassistant.components.rpi_power.const import DOMAIN
+from homeassistant.components.rpi_power.const import DOMAIN, ISSUE_UNDER_VOLTAGE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -49,13 +50,20 @@ async def test_new(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test new entry."""
+    caplog.set_level(logging.DEBUG, logger=binary_sensor.__name__)
     await _async_setup_component(hass, False)
     state = hass.states.get(ENTITY_ID)
+    assert state
     assert state.state == STATE_OFF
     assert not any(x.levelno == logging.WARNING for x in caplog.records)
+    assert (
+        binary_sensor.__name__,
+        logging.DEBUG,
+        DESCRIPTION_NORMALIZED,
+    ) not in caplog.record_tuples
     assert not issue_registry.async_get_issue(
         domain=DOMAIN,
-        issue_id="under_voltage_detected",
+        issue_id=ISSUE_UNDER_VOLTAGE,
     )
 
 
@@ -122,3 +130,73 @@ async def test_setup(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_read_error_unavailable_and_recovery(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test entity becomes unavailable on read error and recovers cleanly."""
+    caplog.set_level(logging.INFO, logger=binary_sensor.__name__)
+    mocked_under_voltage = await _async_setup_component(hass, False)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_OFF
+
+    # First read failure: becomes unavailable and logs warning once
+    type(mocked_under_voltage).get = MagicMock(
+        side_effect=RpiBadPowerError("I/O error")
+    )
+    future = dt_util.utcnow() + timedelta(minutes=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    error_warnings = [
+        rec
+        for rec in caplog.records
+        if rec.name == binary_sensor.__name__
+        and rec.levelno == logging.WARNING
+        and "Error reading under-voltage status" in rec.message
+    ]
+    assert len(error_warnings) == 1
+
+    # Repeated read failure: stays unavailable without logging duplicate warnings
+    future += timedelta(minutes=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    error_warnings = [
+        rec
+        for rec in caplog.records
+        if rec.name == binary_sensor.__name__
+        and rec.levelno == logging.WARNING
+        and "Error reading under-voltage status" in rec.message
+    ]
+    assert len(error_warnings) == 1
+
+    # Recovery with under-voltage active: becomes available, logs recovery, creates issue
+    type(mocked_under_voltage).get = MagicMock(return_value=True)
+    future += timedelta(minutes=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+    assert (
+        binary_sensor.__name__,
+        logging.INFO,
+        "Recovered reading under-voltage status",
+    ) in caplog.record_tuples
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_UNDER_VOLTAGE,
+    )

@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DESCRIPTION_NORMALIZED = "Voltage normalized. Everything is working as intended."
 DESCRIPTION_UNDER_VOLTAGE = (
-    "Under-voltage was detected. Consider getting a uninterruptible power supply for"
+    "Under-voltage was detected. Consider getting an uninterruptible power supply for"
     " your Raspberry Pi."
 )
 
@@ -64,7 +64,18 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
 
     def update(self) -> None:
         """Update the state."""
-        value = self._under_voltage.get()
+        try:
+            value = self._under_voltage.get()
+        except OSError as err:
+            if self._attr_available:
+                _LOGGER.warning("Error reading under-voltage status: %s", err)
+                self._attr_available = False
+            return
+
+        if not self._attr_available:
+            _LOGGER.info("Recovered reading under-voltage status")
+            self._attr_available = True
+
         if self._attr_is_on != value:
             if value:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
@@ -76,8 +87,8 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
                     is_fixable=True,
                     is_persistent=True,
                     severity=IssueSeverity.CRITICAL,
-                    translation_key="under_voltage_detected",
+                    translation_key=ISSUE_UNDER_VOLTAGE,
                 )
-            else:
+            elif self._attr_is_on:
                 _LOGGER.debug(DESCRIPTION_NORMALIZED)
             self._attr_is_on = value
