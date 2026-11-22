@@ -1,5 +1,6 @@
 """Support for Tuya cameras."""
 
+import asyncio
 from dataclasses import dataclass
 from typing import override
 
@@ -15,6 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.components.stream import Stream
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -86,6 +88,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._attr_model = device.product_name
         self._motion_detection_switch = definition.motion_detection_switch
         self._recording_status = definition.recording_status
+        self._stream_creation_lock = asyncio.Lock()
 
     @property
     @override
@@ -102,6 +105,19 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
             return status
         return False
+
+    @override
+    async def async_create_stream(self) -> Stream | None:
+        """Allocate a new source if the previous stream has stopped or failed."""
+        async with self._stream_creation_lock:
+            if (stream := self.stream) is not None and (
+                not stream.outputs() or not stream.available
+            ):
+                # Tuya allocations can only be opened once. The cached stream
+                # keeps that URL even after all viewers have left.
+                self.stream = None
+                await stream.stop()
+            return await super().async_create_stream()
 
     @override
     async def stream_source(self) -> str | None:
