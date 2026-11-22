@@ -135,15 +135,6 @@ def mock_light() -> Generator[AsyncMock]:
             client.colour_temp_mode = type(colour) is int
             run_callbacks()
 
-        async def mock_set_temperature_effect(
-            colour_temp: int, brightness: int, effect: EffectType, effect_speed: int
-        ):
-            client.colour_temp = colour_temp
-            client.brightness = brightness
-            client.effect = effect, effect_speed
-            client.colour_temp_mode = True
-            run_callbacks()
-
         client.add_callback_on_state_changed = add_callback_on_state_changed
         client.remove_callback = remove_callback
         client.set_power = AsyncMock(side_effect=mock_set_power)
