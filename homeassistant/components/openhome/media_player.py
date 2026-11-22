@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 from typing import Any, Concatenate, override
+from urllib.parse import urljoin
 
 from openhomedevice.exceptions import OpenhomeError
 
@@ -48,6 +49,10 @@ SUPPORT_OPENHOME = (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Cap on metadata browse requests during a source-tree search, so a large
+# media library cannot delay play_media with dozens of sequential requests.
+_MAX_METADATA_BROWSE_REQUESTS = 20
 
 
 async def async_setup_entry(
@@ -226,13 +231,7 @@ class OpenhomeDevice(MediaPlayerEntity):
             # Metadata lookup is best-effort: DLNA servers answer upnp error
             # 710 when browsing the direct children of a file, which must not
             # fail playback.
-            try:
-                browsed = await self._async_browse_media_item(media_content_id)
-            except (BrowseError, Unresolvable) as err:
-                _LOGGER.debug(
-                    "Could not browse %s for metadata: %s", media_content_id, err
-                )
-                browsed = None
+            browsed = await self._async_browse_media_item(media_content_id)
             # Keep the media's own metadata instead of a generic one.
             if browsed is not None:
                 track_details["title"] = browsed.title or "Home Assistant"
@@ -240,7 +239,8 @@ class OpenhomeDevice(MediaPlayerEntity):
             elif didl := getattr(play_item, "didl_metadata", None):
                 track_details["title"] = didl.title or "Home Assistant"
                 if album_art := getattr(didl, "album_art_uri", None):
-                    track_details["albumArtwork"] = album_art
+                    # DIDL artwork URLs can be relative to the media server.
+                    track_details["albumArtwork"] = urljoin(media_id, album_art)
 
         if media_type != MediaType.MUSIC:
             _LOGGER.error(
@@ -262,9 +262,14 @@ class OpenhomeDevice(MediaPlayerEntity):
 
         Browsing a leaf id can return a listing instead of the item (e.g.
         radio_browser returns an empty listing for a station id), so fall back
-        to searching the media source root.
+        to searching the media source root. When browsing the id itself fails
+        (e.g. upnp error 710 on a file), look the item up in its parent listing.
         """
-        item = await media_source.async_browse_media(self.hass, media_content_id)
+        try:
+            item = await media_source.async_browse_media(self.hass, media_content_id)
+        except (BrowseError, Unresolvable) as err:
+            _LOGGER.debug("Could not browse %s for metadata: %s", media_content_id, err)
+            return await self._async_find_in_parent_listing(media_content_id)
         if not item.can_expand:
             return item
         parsed = MediaSourceItem.from_uri(self.hass, media_content_id, None)
@@ -273,23 +278,52 @@ class OpenhomeDevice(MediaPlayerEntity):
         root = await media_source.async_browse_media(
             self.hass, f"{media_source.URI_SCHEME}{parsed.domain}"
         )
-        return await self._async_search_media_tree(root, media_content_id, depth=0)
+        budget = [_MAX_METADATA_BROWSE_REQUESTS]
+        return await self._async_search_media_tree(
+            root, media_content_id, depth=0, budget=budget
+        )
+
+    async def _async_find_in_parent_listing(
+        self, media_content_id: str
+    ) -> BrowseMedia | None:
+        """Find a media item in its parent listing."""
+        parsed = MediaSourceItem.from_uri(self.hass, media_content_id, None)
+        if parsed.domain is None or "/" not in parsed.identifier:
+            return None
+        parent_id = (
+            f"{media_source.URI_SCHEME}{parsed.domain}/"
+            f"{parsed.identifier.rsplit('/', 1)[0]}"
+        )
+        try:
+            parent = await media_source.async_browse_media(self.hass, parent_id)
+        except BrowseError, Unresolvable:
+            return None
+        for child in parent.children or []:
+            if child.media_content_id == media_content_id:
+                return child
+        return None
 
     async def _async_search_media_tree(
-        self, item: BrowseMedia, media_content_id: str, *, depth: int
+        self,
+        item: BrowseMedia,
+        media_content_id: str,
+        *,
+        depth: int,
+        budget: list[int],
     ) -> BrowseMedia | None:
         """Search the children of an expandable browse item for a media_content_id."""
-        if depth > 2:
+        if depth > 2 or budget[0] <= 0:
             return None
         for child in item.children or []:
             if child.media_content_id == media_content_id:
                 return child
-            if child.can_expand:
+            if child.can_expand and budget[0] > 0:
+                budget[0] -= 1
                 sub_item = await media_source.async_browse_media(
                     self.hass, child.media_content_id
                 )
                 found = await self._async_search_media_tree(
-                    sub_item, media_content_id, depth=depth + 1
+                    sub_item, media_content_id, depth=depth + 1, budget=budget
                 )
                 if found is not None:
                     return found
