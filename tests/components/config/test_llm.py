@@ -1491,6 +1491,70 @@ async def test_oauth_and_external_step_on_configure_step(
         )
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_SSDP]
+)
+@pytest.mark.parametrize(
+    "step_action",
+    [
+        pytest.param(_step_external, id="external_step"),
+        pytest.param(_step_pick_implementation, id="pick_implementation"),
+        pytest.param(_step_missing_credentials, id="missing_credentials"),
+        pytest.param(_step_redirect_runtime_error, id="redirect_runtime_error"),
+    ],
+)
+async def test_discovery_oauth_handoff(
+    hass: HomeAssistant,
+    llm_api: llm.APIInstance,
+    source: str,
+    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
+) -> None:
+    """Test discovered devices open browser setup when authentication is required."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class DiscoveryOAuthFlow(_BaseOAuthTestFlow):
+        """Discovery flow with a confirmation before authentication."""
+
+        @override
+        async def async_step_zeroconf(self, discovery_info: Any) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        @override
+        async def async_step_ssdp(self, discovery_info: Any) -> ConfigFlowResult:
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(
+            self, user_input: dict[str, Any] | None = None
+        ) -> ConfigFlowResult:
+            if user_input is not None:
+                return await step_action(self)
+            return self.async_show_form(step_id="confirm")
+
+    with mock_config_flow(TEST_DOMAIN, DiscoveryOAuthFlow):
+        started = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": source}
+        )
+        result = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {
+                    "flow_id": f"{TEST_DOMAIN}:{started['flow_id'][-4:]}",
+                    "user_input": {},
+                },
+            )
+        )
+
+    assert result.error is True
+    assert (
+        result.data["frontend_url"]
+        == f"/config/integrations/dashboard/add?domain={TEST_DOMAIN}"
+    )
+    assert hass.config_entries.flow.async_progress_by_handler(TEST_DOMAIN) == []
+
+
 @pytest.mark.parametrize(
     ("tool_name", "tool_args"),
     [

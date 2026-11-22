@@ -866,8 +866,9 @@ class ConfigureFlowTool(Tool):
             flow_mgr = hass.config_entries.flow
             domain = flow_handler.handler
             flow_category = "config"
-            is_new_entry = (
-                flow_handler.context.get("source") == config_entries.SOURCE_USER
+            is_new_entry = flow_handler.context.get("source") not in (
+                config_entries.SOURCE_REAUTH,
+                config_entries.SOURCE_RECONFIGURE,
             )
 
         flow_id = flow_handler.flow_id
