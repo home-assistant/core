@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
+from aiohttp import ClientPayloadError
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
@@ -331,15 +332,23 @@ async def test_unsupported_radio_catalog(
     assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
 
+@pytest.mark.parametrize(
+    "request_error",
+    [
+        pytest.param(SmlightConnectionError, id="connection-lost"),
+        pytest.param(ClientPayloadError, id="incomplete-response"),
+    ],
+)
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
-async def test_update_firmware(
+async def test_update_firmware_retry_after_flash_error(
     mock_sleep: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    request_error: type[Exception],
 ) -> None:
-    """Test firmware updates."""
+    """A flash error survives a disconnect and the same entity can retry."""
     await setup_integration(hass, mock_config_entry)
     mock_smlight_client.get_firmware_version.reset_mock()
     entity_id = "update.mock_title_core_firmware"
@@ -348,11 +357,30 @@ async def test_update_firmware(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        UpdateService.INSTALL,
-        {TargetKey.ENTITY_ID: entity_id},
-        blocking=False,
+    def disconnect_after_flash_error(firmware: Firmware, idx: int) -> bool:
+        get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)(
+            MOCK_FIRMWARE_FAIL
+        )
+        raise request_error
+
+    mock_smlight_client.fw_update.side_effect = disconnect_after_flash_error
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_smlight_client.fw_update.reset_mock(side_effect=True)
+    mock_smlight_client.sse.register_callback.reset_mock()
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
     )
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
@@ -375,6 +403,7 @@ async def test_update_firmware(
 
     freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
+    await install_task
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -575,6 +604,13 @@ async def test_update_install_command_error(
             timedelta(minutes=2, seconds=1),
             "Firmware update timed out",
             id="pending-request",
+        ),
+        pytest.param(
+            timedelta(minutes=11),
+            MOCK_FIRMWARE_FAIL,
+            timedelta(minutes=2, seconds=1),
+            "Firmware update failed",
+            id="flash-error-before-request-timeout",
         ),
         pytest.param(
             timedelta(minutes=8),

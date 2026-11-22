@@ -259,6 +259,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._update_error = True
         self._update_done()
 
+    def _firmware_update_error(self, translation_key: str) -> HomeAssistantError:
+        """Create an install error for this firmware."""
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device_name": str(self.name)},
+        )
+
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -284,19 +292,20 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                         )
                         if accepted:
                             await self._finished_event.wait()
-                except TimeoutError as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="firmware_update_timeout",
-                        translation_placeholders={"device_name": str(self.name)},
-                    ) from err
+                except Exception as err:
+                    # The device may report a flash failure before the POST finishes.
+                    if self._update_error:
+                        raise self._firmware_update_error(
+                            "firmware_update_failed"
+                        ) from err
+                    if isinstance(err, TimeoutError):
+                        raise self._firmware_update_error(
+                            "firmware_update_timeout"
+                        ) from err
+                    raise
 
                 if not accepted or self._update_error:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="firmware_update_failed",
-                        translation_placeholders={"device_name": str(self.name)},
-                    )
+                    raise self._firmware_update_error("firmware_update_failed")
 
                 # allow time for SLZB-06 to reboot before updating coordinator data
                 try:
