@@ -1355,10 +1355,7 @@ class GetAreaSettingsTool(Tool):
     ) -> ToolResult:
         """Return the settings of the area."""
         args = self.parameters(tool_input.tool_args)
-        try:
-            area = _get_area_entry(hass, args["area_id"])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        area = _get_area_entry(hass, args["area_id"])
         return ToolResult(data={"result": _format_area_settings(area)})
 
 
@@ -1391,15 +1388,12 @@ class UpdateAreaSettingsTool(Tool):
         """Update the settings of the area and return the new settings."""
         settings = self.parameters(tool_input.tool_args)
         area_id = settings.pop("area_id")
-        try:
-            _get_area_entry(hass, area_id)
-            _prepare_area_settings(hass, settings)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_area_entry(hass, area_id)
+        _prepare_area_settings(hass, settings)
         try:
             area = ar.async_get(hass).async_update(area_id, **settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_area_settings(area)})
 
 
@@ -1426,14 +1420,11 @@ class CreateAreaTool(Tool):
     ) -> ToolResult:
         """Create the area and return its settings."""
         settings = self.parameters(tool_input.tool_args)
-        try:
-            _prepare_area_settings(hass, settings)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _prepare_area_settings(hass, settings)
         try:
             area = ar.async_get(hass).async_create(**settings)
         except ValueError as err:
-            return _error_result(str(err))
+            raise HomeAssistantError(str(err)) from err
         return ToolResult(data={"result": _format_area_settings(area)})
 
 
@@ -1458,10 +1449,7 @@ class DeleteAreaTool(Tool):
     ) -> ToolResult:
         """Delete the area."""
         area_id = self.parameters(tool_input.tool_args)["area_id"]
-        try:
-            _get_area_entry(hass, area_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        _get_area_entry(hass, area_id)
         ar.async_get(hass).async_delete(area_id)
         return ToolResult(data={"result": {"area_id": area_id}})
 
