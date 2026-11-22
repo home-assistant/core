@@ -114,7 +114,10 @@ class TcpEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Poll with the interval imported from YAML, if any."""
-        if self._custom_interval is not None:
+        if self._custom_interval is not None and not (
+            self.platform.config_entry
+            and self.platform.config_entry.pref_disable_polling
+        ):
             self.async_on_remove(
                 async_track_time_interval(
                     self.hass, self._async_interval_update, self._custom_interval
