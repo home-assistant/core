@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_diagnostics_legacy
+  dict({
+    'reader': 'UnderVoltageLegacy',
+    'supports_push': False,
+    'sysfs_path': '/sys/devices/platform/soc/soc:firmware/get_throttled',
+    'throttled_status': dict({
+      'arm_frequency_capped': False,
+      'arm_frequency_capped_occurred': False,
+      'raw': 327685,
+      'soft_temp_limit': False,
+      'soft_temp_limit_occurred': False,
+      'throttled': True,
+      'throttled_occurred': True,
+      'under_voltage': True,
+      'under_voltage_occurred': True,
+    }),
+    'under_voltage': True,
+  })
+# ---
+# name: test_diagnostics_new
+  dict({
+    'reader': 'UnderVoltageNew',
+    'supports_push': True,
+    'sysfs_path': '/sys/class/hwmon/hwmon0/in0_lcrit_alarm',
+    'under_voltage': False,
+  })
+# ---
+# name: test_diagnostics_read_error
+  dict({
+    'error': 'I/O error',
+    'reader': 'UnderVoltageLegacy',
+    'supports_push': False,
+    'sysfs_path': '/sys/devices/platform/soc/soc:firmware/get_throttled',
+    'throttled_status': None,
+    'under_voltage': None,
+  })
+# ---
