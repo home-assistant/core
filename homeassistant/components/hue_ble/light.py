@@ -59,22 +59,25 @@ def get_available_color_modes(api: HueBleLight) -> set[ColorMode]:
 def _get_effect_name(effect: EffectType | None) -> str | None:
     """Return the effect name str or None from EffectType enum."""
 
-    if not effect:
-        return None
-
-    if effect is EffectType.NONE:
+    if effect is None or effect is EffectType.NONE:
         return EFFECT_OFF
 
     return effect.name.lower()
 
 
-def _get_effect_type(effect_name: str) -> EffectType:
+def _get_effect_type(effect_name: str | None) -> EffectType | None:
     """Return the effect type from the effect name."""
+    try:
+        if effect_name is None:
+            return None
 
-    if effect_name == EFFECT_OFF:
-        return EffectType.NONE
+        if effect_name == EFFECT_OFF:
+            return EffectType.NONE
 
-    return EffectType[effect_name.upper()]
+        return EffectType[effect_name.upper()]
+
+    except KeyError as e:
+        raise ServiceValidationError("Unknown effect") from e
 
 
 class HueBLELight(LightEntity):
@@ -126,38 +129,43 @@ class HueBLELight(LightEntity):
 
     async def _async_set_effect(
         self,
-        effect: str,
-        brightness: int,
-        attrs: dict,
+        **kwargs: Any,
     ) -> None:
-        """Set an effect."""
-        use_color_temp = ATTR_COLOR_TEMP_KELVIN in attrs or (
-            self.color_mode is ColorMode.COLOR_TEMP and ATTR_XY_COLOR not in attrs
+        """Set a light state using the effect API."""
+
+        brightness = (
+            max(1, min(254, kwargs.get[ATTR_BRIGHTNESS]))  # type: ignore[index]
+            if kwargs.get(ATTR_BRIGHTNESS)
+            else self._api.brightness
         )
-        try:
-            use_effect = _get_effect_type(effect)
-        except KeyError as e:
-            raise ServiceValidationError("Unknown effect") from e
 
-        if use_color_temp:
-            mireds = color_util.color_temperature_kelvin_to_mired(
-                attrs.get(ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin)  # type: ignore[arg-type]
+        colour = None
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            colour = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
-            await self._api.set_temperature_effect(
-                mireds, brightness, use_effect, EFFECT_SPEED
-            )
-
+        elif ATTR_XY_COLOR in kwargs:
+            colour = kwargs[ATTR_XY_COLOR]
         else:
-            xy_color = attrs.get(ATTR_XY_COLOR, self.xy_color)
-            await self._api.set_colour_effect(
-                xy_color[0],  # type: ignore[index]
-                xy_color[1],  # type: ignore[index]
-                brightness,
-                use_effect,
-                EFFECT_SPEED,
+            colour = (
+                self._api.colour_temp
+                if self._api.colour_temp_mode
+                else self._api.colour_xy
             )
 
-        await self._api.set_power(True)
+        effect = None
+        if ATTR_EFFECT in kwargs:
+            effect = _get_effect_type(kwargs[ATTR_EFFECT])
+        elif self._api.effect:
+            effect = self._api.effect[0]
+
+        await self._api.set_effect(
+            power=True,
+            brightness=brightness,
+            colour=colour,
+            effect=effect,
+            effect_speed=EFFECT_SPEED if effect else None,
+        )
 
     def _update_updatable_attributes(self) -> None:
         """Update this entities updatable attrs from the lights state."""
@@ -188,14 +196,16 @@ class HueBLELight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set properties then turn the light on."""
 
-        _LOGGER.debug("Turning light %s on with args %s", self.name, kwargs)
-
-        if ATTR_EFFECT in kwargs:
-            effect = kwargs[ATTR_EFFECT]
-            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-            _LOGGER.debug("Setting effect of %s to %s", self.name, effect)
-            await self._async_set_effect(effect, brightness, kwargs)  # type: ignore[arg-type]
+        if self._api.supports_effects:
+            _LOGGER.debug(
+                "Turning light %s on with args %s using effects API", self.name, kwargs
+            )
+            await self._async_set_effect(**kwargs)
             return
+
+        _LOGGER.debug(
+            "Turning light %s on with args %s using legacy API", self.name, kwargs
+        )
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]

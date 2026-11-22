@@ -112,13 +112,23 @@ def mock_light() -> Generator[AsyncMock]:
             client.colour_temp_mode = False
             run_callbacks()
 
-        async def mock_set_colour_effect(
-            x: float, y: float, brightness: int, effect: EffectType, effect_speed: int
+        async def mock_set_effect(
+            power: bool | None = None,
+            brightness: int | None = None,
+            colour: int | tuple[float, float] | None = None,
+            effect: EffectType | None = None,
+            effect_speed: int | None = None,
+            transition: int | None = None,
         ):
-            client.colour_xy = (x, y)
-            client.brightness = brightness
-            client.effect = effect, effect_speed
-            client.colour_temp_mode = False
+            client.power_state = power or client.power_state
+            client.brightness = brightness or client.brightness
+            client.colour_temp = colour if type(colour) is int else client.colour_temp
+            client.colour_xy = colour if type(colour) is tuple else client.colour_xy
+            client.effect = (
+                effect or client.effect[0] if client.effect else None,
+                effect_speed or client.effect[1] if client.effect else None,
+            )
+            client.colour_temp_mode = type(colour) is int
             run_callbacks()
 
         async def mock_set_temperature_effect(
@@ -136,9 +146,6 @@ def mock_light() -> Generator[AsyncMock]:
         client.set_brightness = AsyncMock(side_effect=mock_set_brightness)
         client.set_colour_temp = AsyncMock(side_effect=mock_set_colour_temp)
         client.set_colour_xy = AsyncMock(side_effect=mock_set_colour_xy)
-        client.set_colour_effect = AsyncMock(side_effect=mock_set_colour_effect)
-        client.set_temperature_effect = AsyncMock(
-            side_effect=mock_set_temperature_effect
-        )
+        client.set_effect = AsyncMock(side_effect=mock_set_effect)
 
         yield client
