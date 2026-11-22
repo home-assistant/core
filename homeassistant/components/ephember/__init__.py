@@ -6,11 +6,12 @@ from typing import Any
 from pyephember2.pyephember2 import EphEmber, EphEmberError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import PLATFORMS
+from .const import LOGGER, PLATFORMS, signal_zone_update
 
 
 @dataclass
@@ -43,6 +44,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: EphEmberConfigEntry) -> 
     entry.runtime_data = EphEmberData(ember, homes)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    def zone_updated(zone: dict[str, Any]) -> None:
+        """Pass a live update from the listener thread to the zone's entity."""
+        dispatcher_send(hass, signal_zone_update(entry.entry_id, zone["zoneid"]), zone)
+
+    try:
+        await hass.async_add_executor_job(ember.start_listening, zone_updated)
+    except RuntimeError as err:
+        LOGGER.warning("No live updates from EPH Ember, polling only: %s", err)
+        return
+
+    async def stop_listening(_: Event | None = None) -> None:
+        await hass.async_add_executor_job(ember.stop_listening)
+
+    entry.async_on_unload(stop_listening)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listening)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EphEmberConfigEntry) -> None:
