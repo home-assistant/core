@@ -46,6 +46,13 @@
       }
     }
   },
+  "entity": {
+    "image": {
+      "heating_curve": {
+        "name": "Heating curve {system}"
+      }
+    }
+  },
   "exceptions": {
     "write_failed": {
       "message": "Writing of coil {address} with value `{value}` failed with error `{error}`"
