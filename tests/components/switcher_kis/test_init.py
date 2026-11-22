@@ -52,7 +52,7 @@ async def test_update_fail(
 
     for device in DUMMY_SWITCHER_DEVICES:
         assert (
-            f"Device {device.name} did not send update for"
+            f"Device {device.name} did not send an update for"
             f" {MAX_UPDATE_INTERVAL_SEC} seconds" in caplog.text
         )
 
@@ -104,7 +104,7 @@ async def test_update_fail_token_needed(
     await hass.async_block_till_done()
 
     assert (
-        f"Device {device.name} did not send update for"
+        f"Device {device.name} did not send an update for"
         f" {MAX_UPDATE_INTERVAL_SEC} seconds" in caplog.text
     )
 

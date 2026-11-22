@@ -85,11 +85,11 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         self, start_date: datetime, end_date: datetime
     ) -> Iterable[Event]:
         """Get all events in a specific time frame."""
-        if not self.data:
+        if (timeline := self.data_or_none) is None:
             raise HomeAssistantError(
                 "Unable to get events: Sync from server has not completed"
             )
-        return self.data.overlapping(
+        return timeline.overlapping(
             start_date,
             end_date,
         )

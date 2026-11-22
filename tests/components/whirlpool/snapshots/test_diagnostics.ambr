@@ -2,8 +2,8 @@
 # name: test_entry_diagnostics
   dict({
     'appliances': dict({
-      'aircons': dict({
-        'Aircon said1': dict({
+      'aircons': list([
+        dict({
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
@@ -15,8 +15,10 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-        'Aircon said2': dict({
+        dict({
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
@@ -28,10 +30,12 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-      }),
-      'dryers': dict({
-        'Dryer': dict({
+      ]),
+      'dryers': list([
+        dict({
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
@@ -43,10 +47,38 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-      }),
-      'ovens': dict({
-        'Dual Cavity Oven': dict({
+      ]),
+      'microwaves': list([
+        dict({
+          'category': 'microwave',
+          'model_number': '12345',
+          'raw': dict({
+            'microwaveCavity': dict({
+              'cavityState': 'idle',
+              'doorStatus': 'closed',
+            }),
+            'temperatureUnit': 'C',
+          }),
+          'raw_info': dict({
+            'attributes': dict({
+              'Category': 'Cooking',
+              'Name': '4d6963726f77617665',
+              'Serial': '**REDACTED**',
+            }),
+            'defaultClientId': '**REDACTED**',
+            'thingArn': '**REDACTED**',
+            'thingId': '**REDACTED**',
+            'thingName': '**REDACTED**',
+            'thingTypeName': '12345',
+            'version': 1,
+          }),
+        }),
+      ]),
+      'ovens': list([
+        dict({
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
@@ -58,8 +90,10 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-        'Single Cavity Oven': dict({
+        dict({
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
@@ -71,10 +105,12 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-      }),
-      'refrigerators': dict({
-        'Beer fridge': dict({
+      ]),
+      'refrigerators': list([
+        dict({
           'category': 'refrigerator',
           'model_number': '12345',
           'raw': dict({
@@ -86,10 +122,39 @@
               }),
             }),
           }),
+          'raw_info': dict({
+          }),
         }),
-      }),
-      'washers': dict({
-        'Washer': dict({
+      ]),
+      'unsupported': list([
+        dict({
+          'category': 'cooking',
+          'model_number': '12345',
+          'raw': dict({
+            'primaryCavity': dict({
+              'cavityState': 'idle',
+              'doorStatus': 'closed',
+            }),
+            'temperatureUnit': 'C',
+          }),
+          'raw_info': dict({
+            'attributes': dict({
+              'CapabilityPartNumber': 'W11788386',
+              'Category': 'Cooking',
+              'Name': '556e737570706f72746564206170706c69616e6365',
+              'Serial': '**REDACTED**',
+            }),
+            'defaultClientId': '**REDACTED**',
+            'thingArn': '**REDACTED**',
+            'thingId': '**REDACTED**',
+            'thingName': '**REDACTED**',
+            'thingTypeName': '12345',
+            'version': 1,
+          }),
+        }),
+      ]),
+      'washers': list([
+        dict({
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
@@ -101,8 +166,22 @@
               }),
             }),
           }),
+          'raw_info': dict({
+            'APPLIANCE_ID': '**REDACTED**',
+            'APPLIANCE_NAME': 'Washer',
+            'CATEGORY_NAME': 'FabricCare',
+            'DATA_MODEL_KEY': 'DDM_LAUNDRY_VMAX20_WHIRLPOOL_WASHER8_V2',
+            'DEVICE_ID': '**REDACTED**',
+            'LOCATION_ID': '**REDACTED**',
+            'MACHINE_ID': None,
+            'MODEL_NO': '12345',
+            'NEST_THERMOSTAT_ID': '**REDACTED**',
+            'SAID': '**REDACTED**',
+            'SERIAL': '**REDACTED**',
+            'STATUS': 'CLAIMED',
+          }),
         }),
-      }),
+      ]),
     }),
     'config_entry': dict({
       'data': dict({

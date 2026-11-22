@@ -132,6 +132,7 @@ def async_create_api_client(
             devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
             ignore_unadopted=False,
             override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
+            alarm_hubs=True,
         )
 
     return _async_create_full_client(hass, entry)
@@ -176,6 +177,7 @@ def _async_create_full_client(
         ignore_unadopted=False,
         cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
         config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        alarm_hubs=True,
     )
 
 

@@ -9,6 +9,7 @@ from aioseafile import (
     Library,
     Seafile,
     SeafileAuthenticationError,
+    SeafileConnectionError,
     SeafileError,
     SeafilePermissionError,
     SeafileTimeoutError,
@@ -19,9 +20,14 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIBRARY
+from .utils import handle_seafile_errors
 
 type SeafileConfigEntry = ConfigEntry[SeafileDataUpdateCoordinator]
 
@@ -102,8 +108,12 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except SeafileTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN, translation_key="timeout_connect"
+            ) from err
+        except SeafileConnectionError as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         except SeafileError as err:
             raise UpdateFailed(
@@ -121,6 +131,15 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                     if keep_days is not None
                 },
             )
+
+    async def async_set_history_limit(self, library_id: str, keep_days: int) -> None:
+        """Change the days of history a library keeps and update the entities."""
+        async with handle_seafile_errors():
+            keep_days = await self.client.set_library_history_limit(
+                library_id, keep_days
+            )
+        self.data.history_limits[library_id] = keep_days
+        self.async_update_listeners()
 
     async def _async_get_history_limit(self, library_id: str) -> int | None:
         """Return the days of history a library keeps, if the server allows it."""

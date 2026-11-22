@@ -11,7 +11,7 @@ from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -24,8 +24,6 @@ from .const import (
     CONFIGURE_TIMEOUT,
     CONNECT_TIMEOUT,
     DOMAIN,
-    ERROR_CANNOT_CONNECT,
-    STEP_IMPORT_FAILED,
 )
 
 HOSTNAME = "hostname"
@@ -116,8 +114,8 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_HOST] = host
         self.context["title_placeholders"] = {
-            CONF_NAME: self.bridge_id,
-            CONF_HOST: host,
+            "name": self.bridge_id,
+            "host": host,
         }
         return await self.async_step_link()
 
@@ -167,8 +165,8 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="link",
             errors=errors,
             description_placeholders={
-                CONF_NAME: self.bridge_id,
-                CONF_HOST: self.data[CONF_HOST],
+                "name": self.bridge_id,
+                "host": self.data[CONF_HOST],
             },
         )
 
@@ -219,35 +217,11 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         self.data[CONF_CA_CERTS] = import_data[CONF_CA_CERTS]
 
         if not (lutron_id := await self.async_get_lutron_id()):
-            # Ultimately we won't have a dedicated step for import failure, but
-            # in order to keep configuration.yaml-based configs transparently
-            # working without requiring further actions from the user, we don't
-            # display a form at all before creating a config entry in the
-            # default case, so we're only going to show a form in case the
-            # import fails.
-            # This will change in an upcoming release where UI-based config flow
-            # will become the default for the Lutron Caseta integration (which
-            # will require users to go through a confirmation flow for imports).
-            return await self.async_step_import_failed()
+            return self.async_abort(reason=ABORT_REASON_CANNOT_CONNECT)
 
         await self.async_set_unique_id(lutron_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data=self.data)
-
-    async def async_step_import_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Make failed import surfaced to user."""
-        self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id=STEP_IMPORT_FAILED,
-                description_placeholders={"host": self.data[CONF_HOST]},
-                errors={"base": ERROR_CANNOT_CONNECT},
-            )
-
-        return self.async_abort(reason=ABORT_REASON_CANNOT_CONNECT)
 
     async def async_get_lutron_id(self) -> str | None:
         """Check if we can connect to the bridge with the current config."""

@@ -1,10 +1,13 @@
 """Tests for the Sonos Media Browser."""
 
+from collections.abc import Callable, Coroutine
 from functools import partial
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
+from soco.data_structures import SearchResult
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -266,6 +269,35 @@ async def test_browse_media_root(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["children"] == snapshot
+
+
+@pytest.mark.parametrize("sonos_favorites", [SearchResult([], "favorites", 0, 0, 1)])
+@pytest.mark.usefixtures("soco")
+async def test_browse_media_root_no_favorites(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    music_library: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the root does not show an empty Favorites folder."""
+    # Sonos playlists are listed as favorites too
+    music_library.get_music_library_information.side_effect = None
+    music_library.get_music_library_information.return_value = []
+    await async_setup_sonos()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "favorites" not in [
+        child["media_content_type"] for child in response["result"]["children"]
+    ]
 
 
 @pytest.mark.parametrize(

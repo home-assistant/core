@@ -10,8 +10,10 @@ from python_picnic_api2.models import Article, SearchResult, SearchResultItem, U
 import requests
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.components.picnic.const import SERVICE_ADD_PRODUCT_TO_CART
-from homeassistant.components.picnic.services import PicnicServiceException
+from homeassistant.components.picnic.services import (
+    PicnicService,
+    PicnicServiceException,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -82,7 +84,7 @@ async def test_add_product_using_id(
     """Test adding a product by id."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         {
             "config_entry_id": picnic_config_entry.entry_id,
             "product_id": "5109348572",
@@ -122,7 +124,7 @@ async def test_add_product_using_name(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         {"config_entry_id": picnic_config_entry.entry_id, "product_name": "Tea"},
         blocking=True,
     )
@@ -144,7 +146,7 @@ async def test_add_product_using_name_no_results(
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {
                 "config_entry_id": picnic_config_entry.entry_id,
                 "product_name": "Random non existing product",
@@ -168,7 +170,7 @@ async def test_add_product_using_name_no_named_results(
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {
                 "config_entry_id": picnic_config_entry.entry_id,
                 "product_name": "Random product",
@@ -192,7 +194,7 @@ async def test_add_product_multiple_config_entries(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         {"product_id": "5109348572", "config_entry_id": picnic_config_entry_2.entry_id},
         blocking=True,
     )
@@ -211,7 +213,7 @@ async def test_add_product_device_doesnt_exist(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {"product_id": "5109348572", "config_entry_id": 12345},
             blocking=True,
         )
@@ -243,7 +245,7 @@ async def test_add_product_using_gtin(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         {
             "config_entry_id": picnic_config_entry.entry_id,
             "gtin": gtin,
@@ -299,7 +301,7 @@ async def test_add_product_using_unknown_gtin(
     with pytest.raises(ServiceValidationError, match="No Picnic product found") as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {
                 "config_entry_id": picnic_config_entry.entry_id,
                 "gtin": "5000112678468",
@@ -334,7 +336,7 @@ async def test_add_product_gtin_lookup_failure(
     with pytest.raises(HomeAssistantError, match="Unable to look up") as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {
                 "config_entry_id": picnic_config_entry.entry_id,
                 "gtin": "8720326041724",
@@ -372,7 +374,7 @@ async def test_add_product_using_invalid_gtin(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {
                 "config_entry_id": picnic_config_entry.entry_id,
                 "gtin": gtin,
@@ -413,7 +415,7 @@ async def test_add_product_gtin_excludes_other_identifiers(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRODUCT_TO_CART,
+            PicnicService.ADD_PRODUCT,
             {"config_entry_id": picnic_config_entry.entry_id, **identifiers},
             blocking=True,
         )
@@ -439,7 +441,7 @@ async def test_add_product_using_gtin_multiple_config_entries(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_PRODUCT_TO_CART,
+        PicnicService.ADD_PRODUCT,
         {"config_entry_id": other_entry.entry_id, "gtin": "8720326041724"},
         blocking=True,
     )

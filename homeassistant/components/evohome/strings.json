@@ -1,7 +1,22 @@
 {
   "exceptions": {
-    "api_call_failed": {
-      "message": "The request to the vendor's API failed: {error}"
+    "api_connection_failed": {
+      "message": "Unable to connect to the vendor's API"
+    },
+    "api_credentials_invalid": {
+      "message": "The vendor's API rejected the username or password"
+    },
+    "api_rate_limited": {
+      "message": "The vendor's API rate limit has been exceeded; try again later"
+    },
+    "api_request_failed": {
+      "message": "The request to the vendor's API failed"
+    },
+    "api_request_rejected": {
+      "message": "The vendor's API rejected the request"
+    },
+    "api_server_error": {
+      "message": "The vendor's API returned a server error; try again later"
     },
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"

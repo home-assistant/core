@@ -28,6 +28,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     ColorMode,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -35,6 +37,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -566,10 +569,10 @@ async def test_ikea_default_transition_time(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ikea_light",
-            ATTR_BRIGHTNESS: 100,
+            TargetKey.ENTITY_ID: "light.ikea_light",
+            LightServiceArgument.BRIGHTNESS: 100,
         },
         blocking=True,
     )
@@ -581,11 +584,11 @@ async def test_ikea_default_transition_time(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ikea_light",
-            ATTR_BRIGHTNESS: 100,
-            ATTR_TRANSITION: 5,
+            TargetKey.ENTITY_ID: "light.ikea_light",
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -632,10 +635,10 @@ async def test_lidl_christmas_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.lidl_xmas_light",
-            ATTR_HS_COLOR: (20, 30),
+            TargetKey.ENTITY_ID: "light.lidl_xmas_light",
+            LightServiceArgument.HS_COLOR: (20, 30),
         },
         blocking=True,
     )

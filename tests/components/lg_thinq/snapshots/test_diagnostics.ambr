@@ -4,7 +4,6 @@
     'country': 'KR',
     'devices': list([
       dict({
-        'connected': True,
         'device_type': 'DEVICE_AIR_CONDITIONER',
         'last_update_success': True,
         'locations': dict({
@@ -308,7 +307,6 @@
     'country': 'KR',
     'devices': list([
       dict({
-        'connected': True,
         'device_type': 'DEVICE_WASHER',
         'last_update_success': True,
         'locations': dict({

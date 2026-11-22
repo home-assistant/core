@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -36,6 +35,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import AppleTvConfigEntry
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AppleTvConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

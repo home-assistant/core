@@ -12,6 +12,7 @@ from pyicloud.services.reminders.client import RemindersApiError, RemindersAuthE
 from pyicloud.services.reminders.service import RemindersService
 
 from homeassistant.components.calendar import CalendarEvent
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -213,6 +214,11 @@ def _as_calendar_event(event: EventObject) -> CalendarEvent | None:
 
 REMINDERS_SCAN_INTERVAL = timedelta(minutes=5)
 
+# An account that has never used Reminders has no Reminders zone, which is a
+# permanent state rather than a failure, so poll it gently: often enough for
+# the lists to appear by themselves once the account starts using Reminders.
+MISSING_ZONE_SCAN_INTERVAL = timedelta(hours=1)
+
 # pyicloud raises these for CloudKit failures; neither subclasses
 # PyiCloudException, so both have to be caught explicitly.
 # `get()` raises a bare LookupError when a reminder was removed elsewhere.
@@ -235,6 +241,23 @@ UNDECODED_TITLE = "Error Decoding Title"
 
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
 RESULTS_LIMIT = 200
+
+
+def _is_zone_not_found_error(err: Exception) -> bool:
+    """Return True if err is a CloudKit zone-not-found error.
+
+    pyicloud raises RemindersApiError for CloudKit failures with the raw
+    response as .payload. A missing zone comes back as a zones entry with
+    serverErrorCode ZONE_NOT_FOUND, meaning the account has never used
+    Reminders and the zone was never created.
+    """
+    payload = getattr(err, "payload", None)
+    if not isinstance(payload, dict):
+        return False
+    return any(
+        isinstance(zone, dict) and zone.get("serverErrorCode") == "ZONE_NOT_FOUND"
+        for zone in payload.get("zones") or ()
+    )
 
 
 @dataclass(slots=True)
@@ -274,8 +297,10 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
             update_interval=REMINDERS_SCAN_INTERVAL,
         )
         self.account = entry.runtime_data
+        self._username = entry.data[CONF_USERNAME]
         self._warned_undecoded = False
         self._skipped_undecoded = False
+        self._zone_missing = False
         # Fetching years of completed reminders means paging through tens of
         # thousands of CloudKit records on every refresh, which is what made
         # setup hang. The default excludes them; the option brings them back.
@@ -325,12 +350,38 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
             async with asyncio.timeout(FETCH_TIMEOUT):
                 data = await self.hass.async_add_executor_job(self._fetch)
         except REMINDERS_ERRORS as err:
+            if _is_zone_not_found_error(err):
+                self._handle_missing_zone()
+                # Keep the last snapshot: returning {} here would make
+                # _sync_lists() delete every to-do entity from the registry.
+                return self.data or {}
             raise UpdateFailed(f"Error fetching reminders: {err}") from err
         except TimeoutError as err:
             raise UpdateFailed("Timed out fetching reminders") from err
 
+        self._handle_zone_restored()
         self._warn_if_undecoded()
         return data
+
+    def _handle_missing_zone(self) -> None:
+        """Accept that the account has no Reminders and stop hammering the zone."""
+        if not self._zone_missing:
+            self._zone_missing = True
+            _LOGGER.info(
+                "The iCloud account for '%s' has no Reminders data; to-do lists "
+                "will appear if Reminders is enabled for the account",
+                self._username,
+            )
+        # Not an error: the user may simply not use Reminders. Poll gently so
+        # the lists still appear on their own if the account starts using them.
+        self.update_interval = MISSING_ZONE_SCAN_INTERVAL
+
+    def _handle_zone_restored(self) -> None:
+        """Return to normal polling after a successful fetch."""
+        if not self._zone_missing:
+            return
+        self._zone_missing = False
+        self.update_interval = REMINDERS_SCAN_INTERVAL
 
     def _warn_if_undecoded(self) -> None:
         """Warn once if reminders had to be left out because of encryption.

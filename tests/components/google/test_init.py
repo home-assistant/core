@@ -16,9 +16,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.calendar import CalendarService
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
-from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.services import GoogleCalendarService
 from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -69,13 +70,13 @@ def assert_state(actual: State | None, expected: State | None) -> None:
     params=[
         (
             DOMAIN,
-            SERVICE_CREATE_EVENT,
+            GoogleCalendarService.CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),
         (
             "calendar",
-            SERVICE_CREATE_EVENT,
+            CalendarService.CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),

@@ -393,7 +393,7 @@ async def root_payload(
     """Return root payload for Sonos."""
     children: list[BrowseMedia] = []
 
-    if speaker.favorites:
+    if speaker.favorites.count:
         children.append(
             BrowseMedia(
                 title="Favorites",
