@@ -30,3 +30,7 @@ LEGACY_MODEL_IDS: dict[str, str] = {
 # factor (calorific value times the gas correction factor). Reported for
 # gas only.
 OBIS_GAS_POWER = "7-0:16.7.0"
+
+# The device's MQTT discovery uses its MQTT client ID as the device identifier
+# of the MQTT integration.
+MQTT_DOMAIN = "mqtt"

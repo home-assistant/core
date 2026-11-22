@@ -4,7 +4,13 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Goals, MeasurementGroup, NotificationCategory
+from aiowithings import (
+    DeviceModel,
+    DeviceType,
+    Goals,
+    MeasurementGroup,
+    NotificationCategory,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -588,6 +594,53 @@ async def test_device_sensors_created_when_device_data_received(
     assert not device_registry.async_get_device_by_identifier(
         (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
         polling_config_entry.entry_id,
+    )
+
+
+async def test_no_battery_sensor_for_aura_sensor_v2(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the wired Aura Sensor V2 gets a device, but no battery sensor."""
+    device = replace(
+        load_device_fixture()[0],
+        device_type=DeviceType.SLEEP_MONITOR,
+        model=DeviceModel.AURA_SENSOR_V2,
+        raw_model="Aura Sensor V2",
+    )
+    withings.get_devices.return_value = [device]
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{device.device_id}_battery"
+        )
+        is None
+    )
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.device_id), polling_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.name == "Aura Sensor V2"
+    assert device_entry.via_device_id == (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(polling_config_entry.unique_id)),
+            polling_config_entry.entry_id,
+        ).id
+    )
+
+    withings.get_devices.return_value = []
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.device_id), polling_config_entry.entry_id
     )
 
 

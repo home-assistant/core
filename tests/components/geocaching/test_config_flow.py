@@ -161,8 +161,8 @@ async def test_oauth_error(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == HTTPStatus.OK
 
-    # No user information is returned from API
-    mock_geocaching_config_flow.update.return_value.user = None
+    # No username is returned from API
+    mock_geocaching_config_flow.update.return_value.user.username = None
 
     aioclient_mock.post(
         CURRENT_ENVIRONMENT_URLS["token_url"],

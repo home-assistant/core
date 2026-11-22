@@ -88,6 +88,10 @@ def test_generate(integrations: dict[str, Integration], root_config: Config) -> 
 
     path = root_config.root / integration_categories.PATH
     assert json.loads(path.read_text()) == EXPECTED
+    python_path = root_config.root / integration_categories.PYTHON_PATH
+    assert 'INTEGRATION_CATEGORIES = [\n    "energy",\n    "pets",\n]\n' in (
+        python_path.read_text()
+    )
 
     root_config.errors.clear()
     integration_categories.validate(integrations, root_config)
@@ -97,25 +101,40 @@ def test_generate(integrations: dict[str, Integration], root_config: Config) -> 
 def test_validate_missing_file(
     integrations: dict[str, Integration], root_config: Config
 ) -> None:
-    """Test a missing file is a fixable error."""
+    """Test missing files are fixable errors."""
     integration_categories.validate(integrations, root_config)
 
-    assert len(root_config.errors) == 1
-    assert root_config.errors[0].plugin == "integration_categories"
-    assert root_config.errors[0].fixable
+    assert [error.error for error in root_config.errors] == [
+        "File integration_categories.json is not up to date. "
+        "Run python3 -m script.hassfest",
+        "File integration_categories.py is not up to date. "
+        "Run python3 -m script.hassfest",
+    ]
+    assert all(
+        error.plugin == "integration_categories" and error.fixable
+        for error in root_config.errors
+    )
 
 
 def test_validate_outdated_file(
     integrations: dict[str, Integration], root_config: Config
 ) -> None:
-    """Test an outdated file is a fixable error."""
+    """Test outdated files are fixable errors."""
     (root_config.root / integration_categories.PATH).write_text("[]\n")
+    (root_config.root / integration_categories.PYTHON_PATH).write_text("")
 
     integration_categories.validate(integrations, root_config)
 
-    assert len(root_config.errors) == 1
-    assert root_config.errors[0].plugin == "integration_categories"
-    assert root_config.errors[0].fixable
+    assert [error.error for error in root_config.errors] == [
+        "File integration_categories.json is not up to date. "
+        "Run python3 -m script.hassfest",
+        "File integration_categories.py is not up to date. "
+        "Run python3 -m script.hassfest",
+    ]
+    assert all(
+        error.plugin == "integration_categories" and error.fixable
+        for error in root_config.errors
+    )
 
 
 def test_validate_skips_invalid_integration(

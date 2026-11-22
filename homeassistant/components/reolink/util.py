@@ -60,7 +60,11 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
     config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
         config_entry_id
     )
-    if config_entry is None or config_entry.domain != DOMAIN:
+    if (
+        config_entry is None
+        or config_entry.domain != DOMAIN
+        or config_entry.state is not config_entries.ConfigEntryState.LOADED
+    ):
         raise Unresolvable(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_found",

@@ -30,18 +30,27 @@ FIXTURE_REQUEST_ID = "test"
 FIXTURE_MAC_ADDRESS = FIXTURE_SYSTEM.mac_address
 FIXTURE_UUID = FIXTURE_SYSTEM.uuid
 
+# A valid System Bridge key, from Groundwork's client key test vectors
+FIXTURE_KEY = "system-bridge_client_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz03GVkI"
+FIXTURE_NEW_KEY = (
+    "system-bridge_client_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy382dw9"
+)
+# The shared token System Bridge used before each client had its own key
+FIXTURE_OLD_TOKEN = "abc-123-def-456-ghi"
+FIXTURE_PAIRING_CODE = "MZXW6YTBOI4DQNZXGQ2DGMBQGE3TSNBR"
+
 FIXTURE_AUTH_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
 }
 
 FIXTURE_USER_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
     CONF_HOST: "127.0.0.1",
     CONF_PORT: "9170",
 }
 
 FIXTURE_ZEROCONF_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
     CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
     CONF_PORT: "9170",
 }

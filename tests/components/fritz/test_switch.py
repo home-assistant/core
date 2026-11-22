@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
+from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
 from pytest_homeassistant.common import (
@@ -16,18 +17,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -723,22 +721,21 @@ async def test_switch_no_mesh_wifi_uplink(
 @pytest.mark.parametrize(
     ("wan_access_data", "expected_state"),
     [
-        (None, STATE_UNAVAILABLE),
-        ("unknown", STATE_UNAVAILABLE),
-        ("error", STATE_UNAVAILABLE),
-        ("granted", STATE_ON),
-        ("denied", STATE_OFF),
+        pytest.param(None, STATE_UNKNOWN, id="none"),
+        pytest.param("unknown", STATE_UNKNOWN, id="unknown"),
+        pytest.param("error", STATE_UNKNOWN, id="error"),
+        pytest.param("granted", STATE_ON, id="granted"),
+        pytest.param("denied", STATE_OFF, id="denied"),
     ],
 )
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
 async def test_switch_device_wan_access(
     hass: HomeAssistant,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
+    fh_class_mock: type[FritzHosts],
     wan_access_data: str | None,
     expected_state: str,
 ) -> None:
-    """Test Fritz!Tools switches have proper WAN access state."""
+    """Test profile switch of a device with an IP reflects its WAN access state."""
 
     entity_id = "switch.printer_internet_access"
 
@@ -788,6 +785,46 @@ async def test_switch_device_no_ip_address(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    "ip_address",
+    [
+        pytest.param("", id="empty"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_switch_tracked_device_lost_ip_address(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+    ip_address: str | None,
+) -> None:
+    """Test profile switch of a tracked device becomes unavailable without an IP."""
+
+    entity_id = "switch.printer_internet_access"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    # WAN access stays "granted", so only the missing IP makes it unavailable
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    attributes[0]["IPAddress"] = ip_address
+    fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -845,8 +882,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action.assert_called_once()
@@ -859,8 +896,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action_2:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action_2.assert_called_once()
@@ -1016,6 +1053,40 @@ async def test_migrate_to_new_unique_id(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.unique_id == new_unique_id
+
+
+@pytest.mark.usefixtures("fh_class_mock", "fs_class_mock")
+async def test_migrate_to_identical_unique_id(
+    hass: HomeAssistant,
+    fc_class_mock: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test switch setup preserves an entity whose unique ID is unchanged."""
+    fc_class_mock.return_value.override_services(
+        wifi_services_with_ssids("Main WiFi", "Guest")
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    unique_id = f"{MOCK_SERIAL_NUMBER}-wi_fi_guest"
+    existing_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (existing_entry := entity_registry.async_get(existing_entity.entity_id))
+    assert existing_entry.unique_id == unique_id
+    assert (state := hass.states.get(existing_entity.entity_id))
+    assert state.state == STATE_ON
+    assert (state := hass.states.get("switch.mock_title_wi_fi_main_2_4ghz"))
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

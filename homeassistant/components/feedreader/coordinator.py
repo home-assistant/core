@@ -52,7 +52,7 @@ class FeedReaderCoordinator(
         self.url = config_entry.data[CONF_URL]
         self.feed_author: str | None = None
         self.feed_version: str | None = None
-        self._max_entries = config_entry.options[CONF_MAX_ENTRIES]
+        self._max_entries: int = config_entry.options[CONF_MAX_ENTRIES]
         self._storage = storage
         self._last_entry_timestamp: struct_time | None = None
         self._event_type = EVENT_FEEDREADER
@@ -65,6 +65,21 @@ class FeedReaderCoordinator(
             name=f"{DOMAIN} {self.url}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
+
+    @property
+    def feed(self) -> feedparser.FeedParserDict | None:
+        """Return the last fetched feed."""
+        return self._feed
+
+    @property
+    def max_entries(self) -> int:
+        """Return the maximum number of entries to process."""
+        return self._max_entries
+
+    @property
+    def last_entry_timestamp(self) -> struct_time | None:
+        """Return the timestamp of the last processed entry."""
+        return self._last_entry_timestamp
 
     @callback
     def _log_no_entries(self) -> None:
