@@ -4,7 +4,6 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
-from aiohttp import ClientPayloadError
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
@@ -46,6 +45,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import get_mock_event_function
 from .conftest import setup_integration
@@ -333,22 +333,27 @@ async def test_unsupported_radio_catalog(
 
 
 @pytest.mark.parametrize(
-    "request_error",
+    ("message", "wait"),
     [
-        pytest.param(SmlightConnectionError, id="connection-lost"),
-        pytest.param(ClientPayloadError, id="incomplete-response"),
+        pytest.param(MOCK_FIRMWARE_DONE, timedelta(seconds=5), id="completion-event"),
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            id="missed-completion-event",
+        ),
     ],
 )
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
-async def test_update_firmware_retry_after_flash_error(
+async def test_update_firmware(
     mock_sleep: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
-    request_error: type[Exception],
+    message: MessageEvent,
+    wait: timedelta,
 ) -> None:
-    """A flash error survives a disconnect and the same entity can retry."""
+    """Test firmware updates, with and without the completion event."""
     await setup_integration(hass, mock_config_entry)
     mock_smlight_client.get_firmware_version.reset_mock()
     entity_id = "update.mock_title_core_firmware"
@@ -357,23 +362,6 @@ async def test_update_firmware_retry_after_flash_error(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    def disconnect_after_flash_error(firmware: Firmware, idx: int) -> bool:
-        get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)(
-            MOCK_FIRMWARE_FAIL
-        )
-        raise request_error
-
-    mock_smlight_client.fw_update.side_effect = disconnect_after_flash_error
-    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            UpdateService.INSTALL,
-            {TargetKey.ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-    mock_smlight_client.fw_update.reset_mock(side_effect=True)
-    mock_smlight_client.sse.register_callback.reset_mock()
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
@@ -392,16 +380,18 @@ async def test_update_firmware_retry_after_flash_error(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
-    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
 
-    event_function(MOCK_FIRMWARE_DONE)
+    event_function(message)
 
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
 
-    freezer.tick(timedelta(seconds=5))
+    freezer.tick(wait)
     async_fire_time_changed(hass)
     await install_task
     await hass.async_block_till_done()
@@ -505,12 +495,14 @@ async def test_update_legacy_firmware_v2(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
 
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware_failed(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """A flash error is reported to the install action."""
+    """A flash error is reported to the install action and a retry can succeed."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -535,6 +527,65 @@ async def test_update_firmware_failed(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function(MOCK_FIRMWARE_DONE)
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(sw_version="v2.7.5")
+    await install_task
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+
+
+@pytest.mark.parametrize(
+    "elapsed",
+    [
+        pytest.param(timedelta(seconds=2), id="next-poll"),
+        pytest.param(timedelta(minutes=3, seconds=1), id="version-check-timeout"),
+    ],
+)
+async def test_update_firmware_failed_during_version_check(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    elapsed: timedelta,
+) -> None:
+    """A flash error reported after the completion wait expired is not masked."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+
+    # Absolute times, unlike freezer ticks, can fire the poll without the timeout.
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10, seconds=1))
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
+    event_function(MOCK_FIRMWARE_FAIL)
+    async_fire_time_changed(hass, dt_util.utcnow() + elapsed)
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is False
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await install_task
 
 
 @pytest.mark.parametrize(
@@ -596,33 +647,17 @@ async def test_update_install_command_error(
 
 
 @pytest.mark.parametrize(
-    ("reply_after", "message", "remaining", "expected_error"),
+    ("message", "wait", "expected_error"),
     [
         pytest.param(
-            timedelta(minutes=11),
             MOCK_FIRMWARE_PROGRESS,
-            timedelta(minutes=2, seconds=1),
+            timedelta(minutes=10, seconds=1),
             "Firmware update timed out",
-            id="pending-request",
+            id="no-completion-event",
         ),
         pytest.param(
-            timedelta(minutes=11),
-            MOCK_FIRMWARE_FAIL,
-            timedelta(minutes=2, seconds=1),
-            "Firmware update failed",
-            id="flash-error-before-request-timeout",
-        ),
-        pytest.param(
-            timedelta(minutes=8),
-            MOCK_FIRMWARE_PROGRESS,
-            timedelta(minutes=2, seconds=1),
-            "Firmware update timed out",
-            id="delayed-acceptance",
-        ),
-        pytest.param(
-            timedelta(minutes=8),
             MOCK_FIRMWARE_DONE,
-            timedelta(minutes=3, seconds=1),
+            timedelta(0),
             r"Timeout waiting for .* to reboot after update",
             id="reboot",
         ),
@@ -633,12 +668,11 @@ async def test_update_timeout(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
-    reply_after: timedelta,
     message: MessageEvent,
-    remaining: timedelta,
+    wait: timedelta,
     expected_error: str,
 ) -> None:
-    """Report which phase of the firmware install timed out."""
+    """Report which phase timed out when the version never changes."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -646,11 +680,6 @@ async def test_update_timeout(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    async def accept_request(firmware: Firmware, idx: int) -> bool:
-        await asyncio.sleep(reply_after.total_seconds())
-        return True
-
-    mock_smlight_client.fw_update.side_effect = accept_request
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
@@ -660,17 +689,19 @@ async def test_update_timeout(
         )
     )
     mock_smlight_client.fw_update.assert_awaited_once()
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await asyncio.sleep(0)
-    assert not install_task.done()
     event_function = get_mock_event_function(
         mock_smlight_client, SmEvents[message.type]
     )
     event_function(message)
     await asyncio.sleep(0)
 
-    freezer.tick(remaining)
+    freezer.tick(wait)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    # The version is checked before any timeout is reported.
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
+
+    freezer.tick(timedelta(minutes=3, seconds=1))
     async_fire_time_changed(hass)
     await asyncio.sleep(0)
     assert mock_config_entry.runtime_data.firmware.in_progress is False

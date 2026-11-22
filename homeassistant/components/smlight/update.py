@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, override
 
@@ -20,12 +21,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWAVE_TYPES
+from .const import DOMAIN, FIRMWARE_UPDATE_TIMEOUT, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
 PARALLEL_UPDATES = 1
-FIRMWARE_UPDATE_TIMEOUT = 600
 
 
 def zigbee_firmware_list(data: SmFwData, idx: int) -> FirmwareList:
@@ -285,38 +285,36 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.register_callbacks()
 
             try:
-                try:
-                    async with asyncio.timeout(FIRMWARE_UPDATE_TIMEOUT):
-                        accepted = await self.coordinator.async_execute_command(
-                            self.coordinator.client.fw_update, firmware, self.idx
-                        )
-                        if accepted:
-                            await self._finished_event.wait()
-                except Exception as err:
-                    # The device may report a flash failure before the POST finishes.
-                    if self._update_error:
-                        raise self._firmware_update_error(
-                            "firmware_update_failed"
-                        ) from err
-                    if isinstance(err, TimeoutError):
-                        raise self._firmware_update_error(
-                            "firmware_update_timeout"
-                        ) from err
-                    raise
-
-                if not accepted or self._update_error:
+                accepted = await self.coordinator.async_execute_command(
+                    self.coordinator.client.fw_update, firmware, self.idx
+                )
+                if not accepted:
                     raise self._firmware_update_error("firmware_update_failed")
+
+                # SSE can miss the completion event; the version check below decides.
+                with suppress(TimeoutError):
+                    async with asyncio.timeout(FIRMWARE_UPDATE_TIMEOUT):
+                        await self._finished_event.wait()
 
                 # allow time for SLZB-06 to reboot before updating coordinator data
                 try:
                     async with asyncio.timeout(180):
                         while (
                             self.coordinator.in_progress
+                            and not self._update_error
                             and self.installed_version != firmware.ver
                         ):
                             await self.coordinator.async_refresh()
                             await asyncio.sleep(1)
                 except TimeoutError as err:
+                    if self._update_error:
+                        raise self._firmware_update_error(
+                            "firmware_update_failed"
+                        ) from err
+                    if not self._finished_event.is_set():
+                        raise self._firmware_update_error(
+                            "firmware_update_timeout"
+                        ) from err
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="reboot_timeout",
@@ -324,6 +322,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                             "hostname": self.coordinator.config_entry.data[CONF_HOST],
                         },
                     ) from err
+
+                if self._update_error:
+                    raise self._firmware_update_error("firmware_update_failed")
             finally:
                 self._update_done()
                 self.coordinator.in_progress = False
