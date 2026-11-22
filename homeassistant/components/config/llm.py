@@ -14,6 +14,7 @@ from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
+from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
 from homeassistant.helpers import config_validation as cv, translation
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
@@ -31,7 +32,6 @@ from .const import DOMAIN
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
 _SEARCH_LIMIT = 15
-_INTEGRATION_FILTER_TYPES = ["integration", "helper"]
 _STATUS_VALUES = ["loaded", "error", "not_loaded"]
 _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
     "loaded": {ConfigEntryState.LOADED},
@@ -139,9 +139,9 @@ def _iter_searchable_matches(
     query: str,
     descriptions: dict[str, Any],
     title_trans: dict[str, str],
-    filter_type: str | None,
-) -> Iterator[tuple[int, str, str, str]]:
-    """Yield (rank, sort_name, domain, name) for config-flow integrations matching query.
+    category: str | None,
+) -> Iterator[tuple[int, str, str, str, list[str]]]:
+    """Yield (rank, sort_name, domain, name, categories) for matching config-flow integrations.
 
     Lower rank numbers sort first with heapq.nsmallest:
     - 0: exact match on domain or name
@@ -149,22 +149,20 @@ def _iter_searchable_matches(
     - 2: all query words match domain, name, or brand
     """
     sources: list[tuple[str, dict[str, Any], str]] = []
-    if filter_type in (None, "integration"):
-        for key, info in (
-            descriptions["core"]["integration"] | descriptions["custom"]["integration"]
-        ).items():
-            if "integration_type" in info:
-                sources.append((key, info, ""))
-            elif sub := info.get("integrations"):
-                brand = info.get("name", key).casefold()
-                sources.extend((dom, meta, brand) for dom, meta in sub.items())
-    if filter_type in (None, "helper"):
-        sources.extend(
-            (dom, meta, "")
-            for dom, meta in (
-                descriptions["core"]["helper"] | descriptions["custom"]["helper"]
-            ).items()
-        )
+    for key, info in (
+        descriptions["core"]["integration"] | descriptions["custom"]["integration"]
+    ).items():
+        if "integration_type" in info:
+            sources.append((key, info, ""))
+        elif sub := info.get("integrations"):
+            brand = info.get("name", key).casefold()
+            sources.extend((dom, meta, brand) for dom, meta in sub.items())
+    sources.extend(
+        (dom, meta, "")
+        for dom, meta in (
+            descriptions["core"]["helper"] | descriptions["custom"]["helper"]
+        ).items()
+    )
 
     words = query.replace("_", " ").split()
     seen: set[str] = set()
@@ -179,6 +177,12 @@ def _iter_searchable_matches(
         head = f"{domain} {name_f}".replace("_", " ")
         if not all(word in f"{head} {brand}" for word in words):
             continue
+        categories: list[str] = meta.get("categories", [])
+        # Categories can be subcategories, like 'energy.energy_prices'
+        if category is not None and not any(
+            cat.partition(".")[0] == category for cat in categories
+        ):
+            continue
         seen.add(domain)
         if query in (domain, name_f):
             rank = 0
@@ -186,7 +190,7 @@ def _iter_searchable_matches(
             rank = 1
         else:
             rank = 2
-        yield (rank, name_f, domain, name)
+        yield (rank, name_f, domain, name, categories)
 
 
 class GetConfigEntriesTool(Tool):
@@ -331,8 +335,9 @@ class SearchIntegrationsTool(Tool):
     description = (
         "Search the catalog of available Home Assistant integrations and helpers "
         "that can be set up via a config flow (including uninstalled ones) by name, "
-        "domain, or brand. Use config__get_config_entries instead to list "
-        "integrations that are already installed."
+        "domain, brand, or category. Returns at most "
+        f"{_SEARCH_LIMIT} results per call. Use config__get_config_entries instead "
+        "to list integrations that are already installed."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -340,19 +345,29 @@ class SearchIntegrationsTool(Tool):
     integration = DOMAIN
     parameters = probatio.Schema(
         {
-            probatio.Required(
+            probatio.Optional(
                 "query",
                 description=(
                     "Search text to match against integration name, domain, or "
-                    "brand (case-insensitive)."
+                    "brand (case-insensitive). Required if 'category' is not given."
                 ),
             ): _NON_EMPTY_STRING,
             probatio.Optional(
-                "type",
-                description="Filter results by type: 'integration' or 'helper'.",
-            ): probatio.All(
-                str, probatio.Lower, probatio.In(_INTEGRATION_FILTER_TYPES)
-            ),
+                "category",
+                description=(
+                    "Filter results by category. Use 'helpers' to find helpers, "
+                    "and 'local_services' for waste collection, power outages "
+                    "and other city or utility information."
+                ),
+            ): probatio.In(INTEGRATION_CATEGORIES),
+            probatio.Optional(
+                "offset",
+                description=(
+                    "Number of results to skip. Use the next_offset of the "
+                    "previous result."
+                ),
+                default=0,
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
         }
     )
 
@@ -362,11 +377,14 @@ class SearchIntegrationsTool(Tool):
     ) -> ToolResult:
         """Search available integrations and helpers."""
         args = self.parameters(tool_input.tool_args)
-        query = args["query"].casefold()
-        filter_type: str | None = args.get("type")
+        if "query" not in args and "category" not in args:
+            raise probatio.Invalid("Either 'query' or 'category' is required.")
+        query = args.get("query", "").casefold()
+        category: str | None = args.get("category")
+        offset: int = args["offset"]
 
-        descriptions = await async_get_integration_descriptions(hass)
         lang = _resolve_language(hass, llm_context.language)
+        descriptions = await async_get_integration_descriptions(hass)
         title_trans = await translation.async_get_translations(
             hass,
             lang,
@@ -374,17 +392,24 @@ class SearchIntegrationsTool(Tool):
             set(descriptions["core"].get("translated_name", ())),
         )
 
-        best = heapq.nsmallest(
-            _SEARCH_LIMIT,
-            _iter_searchable_matches(query, descriptions, title_trans, filter_type),
+        matches = list(
+            _iter_searchable_matches(query, descriptions, title_trans, category)
         )
-        return ToolResult(
-            data={
-                "result": list[JsonValueType](
-                    {"domain": domain, "name": name} for _, _, domain, name in best
-                )
-            }
-        )
+        best = heapq.nsmallest(offset + _SEARCH_LIMIT, matches)[offset:]
+        result: JsonObjectType = {
+            "result": list[JsonValueType](
+                {
+                    "domain": domain,
+                    "name": name,
+                    "categories": list[JsonValueType](categories),
+                }
+                for _, _, domain, name, categories in best
+            ),
+            "total": len(matches),
+        }
+        if (next_offset := offset + _SEARCH_LIMIT) < len(matches):
+            result["next_offset"] = next_offset
+        return ToolResult(data=result)
 
 
 _PLACEHOLDER_RE = re.compile(r"\{([^}]+)\}")
