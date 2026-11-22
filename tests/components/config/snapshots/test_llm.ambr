@@ -296,7 +296,7 @@
           'type': 'array',
         }),
         'name': dict({
-          'description': 'The name of the entity. null uses the name from the integration.',
+          'description': 'The name of the entity. null uses the name from the integration. An empty string names the entity after its device only.',
           'format': 'strip',
           'nullable': True,
           'type': 'string',

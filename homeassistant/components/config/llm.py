@@ -1192,9 +1192,10 @@ _ENTITY_REGISTRY = _RegistrySettings(
         probatio.Optional(
             "name",
             description=(
-                "The name of the entity. null uses the name from the integration."
+                "The name of the entity. null uses the name from the integration. "
+                "An empty string names the entity after its device only."
             ),
-        ): _NULLABLE_STRING,
+        ): probatio.Any(None, probatio.All(str, probatio.Strip)),
         probatio.Optional(
             "icon",
             description=(

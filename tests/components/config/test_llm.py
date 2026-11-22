@@ -1907,6 +1907,15 @@ async def test_update_entity_settings(
     assert not result.error
     assert entity_registry.async_get("switch.espresso").hidden_by is None
 
+    # An empty name names the entity after its device only
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "switch.espresso", "name": ""}),
+        llm_context,
+    )
+    assert not result.error
+    assert entity_registry.async_get("switch.espresso").name == ""
+
 
 @pytest.mark.parametrize(
     ("tool_args", "error"),
