@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "keyring_required": "The current connection uses the keyring file for KNX IP Secure. Reconfigure the connection with manual credentials or another connection type before removing it."
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
@@ -55,9 +58,14 @@
         "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}",
         "menu_options": {
           "connection_type": "Reconfigure KNX connection",
+          "remove_knxkeys": "Remove KNX keyring file",
           "secure_knxkeys": "Import KNX keyring file"
         },
         "title": "KNX connection settings"
+      },
+      "remove_knxkeys": {
+        "description": "The imported `.knxkeys` file of project `{keyring_project}` will be deleted. It currently provides KNX Data Secure keys for {data_secure_count} group addresses. KNX IP Secure and KNX Data Secure keys from this file will no longer be available.",
+        "title": "Remove KNX keyring"
       },
       "routing": {
         "data": {

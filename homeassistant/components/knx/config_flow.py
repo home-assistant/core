@@ -82,6 +82,7 @@ from .const import (
 from .storage.keyring import (
     DEFAULT_KNX_KEYRING_FILENAME,
     load_stored_knxkeys_file,
+    remove_knxkeys_file,
     save_uploaded_knxkeys_file,
 )
 from .validation import ia_validator, ip_v4_validator
@@ -282,19 +283,59 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of existing entry."""
         entry = self._get_reconfigure_entry()
         self.initial_data = dict(entry.data)  # type: ignore[assignment]
-        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
-            keyring_project = stored_keyring.keyring.project_name
-        else:
-            keyring_project = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) or "-"
+        menu_options = ["connection_type", "secure_knxkeys"]
+        if self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) is not None:
+            menu_options.append("remove_knxkeys")
         return self.async_show_menu(
             step_id="reconfigure",
-            menu_options=[
-                "connection_type",
-                "secure_knxkeys",
-            ],
+            menu_options=menu_options,
             description_placeholders={
                 "current_connection": _describe_connection(self.initial_data),
-                "keyring_project": keyring_project,
+                "keyring_project": await self._async_keyring_project(),
+            },
+        )
+
+    async def _async_keyring_project(self) -> str:
+        """Return the project name of the imported keyring, or its filename."""
+        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
+            return stored_keyring.keyring.project_name
+        return self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) or "-"
+
+    async def async_step_remove_knxkeys(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Remove the imported keyring file after confirmation."""
+        connection_type = self.initial_data[CONF_KNX_CONNECTION_TYPE]
+        if (
+            connection_type == CONF_KNX_TUNNELING_TCP_SECURE
+            and self.initial_data.get(CONF_KNX_SECURE_USER_ID) is None
+        ) or (
+            connection_type == CONF_KNX_ROUTING_SECURE
+            and self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY) is None
+        ):
+            return self.async_abort(reason="keyring_required")
+
+        if user_input is not None:
+            filename = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME)
+            if TYPE_CHECKING:
+                # only offered in the reconfigure menu when a keyring is imported
+                assert filename is not None
+            await remove_knxkeys_file(self.hass, filename)
+            self.new_entry_data |= KNXConfigEntryData(
+                knxkeys_filename=None,
+                knxkeys_password=None,
+            )
+            return self.finish_flow()
+
+        data_secure_count = 0
+        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
+            data_secure_count = len(stored_keyring.keyring.get_data_secure_group_keys())
+        return self.async_show_form(
+            step_id="remove_knxkeys",
+            data_schema=probatio.Schema({}),
+            description_placeholders={
+                "keyring_project": await self._async_keyring_project(),
+                "data_secure_count": str(data_secure_count),
             },
         )
 
