@@ -177,6 +177,7 @@ async def test_resolve_media_object(hass: HomeAssistant, dms_device_mock: Mock) 
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
+    assert result.thumbnail is None
 
     # Success case: two resources, first is playable
     didl_item = didl_lite.Item(
@@ -195,6 +196,8 @@ async def test_resolve_media_object(hass: HomeAssistant, dms_device_mock: Mock) 
     assert result.url == res_abs_url
     assert result.mime_type == res_mime
     assert result.didl_metadata is didl_item
+    # Image resource is exposed as a normalized absolute thumbnail.
+    assert result.thumbnail == f"{MOCK_DEVICE_BASE_URL}/thumbnail.png"
 
     # Success case: three resources, only third is playable
     didl_item = didl_lite.Item(

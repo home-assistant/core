@@ -410,7 +410,9 @@ async def test_play_media_browse_failure_still_plays(
     await setup_media_player(hass, mock_config_entry)
 
     didl = MagicMock(title="NAS Track", album_art_uri="http://nas:5000/art.jpg")
-    play_item = MagicMock(url="http://nas:5000/music/track.flac", didl_metadata=didl)
+    play_item = MagicMock(
+        url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
+    )
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
@@ -450,7 +452,9 @@ async def test_play_media_browse_failure_resolves_relative_artwork(
     await setup_media_player(hass, mock_config_entry)
 
     didl = MagicMock(title="NAS Track", album_art_uri="/upnp/art.jpg")
-    play_item = MagicMock(url="http://nas:5000/music/track.flac", didl_metadata=didl)
+    play_item = MagicMock(
+        url="http://nas:5000/music/track.flac", didl_metadata=didl, thumbnail=None
+    )
     with (
         patch(
             "homeassistant.components.media_source.async_browse_media",
@@ -594,6 +598,238 @@ async def test_play_media_metadata_search_is_bounded(
             "title": "Home Assistant",
             "uri": "http://stream.example/missing",
             "albumArtwork": "",
+        }
+    )
+
+
+async def test_play_media_browse_failure_prefers_normalized_thumbnail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test the source-normalized thumbnail wins over raw DIDL artwork."""
+    await setup_media_player(hass, mock_config_entry)
+
+    didl = MagicMock(title="NAS Track", album_art_uri="/upnp/art.jpg")
+    play_item = MagicMock(
+        url="http://nas:5000/music/track.flac",
+        didl_metadata=didl,
+        thumbnail="http://nas:5000/upnp/normalized.jpg",
+    )
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=BrowseError("Server failure: upnp error 710")),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "media-source://dlna_dms/nas/:some-object-id",
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "NAS Track",
+            "uri": "http://nas:5000/music/track.flac",
+            "albumArtwork": "http://nas:5000/upnp/normalized.jpg",
+        }
+    )
+
+
+async def test_play_media_root_browse_failure_still_plays(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test a failing media source root browse does not abort playback."""
+    await setup_media_player(hass, mock_config_entry)
+
+    station_id = "media-source://radio_browser/station-uuid"
+    listing = MagicMock(can_expand=True, children=[])
+
+    async def browse_side_effect(
+        hass: HomeAssistant, media_content_id: str, **kwargs: Any
+    ) -> MagicMock:
+        if media_content_id == station_id:
+            return listing
+        raise BrowseError("Server failure: root unavailable")
+
+    play_item = MagicMock(url="http://stream.example/station", didl_metadata=None)
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=browse_side_effect),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: station_id,
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "Home Assistant",
+            "uri": "http://stream.example/station",
+            "albumArtwork": "",
+        }
+    )
+
+
+async def test_play_media_search_continues_after_branch_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test the metadata search skips branches that fail to browse."""
+    await setup_media_player(hass, mock_config_entry)
+
+    station_id = "media-source://radio_browser/station-uuid"
+    station = MagicMock(
+        media_content_id=station_id,
+        title="France Inter",
+        thumbnail="http://localhost/france-inter.ico",
+        can_play=True,
+        can_expand=False,
+    )
+    broken_category = MagicMock(
+        media_content_id="media-source://radio_browser/broken", can_expand=True
+    )
+    good_category = MagicMock(
+        media_content_id="media-source://radio_browser/popular", can_expand=True
+    )
+    good_listing = MagicMock(can_expand=True, children=[station])
+    root_listing = MagicMock(can_expand=True, children=[broken_category, good_category])
+
+    async def browse_side_effect(
+        hass: HomeAssistant, media_content_id: str, **kwargs: Any
+    ) -> MagicMock:
+        if media_content_id == station_id:
+            return MagicMock(can_expand=True, children=[])
+        if media_content_id == broken_category.media_content_id:
+            raise BrowseError("Server failure: upnp error 710")
+        if media_content_id == good_category.media_content_id:
+            return good_listing
+        return root_listing
+
+    play_item = MagicMock(url="http://stream.example/france-inter", didl_metadata=None)
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=browse_side_effect),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: station_id,
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "France Inter",
+            "uri": "http://stream.example/france-inter",
+            "albumArtwork": "http://localhost/france-inter.ico",
+        }
+    )
+
+
+async def test_play_media_search_processes_final_permitted_browse(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test results of the last browse allowed by the budget are still searched."""
+    await setup_media_player(hass, mock_config_entry)
+
+    station_id = "media-source://radio_browser/station-uuid"
+    station = MagicMock(
+        media_content_id=station_id,
+        title="Last Budget Station",
+        thumbnail="http://localhost/last.ico",
+        can_play=True,
+        can_expand=False,
+    )
+    # 19 empty categories, then the station inside the 20th (last permitted) browse.
+    categories = [
+        MagicMock(
+            media_content_id=f"media-source://radio_browser/cat-{idx}", can_expand=True
+        )
+        for idx in range(19)
+    ]
+    last_category = MagicMock(
+        media_content_id="media-source://radio_browser/cat-last", can_expand=True
+    )
+    last_listing = MagicMock(can_expand=True, children=[station])
+    root_listing = MagicMock(can_expand=True, children=[*categories, last_category])
+    empty_listing = MagicMock(can_expand=True, children=[])
+
+    async def browse_side_effect(
+        hass: HomeAssistant, media_content_id: str, **kwargs: Any
+    ) -> MagicMock:
+        if media_content_id == station_id:
+            return empty_listing
+        if media_content_id == last_category.media_content_id:
+            return last_listing
+        if media_content_id.startswith("media-source://radio_browser/cat-"):
+            return empty_listing
+        return root_listing
+
+    play_item = MagicMock(url="http://stream.example/last", didl_metadata=None)
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(side_effect=browse_side_effect),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            AsyncMock(return_value=play_item),
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: station_id,
+            },
+            blocking=True,
+        )
+
+    mock_device.play_media.assert_awaited_once_with(
+        {
+            "title": "Last Budget Station",
+            "uri": "http://stream.example/last",
+            "albumArtwork": "http://localhost/last.ico",
         }
     )
 

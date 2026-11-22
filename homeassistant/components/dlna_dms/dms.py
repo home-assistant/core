@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import functools
 from typing import Any
@@ -110,6 +110,7 @@ class DidlPlayMedia(PlayMedia):
     """Playable media with DIDL metadata."""
 
     didl_metadata: didl_lite.DidlObject
+    thumbnail: str | None = field(kw_only=True, default=None)
 
 
 class DlnaDmsDeviceError(BrowseError, Unresolvable):
@@ -551,7 +552,9 @@ class DmsDeviceSource:
             if mime_type := _resource_mime_type(resource):
                 url = self._device.get_absolute_url(resource.uri)
                 LOGGER.debug("Resolved to url %s MIME %s", url, mime_type)
-                return DidlPlayMedia(url, mime_type, item)
+                return DidlPlayMedia(
+                    url, mime_type, item, thumbnail=self._didl_thumbnail_url(item)
+                )
 
         LOGGER.debug("Object %s has no playable resources", item.id)
         raise Unresolvable("Object has no playable resources")

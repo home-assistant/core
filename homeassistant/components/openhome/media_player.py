@@ -238,7 +238,10 @@ class OpenhomeDevice(MediaPlayerEntity):
                 track_details["albumArtwork"] = browsed.thumbnail or ""
             elif didl := getattr(play_item, "didl_metadata", None):
                 track_details["title"] = didl.title or "Home Assistant"
-                if album_art := getattr(didl, "album_art_uri", None):
+                if thumbnail := getattr(play_item, "thumbnail", None):
+                    # Normalized to an absolute URL by the media source.
+                    track_details["albumArtwork"] = thumbnail
+                elif album_art := getattr(didl, "album_art_uri", None):
                     # DIDL artwork URLs can be relative to the media server.
                     track_details["albumArtwork"] = urljoin(media_id, album_art)
 
@@ -275,9 +278,15 @@ class OpenhomeDevice(MediaPlayerEntity):
         parsed = MediaSourceItem.from_uri(self.hass, media_content_id, None)
         if parsed.domain is None:
             return None
-        root = await media_source.async_browse_media(
-            self.hass, f"{media_source.URI_SCHEME}{parsed.domain}"
-        )
+        try:
+            root = await media_source.async_browse_media(
+                self.hass, f"{media_source.URI_SCHEME}{parsed.domain}"
+            )
+        except (BrowseError, Unresolvable) as err:
+            _LOGGER.debug(
+                "Could not browse media source root of %s: %s", media_content_id, err
+            )
+            return None
         budget = [_MAX_METADATA_BROWSE_REQUESTS]
         return await self._async_search_media_tree(
             root, media_content_id, depth=0, budget=budget
@@ -312,16 +321,24 @@ class OpenhomeDevice(MediaPlayerEntity):
         budget: list[int],
     ) -> BrowseMedia | None:
         """Search the children of an expandable browse item for a media_content_id."""
-        if depth > 2 or budget[0] <= 0:
+        if depth > 2:
             return None
         for child in item.children or []:
             if child.media_content_id == media_content_id:
                 return child
             if child.can_expand and budget[0] > 0:
                 budget[0] -= 1
-                sub_item = await media_source.async_browse_media(
-                    self.hass, child.media_content_id
-                )
+                try:
+                    sub_item = await media_source.async_browse_media(
+                        self.hass, child.media_content_id
+                    )
+                except (BrowseError, Unresolvable) as err:
+                    _LOGGER.debug(
+                        "Could not browse %s during metadata search: %s",
+                        child.media_content_id,
+                        err,
+                    )
+                    continue
                 found = await self._async_search_media_tree(
                     sub_item, media_content_id, depth=depth + 1, budget=budget
                 )
