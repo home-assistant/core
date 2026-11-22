@@ -24,11 +24,7 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 from .const import DOMAIN
 
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
-_SEVERITY_ORDER: dict[str, int] = {
-    ir.IssueSeverity.CRITICAL: 0,
-    ir.IssueSeverity.ERROR: 1,
-    ir.IssueSeverity.WARNING: 2,
-}
+_SEVERITY_ORDER = {severity.value: idx for idx, severity in enumerate(ir.IssueSeverity)}
 
 
 def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObjectType:
@@ -83,7 +79,7 @@ def _get_issues(
     issues.sort(
         key=lambda issue: (
             issue.dismissed_version is not None,
-            _SEVERITY_ORDER.get(issue.severity or "", 3),
+            _SEVERITY_ORDER.get(issue.severity or "", len(_SEVERITY_ORDER)),
             issue.domain,
             issue.issue_id,
         )
@@ -124,7 +120,11 @@ class GetIssuesTool(Tool):
             probatio.Optional(
                 "severity",
                 description="Filter by issue severity.",
-            ): probatio.All(str, probatio.Lower, probatio.In(list(_SEVERITY_ORDER))),
+            ): probatio.All(
+                str,
+                probatio.Lower,
+                probatio.In([severity.value for severity in ir.IssueSeverity]),
+            ),
             probatio.Optional(
                 "include_ignored",
                 description="Whether to include ignored (dismissed) issues in the results.",

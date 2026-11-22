@@ -71,9 +71,9 @@
       'severity': dict({
         'description': 'Filter by issue severity.',
         'enum': list([
-          <IssueSeverity.CRITICAL: 'critical'>,
-          <IssueSeverity.ERROR: 'error'>,
-          <IssueSeverity.WARNING: 'warning'>,
+          'critical',
+          'error',
+          'warning',
         ]),
         'format': 'lower',
         'type': 'string',
