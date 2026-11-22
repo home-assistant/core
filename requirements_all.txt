@@ -353,7 +353,7 @@ aiokem==1.0.1
 aiolibrenms==0.0.4
 
 # homeassistant.components.libresync
-aiolibresync==0.5.1
+aiolibresync==0.5.3
 
 # homeassistant.components.lichess
 aiolichess==1.3.0
@@ -455,7 +455,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.3.0
+aioshelly==14.4.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -476,7 +476,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.5.0
+aioswitcher==6.6.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -509,7 +509,7 @@ aiovitesy==1.4.8
 aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.11
+aiovodafone==3.3.13
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -521,7 +521,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.1.0
+aiowebostv==1.1.1
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -2064,7 +2064,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.3
 
 # homeassistant.components.opendisplay
-py-opendisplay==8.1.0
+py-opendisplay==8.2.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2185,7 +2185,7 @@ pyblu==2.2.0
 pybotvac==0.0.29
 
 # homeassistant.components.fuelprices_dk
-pybraendstofpriser==2.3.1
+pybraendstofpriser==2.4.0
 
 # homeassistant.components.braviatv
 pybravia==0.5.3
@@ -2248,7 +2248,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.10.1
+pydrawise==2026.11.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2876,7 +2876,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.18.0
+python-qube-heatpump==1.19.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2927,7 +2927,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline
-pytouchline_extended==0.4.5
+pytouchline_extended==1.2.1
 
 # homeassistant.components.touchline_sl
 pytouchlinesl==0.6.0
@@ -3204,7 +3204,7 @@ smart-meter-texas==0.6.0
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.2
+soco==0.32.4
 
 # homeassistant.components.sofar
 sofar-modbus==0.32.0
@@ -3481,7 +3481,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.8.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.11.1
+victron-mqtt==2026.11.5
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.14
@@ -3493,7 +3493,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.7.0
+vizaio==0.7.1
 
 # homeassistant.components.caldav
 vobject==0.9.9
@@ -3625,7 +3625,7 @@ youtubeaio==2.1.2
 yt-dlp[default]==2026.07.04
 
 # homeassistant.components.zabbix
-zabbix-utils==2.0.4
+zabbix-utils==2.0.5
 
 # homeassistant.components.zamg
 zamg==0.5.0
