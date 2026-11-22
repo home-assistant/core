@@ -36,7 +36,7 @@ DISCHARGE_LIMIT_ENTITY = "number.balco_260_discharge_limit"
 DISCHARGE_LIMIT_ADDRESS = 57016
 CHARGE_LIMIT_ENTITY = "number.balco_260_charge_limit"
 CHARGE_LIMIT_ADDRESS = 57017
-BATTERY_VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
+BATTERY_VOLTAGE_ENTITY = "sensor.balco_260_built_in_battery_voltage"
 
 
 @pytest.mark.usefixtures("mock_modbus_unit")

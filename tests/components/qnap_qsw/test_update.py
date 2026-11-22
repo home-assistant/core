@@ -12,7 +12,7 @@ from homeassistant.components.update import (
     UpdateService,
     UpdateServiceArgument,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .util import (
@@ -66,7 +66,7 @@ async def test_qnap_qsw_update(hass: HomeAssistant) -> None:
             UpdateService.INSTALL,
             {
                 UpdateServiceArgument.BACKUP: False,
-                CommonServiceArgument.ENTITY_ID: "update.qsw_m408_4c_firmware",
+                TargetKey.ENTITY_ID: "update.qsw_m408_4c_firmware",
             },
             blocking=True,
         )

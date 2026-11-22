@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
-from homeassistant.const import CONF_ID, CommonServiceArgument
+from homeassistant.const import CONF_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,7 +41,7 @@ async def test_cancel_room_setpoint_override_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: button_entity_id,
+            TargetKey.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )
@@ -75,7 +75,7 @@ async def test_hot_water_push_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: button_entity_id,
+            TargetKey.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )
@@ -109,7 +109,7 @@ async def test_restart_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: button_entity_id,
+            TargetKey.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )

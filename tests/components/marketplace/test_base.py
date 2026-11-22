@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 import logging
+from pathlib import Path
+import stat
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -706,3 +708,16 @@ async def test_register_refuses_an_unknown_category(
         is None
     )
     assert marketplace.repositories.get_by_full_name("owner/unknown") is None
+
+
+async def test_saved_card_and_its_gzip_share_the_file_mode(
+    marketplace: MarketplaceManager, tmp_path: Path
+) -> None:
+    """Test the gzip next to a dashboard card is as readable as the card."""
+    card = tmp_path / "card.js"
+
+    assert await marketplace.async_save_file(str(card), "console.log('card');")
+
+    card_mode = stat.S_IMODE(card.stat().st_mode)
+    assert card_mode != 0o600
+    assert stat.S_IMODE((tmp_path / "card.js.gz").stat().st_mode) == card_mode

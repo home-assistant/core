@@ -75,4 +75,5 @@ class BluettiModbusRuntimeData:
     coordinator: BluettiModbusDataUpdateCoordinator
     settings: BluettiModbusDataUpdateCoordinator
     device_info: DeviceInfo
+    device_id: str
     serial: str

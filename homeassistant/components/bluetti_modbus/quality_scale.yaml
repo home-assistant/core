@@ -52,17 +52,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: todo
-    comment: >-
-      Confirmed with an mDNS browser on a Balco 260: current firmware
-      advertises an `_http._tcp` service named "Bluetti HEMS" (mDNS hostname
-      `blhems-<MAC>`), and BLUETTI announced `_bluetti._tcp` named
-      "Balco260<serial>" for a later firmware. The DHCP hostname is the
-      generic "espressif". Left for a follow-up PR.
-  discovery-update-info:
-    status: todo
-    comment: Depends on discovery above landing first.
+  discovery: done
+  discovery-update-info: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

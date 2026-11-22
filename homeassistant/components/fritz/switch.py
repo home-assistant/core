@@ -513,7 +513,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
     @override
     def available(self) -> bool:
         """Return availability of the switch."""
-        if self._device.wan_access is None:
+        if not self._device.ip_address:
             return False
         return self.coordinator.last_update_success
 

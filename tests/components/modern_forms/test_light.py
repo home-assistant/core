@@ -24,6 +24,8 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.modern_forms.coordinator import SCAN_INTERVAL
@@ -32,14 +34,11 @@ from homeassistant.components.modern_forms.services import (
     ModernFormsServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -78,8 +77,8 @@ async def test_change_state(
     with patch("aiomodernforms.ModernFormsDevice.light") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -90,8 +89,11 @@ async def test_change_state(
     with patch("aiomodernforms.ModernFormsDevice.light") as light_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light", ATTR_BRIGHTNESS: 255},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: "light.modernformsfan_light",
+                LightServiceArgument.BRIGHTNESS: 255,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -111,7 +113,7 @@ async def test_sleep_timer_services(
             DOMAIN,
             ModernFormsService.SET_LIGHT_SLEEP_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light",
+                TargetKey.ENTITY_ID: "light.modernformsfan_light",
                 ModernFormsServiceArgument.SLEEP_TIME: 1,
             },
             blocking=True,
@@ -123,7 +125,7 @@ async def test_sleep_timer_services(
         await hass.services.async_call(
             DOMAIN,
             ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
-            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light"},
+            {TargetKey.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -149,8 +151,8 @@ async def test_light_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
 
@@ -176,8 +178,8 @@ async def test_light_connection_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
 
@@ -336,8 +338,8 @@ async def test_light_change_state_gen4(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.modernformsfan_uplight"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.modernformsfan_uplight"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -357,7 +359,7 @@ async def test_light_sleep_timer_not_supported_gen4(
             DOMAIN,
             ModernFormsService.SET_LIGHT_SLEEP_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight",
+                TargetKey.ENTITY_ID: "light.modernformsfan_uplight",
                 ModernFormsServiceArgument.SLEEP_TIME: 1,
             },
             blocking=True,
@@ -378,7 +380,7 @@ async def test_clear_light_sleep_timer_not_supported_gen4(
         await hass.services.async_call(
             DOMAIN,
             ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
-            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight"},
+            {TargetKey.ENTITY_ID: "light.modernformsfan_uplight"},
             blocking=True,
         )
 
@@ -403,10 +405,10 @@ async def test_light_color_temp_gen4(
     with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.modernformsfan_uplight",
-                ATTR_COLOR_TEMP_KELVIN: 4000,
+                TargetKey.ENTITY_ID: "light.modernformsfan_uplight",
+                LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
             },
             blocking=True,
         )
