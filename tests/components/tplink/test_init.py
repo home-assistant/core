@@ -120,7 +120,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     ("modules", "expected_interval"),
     [
         pytest.param([], tplink.UPDATE_INTERVAL, id="mains_powered"),
-        pytest.param(["Battery"], tplink.BATTERY_UPDATE_INTERVAL, id="battery"),
+        pytest.param(["Battery"], tplink.UPDATE_INTERVAL_BATTERY_POWERED, id="battery"),
     ],
 )
 async def test_update_interval_battery_camera(
@@ -142,9 +142,10 @@ async def test_update_interval_battery_camera(
     assert coordinator.update_interval == expected_interval
 
     device.update.reset_mock()
-    async_fire_time_changed(hass, dt_util.utcnow() + tplink.UPDATE_INTERVAL * 2)
+    async_fire_time_changed(hass, dt_util.utcnow() + tplink.UPDATE_INTERVAL * 3)
     await hass.async_block_till_done()
-    assert device.update.called is (expected_interval == tplink.UPDATE_INTERVAL)
+    expected_calls = 1 if expected_interval == tplink.UPDATE_INTERVAL else 0
+    assert device.update.call_count == expected_calls
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:

@@ -64,7 +64,7 @@ DISCOVERY_INTERVAL = timedelta(minutes=15)
 UPDATE_INTERVAL = timedelta(seconds=5)
 # Battery-powered cameras sleep between events and every poll wakes them up,
 # so poll them far less often to avoid draining the battery.
-BATTERY_UPDATE_INTERVAL = timedelta(minutes=10)
+UPDATE_INTERVAL_BATTERY_POWERED = timedelta(minutes=10)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -238,7 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> No
         )
 
     update_interval = (
-        BATTERY_UPDATE_INTERVAL
+        UPDATE_INTERVAL_BATTERY_POWERED
         if SmartCamModule.SmartCamBattery in device.modules
         else UPDATE_INTERVAL
     )
