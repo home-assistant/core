@@ -916,14 +916,16 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             for option in program_options:
                 if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
                     event_key = EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
-                    self.data.events[event_key] = Event(
-                        event_key,
-                        event_key.value,
-                        0,
-                        "",
-                        "",
-                        option.value,
-                    )
+                    if (event := self.data.events.get(event_key)) is None:
+                        self.data.events[event_key] = event = Event(
+                            event_key,
+                            event_key.value,
+                            0,
+                            "",
+                            "",
+                            option.value,
+                        )
+                    event.value = option.value
 
         self.data.events[key] = Event(
             key,
