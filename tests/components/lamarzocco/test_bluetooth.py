@@ -720,6 +720,44 @@ async def test_shot_timer_connects_on_power_on_despite_backoff(
 
 
 @pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_shot_timer_power_cycle_during_failing_connect(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test a power cycle during a connect that fails retries without the backoff."""
+    connecting = asyncio.Event()
+    finish_connect = asyncio.Event()
+
+    async def first_connect_fails_slowly(*_: Any) -> bool:
+        if connecting.is_set():
+            return True
+        connecting.set()
+        await finish_connect.wait()
+        raise BluetoothConnectionFailed("")
+
+    mock_connect = mock_lamarzocco.connect_bluetooth_shot_counter
+    mock_connect.side_effect = first_connect_fails_slowly
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    await connecting.wait()
+    config_coordinator = mock_config_entry_bluetooth.runtime_data.config_coordinator
+    machine_status = mock_lamarzocco.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+
+    # the machine is turned off and on again while still connecting
+    for mode in (MachineMode.STANDBY, MachineMode.BREWING_MODE):
+        machine_status.mode = mode
+        config_coordinator.async_set_updated_data(None)
+        await hass.async_block_till_done(wait_background_tasks=False)
+    assert mock_connect.await_count == 1
+
+    finish_connect.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_connect.await_count == 2
+    mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_ble_device_from_address")
 async def test_shot_timer_follows_bluetooth_mode_offline(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
