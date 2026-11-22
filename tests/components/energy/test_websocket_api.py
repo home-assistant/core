@@ -171,7 +171,7 @@ async def test_save_preferences(
                 "entity_energy_price": None,
                 "number_energy_price": None,
                 "name": "My heat",
-            }
+            },
         ],
         "device_consumption": [
             {
