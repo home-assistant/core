@@ -66,7 +66,7 @@ rules:
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: The integration does not have anything to reconfigure.
+    comment: The only configurable values are the credentials, which are updated through the reauthentication flow.
   repair-issues: done
   stale-devices: done
 
