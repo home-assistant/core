@@ -16,6 +16,11 @@ def account_identifier(entry: ConfigEntry) -> str:
     return entry.unique_id or entry.entry_id
 
 
+def account_device_identifier(account_id: str) -> str:
+    """Return the registry identifier for an account service device."""
+    return f"account_{account_id}"
+
+
 def temperature_unit_or_celsius(unit: str | None) -> UnitOfTemperature:
     """Return Daikin's temperature unit, defaulting invalid or missing values to Celsius."""
     try:
@@ -43,7 +48,12 @@ def enum_value_to_state(value: str) -> str:
 
 def is_read_only_on_off_value(settable: bool, values: list[str] | None) -> bool:
     """Return whether a characteristic is a read-only on/off string value."""
-    return not settable and values is not None and set(values) == {"on", "off"}
+    return not settable and is_on_off_value(values)
+
+
+def is_on_off_value(values: list[str] | None) -> bool:
+    """Return whether a characteristic supports exactly on/off values."""
+    return values is not None and set(values) == {"on", "off"}
 
 
 def set_optional_temperature_bound(

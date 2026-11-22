@@ -246,8 +246,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         operation_mode = kwargs.get(WaterHeaterServiceArgument.OPERATION_MODE)
-        temperature = kwargs.get(WaterHeaterServiceArgument.TEMPERATURE)
-        target_temperature = None
+        temperature = kwargs[WaterHeaterServiceArgument.TEMPERATURE]
         if operation_mode is not None:
             if operation_mode not in self.get_operation_list():
                 self._raise_service_validation_error(
@@ -255,23 +254,18 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 )
             if self.current_operation is None:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
-        if temperature is not None:
-            target_temperature = self._validated_target_temperature(
-                float(temperature),
-                allow_when_off=(
-                    operation_mode is not None and operation_mode != STATE_OFF
-                ),
-            )
+        target_temperature = self._validated_target_temperature(
+            float(temperature),
+            allow_when_off=(operation_mode is not None and operation_mode != STATE_OFF),
+        )
 
         if operation_mode == STATE_OFF:
-            if target_temperature is not None:
-                await self._async_write_tank_temperature(target_temperature)
+            await self._async_write_tank_temperature(target_temperature)
             await self.async_set_operation_mode(operation_mode)
         else:
             if operation_mode is not None:
                 await self.async_set_operation_mode(operation_mode)
-            if target_temperature is not None:
-                await self._async_write_tank_temperature(target_temperature)
+            await self._async_write_tank_temperature(target_temperature)
 
     def get_current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""

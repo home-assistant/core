@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEnt
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .utils import account_identifier
+from .utils import account_device_identifier, account_identifier
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -86,7 +86,7 @@ async def async_remove_config_entry_device(
         return False
     gateway_id = _daikin_device_identifier(device_entry)
     account_id = account_identifier(config_entry)
-    if gateway_id is None or gateway_id == f"account_{account_id}":
+    if gateway_id is None or gateway_id == account_device_identifier(account_id):
         return False
 
     coordinator = config_entry.runtime_data

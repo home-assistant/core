@@ -126,7 +126,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     @property
     def rate_limits(self) -> dict[str, int | None]:
-        """Return rate limits using the existing entity and diagnostics keys."""
+        """Return rate-limit values keyed by their entity and diagnostics fields."""
         rate_limit = self._client.rate_limit
         return {
             "minute": rate_limit.minute_limit,

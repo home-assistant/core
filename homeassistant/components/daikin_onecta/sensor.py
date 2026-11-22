@@ -24,11 +24,7 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import (
-    energy_description_key,
-    scalar_characteristics_for_platform,
-    scalar_platform_for_point,
-)
+from .discovery import energy_description_key, scalar_characteristics_for_platform
 from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
@@ -380,20 +376,11 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        point, characteristic = self._get_current_characteristic()
+        _, characteristic = self._get_current_characteristic()
         self._current_characteristic = characteristic
         self._is_exposed_on_platform = characteristic is not None and (
             self._sub_type is not None
-            or (
-                point is not None
-                and scalar_platform_for_point(
-                    point,
-                    self._value,
-                    characteristic,
-                    gateway_online=self._device.gateway_online,
-                )
-                is Platform.SENSOR
-            )
+            or self._characteristic_exposed_on(self._value, Platform.SENSOR)
         )
         self._attr_native_value = self._sensor_value(characteristic)
         self._attr_native_unit_of_measurement = _native_unit(

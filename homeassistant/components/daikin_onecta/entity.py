@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_platform_for_point
-from .utils import account_identifier
+from .utils import account_device_identifier, account_identifier
 
 EntityIdChecker = Callable[[Platform, str], bool]
 
@@ -212,7 +212,7 @@ class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
         self._account_id = account_identifier(coordinator.config_entry)
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"account_{self._account_id}")},
+            identifiers={(DOMAIN, account_device_identifier(self._account_id))},
             manufacturer="Daikin",
             translation_key="account",
         )

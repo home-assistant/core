@@ -18,6 +18,7 @@ from .entity import (
     iter_management_points,
     management_point_unique_id,
 )
+from .utils import is_on_off_value
 
 PARALLEL_UPDATES = 1
 
@@ -105,7 +106,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         self._is_exposed_on_platform = (
             characteristic is not None
             and characteristic.settable
-            and set(characteristic.values or []) == {"on", "off"}
+            and is_on_off_value(characteristic.values)
             and self._characteristic_exposed_on(self._value, Platform.SWITCH)
         )
 
