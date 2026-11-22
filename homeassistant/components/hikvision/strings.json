@@ -162,5 +162,60 @@
     "invalid_auth": {
       "message": "The device rejected the username or password."
     }
+  },
+  "issues": {
+    "ambiguous_identities": {
+      "fix_flow": {
+        "abort": {
+          "already_finished": "This repair was already finished in another window.",
+          "entry_busy": "The device is being set up or stopped. Open this repair again in a moment.",
+          "entry_removed": "The entry of this device was removed.",
+          "restart_required": "The device could not be stopped. Restart Home Assistant, then open this repair again."
+        },
+        "step": {
+          "choose_device": {
+            "data": {
+              "keep": "Device"
+            },
+            "data_description": {
+              "keep": "The device that keeps its place. The one set up now is chosen to start with."
+            },
+            "description": "Older versions registered the devices of {name} again at each setup, under a new ID, so {device} exists several times, and Home Assistant cannot tell which one came first. Choose the one to keep: it keeps its name and area, and the entities of the camera are put on it. {current} is the one set up now; if you keep another, it is removed. The others are left as they are.",
+            "title": "Choose the device to keep"
+          },
+          "choose_earlier_device": {
+            "data": {
+              "keep": "Device"
+            },
+            "data_description": {
+              "keep": "The device that keeps its place."
+            },
+            "description": "Older versions registered the devices of {name} again at each setup, under a new ID, so {device} exists several times, and Home Assistant cannot tell which one came first. Choose the one to keep: it keeps its name and area, and the entities of the camera are put on it. The others are left as they are.",
+            "title": "Choose the device to keep"
+          },
+          "choose_earlier_entity": {
+            "data": {
+              "keep": "Entity"
+            },
+            "data_description": {
+              "keep": "The entity that keeps its place."
+            },
+            "description": "Older versions registered the entities of {name} again at each setup, under a new ID, so {entity} exists several times, and Home Assistant cannot tell which one came first. Choose the one to keep: it keeps its entity ID, so the automations that use it keep working, and its history. The others are left as they are, and can be deleted.",
+            "title": "Choose the entity to keep"
+          },
+          "choose_entity": {
+            "data": {
+              "keep": "Entity"
+            },
+            "data_description": {
+              "keep": "The entity that keeps its place. The one set up now is chosen to start with."
+            },
+            "description": "Older versions registered the entities of {name} again at each setup, under a new ID, so {entity} exists several times, and Home Assistant cannot tell which one came first. Choose the one to keep: it keeps its entity ID, so the automations that use it keep working, and its history. {current} is the one set up now; if you keep another, it is removed. The others are left as they are, and can be deleted.",
+            "title": "Choose the entity to keep"
+          }
+        }
+      },
+      "title": "Choose the earlier devices and entities of {name} to keep"
+    }
   }
 }

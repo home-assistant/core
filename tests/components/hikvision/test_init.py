@@ -2,20 +2,33 @@
 
 import logging
 from unittest.mock import MagicMock
+import uuid
 from xml.etree.ElementTree import ParseError
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests
 
-from homeassistant.components.hikvision.const import DOMAIN
+from homeassistant.components.hikvision.const import CONF_RANDOM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_SSL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import setup_integration
-from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
+from .conftest import TEST_DEVICE_ID, TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
 
 
 async def test_setup_and_unload_entry(
@@ -334,3 +347,606 @@ async def test_setup_unreachable_device_is_retried(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
+
+
+def _identities(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> tuple[set[str], set[tuple[str, str]]]:
+    """Return the unique IDs of an entry's entities, and its devices' identifiers."""
+    entities = {
+        entity.unique_id
+        for entity in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+    devices = {
+        identifier
+        for device in dr.async_entries_for_config_entry(
+            dr.async_get(hass), entry.entry_id
+        )
+        for identifier in device.identifiers
+    }
+    return entities, devices
+
+
+async def test_a_device_with_a_made_up_id_keeps_its_entities(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device whose ID pyHik makes up keeps its device and entities.
+
+    pyHik makes up a new UUID at every connection for a device whose own ID is too
+    short. The entities are registered under the entry's own ID instead, while the
+    events of the stream are still matched with the ID pyHik gives now.
+    """
+    stored = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=stored)
+    camera = mock_hikcamera.return_value
+    first = uuid.uuid4()
+    camera.get_id = first
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities, devices = _identities(hass, mock_config_entry)
+    assert entities
+    assert all(unique_id.startswith(stored) for unique_id in entities)
+    assert (DOMAIN, stored) in devices
+    callbacks = {call.args[1] for call in camera.add_update_callback.call_args_list}
+    assert callbacks
+    assert all(callback.startswith(f"{first}.") for callback in callbacks)
+
+    # A reauthentication reloads the entry, and pyHik makes up another ID.
+    result = await mock_config_entry.start_reauth_flow(hass)
+    second = uuid.uuid4()
+    camera.get_id = second
+    camera.add_update_callback.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert _identities(hass, mock_config_entry) == (entities, devices)
+    callbacks = {call.args[1] for call in camera.add_update_callback.call_args_list}
+    assert callbacks
+    assert all(callback.startswith(f"{second}.") for callback in callbacks)
+
+
+async def test_an_entry_with_a_made_up_id_does_not_take_a_real_one(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device that answers with its own ID keeps it, whatever the entry has.
+
+    An entry created with an ID pyHik made up cannot be checked against the device:
+    a device with an ID of its own, such as another one at the same address, is
+    registered under that ID.
+    """
+    stored = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        unique_id=stored,
+        data={**mock_config_entry.data, CONF_RANDOM_ID: True},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities, devices = _identities(hass, mock_config_entry)
+    assert entities
+    assert all(unique_id.startswith(TEST_DEVICE_ID) for unique_id in entities)
+    assert devices == {(DOMAIN, TEST_DEVICE_ID)}
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [TEST_DEVICE_ID, str(uuid.uuid5(uuid.NAMESPACE_URL, "serialNumber:sn1"))],
+    ids=["real_id", "derived_id"],
+)
+async def test_an_entry_with_a_real_id_does_not_lend_it_to_a_made_up_one(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    stored: str,
+) -> None:
+    """Test a camera with a made-up ID does not take over a real device's identity.
+
+    A replacement camera at the same address, whose own ID is too short, would
+    otherwise be registered under the original device and its entities.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=stored)
+    made_up = uuid.uuid4()
+    mock_hikcamera.return_value.get_id = made_up
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities, devices = _identities(hass, mock_config_entry)
+    assert entities
+    assert all(unique_id.startswith(str(made_up)) for unique_id in entities)
+    assert devices == {(DOMAIN, str(made_up))}
+
+
+async def test_entities_of_an_earlier_made_up_id_are_kept_on_upgrade(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entities registered before the entry kept its ID are not replaced.
+
+    Before, the user flow and each setup got different random IDs from pyHik, so
+    the entities are registered under another ID than the entry's own. They move to
+    it, with their entity IDs: automations that use them keep working.
+    """
+    earlier = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=earlier)
+    camera = mock_hikcamera.return_value
+    camera.get_id = uuid.UUID(earlier)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entities, devices = _identities(hass, mock_config_entry)
+    assert entities
+    assert devices == {(DOMAIN, earlier)}
+    entity_ids = {
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The entry was created with another ID than the one its entities have.
+    own = str(uuid.uuid4())
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    camera.get_id = uuid.uuid4()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registered = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entry.entity_id for entry in registered} == entity_ids
+    assert {entry.unique_id for entry in registered} == {
+        own + unique_id.removeprefix(earlier) for unique_id in entities
+    }
+    assert _identities(hass, mock_config_entry)[1] == {(DOMAIN, own)}
+    enabled = [entry.entity_id for entry in registered if not entry.disabled_by]
+    assert enabled
+    assert all(
+        hass.states.get(entity_id).state != STATE_UNAVAILABLE for entity_id in enabled
+    )
+
+
+async def test_the_oldest_entity_of_earlier_made_up_ids_is_kept(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test of several earlier random IDs, the oldest entity moves to the entry's.
+
+    Each setup registered a new one, with a suffixed entity ID; the first one has
+    the entity ID automations use. The others are left as they are.
+    """
+    first, later, own = (str(uuid.uuid4()) for _ in range(3))
+    mock_config_entry.add_to_hass(hass)
+    oldest = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{first}_Motion_1",
+        config_entry=mock_config_entry,
+        suggested_object_id="front_camera_motion",
+    )
+    newer = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{later}_Motion_1",
+        config_entry=mock_config_entry,
+        suggested_object_id="front_camera_motion",
+    )
+    assert newer.entity_id != oldest.entity_id
+    oldest_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, first)}
+    )
+    newer_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, later)}
+    )
+    # An entity of the camera's real ID, from a firmware that reported one, is not
+    # an earlier made-up one.
+    real = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{TEST_DEVICE_ID}_Tamper Detection_1",
+        config_entry=mock_config_entry,
+    )
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    mock_hikcamera.return_value.get_id = uuid.uuid4()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(oldest.entity_id).unique_id == f"{own}_Motion_1"
+    assert entity_registry.async_get(newer.entity_id).unique_id == f"{later}_Motion_1"
+    assert entity_registry.async_get(real.entity_id).unique_id == (
+        f"{TEST_DEVICE_ID}_Tamper Detection_1"
+    )
+    assert device_registry.async_get(oldest_device.id).identifiers == {(DOMAIN, own)}
+    assert device_registry.async_get(newer_device.id).identifiers == {(DOMAIN, later)}
+
+
+async def test_earlier_identities_registered_at_the_same_time_are_not_guessed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test earlier identities that share a date of creation are left as they are.
+
+    Entries older than the date of creation were all given the same one, so the
+    first cannot be told, and the order of the registry says nothing about it. A
+    repair issue asks the user which to keep; the setup goes on meanwhile.
+    """
+    first, later, own = (str(uuid.uuid4()) for _ in range(3))
+    mock_config_entry.add_to_hass(hass)
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    earlier_entities = [
+        entity_registry.async_get_or_create(
+            "binary_sensor",
+            DOMAIN,
+            f"{made_up}_Motion_1",
+            config_entry=mock_config_entry,
+            suggested_object_id="front_camera_motion",
+        )
+        for made_up in (first, later)
+    ]
+    earlier_devices = [
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, made_up)},
+        )
+        for made_up in (first, later)
+    ]
+    freezer.tick(60)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    mock_hikcamera.return_value.get_id = uuid.uuid4()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity, made_up in zip(earlier_entities, (first, later), strict=True):
+        assert entity_registry.async_get(entity.entity_id).unique_id == (
+            f"{made_up}_Motion_1"
+        )
+    for device, made_up in zip(earlier_devices, (first, later), strict=True):
+        assert device_registry.async_get(device.id).identifiers == {(DOMAIN, made_up)}
+    # The setup registered new ones under the entry's ID.
+    current = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{own}_Motion_1"
+    )
+    assert current not in {entity.entity_id for entity in earlier_entities}
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"ambiguous_identities_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.translation_key == "ambiguous_identities"
+    assert issue.data == {
+        "entry_id": mock_config_entry.entry_id,
+        "devices": '[""]',
+        "entities": '[["binary_sensor", "_Motion_1"]]',
+    }
+
+
+async def test_the_first_of_earlier_identities_is_kept_when_later_ones_tie(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test only a tie for the first is a question: later ties do not matter."""
+    first, later, latest, own = (str(uuid.uuid4()) for _ in range(4))
+    mock_config_entry.add_to_hass(hass)
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    oldest = entity_registry.async_get_or_create(
+        "binary_sensor", DOMAIN, f"{first}_Motion_1", config_entry=mock_config_entry
+    )
+    freezer.tick(60)
+    for made_up in (later, latest):
+        entity_registry.async_get_or_create(
+            "binary_sensor",
+            DOMAIN,
+            f"{made_up}_Motion_1",
+            config_entry=mock_config_entry,
+        )
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    mock_hikcamera.return_value.get_id = uuid.uuid4()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(oldest.entity_id).unique_id == f"{own}_Motion_1"
+    assert not issue_registry.issues
+
+
+async def test_kept_ones_are_linked_to_the_device_this_setup_registers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test what is kept is linked to the device registered when none was kept.
+
+    The earlier camera devices tie, so none is kept and the setup registers one;
+    the first motion sensor and the channels are kept, from a duplicate. The
+    camera has neither any more. One channel lost its link when an earlier device
+    was removed.
+    """
+    first, later, own = (str(uuid.uuid4()) for _ in range(3))
+    mock_config_entry.add_to_hass(hass)
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    duplicates = [
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, made_up)},
+        )
+        for made_up in (first, later)
+    ]
+    motion = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{later}_Motion_1",
+        config_entry=mock_config_entry,
+        device_id=duplicates[1].id,
+    )
+    linked = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{later}_2")},
+        via_device_id=duplicates[1].id,
+    )
+    unlinked = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{later}_3")},
+    )
+    freezer.move_to("2024-06-01T00:00:00+00:00")
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    camera = mock_hikcamera.return_value
+    camera.get_id = uuid.uuid4()
+    camera.current_event_states = {"Line Crossing": [(False, 1)]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registered = device_registry.async_get_device_by_identifier(
+        (DOMAIN, own), mock_config_entry.entry_id
+    )
+    assert registered is not None
+    assert registered.id not in {device.id for device in duplicates}
+    assert entity_registry.async_get(motion.entity_id).device_id == registered.id
+    assert device_registry.async_get(linked.id).via_device_id == registered.id
+    assert device_registry.async_get(unlinked.id).via_device_id == registered.id
+
+
+async def test_kept_entities_and_channels_are_linked_to_the_kept_devices(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test what is kept from one earlier setup is linked to what is kept of another.
+
+    The first device of the camera is from one setup, the first motion sensor
+    and the first channel from another. The camera has neither any more, so no
+    setup moves them: they are linked to the kept camera device here, and stay
+    when the duplicate device they were on is removed.
+    """
+    first, later, own = (str(uuid.uuid4()) for _ in range(3))
+    mock_config_entry.add_to_hass(hass)
+    freezer.move_to("2024-01-01T00:00:00+00:00")
+    kept_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, first)}
+    )
+    freezer.tick(60)
+    duplicate = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, later)}
+    )
+    freezer.move_to("2023-01-01T00:00:00+00:00")
+    motion = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{later}_Motion_1",
+        config_entry=mock_config_entry,
+        device_id=duplicate.id,
+    )
+    channel = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{later}_2")},
+        via_device_id=duplicate.id,
+    )
+    freezer.move_to("2024-01-01T00:02:00+00:00")
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{first}_Motion_1",
+        config_entry=mock_config_entry,
+        device_id=kept_device.id,
+    )
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=own)
+    camera = mock_hikcamera.return_value
+    camera.get_id = uuid.uuid4()
+    camera.current_event_states = {"Line Crossing": [(False, 1)]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(kept_device.id).identifiers == {(DOMAIN, own)}
+    kept_motion = entity_registry.async_get(motion.entity_id)
+    assert kept_motion.unique_id == f"{own}_Motion_1"
+    assert kept_motion.device_id == kept_device.id
+    kept_channel = device_registry.async_get(channel.id)
+    assert kept_channel.identifiers == {(DOMAIN, f"{own}_2")}
+    assert kept_channel.via_device_id == kept_device.id
+    device_registry.async_remove_device(duplicate.id)
+    assert entity_registry.async_get(motion.entity_id) is not None
+
+
+async def test_an_entry_with_a_real_id_adopts_no_made_up_entities(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities under a made-up ID are only moved to an entry's made-up ID."""
+    made_up = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    legacy = entity_registry.async_get_or_create(
+        "binary_sensor", DOMAIN, f"{made_up}_Motion_1", config_entry=mock_config_entry
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(legacy.entity_id).unique_id == f"{made_up}_Motion_1"
+    )
+
+
+@pytest.mark.parametrize(
+    ("answer", "recorded"),
+    [
+        # The device gives the entry's ID as its own.
+        ("stored", False),
+        # pyHik makes up a random ID, as it did when the entry was created.
+        ("made_up", True),
+        # Another device, or another ID: nothing is settled.
+        ("other", None),
+    ],
+)
+async def test_where_an_older_entrys_id_came_from_is_recorded(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    answer: str,
+    recorded: bool | None,
+) -> None:
+    """Test an entry created before the origin of its ID was recorded gets it.
+
+    Its ID has the form of a random one pyHik makes up, which a device's own ID
+    can have too.
+    """
+    stored = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=stored)
+    assert CONF_RANDOM_ID not in mock_config_entry.data
+    mock_hikcamera.return_value.get_id = {
+        "stored": stored,
+        "made_up": uuid.uuid4(),
+        "other": "DS-OTHER0000000000000",
+    }[answer]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data.get(CONF_RANDOM_ID) is recorded
+
+
+async def test_an_entry_without_an_id_is_not_taken_for_a_made_up_one(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry that has no unique ID records nothing about one."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
+    mock_hikcamera.return_value.get_id = uuid.uuid4()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert CONF_RANDOM_ID not in mock_config_entry.data
+
+
+async def test_an_id_in_another_form_than_pyhik_writes_is_not_taken_for_one(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a UUID that pyHik would not write that way is the device's own ID.
+
+    pyHik writes the UUIDs it makes up in lowercase, with dashes.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=str(uuid.uuid4()).upper()
+    )
+    mock_hikcamera.return_value.get_id = uuid.uuid4()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert CONF_RANDOM_ID not in mock_config_entry.data
+
+
+async def test_a_devices_own_random_uuid_is_not_lent_to_a_made_up_one(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry whose own ID is a random UUID keeps it for its own device only."""
+    own = str(uuid.uuid4())
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        unique_id=own,
+        data={**mock_config_entry.data, CONF_RANDOM_ID: False},
+    )
+    made_up = uuid.uuid4()
+    mock_hikcamera.return_value.get_id = made_up
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities, devices = _identities(hass, mock_config_entry)
+    assert entities
+    assert all(unique_id.startswith(str(made_up)) for unique_id in entities)
+    assert devices == {(DOMAIN, str(made_up))}
+
+
+async def test_a_device_with_its_own_id_uses_it(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a real device ID is what the entities and the events both use."""
+    await setup_integration(hass, mock_config_entry)
+
+    entities, devices = _identities(hass, mock_config_entry)
+    device_id = mock_hikcamera.return_value.get_id
+    assert all(unique_id.startswith(device_id) for unique_id in entities)
+    assert (DOMAIN, device_id) in devices
+    callbacks = {
+        call.args[1]
+        for call in mock_hikcamera.return_value.add_update_callback.call_args_list
+    }
+    assert all(callback.startswith(f"{device_id}.") for callback in callbacks)
