@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
@@ -75,24 +76,31 @@ def _can_connect(data: Mapping[str, Any]) -> bool:
     return True
 
 
-PRESERVED_KEYS = (CONF_PLATFORM, CONF_OBJECT_ID)
+IDENTITY_KEYS = (CONF_PLATFORM, CONF_OBJECT_ID)
+PRESERVED_KEYS = (*IDENTITY_KEYS, CONF_SCAN_INTERVAL)
+EFFECTIVE_KEYS = (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_PAYLOAD,
+    CONF_VALUE_TEMPLATE,
+    CONF_VALUE_ON,
+)
+
+
+def _value(data: Mapping[str, Any], key: str) -> Any:
+    """Return a normalized value."""
+    return data.get(key) if key == CONF_VALUE_ON else data.get(key) or None
+
+
+def _effective(data: Mapping[str, Any]) -> list[Any]:
+    """Return the configuration that defines the entities."""
+    return [_value(data, key) for key in EFFECTIVE_KEYS]
 
 
 def build_unique_id(data: Mapping[str, Any]) -> str:
-    """Return the unique ID that identifies the entities of an entry."""
+    """Return the unique ID, including the legacy import identity."""
     return json.dumps(
-        [
-            data.get(key) or None
-            for key in (
-                CONF_HOST,
-                CONF_PORT,
-                CONF_PAYLOAD,
-                CONF_VALUE_TEMPLATE,
-                CONF_VALUE_ON,
-                CONF_PLATFORM,
-                CONF_OBJECT_ID,
-            )
-        ]
+        [*_effective(data), *(_value(data, key) for key in IDENTITY_KEYS)]
     )
 
 
@@ -100,6 +108,17 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TCP."""
 
     VERSION = 1
+
+    def _has_conflict(
+        self, data: Mapping[str, Any], ignore_entry_id: str | None = None
+    ) -> bool:
+        """Return True if another entry has the same effective configuration."""
+        return any(
+            entry.entry_id != ignore_entry_id
+            and _effective(entry.data) == _effective(data)
+            and not (entry.data.get(CONF_PLATFORM) and data.get(CONF_PLATFORM))
+            for entry in self._async_current_entries()
+        )
 
     @override
     async def async_step_user(
@@ -110,6 +129,8 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(build_unique_id(user_input))
             self._abort_if_unique_id_configured()
+            if self._has_conflict(user_input):
+                return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
@@ -139,7 +160,9 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
             existing = self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, unique_id
             )
-            if existing and existing.entry_id != entry.entry_id:
+            if (existing and existing.entry_id != entry.entry_id) or self._has_conflict(
+                data, entry.entry_id
+            ):
                 return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
                 return self.async_update_reload_and_abort(

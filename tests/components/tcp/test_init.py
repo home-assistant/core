@@ -1,5 +1,6 @@
 """Tests for the TCP setup and the YAML import."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -127,3 +128,29 @@ async def test_yaml_import_entity_namespace(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.utility_power").state == "123"
+
+
+async def test_yaml_import_scan_interval(
+    hass: HomeAssistant,
+    mock_create_connection: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the legacy scan_interval is preserved."""
+    assert await async_setup_component(
+        hass, "sensor", {"sensor": {**YAML, "scan_interval": 120}}
+    )
+    await hass.async_block_till_done()
+
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert entry.data["scan_interval"] == 120
+    calls = mock_create_connection.call_count
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_create_connection.call_count == calls
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_create_connection.call_count == calls + 1

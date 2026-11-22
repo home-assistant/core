@@ -1,14 +1,16 @@
 """Common code for TCP component."""
 
+from datetime import datetime, timedelta
 import logging
 import socket
 import ssl
-from typing import Final
+from typing import Final, override
 
 from homeassistant.const import (
     CONF_HOST,
     CONF_PAYLOAD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
@@ -19,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
 
 from . import TcpConfigEntry
@@ -66,6 +69,10 @@ class TcpEntity(Entity):
         )
         if object_id := data.get(CONF_OBJECT_ID):
             self.entity_id = self._entity_id_format.format(object_id)
+        self._custom_interval: timedelta | None = None
+        if (interval := data.get(CONF_SCAN_INTERVAL)) is not None:
+            self._custom_interval = timedelta(seconds=interval)
+            self._attr_should_poll = False
 
     def update(self) -> None:
         """Get the latest value for this sensor."""
@@ -103,3 +110,17 @@ class TcpEntity(Entity):
                 value_template.template,
                 value,
             )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Poll with the interval imported from YAML, if any."""
+        if self._custom_interval is not None:
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_interval_update, self._custom_interval
+                )
+            )
+
+    async def _async_interval_update(self, now: datetime) -> None:
+        """Update the entity at the custom interval."""
+        await self.async_update_ha_state(True)

@@ -10,7 +10,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.tcp.config_flow import build_unique_id
 from homeassistant.components.tcp.const import CONF_OBJECT_ID, CONF_TITLE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PAYLOAD, CONF_PLATFORM, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PAYLOAD,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -327,3 +333,57 @@ async def test_reconfigure_keeps_import_data(hass: HomeAssistant) -> None:
         )
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {**data, CONF_PORT: 4343}
+
+
+async def test_user_flow_duplicate_of_import(hass: HomeAssistant) -> None:
+    """Test a UI entry cannot duplicate an imported one."""
+    data = {**USER_INPUT, CONF_PLATFORM: "sensor", CONF_OBJECT_ID: "tcp_sensor"}
+    MockConfigEntry(
+        domain=DOMAIN, data=data, unique_id=build_unique_id(data)
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_sensor_and_binary_sensor_coexist(hass: HomeAssistant) -> None:
+    """Test the same YAML config on two platforms is imported twice."""
+    first = {**IMPORT_INPUT, CONF_PLATFORM: "sensor", CONF_OBJECT_ID: "tcp_sensor"}
+    second = {**first, CONF_PLATFORM: "binary_sensor"}
+    for data in (first, second):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == build_unique_id(
+            {k: v for k, v in data.items() if k != CONF_TITLE}
+        )
+
+
+async def test_reconfigure_imported_with_sibling(hass: HomeAssistant) -> None:
+    """Test an imported entry can be reconfigured next to its sibling."""
+    sensor = {**USER_INPUT, CONF_PLATFORM: "sensor", CONF_OBJECT_ID: "tcp_sensor"}
+    binary = {**sensor, CONF_PLATFORM: "binary_sensor", CONF_SCAN_INTERVAL: 60}
+    MockConfigEntry(
+        domain=DOMAIN, data=sensor, unique_id=build_unique_id(sensor)
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=binary, unique_id=build_unique_id(binary)
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.tcp.config_flow._can_connect", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_SCAN_INTERVAL] == 60

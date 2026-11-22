@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
@@ -65,6 +66,8 @@ async def async_import_yaml(
     data[CONF_TITLE] = name
     data[CONF_PLATFORM] = platform.value
     data[CONF_OBJECT_ID] = slugify(f"{namespace} {name}" if namespace else name)
+    if (interval := config.get(CONF_SCAN_INTERVAL)) is not None:
+        data[CONF_SCAN_INTERVAL] = int(interval.total_seconds())
     if (template := data.get(CONF_VALUE_TEMPLATE)) is not None:
         data[CONF_VALUE_TEMPLATE] = template.template
 
