@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -28,6 +28,7 @@ from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRICES, TEST_STATION
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -35,6 +36,9 @@ async def test_setup_and_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"
+    )
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -207,10 +211,10 @@ async def test_api_keys_update_independently(
 ) -> None:
     """Test separate API keys have their own station selections and updates."""
     data = await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
-    mock_braendstofpriser_class.side_effect = {
-        TEST_API_KEY: mock_braendstofpriser,
-        "other-api-key": mock_other_braendstofpriser,
-    }.__getitem__
+    mock_braendstofpriser_class.side_effect = [
+        mock_braendstofpriser,
+        mock_other_braendstofpriser,
+    ]
     mock_braendstofpriser.get_prices_bulk.return_value = data[:1]
     mock_other_braendstofpriser.get_prices_bulk.return_value = data[1:]
     await setup_integration(hass, mock_config_entry)
@@ -229,8 +233,8 @@ async def test_api_keys_update_independently(
     await setup_integration(hass, other_entry)
 
     assert mock_braendstofpriser_class.call_args_list == [
-        call(TEST_API_KEY),
-        call("other-api-key"),
+        call(TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"),
+        call("other-api-key", user_agent=f"Home-Assistant/{__version__}"),
     ]
     mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
     mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])

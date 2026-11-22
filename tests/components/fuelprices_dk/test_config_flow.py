@@ -1,7 +1,7 @@
 """Test the Fuelprices.dk config flow."""
 
 from collections.abc import Callable
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp import ClientResponseError
 from pybraendstofpriser import Flist
@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fuelprices_dk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,6 +34,7 @@ def _client_error(status: int) -> ClientResponseError:
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a full successful config flow."""
@@ -70,6 +71,9 @@ async def test_full_user_flow(
     assert subentry["unique_id"] == f"{TEST_COMPANY}_{TEST_STATION['id']}"
     assert subentry["data"] == {"company": TEST_COMPANY, "station": TEST_STATION}
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -244,6 +248,7 @@ async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
 ) -> None:
     """Test reauthentication updates the API key."""
     mock_config_entry.add_to_hass(hass)
@@ -259,6 +264,9 @@ async def test_reauth_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    mock_braendstofpriser_class.assert_called_once_with(
+        "new-api-key", user_agent=f"Home-Assistant/{__version__}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -301,6 +309,7 @@ async def test_reauth_recovers_from_api_errors(
 async def test_subentry_flow_create(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a station subentry."""
@@ -331,6 +340,9 @@ async def test_subentry_flow_create(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_COMPANY} - {new_station['name']}"
     assert result["unique_id"] == f"{TEST_COMPANY}_{new_station['id']}"
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"
+    )
 
 
 async def test_subentry_flow_duplicate_station(
