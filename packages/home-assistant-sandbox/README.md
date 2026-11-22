@@ -35,9 +35,10 @@ Each worker runs its own Home Assistant instance.
 
 1. Home Assistant includes a router that decides during integration setup whether an integration runs on the host or in a specific worker.
 2. The worker manager starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
-3. The host sends a config-entry snapshot with canonical entry and subentry IDs. The worker sets it up after startup.
-4. The worker sends entity descriptions and state updates. The host registers proxy entities. Each proxy entity represents an entity in a worker. On the host, the sandbox integration provides the proxy entities, but Home Assistant presents them as belonging to the integration and config entry running in the worker. Actions called on the proxy are forwarded to and executed by the worker entity. The host retains canonical entity and device identities.
-5. Inside the worker, operations on a `Store` from `helpers/storage.py` and updates to config entry data are routed to the host for persistence.
+3. When a user adds a sandboxed integration, its config flow runs inside the worker. The host displays the forms and forwards user input to the worker. When the flow completes, the host creates and persists the config entry.
+4. The host sends a config-entry snapshot with canonical entry and subentry IDs. The worker sets it up after startup.
+5. The worker sends entity descriptions and state updates. The host registers proxy entities. Each proxy entity represents an entity in a worker. On the host, the sandbox integration provides the proxy entities, but Home Assistant presents them as belonging to the integration and config entry running in the worker. Actions called on the proxy are forwarded to and executed by the worker entity. The host retains canonical entity and device identities.
+6. Inside the worker, operations on a `Store` from `helpers/storage.py` and updates to config entry data are routed to the host for persistence.
 
 On a worker crash, its proxies become unavailable. The worker manager has a bounded restart policy. Recovery removes the old platforms before reloading entries. Graceful shutdown unloads entries, flushes stores, and returns restore-state data. The host can terminate a worker that does not stop.
 
