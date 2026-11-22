@@ -15,13 +15,19 @@ from .const import (
 )
 from .existing_config import ExistingConfigSuggestionProvider
 from .functional_blocks import FunctionalBlockSuggestionProvider
+from .functions import FunctionSuggestionProvider
 
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
+# Ordered by how much a provider is to be trusted, most reliable first: a
+# configuration the user already made, then device semantics, then building
+# functions. The order ranks suggestions of different providers for the same
+# thing - see `_link_duplicates` - and is the order of the response.
 SUGGESTION_PROVIDERS: list[SuggestionProvider] = [
-    FunctionalBlockSuggestionProvider(),
     ExistingConfigSuggestionProvider(),
+    FunctionalBlockSuggestionProvider(),
+    FunctionSuggestionProvider(),
 ]
 
 
