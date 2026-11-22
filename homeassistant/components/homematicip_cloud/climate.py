@@ -32,6 +32,7 @@ from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .exceptions import HeatingControlError
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import handle_errors
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
@@ -237,14 +238,17 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self._device.maxTemperature
 
+    @handle_errors
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+            return None
 
         if self.min_temp <= temperature <= self.max_temp:
-            await self._device.set_point_temperature_async(temperature)
+            return await self._device.set_point_temperature_async(temperature)
+
+        return None
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
