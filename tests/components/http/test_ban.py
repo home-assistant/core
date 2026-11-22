@@ -703,7 +703,9 @@ async def test_ban_applies_when_the_ban_file_cannot_be_written(
         create=True,
     ):
         client = await aiohttp_client(app)
-        resp = await client.get("/example")
+        resp = await client.get(
+            "/example", headers={"Authorization": "Bearer invalid"}
+        )
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
@@ -712,8 +714,7 @@ async def test_ban_applies_when_the_ban_file_cannot_be_written(
         in caplog.text
     )
     notifications = async_get_persistent_notifications(hass)
-    # Anonymous requests still count toward an IP ban, but do not notify as a login.
-    assert "http-login" not in notifications
+    assert "http-login" in notifications
     assert "ip-ban" in notifications
 
 
