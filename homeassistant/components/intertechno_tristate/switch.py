@@ -117,7 +117,7 @@ class IntertechnoTristateSwitch(SwitchEntity, RestoreEntity):
             housecode=self._housecode,
             group=self._group,
             channel=self._channel,
-            on=on,
+            onoff=on,
         )
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context

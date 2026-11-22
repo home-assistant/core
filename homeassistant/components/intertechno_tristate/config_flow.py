@@ -5,13 +5,6 @@ from typing import Any, override
 import probatio
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.pt2262 import ITTristateCommand
-from rf_protocols.commands.pt2262.ITTristateCommand import (
-    MIN_CHANNEL,
-    MIN_GROUP,
-    MAX_CHANNEL,
-    MAX_GROUP,
-    REPEAT_COUNT_LEARN,
-)
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -29,8 +22,13 @@ from .const import (
     DOMAIN,
 )
 
-_SAMPLE_COMMAND = ITTristateCommand(housecode="A", group=1, channel=1, on=True)
+_SAMPLE_COMMAND = ITTristateCommand(housecode="A", group=1, channel=1, onoff=True)
 _CONF_DEVICE_RESPONDED = "device_responded"
+MIN_CHANNEL = ITTristateCommand.MIN_CHANNEL
+MIN_GROUP = ITTristateCommand.MIN_GROUP
+MAX_CHANNEL = ITTristateCommand.MAX_CHANNEL
+MAX_GROUP = ITTristateCommand.MAX_GROUP
+REPEAT_COUNT_LEARN = ITTristateCommand.REPEAT_COUNT_LEARN
 
 
 class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -128,7 +126,7 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
             housecode=self._device_data[CONF_HOUSECODE],
             group=self._device_data[CONF_GROUP],
             channel=self._device_data[CONF_CHANNEL],
-            on=True,
+            onoff=True,
             repeat_count=REPEAT_COUNT_LEARN,
         )
         await async_send_command(
@@ -195,30 +193,10 @@ class IntertechnoTristateConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_GROUP,
                     default=user_input.get(CONF_GROUP, 1),
-                ): probatio.All(
-                    selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_GROUP,
-                            max=MAX_GROUP,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                    probatio.In(range(MIN_GROUP, MAX_GROUP + 1)),
-                    probatio.Coerce(int),
-                ),
+                ): probatio.Coerce(int),
                 probatio.Required(
                     CONF_CHANNEL,
                     default=user_input.get(CONF_CHANNEL, 1),
-                ): probatio.All(
-                    selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_CHANNEL,
-                            max=MAX_CHANNEL,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                    probatio.In(range(MIN_CHANNEL, MAX_CHANNEL + 1)),
-                    probatio.Coerce(int),
-                ),
+                ): probatio.Coerce(int)
             }
         )

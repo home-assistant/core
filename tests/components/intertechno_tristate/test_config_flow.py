@@ -15,10 +15,7 @@ from homeassistant.components.intertechno_tristate.const import (
     CONF_TRANSMITTER,
     DOMAIN,
 )
-from rf_protocols.commands.pt2262.ITTristateCommand import (
-    MAX_CHANNEL,
-    MAX_GROUP,
-)
+from rf_protocols.commands.pt2262 import ITTristateCommand
 from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as RF_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -26,6 +23,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
+MAX_CHANNEL = ITTristateCommand.MAX_CHANNEL
+MAX_GROUP = ITTristateCommand.MAX_GROUP
 
 
 async def _start_user_flow(hass: HomeAssistant) -> dict:
