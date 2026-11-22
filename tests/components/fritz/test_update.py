@@ -114,7 +114,7 @@ async def test_release_notes_messages(
     hass_ws_client: WebSocketGenerator,
     fc_class_mock,
 ) -> None:
-    """Test the internet interruption message is shown before an update."""
+    """Test the release notes messages are shown before an update."""
 
     fc_class_mock().override_services({**MOCK_FB_SERVICES, **AVAILABLE_UPDATE})
 
@@ -143,7 +143,14 @@ async def test_release_notes_messages(
                     "the model and the connection type, this can take up to 10 "
                     "minutes."
                 ),
-            }
+            },
+            {
+                "severity": "warning",
+                "message": (
+                    "Do not restart, remove power from, or otherwise interrupt the "
+                    "device while the update is in progress."
+                ),
+            },
         ],
     }
 

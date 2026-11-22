@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.components.update import (
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
@@ -67,7 +68,10 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
             key="update",
             name="FRITZ!OS",
             value_fn=None,
-            release_notes_messages=(RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION,),
+            release_notes_messages=(
+                RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION,
+                RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+            ),
         )
         super().__init__(avm_wrapper, device_friendly_name, description)
 
