@@ -8,9 +8,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.hikvision.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_SSL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
@@ -294,3 +296,41 @@ async def test_setup_entry_nvr_empty_events_returned(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
     mock_hik_nvr.return_value.inject_events.assert_not_called()
+
+
+async def test_setup_with_rejected_credentials_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a rejected password asks for new credentials instead of retrying."""
+    mock_hikcamera.return_value.get_id = None
+    mock_hikcamera.return_value.auth_failed = True
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+    # Core also raises a repair for the entry, linking to the reauth flow.
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN,
+        f"config_entry_reauth_{DOMAIN}_{mock_config_entry.entry_id}",
+    )
+
+
+async def test_setup_unreachable_device_is_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test a device that gives no ID, without rejecting the login, is retried."""
+    mock_hikcamera.return_value.get_id = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
