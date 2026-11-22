@@ -1478,10 +1478,7 @@ class GetDeviceSettingsTool(Tool):
     ) -> ToolResult:
         """Return the settings of the device."""
         args = self.parameters(tool_input.tool_args)
-        try:
-            device = _get_device_entry(hass, args["device_id"])
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        device = _get_device_entry(hass, args["device_id"])
         return ToolResult(data={"result": _format_device_settings(device)})
 
 
@@ -1531,18 +1528,17 @@ class UpdateDeviceSettingsTool(Tool):
         """Update the settings of the device and return the new settings."""
         settings = self.parameters(tool_input.tool_args)
         device_id = settings.pop("device_id")
-        try:
-            device = _get_device_entry(hass, device_id)
-        except HomeAssistantError as err:
-            return _error_result(str(err))
+        device = _get_device_entry(hass, device_id)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
-            return _error_result(f"Area '{area_id}' not found.")
+            raise HomeAssistantError(f"Area '{area_id}' not found.")
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
             if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                return _error_result(f"Labels not found: {', '.join(sorted(missing))}")
+                raise HomeAssistantError(
+                    f"Labels not found: {', '.join(sorted(missing))}"
+                )
         if settings.get("disabled_by"):
             settings["disabled_by"] = dr.DeviceEntryDisabler.USER
 

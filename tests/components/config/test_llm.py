@@ -2453,12 +2453,10 @@ async def test_get_device_settings(
         }
     )
 
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"device_id": "unknown"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={"error": "Device 'unknown' not found."}, error=True
-    )
+    with pytest.raises(HomeAssistantError, match="Device 'unknown' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"device_id": "unknown"}), llm_context
+        )
 
 
 async def test_update_device_settings(
@@ -2543,12 +2541,13 @@ async def test_update_device_settings_errors(
     parent, _ = _create_parent_and_child(hass, device_registry)
 
     tool = UpdateDeviceSettingsTool()
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"device_id": parent.id, **tool_args}),
-        llm_context,
-    )
-    assert result == llm.ToolResult(data={"error": error}, error=True)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": parent.id, **tool_args}),
+            llm_context,
+        )
+    assert str(exc_info.value) == error
 
 
 @pytest.mark.parametrize(
