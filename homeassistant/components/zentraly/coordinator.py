@@ -5,16 +5,18 @@ from collections.abc import Awaitable, Callable
 import logging
 from typing import Any, override
 
-from zentraly import ZentralyApiError
+from zentraly import ClimateCapability, ZentralyApiError, ZentralyClimateApi
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 from .models import ZentralyConfigEntry, ZentralyDevice
 
 _LOGGER = logging.getLogger(__name__)
 _READ_FAILED = object()
+CONNECTION_TIMEOUT = 30
 
 
 class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
@@ -38,10 +40,71 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
         )
         self._entry = entry
         self.device = device
+        self.climate_api = ZentralyClimateApi(device)
         self.data = {}
-        self.readers: dict[object, Callable[[], Awaitable[Any]]] = {}
+        self.readers: dict[object, Callable[[], Awaitable[Any]]] = {
+            capability: reader
+            for capability, reader in (
+                (
+                    ClimateCapability.LOCAL_TEMPERATURE,
+                    self.climate_api.async_get_current_temperature,
+                ),
+                (
+                    ClimateCapability.TARGET_TEMPERATURE,
+                    self.climate_api.async_get_target_temperature,
+                ),
+                (
+                    ClimateCapability.OPERATION_MODE,
+                    self.climate_api.async_get_operation_mode,
+                ),
+                (ClimateCapability.HEAT_DEMAND, self.climate_api.async_get_heat_demand),
+                (ClimateCapability.HUMIDITY, self.climate_api.async_get_humidity),
+            )
+            if self.climate_api.supports(capability)
+        }
         self._versions: dict[object, int] = {}
         self._refresh_task: asyncio.Task[None] | None = None
+        self._connected = asyncio.Event()
+        self._initial_refresh_complete = False
+
+    @override
+    async def _async_setup(self) -> None:
+        """Subscribe before fetching the first state from the persistent connection."""
+        self._entry.async_on_unload(
+            self.climate_api.add_state_listener(self.async_update_partial)
+        )
+        self._entry.async_on_unload(
+            self.device.add_state_listener(self.async_update_listeners)
+        )
+        self._entry.async_on_unload(
+            self.device.add_connection_state_listener(self._async_connection_changed)
+        )
+        if self.device.connected:
+            self._connected.set()
+        try:
+            async with asyncio.timeout(CONNECTION_TIMEOUT):
+                await self._connected.wait()
+        except TimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_cannot_connect",
+                translation_placeholders={"device_id": self.device.device_id},
+            ) from err
+
+    @callback
+    def _async_connection_changed(self, connected: bool) -> None:
+        """Publish availability and refresh state after reconnection."""
+        if connected:
+            self._connected.set()
+            if self._initial_refresh_complete:
+                self._entry.async_create_background_task(
+                    self.hass,
+                    self.async_refresh(),
+                    f"Reconnect Zentraly state: {self.device.device_id}",
+                )
+        else:
+            self._connected.clear()
+        self.async_update_listeners()
 
     @callback
     def async_update_partial[KeyT](self, updates: dict[KeyT, Any]) -> None:
@@ -71,12 +134,19 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
         if self._refresh_task is task:
             self._refresh_task = None
 
+    async def async_wait_for_refresh(self) -> None:
+        """Let an in-flight reconnect read finish before an entity action."""
+        if self._refresh_task is not None:
+            await asyncio.shield(self._refresh_task)
+
     @override
     async def _async_update_data(self) -> dict[object, Any]:
         """Read the state without treating a missing connection as a data loss."""
         if not self.device.connected:
             return self.data
-        return await self._async_read()
+        data = await self._async_read()
+        self._initial_refresh_complete = True
+        return data
 
     async def _async_read(self) -> dict[object, Any]:
         """Preserve newer reports and successful readings after a partial failure."""

@@ -238,12 +238,14 @@ async def async_setup_entry(
         coordinator=ZentralyUpdateCoordinator(hass, entry, device),
     )
 
+    await entry.runtime_data.coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(
         entry,
         PLATFORMS,
     )
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Zentraly device created in Home Assistant: device_id=%s mac=%s ip=%s",
         device.device_id,
         device.mac,

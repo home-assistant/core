@@ -72,7 +72,7 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
             }
         )
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Zentraly device discovered: %s at %s:%s",
             device_id,
             self.data[CONF_HOST],
@@ -143,7 +143,7 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
                 self.data[CONF_PASSWORD] = password
                 self.data[CONF_MAC] = mac
 
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Zentraly device validated: device_id=%s mac=%s ip=%s",
                     self.data[CONF_DEVICE_ID],
                     mac,

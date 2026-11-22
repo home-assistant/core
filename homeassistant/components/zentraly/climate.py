@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from zentraly import ClimateCapability, ClimateOperationMode, ZentralyClimateApi
+from zentraly import ClimateCapability, ClimateOperationMode
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -24,6 +24,25 @@ from .entity import ZentralyEntity, translate_action_errors
 from .models import ZentralyConfigEntry, ZentralyDevice
 
 PARALLEL_UPDATES = 1
+
+
+def _create_climate_entities(
+    device: ZentralyDevice,
+    coordinator: ZentralyUpdateCoordinator,
+) -> list[ZentralyClimate]:
+    """Create climate entities supported by a Zentraly device."""
+
+    climate_api = coordinator.climate_api
+
+    if not any(climate_api.supports(capability) for capability in ClimateCapability):
+        return []
+
+    return [
+        ZentralyClimate(
+            device,
+            coordinator,
+        )
+    ]
 
 
 async def async_setup_entry(
@@ -51,13 +70,11 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
         self,
         device: ZentralyDevice,
         coordinator: ZentralyUpdateCoordinator,
-        *,
-        climate_api: ZentralyClimateApi | None = None,
     ) -> None:
         """Initialize the thermostat."""
 
         super().__init__(coordinator)
-        self._climate_api = climate_api or ZentralyClimateApi(device)
+        self._climate_api = coordinator.climate_api
         self._configuration = self._climate_api.configuration
 
         self._attr_unique_id = device.device_id
@@ -77,43 +94,8 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
         self._attr_preset_mode = PRESET_NONE
 
         self._heat_demand: bool | None = None
-        coordinator.readers.update(
-            {
-                capability: reader
-                for capability, reader in (
-                    (
-                        ClimateCapability.LOCAL_TEMPERATURE,
-                        self._climate_api.async_get_current_temperature,
-                    ),
-                    (
-                        ClimateCapability.TARGET_TEMPERATURE,
-                        self._climate_api.async_get_target_temperature,
-                    ),
-                    (
-                        ClimateCapability.OPERATION_MODE,
-                        self._climate_api.async_get_operation_mode,
-                    ),
-                    (
-                        ClimateCapability.HEAT_DEMAND,
-                        self._climate_api.async_get_heat_demand,
-                    ),
-                    (ClimateCapability.HUMIDITY, self._climate_api.async_get_humidity),
-                )
-                if self._climate_api.supports(capability)
-            }
-        )
-
         self._configure_features()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register Zentraly listeners and periodic state refresh."""
-
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            self._climate_api.add_state_listener(self.coordinator.async_update_partial)
-        )
+        self._apply_state_update(coordinator.data)
 
     @property
     @override
@@ -127,9 +109,10 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Translate the device state into climate attributes."""
-        self._handle_state_update(self.coordinator.data)
+        self._apply_state_update(self.coordinator.data)
+        super()._handle_coordinator_update()
 
-    def _handle_state_update(
+    def _apply_state_update(
         self,
         updates: dict[object, Any],
     ) -> None:
@@ -170,8 +153,6 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
                 self._attr_current_humidity = None if value is None else float(value)
 
         self._update_hvac_action()
-
-        self.async_write_ha_state()
 
     def _configure_features(self) -> None:
         """Configure Home Assistant features from device capabilities."""
@@ -279,6 +260,7 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
         step = self._configuration.temperature_step
         temperature = round(float(kwargs[ATTR_TEMPERATURE]) / step) * step
 
+        await self.coordinator.async_wait_for_refresh()
         success = await self._climate_api.async_set_target_temperature(
             float(temperature)
         )
@@ -336,6 +318,7 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
                 translation_domain=DOMAIN, translation_key="invalid_action"
             )
 
+        await self.coordinator.async_wait_for_refresh()
         success = await self._climate_api.async_set_operation_mode(operation_mode)
 
         if not success:
@@ -369,6 +352,7 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
                 translation_domain=DOMAIN, translation_key="invalid_action"
             )
 
+        await self.coordinator.async_wait_for_refresh()
         success = await self._climate_api.async_set_operation_mode(operation_mode)
 
         if not success:
@@ -382,23 +366,3 @@ class ZentralyClimate(ZentralyEntity, ClimateEntity):
         self.coordinator.async_update_partial(
             {ClimateCapability.OPERATION_MODE: operation_mode}
         )
-
-
-def _create_climate_entities(
-    device: ZentralyDevice,
-    coordinator: ZentralyUpdateCoordinator,
-) -> list[ZentralyClimate]:
-    """Create climate entities supported by a Zentraly device."""
-
-    climate_api = ZentralyClimateApi(device)
-
-    if not any(climate_api.supports(capability) for capability in ClimateCapability):
-        return []
-
-    return [
-        ZentralyClimate(
-            device,
-            coordinator,
-            climate_api=climate_api,
-        )
-    ]

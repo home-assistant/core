@@ -78,7 +78,8 @@ def mock_api(mock_api_class: MagicMock) -> MagicMock:
 def mock_climate_api() -> Generator[MagicMock]:
     """Return the public climate API with representative thermostat readings."""
     with patch(
-        "homeassistant.components.zentraly.climate.ZentralyClimateApi", autospec=True
+        "homeassistant.components.zentraly.coordinator.ZentralyClimateApi",
+        autospec=True,
     ) as api_class:
         api = api_class.return_value
         commands = get_device_commands(DeviceModel.ZTTIN)
