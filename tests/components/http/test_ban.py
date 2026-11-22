@@ -421,59 +421,42 @@ async def test_unauthenticated_probe_does_not_notify(
     assert response.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
     assert "http-login" not in async_get_persistent_notifications(hass)
-    assert "Unauthenticated request from example.com" in caplog.text
+    assert "Login attempt or request with invalid authentication from example.com" in caplog.text
     assert "Requested URL: '/api/config'" in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("headers", "path"),
+    ("method", "headers", "path"),
     [
         pytest.param(
+            "GET",
             {"Authorization": "Bearer invalid"},
             "/api/config",
             id="bearer-token",
         ),
-        pytest.param({}, "/api/config?authSig=invalid", id="signed-url"),
+        pytest.param("GET", {}, "/api/config?authSig=invalid", id="signed-url"),
+        pytest.param("POST", {}, "/api/config", id="anonymous-write"),
     ],
 )
-async def test_unauthorized_request_with_credentials_notifies(
+async def test_unauthorized_request_with_credentials_or_write_notifies(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
+    method: str,
     headers: dict[str, str],
     path: str,
 ) -> None:
-    """Failed requests presenting credentials still trigger login notifications."""
+    """Requests presenting credentials or using write methods still notify."""
     app = web.Application()
     app[KEY_HASS] = hass
 
-    async def unauth_handler(request):
+    async def unauth_handler(request: web.Request) -> NoReturn:
         raise HTTPUnauthorized
 
-    app.router.add_get("/api/config", unauth_handler)
+    app.router.add_route(method, "/api/config", unauth_handler)
     setup_bans(hass, app, 5)
     client = await aiohttp_client(app)
 
-    response = await client.get(path, headers=headers)
-    assert response.status == HTTPStatus.UNAUTHORIZED
-    assert "http-login" in async_get_persistent_notifications(hass)
-
-
-async def test_unauthenticated_write_request_notifies(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-) -> None:
-    """An anonymous write request still generates a security notification."""
-    app = web.Application()
-    app[KEY_HASS] = hass
-
-    async def unauth_handler(request):
-        raise HTTPUnauthorized
-
-    app.router.add_post("/api/config", unauth_handler)
-    setup_bans(hass, app, 5)
-    client = await aiohttp_client(app)
-
-    response = await client.post("/api/config")
+    response = await client.request(method, path, headers=headers)
     assert response.status == HTTPStatus.UNAUTHORIZED
     assert "http-login" in async_get_persistent_notifications(hass)
 

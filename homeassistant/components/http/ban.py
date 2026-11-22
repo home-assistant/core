@@ -31,7 +31,7 @@ from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import is_supervisor_unix_socket_request
+from .const import SIGN_QUERY_PARAM, is_supervisor_unix_socket_request
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ async def ban_middleware(
         anonymous_read = (
             request.method in ("GET", "HEAD")
             and hdrs.AUTHORIZATION not in request.headers
-            and "authSig" not in request.query
+            and SIGN_QUERY_PARAM not in request.query
         )
         await process_wrong_login(request, notify=not anonymous_read)
         raise
@@ -140,13 +140,10 @@ async def process_wrong_login(request: Request, *, notify: bool = True) -> None:
                 gethostbyaddr, request.remote
             )
 
-    if notify:
-        base_msg = (
-            "Login attempt or request with invalid authentication from"
-            f" {remote_host} ({remote_addr})."
-        )
-    else:
-        base_msg = f"Unauthenticated request from {remote_host} ({remote_addr})."
+    base_msg = (
+        "Login attempt or request with invalid authentication from"
+        f" {remote_host} ({remote_addr})."
+    )
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")

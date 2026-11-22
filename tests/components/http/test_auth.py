@@ -25,13 +25,12 @@ from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
-    SIGN_QUERY_PARAM,
     STORAGE_KEY,
     async_setup_auth,
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
-from homeassistant.components.http.const import DATA_SUPERVISOR_USER
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER, SIGN_QUERY_PARAM
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,

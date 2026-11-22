@@ -32,6 +32,7 @@ from .const import (
     DATA_SUPERVISOR_USER,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
+    SIGN_QUERY_PARAM,
     is_supervisor_unix_socket_request,
 )
 
@@ -39,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
-SIGN_QUERY_PARAM: Final = "authSig"
 SAFE_QUERY_PARAMS: Final = frozenset(("height", "width"))
 
 STORAGE_VERSION = 1
