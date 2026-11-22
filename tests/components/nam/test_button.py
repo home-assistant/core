@@ -14,7 +14,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.components.nam import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -55,7 +55,7 @@ async def test_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            {TargetKey.ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_button_press_exc(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            {TargetKey.ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
 
@@ -107,7 +107,7 @@ async def test_button_press_auth_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            {TargetKey.ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
 

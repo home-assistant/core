@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "switch": {
+      "privacy_mode": {
+        "name": "Privacy mode"
+      }
+    },
     "update": {
       "firmware": {
         "name": "Firmware"
@@ -34,6 +39,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "privacy_mode_failed": {
+      "message": "Unable to change the privacy mode at Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."

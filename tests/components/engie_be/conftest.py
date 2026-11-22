@@ -26,6 +26,8 @@ from aioengiebelgium import (
     PricesResponse,
     ProductConfiguration,
     ServicePoint,
+    ServicePointInstallation,
+    ServicePointMarketDetails,
     bare_ean,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -50,6 +52,7 @@ BAN = "000000000001"
 BAN_2 = "000000000002"
 OFFTAKE_ONLY_EAN = "541448820000000001_ID1"
 OFFTAKE_INJECTION_EAN = "541448820000000002_ID1"
+GAS_CONVERSION_COEFFICIENT = 11.5
 _SERVICE_POINT_ENERGY_TYPES = {
     bare_ean(OFFTAKE_ONLY_EAN): "GAS",
     bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY",
@@ -155,10 +158,22 @@ def build_prices(
     )
 
 
-def build_service_point(ean: str) -> ServicePoint:
+def build_service_point(
+    ean: str, *, gas_conversion_coefficient: float | None = GAS_CONVERSION_COEFFICIENT
+) -> ServicePoint:
     """Build a service point response for a queried (possibly suffixed) EAN."""
     bare = bare_ean(ean)
-    return ServicePoint(ean_energy_types={bare: _SERVICE_POINT_ENERGY_TYPES[bare]})
+    energy_type = _SERVICE_POINT_ENERGY_TYPES[bare]
+    return ServicePoint(
+        ean_energy_types={bare: energy_type},
+        market_details=ServicePointMarketDetails(
+            installation=ServicePointInstallation(
+                gas_conversion_coefficient=gas_conversion_coefficient
+                if energy_type == "GAS"
+                else None
+            )
+        ),
+    )
 
 
 def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:

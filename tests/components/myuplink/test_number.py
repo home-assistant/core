@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -42,7 +42,7 @@ async def test_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "value": 1},
+        {TargetKey.ENTITY_ID: ENTITY_ID, "value": 1},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -61,7 +61,7 @@ async def test_api_failure(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "value": 1},
+            {TargetKey.ENTITY_ID: ENTITY_ID, "value": 1},
             blocking=True,
         )
     mock_myuplink_client.async_set_device_points.assert_called_once()

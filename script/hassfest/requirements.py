@@ -204,7 +204,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "modern_forms": {"aiomodernforms": {"backoff"}},
     "monarch_money": {"gql": {"backoff"}},
-    "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},

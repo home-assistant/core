@@ -7,6 +7,10 @@
   "gender": "FEMALE",
   "lastWeightReading": 9.1,
   "breeds": ["sphynx"],
+  "profileImage": {
+    "imagePath": "PET-123/profile.jpg",
+    "s3ImageURL": "https://example.com/PET-123/profile.jpg"
+  },
   "weightHistory": [
     { "weight": 6.48, "timestamp": "2025-06-13T16:12:36" },
     { "weight": 6.6, "timestamp": "2025-06-14T03:52:00" },

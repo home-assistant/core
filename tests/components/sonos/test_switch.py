@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -205,7 +205,7 @@ async def test_switch_speech_enhancement(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert getattr(soco, attribute) is True
@@ -387,7 +387,7 @@ async def test_tv_autoplay_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -399,7 +399,7 @@ async def test_tv_autoplay_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -525,7 +525,7 @@ async def test_tv_autoplay_toggle_failure_raises(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -561,7 +561,7 @@ async def test_tv_ungroup_autoplay_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -573,7 +573,7 @@ async def test_tv_ungroup_autoplay_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -686,7 +686,7 @@ async def test_tv_ungroup_autoplay_toggle_failure_raises(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

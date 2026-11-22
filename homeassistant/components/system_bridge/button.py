@@ -147,7 +147,7 @@ class SystemBridgeButton(SystemBridgeEntity, ButtonEntity):
             response = await self.entity_description.press_fn(
                 self.coordinator.websocket_client
             )
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
