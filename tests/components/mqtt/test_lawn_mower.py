@@ -48,7 +48,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant, State
 
 ATTR_ACTIVITY = "activity"
@@ -258,7 +258,7 @@ async def test_run_lawn_mower_service_optimistic(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.START_MOWING,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -276,7 +276,7 @@ async def test_run_lawn_mower_service_optimistic(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.PAUSE,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -290,7 +290,7 @@ async def test_run_lawn_mower_service_optimistic(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.DOCK,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -304,7 +304,7 @@ async def test_run_lawn_mower_service_optimistic(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.STOP,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -378,7 +378,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.START_MOWING,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -396,7 +396,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.PAUSE,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -414,7 +414,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.DOCK,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -432,7 +432,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     await hass.services.async_call(
         lawn_mower.DOMAIN,
         LawnMowerService.STOP,
-        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        {TargetKey.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 

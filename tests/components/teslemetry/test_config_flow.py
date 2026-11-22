@@ -89,12 +89,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CommonServiceArgument,
-)
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.helpers import (
@@ -2159,7 +2154,7 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_flash_lights"},
+            {TargetKey.ENTITY_ID: "button.test_flash_lights"},
             blocking=True,
         )
 

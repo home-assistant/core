@@ -1,0 +1,4 @@
+# serializer version: 1
+# name: test_log_set_download
+  b'[NIBL;20261114;8310]\r\nDivisors\t\t10\t1\t10\t1\r\nDate\tTime\tBT1 Outdoor Temperature [\xb0C]\tTot. op.time compr. EB100-EP14 [h]\tDegree Minutes (16 bit) [DM]\tHeat Offset S1 [\xb0C]\r\n40004\r\n43420\r\n43005\r\n47011'
+# ---

@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -309,7 +309,7 @@ async def test_trigger_attributes_with_optimistic_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -322,7 +322,7 @@ async def test_trigger_attributes_with_optimistic_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -341,7 +341,7 @@ async def test_trigger_attributes_with_optimistic_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -486,7 +486,7 @@ async def test_on_action(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -512,7 +512,7 @@ async def test_on_action_optimistic(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -540,7 +540,7 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -566,7 +566,7 @@ async def test_off_action_optimistic(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
+        {TargetKey.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
