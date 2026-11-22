@@ -38,8 +38,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -122,7 +122,7 @@ async def test_update_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
+        {TargetKey.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
 
@@ -149,7 +149,7 @@ async def test_update_stay_stable(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
+        {TargetKey.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -175,7 +175,7 @@ async def test_update_beta_to_stable(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.wled_rgbw_light_firmware"},
+        {TargetKey.ENTITY_ID: "update.wled_rgbw_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -200,7 +200,7 @@ async def test_update_stay_beta(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
+        {TargetKey.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -329,7 +329,7 @@ async def test_update_install_refused(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
+            {TargetKey.ENTITY_ID: "update.wled_rgb_light_firmware"},
             blocking=True,
         )
 

@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import dataclass, replace
 import logging
-from typing import cast, override
+from typing import override
 
 from duco_connectivity import DucoClient, VentilationState
 from duco_connectivity.exceptions import (
@@ -179,7 +179,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_fetch_data(self) -> DucoData:
         """Fetch node data while holding the request lock."""
-        previous_data = cast(DucoData | None, self.data)
+        previous_data = self.data_or_none
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:

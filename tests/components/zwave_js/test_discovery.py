@@ -36,9 +36,9 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_OFF,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     EntityCategory,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -340,7 +340,7 @@ async def test_zooz_zen72(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -367,7 +367,7 @@ async def test_zooz_zen72(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -445,7 +445,7 @@ async def test_indicator_test(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -465,7 +465,7 @@ async def test_indicator_test(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1

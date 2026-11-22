@@ -6,6 +6,7 @@ from pypalazzetti.exceptions import CommunicationError, ValidationError
 from pypalazzetti.fan import FanType
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,6 +41,7 @@ async def async_setup_entry(
 class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
     """Representation of Palazzetti number entity for Combustion power."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "combustion_power"
     _attr_device_class = NumberDeviceClass.POWER_FACTOR
     _attr_native_min_value = 1
@@ -84,6 +86,7 @@ class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
 class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
     """Representation of Palazzetti number entity for Combustion power."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = NumberDeviceClass.WIND_SPEED
     _attr_native_step = 1
 
