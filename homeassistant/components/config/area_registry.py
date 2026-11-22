@@ -41,6 +41,7 @@ def websocket_list_areas(
     {
         probatio.Required("type"): "config/area_registry/create",
         probatio.Optional("aliases"): list,
+        probatio.Optional("co2_entity_id"): probatio.Any(str, None),
         probatio.Optional("floor_id"): str,
         probatio.Optional("humidity_entity_id"): probatio.Any(str, None),
         probatio.Optional("icon"): str,
@@ -111,6 +112,7 @@ def websocket_delete_area(
         probatio.Required("type"): "config/area_registry/update",
         probatio.Optional("aliases"): list,
         probatio.Required("area_id"): str,
+        probatio.Optional("co2_entity_id"): probatio.Any(str, None),
         probatio.Optional("floor_id"): probatio.Any(str, None),
         probatio.Optional("humidity_entity_id"): probatio.Any(str, None),
         probatio.Optional("icon"): probatio.Any(str, None),

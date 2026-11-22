@@ -39,6 +39,14 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
             EntityStateAttribute.UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
+    hass.states.async_set(
+        "sensor.mock_co2",
+        "500",
+        {
+            EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.CO2,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "ppm",
+        },
+    )
 
 
 async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
@@ -95,6 +103,7 @@ async def test_create_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
     )
 
     assert area2 == ar.AreaEntry(
@@ -109,6 +118,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
     )
     assert len(area_registry.areas) == 2
     assert area.created_at != area2.created_at
@@ -217,6 +227,7 @@ async def test_update_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
     )
 
     assert updated_area != area
@@ -232,6 +243,7 @@ async def test_update_area(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
     )
     assert len(area_registry.areas) == 1
 
@@ -336,6 +348,18 @@ async def test_update_area_with_normalized_name_already_in_use(
             {"humidity_entity_id": "sensor.random"},
             "Entity sensor.random is not a humidity sensor",
         ),
+        (
+            {"co2_entity_id": "sensor.invalid"},
+            "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"co2_entity_id": "light.kitchen"},
+            "Entity light.kitchen is not a CO2 sensor",
+        ),
+        (
+            {"co2_entity_id": "sensor.random"},
+            "Entity sensor.random is not a CO2 sensor",
+        ),
     ],
 )
 async def test_update_area_entity_validation(
@@ -356,6 +380,7 @@ async def test_update_area_entity_validation(
 
     assert area.temperature_entity_id is None
     assert area.humidity_entity_id is None
+    assert area.co2_entity_id is None
 
 
 async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
@@ -401,6 +426,7 @@ async def test_loading_area_from_storage(
                     "modified_at": modified_at.isoformat(),
                     "temperature_entity_id": "sensor.mock_temperature",
                     "humidity_entity_id": "sensor.mock_humidity",
+                    "co2_entity_id": "sensor.mock_co2",
                 }
             ]
         },
@@ -423,6 +449,7 @@ async def test_loading_area_from_storage(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
     )
 
 
@@ -503,6 +530,7 @@ async def test_migration_from_1_1(
                 {
                     "aliases": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "co2_entity_id": None,
                     "floor_id": None,
                     "humidity_entity_id": None,
                     "icon": None,
@@ -516,6 +544,7 @@ async def test_migration_from_1_1(
                 {
                     "aliases": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "co2_entity_id": None,
                     "floor_id": None,
                     "humidity_entity_id": None,
                     "icon": None,
@@ -529,6 +558,7 @@ async def test_migration_from_1_1(
                 {
                     "aliases": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "co2_entity_id": None,
                     "floor_id": None,
                     "humidity_entity_id": None,
                     "icon": None,
@@ -728,6 +758,7 @@ async def test_removing_labels(
             "temperature_entity_id", SensorDeviceClass.TEMPERATURE, id="temperature"
         ),
         pytest.param("humidity_entity_id", SensorDeviceClass.HUMIDITY, id="humidity"),
+        pytest.param("co2_entity_id", SensorDeviceClass.CO2, id="co2"),
     ],
 )
 async def test_entity_renamed(

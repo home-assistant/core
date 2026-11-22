@@ -50,6 +50,14 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
+    hass.states.async_set(
+        "sensor.mock_co2",
+        "500",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CO2,
+            ATTR_UNIT_OF_MEASUREMENT: "ppm",
+        },
+    )
 
 
 async def test_list_areas(
@@ -68,6 +76,7 @@ async def test_list_areas(
     area2 = area_registry.async_create(
         "mock 2",
         aliases={"alias_1", "alias_2"},
+        co2_entity_id="sensor.mock_co2",
         floor_id="first_floor",
         humidity_entity_id="sensor.mock_humidity",
         icon="mdi:garage",
@@ -83,6 +92,7 @@ async def test_list_areas(
         {
             "aliases": [],
             "area_id": area1.id,
+            "co2_entity_id": None,
             "created_at": created_area1.timestamp(),
             "floor_id": None,
             "humidity_entity_id": None,
@@ -96,6 +106,7 @@ async def test_list_areas(
         {
             "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": area2.id,
+            "co2_entity_id": "sensor.mock_co2",
             "created_at": created_area2.timestamp(),
             "floor_id": "first_floor",
             "humidity_entity_id": "sensor.mock_humidity",
@@ -129,6 +140,7 @@ async def test_create_area(
     assert msg["result"] == {
         "aliases": [],
         "area_id": ANY,
+        "co2_entity_id": None,
         "floor_id": None,
         "icon": None,
         "labels": [],
@@ -145,6 +157,7 @@ async def test_create_area(
     await client.send_json_auto_id(
         {
             "aliases": ["alias_1", "alias_2"],
+            "co2_entity_id": "sensor.mock_co2",
             "floor_id": "first_floor",
             "icon": "mdi:garage",
             "labels": ["label_1", "label_2"],
@@ -162,6 +175,7 @@ async def test_create_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": ANY,
+        "co2_entity_id": "sensor.mock_co2",
         "floor_id": "first_floor",
         "icon": "mdi:garage",
         "labels": unordered(["label_1", "label_2"]),
@@ -178,6 +192,7 @@ async def test_create_area(
     await client.send_json_auto_id(
         {
             "aliases": [" alias_1 ", "", " "],
+            "co2_entity_id": "sensor.mock_co2",
             "floor_id": "first_floor",
             "icon": "mdi:garage",
             "labels": ["label_1", "label_2"],
@@ -195,6 +210,7 @@ async def test_create_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1"]),
         "area_id": ANY,
+        "co2_entity_id": "sensor.mock_co2",
         "floor_id": "first_floor",
         "icon": "mdi:garage",
         "labels": unordered(["label_1", "label_2"]),
@@ -281,6 +297,7 @@ async def test_update_area(
             "type": "config/area_registry/update",
             "aliases": ["alias_1", "alias_2"],
             "area_id": area.id,
+            "co2_entity_id": "sensor.mock_co2",
             "floor_id": "first_floor",
             "humidity_entity_id": "sensor.mock_humidity",
             "icon": "mdi:garage",
@@ -296,6 +313,7 @@ async def test_update_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": area.id,
+        "co2_entity_id": "sensor.mock_co2",
         "floor_id": "first_floor",
         "humidity_entity_id": "sensor.mock_humidity",
         "icon": "mdi:garage",
@@ -316,6 +334,7 @@ async def test_update_area(
             "type": "config/area_registry/update",
             "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
+            "co2_entity_id": None,
             "floor_id": None,
             "humidity_entity_id": None,
             "icon": None,
@@ -330,6 +349,7 @@ async def test_update_area(
     assert msg["result"] == {
         "aliases": ["alias_1"],
         "area_id": area.id,
+        "co2_entity_id": None,
         "floor_id": None,
         "icon": None,
         "labels": [],
@@ -350,6 +370,7 @@ async def test_update_area(
             "type": "config/area_registry/update",
             "aliases": ["alias_1", "", " ", " alias_2 "],
             "area_id": area.id,
+            "co2_entity_id": None,
             "floor_id": None,
             "humidity_entity_id": None,
             "icon": None,
@@ -364,6 +385,7 @@ async def test_update_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": area.id,
+        "co2_entity_id": None,
         "floor_id": None,
         "icon": None,
         "labels": [],
