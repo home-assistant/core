@@ -249,11 +249,9 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
             ),
             self.coordinator.config_entry.entry_id,
         )
-        return (
-            child_device.name
-            if child_device is not None and child_device.name is not None
-            else self._device.name
-        )
+        if child_device is None:
+            return self._device.name
+        return child_device.name_by_user or child_device.name or self._device.name
 
     @property
     @override

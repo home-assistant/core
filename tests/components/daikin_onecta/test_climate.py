@@ -2283,13 +2283,16 @@ async def test_climate_platform_services_and_management_points(
         value="cooling", values=["heating", "cooling"], settable=True
     )
     climate_controls["living_room"].setpoint("roomTemperature").settable = True
+    device_registry.async_update_child_device(
+        living_room_device.id, name_by_user="Renamed living room"
+    )
     mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
         "test connection failure", method="PATCH", path="/test"
     )
     with pytest.raises(HomeAssistantError) as err:
         await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
     assert err.value.translation_key == "set_temperature_failed"
-    assert err.value.translation_placeholders == {"device": living_room_device.name}
+    assert err.value.translation_placeholders == {"device": "Renamed living room"}
 
 
 @pytest.mark.parametrize(
