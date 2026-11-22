@@ -164,12 +164,25 @@
               'format': 'lower',
             }),
           ]),
-          'description': "Integration domain to set up (e.g. 'local_todo', 'template').",
+          'description': "Integration domain to set up when flow_type is 'config' (e.g. 'local_todo', 'template').",
+        }),
+        'entry_id': dict({
+          'description': "The entry_id of the config entry when flow_type is 'options' or 'reconfigure' (e.g. 'hue:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'flow_type': dict({
+          'default': 'config',
+          'description': "Type of flow to start: 'config' (new entry, default), 'options', or 'reconfigure'.",
+          'enum': list([
+            'config',
+            'options',
+            'reconfigure',
+          ]),
+          'format': 'lower',
+          'type': 'string',
         }),
       }),
-      'required': list([
-        'domain',
-      ]),
       'type': 'object',
     }),
     'config__update_core_config': dict({
