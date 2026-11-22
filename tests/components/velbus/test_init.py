@@ -822,6 +822,36 @@ async def test_stale_module_removal_clears_child_entities_for_rediscovery(
     )
 
 
+async def test_module_found_discovers_secondary_module_addresses(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_module_no_subdevices: AsyncMock,
+) -> None:
+    """module_found sync discovers channels on all module bus addresses."""
+    await init_integration(hass, config_entry)
+
+    sensor_unique_id = "a1b2c3d4e5f6-3"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id)
+    assert entity_id is not None
+
+    entity_registry.async_remove(entity_id)
+    config_entry.runtime_data.known_unique_ids.discard(f"sensor:{sensor_unique_id}")
+    assert config_entry.runtime_data.scanned_module_addresses is not None
+    config_entry.runtime_data.scanned_module_addresses.discard(2)
+
+    assert controller.return_value._module_found_callbacks
+    await controller.return_value._module_found_callbacks[0](mock_module_no_subdevices)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id)
+        is not None
+    )
+    assert 2 in config_entry.runtime_data.scanned_module_addresses
+
+
 async def test_module_found_adds_new_switch_entity(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,

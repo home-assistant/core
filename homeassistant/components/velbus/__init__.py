@@ -83,8 +83,9 @@ def _register_bus_listeners(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
 
     async def on_module_found(module: Module) -> None:
         """Keep the registries in sync when a module finishes loading."""
-        address = module.get_addresses()[0]
-        await async_sync_bus_state(hass, entry, restrict_to_addresses={address})
+        await async_sync_bus_state(
+            hass, entry, restrict_to_addresses=set(module.get_addresses())
+        )
 
     async def on_scan_complete(found_addresses: set[int]) -> None:
         """Reconcile devices and entities after a full bus scan."""

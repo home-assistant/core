@@ -53,8 +53,10 @@ def _upsert_module_devices(
     """Ensure every loaded module has a device registry entry."""
     dev_reg = dr.async_get(hass)
     for module in entry.runtime_data.controller.get_modules().values():
-        address = module.get_addresses()[0]
-        if module_addresses is not None and address not in module_addresses:
+        addresses = set(module.get_addresses())
+        if module_addresses is not None and not addresses.intersection(
+            module_addresses
+        ):
             continue
         _upsert_module_device(dev_reg, entry.entry_id, module)
 
