@@ -305,7 +305,9 @@ def _counterpart(
     """Find the object of another channel taking the place of `source`.
 
     Only an unambiguous match is used - a channel that offers the same function
-    twice would otherwise silently produce a wrong address.
+    twice would otherwise silently produce a wrong address. For the same reason
+    an object matched by its function text only is not used if it is placed in
+    other folders than `source`.
     """
     candidates = [
         candidate for candidate in candidates if _same_type(source, candidate)
@@ -334,7 +336,15 @@ def _counterpart(
         for candidate in candidates
         if candidate["function_text"] == source["function_text"]
     ]
-    return _unambiguous(index, source, matches)
+    if (match := _unambiguous(index, source, matches)) is None:
+        return None
+    # the text alone doesn't prove it is the same function: the object in the
+    # folders of `source` may just not be linked in this channel
+    folders = _folders_of(index, source)
+    match_folders = _folders_of(index, match)
+    if folders and match_folders and folders != match_folders:
+        return None
+    return match
 
 
 def _channel_name(project: KNXProject, target: ChannelRef) -> str:

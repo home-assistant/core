@@ -14,6 +14,9 @@ from homeassistant.components.knx.storage.entity_suggestions.ga_mapping import (
     ChannelMapping,
     ChannelRef,
     MappedAddress,
+    SourceAddress,
+    build_project_index,
+    derive_channel_mappings,
 )
 from homeassistant.const import Platform
 
@@ -299,11 +302,13 @@ _GATEWAY_TREE = [
 _ALL_OBJECTS = _COVER_OBJECTS + _SWITCH_OBJECTS + _BUTTON_OBJECTS + _GATEWAY_OBJECTS
 
 
-def _project() -> dict[str, Any]:
-    """Build a project out of the objects above."""
+def _project(
+    objects: list[dict] | None = None, devices: dict[str, dict] | None = None
+) -> dict[str, Any]:
+    """Build a project - out of the objects above unless others are given."""
     communication_objects = {
         f"{com_object['device_address']}/O-{com_object['number']}": com_object
-        for com_object in _ALL_OBJECTS
+        for com_object in (_ALL_OBJECTS if objects is None else objects)
     }
     group_addresses: dict[str, Any] = {}
     for com_object_id, com_object in communication_objects.items():
@@ -330,7 +335,8 @@ def _project() -> dict[str, Any]:
             "group_address_style": "ThreeLevel",
         },
         "group_addresses": group_addresses,
-        "devices": {
+        "devices": devices
+        or {
             "1.0.1": _device("Cover actuator", APP_COVER, ["CH-1", "CH-2"]),
             "1.0.2": _device("Cover actuator 2", APP_COVER, ["CH-1", "CH-2"]),
             "1.0.10": _device("Switch actuator", APP_SWITCH),
@@ -572,6 +578,183 @@ async def test_functions_told_apart_by_folders(
     assert suggestion["unmatched"] == (
         [] if brightness else ["ga_brightness.state", "ga_brightness.write"]
     )
+
+
+def _folder_project(
+    objects: list[dict], tree: list[dict], channels: list[str] | None = None
+) -> dict[str, Any]:
+    """Build a project of a single device with a group object tree."""
+    return _project(
+        objects,
+        {"1.0.30": _device("Gateway", APP_DALI, channels or ["CH-1", "CH-2"], tree)},
+    )
+
+
+def _dim_object(number: int, channel: str, address: str, **kwargs: Any) -> dict:
+    return _com_object(
+        number,
+        "1.0.30",
+        kwargs.pop("function_text", "Dim absolute"),
+        [address],
+        channel=channel,
+        dpts=DPT_PERCENT,
+        write=True,
+        **kwargs,
+    )
+
+
+def _folder(name: str, numbers: list[int], nodes: list[dict] | None = None) -> dict:
+    return _node("Folder", f"PB-{name}-{numbers}", name, numbers, "1.0.30") | {
+        "nodes": nodes or []
+    }
+
+
+def _channel(identifier: str, nodes: list[dict]) -> dict:
+    return _node("Channel", identifier, identifier, [], "1.0.30") | {"nodes": nodes}
+
+
+def test_lone_match_in_other_folder_is_not_used() -> None:
+    """Test an object of the same function text in another folder is no match.
+
+    Only linked objects are part of project data, so the brightness object of
+    a channel may be missing while its colour object of the same text is not.
+    """
+    project = _folder_project(
+        [
+            _dim_object(1, "CH-1", "6/0/1", function_text="Switch"),
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(11, "CH-2", "6/1/1", function_text="Switch"),
+            _dim_object(13, "CH-2", "6/1/3"),
+        ],
+        [
+            _channel("CH-1", [_folder("Behaviour", [1, 2])]),
+            _channel(
+                "CH-2", [_folder("Behaviour", [11]), _folder("Colour control", [13])]
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [
+            SourceAddress("switch", "6/0/1", "write"),
+            SourceAddress("brightness", "6/0/2", "write"),
+        ],
+    )
+    assert len(mappings) == 1
+    assert mappings[0].target == ChannelRef("1.0.30", "CH-2")
+    assert mappings[0].addresses == {"switch": MappedAddress("6/1/1")}
+    assert mappings[0].unmatched == ["brightness"]
+
+
+def test_lone_match_without_folder_is_used() -> None:
+    """Test folders only rule a match out if both objects are in one."""
+    project = _folder_project(
+        [_dim_object(2, "CH-1", "6/0/2"), _dim_object(12, "CH-2", "6/1/2")],
+        # the object of CH-2 is placed directly in its channel
+        [_channel("CH-1", [_folder("Behaviour", [2])])],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
+def test_nested_folders_are_compared_as_path() -> None:
+    """Test folders of the same name below different folders are told apart."""
+    project = _folder_project(
+        [
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(12, "CH-2", "6/1/2"),
+            _dim_object(13, "CH-2", "6/1/3"),
+        ],
+        [
+            _channel("CH-1", [_folder("Colour control", [], [_folder("Dim", [2])])]),
+            _channel(
+                "CH-2",
+                [
+                    _folder("Behaviour", [], [_folder("Dim", [12])]),
+                    _folder("Colour control", [], [_folder("Dim", [13])]),
+                ],
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("white", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"white": MappedAddress("6/1/3")}
+    ]
+
+
+def test_module_instances_told_apart_by_folders() -> None:
+    """Test objects of the same module definition are matched by their folder."""
+    module_def = {"definition": "MD-1", "root_number": 1}
+    project = _folder_project(
+        [
+            _dim_object(2, "CH-1", "6/0/2", module_def=module_def),
+            # the function texts differ - only the module identifies these
+            _dim_object(
+                12, "CH-2", "6/1/2", module_def=module_def, function_text="Dim %"
+            ),
+            _dim_object(
+                13, "CH-2", "6/1/3", module_def=module_def, function_text="Dim %"
+            ),
+        ],
+        [
+            _channel("CH-1", [_folder("Behaviour", [2])]),
+            _channel(
+                "CH-2", [_folder("Colour control", [13]), _folder("Behaviour", [12])]
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
+def test_folder_index() -> None:
+    """Test folders are indexed relative to the channel they are in."""
+    project = _folder_project(
+        [
+            _dim_object(1, "CH-1", "6/0/1"),
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(3, "CH-1", "6/0/3"),
+            _com_object(4, "1.0.30", "Central", ["6/0/4"], write=True),
+        ],
+        [
+            # 99 is not part of the project - eg. data of another parser version
+            _folder("General", [4, 99]),
+            _folder(
+                "Outputs",
+                [],
+                [
+                    _node("Channel", "CH-1", "Group 1", [1], "1.0.30")
+                    | {
+                        "nodes": [
+                            _folder("Behaviour", [2], [_folder("Dim", [3])]),
+                        ]
+                    }
+                ],
+            ),
+        ],
+        ["CH-1"],
+    )
+    assert build_project_index(project).folders == {
+        # a folder that is in no channel
+        ("1.0.30", 4): ("General",),
+        # folders above a channel are not part of the path;
+        # object 1 is placed directly in its channel
+        ("1.0.30", 2): ("Behaviour",),
+        ("1.0.30", 3): ("Behaviour", "Dim"),
+    }
 
 
 async def test_no_project(
