@@ -674,11 +674,13 @@ class InfluxThread(threading.Thread):
         """Process incoming events."""
         while not self._shutdown:
             _, json, done_events = self.get_events_json()
-            if json:
-                self.write_to_influxdb(json)
-            # Set the events of block_till_done only after the batch is written
-            for done_event in done_events:
-                done_event.set()
+            try:
+                if json:
+                    self.write_to_influxdb(json)
+            finally:
+                # Set the events of block_till_done only after the batch is written
+                for done_event in done_events:
+                    done_event.set()
 
     def block_till_done(self):
         """Block till all events processed.
