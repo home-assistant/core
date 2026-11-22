@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import threading
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -52,6 +53,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -488,47 +490,242 @@ async def test_attached_cameras_are_tried_again_after_a_connection_error(
 
 
 @pytest.mark.usefixtures("mock_hik_nvr")
-@pytest.mark.parametrize("failing", ["get_image_channels", "get_image_settings"])
-async def test_attached_cameras_are_tried_again_after_a_server_error(
+async def test_one_camera_that_stays_out_of_reach_does_not_reload_the_entry(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
     mock_nvr_image_settings: MagicMock,
-    failing: str,
+    image_values: dict[str, str],
 ) -> None:
-    """Test an NVR that answered busy gets the image entities when it recovers."""
-    working = getattr(mock_nvr_image_settings, failing).side_effect
-    getattr(mock_nvr_image_settings, failing).side_effect = ISAPIError("busy", 503)
+    """Test the cameras that work are not interrupted by the one that does not."""
+    offline = True
 
+    def get_image_values(channel: int = 1, proxy: bool = False) -> dict[str, str]:
+        if channel == 2 and offline:
+            raise ISAPIConnectionError("Timeout")
+        return dict(image_values)
+
+    mock_nvr_image_settings.get_image_values.side_effect = get_image_values
     await setup_integration(hass, mock_config_entry)
-    assert not mock_config_entry.runtime_data.image_coordinators
+    assert hass.states.get(HLC_1).state == STATE_ON
+    assert hass.states.get(HLC_2) is None
 
-    getattr(mock_nvr_image_settings, failing).side_effect = working
+    for _ in range(3):
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Only the camera that failed was asked again, and the entry was not reloaded.
+    assert mock_hikcamera.call_count == 1
+    mock_hikcamera.return_value.disconnect.assert_not_called()
+    assert mock_nvr_image_settings.get_image_channels.call_count == 1
+    assert hass.states.get(HLC_1).state == STATE_ON
+
+    offline = False
     freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(HLC_1).state == STATE_ON
+    assert mock_hikcamera.call_count == 2
     assert hass.states.get(HLC_2).state == STATE_ON
 
 
 @pytest.mark.usefixtures("mock_hik_nvr")
-async def test_cameras_that_fail_together_are_tried_again_with_one_reload(
+async def test_the_list_of_cameras_is_tried_again_after_a_connection_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_nvr_image_settings: MagicMock,
+) -> None:
+    """Test an NVR that was busy is read again, without reloading the entry."""
+    working = mock_nvr_image_settings.get_image_channels.return_value
+    mock_nvr_image_settings.get_image_channels.return_value = None
+    mock_nvr_image_settings.get_image_channels.side_effect = ISAPIConnectionError(
+        "Timeout"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_hikcamera.call_count == 1
+
+    mock_nvr_image_settings.get_image_channels.side_effect = None
+    mock_nvr_image_settings.get_image_channels.return_value = working
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_hikcamera.call_count == 2
+    assert hass.states.get(HLC_1).state == STATE_ON
+    # A device that says it is an NVR needs no record of it.
+    assert CONF_RECORDER not in mock_config_entry.data
+
+
+async def test_a_recorder_that_reports_a_camera_type_is_tried_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_nvr_image_settings: MagicMock,
+    settings: list[ImageSetting],
+) -> None:
+    """Test a timeout listing the cameras is retried when the type says camera."""
+    assert mock_hikcamera.return_value.get_type == "Camera"
+
+    def get_image_settings(channel: int = 1, proxy: bool = False):
+        if not proxy:
+            raise PROXY_ERROR
+        return settings
+
+    working = mock_nvr_image_settings.get_image_channels.return_value
+    mock_nvr_image_settings.get_image_settings.side_effect = get_image_settings
+    mock_nvr_image_settings.get_image_channels.return_value = None
+    mock_nvr_image_settings.get_image_channels.side_effect = ISAPIConnectionError(
+        "Timeout"
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(HLC_1) is None
+
+    mock_nvr_image_settings.get_image_channels.side_effect = None
+    mock_nvr_image_settings.get_image_channels.return_value = working
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # One reload, set up as an NVR at once.
+    assert mock_hikcamera.call_count == 2
+    assert mock_config_entry.data[CONF_RECORDER] is True
+    assert hass.states.get(HLC_1).state == STATE_ON
+
+
+async def test_a_recorder_found_as_the_settings_change_is_not_recorded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_nvr_image_settings: MagicMock,
+    settings: list[ImageSetting],
+) -> None:
+    """Test the retry records nothing about a device it may no longer talk to.
+
+    The connection settings changed while it listed the cameras.
+    """
+
+    def get_image_settings(channel: int = 1, proxy: bool = False):
+        if not proxy:
+            raise PROXY_ERROR
+        return settings
+
+    working = mock_nvr_image_settings.get_image_channels.return_value
+    mock_nvr_image_settings.get_image_settings.side_effect = get_image_settings
+    mock_nvr_image_settings.get_image_channels.return_value = None
+    mock_nvr_image_settings.get_image_channels.side_effect = ISAPIConnectionError(
+        "Timeout"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    def get_image_channels(*args: Any, **kwargs: Any) -> list[ImageChannelInfo]:
+        hass.loop.call_soon_threadsafe(
+            lambda: hass.config_entries.async_update_entry(
+                mock_config_entry,
+                data={**mock_config_entry.data, CONF_HOST: "192.168.1.200"},
+            )
+        )
+        return working
+
+    mock_nvr_image_settings.get_image_channels.side_effect = get_image_channels
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert CONF_RECORDER not in mock_config_entry.data
+    reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_hik_nvr")
+async def test_cameras_that_fail_together_are_tried_again_by_one_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nvr_image_settings: MagicMock,
 ) -> None:
-    """Test each camera that fails does not schedule a reload of its own."""
+    """Test each camera that fails does not start a retry of its own."""
     mock_nvr_image_settings.get_image_settings.side_effect = ISAPIConnectionError(
         "Timeout"
     )
     with patch(
-        "homeassistant.components.hikvision.async_call_later",
+        "homeassistant.components.hikvision.async_track_time_interval",
         return_value=lambda: None,
-    ) as call_later:
+    ) as track:
         await setup_integration(hass, mock_config_entry)
 
-    assert call_later.call_count == 1
+    assert track.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_hik_nvr")
+async def test_an_nvr_that_lists_no_camera_on_a_retry_is_set_up_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_nvr_image_settings: MagicMock,
+) -> None:
+    """Test the list of an NVR that answers at last is read, even with no camera.
+
+    Its cameras may be connected later: the reload reads the list once more.
+    """
+    mock_nvr_image_settings.get_image_channels.side_effect = ISAPIConnectionError(
+        "Timeout"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    mock_nvr_image_settings.get_image_channels.side_effect = None
+    mock_nvr_image_settings.get_image_channels.return_value = [
+        ImageChannelInfo(1, False, None)
+    ]
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_hik_nvr")
+async def test_a_camera_that_is_still_busy_on_a_retry_is_not_set_up_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_nvr_image_settings: MagicMock,
+    settings: list[ImageSetting],
+) -> None:
+    """Test the entry is reloaded only once the camera gives its settings."""
+
+    def get_image_settings(channel: int = 1, proxy: bool = False):
+        if channel == 2:
+            raise PROXY_ERROR
+        return settings
+
+    mock_nvr_image_settings.get_image_settings.side_effect = get_image_settings
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(HLC_2) is None
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        reload.assert_not_called()
+
+        mock_nvr_image_settings.get_image_settings.side_effect = (
+            lambda channel=1, proxy=False: settings
+        )
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_hik_nvr")

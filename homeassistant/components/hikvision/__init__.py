@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import Any
 import uuid
 from xml.etree.ElementTree import ParseError
 
@@ -44,7 +45,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_RANDOM_ID, CONF_RECORDER, DOMAIN
 from .coordinator import (
@@ -113,8 +114,10 @@ class HikvisionData:
     image_coordinators: list[HikvisionImageCoordinator] = field(default_factory=list)
     # The stop of the event stream, shared by everything that stops it
     stream_stop: asyncio.Task[None] | None = None
-    # Whether a reload is scheduled to read the image settings again
-    image_retry_scheduled: bool = False
+    # Set once the device refused the password of the event stream, or of a retry
+    # of the image settings: nothing sends it again, until new credentials reload
+    # the entry.
+    login_rejected: bool = False
     # The settings of the entry this setup connected with
     connection: dict[str, object] = field(default_factory=dict)
 
@@ -454,6 +457,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         raise
 
 
+async def _async_login_rejected(
+    hass: HomeAssistant, entry: HikvisionConfigEntry
+) -> None:
+    """Stop everything that would send a password the device refuses, and ask again.
+
+    The stream and the image settings use the same login.
+    """
+    data = entry.runtime_data
+    data.login_rejected = True
+    if coordinators := data.image_coordinators:
+        # Stops the stream too, and asks for new credentials.
+        await coordinators[0].async_stream_rejected()
+        return
+    try:
+        await async_stop_stream(hass, data)
+    except Exception:
+        # New credentials are asked for all the same: nothing else would.
+        _LOGGER.exception(
+            "Error while stopping the event stream of %s", data.device_name
+        )
+    # Not once the entry is going away, or set up again with a stream of its own.
+    if (
+        hass.is_stopping
+        or entry.state is not ConfigEntryState.LOADED
+        or getattr(entry, "runtime_data", None) is not data
+    ):
+        return
+    log_credentials_rejected(entry)
+    async_start_reauth(hass, entry)
+
+
 # What the watch of the credentials is registered for, after the ID of the stream:
 # no event has this name. pyHik calls every callback when its stream changes state.
 STREAM_CREDENTIALS = "stream_credentials"
@@ -477,38 +511,23 @@ def _async_watch_stream_credentials(
     camera = data.camera
     handled = False
 
-    async def _async_rejected() -> None:
-        if coordinators := data.image_coordinators:
-            # Stops the stream too, and asks for new credentials.
-            await coordinators[0].async_stream_rejected()
-            return
-        try:
-            await async_stop_stream(hass, data)
-        except Exception:
-            # New credentials are asked for all the same: nothing else would.
-            _LOGGER.exception(
-                "Error while stopping the event stream of %s", data.device_name
-            )
-        # Not once the entry is going away, or set up again with a stream of its own.
-        if (
-            hass.is_stopping
-            or entry.state is not ConfigEntryState.LOADED
-            or entry.runtime_data is not data
-        ):
-            return
-        log_credentials_rejected(entry)
-        async_start_reauth(hass, entry)
-
     @callback
     def _async_check() -> None:
         nonlocal handled
         # Not once the stream is being stopped: on purpose, or by a request that
         # found the password rejected, which deals with it.
-        if handled or not camera.stream_auth_failed or data.stream_stop is not None:
+        if (
+            handled
+            or data.login_rejected
+            or not camera.stream_auth_failed
+            or data.stream_stop is not None
+        ):
             return
         handled = True
         entry.async_create_background_task(
-            hass, async_complete(_async_rejected()), f"{DOMAIN} stream credentials"
+            hass,
+            async_complete(_async_login_rejected(hass, entry)),
+            f"{DOMAIN} stream credentials",
         )
 
     def _changed(_sensor: str) -> None:
@@ -594,6 +613,13 @@ async def _async_setup_image_settings(
         # closed twice: a path that already closed it is not repeated.
         await _async_close()
         raise
+    if discovery.retries:
+        _async_retry_image_settings_later(
+            hass,
+            entry,
+            discovery.retries,
+            (host, port, username, password, ssl, verify_ssl),
+        )
     if not coordinators:
         await _async_close()
     return coordinators
@@ -620,6 +646,13 @@ class _ImageDiscovery:
         self._host = host
         self._shared = shared
         self._close = close
+        # What failed and may work later, to read again.
+        self.retries: list[_Probe] = []
+
+    def _retry(self, probe: _Probe) -> None:
+        """Read this again later."""
+        if probe not in self.retries:
+            self.retries.append(probe)
 
     async def _async_send[_T](self, job: Callable[[], _T]) -> _T:
         """Send a discovery request, one at a time on the client.
@@ -674,7 +707,7 @@ class _ImageDiscovery:
         )
 
     async def _async_first_refresh(
-        self, coordinator: HikvisionImageCoordinator, what: str
+        self, coordinator: HikvisionImageCoordinator, what: str, probe: _Probe
     ) -> bool:
         """Read the first values; return whether they could be read."""
         try:
@@ -683,7 +716,7 @@ class _ImageDiscovery:
             # The events work without the image settings, so do not hold them back.
             _LOGGER.warning("Unable to read the image values of %s: %s", what, err)
             if _may_work_later(err):
-                _async_retry_image_settings_later(self._hass, self._entry)
+                self._retry(probe)
             return False
         return True
 
@@ -703,7 +736,7 @@ class _ImageDiscovery:
             return []
         except ISAPIConnectionError as err:
             _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
-            _async_retry_image_settings_later(self._hass, self._entry)
+            self._retry(READ_CAMERA)
             return []
         except ISAPIError as err:
             # Some recorders report the type of a camera, so the device type cannot
@@ -719,12 +752,12 @@ class _ImageDiscovery:
                     "Unable to read the image settings of %s: %s", host, err
                 )
                 if _may_work_later(err):
-                    _async_retry_image_settings_later(self._hass, self._entry)
+                    self._retry(READ_CAMERA)
             return []
         coordinator = HikvisionImageCoordinator(
             self._hass, self._entry, self._shared, settings
         )
-        if not await self._async_first_refresh(coordinator, host):
+        if not await self._async_first_refresh(coordinator, host, READ_CAMERA):
             return []
         return [coordinator]
 
@@ -736,14 +769,7 @@ class _ImageDiscovery:
         the device of the recorder. Set up as an NVR, each attached camera gets a
         device of its own, with its events, its video and its image settings.
         """
-        _LOGGER.info(
-            "%s reports the type of a camera but is a recorder: setting it up as an "
-            "NVR",
-            self._host,
-        )
-        self._hass.config_entries.async_update_entry(
-            self._entry, data={**self._entry.data, CONF_RECORDER: True}
-        )
+        _async_record_recorder(self._hass, self._entry)
         # Once this setup ends: a reload waits for it.
         self._hass.config_entries.async_schedule_reload(self._entry.entry_id)
 
@@ -765,7 +791,7 @@ class _ImageDiscovery:
                 raise await self._async_rejected() from err
             if _may_work_later(err):
                 # Whether it is logged or not: the device may only have been busy.
-                _async_retry_image_settings_later(self._hass, self._entry)
+                self._retry(LIST_CHANNELS)
             if quiet or isinstance(err, ISAPINotSupportedError):
                 _LOGGER.debug("%s does not list image channels: %s", host, err)
             elif isinstance(err, ISAPIAuthError):
@@ -806,14 +832,16 @@ class _ImageDiscovery:
                     "Unable to read the image settings of %s: %s", what, err
                 )
                 if _may_work_later(err):
-                    _async_retry_image_settings_later(self._hass, self._entry)
+                    self._retry(read_channel(channel))
                 continue
             coordinator = HikvisionImageCoordinator(
                 self._hass, self._entry, self._shared, settings, channel
             )
             # Before its first refresh: a 401 there stops the others too.
             self._entry.runtime_data.image_coordinators = [*coordinators, coordinator]
-            if await self._async_first_refresh(coordinator, what):
+            if await self._async_first_refresh(
+                coordinator, what, read_channel(channel)
+            ):
                 coordinators.append(coordinator)
         self._entry.runtime_data.image_coordinators = coordinators
         return coordinators
@@ -856,39 +884,198 @@ def _may_work_later(err: BaseException) -> bool:
     return False
 
 
+# Reads again a part of the image settings that could not be read: the requests to
+# make one after the other, each with the client given to it. They are separate, so
+# that nothing more is sent once the password is known to be refused.
+type _Step = Callable[[ISAPIClient], object]
+type _Probe = tuple[_Step, ...]
+
+
+class _RetryRejected(Exception):
+    """The password was rejected while a step of the retry waited to run."""
+
+
+def _get_settings(client: ISAPIClient) -> None:
+    """Read the image settings of a standalone camera."""
+    client.get_image_settings()
+
+
+def _get_values(client: ISAPIClient) -> None:
+    """Read the image values of a standalone camera."""
+    client.get_image_values()
+
+
+def _get_channels(client: ISAPIClient) -> bool:
+    """List the image channels of an NVR; return whether it lists a camera."""
+    return any(
+        channel.enabled is not False
+        for channel in client.get_image_channels(proxy=True)
+    )
+
+
+def _get_channel_settings(client: ISAPIClient, channel: int) -> None:
+    """Read the image settings of a camera attached to an NVR."""
+    client.get_image_settings(channel, proxy=True)
+
+
+def _get_channel_values(client: ISAPIClient, channel: int) -> None:
+    """Read the image values of a camera attached to an NVR."""
+    client.get_image_values(channel, proxy=True)
+
+
+@callback
+def _async_record_recorder(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
+    """Record that a device that reports the type of a camera is a recorder."""
+    _LOGGER.info(
+        "%s reports the type of a camera but is a recorder: setting it up as an NVR",
+        entry.runtime_data.host,
+    )
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_RECORDER: True}
+    )
+
+
+READ_CAMERA: _Probe = (_get_settings, _get_values)
+LIST_CHANNELS: _Probe = (_get_channels,)
+
+
+def read_channel(channel: int) -> _Probe:
+    """Return the probe of a camera attached to an NVR."""
+    return (
+        partial(_get_channel_settings, channel=channel),
+        partial(_get_channel_values, channel=channel),
+    )
+
+
+@callback
 def _async_retry_image_settings_later(
-    hass: HomeAssistant, entry: HikvisionConfigEntry
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    probes: list[_Probe],
+    client_args: tuple[Any, ...],
 ) -> None:
-    """Try the image settings again later, by reloading the entry.
+    """Try again, later, to read what the device did not give.
 
     The camera may only have been busy or restarting, and without this its image
-    entities would be missing until the integration is reloaded by hand. The
-    timer goes with the entry: an unload, or a failed setup, cancels it. One per
-    setup, whatever failed: each camera of an NVR that fails asks for it, and one
-    reload reads them all again.
+    entities would be missing until the integration is reloaded by hand. Reloading
+    stops the event stream and starts it again, and a camera that stays out of reach
+    would do it every time: so what failed is read again, every few minutes, with a
+    client of its own, and the entry is reloaded only once something can be read.
+    One retry per entry; it goes with the entry, which an unload or a failed setup
+    ends.
     """
+    pending = list(probes)
+    running = False
     data = entry.runtime_data
-    if data.image_retry_scheduled:
-        return
-    data.image_retry_scheduled = True
+
+    def _stale() -> bool:
+        """Return whether nothing more is wanted from the retry."""
+        # A request would send a rejected password again, and a reload would cancel
+        # the reauthentication that waits for a new one. A probe that ends after
+        # the entry was unloaded, or once it began to unload, must not bring it back,
+        # nor send the settings the entry no longer has.
+        return (
+            hass.is_stopping
+            or entry.state is not ConfigEntryState.LOADED
+            or _connection_settings(entry) != data.connection
+            or getattr(entry, "runtime_data", None) is not data
+            or data.stream_stop is not None
+            or data.login_rejected
+            or any(c.credentials_rejected for c in data.image_coordinators)
+        )
+
+    async def _async_close_unused(unused: ISAPIClient) -> None:
+        """Close a client made for a retry that was cancelled meanwhile."""
+        await async_run_to_end(hass, unused.close)
+
+    def _step_unless_rejected(step: _Step, client: ISAPIClient) -> object:
+        """Run a step, unless the password was rejected while it waited.
+
+        A busy executor can start it late, after the check before it was handed over.
+        """
+        if data.login_rejected or any(
+            c.credentials_rejected for c in data.image_coordinators
+        ):
+            raise _RetryRejected
+        return step(client)
+
+    async def _async_probe() -> None:
+        nonlocal pending
+        client = await async_run_to_end(
+            hass, ISAPIClient, *client_args, on_result=_async_close_unused
+        )
+        try:
+            recovered = False
+            still_failing: list[_Probe] = []
+            # Grows when a camera that was busy turns out to be a recorder.
+            queue = list(pending)
+            for probe in queue:
+                for step in probe:
+                    if _stale():
+                        pending = []
+                        return
+                    try:
+                        found = await async_run_to_end(
+                            hass, _step_unless_rejected, step, client
+                        )
+                    except _RetryRejected:
+                        pending = []
+                        return
+                    except ISAPIAuthError as err:
+                        if err.status_code == 401:
+                            pending = []
+                            if not _stale():
+                                await async_complete(_async_login_rejected(hass, entry))
+                            return
+                        # It does not allow it, and will not change its mind.
+                        break
+                    except ISAPIError as err:
+                        if probe is READ_CAMERA and LIST_CHANNELS not in queue:
+                            # As the setup does: a recorder that reports a camera
+                            # type answers the camera's endpoints with an error.
+                            queue.append(LIST_CHANNELS)
+                        if _may_work_later(err):
+                            still_failing.append(probe)
+                        break
+                else:
+                    if probe is LIST_CHANNELS and not data.is_nvr:
+                        if not found:
+                            # Not a recorder: the camera's error stands.
+                            continue
+                        if _stale():
+                            # It may not be the same device any more.
+                            pending = []
+                            return
+                        # As the setup does: set up again as an NVR at once.
+                        _async_record_recorder(hass, entry)
+                    recovered = True
+            pending = [] if recovered else still_failing
+            # The last probe took time: check again before reloading.
+            if recovered and not _stale():
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+        finally:
+            await async_run_to_end(hass, client.close)
 
     @callback
-    def _reload(_now: datetime) -> None:
-        # Nor once the password was rejected: a reload would send it again, and
-        # cancel the reauthentication that waits for a new one.
-        if (
-            hass.is_stopping
-            or data.camera.stream_auth_failed
-            or any(
-                coordinator.credentials_rejected
-                for coordinator in data.image_coordinators
-            )
-        ):
+    def _async_retry(_now: datetime) -> None:
+        nonlocal running
+        if not pending or running or _stale():
             return
-        hass.config_entries.async_schedule_reload(entry.entry_id)
+        running = True
+
+        async def _async_run() -> None:
+            nonlocal running
+            try:
+                await _async_probe()
+            finally:
+                running = False
+
+        entry.async_create_background_task(
+            hass, _async_run(), f"{DOMAIN} image settings retry"
+        )
 
     entry.async_on_unload(
-        async_call_later(hass, IMAGE_SETTINGS_RETRY_INTERVAL, _reload)
+        async_track_time_interval(hass, _async_retry, IMAGE_SETTINGS_RETRY_INTERVAL)
     )
 
 
