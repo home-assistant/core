@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> Non
     LOGGER.debug("Setting up FRITZ!Box Tools component")
 
     if entry.data.get(CONF_SSL) is None:
-        LOGGER.debug("Set missing ssl option to config entry %s", entry.title)
+        LOGGER.info("Set missing ssl option to config entry %s", entry.title)
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_SSL: DEFAULT_SSL}
         )
