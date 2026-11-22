@@ -33,7 +33,7 @@ flowchart LR
 
 Configure sandboxed integrations through `sandbox.integrations` in YAML. Selected built-in integrations share one worker process. Selected custom integrations share another. Each worker runs its own Home Assistant instance.
 
-1. Bootstrap installs the router before integration setup. The router sends selected domains to a worker. Other domains use normal local setup.
+1. Home Assistant includes a router that decides during integration setup whether an integration runs on the host or in a specific worker.
 2. The worker manager starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
 3. The host sends a config-entry snapshot with canonical entry and subentry IDs. The worker sets it up after startup.
 4. The worker sends entity descriptions and state updates. The host registers proxy entities. Each proxy entity represents an entity in a worker. The sandbox integration provides the proxy, but Home Assistant presents it as belonging to the integration and config entry running in the worker. Actions called on the proxy are forwarded to and executed by the worker entity. The host retains canonical entity and device identities.
