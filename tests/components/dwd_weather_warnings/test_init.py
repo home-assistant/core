@@ -127,6 +127,32 @@ async def test_load_entry_with_invalid_api_data(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_load_device_tracker_with_invalid_api_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_tracker_entry: MockConfigEntry,
+) -> None:
+    """Test setup retry when position-based API data is invalid."""
+    mock_tracker_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        mock_tracker_entry.domain,
+        "uuid",
+        suggested_object_id="test_gps",
+        config_entry=mock_tracker_entry,
+    )
+    hass.states.async_set(
+        mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
+        STATE_HOME,
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
+    )
+
+    await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_tracker_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_load_invalid_registry_entry(
     hass: HomeAssistant, mock_tracker_entry: MockConfigEntry
 ) -> None:
