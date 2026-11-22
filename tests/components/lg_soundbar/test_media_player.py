@@ -382,6 +382,39 @@ async def test_availability_follows_the_connection(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+async def test_playback_state_not_kept_across_a_reconnection(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a soundbar back without fresh play info is not shown playing.
+
+    The refresh on reconnection does not wait for the play info, which a
+    restarted soundbar may not answer in time.
+    """
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_client)
+    send_power_status(callback, True)
+    callback(
+        {
+            "msg": "PLAY_INFO",
+            "data": {"i_stream_type": 1, "i_play_ctrl": 0, "s_title": "Song"},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+
+    find_connection_callback(mock_client)(False)
+    find_connection_callback(mock_client)(True)
+    # The refresh got the power status but no play info
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == MediaPlayerState.ON
+    assert "media_title" not in state.attributes
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [

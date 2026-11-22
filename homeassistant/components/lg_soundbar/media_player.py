@@ -130,6 +130,17 @@ class LGDevice(MediaPlayerEntity):
     def _handle_connection(self, connected: bool) -> None:
         """Track availability; the client fetches the state before connecting."""
         self._attr_available = connected
+        if not connected:
+            # Playback may have stopped while away, and the refresh on the next
+            # connection does not wait for the play info, so only fresh play info
+            # can bring PLAYING or PAUSED back
+            self._stream_type = 0
+            self._attr_media_image_url = None
+            self._attr_media_artist = None
+            self._attr_media_title = None
+            self._attr_state = (
+                MediaPlayerState.ON if self._device_on else MediaPlayerState.OFF
+            )
         self.async_write_ha_state()
 
     async def _async_get_play(self) -> None:
