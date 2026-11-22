@@ -10,9 +10,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fuelprices_dk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, __version__
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 from . import setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
@@ -72,7 +73,7 @@ async def test_full_user_flow(
     assert subentry["data"] == {"company": TEST_COMPANY, "station": TEST_STATION}
     assert len(mock_setup_entry.mock_calls) == 1
     mock_braendstofpriser_class.assert_called_once_with(
-        TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"
+        TEST_API_KEY, user_agent=SERVER_SOFTWARE
     )
 
 
@@ -324,7 +325,7 @@ async def test_reauth_success(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
     mock_braendstofpriser_class.assert_called_once_with(
-        "new-api-key", user_agent=f"Home-Assistant/{__version__}"
+        "new-api-key", user_agent=SERVER_SOFTWARE
     )
 
 
@@ -419,7 +420,7 @@ async def test_subentry_flow_create(
     assert result["title"] == f"{TEST_COMPANY} - {new_station['name']}"
     assert result["unique_id"] == f"{TEST_COMPANY}_{new_station['id']}"
     mock_braendstofpriser_class.assert_called_once_with(
-        TEST_API_KEY, user_agent=f"Home-Assistant/{__version__}"
+        TEST_API_KEY, user_agent=SERVER_SOFTWARE
     )
 
 
