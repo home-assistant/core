@@ -277,6 +277,7 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         self._shot_timer_task: Task | None = None
         self._shot_timer_supported = True
         self._shot_timer_started = False
+        self._machine_could_brew = False
         self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
         self._shot_timer_retry_after = dt_util.utcnow()
         # cloud updates may switch the machine between standby and brewing mode
@@ -308,11 +309,16 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     @callback
     def _async_update_shot_timer(self) -> None:
         """Run the shot timer only while the machine is able to brew."""
-        if not self._shot_timer_supported or (
-            self._shot_timer_task is not None and not self._shot_timer_task.done()
-        ):
+        if not self._shot_timer_supported:
             return
         can_brew = self._machine_can_brew
+        if can_brew and not self._machine_could_brew:
+            # the machine was just turned on, connect right away
+            self._shot_timer_retry_after = dt_util.utcnow()
+            self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
+        self._machine_could_brew = can_brew
+        if self._shot_timer_task is not None and not self._shot_timer_task.done():
+            return
         if can_brew == self._shot_timer_started or (
             can_brew and dt_util.utcnow() < self._shot_timer_retry_after
         ):
