@@ -88,8 +88,8 @@ async def test_cover_services(
     # Stop cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     cover.stop.assert_called_once()
@@ -192,11 +192,14 @@ async def test_sivoia_qed_cover_services(
     )
     assert qed.level == 40
     await hass.services.async_call(
-        COVER_DOMAIN, CoverService.CLOSE, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     qed.start_lower.assert_called_once()
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     qed.stop.assert_called_once()
 
@@ -226,7 +229,10 @@ async def test_motor_cover_services(
     )
     motor.start_raise.assert_called_once()
     await hass.services.async_call(
-        COVER_DOMAIN, CoverService.CLOSE, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     motor.start_lower.assert_called_once()
     await hass.services.async_call(
