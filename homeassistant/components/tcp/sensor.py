@@ -3,10 +3,11 @@
 from typing import Final, override
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -28,7 +29,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML configuration."""
-    await async_import_yaml(hass, config)
+    await async_import_yaml(hass, config, Platform.SENSOR)
 
 
 async def async_setup_entry(
@@ -46,6 +47,8 @@ async def async_setup_entry(
 
 class TcpSensor(TcpEntity, SensorEntity):
     """Implementation of a TCP socket based sensor."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     @property
     @override

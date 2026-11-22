@@ -3,9 +3,11 @@
 from typing import Final, override
 
 from homeassistant.components.binary_sensor import (
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -28,7 +30,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML configuration."""
-    await async_import_yaml(hass, config)
+    await async_import_yaml(hass, config, Platform.BINARY_SENSOR)
 
 
 async def async_setup_entry(
@@ -37,11 +39,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TCP binary sensor."""
-    async_add_entities([TcpBinarySensor(hass, entry)], update_before_add=True)
+    entity = await hass.async_add_executor_job(TcpBinarySensor, hass, entry)
+    async_add_entities([entity], update_before_add=True)
 
 
 class TcpBinarySensor(TcpEntity, BinarySensorEntity):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
 
     @property
     @override

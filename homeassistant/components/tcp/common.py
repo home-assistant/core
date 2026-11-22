@@ -7,23 +7,27 @@ import probatio
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
     CONF_HOST,
     CONF_NAME,
     CONF_PAYLOAD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import (
     CONF_BUFFER_SIZE,
+    CONF_OBJECT_ID,
     CONF_TITLE,
     CONF_VALUE_ON,
     DEFAULT_BUFFER_SIZE,
@@ -51,31 +55,22 @@ TCP_PLATFORM_SCHEMA: Final[dict[probatio.Marker, Any]] = {
 YAML_KEYS: Final = {str(key) for key in TCP_PLATFORM_SCHEMA}
 
 
-async def async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_import_yaml(
+    hass: HomeAssistant, config: ConfigType, platform: Platform
+) -> None:
     """Import a YAML platform config and raise the deprecation issue."""
     data = {key: value for key, value in config.items() if key in YAML_KEYS}
-    data[CONF_TITLE] = data.pop(CONF_NAME, DEFAULT_NAME)
+    name = data.pop(CONF_NAME, DEFAULT_NAME)
+    namespace = config.get(CONF_ENTITY_NAMESPACE)
+    data[CONF_TITLE] = name
+    data[CONF_PLATFORM] = platform.value
+    data[CONF_OBJECT_ID] = slugify(f"{namespace} {name}" if namespace else name)
     if (template := data.get(CONF_VALUE_TEMPLATE)) is not None:
         data[CONF_VALUE_TEMPLATE] = template.template
 
-    result = await hass.config_entries.flow.async_init(
+    await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
-    if (
-        result["type"] is FlowResultType.ABORT
-        and result["reason"] != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version="2027.6.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-        )
-        return
 
     ir.async_create_issue(
         hass,

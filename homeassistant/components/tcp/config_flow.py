@@ -1,6 +1,7 @@
 """Config flow for the TCP integration."""
 
 from collections.abc import Mapping
+import json
 import socket
 import ssl
 from typing import Any, override
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PAYLOAD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_SSL,
     CONF_TIMEOUT,
@@ -22,6 +24,7 @@ from homeassistant.helpers.selector import TemplateSelector
 
 from .const import (
     CONF_BUFFER_SIZE,
+    CONF_OBJECT_ID,
     CONF_TITLE,
     CONF_VALUE_ON,
     DEFAULT_BUFFER_SIZE,
@@ -72,17 +75,24 @@ def _can_connect(data: Mapping[str, Any]) -> bool:
     return True
 
 
-def _identity(data: Mapping[str, Any]) -> tuple[Any, ...]:
-    """Return the values that define the entities of an entry."""
-    return tuple(
-        data.get(key) or None
-        for key in (
-            CONF_HOST,
-            CONF_PORT,
-            CONF_PAYLOAD,
-            CONF_VALUE_TEMPLATE,
-            CONF_VALUE_ON,
-        )
+PRESERVED_KEYS = (CONF_PLATFORM, CONF_OBJECT_ID)
+
+
+def build_unique_id(data: Mapping[str, Any]) -> str:
+    """Return the unique ID that identifies the entities of an entry."""
+    return json.dumps(
+        [
+            data.get(key) or None
+            for key in (
+                CONF_HOST,
+                CONF_PORT,
+                CONF_PAYLOAD,
+                CONF_VALUE_TEMPLATE,
+                CONF_VALUE_ON,
+                CONF_PLATFORM,
+                CONF_OBJECT_ID,
+            )
+        ]
     )
 
 
@@ -91,16 +101,6 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _is_duplicate(
-        self, data: Mapping[str, Any], ignore_entry_id: str | None = None
-    ) -> bool:
-        """Return True if another entry defines the same entities."""
-        return any(
-            entry.entry_id != ignore_entry_id
-            and _identity(entry.data) == _identity(data)
-            for entry in self._async_current_entries()
-        )
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -108,8 +108,8 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if self._is_duplicate(user_input):
-                return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(build_unique_id(user_input))
+            self._abort_if_unique_id_configured()
             if await self.hass.async_add_executor_job(_can_connect, user_input):
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
@@ -130,10 +130,21 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            if self._is_duplicate(user_input, entry.entry_id):
+            data = {
+                **{key: entry.data[key] for key in PRESERVED_KEYS if key in entry.data},
+                **user_input,
+            }
+            unique_id = build_unique_id(data)
+            await self.async_set_unique_id(unique_id)
+            existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, unique_id
+            )
+            if existing and existing.entry_id != entry.entry_id:
                 return self.async_abort(reason="already_configured")
             if await self.hass.async_add_executor_job(_can_connect, user_input):
-                return self.async_update_reload_and_abort(entry, data=user_input)
+                return self.async_update_reload_and_abort(
+                    entry, unique_id=unique_id, data=data
+                )
             errors["base"] = "cannot_connect"
 
         return self.async_show_form(
@@ -148,8 +159,6 @@ class TcpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a config from YAML."""
         data = dict(import_data)
         title = data.pop(CONF_TITLE, None) or f"{data[CONF_HOST]}:{data[CONF_PORT]}"
-        if self._is_duplicate(data):
-            return self.async_abort(reason="already_configured")
-        if not await self.hass.async_add_executor_job(_can_connect, data):
-            return self.async_abort(reason="cannot_connect")
+        await self.async_set_unique_id(build_unique_id(data))
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=title, data=data)

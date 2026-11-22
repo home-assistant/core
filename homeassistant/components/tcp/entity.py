@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 
 from . import TcpConfigEntry
-from .const import CONF_BUFFER_SIZE, CONF_VALUE_ON, DOMAIN
+from .const import CONF_BUFFER_SIZE, CONF_OBJECT_ID, CONF_VALUE_ON, DOMAIN
 from .model import TcpSensorConfig
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class TcpEntity(Entity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _entity_id_format: str
 
     def __init__(self, hass: HomeAssistant, entry: TcpConfigEntry) -> None:
         """Set all the config values."""
@@ -63,6 +64,8 @@ class TcpEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)}, name=entry.title
         )
+        if object_id := data.get(CONF_OBJECT_ID):
+            self.entity_id = self._entity_id_format.format(object_id)
 
     def update(self) -> None:
         """Get the latest value for this sensor."""

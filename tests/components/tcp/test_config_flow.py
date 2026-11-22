@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.tcp.const import CONF_TITLE, DOMAIN
+from homeassistant.components.tcp.config_flow import build_unique_id
+from homeassistant.components.tcp.const import CONF_OBJECT_ID, CONF_TITLE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PAYLOAD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PAYLOAD, CONF_PLATFORM, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -52,6 +53,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1:4242"
     assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == build_unique_id(USER_INPUT)
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -76,11 +78,14 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], USER_INPUT
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == build_unique_id(USER_INPUT)
 
 
 async def test_user_flow_duplicate(hass: HomeAssistant) -> None:
     """Test a duplicate entry is aborted."""
-    MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -94,32 +99,20 @@ async def test_user_flow_duplicate(hass: HomeAssistant) -> None:
 
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test the import flow creates an entry."""
-    with patch(
-        "homeassistant.components.tcp.config_flow._can_connect", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_INPUT
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_INPUT
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "TCP Sensor"
     assert result["data"] == USER_INPUT
-
-
-async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test the import flow aborts when the server is unreachable."""
-    with patch(
-        "homeassistant.components.tcp.config_flow._can_connect", return_value=False
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_INPUT
-        )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["result"].unique_id == build_unique_id(USER_INPUT)
 
 
 async def test_import_flow_duplicate(hass: HomeAssistant) -> None:
     """Test the import flow aborts on duplicates."""
-    MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_INPUT
@@ -130,7 +123,9 @@ async def test_import_flow_duplicate(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     """Test reconfiguring an entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
@@ -148,11 +143,14 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == new_input
+    assert entry.unique_id == build_unique_id(new_input)
 
 
 async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test the error shown when the server is unreachable."""
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
@@ -197,6 +195,7 @@ async def test_user_flow_connection_error(hass: HomeAssistant) -> None:
             result["flow_id"], USER_INPUT
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == build_unique_id(USER_INPUT)
 
 
 async def test_user_flow_tls_handshake_fails(hass: HomeAssistant) -> None:
@@ -243,11 +242,14 @@ async def test_user_flow_tls_success(hass: HomeAssistant, verify_ssl: bool) -> N
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert bool(mock_context.return_value.check_hostname) is verify_ssl
+    assert result["result"].unique_id == build_unique_id(USER_INPUT)
 
 
 async def test_same_endpoint_different_template(hass: HomeAssistant) -> None:
     """Test entries with different templates are not duplicates."""
-    MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    ).add_to_hass(hass)
     data = {**USER_INPUT, "value_template": "{{ value.split(';')[1] }}"}
 
     with patch(
@@ -258,11 +260,14 @@ async def test_same_endpoint_different_template(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == data
+    assert result["result"].unique_id == build_unique_id(data)
 
 
 async def test_reconfigure_duplicate(hass: HomeAssistant) -> None:
     """Test reconfiguring into another entry's endpoint is aborted."""
-    MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data=USER_INPUT, unique_id=build_unique_id(USER_INPUT)
+    ).add_to_hass(hass)
     entry = MockConfigEntry(domain=DOMAIN, data={**USER_INPUT, CONF_PORT: 4343})
     entry.add_to_hass(hass)
 
@@ -272,3 +277,53 @@ async def test_reconfigure_duplicate(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_already_in_progress(hass: HomeAssistant) -> None:
+    """Test concurrent flows for the same identity are aborted."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tcp.config_flow._can_connect", return_value=False
+    ):
+        first = await hass.config_entries.flow.async_configure(
+            first["flow_id"], USER_INPUT
+        )
+    assert first["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        second["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+    with patch(
+        "homeassistant.components.tcp.config_flow._can_connect", return_value=True
+    ):
+        first = await hass.config_entries.flow.async_configure(
+            first["flow_id"], USER_INPUT
+        )
+    assert first["type"] is FlowResultType.CREATE_ENTRY
+    assert first["result"].unique_id == build_unique_id(USER_INPUT)
+
+
+async def test_reconfigure_keeps_import_data(hass: HomeAssistant) -> None:
+    """Test the data stored by the import survives a reconfiguration."""
+    data = {**USER_INPUT, CONF_PLATFORM: "binary_sensor", CONF_OBJECT_ID: "power"}
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=build_unique_id(data))
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.tcp.config_flow._can_connect", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**USER_INPUT, CONF_PORT: 4343}
+        )
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**data, CONF_PORT: 4343}
