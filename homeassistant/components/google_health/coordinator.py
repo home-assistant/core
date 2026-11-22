@@ -14,6 +14,9 @@ from google_health_api.exceptions import (
 )
 from google_health_api.model import (
     ActiveEnergyBurnedRollupValue,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
     BodyFat,
     DailyRestingHeartRate,
     DistanceRollupValue,
@@ -21,6 +24,7 @@ from google_health_api.model import (
     HydrationLogRollupValue,
     NutritionLogRollupValue,
     PairedDevice,
+    SedentaryPeriodRollupValue,
     Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
@@ -54,6 +58,10 @@ class GoogleHealthActivityData:
     active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
     total_calories: TotalCaloriesRollupValue | None = None
     floors: FloorsRollupValue | None = None
+    altitude: AltitudeRollupValue | None = None
+    active_minutes: ActiveMinutesRollupValue | None = None
+    active_zone_minutes: ActiveZoneMinutesRollupValue | None = None
+    sedentary_period: SedentaryPeriodRollupValue | None = None
 
 
 @dataclass
@@ -144,28 +152,42 @@ class GoogleHealthActivityCoordinator(
             active_energy_rollup,
             total_calories_rollup,
             floors_rollup,
+            altitude_rollup,
+            active_minutes_rollup,
+            active_zone_minutes_rollup,
+            sedentary_period_rollup,
         ) = await asyncio.gather(
             self.api.steps.today(self.hass.config.time_zone),
             self.api.distance.today(self.hass.config.time_zone),
             self.api.active_energy_burned.today(self.hass.config.time_zone),
             self.api.total_calories.today(self.hass.config.time_zone),
             self.api.floors.today(self.hass.config.time_zone),
+            self.api.altitude.today(self.hass.config.time_zone),
+            self.api.active_minutes.today(self.hass.config.time_zone),
+            self.api.active_zone_minutes.today(self.hass.config.time_zone),
+            self.api.sedentary_period.today(self.hass.config.time_zone),
         )
-
-        steps = steps_rollup.data if steps_rollup else None
-        distance = distance_rollup.data if distance_rollup else None
-        active_energy_burned = (
-            active_energy_rollup.data if active_energy_rollup else None
-        )
-        total_calories = total_calories_rollup.data if total_calories_rollup else None
-        floors = floors_rollup.data if floors_rollup else None
 
         return GoogleHealthActivityData(
-            steps=steps,
-            distance=distance,
-            active_energy_burned=active_energy_burned,
-            total_calories=total_calories,
-            floors=floors,
+            steps=steps_rollup.data if steps_rollup else None,
+            distance=distance_rollup.data if distance_rollup else None,
+            active_energy_burned=(
+                active_energy_rollup.data if active_energy_rollup else None
+            ),
+            total_calories=(
+                total_calories_rollup.data if total_calories_rollup else None
+            ),
+            floors=floors_rollup.data if floors_rollup else None,
+            altitude=altitude_rollup.data if altitude_rollup else None,
+            active_minutes=(
+                active_minutes_rollup.data if active_minutes_rollup else None
+            ),
+            active_zone_minutes=(
+                active_zone_minutes_rollup.data if active_zone_minutes_rollup else None
+            ),
+            sedentary_period=(
+                sedentary_period_rollup.data if sedentary_period_rollup else None
+            ),
         )
 
 

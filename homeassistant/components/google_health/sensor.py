@@ -39,6 +39,7 @@ from . import GoogleHealthConfigEntry
 from .const import DOMAIN
 from .coordinator import (
     GoogleHealthActivityCoordinator,
+    GoogleHealthActivityData,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
     GoogleHealthDeviceCoordinator,
@@ -49,6 +50,32 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
+
+
+def _active_minutes(data: GoogleHealthActivityData | None, level: str) -> int:
+    """Return daily active duration in minutes for an activity level."""
+    if not data or not data.active_minutes:
+        return 0
+    return next(
+        (
+            item.active_minutes_sum
+            for item in data.active_minutes.active_minutes_rollup_by_activity_level
+            if item.activity_level == level and item.active_minutes_sum is not None
+        ),
+        0,
+    )
+
+
+def _total_active_zone_minutes(data: GoogleHealthActivityData | None) -> int:
+    """Return total daily active zone minutes across all heart rate zones."""
+    if not data or not data.active_zone_minutes:
+        return 0
+    azm = data.active_zone_minutes
+    return (
+        (azm.sum_in_fat_burn_heart_zone or 0)
+        + (azm.sum_in_cardio_heart_zone or 0)
+        + (azm.sum_in_peak_heart_zone or 0)
+    )
 
 
 def _sleep_stage_minutes(
@@ -147,6 +174,98 @@ ACTIVITY_SENSORS: list[
         translation_key="floors",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.floors.count_sum if data and data.floors else 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="elevation",
+        translation_key="elevation",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.altitude.gain_millimeters_sum / 1000.0
+            if data and data.altitude and data.altitude.gain_millimeters_sum is not None
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="light_activity",
+        translation_key="light_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _active_minutes(data, "LIGHT"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="moderate_activity",
+        translation_key="moderate_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _active_minutes(data, "MODERATE"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="vigorous_activity",
+        translation_key="vigorous_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _active_minutes(data, "VIGOROUS"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="active_zone_minutes",
+        translation_key="active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=_total_active_zone_minutes,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="sedentary_time",
+        translation_key="sedentary_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.sedentary_period.duration_sum.total_seconds() / 60.0
+            if data
+            and data.sedentary_period
+            and data.sedentary_period.duration_sum is not None
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="fat_burn_active_zone_minutes",
+        translation_key="fat_burn_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.active_zone_minutes.sum_in_fat_burn_heart_zone or 0
+            if data and data.active_zone_minutes
+            else 0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="cardio_active_zone_minutes",
+        translation_key="cardio_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.active_zone_minutes.sum_in_cardio_heart_zone or 0
+            if data and data.active_zone_minutes
+            else 0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="peak_active_zone_minutes",
+        translation_key="peak_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.active_zone_minutes.sum_in_peak_heart_zone or 0
+            if data and data.active_zone_minutes
+            else 0
+        ),
     ),
 ]
 
