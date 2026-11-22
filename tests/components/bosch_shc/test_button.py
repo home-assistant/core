@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -45,7 +45,7 @@ async def test_smoke_test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -70,7 +70,7 @@ async def test_reset_tamper_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.motion_detector_reset_tamper"},
+        {TargetKey.ENTITY_ID: "button.motion_detector_reset_tamper"},
         blocking=True,
     )
 
@@ -111,7 +111,7 @@ async def test_siren_test_alarm_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.outdoor_siren_test_alarm"},
+        {TargetKey.ENTITY_ID: "button.outdoor_siren_test_alarm"},
         blocking=True,
     )
 

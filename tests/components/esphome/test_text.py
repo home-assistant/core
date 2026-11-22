@@ -5,11 +5,11 @@ from unittest.mock import call
 from aioesphomeapi import APIClient, TextInfo, TextMode as ESPHomeTextMode, TextState
 
 from homeassistant.components.text import (
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextService,
+    TextServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -46,8 +46,11 @@ async def test_generic_text_entity(
 
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "text.test_my_text", ATTR_VALUE: "goodbye"},
+        TextService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "text.test_my_text",
+            TextServiceArgument.VALUE: "goodbye",
+        },
         blocking=True,
     )
     mock_client.text_command.assert_has_calls([call(1, "goodbye", device_id=0)])

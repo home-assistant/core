@@ -25,7 +25,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -152,7 +152,7 @@ async def test_set_temperature(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 6},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 6},
         blocking=True,
     )
 
@@ -188,7 +188,7 @@ async def test_set_temperature_preserves_sse_update_during_command(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
                 NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
@@ -238,7 +238,7 @@ async def test_set_temperature_preserves_sse_disconnect_during_command(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
                 NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
@@ -275,7 +275,7 @@ async def test_set_temperature_after_unit_conversion(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+            TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
             NumberServiceArgument.VALUE: 39,
         },
         blocking=True,
@@ -305,7 +305,7 @@ async def test_set_temperature_not_in_allowed_steps(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
                 NumberServiceArgument.VALUE: value,
             },
             blocking=True,
@@ -334,7 +334,7 @@ async def test_set_temperature_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 6,
             },
             blocking=True,

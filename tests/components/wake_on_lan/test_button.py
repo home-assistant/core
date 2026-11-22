@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_BROADCAST_PORT,
     CONF_MAC,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -73,7 +73,7 @@ async def test_service_calls(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.wake_on_lan_00_01_02_03_04_05"},
+        {TargetKey.ENTITY_ID: "button.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
 

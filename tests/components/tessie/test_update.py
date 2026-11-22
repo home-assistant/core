@@ -11,7 +11,7 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     UpdateService,
 )
-from homeassistant.const import STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -36,7 +36,7 @@ async def test_updates(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: [entity_id]},
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_update.assert_called_once()
@@ -61,7 +61,7 @@ async def test_update_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: ["update.test_update"]},
+            {TargetKey.ENTITY_ID: ["update.test_update"]},
             blocking=True,
         )
 
@@ -80,7 +80,7 @@ async def test_update_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: ["update.test_update"]},
+            {TargetKey.ENTITY_ID: ["update.test_update"]},
             blocking=True,
         )
 
