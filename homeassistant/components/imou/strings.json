@@ -74,7 +74,7 @@
     },
     "datetime": {
       "count_down_switch": {
-        "name": "Turn off at"
+        "name": "Switch at"
       }
     },
     "number": {

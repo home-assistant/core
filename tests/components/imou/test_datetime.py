@@ -76,7 +76,7 @@ async def test_set_countdown_end(
     imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Setting an end time writes remaining minutes and keeps a stable timestamp."""
-    entity_id = "datetime.smart_plug_turn_off_at"
+    entity_id = "datetime.smart_plug_switch_at"
     device = imou_mock_devices[0]
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -129,7 +129,7 @@ async def test_set_countdown_imou_exception(
             DATETIME_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "datetime.smart_plug_turn_off_at",
+                ATTR_ENTITY_ID: "datetime.smart_plug_switch_at",
                 ATTR_DATETIME: end,
             },
             blocking=True,
@@ -146,7 +146,7 @@ async def test_countdown_expires_to_unknown(
     imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """When the end is reached, the datetime clears without minute ticks."""
-    entity_id = "datetime.smart_plug_turn_off_at"
+    entity_id = "datetime.smart_plug_switch_at"
     device = imou_mock_devices[0]
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -184,7 +184,7 @@ async def test_countdown_cancelled_when_device_leaves_account(
     imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Removing the last device cancels its local end before sync_all."""
-    entity_id = "datetime.smart_plug_turn_off_at"
+    entity_id = "datetime.smart_plug_switch_at"
     device = imou_mock_devices[0]
     device_key = device.device_id
     coordinator = mock_config_entry.runtime_data
@@ -224,7 +224,7 @@ async def test_countdown_preserves_deadline_while_offline(
     imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Offline status polls must not reset the local end from stale text."""
-    entity_id = "datetime.smart_plug_turn_off_at"
+    entity_id = "datetime.smart_plug_switch_at"
     device = imou_mock_devices[0]
     device_key = device.device_id
     coordinator = mock_config_entry.runtime_data
@@ -279,7 +279,7 @@ async def test_set_countdown_rejects_beyond_cloud_limit(
             DATETIME_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "datetime.smart_plug_turn_off_at",
+                ATTR_ENTITY_ID: "datetime.smart_plug_switch_at",
                 ATTR_DATETIME: too_far,
             },
             blocking=True,
@@ -299,7 +299,7 @@ async def test_countdown_preserves_deadline_on_aligned_online_poll(
     imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Online polls that still report the same whole minutes keep the end time."""
-    entity_id = "datetime.smart_plug_turn_off_at"
+    entity_id = "datetime.smart_plug_switch_at"
     device = imou_mock_devices[0]
     device_key = device.device_id
     coordinator = mock_config_entry.runtime_data
