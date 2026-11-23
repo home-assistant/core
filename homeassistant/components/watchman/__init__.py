@@ -99,6 +99,8 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Allow manual removal of stale devices via the UI."""
+    if not hasattr(config_entry, "runtime_data"):
+        return False
     coordinator = config_entry.runtime_data
     active_serials = {tank.serial_number for tank in coordinator.data}
 

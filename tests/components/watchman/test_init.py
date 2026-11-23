@@ -258,3 +258,19 @@ async def test_remove_stale_device(
         await async_remove_config_entry_device(hass, config_entry, active_device)
         is False
     )
+
+
+async def test_remove_device_after_failed_setup(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A device cannot be removed when setup has not initialized runtime data."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "old_stale_serial")},
+    )
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert await async_remove_config_entry_device(hass, entry, device) is False
