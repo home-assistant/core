@@ -85,10 +85,6 @@ RESTRICTED_REASONS: list = [
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
 
-_SERIAL_NUMBER_LENGTH = 9
-_MIN_ISO_WEEK = 1
-_MAX_ISO_WEEK = 53
-
 
 @callback
 def _get_restricted_reason(data: MowerAttributes) -> str:
@@ -150,29 +146,6 @@ def _get_error_string(data: MowerAttributes) -> str:
     if data.mower.state in ERROR_STATES:
         return data.mower.state.lower()
     return "no_error"
-
-
-@callback
-def _get_manufacture_date(data: MowerAttributes) -> date | None:
-    """Decode the manufacture year and ISO week from a 9-digit YYWWNNNNN serial number.
-
-    The serial number only encodes the year and ISO week, not the exact day.
-    The Monday of that week is returned, since a sensor with device_class DATE
-    requires a specific day.
-    """
-    serial_number = data.system.serial_number
-    if len(serial_number) != _SERIAL_NUMBER_LENGTH or not serial_number.isdigit():
-        return None
-
-    week = int(serial_number[2:4])
-    if not _MIN_ISO_WEEK <= week <= _MAX_ISO_WEEK:
-        return None
-
-    year = 2000 + int(serial_number[0:2])
-    try:
-        return datetime.strptime(f"{year}-W{week}-1", "%G-W%V-%u").date()
-    except ValueError:
-        return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -366,7 +339,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="manufacture_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DATE,
-        value_fn=_get_manufacture_date,
+        value_fn=attrgetter("system.manufacture_date"),
     ),
 )
 

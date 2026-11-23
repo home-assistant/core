@@ -10,6 +10,7 @@ from aioautomower.model import (
     MowerModes,
     MowerStates,
     RestrictedReasons,
+    System,
     WorkArea,
     WorkAreaType,
 )
@@ -310,11 +311,8 @@ async def test_error_sensor(
 @pytest.mark.parametrize(
     ("serial_number", "expected_state"),
     [
-        pytest.param("184800801", "2018-11-26", id="valid_serial"),
-        pytest.param("123", STATE_UNAVAILABLE, id="not_9_digits"),
-        pytest.param("18AB00801", STATE_UNAVAILABLE, id="not_all_digits"),
-        pytest.param("180000801", STATE_UNAVAILABLE, id="week_out_of_range"),
-        pytest.param("215300801", STATE_UNAVAILABLE, id="iso_week_does_not_exist"),
+        pytest.param("184800801", "2018-11-26", id="decodable_serial"),
+        pytest.param("123", STATE_UNAVAILABLE, id="undecodable_serial"),
     ],
 )
 async def test_manufacture_date_sensor(
@@ -325,8 +323,13 @@ async def test_manufacture_date_sensor(
     serial_number: str,
     expected_state: str,
 ) -> None:
-    """Test the manufacture date sensor decodes a 9-digit YYWWNNNNN serial number."""
-    values[TEST_MOWER_ID].system.serial_number = serial_number
+    """Test the manufacture date sensor exposes the date provided by the library."""
+    system = values[TEST_MOWER_ID].system
+    # manufacture_date is derived from the serial number when the library
+    # deserializes the payload, so rebuild System instead of mutating the field.
+    values[TEST_MOWER_ID].system = System.from_dict(
+        {"name": system.name, "model": system.model, "serialNumber": serial_number}
+    )
     mock_automower_client.get_status.return_value = values
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.garden_test_mower_1_manufacture_date")
