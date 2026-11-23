@@ -43,7 +43,7 @@ async def async_setup_entry(
             )
         ):
             added_macs.add(mac)
-            entity = TasmotaUpdateEntity(coordinator, device)
+            entity = TasmotaUpdateEntity(coordinator, device, mac)
             entity.async_on_remove(lambda: added_macs.discard(mac))
             async_add_entities([entity])
 
@@ -72,16 +72,14 @@ class TasmotaUpdateEntity(
         self,
         coordinator: TasmotaLatestReleaseUpdateCoordinator,
         device_entry: DeviceEntry,
+        mac: str,
     ) -> None:
         """Initialize the Tasmota update entity."""
         super().__init__(coordinator=coordinator)
         self._config_entry_id = device_entry.config_entry_id
         self._attr_device_info = dr.DeviceInfo(connections=device_entry.connections)
-        for connection_type, connection_value in device_entry.connections:
-            if connection_type == dr.CONNECTION_NETWORK_MAC:
-                self._connection = (connection_type, connection_value)
-                self._attr_unique_id = connection_value
-                break
+        self._connection = (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
+        self._attr_unique_id = dr.format_mac(mac)
 
     @override
     async def async_added_to_hass(self) -> None:
