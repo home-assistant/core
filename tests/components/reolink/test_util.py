@@ -27,7 +27,7 @@ from homeassistant.components.number import (
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.util import get_device_uid_and_ch
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -122,7 +122,7 @@ async def test_try_function(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,

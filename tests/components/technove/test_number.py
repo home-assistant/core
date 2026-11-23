@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +59,7 @@ async def test_number_expected_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             NumberServiceArgument.VALUE: called_with_value["max_current"],
         },
         blocking=True,
@@ -97,7 +97,7 @@ async def test_number_out_of_bound(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 NumberServiceArgument.VALUE: value,
             },
             blocking=True,
@@ -128,7 +128,7 @@ async def test_set_max_current_sharing_mode(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
@@ -164,7 +164,7 @@ async def test_invalid_response(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 NumberServiceArgument.VALUE: 10,
             },
             blocking=True,
@@ -203,7 +203,7 @@ async def test_connection_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 NumberServiceArgument.VALUE: 10,
             },
             blocking=True,

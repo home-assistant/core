@@ -1,12 +1,10 @@
 """Test the Keenetic NDMS2 device tracker."""
 
-from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from ndms2_client import Device
-from ndms2_client.client import RouterInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -19,51 +17,9 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MOCK_DATA, MOCK_NAME
+from . import CLIENT_MAC
 
-CLIENT_MAC = "aa:bb:cc:dd:ee:ff"
 ENTITY_ID = "device_tracker.phone"
-
-MOCK_ROUTER_INFO = RouterInfo(
-    name=MOCK_NAME,
-    fw_version="3.0.4",
-    fw_channel="stable",
-    model="mock",
-    hw_version="0000",
-    manufacturer="pytest",
-    vendor="foxel",
-    region="RU",
-)
-
-
-@pytest.fixture
-def mock_client() -> Generator[MagicMock]:
-    """Mock the Keenetic client."""
-    with (
-        patch("homeassistant.components.keenetic_ndms2.router.TelnetConnection"),
-        patch(
-            "homeassistant.components.keenetic_ndms2.router.Client", autospec=True
-        ) as mock_client_class,
-    ):
-        client = mock_client_class.return_value
-        client.get_router_info.return_value = MOCK_ROUTER_INFO
-        client.get_devices.return_value = [
-            Device(
-                mac=CLIENT_MAC,
-                name="Phone",
-                ip="192.168.1.2",
-                interface=DEFAULT_INTERFACE,
-            )
-        ]
-        yield client
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

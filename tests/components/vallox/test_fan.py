@@ -16,8 +16,8 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
     NotValidPresetModeError,
 )
 from homeassistant.const import (
@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -282,8 +283,8 @@ async def test_turn_on_with_parameters(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data,
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID} | service_data,
         blocking=True,
     )
 
@@ -337,11 +338,11 @@ async def test_turn_on_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: FAN_ENTITY_ID,
-                ATTR_PERCENTAGE: 15,
-                ATTR_PRESET_MODE: "away",
+                TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+                FanServiceArgument.PERCENTAGE: 15,
+                FanServiceArgument.PRESET_MODE: "away",
             },
             blocking=True,
         )
@@ -364,11 +365,11 @@ async def test_turn_on_unsupported_profile(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: FAN_ENTITY_ID,
-                ATTR_PERCENTAGE: 40,
-                ATTR_PRESET_MODE: "fireplace",
+                TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+                FanServiceArgument.PERCENTAGE: 40,
+                FanServiceArgument.PRESET_MODE: "fireplace",
             },
             blocking=True,
         )
@@ -409,8 +410,8 @@ async def test_set_preset_mode(
     """Test set preset mode."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: preset},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PRESET_MODE: preset},
         blocking=True,
     )
 
@@ -425,8 +426,11 @@ async def test_set_invalid_preset_mode(hass: HomeAssistant) -> None:
     with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "Invalid"},
+            FanService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+                FanServiceArgument.PRESET_MODE: "Invalid",
+            },
             blocking=True,
         )
     assert exc.value.translation_key == "not_valid_preset_mode"
@@ -442,8 +446,11 @@ async def test_set_preset_mode_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "away"},
+            FanService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+                FanServiceArgument.PRESET_MODE: "away",
+            },
             blocking=True,
         )
 
@@ -477,8 +484,8 @@ async def test_set_percentage(
     """Test set fan speed percentage."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: percentage},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: percentage},
         blocking=True,
     )
 
@@ -498,8 +505,8 @@ async def test_set_percentage_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 5},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 5},
             blocking=True,
         )
 
@@ -517,8 +524,8 @@ async def test_set_percentage_unsupported_profile(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 40},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 40},
             blocking=True,
         )
     assert exc.value.translation_key == "preset_without_fan_speed"

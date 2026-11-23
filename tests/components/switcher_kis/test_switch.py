@@ -8,7 +8,7 @@ from aioswitcher.device import DeviceState, ShutterChildLock
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -61,7 +61,7 @@ async def test_switch(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -77,7 +77,7 @@ async def test_switch(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -117,7 +117,7 @@ async def test_switch_token_needed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -133,7 +133,7 @@ async def test_switch_token_needed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -165,7 +165,7 @@ async def test_switch_ignore_previous_async_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -226,7 +226,7 @@ async def test_switch_control_fail(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
         assert exc_info.value.translation_key == translation_key
@@ -245,7 +245,7 @@ async def test_switch_control_fail(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
         assert exc_info.value.translation_key == "command_failed"
@@ -324,7 +324,7 @@ async def test_child_lock_switch(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -340,7 +340,7 @@ async def test_child_lock_switch(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -371,7 +371,7 @@ async def test_child_lock_switch_ignore_previous_async_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -457,7 +457,7 @@ async def test_child_lock_control_fail(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
@@ -475,7 +475,7 @@ async def test_child_lock_control_fail(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 

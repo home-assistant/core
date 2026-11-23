@@ -16,13 +16,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_PRESET_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
@@ -72,10 +70,10 @@ async def test_climate_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_thermostat",
-            ATTR_TEMPERATURE: temperature,
+            TargetKey.ENTITY_ID: "climate.test_thermostat",
+            ClimateServiceArgument.TEMPERATURE: temperature,
         },
         blocking=True,
     )
@@ -96,10 +94,10 @@ async def test_climate_set_temperature_error(
     ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.test_thermostat",
-                ATTR_TEMPERATURE: 24.0,
+                TargetKey.ENTITY_ID: "climate.test_thermostat",
+                ClimateServiceArgument.TEMPERATURE: 24.0,
             },
             blocking=True,
         )
@@ -128,10 +126,10 @@ async def test_climate_set_preset_mode(
     """Test setting different preset modes."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.test_thermostat",
-            ATTR_PRESET_MODE: preset_mode,
+            TargetKey.ENTITY_ID: "climate.test_thermostat",
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
         },
         blocking=True,
     )
@@ -155,10 +153,10 @@ async def test_climate_set_preset_mode_from_boost_to_home(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.test_thermostat",
-            ATTR_PRESET_MODE: "home",
+            TargetKey.ENTITY_ID: "climate.test_thermostat",
+            ClimateServiceArgument.PRESET_MODE: "home",
         },
         blocking=True,
     )
@@ -181,10 +179,10 @@ async def test_climate_set_preset_mode_error(
     ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.test_thermostat",
-                ATTR_PRESET_MODE: "boost",
+                TargetKey.ENTITY_ID: "climate.test_thermostat",
+                ClimateServiceArgument.PRESET_MODE: "boost",
             },
             blocking=True,
         )
