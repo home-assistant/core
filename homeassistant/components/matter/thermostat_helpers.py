@@ -358,9 +358,10 @@ async def set_thermostat_preset(
         else:
             raise PresetNotFoundError
 
+        current_name = _normalize(preset.name)
         resolved_name = _resolve_name(preset_types, preset.presetScenario, name)
         if resolved_name is None:
-            resolved_name = _normalize(preset.name)
+            resolved_name = current_name
 
         edited_preset = _PresetStruct(
             presetHandle=preset_handle,
@@ -379,12 +380,13 @@ async def set_thermostat_preset(
             builtIn=_normalize(preset.builtIn) is True,
         )
 
-        _validate_unique_preset_name(
-            current_presets,
-            edited_preset.presetScenario,
-            edited_preset.name,
-            exclude_handle=preset_handle,
-        )
+        if _normalize(edited_preset.name) != current_name:
+            _validate_unique_preset_name(
+                current_presets,
+                edited_preset.presetScenario,
+                edited_preset.name,
+                exclude_handle=preset_handle,
+            )
 
         return [
             edited_preset if preset.presetHandle == preset_handle else preset
