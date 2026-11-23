@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, cast, override
 
-from aioanylist import AnyListError
+from aioanylist import AnyListError, AuthenticationError
 from aioanylist.proto import ListItem, ShoppingList  # pylint: disable=no-name-in-module
 
 from homeassistant.components.todo import (
@@ -143,6 +143,15 @@ class AnyListTodoListEntity(
             super().available and self._list_id in self.coordinator.data.shopping_lists
         )
 
+    @callback
+    def _async_start_reauth(self) -> HomeAssistantError:
+        """Start a reauth flow and return the error to raise."""
+        self.coordinator.config_entry.async_start_reauth(self.hass)
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        )
+
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the shopping list."""
@@ -155,6 +164,8 @@ class AnyListTodoListEntity(
                 item.summary or "",
                 details=item.description,
             )
+        except AuthenticationError as err:
+            raise self._async_start_reauth() from err
         except (AnyListError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -187,6 +198,8 @@ class AnyListTodoListEntity(
                 await lists.set_details(self._list_id, uid, details, flush=False)
 
             await self.coordinator.client.flush()
+        except AuthenticationError as err:
+            raise self._async_start_reauth() from err
         except (AnyListError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -203,6 +216,8 @@ class AnyListTodoListEntity(
             assert lists is not None
         try:
             await lists.bulk_remove_items(self._list_id, uids)
+        except AuthenticationError as err:
+            raise self._async_start_reauth() from err
         except (AnyListError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

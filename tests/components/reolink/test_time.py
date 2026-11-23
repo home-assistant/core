@@ -14,7 +14,7 @@ from homeassistant.components.time import (
     TimeServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -53,7 +53,7 @@ async def test_floodlight_schedule(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: start_id,
+            TargetKey.ENTITY_ID: start_id,
             TimeServiceArgument.TIME: time(20, 15),
         },
         blocking=True,
@@ -64,7 +64,7 @@ async def test_floodlight_schedule(
     await hass.services.async_call(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: end_id, TimeServiceArgument.TIME: time(7, 0)},
+        {TargetKey.ENTITY_ID: end_id, TimeServiceArgument.TIME: time(7, 0)},
         blocking=True,
     )
     reolink_host.set_spotlight_lighting_schedule.assert_called_with(0, 7, 0, 18, 0)
@@ -77,7 +77,7 @@ async def test_floodlight_schedule(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: start_id,
+                TargetKey.ENTITY_ID: start_id,
                 TimeServiceArgument.TIME: time(20, 15),
             },
             blocking=True,
@@ -91,7 +91,7 @@ async def test_floodlight_schedule(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: start_id,
+                TargetKey.ENTITY_ID: start_id,
                 TimeServiceArgument.TIME: time(20, 15),
             },
             blocking=True,
