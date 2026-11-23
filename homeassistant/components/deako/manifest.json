@@ -2,7 +2,7 @@
   "domain": "deako",
   "name": "Deako",
   "categories": ["plugs_switches"],
-  "codeowners": ["@sebirdman", "@balake", "@deakolights"],
+  "codeowners": ["@sebirdman", "@balake", "@deakolights", "@iulianmac"],
   "config_flow": true,
   "connectivity": ["network"],
   "dependencies": ["zeroconf"],

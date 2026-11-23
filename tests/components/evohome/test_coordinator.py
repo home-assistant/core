@@ -11,7 +11,6 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_TEMPERATURE,
     ClimateService,
     ClimateServiceArgument,
 )
@@ -20,16 +19,11 @@ from homeassistant.components.evohome.const import (
     SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    TargetKey,
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterService,
 )
+from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
@@ -277,7 +271,7 @@ async def test_schedules_fetched_only_when_stale(
     [
         pytest.param(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
+            ClimateService.TURN_OFF,
             {},
             "ctl_id",
             "evohomeasync2.control_system.ControlSystem.set_mode",
@@ -285,15 +279,15 @@ async def test_schedules_fetched_only_when_stale(
         ),
         pytest.param(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: 19.1},
+            ClimateService.SET_TEMPERATURE,
+            {ClimateServiceArgument.TEMPERATURE: 19.1},
             "zone_id",
             "evohomeasync2.zone.Zone.set_temperature",
             id="zone",
         ),
         pytest.param(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             {},
             "dhw_id",
             "evohomeasync2.hotwater.HotWater.set_on",
@@ -322,7 +316,7 @@ async def test_action_api_call_failed(
         await hass.services.async_call(
             domain,
             service,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
+            {TargetKey.ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
 
@@ -523,3 +517,39 @@ async def test_failed_schedule_poll_keeps_entities_available(
         await hass.async_block_till_done()
 
     mock_fcn.assert_awaited()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_invalid_schedule_poll_keeps_entities_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zone_id: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid schedule is logged, and not retried until it is stale."""
+
+    update_interval = SCAN_INTERVAL_DEFAULT
+
+    with patch.object(
+        Zone,
+        "get_schedule",
+        side_effect=evo_exc.InvalidGetScheduleError("Invalid schedule"),
+    ) as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_awaited()  # the schedules were due to be fetched
+    assert "Failed to update the schedule (keeping any previous one)" in caplog.text
+
+    state = hass.states.get(zone_id)
+    assert state is not None and state.state != STATE_UNAVAILABLE
+
+    # unlike a failed GET, an invalid schedule is not retried at the next poll
+    with patch.object(Zone, "get_schedule") as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_not_awaited()

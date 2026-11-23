@@ -1,6 +1,7 @@
 """KNX Keyring handler."""
 
 from collections.abc import Callable
+import contextlib
 import logging
 from pathlib import Path
 import shutil
@@ -74,3 +75,15 @@ async def load_stored_knxkeys_file(
     """
     path = Path(hass.config.path(STORAGE_DIR, filename))
     return await hass.async_add_executor_job(sync_load_keyring, path, password)
+
+
+async def remove_knxkeys_file(hass: HomeAssistant, filename: str) -> None:
+    """Delete a keyring file from the storage directory."""
+    path = Path(hass.config.path(STORAGE_DIR, filename))
+
+    def _remove() -> None:
+        with contextlib.suppress(FileNotFoundError):
+            path.unlink()
+
+    await hass.async_add_executor_job(_remove)
+    ir.async_delete_issue(hass, DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
