@@ -1,7 +1,8 @@
 """Tests for the EnOcean binary sensor platform."""
 
+from types import MappingProxyType
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from enocean_async import EURID
 from enocean_async.protocol.erp1.rorg import RORG
@@ -16,7 +17,11 @@ from homeassistant.components.enocean.const import (
     DEVICE_TYPE_ROCKER_SWITCH,
     SUBENTRY_TYPE_DEVICE,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_DEVICE, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -302,3 +307,101 @@ async def test_removing_a_device_removes_its_binary_sensor(
     assert entity_registry.async_get("binary_sensor.button") is None
     assert mock_gateway.start.call_count == 1
     mock_gateway.stop.assert_not_called()
+
+
+async def test_yaml_import_skips_an_ignored_gateway(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that devices are not stored on a gateway the user chose to ignore."""
+    ignored_entry = MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, _yaml_config())
+    await hass.async_block_till_done()
+
+    assert not ignored_entry.subentries
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_no_gateway_binary_sensor"
+    )
+    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_import_of_two_sensors_with_the_same_id(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the user is told when a second sensor of a device is not imported."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: [
+                {"platform": DOMAIN, "id": DEVICE_ID, "name": "button"},
+                {
+                    "platform": DOMAIN,
+                    "id": DEVICE_ID,
+                    "name": "door",
+                    "device_class": "door",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    (subentry,) = mock_config_entry.subentries.values()
+    assert subentry.title == "button"
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == [
+        "binary_sensor.button"
+    ]
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_already_configured_binary_sensor_door"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "platform": "binary_sensor",
+        "name": "door",
+        "id": DEVICE_ADDRESS,
+    }
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_device_added_while_the_platforms_are_set_up(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a device added right after the platform read the devices is not missed."""
+    mock_config_entry.add_to_hass(hass)
+    forward_entry_setups = hass.config_entries.async_forward_entry_setups
+
+    async def forward_then_add_device(*args: Any) -> None:
+        await forward_entry_setups(*args)
+        hass.config_entries.async_add_subentry(
+            mock_config_entry,
+            ConfigSubentry(
+                data=MappingProxyType(
+                    {
+                        CONF_ID: DEVICE_ADDRESS,
+                        CONF_DEVICE_TYPE_ID: DEVICE_TYPE_ROCKER_SWITCH,
+                    }
+                ),
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="button",
+                unique_id=DEVICE_ADDRESS,
+            ),
+        )
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=forward_then_add_device,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == [
+        "binary_sensor.button"
+    ]

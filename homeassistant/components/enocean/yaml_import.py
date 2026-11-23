@@ -59,7 +59,7 @@ def async_import_yaml_device(
         )
         return
 
-    entries = hass.config_entries.async_entries(DOMAIN)
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=False)
     if not entries:
         _async_create_issue(
             hass,
@@ -70,16 +70,33 @@ def async_import_yaml_device(
         return
 
     entry = entries[0]
-    if all(subentry.unique_id != address for subentry in entry.subentries.values()):
+    data = {CONF_ID: address, CONF_DEVICE_TYPE_ID: device_type_id, **options}
+    stored = next(
+        (
+            subentry
+            for subentry in entry.subentries.values()
+            if subentry.unique_id == address
+        ),
+        None,
+    )
+    if stored is None:
         subentry = ConfigSubentry(
-            data=MappingProxyType(
-                {CONF_ID: address, CONF_DEVICE_TYPE_ID: device_type_id, **options}
-            ),
+            data=MappingProxyType(data),
             subentry_type=SUBENTRY_TYPE_DEVICE,
             title=name,
             unique_id=address,
         )
         hass.config_entries.async_add_subentry(entry, subentry)
+    elif stored.data != data:
+        # A device is stored once: a second YAML entry with the same ID and other
+        # settings, which used to be an entity of its own, cannot be imported.
+        _async_create_issue(
+            hass,
+            f"deprecated_yaml_import_issue_already_configured_{platform}_{name}",
+            "deprecated_yaml_import_issue_already_configured",
+            {"platform": platform, "name": name, "id": address},
+        )
+        return
 
     _async_create_issue(
         hass, f"deprecated_yaml_{platform}", "deprecated_yaml", {"platform": platform}

@@ -36,3 +36,20 @@ async def test_unload_stops_gateway(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_gateway.stop.assert_awaited_once()
+
+
+async def test_gateway_is_stopped_when_platform_setup_fails(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_gateway: Mock
+) -> None:
+    """Test that the serial port is released if the setup fails after the start."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        side_effect=RuntimeError("platform setup failed"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_gateway.start.assert_awaited_once()
+    mock_gateway.stop.assert_awaited_once()

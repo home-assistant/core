@@ -36,6 +36,10 @@
       "description": "Configuring EnOcean devices under `{platform}` in YAML is being removed.\n\nYour existing devices have been imported into the EnOcean integration automatically.\n\nRemove the entries with `platform: enocean` under `{platform}` from your `configuration.yaml` file and restart Home Assistant to fix this issue. Keep the EnOcean entries under other platforms; they are not imported yet.",
       "title": "The EnOcean {platform} YAML configuration is being removed"
     },
+    "deprecated_yaml_import_issue_already_configured": {
+      "description": "The device {name} configured under `{platform}` in your `configuration.yaml` file has the ID {id}. A device with this ID is already set up in the EnOcean integration with other settings, and a device can only be set up once, so this entry could not be imported.\n\nRemove the entry from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::enocean::issues::deprecated_yaml_import_issue_invalid_id::title%]"
+    },
     "deprecated_yaml_import_issue_invalid_id": {
       "description": "The device {name} configured under `{platform}` in your `configuration.yaml` file has an ID that is not an EnOcean device ID, so it could not be imported into the EnOcean integration.\n\nRemove the entry from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
       "title": "An EnOcean device could not be imported from YAML"

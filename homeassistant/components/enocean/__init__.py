@@ -68,16 +68,18 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
+    # Also stops the gateway if the rest of the setup fails
+    config_entry.async_on_unload(gateway.stop)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
+    # Before the platforms are set up: a device added in the meantime is announced
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 
 async def _async_update_listener(
@@ -95,6 +97,5 @@ async def _async_update_listener(
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> None:
-    """Unload EnOcean config entry: stop the gateway."""
+    """Unload EnOcean config entry; the gateway is stopped when it is unloaded."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
-    await config_entry.runtime_data.stop()
