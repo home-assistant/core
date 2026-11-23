@@ -7,7 +7,10 @@ from typing import Any, override
 from httpx2 import BasicAuth
 import probatio
 from pyecoforest.api import EcoforestApi
-from pyecoforest.exceptions import EcoforestAuthenticationRequired
+from pyecoforest.exceptions import (
+    EcoforestAuthenticationRequired,
+    EcoforestConnectionError,
+)
 from pyecoforest.models.device import Device
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -41,9 +44,11 @@ async def _async_get_device(
         return await EcoforestApi(host, BasicAuth(username, password)).get()
     except EcoforestAuthenticationRequired:
         errors["base"] = "invalid_auth"
+    except EcoforestConnectionError:
+        errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
-        errors["base"] = "cannot_connect"
+        errors["base"] = "unknown"
     return None
 
 

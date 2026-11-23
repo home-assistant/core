@@ -2,7 +2,10 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from pyecoforest.exceptions import EcoforestAuthenticationRequired
+from pyecoforest.exceptions import (
+    EcoforestAuthenticationRequired,
+    EcoforestConnectionError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
@@ -79,8 +82,12 @@ async def test_form_device_already_configured(
             "invalid_auth",
         ),
         (
-            Exception("Something wrong"),
+            EcoforestConnectionError("Timeout"),
             "cannot_connect",
+        ),
+        (
+            Exception("Something wrong"),
+            "unknown",
         ),
     ],
 )
@@ -154,7 +161,10 @@ async def test_reauth(
         pytest.param(
             EcoforestAuthenticationRequired("401"), "invalid_auth", id="invalid_auth"
         ),
-        pytest.param(Exception("Something wrong"), "cannot_connect", id="exception"),
+        pytest.param(
+            EcoforestConnectionError("Timeout"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(Exception("Something wrong"), "unknown", id="exception"),
     ],
 )
 async def test_reauth_errors(
