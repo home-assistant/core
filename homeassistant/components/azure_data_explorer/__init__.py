@@ -13,7 +13,7 @@ import probatio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "Could not find Azure Data Explorer database or table"
         ) from exp
     except KustoAuthenticationError as exp:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from exp
@@ -185,6 +185,7 @@ class AzureDataExplorer:
                 _LOGGER.error("Could not find database or table: %s", err)
             except KustoAuthenticationError as err:
                 _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
+                self._entry.async_start_reauth(self.hass)
 
         self._schedule_next_send()
 
