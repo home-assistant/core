@@ -273,3 +273,93 @@ async def test_options_flow_steps() -> None:
         )
     assert res["type"] == FlowResultType.CREATE_ENTRY
     assert res["data"][CONF_VISUAL_CONFIDENCE] == 0.65
+
+
+@pytest.mark.asyncio
+async def test_options_flow_sound_classes_and_compatibility() -> None:
+    """Test sound, classes, and compatibility options flow steps."""
+    entry = SimpleNamespace(
+        entry_id="e1",
+        options={
+            CONF_VISUAL_CONFIDENCE: 0.5,
+            CONF_VISUAL_CONFIRM: 0.0,
+            CONF_CLASS_STALE_SECONDS: 8.0,
+            CONF_VISUAL_COOLDOWN: 2.0,
+            CONF_AUDIO_CONFIDENCE: 0.8,
+            CONF_AUDIO_COOLDOWN: 5.0,
+            CONF_TRACKED_CLASSES: [],
+            CONF_LANGUAGE: "auto",
+        },
+        runtime_data=SimpleNamespace(
+            data=SimpleNamespace(class_catalog={}),
+            hass=SimpleNamespace(config=SimpleNamespace(language="en")),
+            async_apply_option=Mock(),
+        ),
+    )
+    options_flow = RecameraProOptionsFlow()
+    options_flow.hass = entry.runtime_data.hass
+    options_flow.async_show_form = Mock(
+        side_effect=lambda **kw: {"type": FlowResultType.FORM, **kw}
+    )
+    options_flow.async_create_entry = Mock(
+        side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
+    )
+    with patch.object(RecameraProOptionsFlow, "config_entry", new=entry):
+        sound_form = await options_flow.async_step_sound()
+        assert sound_form["type"] == FlowResultType.FORM
+        sound_res = await options_flow.async_step_sound(
+            {CONF_AUDIO_CONFIDENCE: 0.75, CONF_AUDIO_COOLDOWN: 4.0}
+        )
+        assert sound_res["data"][CONF_AUDIO_CONFIDENCE] == 0.75
+
+        classes_form = await options_flow.async_step_classes()
+        assert classes_form["type"] == FlowResultType.FORM
+        classes_res = await options_flow.async_step_classes({CONF_TRACKED_CLASSES: []})
+        assert classes_res["data"][CONF_TRACKED_CLASSES] == []
+
+        compat_form = await options_flow.async_step_compatibility()
+        assert compat_form["type"] == FlowResultType.FORM
+        compat_res = await options_flow.async_step_compatibility(
+            {CONF_LANGUAGE: "zh-Hans"}
+        )
+        assert compat_res["data"][CONF_LANGUAGE] == "zh-Hans"
+
+
+@pytest.mark.asyncio
+async def test_manual_and_reconfigure_error_paths() -> None:
+    """Test manual step and reconfigure error handling."""
+    flow = _make_flow()
+    form = await flow.async_step_user()
+    assert form["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=RecameraConnectionError("offline")),
+    ):
+        err_res = await flow.async_step_user(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"}
+        )
+    assert err_res["errors"]["base"] == "cannot_connect"
+
+    entry = SimpleNamespace(
+        entry_id="e1",
+        unique_id="SN123456",
+        data={
+            CONF_HOST: "192.168.10.22",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "old_password",
+            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
+            CONF_SERIAL_NUMBER: "SN123456",
+        },
+    )
+    flow._get_reconfigure_entry = lambda: entry  # noqa: SLF001
+    reconf_form = await flow.async_step_reconfigure()
+    assert reconf_form["type"] == FlowResultType.FORM
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=RecameraAuthenticationError("bad")),
+    ):
+        reconf_err = await flow.async_step_reconfigure(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "bad"}
+        )
+    assert reconf_err["errors"]["base"] == "invalid_auth"
