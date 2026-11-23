@@ -102,7 +102,7 @@
       "message": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "server_error": {
-      "message": "[%key:common::config_flow::error::unknown%]"
+      "message": "Fuelprices.dk returned a server error."
     }
   }
 }
