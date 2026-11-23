@@ -59,7 +59,9 @@ rules:
     comment: Device API and coordinator behavior still need HA test coverage.
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Planned for a follow-up PR after the initial single-platform integration is merged.
   discovery: done
   discovery-update-info: done
   docs-data-update:

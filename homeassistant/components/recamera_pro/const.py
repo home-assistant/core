@@ -8,16 +8,7 @@ DOMAIN = "recamera_pro"
 MANUFACTURER = "Seeed Studio"
 CONFIG_ENTRY_VERSION = 1
 
-PLATFORMS = (
-    Platform.BINARY_SENSOR,
-    Platform.CAMERA,
-    Platform.EVENT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.UPDATE,
-)
+PLATFORMS = (Platform.CAMERA,)
 
 CONF_DEVICE_ID = "device_id"
 CONF_DISCOVERY_CANDIDATES = "discovery_candidates"
