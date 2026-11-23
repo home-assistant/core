@@ -12,14 +12,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
-    BrowseMedia,
     MediaClass,
     MediaType,
-)
-from homeassistant.components.media_source import (
-    BrowseMediaSource,
-    PlayMedia,
-    RootBrowseMediaSource,
 )
 from homeassistant.components.yamaha_musiccast.const import DEFAULT_ZONE, DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -27,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import STATIONS, TEST_DEVICE_ID
 
@@ -38,15 +33,34 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
+def zone_power() -> str:
+    """Power state of the main zone."""
+    return "on"
+
+
+@pytest.fixture
+async def media_dir(hass: HomeAssistant) -> None:
+    """Set up media sources with the test media folder.
+
+    It has test.mp3, a video, an image and a text file.
+    """
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
+    assert await async_setup_component(hass, "media_source", {})
+
+
+@pytest.fixture
 async def entity_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_musiccast_device: MagicMock,
     platforms: list[Platform],
+    zone_power: str,
 ) -> str:
-    """Set up the integration with the main zone on and return its player."""
-    mock_musiccast_device.data.zones[DEFAULT_ZONE].power = "on"
+    """Set up the integration and return the main zone's player."""
+    mock_musiccast_device.data.zones[DEFAULT_ZONE].power = zone_power
     mock_config_entry.add_to_hass(hass)
     with (
         patch("homeassistant.components.yamaha_musiccast.PLATFORMS", platforms),
@@ -111,13 +125,12 @@ def _children(result: dict) -> list[tuple[str, str, bool, bool]]:
     ]
 
 
-@pytest.mark.usefixtures("mock_musiccast_device")
+@pytest.mark.usefixtures("entity_id")
 async def test_entity_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    entity_id: str,
 ) -> None:
     """Test the state and attributes of the media players."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -143,75 +156,20 @@ async def test_browse_media_root(
     }
 
 
-@pytest.mark.parametrize(
-    ("media_sources", "titles"),
-    [
-        # Several media sources: their overview's entries are added.
-        (
-            RootBrowseMediaSource(
-                title="Media sources",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                can_play=False,
-                can_expand=True,
-                children=[
-                    BrowseMediaSource(
-                        domain="media_source",
-                        identifier=None,
-                        title="My media",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type="",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                    BrowseMediaSource(
-                        domain="radio_browser",
-                        identifier=None,
-                        title="Radio Browser",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type="",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                ],
-            ),
-            ["Presets", "NET RADIO", "My media", "Radio Browser"],
-        ),
-        # A single media source is added as one entry.
-        (
-            BrowseMediaSource(
-                domain="media_source",
-                identifier=None,
-                title="My media",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                can_play=False,
-                can_expand=True,
-            ),
-            ["Presets", "NET RADIO", "My media"],
-        ),
-    ],
-)
+@pytest.mark.usefixtures("media_dir")
 async def test_browse_media_root_with_media_sources(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    entity_id: str,
-    media_sources: BrowseMedia,
-    titles: list[str],
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entity_id: str
 ) -> None:
     """Test the media sources follow the MusicCast entries at the root."""
-    with patch(
-        "homeassistant.components.yamaha_musiccast.media_player.media_source.async_browse_media",
-        return_value=media_sources,
-    ) as browse:
-        response = await _browse(hass_ws_client, entity_id)
+    response = await _browse(hass_ws_client, entity_id)
 
     assert response["success"]
-    assert [child["title"] for child in response["result"]["children"]] == titles
-    # Only audio is offered.
-    content_filter = browse.await_args.kwargs["content_filter"]
-    assert content_filter(MagicMock(media_content_type="audio/mpeg"))
-    assert not content_filter(MagicMock(media_content_type="video/mp4"))
+    assert _children(response["result"]) == [
+        ("Presets", "presets", False, True),
+        ("NET RADIO", "input:net_radio", False, True),
+        # The only media folder is shown directly.
+        ("media", "media-source://media_source/local/.", False, True),
+    ]
 
 
 async def test_browse_media_presets(
@@ -312,45 +270,30 @@ async def test_browse_media_parent_folder(
     assert _children(result) == [("Poland", "list:net_radio:2:0", False, True)]
 
 
+@pytest.mark.usefixtures("media_dir")
 async def test_browse_media_source(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entity_id: str
 ) -> None:
-    """Test media source ids are browsed by the media source integration."""
-    with patch(
-        "homeassistant.components.yamaha_musiccast.media_player.media_source.async_browse_media",
-        return_value=BrowseMedia(
-            title="My media",
-            media_class=MediaClass.DIRECTORY,
-            media_content_id="media-source://media_source/local/.",
-            media_content_type="",
-            can_play=False,
-            can_expand=True,
-        ),
-    ) as browse:
-        response = await _browse(
-            hass_ws_client, entity_id, "media-source://media_source/local/."
-        )
+    """Test media sources are browsed, with audio files only."""
+    response = await _browse(
+        hass_ws_client, entity_id, "media-source://media_source/local/."
+    )
 
     assert response["success"]
-    assert response["result"]["title"] == "My media"
-    assert browse.await_args.args[1] == "media-source://media_source/local/."
-    # Only audio is offered.
-    content_filter = browse.await_args.kwargs["content_filter"]
-    assert content_filter(MagicMock(media_content_type="audio/mpeg"))
-    assert not content_filter(MagicMock(media_content_type="video/mp4"))
+    assert [
+        (child["title"], child["media_content_id"])
+        for child in response["result"]["children"]
+    ] == [("test.mp3", "media-source://media_source/local/test.mp3")]
 
 
+@pytest.mark.parametrize("zone_power", ["standby"])
 async def test_browse_media_turned_off(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_id: str,
-    mock_config_entry: MockConfigEntry,
     mock_musiccast_device: MagicMock,
 ) -> None:
     """Test a zone that is off doesn't offer browsing."""
-    mock_musiccast_device.data.zones[DEFAULT_ZONE].power = "standby"
-    mock_config_entry.runtime_data.async_set_updated_data(mock_musiccast_device.data)
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "off"
 
     response = await _browse(hass_ws_client, entity_id, "input:net_radio")
@@ -363,9 +306,9 @@ async def test_browse_media_turned_off(
 @pytest.mark.parametrize(
     ("content_id", "index"),
     [
-        ("list:net_radio:2:5", "5"),
+        pytest.param("list:net_radio:2:5", "5", id="entry"),
         # The list itself (index -1) plays from its first entry.
-        ("list:net_radio:2:-1", "0"),
+        pytest.param("list:net_radio:2:-1", "0", id="whole_list"),
     ],
 )
 async def test_play_list_entry(
@@ -417,8 +360,14 @@ async def test_play_preset(
 @pytest.mark.parametrize(
     ("content_id", "url"),
     [
-        ("https://example.com/stream.mp3", "https://example.com/stream.mp3"),
-        ("/local/song.mp3", "http://example.local:8123/local/song.mp3"),
+        pytest.param(
+            "https://example.com/stream.mp3",
+            "https://example.com/stream.mp3",
+            id="absolute",
+        ),
+        pytest.param(
+            "/local/song.mp3", "http://example.local:8123/local/song.mp3", id="relative"
+        ),
     ],
 )
 async def test_play_url(
@@ -440,27 +389,25 @@ async def test_play_url(
     )
 
 
+@pytest.mark.usefixtures("media_dir")
 async def test_play_media_source(
     hass: HomeAssistant, entity_id: str, mock_musiccast_device: MagicMock
 ) -> None:
-    """Test a media source item is resolved and played as a URL."""
-    with patch(
-        "homeassistant.components.yamaha_musiccast.media_player.media_source.async_resolve_media",
-        return_value=PlayMedia("https://example.com/song.mp3", "audio/mpeg"),
-    ) as resolve:
-        await _play(hass, entity_id, "media-source://media_source/local/song.mp3")
+    """Test a media source item is played by its signed URL."""
+    await _play(hass, entity_id, "media-source://media_source/local/test.mp3")
 
-    assert resolve.await_args.args[1] == "media-source://media_source/local/song.mp3"
-    mock_musiccast_device.play_url_media.assert_awaited_once_with(
-        DEFAULT_ZONE, "https://example.com/song.mp3", "HomeAssistant"
-    )
+    mock_musiccast_device.play_url_media.assert_awaited_once()
+    zone, url, title = mock_musiccast_device.play_url_media.await_args.args
+    assert zone == DEFAULT_ZONE
+    assert url.startswith("http://example.local:8123/media/local/test.mp3?authSig=")
+    assert title == "HomeAssistant"
 
 
+@pytest.mark.parametrize("zone_power", ["standby"])
 async def test_play_media_turns_on(
     hass: HomeAssistant, entity_id: str, mock_musiccast_device: MagicMock
 ) -> None:
     """Test a zone that is off is turned on before it plays."""
-    mock_musiccast_device.data.zones[DEFAULT_ZONE].power = "standby"
     calls = AsyncMock()
     calls.attach_mock(mock_musiccast_device.turn_on, "turn_on")
     calls.attach_mock(mock_musiccast_device.recall_netusb_preset, "recall")
