@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
 )
+from .errors import CannotConnect
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ BSB003_MODEL_ID = "BSB003"
 
 LINK_TIMEOUT = 60
 LINK_POLL_INTERVAL = 1
+LINK_REQUEST_TIMEOUT = 10
 
 
 class HueFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -208,13 +210,18 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         async with asyncio.timeout(LINK_TIMEOUT):
             while True:
                 try:
-                    return await create_app_key(
-                        bridge.host,
-                        f"home-assistant#{device_name}",
-                        websession=websession,
-                    )
+                    # A request that hangs must not be reported as a missed
+                    # button press when the outer timeout expires
+                    async with asyncio.timeout(LINK_REQUEST_TIMEOUT):
+                        return await create_app_key(
+                            bridge.host,
+                            f"home-assistant#{device_name}",
+                            websession=websession,
+                        )
                 except LinkButtonNotPressed:
                     await asyncio.sleep(LINK_POLL_INTERVAL)
+                except TimeoutError as err:
+                    raise CannotConnect from err
 
     async def async_step_wait_for_button(
         self, user_input: dict[str, Any] | None = None
@@ -244,7 +251,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         except TimeoutError:
             self.link_error = "register_failed"
             return self.async_show_progress_done(next_step_id="link")
-        except aiohttp.ClientError:
+        except aiohttp.ClientError, CannotConnect:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
             return self.async_show_progress_done(next_step_id="cannot_connect")
         except Exception:

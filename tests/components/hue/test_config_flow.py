@@ -377,11 +377,20 @@ async def test_flow_link_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="request_timeout"),
+    ],
+)
 async def test_flow_link_cannot_connect(
-    hass: HomeAssistant, mock_create_app_key: AsyncMock
+    hass: HomeAssistant,
+    mock_create_app_key: AsyncMock,
+    side_effect: type[Exception],
 ) -> None:
     """Test the flow aborts when the bridge cannot be reached while linking."""
-    mock_create_app_key.side_effect = ClientError
+    mock_create_app_key.side_effect = side_effect
     result = await _start_link_flow(hass)
 
     result = await _press_link_button(hass, result["flow_id"])
