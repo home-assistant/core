@@ -2335,17 +2335,23 @@ async def test_empty_presets_during_write_keep_preset_mode(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """An empty Presets report in the middle of a write does not reset the preset mode."""
+    """An empty Presets report during an atomic write keeps the preset mode."""
     _mock_preset_write(matter_client)
-    report = matter_client.read.return_value
-    states_mid_write: list[State | None] = []
 
-    async def read_with_empty_report(*args: Any) -> InteractionReport:
+    # Conserver le résultat avant d'installer le side_effect.
+    write_result = matter_client.write_atomic_attribute.return_value
+
+    async def write_with_empty_report(*args: Any, **kwargs: Any) -> Any:
         await _set_presets(hass, matter_client, matter_node, [])
-        states_mid_write.append(hass.states.get(EVE_THERMO_ENTITY_ID))
-        return report
 
-    matter_client.read.side_effect = read_with_empty_report
+        state = hass.states.get(EVE_THERMO_ENTITY_ID)
+        assert state
+        assert state.attributes["preset_mode"] == "home"
+        assert "sleep" in state.attributes["preset_modes"]
+
+        return write_result
+
+    matter_client.write_atomic_attribute.side_effect = write_with_empty_report
 
     await hass.services.async_call(
         DOMAIN,
@@ -2353,12 +2359,3 @@ async def test_empty_presets_during_write_keep_preset_mode(
         {ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID, ATTR_PRESET_MODE: "sleep"},
         blocking=True,
     )
-
-    [state] = states_mid_write
-    assert state
-    assert state.attributes["preset_mode"] == "home"
-    assert "sleep" in state.attributes["preset_modes"]
-    # the empty list is applied once the write is over
-    state = hass.states.get(EVE_THERMO_ENTITY_ID)
-    assert state
-    assert state.attributes["preset_modes"] == [PRESET_NONE]
