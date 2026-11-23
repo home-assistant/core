@@ -1,6 +1,7 @@
 """Tests for the OpenWrt (ubus) device tracker."""
 
 from datetime import timedelta
+import threading
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -128,6 +129,7 @@ async def test_source_attribute_is_reporting_host(
 async def test_single_tracker_for_multiple_routers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -138,16 +140,7 @@ async def test_single_tracker_for_multiple_routers(
     source attribute follows the router which currently sees the client.
     """
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, entry_b = two_router_entries
 
     phone_leases = {"data": "1600000000 aa:bb:cc:dd:ee:ff 192.168.1.10 my-phone *"}
     ubus[MOCK_HOST].file_read.return_value = phone_leases
@@ -207,7 +200,7 @@ async def test_single_tracker_for_multiple_routers(
     assert "source" not in state.attributes
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_roaming_device_stays_on_single_tracker(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -221,16 +214,6 @@ async def test_roaming_device_stays_on_single_tracker(
     connected, since a router may only release a client it last reported.
     """
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
 
     leases = {"data": "1600000000 aa:bb:cc:dd:ee:ff 192.168.1.10 my-phone *"}
     ubus[MOCK_HOST].file_read.return_value = leases
@@ -348,21 +331,13 @@ async def test_roam_keeps_tracker_connected_until_new_router_polls(
 async def test_tracker_kept_when_owner_entry_reloaded(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the owner keeps reporting a client connected to another router."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, _entry_b = two_router_entries
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -409,21 +384,13 @@ async def test_tracker_kept_when_owner_entry_reloaded(
 async def test_unload_entry_releases_client_claims(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test unloading a router entry stops it from reporting clients."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    _, entry_b = two_router_entries
 
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
@@ -468,65 +435,92 @@ async def test_unload_entry_releases_client_claims(
     assert state.attributes["source"] == MOCK_HOST_B
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_late_refresh_after_unload_is_ignored(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a refresh finishing after an unload doesn't restore its clients."""
+    """Test a refresh in flight during an unload doesn't restore its clients."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, entry_b = two_router_entries
 
-    # The device is reported by router A.
-    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+    # The device is reported by router B, so entry B owns its tracker.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The coordinator is captured before the entry is unloaded, as its
-    # runtime_data is removed from the entry on unload.
-    coordinator_a = entry_a.runtime_data
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+    # The device moves to router A, whose next poll is blocked in flight.
+    poll_started = threading.Event()
+    release = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        poll_started.set()
+        release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    # Wait for router A's poll to be in flight, then unload entry A.
+    await hass.async_add_executor_job(poll_started.wait)
     assert await hass.config_entries.async_unload(entry_a.entry_id)
     await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    # A refresh which was in flight during the unload now finishes; its
-    # results are ignored, so the released reports are not restored.
-    await coordinator_a._async_update_data()
-    coordinator_a._async_refresh_finished()
+    # The in-flight refresh finishes after the unload; its results are
+    # ignored, so the released report is not restored. Once router B has
+    # polled again, the handover window is over and the tracker leaves.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert MOCK_HOST not in hass.data[DOMAIN].reports.get(MAC_PHONE, {})
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert "source" not in state.attributes
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unloading_router_with_no_reports_updates_trackers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test unloading a router without reports still updates remaining trackers."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    _, entry_b = two_router_entries
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -624,22 +618,14 @@ async def test_failed_unload_keeps_client_reported(
 async def test_tracker_handed_to_other_entry_on_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the remaining entry takes over a tracker when the owner is removed."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, entry_b = two_router_entries
 
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
@@ -678,6 +664,61 @@ async def test_tracker_handed_to_other_entry_on_removal(
     assert state.attributes["source"] == MOCK_HOST_B
     assert device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_disconnected_tracker_handed_to_other_entry_on_removal(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a tracker for a disconnected client survives the owner's removal."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+    # The device disconnects, then entry A is removed.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await hass.config_entries.async_remove(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The remaining entry keeps the tracker and the device of the
+    # disconnected client, which would otherwise be deleted on cleanup.
+    handed_over = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert handed_over == entity_id
+    assert entity_registry.async_get(handed_over).config_entry_id == entry_b.entry_id
+    state = hass.states.get(handed_over)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert "source" not in state.attributes
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
     )
 
 
@@ -751,22 +792,14 @@ async def test_tracker_rehomed_when_owning_entry_cannot_report(
 async def test_tracker_rediscovered_by_other_router_after_device_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test another entry recreates a tracker whose device was removed."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, entry_b = two_router_entries
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -817,22 +850,14 @@ async def test_tracker_rediscovered_by_other_router_after_device_removal(
 async def test_tracker_rediscovered_by_other_router_after_entity_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test another entry recreates a tracker whose entity was removed."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
+    entry_a, entry_b = two_router_entries
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -926,7 +951,7 @@ async def test_removed_tracker_recreated_with_same_entity_id(
     assert hass.states.get(entity_id).state == STATE_HOME
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_tracker_unavailable_while_reporting_router_unreachable(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -935,16 +960,6 @@ async def test_tracker_unavailable_while_reporting_router_unreachable(
 ) -> None:
     """Test the tracker is unavailable while the reporting router is unreachable."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -1067,7 +1082,7 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     assert state.state == STATE_NOT_HOME
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_tracker_available_after_unreachable_router_recovers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -1076,16 +1091,6 @@ async def test_tracker_available_after_unreachable_router_recovers(
 ) -> None:
     """Test the tracker becomes available when an unreachable router recovers."""
     _mock, ubus = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
 
     # The device is on router A, so entry A owns its tracker.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {

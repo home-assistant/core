@@ -249,7 +249,20 @@ async def async_setup_entry(
     def _async_update_devices() -> None:
         if not coordinator.last_update_success:
             return
-        new_macs = [mac for mac in coordinator.data if mac not in tracked]
+        # Track every client this router sees, plus every tracker this entry
+        # owns, so it keeps reporting clients connected to another router.
+        owned = {
+            registry_entry.unique_id
+            for registry_entry in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            if registry_entry.domain == DEVICE_TRACKER_DOMAIN
+            and registry_entry.platform == DOMAIN
+            and registry_entry.unique_id is not None
+        }
+        new_macs = [
+            mac for mac in coordinator.data.keys() | owned if mac not in tracked
+        ]
         claimed: list[str] = []
         for mac in new_macs:
             # One tracker per MAC: an entry only creates a tracker it owns, so
@@ -327,24 +340,14 @@ async def async_setup_entry(
         # entity ID; otherwise the recreated tracker gets a suffixed one.
         hass.loop.call_soon(_async_update_devices)
 
-    # Recreate the trackers this entry owns so it keeps reporting clients
-    # connected to another router.
-    for registry_entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-        if (
-            registry_entry.domain != DEVICE_TRACKER_DOMAIN
-            or registry_entry.platform != DOMAIN
-            or registry_entry.unique_id is None
-            or registry_entry.unique_id in tracked
-        ):
-            continue
-        mac = registry_entry.unique_id
-        tracked.add(mac)
-        shared.owners.setdefault(mac, config_entry.entry_id)
-        async_add_entities([UbusScannerEntity(coordinator, mac)])
-
     config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_CLIENTS_UPDATED,
+            _async_update_devices,
+        )
+    )
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,

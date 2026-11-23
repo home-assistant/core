@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "192.168.1.1"
 MOCK_HOST_B = "192.168.1.2"
@@ -104,6 +105,26 @@ def mock_ubus() -> Generator[MagicMock]:
             }
         }
         yield mock
+
+
+@pytest.fixture
+async def two_router_entries(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Return two ubus config entries, set up one per mock router."""
+    _mock, _instances = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    return entry_a, entry_b
 
 
 @pytest.fixture

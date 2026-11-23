@@ -1,13 +1,15 @@
 """The OpenWrt (ubus) integration."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_CLIENTS_UPDATED
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator, UbusSharedState
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
@@ -35,6 +37,48 @@ async def async_unload_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> Non
     }
     if not hass.config_entries.async_entries(DOMAIN):
         hass.data.pop(DOMAIN, None)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
+    """Hand this entry's trackers to a remaining router before cleanup.
+
+    The platforms are unloaded first, so the entry no longer hosts its
+    trackers, but their registry entries survive until the config entry
+    cleanup. Reparenting them here keeps the entry's clients tracked,
+    including clients no remaining router currently sees.
+    """
+    remaining = hass.config_entries.async_entries(DOMAIN)
+    if not remaining or (shared := hass.data.get(DOMAIN)) is None:
+        return
+    target = remaining[0]
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    for registry_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (
+            registry_entry.domain != DEVICE_TRACKER_DOMAIN
+            or registry_entry.platform != DOMAIN
+            or registry_entry.unique_id is None
+        ):
+            continue
+        mac = registry_entry.unique_id
+        # Re-home the tracker before its device: moving a device to another
+        # config entry deletes the registry entries of the old entry linked
+        # to it.
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, config_entry_id=target.entry_id
+        )
+        if (
+            device := device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+            )
+        ) is not None:
+            device_registry.async_update_device(
+                device.id, new_config_entry_id=target.entry_id
+            )
+        shared.owners[mac] = target.entry_id
+    async_dispatcher_send(hass, SIGNAL_CLIENTS_UPDATED)
 
 
 async def async_remove_config_entry_device(
