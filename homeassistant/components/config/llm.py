@@ -534,11 +534,12 @@ async def _async_finalize_flow_step(
                 f"component.homeassistant.config.abort.{reason}"
             )
 
+    flow_id = f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}"
     formatted = llm_flow.format_result(
         result,
         trans,
         base_prefix,
-        flow_id=f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}",
+        flow_id=flow_id,
         fallback_title=title_trans.get(f"component.{domain}.title"),
         fallback_abort_description=fallback_abort,
     )
