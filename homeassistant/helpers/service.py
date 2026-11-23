@@ -708,7 +708,9 @@ def _raise_for_other_domain_entity(
     An available entity of another domain is not missing: the action cannot act
     on it, and the call would otherwise succeed without doing anything. An entity
     of the integration that registered the action may still be loaded, so it is
-    only logged as missing.
+    only logged as missing. Only entities the call names directly are passed in:
+    a targeted group may mix domains, and the action still acts on the members
+    of its own domain.
     """
     ent_reg = entity_registry.async_get(hass)
     for entity_id in sorted(missing):
@@ -788,7 +790,9 @@ async def _resolve_entity_service_call_entities(
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
         if missing:
-            _raise_for_other_domain_entity(hass, call, missing)
+            _raise_for_other_domain_entity(
+                hass, call, missing & target_selection.entity_ids
+            )
         referenced.log_missing(missing, _LOGGER)
 
     entities: list[Entity] = []

@@ -2883,6 +2883,29 @@ async def test_entity_service_call_other_domain_entity_still_warn(
         ) in caplog.text
 
 
+async def test_entity_service_call_other_domain_group_member(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    mock_entities_method: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a member of another domain in a targeted group is only logged.
+
+    A group may mix domains, and the action still applies to the members of its
+    own domain.
+    """
+    hass.states.async_set("switch.heater", STATE_ON)
+    hass.states.async_set(
+        "group.room", STATE_ON, {"entity_id": ["light.kitchen", "switch.heater"]}
+    )
+    call = ServiceCall(hass, "light", "turn_on", {"entity_id": ["group.room"]})
+    await service.entity_service_call(hass, mock_entities, "test_method", call)
+    assert mock_entities_method.call_count == 1
+    assert (
+        "Referenced entities switch.heater are missing or not currently available"
+    ) in caplog.text
+
+
 async def test_async_extract_entities_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
