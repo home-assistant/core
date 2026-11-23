@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -50,7 +50,7 @@ async def test_set_humidity(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -70,7 +70,7 @@ async def test_dont_set_humidity_when_sauna_not_heating(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             NumberServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -106,7 +106,7 @@ async def test_set_humidity_above_controller_maximum(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
@@ -129,7 +129,7 @@ async def test_set_humidity_at_controller_maximum(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             NumberServiceArgument.VALUE: 10,
         },
         blocking=True,
@@ -158,7 +158,7 @@ async def test_humidity_maximum_without_controller_value(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 5,
             },
             blocking=True,
@@ -212,7 +212,7 @@ async def test_set_humidity_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 5,
             },
             blocking=True,

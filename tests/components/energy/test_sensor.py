@@ -1307,6 +1307,39 @@ async def test_cost_sensor_handle_water(
     assert float(state.state) == pytest.approx(growth)
 
 
+@pytest.mark.parametrize("source_type", ["gas", "water"])
+async def test_cost_sensor_fixed_price_without_other_cost_keys(
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    source_type: str,
+) -> None:
+    """Test a fixed price works for a meter stored without the other cost keys."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": source_type,
+            "stat_energy_from": "sensor.meter",
+            "number_energy_price": 0.5,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    hass.states.async_set("sensor.meter", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    assert hass.states.get("sensor.meter_cost").state == "0.0"
+
+    hass.states.async_set("sensor.meter", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.meter_cost").state == "50.0"
+
+
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
     setup_integration,

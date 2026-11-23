@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -60,7 +61,7 @@ async def test_switch_action(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1

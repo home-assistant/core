@@ -231,6 +231,12 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
         self.async_initiate_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity and its coordinator are available."""
+        return super().available and self.coordinator.last_update_success
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -301,6 +307,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
         coordinator_data = self.coordinator.data
+        if coordinator_data is None and self.coordinator.supports_websocket:
+            self.async_write_ha_state()
+            return
         if coordinator_data is None:
             event = ItemEvent.CHANGED
             changed_obj_id = None
@@ -329,10 +338,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = (
-            description.available_fn(self.hub, self._obj_id)
-            and self.coordinator.last_update_success
-        )
+        self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
 
@@ -371,7 +377,10 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""
-        if self.coordinator.update_interval is not None:
+        if (
+            not self.coordinator.supports_websocket
+            and self.coordinator.update_interval is not None
+        ):
             await self.coordinator.async_refresh()
 
     @callback

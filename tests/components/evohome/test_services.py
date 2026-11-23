@@ -19,7 +19,7 @@ from homeassistant.components.evohome.const import (
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, TargetKey
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -176,7 +176,7 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_ENTITY_ID: ctl_id,
+                TargetKey.ENTITY_ID: ctl_id,
                 EvoServiceArgument.MODE: "Away",
                 EvoServiceArgument.PERIOD: {"days": 7},
             },
@@ -324,7 +324,7 @@ async def test_set_zone_override_advance_schedule_fetch_failed(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "api_call_failed"
+    assert exc_info.value.translation_key == "api_request_failed"
     mock_fcn.assert_not_awaited()
 
 
@@ -384,7 +384,7 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
                 EvoServiceArgument.SETPOINT: 19.5,
             },
             blocking=True,
@@ -398,7 +398,7 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
                 EvoServiceArgument.SETPOINT: 19.5,
                 EvoServiceArgument.DURATION: {"minutes": 135},
             },
@@ -445,7 +445,7 @@ async def test_controller_services_with_zone_id(
             EvoService.SET_SYSTEM_MODE,
             {
                 EvoServiceArgument.MODE: "Auto",
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
             },
             blocking=True,
         )
@@ -614,3 +614,71 @@ async def test_set_dhw_override_advance(
         mock_fcn.assert_awaited_once_with(until=expected_until)
 
     assert dhw_entity.setpoints["next_sp_from"] == expected_until
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("entity_fixture", "client_api", "service", "service_data", "reason", "key"),
+    [
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="zone_not_in_future",
+        ),
+        pytest.param(
+            "dhw_id",
+            "evohomeasync2.hotwater.HotWater.set_on",
+            EvoService.SET_DHW_OVERRIDE,
+            {EvoServiceArgument.STATE: True},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="dhw_not_in_future",
+        ),
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            None,
+            "override_request_invalid",
+            id="zone_other_reason",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_override_rejected_by_client(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_fixture: str,
+    client_api: str,
+    service: EvoService,
+    service_data: dict[str, Any],
+    reason: evo_exc.RequestErrorReason | None,
+    key: str,
+) -> None:
+    """Test a zone/DHW override rejected by the client raises a translated error."""
+
+    entity_id: str = request.getfixturevalue(entity_fixture)
+
+    with (
+        patch(
+            client_api,
+            side_effect=evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=reason, mode="temporary_override"
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**service_data, EvoServiceArgument.DURATION: {"hours": 1}},
+            target={TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == key

@@ -29,6 +29,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -39,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -419,10 +422,10 @@ async def test_light_color_different_than_custom(
     assert config_entry.state is ConfigEntryState.LOADED
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_RGB_COLOR: (255, 255, 0),
-            ATTR_ENTITY_ID: entity_id,
+            LightServiceArgument.RGB_COLOR: (255, 255, 0),
+            TargetKey.ENTITY_ID: entity_id,
         },
     )
     await hass.async_block_till_done()

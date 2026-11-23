@@ -19,7 +19,7 @@ from homeassistant.components.input_number.const import (
     InputNumberService,
     InputNumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EntityStateAttribute
+from homeassistant.const import CONF_NAME, EntityStateAttribute, TargetKey
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -71,7 +71,7 @@ async def set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputNumberService.SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, InputNumberServiceArgument.VALUE: value},
+        {TargetKey.ENTITY_ID: entity_id, InputNumberServiceArgument.VALUE: value},
         blocking=True,
     )
 
@@ -82,7 +82,10 @@ async def increment(hass: HomeAssistant, entity_id: str) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     await hass.services.async_call(
-        DOMAIN, InputNumberService.INCREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN,
+        InputNumberService.INCREMENT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
 
@@ -92,7 +95,10 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     await hass.services.async_call(
-        DOMAIN, InputNumberService.DECREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN,
+        InputNumberService.DECREMENT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
 
