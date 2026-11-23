@@ -109,10 +109,11 @@ class R2D7Blind(CoverEntity):
         """Send a command, translating link errors."""
         try:
             await command
-        except LINK_ERRORS as err:
+        except LINK_ERRORS:
+            # No cause: its text can carry the port URL and its API key.
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
-            ) from err
+            ) from None
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:

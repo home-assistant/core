@@ -26,12 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None
 
     try:
         await connection.connect()
-    except LINK_ERRORS as err:
+    except LINK_ERRORS:
+        # No cause: its text can carry the port URL and its API key, and the
+        # full exception is logged.
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={"port": redact_port(port)},
-        ) from err
+        ) from None
 
     entry.runtime_data = connection
 
