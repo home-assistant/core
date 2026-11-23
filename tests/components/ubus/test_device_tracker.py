@@ -742,6 +742,80 @@ async def test_tracker_rediscovered_by_other_router_after_device_removal(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_rediscovered_by_other_router_after_entity_removal(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test another entry recreates a tracker whose entity was removed."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # The device leaves router A and its tracker is removed, leaving
+    # the device in the registry.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
+    )
+
+    # The client reconnects to router B only, so entry B must recreate it.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_unavailable_while_reporting_router_unreachable(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

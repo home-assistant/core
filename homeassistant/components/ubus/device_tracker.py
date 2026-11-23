@@ -114,6 +114,44 @@ async def async_setup_scanner(
     return True
 
 
+@callback
+def _async_rehome_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    mac: str,
+) -> None:
+    """Move a device left behind for this client, avoiding a duplicate."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if device := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id, new_config_entry_id=config_entry_id
+            )
+
+
+@callback
+def _async_release_removed_claim(
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    tracked: set[str],
+    shared: UbusSharedState,
+) -> None:
+    """Release the claim on the MAC whose tracker was removed from the registry."""
+    if not entity_id.startswith(f"{DEVICE_TRACKER_DOMAIN}."):
+        return
+    for mac in list(tracked):
+        deleted = entity_registry.deleted_entities.get(
+            (DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+        )
+        if deleted is not None and deleted.entity_id == entity_id:
+            # A stale claim would block another entry from recreating the
+            # tracker when the client reconnects to a different router.
+            tracked.discard(mac)
+            shared.owners.pop(mac, None)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UbusConfigEntry,
@@ -176,6 +214,8 @@ async def async_setup_entry(
                 != config_entry.entry_id
             ):
                 continue
+            if entity_id is None:
+                _async_rehome_devices(hass, device_registry, config_entry.entry_id, mac)
             tracked.add(mac)
             claimed.append(mac)
         if claimed:
@@ -233,6 +273,11 @@ async def async_setup_entry(
         event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
         """Track a client again when its registry entry is removed."""
+        if TYPE_CHECKING:
+            assert event.data["action"] == "remove"
+        _async_release_removed_claim(
+            entity_registry, event.data["entity_id"], tracked, shared
+        )
         _async_update_devices()
 
     # Recreate the trackers this entry owns so it keeps reporting clients
