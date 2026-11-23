@@ -30,7 +30,6 @@ from homeassistant.components.homematicip_cloud.entity import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .helper import (
     HAPID,
@@ -55,13 +54,6 @@ async def test_hmip_heating_group_heat(
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
-    climate_component = hass.data[DATA_INSTANCES]["climate"]
-    entity = climate_component.get_entity(entity_id)
-    assert entity is not None
-
-    mock_calls_before = len(hmip_device.mock_calls)
-    await entity.async_set_temperature(temperature=None)
-    assert len(hmip_device.mock_calls) == mock_calls_before
 
     service_call_counter = len(hmip_device.mock_calls)
 
@@ -95,14 +87,23 @@ async def test_hmip_heating_group_heat(
     assert ha_state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
 
     # Temperature is below the minimum.
-    mock_calls_before = len(hmip_device.mock_calls)
-    await entity.async_set_temperature(temperature=4.0)
-    assert len(hmip_device.mock_calls) == mock_calls_before
+    # Temperature is below the minimum.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": entity_id, "temperature": 4.0},
+            blocking=True,
+        )
 
     # Temperature is above the maximum.
-    mock_calls_before = len(hmip_device.mock_calls)
-    await entity.async_set_temperature(temperature=31.0)
-    assert len(hmip_device.mock_calls) == mock_calls_before
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": entity_id, "temperature": 31.0},
+            blocking=True,
+        )
 
     await hass.services.async_call(
         "climate",
