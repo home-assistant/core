@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import API_KEY_ONLY_PLATFORMS, DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .entity import async_device_supported_fn
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
@@ -56,11 +56,15 @@ async def async_setup_entry(
     hub = config_entry.runtime_data = UnifiHub(hass, config_entry, api)
     await hub.initialize()
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry,
+        API_KEY_ONLY_PLATFORMS if hub.config.api_key_only else PLATFORMS,
+    )
     hub.async_update_device_registry()
     hub.entity_loader.load_entities()
 
-    hub.websocket.start()
+    if not hub.config.api_key_only:
+        hub.websocket.start()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
@@ -86,6 +90,11 @@ async def async_remove_config_entry_device(
         # This integration does not create child devices.
         return False
     hub = config_entry.runtime_data
+    if hub.config.api_key_only:
+        return not any(
+            identifier in hub.api.network.devices
+            for _, identifier in device_entry.connections
+        )
     if any(
         identifier in hub.api.devices and async_device_supported_fn(hub, identifier)
         for _, identifier in device_entry.connections

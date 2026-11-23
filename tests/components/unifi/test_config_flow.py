@@ -10,6 +10,7 @@ from unittest.mock import patch
 import aiounifi
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
@@ -18,6 +19,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_CONNECTION_MODE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_LOCAL_MAC,
@@ -28,6 +30,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONNECTION_MODE_API_KEY_ONLY,
     DOMAIN,
 )
 from homeassistant.components.unifi.errors import (
@@ -35,7 +38,9 @@ from homeassistant.components.unifi.errors import (
     CannotConnect,
     MfaRequired,
 )
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -44,9 +49,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
 
-from .conftest import ConfigEntryFactoryType
+from .conftest import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_SITE,
+    NETWORK_API_KEY,
+    NETWORK_SITE_ID,
+    NETWORK_URL,
+    ConfigEntryFactoryType,
+    network_page,
+)
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -108,16 +123,33 @@ OLD_SITE_ID = "5f0a1b2c3d4e5f6a7b8c9d0e"
 NEW_SITE_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
 
 
+async def _select_menu(
+    hass: HomeAssistant, result: ConfigFlowResult, next_step_id: str
+) -> ConfigFlowResult:
+    """Pick a menu option of a flow."""
+    assert result["type"] is FlowResultType.MENU
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": next_step_id}
+    )
+
+
+async def _start_user_flow(hass: HomeAssistant, next_step_id: str) -> ConfigFlowResult:
+    """Start a user flow and pick how to connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+    return await _select_menu(hass, result, next_step_id)
+
+
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
     assert result["data_schema"]({CONF_PASSWORD: ""}) == {
         CONF_HOST: "1",
         CONF_USERNAME: "",
@@ -152,12 +184,10 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
 
 async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
     assert result["data_schema"]({CONF_PASSWORD: ""}) == {
         CONF_HOST: "unifi",
         CONF_USERNAME: "",
@@ -179,12 +209,10 @@ async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_multiple_sites(hass: HomeAssistant) -> None:
     """Test config flow works when finding multiple sites."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -206,12 +234,10 @@ async def test_flow_multiple_sites(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
     """Test config flow aborts since a connected config entry already exists."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -305,12 +331,10 @@ async def test_flow_fails_and_recovers(
     error: str,
 ) -> None:
     """Test config flow recovers from errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
 
     with patch(target, side_effect=side_effect):
         result = await hass.config_entries.flow.async_configure(
@@ -360,7 +384,7 @@ async def test_reauth_flow_update_configuration(
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     context = next(
         flow["context"]
@@ -433,6 +457,7 @@ async def test_reconfigure_flow_uses_update_listener_to_reload_entry(
 
     try:
         result = await config_entry.start_reconfigure_flow(hass)
+        result = await _select_menu(hass, result, "reconfigure_full")
 
         with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
             result = await hass.config_entries.flow.async_configure(
@@ -507,7 +532,7 @@ async def test_abort_reauth_flow_on_site_id_mismatch(
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -532,9 +557,10 @@ async def test_reconfigure_flow_update_configuration(
     config_entry = config_entry_setup
 
     result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         result = await hass.config_entries.flow.async_configure(
@@ -560,9 +586,7 @@ async def test_reconfigure_flow_update_configuration(
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_site_request_timeout(hass: HomeAssistant) -> None:
     """Test config flow gives up on a site request that does not answer."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _start_user_flow(hass, "full")
     user_input = {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "username",
@@ -599,6 +623,7 @@ async def test_reconfigure_flow_with_no_sites(
 ) -> None:
     """Verify an empty site list is an error that can be retried, not an abort."""
     result = await config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
     user_input = {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "new_name",
@@ -643,9 +668,10 @@ async def test_reconfigure_flow_retains_user_input_on_error(
     config_entry = config_entry_setup
 
     result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
     user_input = {
         CONF_HOST: "4.3.2.1",
         CONF_USERNAME: "new_name",
@@ -699,9 +725,10 @@ async def test_abort_reconfigure_flow_on_site_id_mismatch(
     mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
 
     result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -746,6 +773,7 @@ async def test_reconfigure_flow_recovers_changed_site_id(
     mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
 
     result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -794,6 +822,7 @@ async def test_reconfigure_flow_recovers_changed_site_id_loaded_entry(
 
     hass.config_entries.async_update_entry(config_entry, unique_id=OLD_SITE_ID)
     result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         result = await hass.config_entries.flow.async_configure(
@@ -908,8 +937,9 @@ async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data=INTEGRATION_DISCOVERY_INFO,
     )
+    result = await _select_menu(hass, result, "full")
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
     assert result["errors"] == {}
 
     context = next(
@@ -1036,14 +1066,14 @@ async def test_flow_integration_discovery_aborts_on_other_announced_address(
                     "wired_rate_mbps": 1000,
                 }
             ],
-            FlowResultType.FORM,
+            FlowResultType.MENU,
             None,
             id="console_as_client",
         ),
         pytest.param(
             [{**DEVICES[0], "mac": "e0:63:da:00:00:01"}],
             [],
-            FlowResultType.FORM,
+            FlowResultType.MENU,
             None,
             id="other_device_same_oui",
         ),
@@ -1078,7 +1108,7 @@ async def test_flow_integration_discovery_ignores_entry_without_host(
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data={**INTEGRATION_DISCOVERY_INFO, "direct_connect_domain": None},
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
 
@@ -1091,8 +1121,9 @@ async def test_flow_integration_discovery_uses_direct_connect_domain(
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data=INTEGRATION_DISCOVERY_INFO,
     )
+    result = await _select_menu(hass, result, "full")
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
 
     schema_defaults = {
         marker.schema: marker.default()
@@ -1194,8 +1225,9 @@ async def test_flow_integration_discovery_gets_form_with_ignored_entry(
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data=INTEGRATION_DISCOVERY_INFO,
     )
+    result = await _select_menu(hass, result, "full")
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "full"
     assert result["errors"] == {}
     context = next(
         flow["context"]
@@ -1206,3 +1238,397 @@ async def test_flow_integration_discovery_gets_form_with_ignored_entry(
         "host": "10.0.0.1",
         "name": "Dream Machine Pro",
     }
+
+
+API_KEY_INPUT = {
+    CONF_HOST: DEFAULT_HOST,
+    CONF_API_KEY: NETWORK_API_KEY,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_VERIFY_SSL: False,
+}
+API_KEY_ENTRY_DATA = {
+    **API_KEY_INPUT,
+    CONF_SITE_ID: DEFAULT_SITE,
+    CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+}
+SITE_OBJECT_ID = "5ba29dd4e3c58f026e9d7c38"
+OBJECT_ID_SITE_PAYLOAD = [
+    {"desc": "Site name", "name": DEFAULT_SITE, "role": "admin", "_id": SITE_OBJECT_ID}
+]
+
+
+LOCAL_USER_INPUT = {
+    CONF_HOST: DEFAULT_HOST,
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PORT: DEFAULT_PORT,
+    CONF_VERIFY_SSL: False,
+}
+
+
+async def test_api_key_flow(
+    hass: HomeAssistant, mock_network_requests: Callable[[], None]
+) -> None:
+    """Test setting up an entry with only an API key."""
+    mock_network_requests()
+
+    result = await _start_user_flow(hass, "api_key")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+    assert result["data_schema"]({CONF_API_KEY: "key"}) == {
+        CONF_HOST: "unifi",
+        CONF_API_KEY: "key",
+        CONF_PORT: 443,
+        CONF_VERIFY_SSL: False,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Site name"
+    assert result["data"] == API_KEY_ENTRY_DATA
+    assert result["result"].unique_id == NETWORK_SITE_ID
+
+
+@pytest.mark.parametrize(
+    ("info_status", "sites_status", "sites_payload", "error"),
+    [
+        pytest.param(401, 200, None, "faulty_credentials", id="rejected_key"),
+        pytest.param(
+            404, 200, None, "network_api_unavailable", id="no_integration_api"
+        ),
+        pytest.param(503, 200, None, "service_unavailable", id="unavailable"),
+        pytest.param(200, 403, None, "faulty_credentials", id="sites_forbidden"),
+        pytest.param(200, 200, network_page([]), "service_unavailable", id="no_sites"),
+    ],
+)
+async def test_api_key_flow_fails_and_recovers(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    info_status: int,
+    sites_status: int,
+    sites_payload: dict[str, Any] | None,
+    error: str,
+) -> None:
+    """Test setting up with an API key recovers from errors."""
+    result = await _start_user_flow(hass, "api_key")
+
+    aioclient_mock.get(
+        f"{NETWORK_URL}/info", status=info_status, json={"applicationVersion": "10"}
+    )
+    aioclient_mock.get(f"{NETWORK_URL}/sites", status=sites_status, json=sites_payload)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    aioclient_mock.clear_requests()
+    mock_network_requests()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == API_KEY_ENTRY_DATA
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected_type"),
+    [
+        pytest.param(SITE_OBJECT_ID, FlowResultType.ABORT, id="same_site"),
+        pytest.param("1", FlowResultType.CREATE_ENTRY, id="other_site"),
+    ],
+)
+async def test_api_key_flow_site_of_local_user_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_network_requests: Callable[[], None],
+    unique_id: str,
+    expected_type: FlowResultType,
+) -> None:
+    """Test only a local user entry keying the same site by ObjectId aborts.
+
+    An entry of another console at the same address can have a site of the
+    same name.
+    """
+    hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+    mock_network_requests()
+    result = await _start_user_flow(hass, "api_key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is expected_type
+
+
+async def test_reauth_api_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test reauth of an API key entry asks for a new key only."""
+    result = await network_config_entry_setup.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_api_key"
+    assert [str(marker) for marker in result["data_schema"].schema] == [CONF_API_KEY]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{NETWORK_URL}/info", status=401)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "wrong_key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "faulty_credentials"}
+
+    aioclient_mock.clear_requests()
+    mock_network_requests()
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "new_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    # The update listener reloads the loaded entry, once
+    mock_reload.assert_called_once_with(network_config_entry_setup.entry_id)
+    assert network_config_entry_setup.data == {
+        **API_KEY_ENTRY_DATA,
+        CONF_API_KEY: "new_key",
+    }
+
+
+@pytest.mark.parametrize("site_payload", [OBJECT_ID_SITE_PAYLOAD])
+async def test_reconfigure_to_api_key(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_network_requests: Callable[[], None],
+) -> None:
+    """Test switching to an API key keeps the local user for switching back."""
+    hass.config_entries.async_update_entry(config_entry, unique_id=SITE_OBJECT_ID)
+    await config_entry_factory()
+    mock_network_requests()
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_api_key")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_api_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        **API_KEY_ENTRY_DATA,
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "password",
+    }
+    # The Integration API keys the site of an older console by UUID
+    assert config_entry.unique_id == NETWORK_SITE_ID
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, NETWORK_SITE_ID), config_entry.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, SITE_OBJECT_ID), config_entry.entry_id
+    )
+
+
+@pytest.mark.parametrize("site_payload", [OBJECT_ID_SITE_PAYLOAD])
+async def test_reconfigure_to_local_user(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    network_config_entry_setup: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Test switching to a local user keeps the API key for switching back."""
+    mock_requests(DEFAULT_HOST, DEFAULT_SITE)
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=LOCAL_USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert network_config_entry_setup.data == {
+        **LOCAL_USER_INPUT,
+        CONF_API_KEY: NETWORK_API_KEY,
+        CONF_SITE_ID: DEFAULT_SITE,
+    }
+    assert network_config_entry_setup.unique_id == SITE_OBJECT_ID
+    assert network_config_entry_setup.state is ConfigEntryState.LOADED
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, SITE_OBJECT_ID), network_config_entry_setup.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, NETWORK_SITE_ID), network_config_entry_setup.entry_id
+    )
+
+
+@pytest.mark.parametrize("site_payload", [OBJECT_ID_SITE_PAYLOAD])
+async def test_reconfigure_mode_on_other_console(
+    hass: HomeAssistant,
+    network_config_entry_setup: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Test a site of the same name on another console is not taken over."""
+    mock_requests("5.6.7.8", DEFAULT_SITE)
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={**LOCAL_USER_INPUT, CONF_HOST: "5.6.7.8"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_site_id"
+    assert network_config_entry_setup.unique_id == NETWORK_SITE_ID
+
+
+@pytest.mark.parametrize("site_payload", [OBJECT_ID_SITE_PAYLOAD])
+async def test_reconfigure_mode_to_configured_site(
+    hass: HomeAssistant,
+    network_config_entry_setup: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Test the site an other entry has is not taken over."""
+    MockConfigEntry(domain=DOMAIN, unique_id=SITE_OBJECT_ID).add_to_hass(hass)
+    mock_requests(DEFAULT_HOST, DEFAULT_SITE)
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_full")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=LOCAL_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert network_config_entry_setup.unique_id == NETWORK_SITE_ID
+
+
+async def test_reconfigure_api_key_keeps_stored_key(
+    hass: HomeAssistant,
+    network_config_entry_setup: MockConfigEntry,
+    mock_network_requests: Callable[[], None],
+) -> None:
+    """Test an empty API key keeps the stored one."""
+    mock_network_requests()
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_api_key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            key: value for key, value in API_KEY_INPUT.items() if key != CONF_API_KEY
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert network_config_entry_setup.data == API_KEY_ENTRY_DATA
+
+
+async def test_reconfigure_api_key_unknown_site(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the site of the entry is gone."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{NETWORK_URL}/info", json={"applicationVersion": "10"})
+    aioclient_mock.get(
+        f"{NETWORK_URL}/sites",
+        json=network_page(
+            [{"id": "other-site", "internalReference": "other", "name": "Other"}]
+        ),
+    )
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_api_key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_site_id"
+    assert network_config_entry_setup.unique_id == NETWORK_SITE_ID
+
+
+async def test_api_key_flow_multiple_sites(
+    hass: HomeAssistant,
+    mock_network_requests: Callable[[], None],
+    network_site_payload: list[dict[str, Any]],
+) -> None:
+    """Test an API key that sees several sites asks which one to set up."""
+    network_site_payload.append(
+        {"id": "other-site", "internalReference": "other", "name": "Other"}
+    )
+    mock_network_requests()
+    result = await _start_user_flow(hass, "api_key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_SITE_ID: "other-site"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Other"
+    assert result["data"] == {**API_KEY_ENTRY_DATA, CONF_SITE_ID: "other"}
+    assert result["result"].unique_id == "other-site"
+
+
+async def test_flow_integration_discovery_matches_api_key_console(
+    hass: HomeAssistant,
+    network_device_payload: list[dict[str, Any]],
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test discovery finds a console that an API key entry lists."""
+    network_device_payload.append(
+        {
+            "id": "4ff3bc5f-6d39-3d2e-9bfd-0f2bf6c3f1d4",
+            "macAddress": INTEGRATION_DISCOVERY_INFO["hw_addr"],
+            "model": "UDM Pro",
+            "name": "Console",
+            "state": "ONLINE",
+            "supported": True,
+        }
+    )
+    await network_config_entry_factory()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "192.168.80.1",
+            "direct_connect_domain": None,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

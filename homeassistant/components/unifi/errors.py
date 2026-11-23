@@ -23,6 +23,10 @@ class CannotConnect(UnifiException):
     """Unable to connect to UniFi Network."""
 
 
+class NetworkApiUnavailable(CannotConnect):
+    """The console does not offer the UniFi Network Integration API."""
+
+
 class LoginRequired(UnifiException):
     """Integration got logged out."""
 

@@ -11,6 +11,7 @@ import aiounifi
 from aiounifi.models.configuration import Configuration
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,7 +23,13 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.util import ssl as ssl_util
 
 from ..const import CONF_SITE_ID, LOGGER
-from ..errors import AuthenticationRequired, CannotConnect, MfaRequired
+from ..errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+    NetworkApiUnavailable,
+)
+from .config import entry_is_api_key_only
 
 
 async def get_unifi_api(
@@ -49,17 +56,30 @@ async def get_unifi_api(
         Configuration(
             session,
             host=config[CONF_HOST],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
+            username=config.get(CONF_USERNAME, ""),
+            password=config.get(CONF_PASSWORD, ""),
             port=config[CONF_PORT],
             site=config[CONF_SITE_ID],
             ssl_context=ssl_context,
+            api_key=config.get(CONF_API_KEY),
         )
     )
+    api_key_only = entry_is_api_key_only(config)
 
     try:
         async with asyncio.timeout(10):
-            await api.login()
+            if not api_key_only:
+                await api.login()
+            else:
+                try:
+                    await api.network.get_info()
+                except aiounifi.EndpointNotFound as err:
+                    LOGGER.error(
+                        "UniFi Network at %s does not offer the Integration API: %s",
+                        config[CONF_HOST],
+                        err,
+                    )
+                    raise NetworkApiUnavailable from err
 
     except aiounifi.TwoFaTokenRequired as err:
         LOGGER.warning(

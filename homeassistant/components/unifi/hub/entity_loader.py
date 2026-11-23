@@ -12,9 +12,9 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
-from aiounifi.models.api import ApiItem
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.client import Client
+from aiounifi.network.v1.models.client import ClientAccessType, ClientData, ClientType
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, async_noop, callback
@@ -27,6 +27,7 @@ from homeassistant.util import dt as dt_util
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import (
     UPDATE_TIMEOUT,
+    UnifiApiHandler,
     UnifiDataUpdateCoordinator,
     UnifiDeviceDataUpdateCoordinator,
 )
@@ -37,6 +38,8 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+# Ports and statistics take one request per device
+DEVICE_DATA_UPDATE_INTERVAL = timedelta(seconds=60)
 
 
 class UnifiEntityLoader:
@@ -45,43 +48,17 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self._startup_only_api_updaters = (self._async_update_clients_all,)
+        self._startup_only_api_updaters: tuple[
+            Callable[[], Coroutine[Any, Any, None]], ...
+        ] = () if hub.config.api_key_only else (self._async_update_clients_all,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
-            id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
-            id(hub.api.devices): UnifiDeviceDataUpdateCoordinator(hub),
-            id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
-            id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
-            id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
-                hub,
-                hub.api.firewall_policies,
-                disable_polling_on_endpoint_not_found=True,
-            ),
-            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
-                hub,
-                hub.api.object_oriented_network_configs,
-                disable_polling_on_endpoint_not_found=True,
-            ),
-            id(hub.api.port_forwarding): UnifiDataUpdateCoordinator(
-                hub, hub.api.port_forwarding
-            ),
-            id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub,
-                hub.api.traffic_rules,
-                disable_polling_on_endpoint_not_found=True,
-            ),
-            id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub,
-                hub.api.traffic_routes,
-                disable_polling_on_endpoint_not_found=True,
-            ),
-            id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
-        }
-        self._data_coordinator_aliases: dict[int, int] = {
-            id(hub.api.outlets): id(hub.api.devices),
-            id(hub.api.ports): id(hub.api.devices),
-        }
+        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]]
+        self._data_coordinator_aliases: dict[int, int] = {}
+        if hub.config.api_key_only:
+            self._data_coordinators = self._create_network_api_coordinators()
+        else:
+            self._data_coordinators = self._create_coordinators()
         for coordinator in self._data_coordinators.values():
             self.hub.config.entry.async_on_unload(
                 coordinator.async_add_listener(async_noop)
@@ -116,11 +93,71 @@ class UnifiEntityLoader:
             )
         )
 
+    def _create_coordinators(self) -> dict[int, UnifiDataUpdateCoordinator[Any]]:
+        """Create the coordinators of the local user API handlers."""
+        hub = self.hub
+        coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
+            id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
+            id(hub.api.devices): UnifiDeviceDataUpdateCoordinator(hub),
+            id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
+            id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
+            id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
+                hub,
+                hub.api.firewall_policies,
+                disable_polling_on_endpoint_not_found=True,
+            ),
+            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
+                hub,
+                hub.api.object_oriented_network_configs,
+                disable_polling_on_endpoint_not_found=True,
+            ),
+            id(hub.api.port_forwarding): UnifiDataUpdateCoordinator(
+                hub, hub.api.port_forwarding
+            ),
+            id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
+                hub,
+                hub.api.traffic_rules,
+                disable_polling_on_endpoint_not_found=True,
+            ),
+            id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
+                hub,
+                hub.api.traffic_routes,
+                disable_polling_on_endpoint_not_found=True,
+            ),
+            id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
+        }
+        self._data_coordinator_aliases = {
+            id(hub.api.outlets): id(hub.api.devices),
+            id(hub.api.ports): id(hub.api.devices),
+        }
+        return coordinators
+
+    def _create_network_api_coordinators(
+        self,
+    ) -> dict[int, UnifiDataUpdateCoordinator[Any]]:
+        """Create the coordinators of the Integration API handlers."""
+        hub = self.hub
+        network = hub.api.network
+        return {
+            id(handler): UnifiDataUpdateCoordinator(hub, handler)
+            for handler in (network.clients, network.devices)
+        } | {
+            id(handler): UnifiDataUpdateCoordinator(
+                hub, handler, update_interval=DEVICE_DATA_UPDATE_INTERVAL
+            )
+            for handler in (hub.network_ports, hub.network_statistics)
+        }
+
     async def async_load_sites(self) -> None:
         """Load the sites of the console."""
+        sites = (
+            self.hub.api.network.sites
+            if self.hub.config.api_key_only
+            else self.hub.api.sites
+        )
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
-                await self.hub.api.sites.update()
+                await sites.update()
         except ACCOUNT_ERRORS as err:
             raise ConfigEntryAuthFailed from err
         except (
@@ -131,11 +168,14 @@ class UnifiEntityLoader:
             raise ConfigEntryNotReady(
                 "UniFi site information is not available"
             ) from err
-        if not self.hub.api.sites.values():
+        if not sites.values():
             raise ConfigEntryNotReady("UniFi Network has not listed any site yet")
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
+        if self.hub.config.api_key_only:
+            await self._initialize_network_api()
+            return
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.system_information.update()
@@ -164,6 +204,56 @@ class UnifiEntityLoader:
         self._prune_entities_of_unlisted_clients()
         self._prune_entities_of_unlisted_devices()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
+
+    async def _initialize_network_api(self) -> None:
+        """Load Integration API data, devices before their ports and statistics."""
+        hub = self.hub
+        network = hub.api.network
+        for handlers in (
+            (network.clients, network.devices),
+            (hub.network_ports, hub.network_statistics),
+        ):
+            await self._refresh_data(
+                [
+                    self.get_data_update_coordinator(handler).async_refresh
+                    for handler in handlers
+                ]
+            )
+        self._restore_network_clients()
+
+    @callback
+    def _restore_network_clients(self) -> None:
+        """Keep enabled trackers of unlisted clients, prune disabled ones.
+
+        The Integration API only lists connected clients and keeps no history,
+        a disabled tracker is created again once its client connects.
+        """
+        clients = self.hub.api.network.clients
+        entity_registry = er.async_get(self.hub.hass)
+        device_registry = dr.async_get(self.hub.hass)
+        for entity_id, mac in self._client_trackers():
+            if mac in clients:
+                continue
+            device = device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
+            )
+            entry = entity_registry.async_get(entity_id)
+            if entry is not None and entry.disabled:
+                entity_registry.async_remove(entity_id)
+                if device is not None and not er.async_entries_for_device(
+                    entity_registry, device.id, include_disabled_entities=True
+                ):
+                    device_registry.async_remove_device(device.id)
+                continue
+            clients.restore(
+                ClientData(
+                    access={"type": ClientAccessType.DEFAULT},
+                    id="",
+                    macAddress=mac,
+                    name=(device.name if device else None) or mac,
+                    type=ClientType.UNKNOWN,
+                )
+            )
 
     async def _async_update_clients_all(self) -> None:
         """Load all known clients to restore inactive ones."""
@@ -386,7 +476,7 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
+    def get_data_update_coordinator[HandlerT: UnifiApiHandler](
         self, handler: HandlerT
     ) -> UnifiDataUpdateCoordinator[HandlerT]:
         """Return the data coordinator for a handler."""

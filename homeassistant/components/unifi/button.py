@@ -9,7 +9,7 @@ import secrets
 from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
@@ -21,6 +21,8 @@ from aiounifi.models.device import (
 )
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan, WlanChangePasswordRequest
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
+from aiounifi.network.v1.models.device import Device as NetworkDevice
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -34,16 +36,21 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
+from .coordinator import UnifiApiHandler
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
+    async_network_device_available_fn,
+    async_network_device_device_info_fn,
+    async_network_device_supported_fn,
     async_port_poe_supported_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
+from .hub.network import NetworkPort, NetworkPorts
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -74,6 +81,23 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
+async def async_network_restart_device_control_fn(
+    api: aiounifi.Controller, obj_id: str
+) -> None:
+    """Restart a device through the Integration API."""
+    await api.network.devices.restart(api.network.devices[obj_id].device_id)
+
+
+async def async_network_power_cycle_port_control_fn(
+    api: aiounifi.Controller, obj_id: str
+) -> None:
+    """Power cycle a PoE port through the Integration API."""
+    mac, _, index = obj_id.partition("_")
+    await api.network.devices.power_cycle_port(
+        api.network.devices[mac].device_id, int(index)
+    )
+
+
 async def async_regenerate_password_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
@@ -84,7 +108,7 @@ async def async_regenerate_password_control_fn(
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiButtonEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiButtonEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     ButtonEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi button entity."""
@@ -135,18 +159,59 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
 )
 
 
+@callback
+def make_network_api_descriptions(
+    hub: UnifiHub,
+) -> tuple[UnifiButtonEntityDescription, ...]:
+    """Describe the buttons of the Integration API."""
+
+    return (
+        UnifiButtonEntityDescription[NetworkDevices, NetworkDevice](
+            key="Device restart",
+            entity_category=EntityCategory.CONFIG,
+            device_class=ButtonDeviceClass.RESTART,
+            api_handler_fn=lambda api: api.network.devices,
+            available_fn=async_network_device_available_fn,
+            control_fn=async_network_restart_device_control_fn,
+            device_info_fn=async_network_device_device_info_fn,
+            object_fn=lambda api, obj_id: api.network.devices[obj_id],
+            supported_fn=async_network_device_supported_fn,
+            unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
+        ),
+        UnifiButtonEntityDescription[NetworkPorts, NetworkPort](
+            key="PoE power cycle",
+            translation_key="port_power_cycle",
+            entity_category=EntityCategory.CONFIG,
+            device_class=ButtonDeviceClass.RESTART,
+            api_handler_fn=lambda _: hub.network_ports,
+            available_fn=async_network_device_available_fn,
+            control_fn=async_network_power_cycle_port_control_fn,
+            device_info_fn=async_network_device_device_info_fn,
+            object_fn=lambda _, obj_id: hub.network_ports[obj_id],
+            translation_placeholders_fn=lambda port: {"port_name": f"Port {port.idx}"},
+            unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
+        ),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities, UnifiButtonEntity, ENTITY_DESCRIPTIONS, requires_admin=True
+    hub = config_entry.runtime_data
+    hub.entity_loader.register_platform(
+        async_add_entities,
+        UnifiButtonEntity,
+        make_network_api_descriptions(hub)
+        if hub.config.api_key_only
+        else ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 
-class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiButtonEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], ButtonEntity
 ):
     """Base representation of a UniFi button."""

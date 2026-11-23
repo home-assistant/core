@@ -12,7 +12,7 @@ from enum import StrEnum
 from functools import partial
 from typing import Literal, cast, override
 
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
@@ -31,6 +31,12 @@ from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
+from aiounifi.network.v1.models.device import (
+    Device as NetworkDevice,
+    DeviceState as NetworkDeviceState,
+    DeviceStatistics,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -58,6 +64,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES, DOMAIN
+from .coordinator import UnifiApiHandler
 from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
@@ -68,12 +75,16 @@ from .entity import (
     async_device_device_info_fn,
     async_device_supported_fn,
     async_firewall_policy_supported_fn,
+    async_network_device_available_fn,
+    async_network_device_device_info_fn,
+    async_network_device_supported_fn,
     async_unifi_network_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
+from .hub.network import NetworkStatistics
 
 PARALLEL_UPDATES = 0
 
@@ -488,7 +499,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSensorEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     SensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi sensor entity."""
@@ -995,6 +1006,103 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
 
+NETWORK_DEVICE_STATES = [
+    state.lower()
+    for state in NetworkDeviceState
+    if state is not NetworkDeviceState.UNKNOWN
+]
+
+
+@callback
+def async_network_device_state_value_fn(
+    hub: UnifiHub, device: NetworkDevice
+) -> str | None:
+    """Retrieve the state of a device of the Integration API."""
+    if device.state is NetworkDeviceState.UNKNOWN:
+        return None
+    return device.state.lower()
+
+
+@callback
+def async_network_device_uptime_value_fn(
+    hub: UnifiHub, statistics: DeviceStatistics
+) -> datetime | None:
+    """Calculate the time a device started from when its statistics were sampled."""
+    if not statistics.uptime_sec:
+        return None
+    sampled_at = (
+        dt_util.parse_datetime(statistics.last_heartbeat_at)
+        if statistics.last_heartbeat_at
+        else None
+    ) or dt_util.now()
+    return (sampled_at - timedelta(seconds=statistics.uptime_sec)).replace(
+        microsecond=0
+    )
+
+
+@callback
+def make_network_api_descriptions(
+    hub: UnifiHub,
+) -> tuple[UnifiSensorEntityDescription, ...]:
+    """Describe the sensors of the Integration API."""
+    return (
+        UnifiSensorEntityDescription[NetworkDevices, NetworkDevice](
+            key="Integration API device state",
+            translation_key="network_device_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            api_handler_fn=lambda api: api.network.devices,
+            device_info_fn=async_network_device_device_info_fn,
+            supported_fn=async_network_device_supported_fn,
+            object_fn=lambda api, obj_id: api.network.devices[obj_id],
+            unique_id_fn=lambda hub, obj_id: f"network_device_state-{obj_id}",
+            value_fn=async_network_device_state_value_fn,
+            options=NETWORK_DEVICE_STATES,
+        ),
+        UnifiSensorEntityDescription[NetworkStatistics, DeviceStatistics](
+            key="Device uptime",
+            device_class=SensorDeviceClass.UPTIME,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            api_handler_fn=lambda _: hub.network_statistics,
+            available_fn=async_network_device_available_fn,
+            device_info_fn=async_network_device_device_info_fn,
+            supported_fn=async_network_device_supported_fn,
+            object_fn=lambda _, obj_id: hub.network_statistics[obj_id],
+            unique_id_fn=lambda hub, obj_id: f"device_uptime-{obj_id}",
+            value_fn=async_network_device_uptime_value_fn,
+            value_changed_fn=async_uptime_value_changed_fn,
+        ),
+        UnifiSensorEntityDescription[NetworkStatistics, DeviceStatistics](
+            key="Device CPU utilization",
+            translation_key="device_cpu_utilization",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            api_handler_fn=lambda _: hub.network_statistics,
+            available_fn=async_network_device_available_fn,
+            device_info_fn=async_network_device_device_info_fn,
+            supported_fn=async_network_device_supported_fn,
+            object_fn=lambda _, obj_id: hub.network_statistics[obj_id],
+            unique_id_fn=lambda hub, obj_id: f"cpu_utilization-{obj_id}",
+            value_fn=lambda hub, statistics: statistics.cpu_utilization_pct,
+        ),
+        UnifiSensorEntityDescription[NetworkStatistics, DeviceStatistics](
+            key="Device memory utilization",
+            translation_key="device_memory_utilization",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            api_handler_fn=lambda _: hub.network_statistics,
+            available_fn=async_network_device_available_fn,
+            device_info_fn=async_network_device_device_info_fn,
+            supported_fn=async_network_device_supported_fn,
+            object_fn=lambda _, obj_id: hub.network_statistics[obj_id],
+            unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
+            value_fn=lambda hub, statistics: statistics.memory_utilization_pct,
+        ),
+    )
+
+
 @callback
 def _async_should_add_sensor(
     hub: UnifiHub, description: UnifiSensorEntityDescription, obj_id: str
@@ -1032,13 +1140,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Network integration."""
     hub = config_entry.runtime_data
+    descriptions = (
+        make_network_api_descriptions(hub)
+        if hub.config.api_key_only
+        else ENTITY_DESCRIPTIONS
+    )
 
     @callback
     def add_sensors() -> None:
         """Discover sensors and restore registered sensors during telemetry gaps."""
         async_add_entities(
             UnifiSensorEntity(obj_id, hub, description)
-            for description in ENTITY_DESCRIPTIONS
+            for description in descriptions
             for obj_id in description.api_handler_fn(hub.api)
             if _async_should_add_sensor(hub, description, obj_id)
         )
@@ -1057,7 +1170,7 @@ async def async_setup_entry(
         if _async_should_add_sensor(hub, description, obj_id):
             async_add_entities([UnifiSensorEntity(obj_id, hub, description)])
 
-    for description in ENTITY_DESCRIPTIONS:
+    for description in descriptions:
         api_handler = description.api_handler_fn(hub.api)
         config_entry.async_on_unload(
             api_handler.subscribe(
@@ -1070,7 +1183,7 @@ async def async_setup_entry(
         )
 
 
-class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiSensorEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], SensorEntity
 ):
     """Base representation of a UniFi sensor."""

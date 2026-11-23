@@ -1,0 +1,651 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'clients': dict({
+      '00:00:00:00:00:00': dict({
+        'access': dict({
+          'type': 'DEFAULT',
+        }),
+        'connectedAt': '2026-11-07T09:00:00Z',
+        'id': 'a2d6c6a8-0f6c-36b7-9e4c-5f5a1c0d9f01',
+        'ipAddress': '10.0.0.10',
+        'macAddress': '00:00:00:00:00:00',
+        'name': 'Phone',
+        'type': 'WIRELESS',
+        'uplinkDeviceId': '4ff3bc5f-6d39-3d2e-9bfd-0f2bf6c3f1d4',
+      }),
+      '00:00:00:00:00:01': dict({
+        'access': dict({
+          'type': 'DEFAULT',
+        }),
+        'id': 'b2d6c6a8-0f6c-36b7-9e4c-5f5a1c0d9f02',
+        'ipAddress': '10.0.0.11',
+        'macAddress': '00:00:00:00:00:01',
+        'name': 'Desktop',
+        'type': 'WIRED',
+        'uplinkDeviceId': '4ff3bc5f-6d39-3d2e-9bfd-0f2bf6c3f1d4',
+      }),
+    }),
+    'config': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'connection_mode': 'api_key_only',
+        'host': '**REDACTED**',
+        'port': 1234,
+        'site': 'site_id',
+        'verify_ssl': False,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'unifi',
+      'entry_id': '1',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Site name',
+      'unique_id': '88f7af54-98f8-306a-a1c7-c9349722b1f6',
+      'version': 1,
+    }),
+    'devices': dict({
+      '00:00:00:00:00:02': dict({
+        'features': list([
+          'switching',
+        ]),
+        'firmwareUpdatable': False,
+        'firmwareVersion': '7.1.26',
+        'id': '4ff3bc5f-6d39-3d2e-9bfd-0f2bf6c3f1d4',
+        'interfaces': dict({
+          'ports': list([
+            dict({
+              'connector': 'RJ45',
+              'idx': 1,
+              'maxSpeedMbps': 1000,
+              'poe': dict({
+                'enabled': True,
+                'standard': '802.3at',
+                'state': 'UP',
+                'type': 2,
+              }),
+              'speedMbps': 1000,
+              'state': 'UP',
+            }),
+            dict({
+              'connector': 'SFP',
+              'idx': 25,
+              'maxSpeedMbps': 10000,
+              'state': 'DOWN',
+            }),
+          ]),
+        }),
+        'ipAddress': '10.0.1.2',
+        'macAddress': '00:00:00:00:00:02',
+        'model': 'USW Pro 24 PoE',
+        'name': 'Switch',
+        'state': 'ONLINE',
+        'supported': True,
+      }),
+    }),
+    'network_version': '10.0.160',
+    'ports': dict({
+      '00:00:00:00:00:02_1': dict({
+        'connector': 'RJ45',
+        'idx': 1,
+        'maxSpeedMbps': 1000,
+        'obj_id': '**REDACTED**',
+        'poe': dict({
+          'enabled': True,
+          'standard': '802.3at',
+          'state': 'UP',
+          'type': 2,
+        }),
+        'speedMbps': 1000,
+        'state': 'UP',
+      }),
+    }),
+    'statistics': dict({
+      '00:00:00:00:00:02': dict({
+        'cpuUtilizationPct': 12.5,
+        'lastHeartbeatAt': '2026-11-07T10:00:00Z',
+        'loadAverage1Min': 0.25,
+        'memoryUtilizationPct': 40.1,
+        'obj_id': '00:00:00:00:00:02',
+        'uptimeSec': 3600,
+      }),
+    }),
+  })
+# ---
+# name: test_entity_and_device_data[button][button.switch_port_1_power_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.switch_port_1_power_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Port 1 power cycle',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Port 1 power cycle',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_power_cycle',
+    'unique_id': 'power_cycle-00:00:00:00:01:01_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[button][button.switch_port_1_power_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch Port 1 power cycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.switch_port_1_power_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_and_device_data[button][button.switch_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.switch_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_restart-00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[button][button.switch_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.switch_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.desktop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.desktop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'site_id-00:00:00:00:00:02',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.desktop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Desktop',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+        'zone.home',
+      ]),
+      <ScannerEntityStateAttribute.IP: 'ip'>: '10.0.0.11',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.desktop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.phone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.phone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'site_id-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.phone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Phone',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+        'zone.home',
+      ]),
+      <ScannerEntityStateAttribute.IP: 'ip'>: '10.0.0.10',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.phone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[device_tracker][device_tracker.switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+        'zone.home',
+      ]),
+      <ScannerEntityStateAttribute.IP: 'ip'>: '10.0.1.2',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:01:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_cpu_utilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.switch_cpu_utilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CPU utilization',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU utilization',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_cpu_utilization',
+    'unique_id': 'cpu_utilization-00:00:00:00:01:01',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_cpu_utilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch CPU utilization',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.switch_cpu_utilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.5',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_memory_utilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.switch_memory_utilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Memory utilization',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory utilization',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_memory_utilization',
+    'unique_id': 'memory_utilization-00:00:00:00:01:01',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_memory_utilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch Memory utilization',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.switch_memory_utilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.1',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'pending_adoption',
+        'updating',
+        'getting_ready',
+        'adopting',
+        'deleting',
+        'connection_interrupted',
+        'isolated',
+        'u5g_incorrect_topology',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.switch_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_device_state',
+    'unique_id': 'network_device_state-00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch State',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'pending_adoption',
+        'updating',
+        'getting_ready',
+        'adopting',
+        'deleting',
+        'connection_interrupted',
+        'isolated',
+        'u5g_incorrect_topology',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.switch_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:01:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.switch_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_uptime-00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[sensor][sensor.switch_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.switch_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-07T09:00:00+00:00',
+  })
+# ---
+# name: test_tracker_options[client_source_ignored]
+  list([
+    'device_tracker.switch',
+  ])
+# ---
+# name: test_tracker_options[no_clients_or_devices]
+  list([
+  ])
+# ---
+# name: test_tracker_options[no_wired_clients]
+  list([
+    'device_tracker.phone',
+    'device_tracker.switch',
+  ])
+# ---

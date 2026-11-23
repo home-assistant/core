@@ -26,7 +26,18 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+API_KEY_ONLY_PLATFORMS = [
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
+
 CONF_SITE_ID = "site"
+
+# Stored local user credentials do not imply the mode: they are kept on a
+# switch to API key only so switching back is lossless.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
 
 UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
