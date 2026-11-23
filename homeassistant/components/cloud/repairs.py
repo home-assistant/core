@@ -1,8 +1,10 @@
 """Repairs implementation for the cloud integration."""
 
 import asyncio
+from typing import override
 
 from hass_nabucasa.payments_api import SubscriptionInfo
+from hass_nabucasa.remote import REPAIR_CLIENT_CERTIFICATE_ERROR
 import probatio
 
 from homeassistant.components.repairs import (
@@ -42,6 +44,22 @@ def async_manage_legacy_subscription_issue(
         )
         return
     ir.async_delete_issue(hass=hass, domain=DOMAIN, issue_id="legacy_subscription")
+
+
+class RemoteClientCertificateRepairFlow(ConfirmRepairFlow):
+    """Handler to stop requiring client certificates on remote access."""
+
+    @override
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            cloud = self.hass.data[DATA_CLOUD]
+            await cloud.client.prefs.async_update(
+                remote_require_client_certificate=False
+            )
+        return await super().async_step_confirm(user_input)
 
 
 class LegacySubscriptionRepairFlow(RepairsFlow):
@@ -122,4 +140,6 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == "legacy_subscription":
         return LegacySubscriptionRepairFlow()
+    if issue_id == REPAIR_CLIENT_CERTIFICATE_ERROR:
+        return RemoteClientCertificateRepairFlow()
     return ConfirmRepairFlow()

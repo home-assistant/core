@@ -10,7 +10,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.const import DATA_CLOUD, DOMAIN
 from homeassistant.components.cloud.repairs import (
     async_manage_legacy_subscription_issue,
 )
@@ -246,4 +246,62 @@ async def test_legacy_subscription_repair_flow_timeout(
 
     assert issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
+    )
+
+
+async def test_remote_client_certificate_repair_flow(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the fix flow stops requiring client certificates on remote access."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    cloud = hass.data[DATA_CLOUD]
+    monkeypatch.setattr(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem")
+    await cloud.client.prefs.async_update(remote_require_client_certificate=True)
+    await cloud.client.async_create_repair_issue(
+        identifier="remote_client_certificate_error",
+        translation_key="remote_client_certificate_error",
+        placeholders={"ca_file": "/ssl/client_ca.pem"},
+        severity="error",
+    )
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": "remote_client_certificate_error"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["type"] == "form"
+    assert data["step_id"] == "confirm"
+    assert data["description_placeholders"] == {"ca_file": "/ssl/client_ca.pem"}
+    assert cloud.client.prefs.remote_require_client_certificate
+
+    with (
+        patch.object(cloud, "started", True),
+        patch.object(cloud.remote, "stop") as stop,
+        patch.object(cloud.remote, "start") as start,
+    ):
+        resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+        await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == "create_entry"
+
+    stop.assert_called_once()
+    start.assert_called_once()
+    assert not cloud.client.prefs.remote_require_client_certificate
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="remote_client_certificate_error"
     )

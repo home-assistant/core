@@ -14,6 +14,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
+    FIXABLE_REPAIR_TRANSLATION_KEYS,
     VALID_REPAIR_TRANSLATION_KEYS,
     CloudClient,
 )
@@ -536,12 +537,14 @@ async def test_async_create_repair_issue_known(
         translation_key=translation_key,
         placeholders={
             "account_url": "http://example.org",
+            "ca_file": "/ssl/client_ca.pem",
             "custom_domains": "example.com",
         },
         severity="warning",
     )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
     assert issue is not None
+    assert issue.is_fixable is (translation_key in FIXABLE_REPAIR_TRANSLATION_KEYS)
 
 
 async def test_async_create_repair_issue_unknown(
