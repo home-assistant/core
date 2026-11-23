@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["nextdns"],
   "quality_scale": "platinum",
-  "requirements": ["nextdns==5.2.0"]
+  "requirements": ["nextdns==5.3.0"]
 }

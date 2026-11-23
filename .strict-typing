@@ -649,6 +649,7 @@ homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
+homeassistant.components.tile_ble.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*

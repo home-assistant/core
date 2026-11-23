@@ -22,7 +22,7 @@ HAP-python==5.2.0
 HATasmota==0.10.2
 
 # homeassistant.components.hue_ble
-HueBLE==2.3.0
+HueBLE==2.4.1
 
 # homeassistant.components.mastodon
 Mastodon.py==2.3.3
@@ -218,7 +218,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==3.1.0
+aioautomower==3.2.0
 
 # homeassistant.components.axle_energy
 aioaxlevpp==0.2.0
@@ -458,7 +458,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.4.0
+aioshelly==14.5.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -512,7 +512,7 @@ aiovitesy==1.4.8
 aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.3.13
+aiovodafone==3.3.14
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -539,7 +539,7 @@ airgradient==0.11.0
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.6.14
+airos==0.6.15
 
 # homeassistant.components.airpatrol
 airpatrol==0.1.0
@@ -1053,7 +1053,7 @@ evolutionhttp==0.0.19
 faadelays==2023.9.1
 
 # homeassistant.components.fastdotcom
-fastdotcom==0.0.6
+fastdotcom==0.0.7
 
 # homeassistant.components.feedreader
 feedparser==6.0.12
@@ -1778,7 +1778,7 @@ nettigo-air-monitor==5.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexblue
-nexblue-api==0.1.3
+nexblue-api==0.1.4
 
 # homeassistant.components.nexia
 nexia==2.13.0
@@ -1790,7 +1790,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==5.2.0
+nextdns==5.3.0
 
 # homeassistant.components.niko_home_control
 nhc==0.8.1
@@ -2136,7 +2136,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.4.0
+pyairnow==1.4.1
 
 # homeassistant.components.airobot
 pyairobotrest==0.4.0
@@ -2450,7 +2450,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.5.6
+pylamarzocco==2.6.0
 
 # homeassistant.components.lastfm
 pylast==7.2.0
@@ -2668,7 +2668,7 @@ pysabnzbd==1.1.1
 pysaunum==0.7.0
 
 # homeassistant.components.schlage
-pyschlage==2026.9.0
+pyschlage==2026.11.0
 
 # homeassistant.components.scorpiontrack
 pyscorpiontrack==0.1.2
@@ -2854,7 +2854,7 @@ python-mystrom==2.5.0
 python-open-router==0.5.0
 
 # homeassistant.components.swiss_public_transport
-python-opendata-transport==0.6.2
+python-opendata-transport==0.6.3
 
 # homeassistant.components.openevse
 python-openevse-http==1.8.0
@@ -3012,7 +3012,7 @@ pyzonneplan==0.3.0
 qbittorrent-api==2026.5.1
 
 # homeassistant.components.qbus
-qbusmqttapi==1.5.1
+qbusmqttapi==1.6.1
 
 # homeassistant.components.qingping
 qingping-ble==1.3.0
@@ -3341,7 +3341,7 @@ teslemetry-stream==1.5.0
 tessie-api==0.1.3
 
 # homeassistant.components.theben_conexa
-theben-conexa-smgw==0.4.3
+theben-conexa-smgw==0.4.4
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.10.0
@@ -3404,7 +3404,7 @@ trmnl==0.2.0
 ttls==1.11.1
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.3.0
+ttn_client==1.3.2
 
 # homeassistant.components.tuya
 tuya-device-handlers==0.0.34
@@ -3580,7 +3580,7 @@ xiaomi-weather==0.1.0
 xknx==4.1.1
 
 # homeassistant.components.knx
-xknxproject==3.10.0
+xknxproject==3.11.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
