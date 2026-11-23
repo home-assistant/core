@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
@@ -19,6 +19,7 @@ from recamera_protocol import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVENT_CAPTURE_COMPLETED
 
@@ -81,7 +82,7 @@ class CaptureOperation:
     error: str | None = None
     stop_response: dict[str, Any] | None = None
     request_token: str = field(default_factory=lambda: uuid.uuid4().hex)
-    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    started_at: datetime = field(default_factory=dt_util.utcnow)
     started_monotonic: float = 0.0
     expected_end_monotonic: float = 0.0
     last_confirmed_monotonic: float = 0.0
@@ -689,7 +690,7 @@ class CaptureController:
         del self._history[:-20]
         if not success:
             _LOGGER.warning(
-                "reCamera %s capture failed: kind=%s id=%s state=%s error=%s",
+                "Capture failed for reCamera %s: kind=%s id=%s state=%s error=%s",
                 self.device_id,
                 operation.kind,
                 operation.capture_id,
@@ -758,7 +759,7 @@ class CaptureController:
             return
 
         now = asyncio.get_running_loop().time()
-        elapsed = max(0.0, (datetime.now(UTC) - started_at).total_seconds())
+        elapsed = max(0.0, (dt_util.utcnow() - started_at).total_seconds())
         started_monotonic = now - elapsed
         try:
             status = await self._async_get_status_limited()

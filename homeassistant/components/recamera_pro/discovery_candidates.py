@@ -3,6 +3,8 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from homeassistant.util import dt as dt_util
+
 from .const import CONF_DISCOVERY_CANDIDATES
 
 CANDIDATE_LIMIT = 4
@@ -39,7 +41,7 @@ def merge_discovery_candidate(
     if normalized_host is None:
         return _current_candidates(data, now=now)
 
-    now = (now or datetime.now(UTC)).astimezone(UTC)
+    now = (now or dt_util.utcnow()).astimezone(UTC)
     candidates: dict[str, datetime] = {
         normalized_host: now,
     }
@@ -118,7 +120,7 @@ def _current_candidates(
     include_expired: bool = False,
 ) -> list[dict[str, str]]:
     """Return valid persisted candidates with invalid entries discarded."""
-    now = (now or datetime.now(UTC)).astimezone(UTC)
+    now = (now or dt_util.utcnow()).astimezone(UTC)
     candidates: dict[str, datetime] = {}
     raw_candidates = data.get(CONF_DISCOVERY_CANDIDATES)
     if not isinstance(raw_candidates, list):

@@ -9,7 +9,6 @@ from recamera_protocol import (
     normalize_serial_number,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -26,11 +25,9 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import RecameraCoordinator, async_remove_store
+from .coordinator import RecameraConfigEntry, RecameraCoordinator, async_remove_store
 from .identity import device_title
 from .services import async_setup_services
-
-type RecameraConfigEntry = ConfigEntry[RecameraCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

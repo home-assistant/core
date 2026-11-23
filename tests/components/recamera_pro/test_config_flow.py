@@ -346,6 +346,7 @@ async def test_manual_and_reconfigure_error_paths() -> None:
     entry = SimpleNamespace(
         entry_id="e1",
         unique_id="SN123456",
+        update_listeners=[],
         data={
             CONF_HOST: "192.168.10.22",
             CONF_USERNAME: "admin",
@@ -355,6 +356,9 @@ async def test_manual_and_reconfigure_error_paths() -> None:
         },
     )
     flow._get_reconfigure_entry = lambda: entry
+    flow.async_update_reload_and_abort = Mock(
+        return_value={"type": FlowResultType.ABORT, "reason": "reconfigure_successful"}
+    )
     reconf_form = await flow.async_step_reconfigure()
     assert reconf_form["type"] == FlowResultType.FORM
     with patch(

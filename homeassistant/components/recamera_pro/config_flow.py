@@ -602,7 +602,7 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {"name": self._discovery_name}
         _LOGGER.info(
-            "reCamera discovery flow active: %s -> %s",
+            "Discovery flow active for reCamera: %s -> %s",
             discovery_info.name,
             hosts,
         )
@@ -674,7 +674,7 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.flow.async_get(self.flow_id)
                 except data_entry_flow.UnknownFlow:
                     _LOGGER.info(
-                        "reCamera discovery flow removed: %s",
+                        "Discovery flow removed for reCamera: %s",
                         self.flow_id,
                     )
                     return
@@ -770,7 +770,7 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
                         continue
 
                 _LOGGER.info(
-                    "reCamera discovery refreshed %s -> %s",
+                    "Refreshed reCamera discovery %s -> %s",
                     previous,
                     addresses,
                 )
@@ -799,7 +799,7 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
                 return
         finally:
             _LOGGER.info(
-                "reCamera discovery refresh stopped: %s",
+                "Stopped reCamera discovery refresh: %s",
                 service_name,
             )
 

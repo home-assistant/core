@@ -7,40 +7,18 @@ from pathlib import Path
 import time
 from typing import override
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-
-try:
-    from homeassistant.components.camera.helper import async_get_stream_image
-except ImportError:
-
-    async def async_get_stream_image(
-        camera: Camera,
-        width: int | None = None,
-        height: int | None = None,
-        wait_for_next_keyframe: bool = False,
-    ) -> bytes | None:
-        """Fallback for Home Assistant releases before the helper existed."""
-        if not camera.stream and (
-            CameraEntityFeature.STREAM in camera.supported_features
-        ):
-            camera.stream = await camera.async_create_stream()
-        if camera.stream:
-            return await camera.stream.async_get_image(
-                width=width,
-                height=height,
-                wait_for_next_keyframe=wait_for_next_keyframe,
-            )
-        return None
-
-
 from recamera_protocol import RecameraError
 
+from homeassistant.components.camera import (
+    Camera,
+    CameraEntityFeature,
+    async_get_stream_image,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RecameraConfigEntry
-from .coordinator import RecameraCoordinator
+from .coordinator import RecameraConfigEntry, RecameraCoordinator
 from .entity import RecameraEntity, recamera_service_error
 
 PARALLEL_UPDATES = 0
@@ -85,7 +63,7 @@ class RecameraCamera(RecameraEntity, Camera):
         """Initialize one camera stream."""
         RecameraEntity.__init__(self, coordinator)
         Camera.__init__(self)
-        self._attr_unique_id = f"{coordinator.device_id}_camera_{self._unique_suffix}"
+        self._attr_unique_id = f"{coordinator.device_id}_{self._unique_suffix}"
         self._still_cache: bytes | None = None
         self._still_cached_at = 0.0
         self._still_cache_key: tuple[int | None, int | None] | None = None

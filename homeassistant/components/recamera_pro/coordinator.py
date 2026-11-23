@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import Awaitable, Callable
 import contextlib
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 import time
@@ -47,6 +47,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .capture_controller import CaptureController
 from .const import (
@@ -199,18 +200,21 @@ def _firmware_started_at(value: object) -> datetime | None:
         return None
     if started_at.tzinfo is None:
         return None
-    now = datetime.now(UTC)
+    now = dt_util.utcnow()
     if started_at > now + timedelta(seconds=30):
         return None
     return min(started_at, now)
 
 
+type RecameraConfigEntry = ConfigEntry[RecameraCoordinator]
+
+
 class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
     """Coordinate device metadata, media metadata, and builtin YOLO."""
 
-    config_entry: ConfigEntry
+    config_entry: RecameraConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: RecameraConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -219,7 +223,6 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             name=f"{DOMAIN}.{config_entry.title}",
             update_interval=UPDATE_INTERVAL,
         )
-        self.config_entry = config_entry
         use_hass_session = hasattr(hass, "loop") and hasattr(
             RecameraDeviceClient, "async_set_rtsp_stream_enabled"
         )
@@ -408,7 +411,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         async with self._firmware_lock:
             if self._firmware_reboot is not None:
                 return self._firmware_update
-            now = datetime.now(UTC)
+            now = dt_util.utcnow()
             current = self.data.info.firmware_version if self.data else None
             cached = self._firmware_update
             if (
@@ -646,7 +649,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             in_progress=updating,
             status=("updating" if updating else "available" if available else "idle"),
             operation="external" if updating else None,
-            last_checked=datetime.now(UTC),
+            last_checked=dt_util.utcnow(),
         )
         self.async_update_listeners()
         return self._firmware_update
@@ -873,7 +876,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         self._firmware_reboot = {
             "from_version": previous,
             "operation": operation,
-            "started_at": datetime.now(UTC).isoformat(),
+            "started_at": dt_util.utcnow().isoformat(),
             "unreachable_seen": False,
             "target_version": target_version,
         }
@@ -891,7 +894,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         store = getattr(self, "_store", None)
         save = getattr(store, "async_delay_save", None)
         if save is not None:
-            save(lambda: self._store_payload(), 0)
+            save(self._store_payload, 0)
         self._schedule_firmware_reboot_monitor()
 
     @callback
@@ -934,7 +937,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             return
         elapsed = max(
             0.0,
-            (datetime.now(UTC) - started_at).total_seconds(),
+            (dt_util.utcnow() - started_at).total_seconds(),
         )
         remaining = max(0.0, FIRMWARE_REBOOT_TIMEOUT_SECONDS - elapsed)
         deadline = asyncio.get_running_loop().time() + remaining
@@ -960,7 +963,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                         store = getattr(self, "_store", None)
                         save = getattr(store, "async_delay_save", None)
                         if save is not None:
-                            save(lambda: self._store_payload(), 0)
+                            save(self._store_payload, 0)
                     continue
                 except RecameraError as err:
                     _LOGGER.debug(
@@ -1059,7 +1062,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 )
             ),
             operation=None,
-            last_checked=datetime.now(UTC),
+            last_checked=dt_util.utcnow(),
         )
         if current_version:
             self.hass.config_entries.async_update_entry(
@@ -1082,7 +1085,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         store = getattr(self, "_store", None)
         save = getattr(store, "async_delay_save", None)
         if save is not None:
-            save(lambda: self._store_payload(), 0)
+            save(self._store_payload, 0)
         self.async_update_listeners()
         self._async_publish_firmware_result(
             success=success,
@@ -1233,7 +1236,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 data=updated,
             )
             _LOGGER.info(
-                "reCamera discovery fallback switched %s -> %s",
+                "Switched reCamera discovery fallback %s -> %s",
                 current_host or "unknown",
                 host,
             )
@@ -1267,13 +1270,19 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         ) and await self._async_try_discovery_fallback(attempted):
             info_result, capabilities_result = await async_fetch_primary()
         if isinstance(info_result, RecameraAuthenticationError):
-            raise ConfigEntryAuthFailed("invalid_auth") from info_result
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from info_result
         if isinstance(info_result, BaseException):
             raise UpdateFailed(str(info_result)) from info_result
         info = info_result
         capabilities = dict(previous.capabilities) if previous is not None else {}
         if isinstance(capabilities_result, RecameraAuthenticationError):
-            raise ConfigEntryAuthFailed("invalid_auth") from capabilities_result
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from capabilities_result
         if isinstance(capabilities_result, BaseException):
             _LOGGER.debug(
                 "Unable to refresh camera capabilities: %s",
@@ -1320,7 +1329,10 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         ):
             profile = media_profiles.setdefault(stream_name, {})
             if isinstance(result, RecameraAuthenticationError):
-                raise ConfigEntryAuthFailed("invalid_auth") from result
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from result
             if isinstance(result, BaseException):
                 media_errors[f"{stream_name}.{item_name}"] = type(result).__name__
                 if item_name == "stream":
@@ -1350,7 +1362,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             store = getattr(self, "_store", None)
             if store is not None:
                 store.async_delay_save(
-                    lambda: self._store_payload(),
+                    self._store_payload,
                     30,
                 )
         previous_motion = (
@@ -1430,7 +1442,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 system_source_confirmed=(motion.system_source_confirmed),
                 reason="motion_app_not_installed",
                 app_health=SOURCE_AVAILABLE,
-                last_confirmed=datetime.now(UTC),
+                last_confirmed=dt_util.utcnow(),
             )
         running = app.get("running") is True or app.get("observed_state") == "running"
         app_type = app.get("app_type", app.get("type"))
@@ -1464,7 +1476,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             reason=app.get("state_reason"),
             app_health=SOURCE_AVAILABLE,
             error=None,
-            last_confirmed=datetime.now(UTC),
+            last_confirmed=dt_util.utcnow(),
         )
         try:
             config_values = await self._async_read_motion_config_values()
@@ -1473,7 +1485,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 config=config_values,
                 config_health=SOURCE_AVAILABLE,
                 config_error=None,
-                config_last_confirmed=datetime.now(UTC),
+                config_last_confirmed=dt_util.utcnow(),
             )
         except RecameraError as err:
             _LOGGER.debug(
@@ -1513,7 +1525,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 raise RecameraValidationError("motion_transition_in_progress")
             previous_motion = self.data.motion
             self._motion_generation = getattr(self, "_motion_generation", 0) + 1
-            transition_started = datetime.now(UTC)
+            transition_started = dt_util.utcnow()
             pending_motion = replace(
                 previous_motion,
                 running=enabled,
@@ -1602,7 +1614,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 transition_error=None,
                 app_health=SOURCE_AVAILABLE,
                 error=None,
-                last_confirmed=datetime.now(UTC),
+                last_confirmed=dt_util.utcnow(),
             )
             self.async_set_updated_data(replace(self.data, motion=motion))
 
@@ -1654,7 +1666,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                     config=dict(values),
                     config_health=SOURCE_AVAILABLE,
                     config_error=None,
-                    config_last_confirmed=datetime.now(UTC),
+                    config_last_confirmed=dt_util.utcnow(),
                 ),
             )
         )
@@ -1715,7 +1727,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                                 None if refreshed is not None else type(err).__name__
                             ),
                             config_last_confirmed=(
-                                datetime.now(UTC)
+                                dt_util.utcnow()
                                 if refreshed is not None
                                 else self.data.motion.config_last_confirmed
                             ),
@@ -1723,7 +1735,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                     )
                 )
                 raise
-            now = datetime.now(UTC)
+            now = dt_util.utcnow()
             motion = replace(
                 self.data.motion,
                 config=readback,
@@ -1831,7 +1843,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         if not isinstance(payload, dict) or self.data is None:
             return
 
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         message_type = payload.get("type")
         if message_type in {"hello", "snapshot"}:
             self.async_set_updated_data(
