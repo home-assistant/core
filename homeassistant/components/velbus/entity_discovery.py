@@ -1,6 +1,7 @@
 """Discover Velbus entities from the live bus state."""
 
 from collections.abc import Callable
+import logging
 from typing import TYPE_CHECKING
 
 from velbusaio.controller import Velbus
@@ -13,6 +14,8 @@ from .entity import VelbusEntity
 
 if TYPE_CHECKING:
     from . import VelbusConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def entity_registry_key(domain: str, unique_id: str) -> str:
@@ -81,14 +84,22 @@ def discover_sensor_entities(controller: Velbus) -> list[Entity]:
 
     entities: list[Entity] = []
     for channel in controller.get_all_sensor():
-        entities.extend(
-            VelbusSensor(
-                channel,
-                SENSOR_DESCRIPTIONS[sensor_type],
-                is_counter=sensor_type in COUNTER_SENSOR_KEYS,
+        for sensor_type in channel.get_sensor_types():
+            description = SENSOR_DESCRIPTIONS.get(sensor_type)
+            if description is None:
+                _LOGGER.warning(
+                    "Skipping unknown Velbus sensor type %r on %s",
+                    sensor_type,
+                    channel.get_full_name(),
+                )
+                continue
+            entities.append(
+                VelbusSensor(
+                    channel,
+                    description,
+                    is_counter=sensor_type in COUNTER_SENSOR_KEYS,
+                )
             )
-            for sensor_type in channel.get_sensor_types()
-        )
 
     return entities
 

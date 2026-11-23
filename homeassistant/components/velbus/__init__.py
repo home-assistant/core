@@ -33,6 +33,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .bus_sync import async_sync_bus_state
 from .const import CONF_VLP_FILE, DOMAIN
+from .entity_discovery import entity_registry_key
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -308,6 +309,19 @@ async def async_remove_config_entry_device(
     if device_entry.config_entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    removal_device_ids = {device_entry.id}
+    removal_device_ids.update(
+        child.id
+        for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id)
+    )
+    for entity in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
+        if entity.device_id not in removal_device_ids:
+            continue
+        if entity.unique_id:
+            config_entry.runtime_data.known_unique_ids.discard(
+                entity_registry_key(entity.domain, entity.unique_id)
+            )
     for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
         dev_reg.async_remove_device(child.id)
     return True
