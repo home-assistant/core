@@ -185,10 +185,9 @@ class Trigger:
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
         # because unsubscribe is done with help of async_create_task
-        if not topic_changed:
-            return
-        for trig in self.trigger_instances:
-            await trig.async_attach_trigger()
+        if topic_changed:
+            for trig in self.trigger_instances:
+                await trig.async_attach_trigger()
 
     def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""
