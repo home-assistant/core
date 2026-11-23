@@ -774,7 +774,7 @@ boto3==1.43.117
 bring-api==1.1.2
 
 # homeassistant.components.broadlink
-broadlink-async==1.3.0
+broadlink-async==1.4.1
 
 # homeassistant.components.brother
 brother==7.0.0
@@ -2227,7 +2227,7 @@ pydaikin==2.24.1
 pydanfossair==1.0.0
 
 # homeassistant.components.deako
-pydeako-community==0.6.1
+pydeako-community==0.7.1
 
 # homeassistant.components.deconz
 pydeconz==120
@@ -3003,7 +3003,7 @@ pyzbar==0.1.9
 pyzerproc==0.4.8
 
 # homeassistant.components.zonneplan
-pyzonneplan==0.3.0
+pyzonneplan==0.3.2
 
 # homeassistant.components.qbittorrent
 qbittorrent-api==2026.5.1
