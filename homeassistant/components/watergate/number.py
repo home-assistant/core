@@ -93,9 +93,18 @@ class SonicAutoShutOffThreshold(WatergateEntity, NumberEntity):
 
     @property
     @override
-    def native_value(self) -> int:
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data.auto_shut_off is not None
+
+    @property
+    @override
+    def native_value(self) -> int | None:
         """Return the configured threshold."""
-        return self.entity_description.value_fn(self.coordinator.data.auto_shut_off)
+        auto_shut_off = self.coordinator.data.auto_shut_off
+        return (
+            self.entity_description.value_fn(auto_shut_off) if auto_shut_off else None
+        )
 
     @override
     async def async_set_native_value(self, value: float) -> None:

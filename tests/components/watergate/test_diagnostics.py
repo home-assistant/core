@@ -5,6 +5,7 @@ import copy
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import (
     AsyncMock,
     MockConfigEntry,
@@ -95,6 +96,32 @@ async def test_diagnostics_without_battery(
     result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
 
     assert result["data"]["power"] is None
+
+
+@pytest.mark.parametrize(
+    ("read", "key"),
+    [
+        ("async_get_telemetry_data", "telemetry"),
+        ("async_get_networking", "networking"),
+        ("async_get_auto_shut_off", "auto_shut_off"),
+    ],
+)
+async def test_diagnostics_with_empty_response(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    read: str,
+    key: str,
+) -> None:
+    """Test diagnostics are still provided when the device leaves out some data."""
+    getattr(mock_watergate_client, read).return_value = None
+    await init_integration(hass, mock_entry)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+
+    assert result["data"][key] is None
+    assert result["data"]["state"]["valve_state"] == "open"
 
 
 async def test_diagnostics_without_device_state(

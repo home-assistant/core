@@ -53,8 +53,10 @@ def _device_state(state: DeviceStateV2) -> dict[str, Any]:
     }
 
 
-def _telemetry(telemetry: TelemetryData) -> dict[str, Any]:
+def _telemetry(telemetry: TelemetryData | None) -> dict[str, Any] | None:
     """Return the telemetry as a dict."""
+    if telemetry is None:
+        return None
     event = telemetry.ongoing_event
     return {
         "flow": telemetry.flow,
@@ -67,8 +69,10 @@ def _telemetry(telemetry: TelemetryData) -> dict[str, Any]:
     }
 
 
-def _networking(networking: NetworkingData) -> dict[str, Any]:
+def _networking(networking: NetworkingData | None) -> dict[str, Any] | None:
     """Return the networking data as a dict."""
+    if networking is None:
+        return None
     return {
         "mqtt_connected": networking.mqtt_connected,
         "wifi_connected": networking.wifi_connected,
@@ -82,8 +86,10 @@ def _networking(networking: NetworkingData) -> dict[str, Any]:
     }
 
 
-def _auto_shut_off(auto_shut_off: AutoShutOffState) -> dict[str, Any]:
+def _auto_shut_off(auto_shut_off: AutoShutOffState | None) -> dict[str, Any] | None:
     """Return the auto shut-off state as a dict."""
+    if auto_shut_off is None:
+        return None
     return {
         "enabled": auto_shut_off.enabled,
         "volume_threshold": auto_shut_off.volume_threshold,

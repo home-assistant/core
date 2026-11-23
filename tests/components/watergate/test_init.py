@@ -19,10 +19,14 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from watergate_local_api import WatergateApiException
 from watergate_local_api.models import PowerSupply, TelemetryData
 
-from homeassistant.components.valve import ValveState
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveState,
+)
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -31,12 +35,64 @@ from .const import DEFAULT_DEVICE_STATE_V2, MOCK_WEBHOOK_ID
 
 NEGATIVE_VOLUME_ENTITY_ID = "sensor.sonic_water_meter_negative_volume"
 
-REQUIRED_READS = [
-    "async_get_device_state_v2",
-    "async_get_telemetry_data",
-    "async_get_networking",
-    "async_get_auto_shut_off",
+OPTIONAL_READS = [
+    pytest.param(
+        "async_get_telemetry_data",
+        {
+            "sensor.sonic_volume_flow_rate",
+            "sensor.sonic_water_pressure",
+            "sensor.sonic_water_temperature",
+        },
+        id="telemetry",
+    ),
+    pytest.param(
+        "async_get_networking",
+        {
+            "binary_sensor.sonic_mqtt_connected",
+            "binary_sensor.sonic_wi_fi_connected",
+            "sensor.sonic_mqtt_up_since",
+            "sensor.sonic_signal_strength",
+            "sensor.sonic_wi_fi_up_since",
+        },
+        id="networking",
+    ),
+    pytest.param(
+        "async_get_auto_shut_off",
+        {
+            "number.sonic_auto_shut_off_duration_threshold",
+            "number.sonic_auto_shut_off_volume_threshold",
+            "switch.sonic_auto_shut_off",
+        },
+        id="auto_shut_off",
+    ),
 ]
+
+WEBHOOK_EVENTS = [
+    {"type": "valve", "data": {"state": "closed"}},
+    {
+        "type": "telemetry",
+        "data": {"flow": 12, "pressure": 3000, "temperature": 20.5, "errors": None},
+    },
+    {
+        "type": "wifi-changed",
+        "data": {
+            "ip": "192.168.1.2",
+            "gateway": "192.168.1.1",
+            "subnet": "255.255.255.0",
+            "ssid": "Sonic",
+            "rssi": -60,
+        },
+    },
+]
+
+
+def _unavailable_entities(hass: HomeAssistant) -> set[str]:
+    """Return the entity IDs of the unavailable entities."""
+    return {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
 
 
 async def test_async_setup_entry(
@@ -209,35 +265,31 @@ async def test_device_state_missing_from_the_v1_fallback(
     assert mock_entry.runtime_data.last_update_success is False
 
 
-@pytest.mark.parametrize("read", REQUIRED_READS)
-async def test_setup_retry_on_empty_response(
+async def test_setup_retry_on_empty_device_state(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
-    read: str,
 ) -> None:
-    """Setup is retried when the device answers a read with an empty response."""
-    getattr(mock_watergate_client, read).return_value = None
+    """Setup is retried when the device answers with an empty device state."""
+    mock_watergate_client.async_get_device_state_v2.return_value = None
 
     await init_integration(hass, mock_entry)
 
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("read", REQUIRED_READS)
-async def test_update_fails_on_empty_response(
+async def test_update_fails_on_empty_device_state(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    read: str,
 ) -> None:
-    """An empty response fails the update, and webhooks are still handled."""
+    """An empty device state fails the update, and webhooks are still handled."""
     await init_integration(hass, mock_entry)
     client = await hass_client_no_auth()
 
-    getattr(mock_watergate_client, read).return_value = None
+    mock_watergate_client.async_get_device_state_v2.return_value = None
     freezer.tick(timedelta(minutes=2, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -247,28 +299,75 @@ async def test_update_fails_on_empty_response(
     assert error.translation_key == "empty_response"
     assert {state.state for state in hass.states.async_all()} == {STATE_UNAVAILABLE}
 
-    for body in (
-        {"type": "valve", "data": {"state": "closed"}},
-        {
-            "type": "telemetry",
-            "data": {"flow": 12, "pressure": 3000, "temperature": 20.5, "errors": None},
-        },
-        {
-            "type": "wifi-changed",
-            "data": {
-                "ip": "192.168.1.2",
-                "gateway": "192.168.1.1",
-                "subnet": "255.255.255.0",
-                "ssid": "Sonic",
-                "rssi": -60,
-            },
-        },
-    ):
+    await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "valve", "data": {"state": "closed"}},
+    )
+    assert mock_entry.runtime_data.data.state.valve_state == "closed"
+
+
+@pytest.mark.parametrize(("read", "unavailable"), OPTIONAL_READS)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_setup_with_empty_response(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    read: str,
+    unavailable: set[str],
+) -> None:
+    """Only the entities using the missing data are unavailable after setup."""
+    getattr(mock_watergate_client, read).return_value = None
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert _unavailable_entities(hass) == unavailable
+
+
+@pytest.mark.parametrize(("read", "unavailable"), OPTIONAL_READS)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_update_with_empty_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    read: str,
+    unavailable: set[str],
+) -> None:
+    """Webhooks and the valve keep working while some of the data is missing."""
+    await init_integration(hass, mock_entry)
+    client = await hass_client_no_auth()
+    read_mock = getattr(mock_watergate_client, read)
+    response = read_mock.return_value
+
+    read_mock.return_value = None
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _unavailable_entities(hass) == unavailable
+
+    for body in WEBHOOK_EVENTS:
         await client.post(f"/api/webhook/{MOCK_WEBHOOK_ID}", json=body)
-    data = mock_entry.runtime_data.data
-    assert data.state.valve_state == "closed"
-    assert data.telemetry.flow == 12
-    assert data.networking.rssi == -60
+    await hass.async_block_till_done()
+    assert "Error processing webhook" not in caplog.text
+    assert hass.states.get("valve.sonic").state == ValveState.CLOSED
+    assert _unavailable_entities(hass) == unavailable
+
+    await hass.services.async_call(
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: "valve.sonic"},
+        blocking=True,
+    )
+    mock_watergate_client.async_set_valve_state.assert_awaited_once()
+
+    read_mock.return_value = response
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _unavailable_entities(hass) == set()
 
 
 async def test_device_state_v2_is_not_probed_again_after_falling_back(
