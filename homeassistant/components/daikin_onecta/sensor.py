@@ -448,6 +448,8 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             climate_control = point.climate_control
             if climate_control is None:
                 return None
+            if (setpoint := climate_control.setpoint(self._value)) is not None:
+                return setpoint
             return next(
                 (
                     setpoint

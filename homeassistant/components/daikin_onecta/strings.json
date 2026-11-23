@@ -372,14 +372,8 @@
       "leavingwateroffset": {
         "name": "Leaving water offset"
       },
-      "leavingwateroffset_setpoint": {
-        "name": "Leaving water offset setpoint"
-      },
       "leavingwatertemperature": {
         "name": "Leaving water temperature"
-      },
-      "leavingwatertemperature_setpoint": {
-        "name": "Leaving water temperature setpoint"
       },
       "operationmode": {
         "name": "Operation mode",
@@ -418,9 +412,6 @@
       },
       "roomtemperature": {
         "name": "Room temperature"
-      },
-      "roomtemperature_setpoint": {
-        "name": "Room temperature setpoint"
       },
       "setpointmode": {
         "name": "Setpoint mode",

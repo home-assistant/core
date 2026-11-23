@@ -1,10 +1,12 @@
 """Tests for Daikin Onecta sensor entities."""
 
+from collections.abc import Callable
 from dataclasses import replace
 import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from daikin_onecta.models import Characteristic, GatewayDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -38,6 +40,30 @@ from .platform_helpers import (
     _async_setup_fixture,
     _load_gateway_devices,
 )
+
+
+def _set_cooling_calculated_temperature(gateway: GatewayDevice) -> None:
+    """Set different calculated temperatures for the current and first modes."""
+    point = gateway.management_points_by_type("climateControl")[0]
+    point.operation_mode = Characteristic(
+        value="cooling", values=["auto", "cooling", "heating"]
+    )
+    assert point.temperature_control is not None
+    operation_modes = point.temperature_control.value.operation_modes
+    operation_modes["auto"].setpoints["calculatedLeavingWaterTemperature"].value = 45
+    operation_modes["cooling"].setpoints["calculatedLeavingWaterTemperature"].value = 38
+
+
+def _remove_cooling_calculated_temperature(gateway: GatewayDevice) -> None:
+    """Make the first mode the fallback when the current mode lacks a value."""
+    point = gateway.management_points_by_type("climateControl")[0]
+    point.operation_mode = Characteristic(
+        value="cooling", values=["auto", "cooling", "heating"]
+    )
+    assert point.temperature_control is not None
+    operation_modes = point.temperature_control.value.operation_modes
+    operation_modes["auto"].setpoints["calculatedLeavingWaterTemperature"].value = 45
+    operation_modes["cooling"].setpoints.pop("calculatedLeavingWaterTemperature")
 
 
 async def test_calculated_leaving_water_temperature_is_a_sensor(
@@ -76,6 +102,47 @@ async def test_calculated_leaving_water_temperature_is_a_sensor(
     assert calculated_state is not None and calculated_state.state == "50"
     assert calculated_climate_entity is None
     assert leaving_water_climate_entity is not None
+
+
+@pytest.mark.parametrize(
+    ("prepare_gateway", "expected_value"),
+    [
+        pytest.param(
+            _set_cooling_calculated_temperature,
+            "38",
+            id="current-operation-mode",
+        ),
+        pytest.param(
+            _remove_cooling_calculated_temperature,
+            "45",
+            id="fallback-to-first-mode",
+        ),
+    ],
+)
+async def test_calculated_lwt_sensor_uses_current_mode_then_falls_back(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    prepare_gateway: Callable[[GatewayDevice], None],
+    expected_value: str,
+) -> None:
+    """Prefer the current operation's calculated LWT and fall back if absent."""
+    await _async_setup_fixture(hass, config_entry, "gas")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values())).device
+    prepare_gateway(gateway)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    sensor_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_1_setpoint_calculatedLeavingWaterTemperature",
+    )
+    assert sensor_id is not None
+    state = hass.states.get(sensor_id)
+    assert state is not None
+    assert state.state == expected_value
 
 
 @pytest.mark.parametrize(
