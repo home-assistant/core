@@ -314,6 +314,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
 
+@callback
+def _async_mqtt_client_not_available(hass: HomeAssistant) -> None:
+    """Let the waiters for the MQTT client know the client is not available."""
+    # A new future is created when the setup is retried
+    client_available = hass.data.pop(DATA_MQTT_AVAILABLE, None)
+    if client_available is not None and not client_available.done():
+        client_available.set_result(False)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry."""
     mqtt_data: MqttData
@@ -333,6 +342,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 {CONF_PORT: DEFAULT_PORT} | new_entry_data,
             )
         except OSError as err:
+            _async_mqtt_client_not_available(hass)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_load_certificates",
@@ -376,6 +386,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
+        # Only expose the client after it was initialized with the certificates
+        await client.async_init_client()
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
@@ -383,7 +395,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         else:
             # Initial setup
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        await client.async_start(mqtt_data)
+        client.async_start(mqtt_data)
 
         # Restore saved subscriptions
         if mqtt_data.subscriptions_to_restore:
@@ -403,7 +415,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     else:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 
-    mqtt_data, conf = await _setup_client()
+    try:
+        mqtt_data, conf = await _setup_client()
+    except ConfigEntryNotReady:
+        _async_mqtt_client_not_available(hass)
+        raise
     platforms_used = platforms_from_config(mqtt_data.config)
     platforms_used.update(_platforms_in_use(hass, entry))
     integration = async_get_loaded_integration(hass, DOMAIN)

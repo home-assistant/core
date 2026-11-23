@@ -579,6 +579,36 @@ async def test_installed_certificate_files_check_error(
     } | {key: str(tmp_path / file) for key, file in file_placeholders.items()}
 
 
+async def test_ignored_client_certificate_issue_changes(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    tmp_path: Path,
+) -> None:
+    """Test an ignored issue is shown again when the certificate issue changes."""
+    expiry = dt_util.utcnow() + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    await _async_setup_entry(hass, mqtt_mock_entry, _certificate_file_data(tmp_path))
+    issue_registry.async_ignore(DOMAIN, ISSUE_CLIENT_CERTIFICATE, True)
+
+    # The issue stays ignored while it does not change
+    await _async_advance_one_day(hass, freezer)
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.translation_key == "client_certificate_file_expiring"
+    assert issue.dismissed_version is not None
+
+    await hass.async_add_executor_job(
+        _install_certificate, tmp_path, expiry + timedelta(days=90)
+    )
+    await _async_advance_one_day(hass, freezer)
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.translation_key == "client_certificate_renewed"
+    assert issue.dismissed_version is None
+
+
 async def test_renewed_client_certificate_not_yet_valid(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

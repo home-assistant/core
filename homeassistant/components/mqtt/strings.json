@@ -1152,7 +1152,7 @@
     },
     "client_certificate_expiring": {
       "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}. Upload a renewed client certificate and private key by reconfiguring the MQTT integration, to make sure Home Assistant can keep connecting to your MQTT broker.",
-      "title": "MQTT client certificate expires soon"
+      "title": "MQTT client certificate needs renewal"
     },
     "client_certificate_file_expiring": {
       "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}, but no renewed certificate was found in this file. Replace the client certificate and private key files with renewed ones, to make sure Home Assistant can keep connecting to your MQTT broker. When a renewed certificate is found, you will be offered to reload MQTT.",

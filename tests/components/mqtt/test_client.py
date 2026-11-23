@@ -37,6 +37,7 @@ from homeassistant.components.mqtt.const import (
 )
 from homeassistant.components.mqtt.models import (
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     MessageCallbackType,
     ReceiveMessage,
 )
@@ -2009,6 +2010,8 @@ async def test_setup_certificates_cannot_be_loaded(
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
+    waiter = hass.async_create_task(mqtt.async_wait_for_mqtt_client(hass))
+    await asyncio.sleep(0)
 
     with patch.object(
         mqtt.MQTT, "cleanup", autospec=True, side_effect=mqtt.MQTT.cleanup
@@ -2022,6 +2025,15 @@ async def test_setup_certificates_cannot_be_loaded(
     )
     # The listeners of the client that failed to set up are removed
     assert mock_cleanup.call_count == cleanup_calls
+
+    # Waiters are told the client is not available, and a retry gets a new future
+    assert await waiter is False
+    assert DATA_MQTT_AVAILABLE not in hass.data
+
+    # The client that failed to set up is not used
+    assert DATA_MQTT not in hass.data
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_publish(hass, "test-topic", "test-payload")
 
 
 @pytest.mark.parametrize(
