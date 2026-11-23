@@ -35,3 +35,33 @@
     }),
   })
 # ---
+# name: test_entry_diagnostics_url_credentials
+  dict({
+    'disks': list([
+      dict({
+        'freeSpace': 282500067328,
+        'label': '',
+        'path': 'C:\\',
+        'totalSpace': 499738734592,
+      }),
+    ]),
+    'entry_data': dict({
+      'api_key': '**REDACTED**',
+      'url': 'https://**REDACTED**@sonarr.example.com/',
+      'verify_ssl': True,
+    }),
+    'entry_options': dict({
+      'upcoming_days': 1,
+      'wanted_max_items': 50,
+    }),
+    'last_update_success': dict({
+      'commands': True,
+      'diskspace': True,
+      'queue': True,
+      'series': True,
+      'status': True,
+      'upcoming': True,
+      'wanted': True,
+    }),
+  })
+# ---

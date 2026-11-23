@@ -3,13 +3,23 @@
 from dataclasses import fields
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_KEY
+from yarl import URL
+
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SonarrConfigEntry, SonarrDataUpdateCoordinator
 
 TO_REDACT = {CONF_API_KEY}
+
+
+def _redact_url_credentials(url: str) -> str:
+    """Redact the user and password of a URL, for example of a proxy."""
+    parsed = URL(url)
+    if parsed.user is None:
+        return url
+    return str(parsed.with_user(REDACTED).with_password(None))
 
 
 def _model_to_dict(model: Any) -> dict[str, Any]:
@@ -36,8 +46,11 @@ async def async_get_config_entry_diagnostics(
         "wanted": data.wanted,
     }
 
+    entry_data = async_redact_data(entry.data, TO_REDACT)
+    entry_data[CONF_URL] = _redact_url_credentials(entry_data[CONF_URL])
+
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT),
+        "entry_data": entry_data,
         "entry_options": dict(entry.options),
         "last_update_success": {
             name: coordinator.last_update_success
