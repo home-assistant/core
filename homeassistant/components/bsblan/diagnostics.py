@@ -35,18 +35,16 @@ async def async_get_config_entry_diagnostics(
     }
 
     # Add DHW config and schedule from slow coordinator if available
-    if data.slow_coordinator.data:
+    if slow_coordinator_data := data.slow_coordinator.data_or_none:
         slow_data = {}
-        if data.slow_coordinator.data.dhw_config:
-            slow_data["dhw_config"] = data.slow_coordinator.data.dhw_config.model_dump()
-        if data.slow_coordinator.data.dhw_schedule:
-            slow_data["dhw_schedule"] = (
-                data.slow_coordinator.data.dhw_schedule.model_dump()
-            )
-        if data.slow_coordinator.data.heating_schedule:
+        if slow_coordinator_data.dhw_config:
+            slow_data["dhw_config"] = slow_coordinator_data.dhw_config.model_dump()
+        if slow_coordinator_data.dhw_schedule:
+            slow_data["dhw_schedule"] = slow_coordinator_data.dhw_schedule.model_dump()
+        if slow_coordinator_data.heating_schedule:
             slow_data["heating_schedule"] = {
                 str(circuit): schedule.model_dump()
-                for circuit, schedule in data.slow_coordinator.data.heating_schedule.items()
+                for circuit, schedule in slow_coordinator_data.heating_schedule.items()
             }
         if slow_data:
             diagnostics["slow_coordinator_data"] = slow_data
