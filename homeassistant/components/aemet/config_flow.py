@@ -137,10 +137,14 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             entry = self._get_reconfigure_entry()
+            latitude = entry.data[CONF_LATITUDE]
+            longitude = entry.data[CONF_LONGITUDE]
+
+            await self.async_set_unique_id(f"{latitude}-{longitude}")
+            self._abort_if_unique_id_mismatch()
+
             errors = await self._async_validate_api_key(
-                user_input[CONF_API_KEY],
-                entry.data[CONF_LATITUDE],
-                entry.data[CONF_LONGITUDE],
+                user_input[CONF_API_KEY], latitude, longitude
             )
             if not errors:
                 return self.async_update_reload_and_abort(
