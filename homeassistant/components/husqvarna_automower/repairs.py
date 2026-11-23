@@ -32,7 +32,7 @@ class MigrationRepairFlow(RepairsFlow):
         """Start reauthentication after confirmation."""
         if user_input is not None:
             self.entry.async_start_reauth(self.hass)
-            return self.async_create_entry(data={})
+            return self.async_abort(reason="reauth_started")
 
         return self.async_show_form(step_id="confirm", data_schema=probatio.Schema({}))
 

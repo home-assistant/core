@@ -42,13 +42,17 @@ async def test_migration_repair_starts_reauth(
 
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await process_repair_fix_flow(client, result["flow_id"], json={})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_started"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await hass.async_block_till_done()
     reauth_flows = hass.config_entries.flow.async_progress()
     assert len(reauth_flows) == 1
     assert reauth_flows[0]["context"]["source"] == "reauth"
+    hass.config_entries.flow.async_abort(reauth_flows[0]["flow_id"])
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
