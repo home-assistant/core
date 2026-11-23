@@ -1016,7 +1016,7 @@ async def test_form_country_options(hass: HomeAssistant) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"remove_holidays": "remove_holiday_error"}
+    assert result["errors"] == {"custom_holidays": "remove_holiday_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
