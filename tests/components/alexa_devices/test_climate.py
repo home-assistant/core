@@ -38,7 +38,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import setup_integration
 from .const import (
@@ -207,6 +211,46 @@ def _operation(
             id="temperature",
         ),
         pytest.param(
+            "HEAT",
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 20.3},
+            [
+                _operation(
+                    "setTargetSetpoint",
+                    {"targetSetpoint": {"value": 69, "scale": "FAHRENHEIT"}},
+                )
+            ],
+            (HVACMode.HEAT, {ATTR_TEMPERATURE: 20.6}),
+            id="temperature_rounded",
+        ),
+        pytest.param(
+            "HEAT",
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_HVAC_MODE: HVACMode.HEAT, ATTR_TEMPERATURE: 20},
+            [
+                _operation(
+                    "setTargetSetpoint",
+                    {"targetSetpoint": {"value": 68, "scale": "FAHRENHEIT"}},
+                )
+            ],
+            (HVACMode.HEAT, {ATTR_TEMPERATURE: 20.0}),
+            id="temperature_same_hvac_mode",
+        ),
+        pytest.param(
+            "COOL",
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_HVAC_MODE: HVACMode.HEAT, ATTR_TEMPERATURE: 20},
+            [
+                _operation("setThermostatMode", {"thermostatMode": "HEAT"}),
+                _operation(
+                    "setTargetSetpoint",
+                    {"targetSetpoint": {"value": 68, "scale": "FAHRENHEIT"}},
+                ),
+            ],
+            (HVACMode.HEAT, {ATTR_TEMPERATURE: 20.0}),
+            id="temperature_with_hvac_mode",
+        ),
+        pytest.param(
             "AUTO",
             SERVICE_SET_TEMPERATURE,
             {ATTR_TARGET_TEMP_LOW: 18, ATTR_TARGET_TEMP_HIGH: 24},
@@ -214,14 +258,14 @@ def _operation(
                 _operation(
                     "setTargetSetpoint",
                     {
-                        "lowerSetpoint": {"value": 64.4, "scale": "FAHRENHEIT"},
-                        "upperSetpoint": {"value": 75.2, "scale": "FAHRENHEIT"},
+                        "lowerSetpoint": {"value": 64, "scale": "FAHRENHEIT"},
+                        "upperSetpoint": {"value": 75, "scale": "FAHRENHEIT"},
                     },
                 )
             ],
             (
                 HVACMode.HEAT_COOL,
-                {ATTR_TARGET_TEMP_LOW: 18.0, ATTR_TARGET_TEMP_HIGH: 24.0},
+                {ATTR_TARGET_TEMP_LOW: 17.8, ATTR_TARGET_TEMP_HIGH: 23.9},
             ),
             id="temperature_range",
         ),
@@ -233,14 +277,14 @@ def _operation(
                 _operation(
                     "setTargetSetpoint",
                     {
-                        "lowerSetpoint": {"value": 64.4, "scale": "FAHRENHEIT"},
-                        "upperSetpoint": {"value": 75.2, "scale": "FAHRENHEIT"},
+                        "lowerSetpoint": {"value": 64, "scale": "FAHRENHEIT"},
+                        "upperSetpoint": {"value": 75, "scale": "FAHRENHEIT"},
                     },
                 )
             ],
             (
                 HVACMode.HEAT_COOL,
-                {ATTR_TARGET_TEMP_LOW: 18.0, ATTR_TARGET_TEMP_HIGH: 24.0},
+                {ATTR_TARGET_TEMP_LOW: 17.8, ATTR_TARGET_TEMP_HIGH: 23.9},
             ),
             id="temperature_range_eco",
         ),
@@ -289,56 +333,26 @@ async def test_climate_services(
     } == expected_attributes
 
 
-@pytest.mark.parametrize(
-    ("mode", "service_data", "translation_key"),
-    [
-        pytest.param(
-            "AUTO",
-            {ATTR_TEMPERATURE: 20},
-            "missing_target_temperature_entity_feature",
-            id="temperature_in_heat_cool",
-        ),
-        pytest.param(
-            "COOL",
-            {ATTR_HVAC_MODE: HVACMode.HEAT, ATTR_TEMPERATURE: 20},
-            "hvac_mode_with_temperature",
-            id="hvac_mode_with_temperature",
-        ),
-        pytest.param(
-            "AUTO",
-            {
-                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
-                ATTR_TARGET_TEMP_LOW: 18,
-                ATTR_TARGET_TEMP_HIGH: 24,
-            },
-            "hvac_mode_with_temperature",
-            id="hvac_mode_with_temperature_range",
-        ),
-    ],
-)
 async def test_set_temperature_rejected(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mode: str,
-    service_data: dict[str, Any],
-    translation_key: str,
 ) -> None:
-    """Test invalid target temperature requests are rejected."""
+    """Test a single target temperature is rejected in heat/cool mode."""
     mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN][
         "thermostatMode"
-    ].value = mode
+    ].value = "AUTO"
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_key == "missing_target_temperature_entity_feature"
     mock_amazon_devices_client.call_feature_operation.assert_not_called()
 
 
@@ -465,12 +479,24 @@ async def test_command_without_known_setpoint(
     assert state.attributes[ATTR_TEMPERATURE] is None
 
 
+@pytest.mark.parametrize(
+    ("unit_system", "target", "expected_step", "expected_value"),
+    [
+        pytest.param(METRIC_SYSTEM, 21.5, 0.5, 21.5, id="metric"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 70, 1.0, 21.0, id="us_customary"),
+    ],
+)
 async def test_celsius_thermostat(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    unit_system: UnitSystem,
+    target: float,
+    expected_step: float,
+    expected_value: float,
 ) -> None:
-    """Test a thermostat using Celsius has half degree steps and sends Celsius."""
+    """Test a thermostat using Celsius sends half degrees in Celsius."""
+    hass.config.units = unit_system
     sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
     for sensor in sensors.values():
         sensor.scale = "CELSIUS" if sensor.scale else None
@@ -478,12 +504,12 @@ async def test_celsius_thermostat(
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 0.5
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == expected_step
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target},
         blocking=True,
     )
 
@@ -491,9 +517,32 @@ async def test_celsius_thermostat(
         TEST_DEVICE_THERMOSTAT,
         "thermostat",
         "setTargetSetpoint",
-        command_payload={"targetSetpoint": {"value": 21.5, "scale": "CELSIUS"}},
+        command_payload={
+            "targetSetpoint": {"value": expected_value, "scale": "CELSIUS"}
+        },
         instance=None,
     )
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "expected_step"),
+    [
+        pytest.param(METRIC_SYSTEM, 0.5, id="metric"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 1.0, id="us_customary"),
+    ],
+)
+async def test_fahrenheit_thermostat_step(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unit_system: UnitSystem,
+    expected_step: float,
+) -> None:
+    """Test a thermostat using Fahrenheit shows the step of the display unit."""
+    hass.config.units = unit_system
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == expected_step
 
 
 async def test_pushed_sensor_update(

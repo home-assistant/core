@@ -16,12 +16,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import AMAZON_TO_UNIT, DOMAIN
+from .const import AMAZON_TO_UNIT
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
 
@@ -51,8 +50,10 @@ HVAC_MODE_TO_AMAZON = {
 UNIT_TO_AMAZON: dict[str, str] = {value: key for key, value in AMAZON_TO_UNIT.items()}
 
 # the thermostat reports half degrees in Celsius
-TARGET_TEMP_STEP_CELSIUS = 0.5
-TARGET_TEMP_STEP_FAHRENHEIT = 1.0
+TARGET_TEMP_STEP: dict[str, float] = {
+    UnitOfTemperature.CELSIUS: 0.5,
+    UnitOfTemperature.FAHRENHEIT: 1.0,
+}
 
 
 async def async_setup_entry(
@@ -207,9 +208,13 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
-        if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
-            return TARGET_TEMP_STEP_CELSIUS
-        return TARGET_TEMP_STEP_FAHRENHEIT
+        # climate publishes the step as is, in the unit shown to the user
+        return TARGET_TEMP_STEP[self.hass.config.units.temperature_unit]
+
+    def _round_to_step(self, temperature: float) -> float:
+        """Round a temperature to a setpoint the thermostat accepts."""
+        step = TARGET_TEMP_STEP[self.native_temperature_unit]
+        return round(temperature / step) * step
 
     @property
     @override
@@ -358,15 +363,14 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature or temperature range."""
-        # the available setpoints depend on the mode, so both cannot change at once
-        if ATTR_HVAC_MODE in kwargs:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="hvac_mode_with_temperature",
-            )
+        # the available setpoints depend on the mode, so it is applied first
+        if (
+            hvac_mode := kwargs.get(ATTR_HVAC_MODE)
+        ) is not None and hvac_mode != self.hvac_mode:
+            await self.async_set_hvac_mode(hvac_mode)
         scale = UNIT_TO_AMAZON[self.native_temperature_unit]
         if ATTR_TEMPERATURE in kwargs:
-            target = kwargs[ATTR_TEMPERATURE]
+            target = self._round_to_step(kwargs[ATTR_TEMPERATURE])
             await self._async_call_feature_operation(
                 "setTargetSetpoint",
                 {"targetSetpoint": {"value": target, "scale": scale}},
@@ -374,8 +378,8 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 scale=scale,
             )
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            low = kwargs[ATTR_TARGET_TEMP_LOW]
-            high = kwargs[ATTR_TARGET_TEMP_HIGH]
+            low = self._round_to_step(kwargs[ATTR_TARGET_TEMP_LOW])
+            high = self._round_to_step(kwargs[ATTR_TARGET_TEMP_HIGH])
             await self._async_call_feature_operation(
                 "setTargetSetpoint",
                 {
