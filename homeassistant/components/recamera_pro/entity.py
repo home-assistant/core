@@ -6,11 +6,7 @@ from recamera_protocol import RecameraError, RecameraValidationError, format_url
 
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceEntryType,
-    DeviceInfo,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -119,23 +115,3 @@ class RecameraEntity(CoordinatorEntity[RecameraCoordinator]):
     def available(self) -> bool:
         """Return whether device metadata is available."""
         return super().available
-
-
-def recamera_picture_device_info(
-    coordinator: RecameraCoordinator,
-) -> DeviceInfo:
-    """Return the service device that groups picture controls."""
-    data = coordinator.config_entry.data
-    return DeviceInfo(
-        identifiers={(DOMAIN, f"{coordinator.device_id}:picture_settings")},
-        entry_type=DeviceEntryType.SERVICE,
-        manufacturer=MANUFACTURER,
-        model="reCamera Pro settings",
-        name=picture_settings_name(
-            effective_integration_language(
-                coordinator.hass,
-                coordinator.config_entry,
-            )
-        ),
-        configuration_url=(f"https://{format_url_host(data[CONF_HOST])}"),
-    )

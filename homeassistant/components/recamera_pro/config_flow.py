@@ -9,23 +9,15 @@ from typing import Any, override
 
 import probatio
 from recamera_protocol import (
-    MAX_GOP,
     DetectedClass,
     RecameraAuthenticationError,
     RecameraConnectionError,
-    RecameraDeviceClient,
     RecameraError,
     RecameraProbeResult,
     RecameraProtocolError,
-    RecameraValidationError,
     async_probe_device,
-    bitrate_range,
-    motion_config_payload,
-    motion_option_specs,
     normalize_mac_address,
     normalize_serial_number,
-    supported_resolutions,
-    supports_frame_rate,
 )
 from zeroconf._exceptions import NotRunningException
 from zeroconf.asyncio import AsyncServiceInfo
@@ -52,7 +44,6 @@ from .const import (
     CONF_DISCOVERY_CANDIDATES,
     CONF_DISCOVERY_ID,
     CONF_HW_VERSION,
-    CONF_LANGUAGE,
     CONF_MAC_ADDRESS,
     CONF_MODEL,
     CONF_SERIAL_NUMBER,
@@ -65,13 +56,11 @@ from .const import (
     DEFAULT_AUDIO_CONFIDENCE,
     DEFAULT_AUDIO_COOLDOWN,
     DEFAULT_CLASS_STALE_SECONDS,
-    DEFAULT_LANGUAGE,
     DEFAULT_TRACKED_CLASSES,
     DEFAULT_VISUAL_CONFIDENCE,
     DEFAULT_VISUAL_CONFIRM,
     DEFAULT_VISUAL_COOLDOWN,
     DOMAIN,
-    MOTION_APP_ID,
     SERVICE_TYPE,
     STORAGE_VERSION,
 )
@@ -83,28 +72,6 @@ _DISCOVERY_PROBE_TOTAL_SECONDS = 15.0
 _DISCOVERY_PROBE_PER_HOST_SECONDS = 8.0
 _DISCOVERY_REFRESH_INTERVAL = 2.0
 _DISCOVERY_RESOLVE_TIMEOUT = 3.0
-
-_OPTION_ERROR_KEYS = {
-    "cannot_connect",
-    "connection_error",
-    "device_busy",
-    "firmware_busy",
-    "invalid_auth",
-    "invalid_appmgr_response",
-    "invalid_video_bitrate",
-    "invalid_video_frame_rate",
-    "invalid_video_gop",
-    "invalid_video_resolution",
-    "motion_app_not_installed",
-    "motion_config_not_applied",
-    "motion_state_not_confirmed",
-    "protocol_error",
-    "session_expired",
-    "unknown",
-    "video_rtsp_restore_failed",
-    "video_update_failed",
-    "video_update_not_applied",
-}
 
 
 def _text(value: Any) -> str:
@@ -194,55 +161,6 @@ async def _async_probe_device_with_hass(
     )
 
 
-def _option_error_key(error: RecameraError) -> str:
-    """Map device exceptions to bounded Options Flow error keys."""
-    if error.translation_key in _OPTION_ERROR_KEYS:
-        return error.translation_key
-    if isinstance(error, RecameraAuthenticationError):
-        return "invalid_auth"
-    if isinstance(error, RecameraConnectionError):
-        return "connection_error"
-    if isinstance(error, RecameraProtocolError):
-        return "protocol_error"
-    return "unknown"
-
-
-def _video_form_values(
-    stream: str,
-    encode: dict[str, Any],
-    suggested: dict[str, Any] | None,
-    resolutions: list[str],
-) -> dict[str, Any]:
-    """Normalize device and submitted video values for form defaults."""
-    values = suggested or {}
-    return {
-        "resolution": str(
-            values.get(
-                "resolution",
-                encode.get("sResolution", resolutions[0]),
-            )
-        ),
-        "frame_rate": values.get(
-            "frame_rate",
-            encode.get("sFrameRate", 30),
-        ),
-        "max_bitrate": values.get(
-            "max_bitrate",
-            encode.get("iMaxRate", 8192 if stream == "main" else 2048),
-        ),
-        "gop": values.get(
-            "gop",
-            encode.get("iGOP", 30),
-        ),
-        "codec": str(
-            values.get(
-                "codec",
-                encode.get("sOutputDataType", "H.264"),
-            )
-        ),
-    }
-
-
 async def _options_catalog(
     config_entry: ConfigEntry, hass: HomeAssistant
 ) -> dict[str, DetectedClass]:
@@ -275,11 +193,6 @@ async def _options_catalog(
         if detected_class is not None:
             catalog.setdefault(detected_class.key, detected_class)
     return catalog
-
-
-def _raise_invalid_appmgr() -> None:
-    """Raise a typed protocol error for unexpected AppMgr payloads."""
-    raise RecameraProtocolError("invalid_appmgr_response")
 
 
 async def _async_resolve_zeroconf_service(
@@ -330,14 +243,7 @@ async def _async_resolve_zeroconf_service(
 
 
 class RecameraProOptionsFlow(OptionsFlowWithReload):
-    """Grouped runtime, detection, and compatibility settings."""
-
-    _VIDEO_FIELDS = {
-        "resolution": "sResolution",
-        "frame_rate": "sFrameRate",
-        "max_bitrate": "iMaxRate",
-        "gop": "iGOP",
-    }
+    """Grouped runtime detection settings."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -346,254 +252,10 @@ class RecameraProOptionsFlow(OptionsFlowWithReload):
         return self.async_show_menu(
             step_id="init",
             menu_options=[
-                "picture",
-                "motion",
                 "vision",
                 "sound",
                 "classes",
-                "compatibility",
             ],
-        )
-
-    async def async_step_picture(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show picture and stream settings separately from events."""
-        return self.async_show_menu(
-            step_id="picture",
-            menu_options=[
-                "main_stream",
-                "sub_stream",
-            ],
-        )
-
-    async def async_step_motion(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure the motion-detect App's analysis parameters."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                coordinator = getattr(self.config_entry, "runtime_data", None)
-                config = motion_config_payload(user_input)
-                if coordinator is not None:
-                    await coordinator.async_update_motion_detection_config(config)
-                else:
-                    client = RecameraDeviceClient(
-                        str(self.config_entry.data[CONF_HOST]),
-                        str(self.config_entry.data[CONF_USERNAME]),
-                        str(self.config_entry.data[CONF_PASSWORD]),
-                    )
-                    try:
-                        response = await client.async_update_appmgr_config(
-                            MOTION_APP_ID,
-                            config,
-                        )
-                    finally:
-                        await client.async_close()
-                    applied = response.get("config")
-                    if not isinstance(applied, dict):
-                        _raise_invalid_appmgr()
-            except RecameraError as err:
-                errors["base"] = _option_error_key(err)
-            except ValueError:
-                errors["base"] = "invalid_motion_config"
-            except Exception:
-                _LOGGER.exception("Unexpected motion-detect configuration error")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(data=dict(self.config_entry.options))
-
-        values: dict[str, Any] = user_input or {}
-        if user_input is None:
-            try:
-                coordinator = getattr(self.config_entry, "runtime_data", None)
-                if coordinator is not None:
-                    values = await coordinator.async_get_motion_detection_config()
-                else:
-                    client = RecameraDeviceClient(
-                        str(self.config_entry.data[CONF_HOST]),
-                        str(self.config_entry.data[CONF_USERNAME]),
-                        str(self.config_entry.data[CONF_PASSWORD]),
-                    )
-                    try:
-                        response = await client.async_get_appmgr_config(MOTION_APP_ID)
-                    finally:
-                        await client.async_close()
-                    raw_values = response.get("values")
-                    if not isinstance(raw_values, dict):
-                        raise RecameraProtocolError("invalid_appmgr_response")
-                    values = raw_values
-            except RecameraError as err:
-                errors["base"] = _option_error_key(err)
-
-        data_schema: dict[probatio.Marker, Any] = {}
-        for spec in motion_option_specs(values):
-            try:
-                default = spec.coerce(values.get(spec.key, spec.default))
-            except TypeError, ValueError:
-                default = spec.default
-            selector_config = selector.NumberSelectorConfig(
-                min=spec.minimum,
-                max=spec.maximum,
-                step=spec.step,
-                mode=selector.NumberSelectorMode.BOX,
-            )
-            if spec.unit is not None:
-                selector_config["unit_of_measurement"] = spec.unit
-            data_schema[probatio.Required(spec.key, default=default)] = (
-                selector.NumberSelector(selector_config)
-            )
-
-        return self.async_show_form(
-            step_id="motion",
-            data_schema=probatio.Schema(data_schema),
-            errors=errors,
-        )
-
-    async def async_step_main_stream(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure the main stream."""
-        return await self._async_video_step("main", user_input)
-
-    async def async_step_sub_stream(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure the sub stream."""
-        return await self._async_video_step("sub", user_input)
-
-    async def _async_video_step(
-        self,
-        stream: str,
-        user_input: dict[str, Any] | None,
-        errors: dict[str, str] | None = None,
-        suggested: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Show or apply one stream's encoder settings."""
-        coordinator = getattr(self.config_entry, "runtime_data", None)
-        profile = (
-            coordinator.data.media_profiles.get(stream, {})
-            if coordinator is not None and coordinator.data is not None
-            else {}
-        )
-        encode = profile.get("encode") or {}
-        if user_input is not None:
-            suggested = user_input
-            try:
-                selected_resolution = str(user_input["resolution"])
-                selected_frame_rate = str(int(user_input["frame_rate"]))
-                stream_id = 0 if stream == "main" else 1
-                if not supports_frame_rate(
-                    stream_id,
-                    selected_resolution,
-                    selected_frame_rate,
-                ):
-                    raise RecameraValidationError("invalid_video_frame_rate")
-                if coordinator is not None:
-                    await coordinator.async_update_video_encode(
-                        stream,
-                        resolution=selected_resolution,
-                        frame_rate=selected_frame_rate,
-                        max_bitrate=int(user_input["max_bitrate"]),
-                        gop=int(user_input["gop"]),
-                        codec=str(user_input["codec"]),
-                    )
-                else:
-                    client = RecameraDeviceClient(
-                        str(self.config_entry.data[CONF_HOST]),
-                        str(self.config_entry.data[CONF_USERNAME]),
-                        str(self.config_entry.data[CONF_PASSWORD]),
-                    )
-                    try:
-                        await client.async_update_stream_encode(
-                            0 if stream == "main" else 1,
-                            resolution=selected_resolution,
-                            frame_rate=selected_frame_rate,
-                            max_bitrate=int(user_input["max_bitrate"]),
-                            gop=int(user_input["gop"]),
-                            codec=str(user_input["codec"]),
-                        )
-                    finally:
-                        await client.async_close()
-            except RecameraError as err:
-                user_input = None
-                errors = {"base": _option_error_key(err)}
-            else:
-                return self.async_create_entry(data=dict(self.config_entry.options))
-
-        stream_id = 0 if stream == "main" else 1
-        resolutions = list(supported_resolutions(stream_id))
-        bitrate_min, bitrate_max = bitrate_range(stream_id) or (0, 0)
-        values = _video_form_values(
-            stream,
-            encode,
-            suggested,
-            resolutions,
-        )
-        try:
-            current_frame_rate = int(values["frame_rate"])
-        except TypeError, ValueError:
-            current_frame_rate = 30
-        return self.async_show_form(
-            step_id=f"{stream}_stream",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        "resolution",
-                        default=str(values["resolution"]),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=resolutions,
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Required(
-                        "frame_rate",
-                        default=current_frame_rate,
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=1,
-                            max=60 if stream_id == 0 else 30,
-                            step=1,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                    probatio.Required(
-                        "max_bitrate",
-                        default=int(values["max_bitrate"]),
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=bitrate_min,
-                            max=bitrate_max,
-                            step=256 if stream == "main" else 128,
-                            unit_of_measurement="kbit/s",
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                    probatio.Required(
-                        "gop",
-                        default=int(values["gop"]),
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=1,
-                            max=MAX_GOP,
-                            step=1,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                    probatio.Required(
-                        "codec",
-                        default=str(values["codec"]),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=["H.264", "H.265"],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
-            errors=errors,
         )
 
     async def async_step_vision(
@@ -766,43 +428,6 @@ class RecameraProOptionsFlow(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={"class_count": str(len(class_options))},
-        )
-
-    async def async_step_compatibility(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure legacy entity compatibility."""
-        options = self.config_entry.options
-        if user_input is not None:
-            return self.async_create_entry(data={**options, **user_input})
-        return self.async_show_form(
-            step_id="compatibility",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_LANGUAGE,
-                        default=str(options.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[
-                                selector.SelectOptionDict(
-                                    value="auto",
-                                    label="Auto (Home Assistant system)",
-                                ),
-                                selector.SelectOptionDict(
-                                    value="en",
-                                    label="English",
-                                ),
-                                selector.SelectOptionDict(
-                                    value="zh-Hans",
-                                    label="简体中文",
-                                ),
-                            ],
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
         )
 
 

@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_registry import RegistryEntryHider
 
 from .const import DOMAIN
 from .coordinator import RecameraCoordinator
-from .entity import RecameraEntity, recamera_picture_device_info, recamera_service_error
+from .entity import RecameraEntity, recamera_service_error
 
 PARALLEL_UPDATES = 0
 
@@ -127,7 +127,6 @@ class RecameraVideoSelect(RecameraEntity, SelectEntity):
     ) -> None:
         """Initialize one video select entity."""
         super().__init__(coordinator)
-        self._attr_device_info = recamera_picture_device_info(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_options = description.options

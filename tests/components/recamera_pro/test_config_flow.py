@@ -8,9 +8,7 @@ from recamera_protocol import (
     RecameraAuthenticationError,
     RecameraConnectionError,
     RecameraDeviceInfo,
-    RecameraError,
     RecameraProbeResult,
-    RecameraProtocolError,
 )
 
 from homeassistant import data_entry_flow
@@ -19,10 +17,8 @@ from homeassistant.components.recamera_pro.config_flow import (
     RecameraProOptionsFlow,
     _any_host_reachable,
     _async_resolve_zeroconf_service,
-    _option_error_key,
     _options_catalog,
     _prioritize_reachable_hosts,
-    _video_form_values,
 )
 from homeassistant.components.recamera_pro.const import (
     CONF_AUDIO_CONFIDENCE,
@@ -269,12 +265,7 @@ async def test_options_flow_steps() -> None:
     with patch.object(RecameraProOptionsFlow, "config_entry", new=entry):
         menu = await options_flow.async_step_init()
         assert menu["type"] == FlowResultType.MENU
-        assert set(menu["menu_options"]) >= {
-            "vision",
-            "sound",
-            "classes",
-            "compatibility",
-        }
+        assert menu["menu_options"] == ["vision", "sound", "classes"]
 
         res = await options_flow.async_step_vision(
             {
@@ -330,13 +321,6 @@ async def test_options_flow_sound_classes_and_compatibility() -> None:
         classes_res = await options_flow.async_step_classes({CONF_TRACKED_CLASSES: []})
         assert classes_res["data"][CONF_TRACKED_CLASSES] == []
 
-        compat_form = await options_flow.async_step_compatibility()
-        assert compat_form["type"] == FlowResultType.FORM
-        compat_res = await options_flow.async_step_compatibility(
-            {CONF_LANGUAGE: "zh-Hans"}
-        )
-        assert compat_res["data"][CONF_LANGUAGE] == "zh-Hans"
-
 
 @pytest.mark.asyncio
 async def test_manual_and_reconfigure_error_paths() -> None:
@@ -381,20 +365,7 @@ async def test_manual_and_reconfigure_error_paths() -> None:
 
 @pytest.mark.asyncio
 async def test_helpers_and_reachability() -> None:
-    """Test config flow helper functions and host reachability probing."""
-    assert _option_error_key(RecameraAuthenticationError("bad")) == "invalid_auth"
-    assert _option_error_key(RecameraConnectionError("down")) == "connection_error"
-    assert _option_error_key(RecameraProtocolError("bad json")) == "protocol_error"
-    assert _option_error_key(RecameraError("other")) == "unknown"
-
-    defaults = _video_form_values(
-        "sub",
-        {"sResolution": "1280x720", "sFrameRate": "15", "iMaxRate": 1024, "iGOP": 30},
-        None,
-        ["1280x720", "640x360"],
-    )
-    assert defaults["resolution"] == "1280x720"
-
+    """Test config flow host reachability probing helpers."""
     fake_writer = SimpleNamespace(close=Mock(), wait_closed=AsyncMock())
 
     async def _fake_open(host: str, _port: int):
@@ -413,8 +384,8 @@ async def test_helpers_and_reachability() -> None:
 
 
 @pytest.mark.asyncio
-async def test_options_catalog_store_and_motion_picture_steps() -> None:
-    """Test store fallback for class catalog plus picture and motion option steps."""
+async def test_options_catalog_store_fallback() -> None:
+    """Test store fallback for class catalog when runtime_data is unavailable."""
     entry_no_rt = SimpleNamespace(entry_id="e1", runtime_data=None)
 
     class _FakeStore:
@@ -437,49 +408,6 @@ async def test_options_catalog_store_and_motion_picture_steps() -> None:
     ):
         catalog = await _options_catalog(entry_no_rt, SimpleNamespace())
     assert "builtin:person" in catalog
-
-    entry = SimpleNamespace(
-        entry_id="e1",
-        options={CONF_LANGUAGE: "auto"},
-        runtime_data=SimpleNamespace(
-            data=SimpleNamespace(class_catalog={}),
-            hass=SimpleNamespace(config=SimpleNamespace(language="en")),
-            async_get_motion_detection_config=AsyncMock(
-                return_value={
-                    "sq_diff_threshold": 20,
-                    "min_changed_ratio": 0.02,
-                    "hold_seconds": 3,
-                    "sample_fps": 5,
-                }
-            ),
-            async_update_motion_detection_config=AsyncMock(),
-        ),
-    )
-    options_flow = RecameraProOptionsFlow()
-    options_flow.hass = entry.runtime_data.hass
-    options_flow.async_show_menu = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.MENU, **kw}
-    )
-    options_flow.async_show_form = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.FORM, **kw}
-    )
-    options_flow.async_create_entry = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
-    )
-    with patch.object(RecameraProOptionsFlow, "config_entry", new=entry):
-        pic_menu = await options_flow.async_step_picture()
-        assert pic_menu["type"] == FlowResultType.MENU
-        motion_form = await options_flow.async_step_motion()
-        assert motion_form["type"] == FlowResultType.FORM
-        motion_ok = await options_flow.async_step_motion(
-            {
-                "sq_diff_threshold": 25,
-                "min_changed_ratio": 0.03,
-                "hold_seconds": 4,
-                "sample_fps": 5,
-            }
-        )
-        assert motion_ok["type"] == FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.asyncio
@@ -516,59 +444,8 @@ async def test_zeroconf_confirm_error_paths_and_existing_entry_update() -> None:
 
 
 @pytest.mark.asyncio
-async def test_video_stream_options_and_zeroconf_existing_entry() -> None:
-    """Test main/sub stream options and zeroconf update for existing entries."""
-    entry = SimpleNamespace(
-        entry_id="e1",
-        options={CONF_LANGUAGE: "auto"},
-        runtime_data=SimpleNamespace(
-            data=SimpleNamespace(
-                class_catalog={},
-                media_profiles={
-                    "main": {
-                        "encode": {
-                            "sResolution": "1920x1080",
-                            "sFrameRate": "30",
-                            "iMaxRate": 2048,
-                            "iGOP": 30,
-                        }
-                    },
-                    "sub": {
-                        "encode": {
-                            "sResolution": "1280*720",
-                            "sFrameRate": "15",
-                            "iMaxRate": 1024,
-                            "iGOP": 30,
-                        }
-                    },
-                },
-            ),
-            hass=SimpleNamespace(config=SimpleNamespace(language="en")),
-            async_update_video_encode=AsyncMock(),
-        ),
-    )
-    options_flow = RecameraProOptionsFlow()
-    options_flow.hass = entry.runtime_data.hass
-    options_flow.async_show_form = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.FORM, **kw}
-    )
-    options_flow.async_create_entry = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
-    )
-    with patch.object(RecameraProOptionsFlow, "config_entry", new=entry):
-        sub_form = await options_flow.async_step_sub_stream()
-        assert sub_form["type"] == FlowResultType.FORM
-        sub_ok = await options_flow.async_step_sub_stream(
-            {
-                "resolution": "1280*720",
-                "frame_rate": 15,
-                "max_bitrate": 1024,
-                "gop": 30,
-                "codec": "H264",
-            }
-        )
-        assert sub_ok["type"] == FlowResultType.CREATE_ENTRY
-
+async def test_zeroconf_existing_entry_update() -> None:
+    """Test zeroconf host update for existing configured entries."""
     flow = _make_flow()
     flow.hass.config_entries.async_schedule_reload = Mock()
     existing = SimpleNamespace(
@@ -696,71 +573,3 @@ async def test_resolve_zeroconf_and_refresh_exit() -> None:
         side_effect=data_entry_flow.UnknownFlow
     )
     await flow._async_refresh_discovery("_recamera._tcp.local.", "svc")  # noqa: SLF001
-
-
-@pytest.mark.asyncio
-async def test_options_without_runtime_data() -> None:
-    """Test motion and video stream options fallback to direct device client."""
-    entry = SimpleNamespace(
-        entry_id="e1",
-        runtime_data=None,
-        data={CONF_HOST: "192.168.42.1", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"},
-        options={CONF_LANGUAGE: "auto"},
-    )
-    fake_client = SimpleNamespace(
-        async_get_appmgr_config=AsyncMock(
-            return_value={"values": {"sq_diff_threshold": 20}}
-        ),
-        async_update_appmgr_config=AsyncMock(
-            return_value={"config": {"sq_diff_threshold": 25}}
-        ),
-        async_get_stream_encode=AsyncMock(
-            return_value={
-                "encode": {
-                    "sResolution": "1280*720",
-                    "sFrameRate": "15",
-                    "iMaxRate": 1024,
-                    "iGOP": 30,
-                }
-            }
-        ),
-        async_update_stream_encode=AsyncMock(),
-        async_close=AsyncMock(),
-    )
-    options_flow = RecameraProOptionsFlow()
-    options_flow.hass = SimpleNamespace(config=SimpleNamespace(language="en"))
-    options_flow.async_show_form = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.FORM, **kw}
-    )
-    options_flow.async_create_entry = Mock(
-        side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
-    )
-    with (
-        patch.object(RecameraProOptionsFlow, "config_entry", new=entry),
-        patch(
-            "homeassistant.components.recamera_pro.config_flow.RecameraDeviceClient",
-            return_value=fake_client,
-        ),
-    ):
-        m_form = await options_flow.async_step_motion()
-        assert m_form["type"] == FlowResultType.FORM
-        m_ok = await options_flow.async_step_motion(
-            {
-                "sq_diff_threshold": 25,
-                "min_changed_ratio": 0.02,
-                "hold_seconds": 3,
-                "sample_fps": 5,
-            }
-        )
-        assert m_ok["type"] == FlowResultType.CREATE_ENTRY
-
-        v_ok = await options_flow.async_step_sub_stream(
-            {
-                "resolution": "1280*720",
-                "frame_rate": 15,
-                "max_bitrate": 1024,
-                "gop": 30,
-                "codec": "H264",
-            }
-        )
-        assert v_ok["type"] == FlowResultType.CREATE_ENTRY

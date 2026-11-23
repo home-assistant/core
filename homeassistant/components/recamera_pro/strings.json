@@ -101,70 +101,9 @@
         "title": "reCamera Pro settings",
         "description": "Choose a settings category.",
         "menu_options": {
-          "picture": "Picture settings",
-          "motion": "Motion detection",
           "vision": "Visual recognition",
           "sound": "Sound recognition",
-          "classes": "Detection classes",
-          "compatibility": "Compatibility"
-        }
-      },
-      "picture": {
-        "title": "Picture settings",
-        "description": "Configure main and sub stream encoding.",
-        "menu_options": {
-          "main_stream": "Main stream",
-          "sub_stream": "Sub stream"
-        }
-      },
-      "main_stream": {
-        "title": "Main stream settings",
-        "data": {
-          "resolution": "Resolution",
-          "frame_rate": "Frame rate",
-          "max_bitrate": "Maximum bitrate",
-          "gop": "GOP",
-          "codec": "Encoding format"
-        }
-      },
-      "sub_stream": {
-        "title": "Sub stream settings",
-        "data": {
-          "resolution": "Resolution",
-          "frame_rate": "Frame rate",
-          "max_bitrate": "Maximum bitrate",
-          "gop": "GOP",
-          "codec": "Encoding format"
-        }
-      },
-      "motion": {
-        "title": "Motion detection settings",
-        "description": "These values are applied directly to the device-side motion-detect App.",
-        "data": {
-          "sq_diff_threshold": "Pixel difference threshold",
-          "min_changed_ratio": "Minimum changed area",
-          "motion_hold_ms": "Motion hold time",
-          "baseline_frames": "Baseline frame count",
-          "current_frames": "Current frame count",
-          "baseline_gap_ms": "Baseline time gap",
-          "sample_fps": "Analysis sample rate",
-          "analysis_width": "Analysis width",
-          "emit_interval_ms": "Motion update interval",
-          "idle_heartbeat_ms": "Idle heartbeat interval",
-          "heartbeat_sec": "Heartbeat interval"
-        },
-        "data_description": {
-          "sq_diff_threshold": "Lower values detect smaller pixel differences and therefore increase sensitivity.",
-          "min_changed_ratio": "Fraction of the analysis frame that must change before motion is reported.",
-          "motion_hold_ms": "Keep motion active for this long after the source image becomes stable.",
-          "baseline_frames": "Number of frames used to build the stable background baseline.",
-          "current_frames": "Number of recent frames averaged for the current image.",
-          "baseline_gap_ms": "Minimum time between the baseline and current image windows.",
-          "sample_fps": "The App analyzes frames at this rate.",
-          "analysis_width": "Frames are scaled to this width for motion analysis; larger values use more CPU.",
-          "emit_interval_ms": "How often active motion is refreshed on Result Hub.",
-          "idle_heartbeat_ms": "How often an idle state is refreshed; 0 disables idle heartbeats.",
-          "heartbeat_sec": "Heartbeat interval used by the current App schema, in seconds."
+          "classes": "Detection classes"
         }
       },
       "vision": {
@@ -201,15 +140,6 @@
         },
         "data_description": {
           "tracked_classes": "Each selected class creates a binary_sensor entity; unselected classes still emit events."
-        }
-      },
-      "compatibility": {
-        "title": "Compatibility",
-        "data": {
-          "language": "Entity and device language"
-        },
-        "data_description": {
-          "language": "Override the language used for entity names and the Picture settings device."
         }
       }
     }

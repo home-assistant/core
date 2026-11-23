@@ -36,7 +36,7 @@ from .const import (
     SOURCE_AVAILABLE,
 )
 from .coordinator import RecameraCoordinator
-from .entity import RecameraEntity, recamera_picture_device_info, recamera_service_error
+from .entity import RecameraEntity, recamera_service_error
 
 PARALLEL_UPDATES = 0
 MAIN_BITRATE_MIN, MAIN_BITRATE_MAX = bitrate_range(0) or (256, 16384)
@@ -312,7 +312,6 @@ class RecameraVideoNumber(RecameraEntity, NumberEntity):
     ) -> None:
         """Initialize one video number."""
         super().__init__(coordinator)
-        self._attr_device_info = recamera_picture_device_info(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_native_min_value = description.minimum
