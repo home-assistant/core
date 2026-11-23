@@ -839,8 +839,7 @@ async def test_optimistic_state(
     await setup_entity(
         hass, TEST_MEDIA_PLAYER, style, 1, {**ON_OFF_ACTIONS, **PLAYBACK_ACTIONS}
     )
-    state = assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, STATE_UNKNOWN)
-    assert state.attributes["assumed_state"] is True
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, STATE_UNKNOWN)
 
     await hass.services.async_call(
         media_player.DOMAIN,
@@ -873,8 +872,7 @@ async def test_state_template_is_not_optimistic(
         blocking=True,
     )
     assert_action(TEST_MEDIA_PLAYER, calls, 1, "media_play")
-    state = assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "paused")
-    assert "assumed_state" not in state.attributes
+    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, "paused")
 
 
 @pytest.mark.parametrize(

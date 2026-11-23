@@ -241,7 +241,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._set_state(LockState.LOCKED)
             self.async_write_ha_state()
 
@@ -260,7 +260,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._set_state(LockState.UNLOCKED)
             self.async_write_ha_state()
 
@@ -279,7 +279,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._set_state(LockState.OPEN)
             self.async_write_ha_state()
 

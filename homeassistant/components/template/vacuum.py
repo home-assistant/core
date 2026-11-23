@@ -328,7 +328,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
         if script := self._action_scripts.get(CONF_CLEAN_SEGMENTS):
@@ -341,7 +341,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
         await self.async_run_script(
@@ -351,7 +351,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.PAUSED
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_PAUSE):
@@ -360,7 +360,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.IDLE
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_STOP):
@@ -369,7 +369,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.RETURNING
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
@@ -378,7 +378,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):

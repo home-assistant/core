@@ -75,6 +75,7 @@ class AbstractTemplateEntity(Entity):
 
     _entity_id_format: str
     _optimistic_entity: bool = False
+    _is_optimistic_state: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
@@ -118,7 +119,7 @@ class AbstractTemplateEntity(Entity):
                         for option in self._extra_optimistic_options
                     )
 
-                self._attr_assumed_state = optimistic or (
+                self._is_optimistic_state = optimistic or (
                     optimistic is None and assumed_optimistic
                 )
 

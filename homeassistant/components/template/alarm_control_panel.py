@@ -213,7 +213,7 @@ class AbstractTemplateAlarmControlPanel(
                 script, run_variables={ATTR_CODE: code}, context=self._context
             )
 
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_alarm_state = state
             self.async_write_ha_state()
 

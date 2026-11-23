@@ -516,7 +516,7 @@ class AbstractTemplateMediaPlayer(
             await self.async_run_script(
                 script, run_variables=run_variables, context=self._context
             )
-        if state is not None and self._attr_assumed_state:
+        if state is not None and self._is_optimistic_state:
             self._update_player_state(state)
             self.async_write_ha_state()
 
