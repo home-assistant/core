@@ -162,7 +162,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': 100,
+              'open_tilt_position': 50,
             }),
             'categories': dict({
             }),
@@ -197,7 +197,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Bath East',
                 'is_closed': True,
-                'open_tilt_position': 100,
+                'open_tilt_position': 50,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -504,7 +504,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': 100,
+              'open_tilt_position': 50,
             }),
             'categories': dict({
             }),
@@ -539,7 +539,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Bath South',
                 'is_closed': True,
-                'open_tilt_position': 100,
+                'open_tilt_position': 50,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -846,7 +846,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': 100,
+              'open_tilt_position': 50,
             }),
             'categories': dict({
             }),
@@ -881,7 +881,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen North',
                 'is_closed': True,
-                'open_tilt_position': 100,
+                'open_tilt_position': 50,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -1188,7 +1188,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': 100,
+              'open_tilt_position': 50,
             }),
             'categories': dict({
             }),
@@ -1223,7 +1223,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen West',
                 'is_closed': True,
-                'open_tilt_position': 100,
+                'open_tilt_position': 50,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -2517,7 +2517,7 @@
           ]),
           'area_id': None,
           'capabilities': dict({
-            'open_tilt_position': 100,
+            'open_tilt_position': 50,
           }),
           'categories': dict({
           }),
@@ -2552,7 +2552,7 @@
               'device_class': 'shade',
               'friendly_name': 'Kitchen North',
               'is_closed': True,
-              'open_tilt_position': 100,
+              'open_tilt_position': 50,
               'room_name': 'Spindle',
               'supported_features': 176,
             }),
