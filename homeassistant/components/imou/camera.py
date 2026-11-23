@@ -5,9 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, override
 
-if TYPE_CHECKING:
-    from homeassistant.components.stream import Stream
-
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -16,7 +13,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.components.stream.const import OUTPUT_STARTUP_TIMEOUT
+from homeassistant.components.stream import OUTPUT_STARTUP_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -26,6 +23,9 @@ from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 from .helpers import async_wrap_imou_command
+
+if TYPE_CHECKING:
+    from homeassistant.components.stream import Stream
 
 PARALLEL_UPDATES = 0
 
