@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CLIMATE_ENTITY_DESCRIPTIONS, FANMODE_FIXED
+from .const import CLIMATE_ENTITY_DESCRIPTIONS, FANMODE_FIXED, LEAVING_WATER_OFFSET
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
@@ -119,7 +119,15 @@ def _create_climate_entities(
         climate_control = management_point.climate_control
         if climate_control is None:
             continue
-        for setpoint_type in climate_control.setpoint_types:
+        setpoint_types = climate_control.setpoint_types
+        has_other_climate_setpoint = any(
+            setpoint_type != LEAVING_WATER_OFFSET
+            and setpoint_type in CLIMATE_ENTITY_DESCRIPTIONS
+            for setpoint_type in setpoint_types
+        )
+        for setpoint_type in setpoint_types:
+            if setpoint_type == LEAVING_WATER_OFFSET and has_other_climate_setpoint:
+                continue
             description = CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type)
             if description is None:
                 continue
@@ -295,7 +303,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Return the features supported by this climate entity."""
         supported_features = ClimateEntityFeature(0)
         setpointdict = self._get_setpoint()
-        if setpointdict is not None and setpointdict.settable:
+        if (
+            self._setpoint != LEAVING_WATER_OFFSET
+            and setpointdict is not None
+            and setpointdict.settable
+        ):
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self._attr_preset_modes and len(self._attr_preset_modes) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -347,6 +359,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_max_temp(self) -> float | None:
         """Return the maximum configurable temperature, if provided."""
+        if self._setpoint == LEAVING_WATER_OFFSET:
+            return None
         setpoint = self._get_setpoint()
         return (
             float(setpoint.max_value)
@@ -356,6 +370,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_min_temp(self) -> float | None:
         """Return the minimum configurable temperature, if provided."""
+        if self._setpoint == LEAVING_WATER_OFFSET:
+            return None
         setpoint = self._get_setpoint()
         return (
             float(setpoint.min_value)
@@ -365,6 +381,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_target_temperature(self) -> float | None:
         """Return the configured target temperature."""
+        if self._setpoint == LEAVING_WATER_OFFSET:
+            return None
         value: float | None = None
         setpointdict = self._get_setpoint()
         if setpointdict is not None:
@@ -373,12 +391,19 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
+        if self._setpoint == LEAVING_WATER_OFFSET:
+            return None
         setpoint = self._get_setpoint()
         return setpoint.step_value if setpoint is not None else None
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the HVAC mode and/or target temperature."""
+        if (
+            self._setpoint == LEAVING_WATER_OFFSET
+            and ClimateServiceArgument.TEMPERATURE in kwargs
+        ):
+            self._raise_service_validation_error("climate_temperature_unavailable")
         if ClimateServiceArgument.HVAC_MODE in kwargs:
             await self.async_handle_set_hvac_mode_service(
                 kwargs[ClimateServiceArgument.HVAC_MODE]

@@ -35,6 +35,7 @@ from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockOnectaClient
 from .platform_helpers import (
     _async_fire_coordinator_update,
     _async_setup_fixture,
@@ -123,16 +124,19 @@ async def test_calculated_lwt_sensor_uses_current_mode_then_falls_back(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
     prepare_gateway: Callable[[GatewayDevice], None],
     expected_value: str,
 ) -> None:
     """Prefer the current operation's calculated LWT and fall back if absent."""
     await _async_setup_fixture(hass, config_entry, "gas")
     coordinator = config_entry.runtime_data
-    gateway = next(iter(coordinator.data.values())).device
+    devices = _load_gateway_devices("gas")
+    gateway = devices[0]
     prepare_gateway(gateway)
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
+    mock_onecta_client.get_gateway_devices.return_value = devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     sensor_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,

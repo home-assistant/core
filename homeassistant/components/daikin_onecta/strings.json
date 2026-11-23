@@ -109,7 +109,7 @@
     },
     "climate": {
       "leaving_water_offset": {
-        "name": "Leaving water offset",
+        "name": "Leaving water",
         "state_attributes": {
           "fan_mode": {
             "state": {
@@ -235,6 +235,11 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "leaving_water_offset": {
+        "name": "Leaving water offset"
       }
     },
     "select": {

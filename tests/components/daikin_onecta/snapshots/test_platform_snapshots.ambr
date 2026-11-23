@@ -3587,86 +3587,6 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_entities[altherma-climate][climate.altherma_leaving_water_offset-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Leaving water offset',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Leaving water offset',
-    'platform': 'daikin_onecta',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 400>,
-    'translation_key': 'leaving_water_offset',
-    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_entities[altherma-climate][climate.altherma_leaving_water_offset-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_platform_entities[altherma-climate][climate.altherma_leaving_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4351,6 +4271,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_entities[altherma-number][number.altherma_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Leaving water offset',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_entities[altherma-number][number.altherma_leaving_water_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_entities[altherma-select][select.altherma_schedule-entry]
@@ -11455,7 +11436,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_entities[altherma3m-climate][climate.altherma_leaving_water_offset-entry]
+# name: test_platform_entities[altherma3m-climate][climate.altherma_leaving_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11466,13 +11447,12 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'away',
       ]),
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'config_entry_id': <ANY>,
@@ -11482,7 +11462,76 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.altherma_leaving_water_offset',
+    'entity_id': 'climate.altherma_leaving_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Leaving water',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 400>,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000121_climateControlMainZone_leavingWaterOffset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_entities[altherma3m-climate][climate.altherma_leaving_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'none',
+        'away',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.altherma_leaving_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_entities[altherma3m-number][number.altherma_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000121')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.altherma_leaving_water_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11493,45 +11542,35 @@
     'object_id_base': 'Leaving water offset',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Leaving water offset',
     'platform': 'daikin_onecta',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': 0,
     'translation_key': 'leaving_water_offset',
     'unique_id': '00000000-0000-4000-8000-000000000121_climateControlMainZone_leavingWaterOffset',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_entities[altherma3m-climate][climate.altherma_leaving_water_offset-state]
+# name: test_platform_entities[altherma3m-number][number.altherma_leaving_water_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 0,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.altherma_leaving_water_offset',
+    'entity_id': 'number.altherma_leaving_water_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': '0.0',
   })
 # ---
 # name: test_platform_entities[altherma3m-select][select.domestic_hot_water_tank_schedule-entry]
@@ -13578,89 +13617,6 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_entities[altherma_boost-climate][climate.altherma_leaving_water_offset-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Leaving water offset',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Leaving water offset',
-    'platform': 'daikin_onecta',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': 'leaving_water_offset',
-    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_entities[altherma_boost-climate][climate.altherma_leaving_water_offset-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 0,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'heat',
-  })
-# ---
 # name: test_platform_entities[altherma_boost-climate][climate.altherma_leaving_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -13822,6 +13778,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
+  })
+# ---
+# name: test_platform_entities[altherma_boost-number][number.altherma_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Leaving water offset',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_entities[altherma_boost-number][number.altherma_leaving_water_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_entities[altherma_boost-select][select.altherma_schedule-entry]
@@ -18442,89 +18459,6 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_entities[altherma_schedule-climate][climate.altherma_leaving_water_offset-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Leaving water offset',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Leaving water offset',
-    'platform': 'daikin_onecta',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': 'leaving_water_offset',
-    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_entities[altherma_schedule-climate][climate.altherma_leaving_water_offset-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 36,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-        <HVACMode.COOL: 'cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 0,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_platform_entities[altherma_schedule-climate][climate.altherma_leaving_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -18686,6 +18620,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_entities[altherma_schedule-number][number.altherma_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Leaving water offset',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000105_climateControlMainZone_leavingWaterOffset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_entities[altherma_schedule-number][number.altherma_leaving_water_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_entities[altherma_schedule-select][select.altherma_schedule-entry]
@@ -47619,7 +47614,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_entities[mc80z-climate][climate.test_floor_heating_leaving_water_offset-entry]
+# name: test_platform_entities[mc80z-climate][climate.test_floor_heating_leaving_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -47632,13 +47627,12 @@
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'away',
       ]),
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'config_entry_id': <ANY>,
@@ -47648,7 +47642,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+    'entity_id': 'climate.test_floor_heating_leaving_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -47656,46 +47650,44 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Leaving water offset',
+    'object_id_base': 'Leaving water',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Leaving water offset',
+    'original_name': 'Leaving water',
     'platform': 'daikin_onecta',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 400>,
     'translation_key': 'leaving_water_offset',
     'unique_id': '00000000-0000-4000-8000-000000000109_1_leavingWaterOffset',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_entities[mc80z-climate][climate.test_floor_heating_leaving_water_offset-state]
+# name: test_platform_entities[mc80z-climate][climate.test_floor_heating_leaving_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'away',
       ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -3,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+    'entity_id': 'climate.test_floor_heating_leaving_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -47771,6 +47763,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_platform_entities[mc80z-number][number.test_floor_heating_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000109')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.test_floor_heating_leaving_water_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Leaving water offset',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000109_1_leavingWaterOffset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_entities[mc80z-number][number.test_floor_heating_leaving_water_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_floor_heating_leaving_water_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-3.0',
   })
 # ---
 # name: test_platform_entities[mc80z-select][select.air_purifier_schedule-entry]
@@ -52629,85 +52682,6 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_entities[nomodel_id-climate][climate.altherma_leaving_water_offset-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000113')]>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Leaving water offset',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Leaving water offset',
-    'platform': 'daikin_onecta',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': 'leaving_water_offset',
-    'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_leavingWaterOffset',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_entities[nomodel_id-climate][climate.altherma_leaving_water_offset-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 36,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10.0,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10.0,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
-      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'none',
-        'away',
-      ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 0,
-      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.altherma_leaving_water_offset',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'heat',
-  })
-# ---
 # name: test_platform_entities[nomodel_id-climate][climate.altherma_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -52785,6 +52759,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
+  })
+# ---
+# name: test_platform_entities[nomodel_id-number][number.altherma_leaving_water_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000113')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Leaving water offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Leaving water offset',
+    'platform': 'daikin_onecta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_water_offset',
+    'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_leavingWaterOffset',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_entities[nomodel_id-number][number.altherma_leaving_water_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.altherma_leaving_water_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_entities[nomodel_id-select][select.altherma_schedule-entry]

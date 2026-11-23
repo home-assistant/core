@@ -30,8 +30,8 @@ rules:
   action-exceptions:
     status: done
     comment: >-
-      Climate, fan, switch, schedule, and water-heater actions report translated
-      failures.
+      Climate, fan, number, switch, schedule, and water-heater actions report
+      translated failures.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

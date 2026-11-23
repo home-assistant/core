@@ -10,6 +10,7 @@ from daikin_onecta.models import (
     Characteristic,
     FanDirection,
     FanDirectionAxis,
+    GatewayDevice,
     ManagementPoint,
 )
 import pytest
@@ -17,6 +18,10 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.climate import (
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -37,7 +42,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import DaikinClimate
-from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
+from homeassistant.components.daikin_onecta.const import (
+    FANMODE_FIXED,
+    LEAVING_WATER_OFFSET,
+)
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
@@ -231,7 +239,6 @@ async def test_climate_entities_are_deduplicated_by_management_point(
     await _async_setup_fixture(hass, config_entry, "altherma")
 
     assert set(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == {
-        "climate.altherma_leaving_water_offset",
         "climate.altherma_room_temperature",
         "climate.altherma_leaving_water_temperature",
         "climate.test_bedroom_1_room_temperature",
@@ -239,6 +246,126 @@ async def test_climate_entities_are_deduplicated_by_management_point(
         "climate.test_living_room_room_temperature",
         "climate.test_office_room_temperature",
     }
+
+
+def _offset_gateway_and_point(fixture: str) -> tuple[GatewayDevice, ManagementPoint]:
+    """Find a fixture point that advertises the offset setpoint."""
+    return next(
+        (gateway, point)
+        for gateway in _load_gateway_devices(fixture)
+        for point in gateway.management_points_by_type("climateControl")
+        if point.climate_control is not None
+        and LEAVING_WATER_OFFSET in point.climate_control.setpoint_types
+    )
+
+
+@pytest.mark.parametrize(
+    ("fixture", "has_offset_climate"),
+    [
+        pytest.param("altherma3m", True, id="offset-only-altherma"),
+        pytest.param("mc80z", True, id="offset-only-purifier"),
+        pytest.param("altherma", False, id="room-and-leaving-water"),
+        pytest.param("altherma_boost", False, id="multiple-setpoint-types"),
+        pytest.param("altherma_schedule", False, id="scheduled-altherma"),
+        pytest.param("nomodel_id", False, id="missing-model-id"),
+    ],
+)
+async def test_leaving_water_offset_climate_entity_ownership(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+    has_offset_climate: bool,
+) -> None:
+    """Keep offset climate ownership only when it is the point's sole target."""
+    gateway, point = _offset_gateway_and_point(fixture)
+    await _async_setup_fixture(hass, config_entry, fixture)
+
+    entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
+    )
+    assert (entity_id is not None) is has_offset_climate
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        pytest.param("altherma3m", id="altherma"),
+        pytest.param("mc80z", id="purifier"),
+    ],
+)
+async def test_offset_only_climate_has_mode_controls_without_temperature_target(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+) -> None:
+    """Expose controller modes without treating an offset as a target temp."""
+    gateway, point = _offset_gateway_and_point(fixture)
+    await _async_setup_fixture(hass, config_entry, fixture)
+    entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
+    )
+    assert entity_id is not None
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinClimate)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert ClimateEntityStateAttribute.TARGET_TEMPERATURE not in state.attributes
+    assert ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP not in state.attributes
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert ClimateEntityStateAttribute.CURRENT_TEMPERATURE in state.attributes
+    assert entity.target_temperature is None
+    assert entity.target_temperature_step is None
+    assert not hasattr(entity, "_attr_min_temp")
+    assert not hasattr(entity, "_attr_max_temp")
+    supported_features = state.attributes["supported_features"]
+    assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE == 0
+    assert supported_features & ClimateEntityFeature.TURN_ON
+    assert supported_features & ClimateEntityFeature.TURN_OFF
+    assert state.attributes[ClimateEntityCapabilityAttribute.HVAC_MODES]
+
+
+async def test_leaving_water_offset_climate_rejects_temperature_but_accepts_hvac_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep HVAC control while rejecting absolute-temperature writes."""
+    gateway = _load_gateway_devices("altherma3m")[0]
+    point = next(
+        point
+        for point in gateway.management_points_by_type("climateControl")
+        if point.climate_control is not None
+        and LEAVING_WATER_OFFSET in point.climate_control.setpoint_types
+    )
+    await _async_setup_fixture(hass, config_entry, "altherma3m")
+    entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
+    )
+    assert entity_id is not None
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinClimate)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_temperature(**{ClimateServiceArgument.TEMPERATURE: 5})
+    assert err.value.translation_key == "climate_temperature_unavailable"
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+    await entity.async_set_temperature(
+        **{ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT}
+    )
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway.id, point.embedded_id, "onOffMode", "on", path=None
+    )
 
 
 async def test_climate_platform_skips_points_without_climate_controls(

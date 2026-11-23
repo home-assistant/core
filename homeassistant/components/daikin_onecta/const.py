@@ -24,6 +24,7 @@ OAUTH2_AUTHORIZE = "https://idp.onecta.daikineurope.com/v1/oidc/authorize"
 OAUTH2_TOKEN = "https://idp.onecta.daikineurope.com/v1/oidc/token"
 
 FANMODE_FIXED = "fixed"
+LEAVING_WATER_OFFSET = "leavingWaterOffset"
 
 
 class EnergyPeriod(NamedTuple):
@@ -41,7 +42,7 @@ ENERGY_AGGREGATE_PERIODS: dict[str, EnergyPeriod] = {
 }
 
 CLIMATE_ENTITY_DESCRIPTIONS: dict[str, ClimateEntityDescription] = {
-    "leavingWaterOffset": ClimateEntityDescription(
+    LEAVING_WATER_OFFSET: ClimateEntityDescription(
         key="leaving_water_offset",
         translation_key="leaving_water_offset",
     ),

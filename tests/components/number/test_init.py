@@ -707,6 +707,14 @@ async def test_restore_number_restore_state(
             38.0,
         ),
         (
+            NumberDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            2,
+            3.6,
+        ),
+        (
             NumberDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,

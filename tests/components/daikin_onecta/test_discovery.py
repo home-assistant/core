@@ -694,14 +694,14 @@ def _add_management_point(devices: list[GatewayDevice]) -> tuple[str, str]:
 
 
 def _add_setpoint(devices: list[GatewayDevice]) -> tuple[str, str]:
-    """Advertise a new target on an existing climate management point."""
+    """Advertise a leaving-water offset number on a climate management point."""
     gateway = devices[0]
     point = gateway.management_points_by_type("climateControl")[0]
     for operation in point.temperature_control.value.operation_modes.values():
         operation.setpoints["leavingWaterOffset"] = Setpoint(
             value=0, settable=True, min_value=-10, max_value=10
         )
-    return "climate", f"{gateway.id}_{point.embedded_id}_leavingWaterOffset"
+    return "number", f"{gateway.id}_{point.embedded_id}_leavingWaterOffset"
 
 
 def _add_boolean(devices: list[GatewayDevice]) -> tuple[str, str]:
@@ -803,16 +803,14 @@ async def test_multiple_new_capabilities_are_added_without_reload(
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
         updated_devices = deepcopy(devices)
-        climate_domain, climate_unique_id = _add_setpoint(updated_devices)
+        number_domain, number_unique_id = _add_setpoint(updated_devices)
         mock_onecta_client.get_gateway_devices.return_value = updated_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert entity_registry.async_get_entity_id(
         boolean_domain, DOMAIN, boolean_unique_id
     )
-    assert entity_registry.async_get_entity_id(
-        climate_domain, DOMAIN, climate_unique_id
-    )
+    assert entity_registry.async_get_entity_id(number_domain, DOMAIN, number_unique_id)
     schedule_reload.assert_not_called()
 
 

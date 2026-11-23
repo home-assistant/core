@@ -10,6 +10,9 @@
       "ispowerfulmodeactive": { "default": "mdi:information-outline" },
       "ledenabled": { "default": "mdi:information-outline" }
     },
+    "number": {
+      "leaving_water_offset": { "default": "mdi:thermometer-plus" }
+    },
     "select": {
       "schedule": { "default": "mdi:calendar-clock" }
     },
