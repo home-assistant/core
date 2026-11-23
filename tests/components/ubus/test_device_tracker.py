@@ -210,6 +210,42 @@ async def test_missing_leases_keep_existing_device_name(
     assert laptop.name == MAC_LAPTOP
 
 
+async def test_missing_uci_config_falls_back_to_mac_names(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test clients are named by MAC while the dnsmasq uci config is missing."""
+    mock_ubus.return_value.get_uci_config.return_value = None
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == MAC_PHONE
+    laptop = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
+    )
+    assert laptop is not None
+    assert laptop.name == MAC_LAPTOP
+
+    # The hostnames are picked up on a later read once the config is available.
+    mock_ubus.return_value.get_uci_config.return_value = {
+        "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(phone.id).name == "my-phone"
+    assert device_registry.async_get(laptop.id).name == "my-laptop"
+
+
 @pytest.mark.parametrize(
     "enabled", [pytest.param(False, id="disabled"), pytest.param(True, id="enabled")]
 )

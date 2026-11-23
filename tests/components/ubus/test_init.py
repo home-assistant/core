@@ -21,17 +21,46 @@ from .conftest import MAC_LAPTOP, MAC_PHONE, MOCK_CONFIG, MOCK_HOST
 
 
 @pytest.mark.parametrize(
-    ("method", "behavior"),
+    ("method", "behavior", "dhcp_software"),
     [
-        pytest.param("connect", {"side_effect": TypeError}, id="unreachable"),
-        pytest.param("connect", {"side_effect": PermissionError}, id="access_denied"),
         pytest.param(
-            "connect", {"side_effect": None, "return_value": None}, id="no_session"
+            "connect", {"side_effect": TypeError}, "dnsmasq", id="unreachable"
+        ),
+        pytest.param(
+            "connect", {"side_effect": PermissionError}, "dnsmasq", id="access_denied"
+        ),
+        pytest.param(
+            "connect",
+            {"side_effect": None, "return_value": None},
+            "dnsmasq",
+            id="no_session",
         ),
         pytest.param(
             "get_hostapd_clients",
             {"side_effect": PermissionError},
+            "dnsmasq",
             id="session_stays_denied",
+        ),
+        pytest.param(
+            "get_hostapd", {"return_value": {}}, "dnsmasq", id="no_hostapd_data"
+        ),
+        pytest.param(
+            "get_hostapd_clients",
+            {"side_effect": ConnectionError},
+            "dnsmasq",
+            id="client_query_error",
+        ),
+        pytest.param(
+            "file_read",
+            {"side_effect": ConnectionError},
+            "dnsmasq",
+            id="dnsmasq_lease_error",
+        ),
+        pytest.param(
+            "get_dhcp_method",
+            {"side_effect": ConnectionError},
+            "odhcpd",
+            id="odhcpd_lease_error",
         ),
     ],
 )
