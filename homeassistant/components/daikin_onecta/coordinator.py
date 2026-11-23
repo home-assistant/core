@@ -30,9 +30,17 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestBaseError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -385,6 +393,43 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     config_entry_id=self.config_entry.entry_id,
                     device_info=device_info,
                 )
+
+        climate_points = gateway.management_points_by_type("climateControl")
+        climate_point_device_ids: dict[str, str] = {}
+        # Climate zones use the gateway device when there is one zone and child
+        # devices when there are multiple. Reconcile existing entity entries
+        # because HA does not refresh their device association when a new zone is
+        # discovered.
+        if len(climate_points) > 1:
+            for management_point in climate_points:
+                device_info = management_point_device_info(
+                    device, management_point.embedded_id
+                )
+                if not isinstance(device_info, ChildDeviceInfo):
+                    continue
+                child_device = registry.async_get_or_create_child_from_info(
+                    config_entry_id=self.config_entry.entry_id,
+                    device_info=device_info,
+                )
+                climate_point_device_ids[management_point.embedded_id] = child_device.id
+
+        entity_registry = er.async_get(self.hass)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+        for management_point in climate_points:
+            target_device_id = climate_point_device_ids.get(
+                management_point.embedded_id, gateway_entry.id
+            )
+            unique_id_prefix = f"{device.id}_{management_point.embedded_id}_"
+            for entity_entry in entity_entries:
+                if (
+                    entity_entry.unique_id.startswith(unique_id_prefix)
+                    and entity_entry.device_id != target_device_id
+                ):
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, device_id=target_device_id
+                    )
 
     @property
     def cloud_update_sequence(self) -> int:

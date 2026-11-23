@@ -128,6 +128,16 @@ class DaikinOnectaDevice:
                     if point.management_point_type not in {"gateway", "climateControl"}
                 )
             ),
+            tuple(
+                sorted(
+                    (
+                        point.embedded_id,
+                        point.name.value if point.name is not None else None,
+                    )
+                    for point in self.device.management_points
+                    if point.management_point_type == "climateControl"
+                )
+            ),
         )
 
     @property

@@ -33,7 +33,7 @@ from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
@@ -780,6 +780,73 @@ async def test_multiple_new_capabilities_are_added_without_reload(
         climate_domain, DOMAIN, climate_unique_id
     )
     schedule_reload.assert_not_called()
+
+
+async def test_discovering_second_climate_zone_moves_existing_entities_to_child(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep all zone entities together when a gateway gains a second zone."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    gateway = _load_gateway_devices("dry")[0]
+    climate_point = gateway.management_points_by_type("climateControl")[0]
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway.id), config_entry.entry_id
+    )
+    assert gateway_device is not None
+    original_zone_prefix = f"{gateway.id}_{climate_point.embedded_id}_"
+    original_zone_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.unique_id.startswith(original_zone_prefix)
+    ]
+    assert original_zone_entities
+    assert all(entry.device_id == gateway_device.id for entry in original_zone_entities)
+
+    second_zone = deepcopy(climate_point)
+    second_zone.embedded_id = "new-zone"
+    second_zone.name = Characteristic(value="Second zone")
+    gateway.management_points.append(second_zone)
+    mock_onecta_client.get_gateway_devices.return_value = [gateway]
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    original_child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway.id}_{climate_point.embedded_id}"), config_entry.entry_id
+    )
+    second_child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway.id}_{second_zone.embedded_id}"), config_entry.entry_id
+    )
+    assert original_child is not None
+    assert second_child is not None
+    assert original_child.parent_device_id == gateway_device.id
+    assert second_child.parent_device_id == gateway_device.id
+    updated_zone_entities = [
+        entity_registry.async_get(entry.entity_id) for entry in original_zone_entities
+    ]
+    assert all(entry is not None for entry in updated_zone_entities)
+    assert all(
+        entry.device_id == original_child.id
+        for entry in updated_zone_entities
+        if entry is not None
+    )
+
+    new_climate_entity = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_{second_zone.embedded_id}_roomTemperature",
+    )
+    assert new_climate_entity is not None
+    new_climate_entry = entity_registry.async_get(new_climate_entity)
+    assert new_climate_entry is not None
+    assert new_climate_entry.device_id == second_child.id
 
 
 async def test_disabled_discovered_entity_is_recreated_after_registry_removal(
