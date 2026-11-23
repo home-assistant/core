@@ -1,5 +1,6 @@
 """Roborock Coordinator."""
 
+from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -37,6 +38,7 @@ from .const import (
     A01_UPDATE_INTERVAL,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
+    MAP_SLEEP,
     Q10_UPDATE_INTERVAL,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
@@ -262,10 +264,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         selected. Re-selecting that map (LOAD_MULTI_MAP) restores it.
         """
         status = self.properties_api.status
-        if status.in_cleaning:
-            return
-        if getattr(status, "map_present", None) != 0:
+        if status.map_present != 0:
             self._map_reload_attempted = False
+            return
+        if status.in_cleaning:
             return
         if self._map_reload_attempted:
             return
@@ -275,6 +277,11 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         _LOGGER.debug("Vacuum reports no map loaded, reloading map %s", current_map)
         try:
             await self.properties_api.maps.set_current_map(current_map)
+        except (RoborockException, HomeAssistantError) as err:
+            _LOGGER.debug("Failed to reload map: %s", err)
+            return
+        await asyncio_sleep(MAP_SLEEP)
+        try:
             await self.update_map()
         except (RoborockException, HomeAssistantError) as err:
             _LOGGER.debug("Failed to reload map: %s", err)
