@@ -220,9 +220,9 @@ class ShellyStorageMediaSource(MediaSource):
             dt_util.utc_from_timestamp(stored["ts"])
         ).strftime("%Y-%m-%d %H:%M:%S")
         trigger = stored.get("trigger")
-        title = f"{local_time} · {trigger['event'] if trigger else 'manual'}"
+        title = f"{local_time} - {trigger['event'] if trigger else 'manual'}"
         if (duration := stored.get("duration")) is not None:
-            title += f" · {duration:g}s"
+            title += f" - {duration:g}s"
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{entry.entry_id}:{stored['media_id']}",
