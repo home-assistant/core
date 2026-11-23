@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockOnectaClient
 from .platform_helpers import (
     _async_setup_fixture,
     _execute_typed_command,
@@ -25,12 +26,14 @@ TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID = "switch.test_living_room_streamer_mod
 
 
 async def test_switch_service_updates_cached_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A successful switch command updates the state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "altherma")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
 
     await hass.services.async_call(
@@ -66,6 +69,7 @@ async def test_settable_climate_power_without_setpoint_is_exposed_as_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Expose writable power when the climate point has no supported setpoint."""
     gateway_devices = _load_gateway_devices("climate_floorheatingairflow")
@@ -87,7 +91,7 @@ async def test_settable_climate_power_without_setpoint_is_exposed_as_switch(
         "climate_floorheatingairflow",
         gateway_devices=gateway_devices,
     )
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute_command
 
     entity_id = entity_registry.async_get_entity_id(
@@ -108,7 +112,7 @@ async def test_settable_climate_power_without_setpoint_is_exposed_as_switch(
     )
 
     assert hass.states.get(entity_id).state == "off"
-    config_entry.runtime_data.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         "climatePowerWithoutSetpoint",
         "onOffMode",
@@ -122,10 +126,11 @@ async def test_switch_rejects_unknown_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     service: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject switch commands through the HA service when Daikin omits its value."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute_command
     device = next(
         device

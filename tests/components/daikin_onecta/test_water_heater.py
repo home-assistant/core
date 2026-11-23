@@ -329,11 +329,12 @@ async def test_water_heater_rejects_unavailable_temperature_control(
     power_value: str,
     change_control: Callable[[ManagementPoint], None],
     translation_key: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject a HA temperature request when its device control is unavailable."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
@@ -369,11 +370,12 @@ async def test_water_heater_rejects_unavailable_power_control(
     config_entry: MockConfigEntry,
     power_value: str,
     service: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject unsupported power actions through Home Assistant services."""
     await _async_setup_fixture(hass, config_entry, "holidaymode")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     point = next(
         point
@@ -400,11 +402,13 @@ async def test_water_heater_rejects_unavailable_power_control(
 
 
 async def test_water_heater_rejects_unadvertised_operation_mode(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject an operation mode through HA that Daikin does not advertise."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
 
     with pytest.raises(HomeAssistantError):
@@ -422,12 +426,14 @@ async def test_water_heater_rejects_unadvertised_operation_mode(
 
 
 async def test_water_heater_rejects_heat_pump_with_read_only_performance_mode(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not report success if read-only boost prevents heat-pump mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     point = next(
         point
@@ -473,12 +479,14 @@ async def test_water_heater_rejects_heat_pump_with_read_only_performance_mode(
 
 
 async def test_water_heater_turn_off_updates_cached_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A successful water-heater command updates the cached operation mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
     listener = MagicMock()
     remove_listener = config_entry.runtime_data.async_add_listener(listener)
@@ -510,12 +518,14 @@ async def test_water_heater_turn_off_updates_cached_state(
 
 
 async def test_water_heater_temperature_updates_typed_cache(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A successful temperature write updates the shared typed model."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
     listener = MagicMock()
     remove_listener = config_entry.runtime_data.async_add_listener(listener)
@@ -544,12 +554,16 @@ async def test_water_heater_temperature_updates_typed_cache(
 
 
 async def test_water_heater_set_temperature_applies_operation_mode_first(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Apply a non-off mode before a combined temperature write."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
@@ -572,7 +586,7 @@ async def test_water_heater_set_temperature_applies_operation_mode_first(
         blocking=True,
     )
 
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         call(gateway.id, point.embedded_id, "powerfulMode", "off", path=None),
         call(
             gateway.id,
@@ -585,12 +599,16 @@ async def test_water_heater_set_temperature_applies_operation_mode_first(
 
 
 async def test_water_heater_set_temperature_applies_temperature_before_off(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Write the target temperature before turning the tank off."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
     point.on_off_mode.value = "on"
@@ -611,7 +629,7 @@ async def test_water_heater_set_temperature_applies_temperature_before_off(
         blocking=True,
     )
 
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         call(
             gateway.id,
             point.embedded_id,
@@ -624,12 +642,14 @@ async def test_water_heater_set_temperature_applies_temperature_before_off(
 
 
 async def test_water_heater_rejects_temperature_when_off_target_is_off(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not write the temperature when the heater is already off."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
@@ -658,12 +678,14 @@ async def test_water_heater_rejects_temperature_when_off_target_is_off(
 
 
 async def test_water_heater_rejects_invalid_combined_mode_before_temperature_write(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Validate the requested mode before writing a combined temperature."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
 
     with pytest.raises(HomeAssistantError):
@@ -682,12 +704,14 @@ async def test_water_heater_rejects_invalid_combined_mode_before_temperature_wri
 
 
 async def test_water_heater_temperature_writes_without_power_characteristic(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A settable temperature remains usable without on/off control."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
@@ -708,7 +732,7 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
     assert point.domestic_hot_water.temperature.value == 50
-    coordinator.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         point.embedded_id,
         "temperatureControl",
@@ -736,12 +760,13 @@ async def test_water_heater_temperature_rounds_to_native_step(
     service_temperature: float,
     step_value: float | None,
     expected_temperature: float,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Round requested temperatures to the nearest supported native step."""
     hass.config.units = unit_system
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
@@ -760,7 +785,7 @@ async def test_water_heater_temperature_rounds_to_native_step(
     )
 
     assert point.domestic_hot_water.temperature.value == expected_temperature
-    coordinator.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         point.embedded_id,
         "temperatureControl",
@@ -770,12 +795,16 @@ async def test_water_heater_temperature_rounds_to_native_step(
 
 
 async def test_water_heater_rounded_current_temperature_does_not_write(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Skip a request when the rounded target equals the current tank target."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     point = next(
         point
         for device in coordinator.data.values()
@@ -799,7 +828,7 @@ async def test_water_heater_rounded_current_temperature_does_not_write(
         blocking=True,
     )
 
-    coordinator.client.patch_characteristic.assert_not_awaited()
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -817,11 +846,14 @@ async def test_water_heater_temperature_is_rounded_and_clamped(
     step: float,
     requested: float,
     expected: float,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Round relative to the minimum and clamp to Daikin's setpoint bounds."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
@@ -842,7 +874,7 @@ async def test_water_heater_temperature_is_rounded_and_clamped(
     )
 
     assert setpoint.value == expected
-    coordinator.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         point.embedded_id,
         "temperatureControl",
@@ -852,12 +884,16 @@ async def test_water_heater_temperature_is_rounded_and_clamped(
 
 
 async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not clamp to Home Assistant defaults when Daikin omits tank limits."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
@@ -880,7 +916,7 @@ async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
     )
 
     assert setpoint.value == 40
-    coordinator.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         point.embedded_id,
         "temperatureControl",
@@ -953,11 +989,12 @@ async def test_water_heater_rejects_unknown_power_state(
     service: str,
     service_data: dict[str, str | int],
     power_value: str | None,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject HA write services when Daikin omits the current power value."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     point = next(
         point
@@ -985,11 +1022,13 @@ async def test_water_heater_rejects_unknown_power_state(
 
 
 async def test_water_heater_set_performance_updates_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A successful boost command updates the entity through HA's service API."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
     point = next(
         point
@@ -1035,12 +1074,14 @@ async def test_water_heater_set_performance_updates_state(
 
 
 async def test_water_heater_selecting_heat_pump_disables_powerful_mode_when_off(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Disable a stale powerful-mode flag when turning the tank on in heat-pump mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = next(
@@ -1065,7 +1106,7 @@ async def test_water_heater_selecting_heat_pump_disables_powerful_mode_when_off(
         blocking=True,
     )
 
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         call(gateway.id, point.embedded_id, "onOffMode", "on", path=None),
         call(gateway.id, point.embedded_id, "powerfulMode", "off", path=None),
     ]

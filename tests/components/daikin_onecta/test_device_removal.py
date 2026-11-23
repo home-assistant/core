@@ -102,9 +102,9 @@ async def test_remove_missing_gateway_requires_complete_sites(
 ) -> None:
     """A complete Sites response is required before removing a missing gateway."""
     coordinator = config_entry.runtime_data
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=linked_gateways)]
-    )
+    mock_onecta_client.get_sites.return_value = [
+        Site(id="site", gateway_device_ids=linked_gateways)
+    ]
     gateway_id = next(iter(coordinator.data))
 
     assert (
@@ -144,7 +144,7 @@ async def test_remove_missing_gateway_rejects_empty_sites(
 ) -> None:
     """An empty Sites response is not proof that a gateway was removed."""
     coordinator = config_entry.runtime_data
-    mock_onecta_client.get_sites = AsyncMock(return_value=[])
+    mock_onecta_client.get_sites.return_value = []
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -163,9 +163,7 @@ async def test_remove_gateway_absent_from_cached_devices(
     coordinator = config_entry.runtime_data
     gateway_id = _gateway_id(missing_gateway)
     coordinator.data.pop(gateway_id)
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[])]
-    )
+    mock_onecta_client.get_sites.return_value = [Site(id="site", gateway_device_ids=[])]
 
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
     mock_onecta_client.get_sites.assert_awaited_once_with()
@@ -179,9 +177,9 @@ async def test_remove_missing_gateway_rejects_site_membership(
 ) -> None:
     """A gateway linked to a site is not confirmed removed."""
     coordinator = config_entry.runtime_data
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=list(coordinator.data))]
-    )
+    mock_onecta_client.get_sites.return_value = [
+        Site(id="site", gateway_device_ids=list(coordinator.data))
+    ]
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -211,7 +209,7 @@ async def test_remove_missing_gateway_rejects_failed_sites_lookup(
 ) -> None:
     """A failed lookup must never be interpreted as an empty inventory."""
     coordinator = config_entry.runtime_data
-    mock_onecta_client.get_sites = AsyncMock(side_effect=error)
+    mock_onecta_client.get_sites.side_effect = error
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -226,12 +224,8 @@ async def test_remove_missing_gateway_starts_reauth_for_sites_401(
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Start reauthentication when the Sites endpoint rejects the access token."""
-    mock_onecta_client.get_sites = AsyncMock(
-        side_effect=OnectaAuthenticationError(
-            status=401,
-            method="GET",
-            path="/v1/sites",
-        )
+    mock_onecta_client.get_sites.side_effect = OnectaAuthenticationError(
+        status=401, method="GET", path="/v1/sites"
     )
 
     assert not await async_remove_config_entry_device(
@@ -253,7 +247,6 @@ async def test_remove_present_gateway_is_rejected_without_cloud_call(
     coordinator = config_entry.runtime_data
     gateway_id = next(iter(coordinator.data))
     coordinator.data[gateway_id].device.cloud_connection.value = online
-    mock_onecta_client.get_sites = AsyncMock()
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, gateway_id), config_entry.entry_id
     )
@@ -271,7 +264,6 @@ async def test_remove_account_device_is_rejected(
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """The account device is removed only with its config entry."""
-    mock_onecta_client.get_sites = AsyncMock()
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"account_{config_entry.unique_id}"), config_entry.entry_id
     )
@@ -290,7 +282,7 @@ async def test_remove_management_point_device_is_rejected(
     """Sites inventory can confirm gateways only, not their child devices."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
-    mock_onecta_client.get_sites = AsyncMock(return_value=[])
+    mock_onecta_client.get_sites.return_value = []
     gateway_id = next(iter(coordinator.data))
     management_point = next(
         point
@@ -389,7 +381,6 @@ async def test_remove_missing_gateway_rejects_failed_poll(
     """Do not use cached absence after a failed poll."""
     coordinator = config_entry.runtime_data
     coordinator.last_update_success = False
-    mock_onecta_client.get_sites = AsyncMock()
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -412,7 +403,7 @@ async def test_remove_missing_gateway_rechecks_presence_after_lookup(
         device.set_device_data(device.device)
         return []
 
-    mock_onecta_client.get_sites = AsyncMock(side_effect=restore_gateway)
+    mock_onecta_client.get_sites.side_effect = restore_gateway
 
     assert not await async_remove_config_entry_device(
         hass, config_entry, missing_gateway
@@ -439,9 +430,9 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
         device_registry, gateway_id, management_point.embedded_id, config_entry.entry_id
     )
     assert child is not None
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[gateway_id])]
-    )
+    mock_onecta_client.get_sites.return_value = [
+        Site(id="site", gateway_device_ids=[gateway_id])
+    ]
 
     assert not await async_remove_config_entry_device(hass, config_entry, child)
     mock_onecta_client.get_sites.assert_awaited_once_with()
@@ -466,9 +457,7 @@ async def test_remove_child_of_missing_gateway_keeps_gateway_in_coordinator(
         device_registry, gateway_id, management_point.embedded_id, config_entry.entry_id
     )
     assert child is not None
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[])]
-    )
+    mock_onecta_client.get_sites.return_value = [Site(id="site", gateway_device_ids=[])]
 
     assert await async_remove_config_entry_device(hass, config_entry, child)
     assert coordinator.data[gateway_id] is not None
@@ -496,9 +485,7 @@ async def test_entities_recover_when_removed_gateway_returns_after_child_removal
         device_registry, gateway_id, point.embedded_id, config_entry.entry_id
     )
     assert child is not None
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[])]
-    )
+    mock_onecta_client.get_sites.return_value = [Site(id="site", gateway_device_ids=[])]
 
     assert await async_remove_config_entry_device(hass, config_entry, child)
     assert coordinator.data[gateway_id] is gateway_device
@@ -530,9 +517,9 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
     coordinator = config_entry.runtime_data
     gateway_id = _gateway_id(missing_gateway)
     original_device = coordinator.data[gateway_id]
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
-    )
+    mock_onecta_client.get_sites.return_value = [
+        Site(id="site", gateway_device_ids=["other-gateway"])
+    ]
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
     assert coordinator.data[gateway_id] is original_device
     assert not original_device.present_in_cloud
@@ -576,9 +563,7 @@ async def test_removed_gateway_is_registered_again_when_it_returns(
         (DOMAIN, gateway_id), config_entry.entry_id
     )
     assert gateway_entry is not None
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[])]
-    )
+    mock_onecta_client.get_sites.return_value = [Site(id="site", gateway_device_ids=[])]
     assert await async_remove_config_entry_device(hass, config_entry, gateway_entry)
     device_registry.async_remove_device(gateway_entry.id)
     assert (
@@ -621,9 +606,7 @@ async def test_disabled_sensor_is_recreated_after_gateway_removal(
     sensor_entity_id = "sensor.altherma_ip_address"
     disabled_sensor = entity_registry.async_get(sensor_entity_id)
     assert disabled_sensor is not None and disabled_sensor.disabled
-    mock_onecta_client.get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=[])]
-    )
+    mock_onecta_client.get_sites.return_value = [Site(id="site", gateway_device_ids=[])]
 
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
     device_registry.async_remove_device(missing_gateway.id)

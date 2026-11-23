@@ -223,6 +223,7 @@ async def test_polling_child_firmware_change_updates_device_registry(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Refresh the physical point's software version in the device registry."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
@@ -232,7 +233,7 @@ async def test_polling_child_firmware_change_updates_device_registry(
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
     original_version = point.version
     point.software_version = Characteristic(value="new-firmware")
-    coordinator.client.get_gateway_devices = AsyncMock(return_value=[replacement])
+    mock_onecta_client.get_gateway_devices.return_value = [replacement]
     point_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
     )
@@ -291,15 +292,14 @@ async def test_rate_limited_poll_after_success_keeps_cached_state(
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep the last known state available when a poll is rate limited."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     caplog.clear()
-    coordinator.client.get_gateway_devices = AsyncMock(
-        side_effect=OnectaRateLimitError(
-            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
-        )
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
     )
     assert coordinator.update_interval is not None
     freezer.tick(coordinator.update_interval)
@@ -314,7 +314,7 @@ async def test_rate_limited_poll_after_success_keeps_cached_state(
     ]
     assert warnings == []
     assert coordinator.last_update_success
-    coordinator.client.get_gateway_devices.assert_awaited_once_with()
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
 
 async def test_poll_failure_is_logged_only_once(
@@ -322,17 +322,14 @@ async def test_poll_failure_is_logged_only_once(
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Log the transition to unavailable without repeating it each poll."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     caplog.set_level(logging.INFO, logger=coordinator_module._LOGGER.name)
-    coordinator.client.get_gateway_devices = AsyncMock(
-        side_effect=OnectaConnectionError(
-            EXPECTED_CONNECTION_ERROR,
-            method="GET",
-            path="/v1/gateway-devices",
-        )
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+        EXPECTED_CONNECTION_ERROR, method="GET", path="/v1/gateway-devices"
     )
 
     await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -399,11 +396,7 @@ async def coordinator(
 ) -> OnectaDataUpdateCoordinator:
     """Return the coordinator from a fully set up config entry."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    coordinator = config_entry.runtime_data
-    coordinator.client.get_gateway_devices = mock_onecta_client.get_gateway_devices
-    coordinator.client.patch_characteristic = mock_onecta_client.patch_characteristic
-    coordinator.client.post_management_point = mock_onecta_client.post_management_point
-    return coordinator
+    return config_entry.runtime_data
 
 
 class TestOnectaDataUpdateCoordinator:
@@ -470,7 +463,9 @@ class TestOnectaDataUpdateCoordinator:
         assert ceil(15 * 3600 / 594) + ceil(9 * 3600 / 1782) == 110
 
     async def test_transient_command_token_failure_returns_failure(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        coordinator: OnectaDataUpdateCoordinator,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Map a transient token renewal failure to a failed command."""
         error = OAuth2TokenRequestError(
@@ -480,20 +475,21 @@ class TestOnectaDataUpdateCoordinator:
             message="server error",
         )
 
-        coordinator.client.patch_characteristic.side_effect = error
+        mock_onecta_client.patch_characteristic.side_effect = error
         assert not await coordinator.async_execute_command(
             lambda client: client.patch_characteristic(
                 "gateway", "point", "power", "on"
             )
         )
-        coordinator.client.patch_characteristic.assert_awaited_once_with(
-            "gateway", "point", "power", "on"
+        mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+            "gateway", "point", "power", "on", path=None
         )
 
     async def test_unexpected_request_error_has_request_log_message(
         self,
         coordinator: OnectaDataUpdateCoordinator,
         caplog: pytest.LogCaptureFixture,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Log other request failures as requests, not OAuth token failures."""
         error = OnectaRequestError(
@@ -503,7 +499,7 @@ class TestOnectaDataUpdateCoordinator:
         )
         caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
 
-        coordinator.client.patch_characteristic.side_effect = error
+        mock_onecta_client.patch_characteristic.side_effect = error
         assert not await coordinator.async_execute_command(
             lambda client: client.patch_characteristic(
                 "gateway", "point", "power", "on"
@@ -514,13 +510,16 @@ class TestOnectaDataUpdateCoordinator:
         assert "OAuth token request failed" not in caplog.text
 
     async def test_command_token_connection_error_returns_failure(
-        self, coordinator: OnectaDataUpdateCoordinator, caplog: pytest.LogCaptureFixture
+        self,
+        coordinator: OnectaDataUpdateCoordinator,
+        caplog: pytest.LogCaptureFixture,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Map OAuth transport failures to the platform's translated command error."""
         error = OAuth2TokenRequestConnectionError(domain=DOMAIN)
         caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
 
-        coordinator.client.patch_characteristic.side_effect = error
+        mock_onecta_client.patch_characteristic.side_effect = error
         assert not await coordinator.async_execute_command(
             lambda client: client.patch_characteristic(
                 "gateway", "point", "power", "on"
@@ -528,7 +527,7 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         assert coordinator.hass.config_entries.flow.async_progress() == []
-        coordinator.client.patch_characteristic.assert_awaited_once()
+        mock_onecta_client.patch_characteristic.assert_awaited_once()
         assert "OAuth2TokenRequestConnectionError" in caplog.text
 
     @pytest.mark.parametrize(
@@ -543,6 +542,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator: OnectaDataUpdateCoordinator,
         status: int,
         expected_reauth_calls: int,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Only a 401 write failure starts reauthentication."""
         coordinator.config_entry.async_start_reauth = MagicMock()
@@ -551,7 +551,7 @@ class TestOnectaDataUpdateCoordinator:
             method="PATCH",
             path="/v1/management-points/point/characteristics/temperatureControl",
         )
-        coordinator.client.patch_characteristic.side_effect = error
+        mock_onecta_client.patch_characteristic.side_effect = error
 
         assert not await coordinator.async_execute_command(
             lambda client: client.patch_characteristic(
@@ -564,7 +564,7 @@ class TestOnectaDataUpdateCoordinator:
             == expected_reauth_calls
         )
         assert coordinator.hass.config_entries.flow.async_progress() == []
-        coordinator.client.patch_characteristic.assert_awaited_once()
+        mock_onecta_client.patch_characteristic.assert_awaited_once()
 
     async def test_polling_intervals_use_reported_daily_limit(
         self, coordinator: OnectaDataUpdateCoordinator
@@ -593,11 +593,12 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Apply Daikin's reported daily limit after a cloud refresh."""
         _move_to_local_time(freezer, datetime(2023, 1, 1, 10, 0))
         coordinator.client.rate_limit = RateLimit(day_limit=400)
-        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        mock_onecta_client.get_gateway_devices.return_value = []
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -865,6 +866,7 @@ class TestOnectaDataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Keep the cached state available if a manual refresh is rate limited."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -872,17 +874,13 @@ class TestOnectaDataUpdateCoordinator:
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         state_before = hass.states.get(entity_id)
         assert state_before is not None
-        coordinator.client.get_gateway_devices = AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
         )
 
         await async_update_entity(hass, entity_id)
 
-        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
         assert coordinator.last_update_success
         assert coordinator.update_interval == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
@@ -918,12 +916,12 @@ class TestOnectaDataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """One manual update for multiple climate entities makes one cloud call."""
         await _async_setup_fixture(hass, config_entry, "altherma")
-        coordinator = config_entry.runtime_data
-        coordinator.client.get_gateway_devices = AsyncMock(
-            return_value=_load_gateway_devices("altherma")
+        mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+            "altherma"
         )
         entity_ids = [
             "climate.altherma_leaving_water_offset",
@@ -935,7 +933,7 @@ class TestOnectaDataUpdateCoordinator:
             *(async_update_entity(hass, entity_id) for entity_id in entity_ids)
         )
 
-        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_scheduled_update_respects_write_polling_backoff(
         self,
@@ -1076,10 +1074,11 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         freezer: FrozenDateTimeFactory,
         coordinator: OnectaDataUpdateCoordinator,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Poll 30 seconds after a successful write clears the backoff."""
         coordinator.update_interval = timedelta(minutes=5)
-        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        mock_onecta_client.get_gateway_devices.return_value = []
 
         rate_limited_command = AsyncMock(
             side_effect=OnectaRateLimitError(
@@ -1097,21 +1096,22 @@ class TestOnectaDataUpdateCoordinator:
         freezer.tick(timedelta(seconds=29))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        coordinator.client.get_gateway_devices.assert_not_awaited()
+        mock_onecta_client.get_gateway_devices.assert_not_awaited()
 
         freezer.tick(timedelta(seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_api_error_uses_update_failed_with_http_status(
         self,
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Translate an HTTP response failure during a loaded-entry poll."""
-        coordinator.client.get_gateway_devices.side_effect = OnectaApiError(
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaApiError(
             500,
             "Internal Server Error",
             method="GET",
@@ -1129,6 +1129,7 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Explain a malformed successful API response during polling."""
         response_error = OnectaResponseError(
@@ -1137,7 +1138,7 @@ class TestOnectaDataUpdateCoordinator:
             method="GET",
             path="/v1/gateway-devices",
         )
-        coordinator.client.get_gateway_devices.side_effect = response_error
+        mock_onecta_client.get_gateway_devices.side_effect = response_error
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -1152,9 +1153,10 @@ class TestOnectaDataUpdateCoordinator:
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
         status: int,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Mark a loaded entry as authentication-failed after rejected API access."""
-        coordinator.client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaAuthenticationError(
             status=status,
             method="GET",
             path="/v1/gateway-devices",
@@ -1170,6 +1172,7 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Translate refresh-token rejection while polling a loaded entry."""
         token_error = OAuth2TokenRequestReauthError(
@@ -1178,7 +1181,7 @@ class TestOnectaDataUpdateCoordinator:
             status=401,
             message="invalid_grant",
         )
-        coordinator.client.get_gateway_devices.side_effect = token_error
+        mock_onecta_client.get_gateway_devices.side_effect = token_error
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -1191,6 +1194,7 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Leave transient OAuth failures eligible for retry."""
         token_error = OAuth2TokenRequestError(
@@ -1199,7 +1203,7 @@ class TestOnectaDataUpdateCoordinator:
             status=500,
             message="server error",
         )
-        coordinator.client.get_gateway_devices.side_effect = token_error
+        mock_onecta_client.get_gateway_devices.side_effect = token_error
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -1210,10 +1214,11 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Mark loaded entities unavailable after a connection failure."""
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
-        coordinator.client.get_gateway_devices.side_effect = OnectaConnectionError(
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
             EXPECTED_CONNECTION_ERROR,
             method="GET",
             path="/v1/gateway-devices",
@@ -1231,11 +1236,12 @@ class TestOnectaDataUpdateCoordinator:
         hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Mark cached gateways unavailable when the cloud no longer returns them."""
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         gateway = next(iter(coordinator.data.values()))
-        coordinator.client.get_gateway_devices.return_value = []
+        mock_onecta_client.get_gateway_devices.return_value = []
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -1249,12 +1255,13 @@ class TestOnectaDataUpdateCoordinator:
         coordinator: OnectaDataUpdateCoordinator,
         device_registry: dr.DeviceRegistry,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Replace gateway models and update registry metadata from cloud data."""
         gateway = next(iter(coordinator.data.values()))
         replacement = deepcopy(gateway.device)
         replacement.device_model = "Renamed Daikin"
-        coordinator.client.get_gateway_devices.return_value = [replacement]
+        mock_onecta_client.get_gateway_devices.return_value = [replacement]
 
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 

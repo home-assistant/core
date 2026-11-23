@@ -17,18 +17,23 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _execute_typed_command
 
 MASTER_SCHEDULE_ENTITY_ID = "select.master_schedule"
 
 
 async def test_schedule_select_updates_cached_selection(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Selecting a schedule updates the entity state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "schedule")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     async_update_listeners = MagicMock(wraps=coordinator.async_update_listeners)
     coordinator.async_update_listeners = async_update_listeners
 
@@ -49,11 +54,13 @@ async def test_schedule_select_updates_cached_selection(
 
 
 async def test_schedule_select_ignores_current_option(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not spend a cloud request when the selected schedule is unchanged."""
     await _async_setup_fixture(hass, config_entry, "schedule")
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute_command
     state = hass.states.get(MASTER_SCHEDULE_ENTITY_ID)
     assert state is not None
@@ -72,12 +79,14 @@ async def test_schedule_select_ignores_current_option(
 
 
 async def test_schedule_select_preserves_read_only_disabled_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not offer schedules that cannot be enabled."""
     await _async_setup_fixture(hass, config_entry, "gas")
     coordinator = config_entry.runtime_data
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute_command
     state = hass.states.get("select.my_living_room_schedule")
     assert state is not None
@@ -99,11 +108,13 @@ async def test_schedule_select_preserves_read_only_disabled_state(
 
 
 async def test_read_only_schedule_only_advertises_current_option(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not offer schedule choices that Daikin marks as read-only."""
     await _async_setup_fixture(hass, config_entry, "holidaymode")
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute_command
     state = hass.states.get("select.ndj_schedule")
     assert state is not None
@@ -192,12 +203,16 @@ async def test_schedule_select_rejects_unadvertised_option(
 
 
 async def test_schedule_named_off_does_not_disable_schedule(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Distinguish a native schedule named off from the disabled option."""
     await _async_setup_fixture(hass, config_entry, "schedule")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     device = next(iter(coordinator.data.values()))
     point = device.device.management_points_by_type("climateControl")[0]
     assert point.schedule is not None
@@ -220,7 +235,7 @@ async def test_schedule_named_off_does_not_disable_schedule(
         blocking=True,
     )
 
-    coordinator.client.put_management_point.assert_awaited_once_with(
+    mock_onecta_client.put_management_point.assert_awaited_once_with(
         device.id,
         point.embedded_id,
         "schedule/any/current",
@@ -232,12 +247,16 @@ async def test_schedule_named_off_does_not_disable_schedule(
 
 
 async def test_duplicate_schedule_names_have_unique_select_options(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Disambiguate schedule names and select the intended cloud schedule ID."""
     await _async_setup_fixture(hass, config_entry, "schedule")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     device = next(iter(coordinator.data.values()))
     point = device.device.management_points_by_type("climateControl")[0]
     assert point.schedule_state is not None
@@ -270,7 +289,7 @@ async def test_duplicate_schedule_names_have_unique_select_options(
         blocking=True,
     )
 
-    coordinator.client.put_management_point.assert_awaited_once_with(
+    mock_onecta_client.put_management_point.assert_awaited_once_with(
         device.id,
         point.embedded_id,
         "schedule/any/current",

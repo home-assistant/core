@@ -67,7 +67,7 @@ async def test_firmware_install_executes_command(
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
 
     await hass.services.async_call(
@@ -172,7 +172,9 @@ async def test_firmware_pending_install_survives_missing_installed_version(
     """Keep an install pending when a poll omits the installed version."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     entity_id = LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID
     entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
     assert isinstance(entity, DaikinFirmwareUpdateEntity)
@@ -376,7 +378,9 @@ async def test_firmware_pending_install_survives_failed_refresh(
     entity_id = LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID
     entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
     assert isinstance(entity, DaikinFirmwareUpdateEntity)
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -448,11 +452,14 @@ async def test_firmware_install_schedules_refresh_after_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Refresh cloud state shortly after a successful firmware install."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     refresh = AsyncMock()
     coordinator.async_refresh = refresh
 
@@ -593,12 +600,14 @@ async def test_firmware_install_rejects_unavailable_firmware(
 
 
 async def test_firmware_state_clears_when_firmware_disappears(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Clear update state through HA when a gateway stops reporting firmware."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
     entity_id = LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID
     await hass.services.async_call(

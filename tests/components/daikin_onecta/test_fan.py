@@ -26,6 +26,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+from .conftest import MockOnectaClient
 from .platform_helpers import (
     AIR_PURIFIER_ENTITY_ID,
     _async_setup_fixture,
@@ -42,12 +43,14 @@ def _air_purification(config_entry: MockConfigEntry):
 
 
 async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A changed cloud mode does not redirect a pending speed command or its cache."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -67,7 +70,7 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     embedded_id = device.device.management_points_by_type("climateControl")[
         0
     ].embedded_id
-    coordinator.client.patch_characteristic.reset_mock()
+    mock_onecta_client.patch_characteristic.reset_mock()
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         device.set_device_data(deepcopy(device.device))
@@ -85,7 +88,7 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
         blocking=True,
     )
 
-    coordinator.client.patch_characteristic.assert_awaited_once_with(
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         device.id,
         embedded_id,
         "fanControl",
@@ -166,11 +169,12 @@ async def test_air_purifier_rejects_unavailable_controls(
     service_data: dict[str, str | int],
     make_unavailable: Callable[[ManagementPoint], None],
     translation_key: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject purifier services when the cloud no longer provides its controls."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     point = next(iter(coordinator.data.values())).device.management_points_by_type(
         "climateControl"
@@ -191,12 +195,14 @@ async def test_air_purifier_rejects_unavailable_controls(
 
 
 async def test_air_purifier_preset_updates_cached_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A successful purifier command updates its native preset state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
 
     await hass.services.async_call(
@@ -218,12 +224,14 @@ async def test_air_purifier_preset_updates_cached_state(
 
 
 async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Setting speed selects the writable manual mode and updates its cache."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
 
     await hass.services.async_call(
@@ -246,12 +254,16 @@ async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
 
 
 async def test_air_purifier_uses_discrete_speed_percentages(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Map purifier percentages to the finite native speed list."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
@@ -261,7 +273,7 @@ async def test_air_purifier_uses_discrete_speed_percentages(
         },
         blocking=True,
     )
-    coordinator.client.patch_characteristic.reset_mock()
+    mock_onecta_client.patch_characteristic.reset_mock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -283,8 +295,8 @@ async def test_air_purifier_uses_discrete_speed_percentages(
         blocking=True,
     )
 
-    coordinator.client.patch_characteristic.assert_awaited_once()
-    assert coordinator.client.patch_characteristic.await_args.args[3] == 1
+    mock_onecta_client.patch_characteristic.assert_awaited_once()
+    assert mock_onecta_client.patch_characteristic.await_args.args[3] == 1
     assert (
         hass.states.get(AIR_PURIFIER_ENTITY_ID).attributes[
             FanEntityStateAttribute.PERCENTAGE
@@ -332,12 +344,15 @@ async def test_air_purifier_preserves_unknown_fixed_speed(
 
 @pytest.mark.parametrize("service", [FAN_SERVICE_TURN_ON, FAN_SERVICE_TURN_OFF])
 async def test_air_purifier_rejects_unknown_power_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry, service: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject HA power services when Daikin omits its current value."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.power is not None
@@ -358,12 +373,14 @@ async def test_air_purifier_rejects_unknown_power_state(
 
 
 async def test_air_purifier_percentage_rejects_unknown_power_before_mode_write(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not change purifier mode through HA when its power state is unknown."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.power is not None
@@ -387,12 +404,14 @@ async def test_air_purifier_percentage_rejects_unknown_power_before_mode_write(
 
 
 async def test_air_purifier_turn_off_then_on_updates_cached_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Power commands immediately publish their successful local state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
 
     await hass.services.async_call(
@@ -418,11 +437,13 @@ async def test_air_purifier_turn_off_then_on_updates_cached_state(
 
 
 async def test_air_purifier_turn_on_rejects_invalid_preset_before_power_write(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Validate a requested preset before turning on the purifier."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.power is not None
@@ -447,11 +468,13 @@ async def test_air_purifier_turn_on_rejects_invalid_preset_before_power_write(
 
 
 async def test_air_purifier_ignores_unchanged_preset(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not spend a cloud request when the selected purifier mode is unchanged."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute_command
 
     await hass.services.async_call(
@@ -468,12 +491,14 @@ async def test_air_purifier_ignores_unchanged_preset(
 
 
 async def test_air_purifier_percentage_turns_on_and_exits_preset(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A nonzero manual speed powers on an off purifier and clears its preset."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -505,19 +530,23 @@ async def test_air_purifier_percentage_turns_on_and_exits_preset(
 
 
 async def test_air_purifier_percentage_powers_on_before_mode_and_speed(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Power on an off purifier before changing its mode and fan speed."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
     await hass.services.async_call(
         FAN_DOMAIN,
         FAN_SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: AIR_PURIFIER_ENTITY_ID},
         blocking=True,
     )
-    coordinator.client.patch_characteristic.reset_mock()
+    mock_onecta_client.patch_characteristic.reset_mock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -531,7 +560,7 @@ async def test_air_purifier_percentage_powers_on_before_mode_and_speed(
 
     device = next(iter(coordinator.data.values()))
     point = device.device.management_points_by_type("climateControl")[0]
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         ((device.id, point.embedded_id, "onOffMode", "on"), {"path": None}),
         (
             (device.id, point.embedded_id, "airPurificationMode", "manualFan"),
@@ -545,7 +574,9 @@ async def test_air_purifier_percentage_powers_on_before_mode_and_speed(
 
 
 async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Re-read purifier state after turning it on replaces the cached model."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
@@ -566,7 +597,9 @@ async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
     assert replacement_point.air_purification.mode is not None
     replacement_point.air_purification.power.value = "on"
     replacement_point.air_purification.mode.value = "manualFan"
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
 
     async def replace_model() -> None:
         device.set_device_data(replacement)
@@ -582,7 +615,7 @@ async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
             blocking=True,
         )
 
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         (
             (
                 device.id,
@@ -596,11 +629,13 @@ async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
 
 
 async def test_air_purifier_rejects_manual_speed_as_preset(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """The HA preset action must not expose the native manual speed mode."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    command = _execute_typed_command(config_entry)
+    command = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = command
 
     with pytest.raises(ServiceValidationError):
@@ -618,12 +653,14 @@ async def test_air_purifier_rejects_manual_speed_as_preset(
 
 
 async def test_air_purifier_ignores_missing_mode_value(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Ignore a null current mode when building preset options."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.mode is not None
@@ -657,12 +694,14 @@ async def test_air_purifier_ignores_missing_mode_value(
 
 
 async def test_air_purifier_does_not_expose_read_only_preset_modes(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A read-only native mode is omitted from the HA fan preset service."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.mode is not None
@@ -706,12 +745,14 @@ async def test_air_purifier_clears_state_when_purification_disappears(
 
 
 async def test_air_purifier_hides_invalid_fixed_speed_control(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not advertise percentage control for malformed native speed data."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     operation = purification.fan_operation("manualFan")
@@ -738,11 +779,13 @@ async def test_air_purifier_hides_invalid_fixed_speed_control(
 
 
 async def test_air_purifier_turn_on_rejects_preset_and_percentage(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject conflicting arguments before any power or mode write."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.power is not None
@@ -790,10 +833,11 @@ async def test_air_purifier_turn_on_applies_one_optional_control(
     service_data: dict[str, str | int],
     expected_preset: str | None,
     expected_percentage: int | None,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Apply either a preset or a manual speed through the HA fan service."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
 
     await hass.services.async_call(
@@ -812,11 +856,13 @@ async def test_air_purifier_turn_on_applies_one_optional_control(
 
 
 async def test_air_purifier_turn_off_is_noop_when_already_off(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Avoid a cloud write through HA when the purifier is already off."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     config_entry.runtime_data.async_execute_command = execute
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -837,12 +883,14 @@ async def test_air_purifier_turn_off_is_noop_when_already_off(
 
 
 async def test_air_purifier_zero_percentage_turns_off(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Map zero fan percentage to power off through the HA fan service."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+        config_entry, mock_onecta_client
     )
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -859,12 +907,14 @@ async def test_air_purifier_zero_percentage_turns_off(
 
 
 async def test_air_purifier_percentage_rejects_missing_speed_after_mode_change(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Reject percentage service if the mode change removes speed data."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("climateControl")[0]
@@ -872,7 +922,7 @@ async def test_air_purifier_percentage_rejects_missing_speed_after_mode_change(
     def remove_air_purification(*_args, **_kwargs) -> None:
         point.characteristics.pop("airPurificationMode")
 
-    coordinator.client.patch_characteristic.side_effect = remove_air_purification
+    mock_onecta_client.patch_characteristic.side_effect = remove_air_purification
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             FAN_DOMAIN,

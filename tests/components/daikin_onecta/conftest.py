@@ -1,6 +1,7 @@
 """Shared fixtures for the Daikin Onecta integration tests."""
 
 import time
+from typing import Any
 from unittest.mock import AsyncMock
 
 from daikin_onecta import Site, get_account_id
@@ -22,6 +23,8 @@ class MockOnectaClient:
         self.get_gateway_devices = AsyncMock()
         self.get_sites = AsyncMock()
         self.post_management_point = AsyncMock()
+        self.put_management_point = AsyncMock()
+        self.install_firmware = AsyncMock()
 
 
 @pytest.fixture
@@ -63,6 +66,25 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
             gateway_id, management_point_id, resource, value
         )
 
+    async def mock_put_management_point(
+        _client: object,
+        gateway_id: str,
+        management_point_id: str,
+        resource: str,
+        value: Any = None,
+    ) -> Any:
+        return await mock_client.put_management_point(
+            gateway_id, management_point_id, resource, value
+        )
+
+    async def mock_install_firmware(
+        _client: object,
+        gateway_id: str,
+        management_point_id: str,
+        firmware_id: str,
+    ) -> None:
+        await mock_client.install_firmware(gateway_id, management_point_id, firmware_id)
+
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.patch_characteristic",
         mock_patch_characteristic,
@@ -75,6 +97,14 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.post_management_point",
         mock_post_management_point,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.daikin_onecta.coordinator.OnectaClient.put_management_point",
+        mock_put_management_point,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.daikin_onecta.coordinator.OnectaClient.install_firmware",
+        mock_install_firmware,
     )
     return mock_client
 

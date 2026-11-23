@@ -33,6 +33,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockOnectaClient
 from .platform_helpers import (
     AIR_PURIFIER_ENTITY_ID,
     ALTHERMA_WATER_HEATER_ENTITY_ID,
@@ -146,11 +147,12 @@ async def test_command_cache_survives_model_replacement(
     data: dict[str, str | int],
     attribute: str,
     expected: str | int,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Update the current model if polling replaces it while a command waits."""
     await _async_setup_fixture(hass, config_entry, fixture)
     coordinator = config_entry.runtime_data
-    execute = _execute_typed_command(config_entry)
+    execute = _execute_typed_command(config_entry, mock_onecta_client)
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         for device in coordinator.data.values():

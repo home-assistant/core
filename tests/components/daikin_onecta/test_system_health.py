@@ -1,6 +1,6 @@
 """Tests for Daikin Onecta system health."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from daikin_onecta.client import ONECTA_API_URL
 from daikin_onecta.rate_limit import RateLimit
@@ -11,7 +11,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.daikin_onecta.const import DOMAIN, OAUTH2_AUTHORIZE
 from homeassistant.components.daikin_onecta.system_health import (
-    _entry_info,
     async_register,
     system_health_info,
 )
@@ -27,36 +26,6 @@ def test_system_health_register() -> None:
     async_register(MagicMock(), register)
 
     register.async_register_info.assert_called_once_with(system_health_info)
-
-
-def test_system_health_reads_rate_limits_once() -> None:
-    """Build all health fields from one cached rate-limit snapshot."""
-
-    class RuntimeData:
-        rate_limit_reads = 0
-        session = MagicMock(valid_token=True)
-
-        @property
-        def rate_limits(self) -> dict[str, int | None]:
-            self.rate_limit_reads += 1
-            return {
-                "minute": 10,
-                "day": 200,
-                "remaining_minutes": 9,
-                "remaining_day": 199,
-                "retry_after": None,
-                "ratelimit_reset": None,
-            }
-
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    runtime_data = RuntimeData()
-    config_entry.runtime_data = runtime_data
-
-    info = _entry_info(config_entry)
-
-    assert info["max_minute"] == 10
-    assert info["remaining_day"] == 199
-    assert runtime_data.rate_limit_reads == 1
 
 
 async def test_system_health_ignores_unloaded_entry(
@@ -82,7 +51,16 @@ async def test_system_health_info(
 
     aioclient_mock.get(ONECTA_API_URL, status=503)
     aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)
-    info = await system_health_info(hass)
+    coordinator = config_entry.runtime_data
+    cached_rate_limits = coordinator.rate_limits
+    with patch.object(
+        type(coordinator),
+        "rate_limits",
+        new_callable=PropertyMock,
+        return_value=cached_rate_limits,
+    ) as rate_limits:
+        info = await system_health_info(hass)
+        assert rate_limits.call_count == 1
 
     info["api_status"] = await info["api_status"]
     info["oauth2_status"] = await info["oauth2_status"]

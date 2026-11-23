@@ -2,7 +2,7 @@
 
 from hashlib import sha256
 from types import MappingProxyType
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from daikin_onecta import OnectaConnectionError, Site
 import pytest
@@ -21,6 +21,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_setup_fixture
 
 
@@ -29,6 +30,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Test cached cloud data is provided with identifying data redacted."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -48,19 +50,16 @@ async def test_diagnostics(
         ),
     )
     coordinator = config_entry.runtime_data
-    coordinator.client.get_gateway_devices = AsyncMock()
-    coordinator.client.get_sites = AsyncMock(
-        return_value=[
-            Site(
-                id="site-1",
-                name="Home",
-                gateway_device_ids=[
-                    device.id
-                    for device in (config_entry.runtime_data.data or {}).values()
-                ],
-            )
-        ]
-    )
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    mock_onecta_client.get_sites.return_value = [
+        Site(
+            id="site-1",
+            name="Home",
+            gateway_device_ids=[
+                device.id for device in (config_entry.runtime_data.data or {}).values()
+            ],
+        )
+    ]
 
     with patch(
         "homeassistant.components.daikin_onecta.diagnostics.secrets.token_bytes",
@@ -101,20 +100,20 @@ async def test_diagnostics(
         != second_diagnostics["sites"]["gateway_membership"][0]["gateway_id_hash"]
     )
     assert gateway_id not in repr(diagnostics["sites"])
-    coordinator.client.get_sites.assert_awaited_once_with()
-    coordinator.client.get_gateway_devices.assert_not_awaited()
+    mock_onecta_client.get_sites.assert_awaited_once_with()
+    mock_onecta_client.get_gateway_devices.assert_not_awaited()
 
 
 async def test_diagnostics_redacts_gateway_ssids(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Redact gateway Wi-Fi names from cached cloud data."""
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
-    coordinator = config_entry.runtime_data
-    coordinator.client.get_gateway_devices = AsyncMock()
-    coordinator.client.get_sites = AsyncMock(return_value=[])
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    mock_onecta_client.get_sites.return_value = []
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -137,10 +136,11 @@ async def test_diagnostics_redacts_serialized_product_identifiers(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Redact the serialized identifier of an Altherma management point."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
-    config_entry.runtime_data.client.get_sites = AsyncMock(return_value=[])
+    mock_onecta_client.get_sites.return_value = []
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -176,10 +176,11 @@ async def test_diagnostics_reports_site_lookup_failures(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     error: Exception,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep diagnostics available when the explicit Sites lookup fails."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    config_entry.runtime_data.client.get_sites = AsyncMock(side_effect=error)
+    mock_onecta_client.get_sites.side_effect = error
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
@@ -198,16 +199,15 @@ async def test_diagnostics_reports_oauth_token_failure(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Include OAuth token refresh failures in diagnostics instead of returning 500."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
-    config_entry.runtime_data.client.get_sites = AsyncMock(
-        side_effect=OAuth2TokenRequestError(
-            domain="daikin_onecta",
-            request_info=MagicMock(),
-            status=401,
-            message="private token details",
-        )
+    mock_onecta_client.get_sites.side_effect = OAuth2TokenRequestError(
+        domain="daikin_onecta",
+        request_info=MagicMock(),
+        status=401,
+        message="private token details",
     )
 
     diagnostics = await get_diagnostics_for_config_entry(

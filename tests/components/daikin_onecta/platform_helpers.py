@@ -13,6 +13,8 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockOnectaClient
+
 ALTHERMA_CLIMATE_ENTITY_ID = "climate.altherma_room_temperature"
 ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID = "sensor.altherma_control_mode"
 ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.domestic_hot_water_tank"
@@ -32,12 +34,14 @@ async def _async_fire_coordinator_update(
     await hass.async_block_till_done()
 
 
-def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
+def _execute_typed_command(
+    config_entry: MockConfigEntry, mock_onecta_client: MockOnectaClient
+) -> AsyncMock:
     """Execute a typed command callback without making a cloud request."""
     coordinator = config_entry.runtime_data
-    coordinator.client.patch_characteristic = AsyncMock()
-    coordinator.client.put_management_point = AsyncMock()
-    coordinator.client.install_firmware = AsyncMock()
+    mock_onecta_client.patch_characteristic.reset_mock()
+    mock_onecta_client.put_management_point.reset_mock()
+    mock_onecta_client.install_firmware.reset_mock()
 
     async def execute(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         await command(coordinator.client)

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import replace
-from unittest.mock import AsyncMock, call
+from unittest.mock import call
 
 from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import (
@@ -1387,6 +1387,7 @@ async def test_climate_does_not_disable_read_only_active_preset(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Skip disabling an active preset when Daikin marks it read-only."""
     (
@@ -1405,7 +1406,9 @@ async def test_climate_does_not_disable_read_only_active_preset(
     holiday_mode.value.enabled = True
     holiday_mode.settable = False
     coordinator.async_update_listeners()
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
 
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
     assert entity is not None
@@ -1419,8 +1422,8 @@ async def test_climate_does_not_disable_read_only_active_preset(
         blocking=True,
     )
 
-    coordinator.client.put_management_point.assert_not_awaited()
-    assert coordinator.client.patch_characteristic.await_args_list == [
+    mock_onecta_client.put_management_point.assert_not_awaited()
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
         (
             (
                 gateway_id,
@@ -2827,6 +2830,7 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     service_data: dict[str, str],
     feature: ClimateEntityFeature,
     translation_key: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not advertise or write read-only fan and swing telemetry."""
     await _async_setup_fixture(hass, config_entry, "ururu")
@@ -2835,7 +2839,7 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     device = next(iter(coordinator.data.values()))
     point = next(iter(device.device.management_points_by_type("climateControl")))
     configure_control(point)
-    coordinator.client.patch_characteristic = AsyncMock()
+    mock_onecta_client.patch_characteristic.reset_mock()
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, f"{device.id}_{point.embedded_id}_roomTemperature"
     )
@@ -2863,7 +2867,68 @@ async def test_read_only_fan_controls_do_not_call_cloud(
             {ATTR_ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
-    coordinator.client.patch_characteristic.assert_not_awaited()
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+async def test_fan_mode_changes_with_hvac_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Update the fan state from each native HVAC operation mode."""
+    await _async_setup_fixture(hass, config_entry, "fanmode")
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            "entity_id": entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "3"
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            "entity_id": entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.DRY
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "auto"
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
+        call(
+            "00000000-0000-4000-8000-000000000101",
+            "climateControl",
+            "onOffMode",
+            "on",
+            path=None,
+        ),
+        call(
+            "00000000-0000-4000-8000-000000000101",
+            "climateControl",
+            "operationMode",
+            "cooling",
+            path=None,
+        ),
+        call(
+            "00000000-0000-4000-8000-000000000101",
+            "climateControl",
+            "operationMode",
+            "dry",
+            path=None,
+        ),
+    ]
 
 
 @pytest.mark.parametrize(

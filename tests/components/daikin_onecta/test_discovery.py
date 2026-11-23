@@ -549,6 +549,7 @@ async def test_missing_scalar_value_does_not_change_entity_topology(
     device_index: int,
     management_point_type: str,
     characteristic_name: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep scalar entities registered when their current value is omitted."""
     cloud_devices = _load_gateway_devices("altherma")
@@ -569,6 +570,7 @@ async def test_missing_scalar_value_does_not_change_entity_topology(
         initial_devices,
         platform,
         unique_id,
+        mock_onecta_client,
     )
 
 
@@ -577,6 +579,7 @@ async def test_missing_firmware_version_does_not_change_entity_topology(
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep firmware entities registered when their current version is omitted."""
     cloud_devices = _load_gateway_devices("dx4_firmwareavailable")
@@ -596,6 +599,7 @@ async def test_missing_firmware_version_does_not_change_entity_topology(
         initial_devices,
         Platform.UPDATE,
         f"{device.id}_{point.embedded_id}_firmware",
+        mock_onecta_client,
     )
 
 
@@ -608,6 +612,7 @@ async def _async_test_missing_value_does_not_schedule_reload(
     initial_devices: list[GatewayDevice],
     platform: Platform,
     unique_id: str,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Set up missing current data, then confirm a full response adds no topology."""
     with (
@@ -628,7 +633,7 @@ async def _async_test_missing_value_does_not_schedule_reload(
     assert entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
 
     coordinator = config_entry.runtime_data
-    coordinator.client.get_gateway_devices = AsyncMock(return_value=cloud_devices)
+    mock_onecta_client.get_gateway_devices.return_value = cloud_devices
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
