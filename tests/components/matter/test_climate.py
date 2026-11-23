@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     PRESET_NONE,
     ClimateEntityFeature,
+    ClimateService,
     HVACAction,
     HVACMode,
 )
@@ -36,7 +37,7 @@ from homeassistant.components.matter.thermostat_helpers import (
     InvalidPresetDataError,
     _validate_unique_preset_name,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -1448,7 +1449,7 @@ async def test_set_thermostat_preset_edit(
         DOMAIN,
         "set_thermostat_preset",
         {
-            ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+            TargetKey.ENTITY_ID: EVE_THERMO_ENTITY_ID,
             ATTR_PRESET_MODE: "home",
             ATTR_HEATING_SETPOINT: 23.5,
         },
