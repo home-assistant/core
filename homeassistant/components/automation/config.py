@@ -374,6 +374,12 @@ async def async_validate_config_item(
     """
     # The schema renames keys of config in place
     submitted_keys = set(config) if isinstance(config, dict) else set()
+    # A key is not renamed when the key it is renamed to was submitted too
+    renamed_keys = {
+        new_key: old_key
+        for new_key, old_key in _RENAMED_KEYS.items()
+        if old_key in submitted_keys and new_key not in submitted_keys
+    }
     try:
         return await _async_validate_config_item(hass, config, True, False)
     except (probatio.Invalid, HomeAssistantError) as err:
@@ -398,8 +404,8 @@ async def async_validate_config_item(
     located: list[ValidationErrorInfo] = []
     for info in errors:
         path = info.path
-        if path and _RENAMED_KEYS.get(path[0]) in submitted_keys:
-            path = (_RENAMED_KEYS[path[0]], *path[1:])
+        if path and path[0] in renamed_keys:
+            path = (renamed_keys[path[0]], *path[1:])
         if uses_blueprint and not (path and path[0] in submitted_keys):
             path = (blueprint.CONF_USE_BLUEPRINT,)
         located.append(ValidationErrorInfo(info.exception, path))

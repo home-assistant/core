@@ -237,6 +237,39 @@ _INVALID_CONFIGS = [
         },
         id="schema_errors_in_all_sections",
     ),
+    pytest.param(
+        {
+            "trigger": _EVENT_TRIGGER,
+            "triggers": [{"trigger": "state"}],
+            "actions": [],
+        },
+        id="singular_and_plural_trigger_keys",
+    ),
+    pytest.param(
+        {
+            "triggers": [_EVENT_TRIGGER],
+            "condition": {"condition": "state", "entity_id": "light.kitchen"},
+            "conditions": [_UNKNOWN_ENTITY_CONDITION],
+            "actions": [],
+        },
+        id="singular_and_plural_condition_keys",
+    ),
+    pytest.param(
+        {
+            "triggers": [_EVENT_TRIGGER],
+            "action": [],
+            "actions": [_UNKNOWN_ENTITY_CONDITION],
+        },
+        id="singular_and_plural_action_keys",
+    ),
+    pytest.param(
+        {
+            "trigger": {"trigger": "state"},
+            "action": [],
+            "actions": [_UNKNOWN_ENTITY_CONDITION],
+        },
+        id="singular_trigger_key_and_singular_and_plural_action_keys",
+    ),
 ]
 _INVALID_BLUEPRINT_CONFIGS = [
     pytest.param(
