@@ -7,16 +7,10 @@ import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 from yalexs.exceptions import InvalidAuth, YaleApiError
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.yale.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -106,7 +100,9 @@ async def test_unlock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
             " consumable"
         ),
     ):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+        await hass.services.async_call(
+            LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True
+        )
 
 
 async def test_lock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
@@ -137,7 +133,9 @@ async def test_lock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
             " consumable"
         ),
     ):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
+        await hass.services.async_call(
+            LOCK_DOMAIN, LockService.LOCK, data, blocking=True
+        )
 
 
 async def test_open_throws_hass_service_not_supported_error(
@@ -150,7 +148,9 @@ async def test_open_throws_hass_service_not_supported_error(
         ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
     }
     with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+        await hass.services.async_call(
+            LOCK_DOMAIN, LockService.OPEN, data, blocking=True
+        )
 
 
 async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:

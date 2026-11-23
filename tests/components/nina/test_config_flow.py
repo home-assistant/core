@@ -38,7 +38,23 @@ def assert_dummy_entry_created(result: dict[str, Any]) -> None:
     assert result["title"] == "NINA"
     assert result["data"] == DUMMY_USER_INPUT | {
         CONF_REGIONS: {
-            "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
+            "010560000000": "Raa-Besenbek (Pinneberg - Schleswig-Holstein)",
+            "010590000000": (
+                "Maasbüll (Schleswig-Flensburg - Schleswig-Holstein) + Rabel"
+                " (Schleswig-Flensburg - Schleswig-Holstein)"
+            ),
+            "010610000000": (
+                "Vaale (Steinburg - Schleswig-Holstein) + Vaalermoor"
+                " (Steinburg - Schleswig-Holstein)"
+            ),
+            "032510000000": "Maasen (Diepholz - Niedersachsen)",
+            "055660000000": "Ibbenbüren, Stadt (Steinfurt - Nordrhein-Westfalen)",
+            "083370000000": "Ibach (Waldshut - Baden-Württemberg)",
+            "095760000000": (
+                "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
+            ),
+            "146260000000": "Ebersbach-Neugersdorf, Stadt (Görlitz - Sachsen)",
+            "160650000000": "Ebeleben, Stadt (Kyffhäuserkreis - Thüringen)",
         }
     }
     assert result["version"] == 1
@@ -375,3 +391,45 @@ async def test_options_flow_device_removal(
     assert not any(
         old_device.id in (device.id for device in devices) for old_device in old_devices
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_user_multiple_regions_same_code(
+    hass: HomeAssistant, mock_nina_class: AsyncMock
+) -> None:
+    """Test selecting three regions with the same code plus an additional region."""
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MESSAGE_SLOTS: 5,
+            CONST_REGION_A_TO_D: [
+                "095760000000",
+                "095760000000_15",
+                "095760000000_0",
+                "072350000000_63",
+            ],
+            CONST_REGION_E_TO_H: [],
+            CONST_REGION_I_TO_L: [],
+            CONST_REGION_M_TO_Q: [],
+            CONST_REGION_R_TO_U: [],
+            CONST_REGION_V_TO_Z: [],
+            CONF_FILTERS: {
+                CONF_HEADLINE_FILTER: ".*corona.*",
+                CONF_AREA_FILTER: ".*",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "NINA"
+    assert result["data"][CONF_REGIONS] == {
+        "095760000000": (
+            "Abenberg, St (Roth - Bayern) + Abenberger Wald (Roth - Bayern) +"
+            " Allersberg, M (Roth - Bayern)"
+        ),
+        "072350000000": "Aach (Trier-Saarburg - Rheinland-Pfalz)",
+    }

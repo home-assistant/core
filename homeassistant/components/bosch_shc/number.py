@@ -188,6 +188,42 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         max_value_fn=lambda device: float(device.max_offset),
         step_fn=lambda device: step if (step := device.step_size) > 0 else 0.5,
     ),
+    "dimmer_min": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_min",
+        translation_key="dimmer_min",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: (
+            float(config.min_brightness)
+            if (config := device.dimmer_configuration)
+            else None
+        ),
+        set_value_fn=lambda device, value: device.set_brightness_range(
+            min_brightness=round(value)
+        ),
+    ),
+    "dimmer_max": SHCNumberEntityDescription[SHCMicromoduleDimmer](
+        key="dimmer_max",
+        translation_key="dimmer_max",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: (
+            float(config.max_brightness)
+            if (config := device.dimmer_configuration)
+            else None
+        ),
+        set_value_fn=lambda device, value: device.set_brightness_range(
+            max_brightness=round(value)
+        ),
+    ),
     "led_brightness": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
         key="led_brightness",
         translation_key="led_brightness",
@@ -386,6 +422,19 @@ async def async_setup_entry(
         for device in session.device_helper.micromodule_dimmers
         if device.supports_dimmer_configuration and device.dimming_speed is not None
     )
+
+    for key in ("dimmer_min", "dimmer_max"):
+        entities.extend(
+            SHCNumber(
+                hass=hass,
+                device=device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=NUMBER_TYPES[key],
+            )
+            for device in session.device_helper.micromodule_dimmers
+            if device.supports_dimmer_configuration
+        )
 
     async_add_entities(entities)
 

@@ -28,7 +28,7 @@ async def test_get_device_id(
     """Test get_device_id."""
     device_id = get_device_id(matter_client.server_info, matter_node.endpoints[0])
 
-    assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
+    assert device_id == "00000000000004D2-00000000000003ED-MatterNodeDevice"
 
 
 async def test_get_node_from_device_entry(
