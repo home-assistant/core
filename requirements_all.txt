@@ -2924,7 +2924,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline
-pytouchline_extended==1.2.1
+pytouchline_extended==1.3.1
 
 # homeassistant.components.touchline_sl
 pytouchlinesl==0.6.0
