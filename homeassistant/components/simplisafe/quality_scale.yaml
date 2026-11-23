@@ -14,7 +14,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  docs-triggers: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration does not register any new triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
