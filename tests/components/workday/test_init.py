@@ -1,9 +1,11 @@
 """Test Workday component setup process."""
 
 from datetime import datetime
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays.utils import country_holidays
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.workday.const import (
@@ -45,8 +47,10 @@ async def test_update_options(
     state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state.state == "on"
 
-    new_options = TEST_CONFIG_WITH_PROVINCE.copy()
-    new_options["add_holidays"] = ["2023-04-12"]
+    new_options = {
+        **TEST_CONFIG_WITH_PROVINCE,
+        "custom_holidays": {"add_holidays": ["2023-04-12"], "remove_holidays": []},
+    }
 
     hass.config_entries.async_update_entry(entry, options=new_options)
     await hass.config_entries.async_reload(entry.entry_id)
@@ -69,35 +73,83 @@ async def test_workday_subdiv_aliases() -> None:
     assert subdiv_aliases["6AE"] == ["Alsace"]
 
 
-async def test_migrate_minor_version_1_to_2(hass: HomeAssistant) -> None:
-    """Test migrates to version 1.2."""
-    config = {
-        "name": "Test sensor",
-        "country": "US",
-        "excludes": ["sat", "sun"],
-        "days_offset": DEFAULT_OFFSET,
-        "workdays": DEFAULT_WORKDAYS,
-        "add_holidays": [],
-        "remove_holidays": [],
-        "language": "en_US",
-    }
+@pytest.mark.parametrize("minor_version", [1, 2])
+@pytest.mark.parametrize(
+    ("options", "expected_options"),
+    [
+        pytest.param(
+            {
+                "country": "DE",
+                "excludes": ["sat", "sun"],
+                "days_offset": DEFAULT_OFFSET,
+                "workdays": DEFAULT_WORKDAYS,
+                "add_holidays": ["2023-04-12"],
+                "remove_holidays": ["Weihnachtstag"],
+                "province": "BW",
+                "language": "de",
+                "category": ["catholic"],
+            },
+            {
+                "country": "DE",
+                "excludes": ["sat", "sun"],
+                "days_offset": DEFAULT_OFFSET,
+                "workdays": DEFAULT_WORKDAYS,
+                "custom_holidays": {
+                    "add_holidays": ["2023-04-12"],
+                    "remove_holidays": ["Weihnachtstag"],
+                },
+                "country_settings": {
+                    "province": "BW",
+                    "language": "de",
+                    "category": ["catholic"],
+                },
+            },
+            id="country",
+        ),
+        pytest.param(
+            {
+                "excludes": ["sat", "sun"],
+                "days_offset": DEFAULT_OFFSET,
+                "workdays": DEFAULT_WORKDAYS,
+                "add_holidays": [],
+                "remove_holidays": [],
+            },
+            {
+                "excludes": ["sat", "sun"],
+                "days_offset": DEFAULT_OFFSET,
+                "workdays": DEFAULT_WORKDAYS,
+                "custom_holidays": {
+                    "add_holidays": [],
+                    "remove_holidays": [],
+                },
+            },
+            id="no_country",
+        ),
+    ],
+)
+async def test_migrate_to_version_2(
+    hass: HomeAssistant,
+    minor_version: int,
+    options: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test migration moves the options into sections."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
         data={},
-        options=config,
+        options=options,
         entry_id="1",
         title="Test sensor",
-        minor_version=1,
+        version=1,
+        minor_version=minor_version,
     )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_sensor")
-    assert state
-
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 2
-    assert config_entry.options == config
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
+    assert config_entry.options == expected_options
