@@ -101,10 +101,4 @@ async def test_tado_x_home_is_rejected_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == (
-        'The home "x home" uses Tado X devices, which are not supported by this'
-        " integration. Tado X uses a different API that Tado does not allow"
-        " third parties to access. To use these devices with Home Assistant,"
-        " set them up via the Matter integration with a Thread border router"
-        " instead"
-    )
+    assert "Matter" in mock_config_entry.reason

@@ -21,7 +21,6 @@ from .const import (
     CONF_REFRESH_TOKEN,
     CONST_OVERLAY_TADO_DEFAULT,
     DOMAIN,
-    GENERATION_LINE_X,
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
@@ -116,7 +115,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
         tado_home = tado_home_call["homes"][0]
-        if tado_home.get("generation") == GENERATION_LINE_X:
+        if tado_home.get("generation", "").lower() == "line_x":
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="tado_x_unsupported",

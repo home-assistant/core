@@ -63,10 +63,6 @@ TYPE_HOT_WATER = "HOT_WATER"
 TYPE_BATTERY = "BATTERY"
 TYPE_POWER = "POWER"
 
-# Tado X systems report this generation in the /me response and are served by
-# the separate hops.tado.com API which this integration does not support.
-GENERATION_LINE_X = "LINE_X"
-
 # Base modes
 CONST_MODE_OFF = "OFF"
 CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"  # Use the schedule
