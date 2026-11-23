@@ -1533,6 +1533,44 @@ async def test_set_thermostat_preset_add_duplicate_name(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+@pytest.mark.parametrize("attributes", [{"1/513/72": TWO_OCCUPIED_PRESET_TYPES}])
+async def test_set_thermostat_preset_edit_duplicate_name(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Editing a preset with a duplicate name in the same scenario is refused."""
+    current_presets = [
+        *_eve_thermo_presets(),
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=b"\x07",
+            presetScenario=1,
+            name="Home 2",
+            coolingSetpoint=None,
+            heatingSetpoint=2100,
+            builtIn=False,
+        ),
+    ]
+    _mock_preset_write(matter_client, current_presets)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_MODE: "home",
+                ATTR_PRESET_NAME: "Home 2",
+                ATTR_HEATING_SETPOINT: 23.5,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "preset_name_not_unique"
+    matter_client.write_atomic_attribute.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
 async def test_clear_thermostat_preset(
     hass: HomeAssistant,
     matter_client: MagicMock,
