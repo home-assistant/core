@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+import dataclasses
 from datetime import timedelta
 from ipaddress import ip_address
 import logging
@@ -1655,6 +1656,236 @@ async def test_reauth_issue_removed_with_entry(
     issue = await _test_reauth_issue(hass, manager, issue_registry)
 
     await manager.async_remove(issue.config_entry_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def _async_ignored_reauth_issue(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+    module: MockModule,
+) -> ir.IssueEntry:
+    """Set up an entry failing auth and ignore its reauth issue."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    mock_integration(hass, module)
+    mock_platform(hass, "test.config_flow", None)
+    entry.add_to_hass(hass)
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_ignore(
+        HOMEASSISTANT_DOMAIN, f"config_entry_reauth_test_{entry.entry_id}", True
+    )
+    assert issue.data == {
+        "flow_id": manager.flow.async_progress_by_handler("test")[0]["flow_id"]
+    }
+    assert issue.dismissed_version is not None
+    return issue
+
+
+async def test_reauth_issue_ignore_kept_on_reload_with_auth_failed(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored reauth issue survives a reload which fails auth again."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    old_flow_id = issue.data["flow_id"]
+
+    assert not await manager.async_reload(issue.config_entry_id)
+    await hass.async_block_till_done()
+
+    flows = manager.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+    assert flows[0]["flow_id"] != old_flow_id
+    reloaded_issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, issue.issue_id
+    )
+    assert reloaded_issue == dataclasses.replace(
+        issue, data={"flow_id": flows[0]["flow_id"]}
+    )
+
+    # Completing the new reauth flow resolves the issue
+    result = await manager.flow.async_configure(flows[0]["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    ("setup_side_effect", "expected_state"),
+    [
+        pytest.param(None, config_entries.ConfigEntryState.LOADED, id="loaded"),
+        pytest.param(
+            ConfigEntryNotReady(),
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            id="not_ready",
+        ),
+        pytest.param(
+            ConfigEntryError(),
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            id="error",
+        ),
+    ],
+)
+async def test_reauth_issue_deleted_on_reload_without_reauth(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+    setup_side_effect: Exception | None,
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test a reload which does not start a reauth deletes the reauth issue."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    entry = manager.async_get_known_entry(issue.config_entry_id)
+
+    mock_setup_entry.side_effect = setup_side_effect
+    await manager.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+    assert manager.flow.async_progress_by_handler("test") == []
+    assert len(issue_registry.issues) == 0
+
+
+async def test_reauth_issue_kept_on_reload_with_reauth_started_during_reload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a reauth started during a successful reload keeps the reauth issue."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    entry = manager.async_get_known_entry(issue.config_entry_id)
+
+    async def mock_setup_entry_start_reauth(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        # Like a coordinator starting a reauth without failing the setup
+        entry.async_start_reauth(hass)
+
+    mock_setup_entry.side_effect = mock_setup_entry_start_reauth
+    assert await manager.async_reload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    await hass.async_block_till_done()
+
+    flows = manager.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, issue.issue_id
+    ) == dataclasses.replace(issue, data={"flow_id": flows[0]["flow_id"]})
+
+
+async def test_reauth_issue_kept_on_reload_with_reauth_starting(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a reauth flow still initializing after a reload keeps the issue."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    entry = manager.async_get_known_entry(issue.config_entry_id)
+
+    release_init = asyncio.Event()
+    original_async_init = manager.flow.async_init
+
+    async def delayed_async_init(
+        *args: Any, **kwargs: Any
+    ) -> config_entries.ConfigFlowResult:
+        await release_init.wait()
+        return await original_async_init(*args, **kwargs)
+
+    with patch.object(manager.flow, "async_init", delayed_async_init):
+        assert not await manager.async_reload(entry.entry_id)
+        assert manager.flow.async_progress_by_handler("test") == []
+        assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue.issue_id)
+
+        release_init.set()
+        await hass.async_block_till_done()
+
+    flows = manager.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, issue.issue_id
+    ) == dataclasses.replace(issue, data={"flow_id": flows[0]["flow_id"]})
+
+
+async def test_reauth_issue_ignore_kept_on_disable_and_enable(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored reauth issue survives disabling and enabling its entry."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    entry = manager.async_get_known_entry(issue.config_entry_id)
+
+    await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert manager.flow.async_progress_by_handler("test") == []
+    hidden_issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue.issue_id)
+    assert hidden_issue == issue
+    assert issue_registry.async_is_hidden(hidden_issue)
+
+    await manager.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    flows = manager.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, issue.issue_id
+    ) == dataclasses.replace(issue, data={"flow_id": flows[0]["flow_id"]})
+
+
+async def test_ignored_reauth_issue_removed_with_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored reauth issue kept by a reload is deleted with its entry."""
+    mock_setup_entry = AsyncMock(return_value=None, side_effect=ConfigEntryAuthFailed())
+    issue = await _async_ignored_reauth_issue(
+        hass,
+        manager,
+        issue_registry,
+        MockModule("test", async_setup_entry=mock_setup_entry),
+    )
+    assert not await manager.async_reload(issue.config_entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue.issue_id)
+
+    await manager.async_remove(issue.config_entry_id)
+
+    assert manager.flow.async_progress_by_handler("test") == []
     assert len(issue_registry.issues) == 0
 
 
@@ -5348,6 +5579,7 @@ async def test_unique_id_ignore(
 
     # We should never set up an ignored entry.
     assert len(async_setup_entry.mock_calls) == 0
+    assert "comp" not in hass.config.components
 
     entry = hass.config_entries.async_entries("comp")[0]
 
@@ -5356,6 +5588,73 @@ async def test_unique_id_ignore(
     assert entry.title == "Ignored Title"
     assert entry.data == {}
     assert entry.discovery_keys == expected_entry_discovery_keys
+
+
+@pytest.mark.parametrize(
+    ("source", "data", "setup_calls", "component_loaded", "expected_state"),
+    [
+        pytest.param(
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "mock-unique-id", "title": "Ignored Title"},
+            0,
+            False,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            id="ignore",
+        ),
+        pytest.param(
+            config_entries.SOURCE_USER,
+            None,
+            1,
+            True,
+            config_entries.ConfigEntryState.LOADED,
+            id="user",
+        ),
+    ],
+)
+async def test_ignore_flow_does_not_set_up_component(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    data: dict[str, str] | None,
+    setup_calls: int,
+    component_loaded: bool,
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test an ignore flow does not set up the integration, unlike a user flow."""
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user flow."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="User Title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp", context={"source": source}, data=data
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert len(async_setup.mock_calls) == setup_calls
+    assert len(async_setup_entry.mock_calls) == setup_calls
+    assert ("comp" in hass.config.components) is component_loaded
+
+    entry = result["result"]
+    assert entry.source == source
+    assert entry.state is expected_state
+    assert hass.config_entries.async_entries("comp") == [entry]
 
 
 async def test_manual_add_overrides_ignored_entry(

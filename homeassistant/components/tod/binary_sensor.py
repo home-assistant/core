@@ -152,21 +152,20 @@ class TodSensor(BinarySensorEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        if time_zone := dt_util.get_default_time_zone():
-            return {
-                TodEntityStateAttribute.AFTER: self._time_after.astimezone(
-                    time_zone
-                ).isoformat(),
-                TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
-                    time_zone
-                ).isoformat(),
-                TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
-                    time_zone
-                ).isoformat(),
-            }
-        return None
+        time_zone = dt_util.get_default_time_zone()
+        return {
+            TodEntityStateAttribute.AFTER: self._time_after.astimezone(
+                time_zone
+            ).isoformat(),
+            TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
+                time_zone
+            ).isoformat(),
+            TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
+                time_zone
+            ).isoformat(),
+        }
 
     def _naive_time_to_utc_datetime(self, naive_time: time) -> datetime:
         """Convert naive time from config to utc_datetime with current day."""

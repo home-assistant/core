@@ -564,7 +564,6 @@ def _purge_old_event_types(instance: Recorder, session: Session) -> None:
 
 def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
     """Purge all old entity_ids."""
-    # entity_ids are small, no need to batch run it
     purge_entity_ids = set()
     states_metadata_ids = set()
     for metadata_id, entity_id in session.execute(find_entity_ids_to_purge()):
@@ -574,8 +573,11 @@ def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
     if not states_metadata_ids:
         return
 
-    deleted_rows = session.execute(delete_states_meta_rows(states_metadata_ids))
-    _LOGGER.debug("Deleted %s states meta", deleted_rows)
+    for metadata_ids_chunk in chunked_or_all(
+        states_metadata_ids, instance.max_bind_vars
+    ):
+        deleted_rows = session.execute(delete_states_meta_rows(metadata_ids_chunk))
+        _LOGGER.debug("Deleted %s states meta", deleted_rows)
 
     # Evict any entries in the event_type cache referring to a purged state
     instance.states_meta_manager.evict_purged(purge_entity_ids)

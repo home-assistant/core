@@ -1,9 +1,10 @@
 """Test initialization of lamarzocco."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import (
     AuthFail,
@@ -15,7 +16,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
+from homeassistant.components.lamarzocco.const import (
+    CONF_INSTALLATION_KEY,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -30,7 +35,14 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
+from . import (
+    MOCK_INSTALLATION_KEY,
+    USER_INPUT,
+    async_init_integration,
+    configure_machine_mock,
+)
+
+OTHER_SERIAL = "GS054321"
 
 
 async def test_load_unload_config_entry(
@@ -277,25 +289,78 @@ async def test_gateway_version_issue(
     assert (issue is not None) == issue_exists
 
 
+@pytest.mark.parametrize(
+    ("entry_token", "cloud_token", "use_bluetooth", "issue_exists"),
+    [
+        pytest.param(None, None, True, True, id="missing_token"),
+        pytest.param("token", None, True, False, id="stored_token"),
+        pytest.param(None, "token", True, False, id="token_from_cloud"),
+        pytest.param(None, None, False, False, id="bluetooth_disabled"),
+    ],
+)
+async def test_missing_bluetooth_token_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+    entry_token: str | None,
+    cloud_token: str | None,
+    use_bluetooth: bool,
+    issue_exists: bool,
+) -> None:
+    """Test the issue for a missing Bluetooth token."""
+    mock_cloud_client.get_thing_settings.return_value.ble_auth_token = cloud_token
+    entry = MockConfigEntry(
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        version=4,
+        data=mock_config_entry.data | {CONF_TOKEN: entry_token},
+        options={CONF_USE_BLUETOOTH: use_bluetooth},
+        unique_id=mock_config_entry.unique_id,
+    )
+
+    await async_init_integration(hass, entry)
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"missing_bluetooth_token_{entry.entry_id}"
+        )
+        is not None
+    ) == issue_exists
+
+
 async def test_gateway_version_issue_per_entry(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
+    mock_lamarzocco: MagicMock,
 ) -> None:
     """Test each entry gets its own gateway issue, removed with the entry."""
     mock_cloud_client.get_thing_settings.return_value.firmwares[
         FirmwareType.GATEWAY
     ].build_version = "v3.5-rc6"
+    other_machine = create_autospec(LaMarzoccoMachine, instance=True)
+    configure_machine_mock(
+        other_machine, mock_lamarzocco.dashboard.model_name, OTHER_SERIAL
+    )
+    machines = {
+        mock_lamarzocco.serial_number: mock_lamarzocco,
+        OTHER_SERIAL: other_machine,
+    }
     other_entry = MockConfigEntry(
         title="My other LaMarzocco",
         domain=DOMAIN,
         version=4,
         data=mock_config_entry.data,
-        unique_id="GS012345",
+        unique_id=OTHER_SERIAL,
     )
     other_entry.add_to_hass(hass)
-    await async_init_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.lamarzocco.LaMarzoccoMachine",
+        side_effect=lambda serial_number, **_: machines[serial_number],
+    ):
+        await async_init_integration(hass, mock_config_entry)
 
     entries = (mock_config_entry, other_entry)
     for entry in entries:

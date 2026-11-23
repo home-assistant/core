@@ -980,11 +980,61 @@ async def test_trigger_variables_requires_trigger(
                 "binary_sensor": {"name": "test", "state": "{{ true }}"},
             },
             "Invalid config for 'template':"
-            " Invalid trigger 'not_a_platform' specified '', got"
-            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
-            " {'trigger': 'not_a_platform'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " Invalid trigger 'not_a_platform' specified 'triggers->1', got"
+            " {'platform': 'not_a_platform'}",
             id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "not_a_platform"},
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->0', got"
+            " {'platform': 'not_a_platform'}",
+            id="single_trigger",
+        ),
+        pytest.param(
+            {
+                "trigger": {"platform": "not_a_platform"},
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->0', got"
+            " {'platform': 'not_a_platform'}",
+            id="single_trigger_legacy_key",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    {
+                        "triggers": [
+                            {"trigger": "event", "event_type": "valid"},
+                            {"trigger": "not_a_platform"},
+                        ]
+                    },
+                    {"trigger": "event", "event_type": "also_valid"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified 'triggers->1', got"
+            " {'platform': 'not_a_platform'}",
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "use_blueprint": {
+                    "path": "test_event_sensor.yaml",
+                    "input": {"event_type": "state_reported", "event_data": {}},
+                },
+                "name": "test",
+            },
+            "Invalid config for 'template' at"
+            " blueprints/template/test_event_sensor.yaml, line 19:"
+            " Can't listen to state_reported in event trigger for dictionary value"
+            " 'triggers->0->event_type', got 'state_reported'",
+            id="blueprint_trigger",
         ),
         pytest.param(
             {
@@ -1005,13 +1055,43 @@ async def test_trigger_variables_requires_trigger(
             },
             "Invalid config for 'template':"
             " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " '', got"
-            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
-            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
-            " 'state': 'on'}, {'condition': 'state',"
-            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " 'conditions->1', got {'condition': 'state',"
+            " 'entity_id': ['abcdabcdabcdabcdabcdabcdabcdabcd'], 'state': 'on',"
+            " 'match': 'all'}",
             id="condition",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "on",
+                },
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " 'conditions->0', got {'condition': 'state',"
+            " 'entity_id': ['abcdabcdabcdabcdabcdabcdabcdabcd'], 'state': 'on',"
+            " 'match': 'all'}",
+            id="single_condition",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "sensor.foo",
+                    "state": "on",
+                    "for": "invalid",
+                },
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template': offset invalid should be format 'HH:MM',"
+            " 'HH:MM:SS' or 'HH:MM:SS.F' for dictionary value 'conditions->for',"
+            " got 'invalid'",
+            id="schema_error_single_condition",
         ),
     ],
 )

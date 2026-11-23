@@ -14,11 +14,6 @@ from pytest_homeassistant.common import MockConfigEntry, MockUser
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nintendo_parental_controls.const import (
-    ATTR_BEDTIME_END,
-    ATTR_BEDTIME_START,
-    ATTR_BONUS_TIME,
-    ATTR_DAY_OF_WEEK,
-    ATTR_MAX_PLAY_TIME,
     BEDTIME_ALARM_DISABLE,
     BEDTIME_ALARM_MAX,
     BEDTIME_ALARM_MIN,
@@ -28,8 +23,9 @@ from homeassistant.components.nintendo_parental_controls.const import (
 )
 from homeassistant.components.nintendo_parental_controls.services import (
     NintendoParentalService,
+    NintendoParentalServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PIN
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -55,8 +51,8 @@ async def test_add_bonus_time(
         DOMAIN,
         NintendoParentalService.ADD_BONUS_TIME,
         {
-            ATTR_DEVICE_ID: device_entry.id,
-            ATTR_BONUS_TIME: 15,
+            CommonServiceArgument.DEVICE_ID: device_entry.id,
+            NintendoParentalServiceArgument.BONUS_TIME: 15,
         },
         blocking=True,
     )
@@ -68,63 +64,87 @@ async def test_add_bonus_time(
     [
         (
             NintendoParentalService.ADD_BONUS_TIME,
-            {ATTR_DEVICE_ID: "invalid_device", ATTR_BONUS_TIME: 15},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.BONUS_TIME: 15,
+            },
             False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalService.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "1234"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.PIN: "1234",
+            },
             False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalService.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.PIN: "123",
+            },
             False,
             DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalService.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123456789"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.PIN: "123456789",
+            },
             False,
             DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalService.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "0000"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.PIN: "0000",
+            },
             False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalService.UPDATE_PIN_CODE,
-            {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "abc"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.PIN: "abc",
+            },
             False,
             DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalService.DEVICE_USAGE_REPORT,
-            {ATTR_DEVICE_ID: "invalid_device"},
+            {CommonServiceArgument.DEVICE_ID: "invalid_device"},
             True,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalService.PLAYER_USAGE_REPORT,
-            {ATTR_DEVICE_ID: "invalid_device", ATTR_ENTITY_ID: PLAYER_ENTITY_ID},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                CommonServiceArgument.ENTITY_ID: PLAYER_ENTITY_ID,
+            },
             True,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
         ),
         (
             NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
-            {ATTR_DEVICE_ID: "invalid_device", ATTR_DAY_OF_WEEK: "monday"},
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device",
+                NintendoParentalServiceArgument.DAY_OF_WEEK: "monday",
+            },
             False,
             HOMEASSISTANT_DOMAIN,
             "service_device_not_found",
@@ -156,10 +176,14 @@ async def test_service_no_device_exceptions(
     [
         (
             NintendoParentalService.ADD_BONUS_TIME,
-            {ATTR_BONUS_TIME: 15},
+            {NintendoParentalServiceArgument.BONUS_TIME: 15},
             "invalid_device",
         ),
-        (NintendoParentalService.UPDATE_PIN_CODE, {CONF_PIN: 1234}, "invalid_device"),
+        (
+            NintendoParentalService.UPDATE_PIN_CODE,
+            {NintendoParentalServiceArgument.PIN: 1234},
+            "invalid_device",
+        ),
     ],
 )
 async def test_service_invalid_device_exceptions(
@@ -184,7 +208,7 @@ async def test_service_invalid_device_exceptions(
             service,
             {
                 **payload,
-                ATTR_DEVICE_ID: device_entry.id,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
             },
             blocking=True,
         )
@@ -209,8 +233,8 @@ async def test_update_pin_code(
         DOMAIN,
         NintendoParentalService.UPDATE_PIN_CODE,
         {
-            ATTR_DEVICE_ID: device_entry.id,
-            CONF_PIN: "1234",
+            CommonServiceArgument.DEVICE_ID: device_entry.id,
+            NintendoParentalServiceArgument.PIN: "1234",
         },
         blocking=True,
     )
@@ -223,16 +247,16 @@ async def test_update_pin_code(
         (
             NintendoParentalService.UPDATE_PIN_CODE,
             {
-                CONF_PIN: "1234",
+                NintendoParentalServiceArgument.PIN: "1234",
             },
             "set_new_pin",
         ),
         (
             NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
             {
-                ATTR_DAY_OF_WEEK: "monday",
-                ATTR_BEDTIME_START: "20:00",
-                ATTR_BEDTIME_END: "22:00",
+                NintendoParentalServiceArgument.DAY_OF_WEEK: "monday",
+                NintendoParentalServiceArgument.BEDTIME_START: "20:00",
+                NintendoParentalServiceArgument.BEDTIME_END: "22:00",
             },
             "set_daily_restrictions",
         ),
@@ -259,7 +283,7 @@ async def test_service_requires_admin(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {**payload, ATTR_DEVICE_ID: device_entry.id},
+            {**payload, CommonServiceArgument.DEVICE_ID: device_entry.id},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
@@ -286,7 +310,10 @@ async def test_get_player_application_report(
     response = await hass.services.async_call(
         DOMAIN,
         NintendoParentalService.PLAYER_USAGE_REPORT,
-        {ATTR_DEVICE_ID: device_entry.id, ATTR_ENTITY_ID: PLAYER_ENTITY_ID},
+        {
+            CommonServiceArgument.DEVICE_ID: device_entry.id,
+            CommonServiceArgument.ENTITY_ID: PLAYER_ENTITY_ID,
+        },
         blocking=True,
         return_response=True,
     )
@@ -314,7 +341,7 @@ async def test_get_device_application_report(
         DOMAIN,
         NintendoParentalService.DEVICE_USAGE_REPORT,
         {
-            ATTR_DEVICE_ID: device_entry.id,
+            CommonServiceArgument.DEVICE_ID: device_entry.id,
         },
         blocking=True,
         return_response=True,
@@ -327,14 +354,16 @@ async def test_get_device_application_report(
     [
         (
             NintendoParentalService.PLAYER_USAGE_REPORT,
-            {ATTR_ENTITY_ID: "sensor.not_found"},
+            {CommonServiceArgument.ENTITY_ID: "sensor.not_found"},
             True,
             DOMAIN,
             "invalid_entity",
         ),
         (
             NintendoParentalService.PLAYER_USAGE_REPORT,
-            {ATTR_ENTITY_ID: "sensor.home_assistant_test_screen_time_remaining"},
+            {
+                CommonServiceArgument.ENTITY_ID: "sensor.home_assistant_test_screen_time_remaining"
+            },
             True,
             DOMAIN,
             "invalid_player",
@@ -362,7 +391,7 @@ async def test_player_service_failures(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_DEVICE_ID: device_entry.id, **payload},
+            {CommonServiceArgument.DEVICE_ID: device_entry.id, **payload},
             blocking=True,
             return_response=return_response,
         )
@@ -387,11 +416,11 @@ async def test_update_daily_restrictions(
         DOMAIN,
         NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
         {
-            ATTR_DEVICE_ID: device_entry.id,
-            ATTR_DAY_OF_WEEK: "monday",
-            ATTR_BEDTIME_START: time(21, 0, 0),
-            ATTR_BEDTIME_END: time(9, 0, 0),
-            ATTR_MAX_PLAY_TIME: 360,
+            CommonServiceArgument.DEVICE_ID: device_entry.id,
+            NintendoParentalServiceArgument.DAY_OF_WEEK: "monday",
+            NintendoParentalServiceArgument.BEDTIME_START: time(21, 0, 0),
+            NintendoParentalServiceArgument.BEDTIME_END: time(9, 0, 0),
+            NintendoParentalServiceArgument.MAX_PLAY_TIME: 360,
         },
         blocking=True,
     )
@@ -457,9 +486,9 @@ async def test_update_daily_restrictions_exceptions(
             DOMAIN,
             NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
             {
-                ATTR_DEVICE_ID: device_entry.id,
-                ATTR_DAY_OF_WEEK: "monday",
-                ATTR_MAX_PLAY_TIME: 360,
+                CommonServiceArgument.DEVICE_ID: device_entry.id,
+                NintendoParentalServiceArgument.DAY_OF_WEEK: "monday",
+                NintendoParentalServiceArgument.MAX_PLAY_TIME: 360,
             },
             blocking=True,
         )

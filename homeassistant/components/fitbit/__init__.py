@@ -1,48 +1,38 @@
-"""The fitbit component."""
+"""The Fitbit integration."""
 
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import issue_registry as ir
 
-from . import api
-from .const import FitbitScope
-from .coordinator import FitbitConfigEntry, FitbitData, FitbitDeviceCoordinator
-from .exceptions import FitbitApiException, FitbitAuthException
-from .model import config_from_entry_data
-
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+DOMAIN = "fitbit"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> None:
-    """Set up fitbit from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up Fitbit from a config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "application_credentials": "/config/application_credentials",
+            "entries": "/config/integrations/integration/fitbit",
+            "google_health_docs": "https://www.home-assistant.io/integrations/google_health/",
+            "migration_guide": "https://developers.google.com/health/migration",
+        },
     )
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    fitbit_api = api.OAuthFitbitApi(
-        hass, session, unit_system=entry.data.get("unit_system")
-    )
-    try:
-        await fitbit_api.async_get_access_token()
-    except FitbitAuthException as err:
-        raise ConfigEntryAuthFailed from err
-    except FitbitApiException as err:
-        raise ConfigEntryNotReady from err
-
-    fitbit_config = config_from_entry_data(entry.data)
-    coordinator: FitbitDeviceCoordinator | None = None
-    if fitbit_config.is_allowed_resource(FitbitScope.DEVICE, "devices/battery"):
-        coordinator = FitbitDeviceCoordinator(hass, entry, fitbit_api)
-        await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = FitbitData(api=fitbit_api, device_coordinator=coordinator)
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        for _entry in hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))
