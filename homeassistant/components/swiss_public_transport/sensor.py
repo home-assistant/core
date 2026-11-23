@@ -16,14 +16,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CONNECTIONS_COUNT, DOMAIN
 from .coordinator import (
     DataConnection,
     DataDeparture,
     SwissPublicTransportConfigEntry,
-    SwissPublicTransportDataUpdateCoordinator,
     SwissPublicTransportStationboardDataUpdateCoordinator,
 )
 
@@ -33,17 +35,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
-class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
+class SwissPublicTransportSensorEntityDescription[
+    _DataT: DataConnection | DataDeparture
+](SensorEntityDescription):
     """Describes swiss public transport sensor entity."""
 
-    value_fn: Callable[[DataConnection], StateType | datetime]
+    value_fn: Callable[[_DataT], StateType | datetime]
 
     index: int = 0
 
 
-SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
+SENSORS: tuple[SwissPublicTransportSensorEntityDescription[DataConnection], ...] = (
     *[
-        SwissPublicTransportSensorEntityDescription(
+        SwissPublicTransportSensorEntityDescription[DataConnection](
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
@@ -85,20 +89,11 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
 )
 
 
-@dataclass(kw_only=True, frozen=True)
-class SwissPublicTransportStationboardSensorEntityDescription(SensorEntityDescription):
-    """Describes swiss public transport stationboard sensor entity."""
-
-    value_fn: Callable[[DataDeparture], StateType | datetime]
-
-    index: int = 0
-
-
 STATIONBOARD_SENSORS: tuple[
-    SwissPublicTransportStationboardSensorEntityDescription, ...
+    SwissPublicTransportSensorEntityDescription[DataDeparture], ...
 ] = (
     *[
-        SwissPublicTransportStationboardSensorEntityDescription(
+        SwissPublicTransportSensorEntityDescription[DataDeparture](
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
@@ -107,24 +102,24 @@ STATIONBOARD_SENSORS: tuple[
         )
         for i in range(CONNECTIONS_COUNT)
     ],
-    SwissPublicTransportStationboardSensorEntityDescription(
+    SwissPublicTransportSensorEntityDescription[DataDeparture](
         key="destination",
         translation_key="destination",
         value_fn=lambda departure: departure["destination"],
     ),
-    SwissPublicTransportStationboardSensorEntityDescription(
+    SwissPublicTransportSensorEntityDescription[DataDeparture](
         key="platform",
         translation_key="platform",
         value_fn=lambda departure: departure["platform"],
     ),
-    SwissPublicTransportStationboardSensorEntityDescription(
+    SwissPublicTransportSensorEntityDescription[DataDeparture](
         key="delay",
         translation_key="delay",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda departure: departure["delay"],
     ),
-    SwissPublicTransportStationboardSensorEntityDescription(
+    SwissPublicTransportSensorEntityDescription[DataDeparture](
         key="line",
         translation_key="line",
         value_fn=lambda departure: departure["line"],
@@ -146,7 +141,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     if isinstance(coordinator, SwissPublicTransportStationboardDataUpdateCoordinator):
         async_add_entities(
-            SwissPublicTransportStationboardSensor(coordinator, description, unique_id)
+            SwissPublicTransportSensor(coordinator, description, unique_id)
             for description in STATIONBOARD_SENSORS
         )
         return
@@ -157,19 +152,19 @@ async def async_setup_entry(
     )
 
 
-class SwissPublicTransportSensor(
-    CoordinatorEntity[SwissPublicTransportDataUpdateCoordinator], SensorEntity
+class SwissPublicTransportSensor[_DataT: DataConnection | DataDeparture](
+    CoordinatorEntity[DataUpdateCoordinator[list[_DataT]]], SensorEntity
 ):
     """Implementation of a Swiss public transport sensor."""
 
-    entity_description: SwissPublicTransportSensorEntityDescription
+    entity_description: SwissPublicTransportSensorEntityDescription[_DataT]
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SwissPublicTransportDataUpdateCoordinator,
-        entity_description: SwissPublicTransportSensorEntityDescription,
+        coordinator: DataUpdateCoordinator[list[_DataT]],
+        entity_description: SwissPublicTransportSensorEntityDescription[_DataT],
         unique_id: str,
     ) -> None:
         """Initialize the sensor."""
@@ -186,47 +181,7 @@ class SwissPublicTransportSensor(
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        connections = self.coordinator.data
-        if len(connections) <= self.entity_description.index:
+        data = self.coordinator.data
+        if len(data) <= self.entity_description.index:
             return None
-        return self.entity_description.value_fn(
-            connections[self.entity_description.index]
-        )
-
-
-class SwissPublicTransportStationboardSensor(
-    CoordinatorEntity[SwissPublicTransportStationboardDataUpdateCoordinator],
-    SensorEntity,
-):
-    """Implementation of a Swiss public transport stationboard sensor."""
-
-    entity_description: SwissPublicTransportStationboardSensorEntityDescription
-    _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SwissPublicTransportStationboardDataUpdateCoordinator,
-        entity_description: SwissPublicTransportStationboardSensorEntityDescription,
-        unique_id: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            manufacturer="Opendata.ch",
-            entry_type=DeviceEntryType.SERVICE,
-        )
-
-    @property
-    @override
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        departures = self.coordinator.data
-        if self.entity_description.index >= len(departures):
-            return None
-        return self.entity_description.value_fn(
-            departures[self.entity_description.index]
-        )
+        return self.entity_description.value_fn(data[self.entity_description.index])
