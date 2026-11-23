@@ -410,3 +410,58 @@ async def test_output_added_while_stopping_is_kept(
         finally:
             worker_wake.set()
             await stream.stop()
+
+
+async def test_start_after_cancelled_stop_waits_for_worker(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test that start() waits for a stopping worker after a cancelled stop()."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    worker_open = threading.Event()
+    first_wake = threading.Event()
+    second_wake = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            worker_open.set()
+            if len(opened_sources) == 1:
+                first_wake.wait()
+            else:
+                second_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+
+    with patch("av.open", new=blocking_open):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+
+            stop_task = hass.async_create_task(stream.stop())
+            await asyncio.sleep(0)
+            stop_task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await stop_task
+
+            # start() must not launch a second worker until the first exits
+            worker_open.clear()
+            stream.add_provider(HLS_PROVIDER)
+            start_task = hass.async_create_task(stream.start())
+            await asyncio.sleep(0)
+            assert not start_task.done()
+            assert opened_sources == [STREAM_SOURCE]
+
+            first_wake.set()
+            await start_task
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+            assert opened_sources == [STREAM_SOURCE, STREAM_SOURCE]
+        finally:
+            first_wake.set()
+            second_wake.set()
+            await stream.stop()

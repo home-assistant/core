@@ -474,7 +474,9 @@ class Stream:
         """
         async with self._start_stop_lock:
             if self._thread and self._thread.is_alive():
-                return
+                if self._worker_control is None or not self._worker_control.is_stopped:
+                    return
+                await self.hass.async_add_executor_job(self._thread.join)
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
@@ -605,12 +607,10 @@ class Stream:
         async with self._start_stop_lock:
             if self._thread is None or self._worker_control is None:
                 return
-            thread = self._thread
-            control = self._worker_control
+            self._worker_control.stop()
+            await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
             self._worker_control = None
-            control.stop()
-            await self.hass.async_add_executor_job(thread.join)
             if not self.available:
                 self._async_update_state(True)
             self._logger.debug(
