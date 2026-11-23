@@ -6,7 +6,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizState
+from pyoverkiz.models import CommandDefinitions, Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -18,9 +19,17 @@ from homeassistant.components.water_heater import (
     ATTR_TARGET_TEMP_STEP,
     STATE_ECO,
     STATE_PERFORMANCE,
+    WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -621,6 +630,49 @@ async def test_dynamic_set_temperature(
         command_name="setTargetTemperature",
         parameters=[50.0],
     )
+
+
+def _remove_dynamic_set_target_temperature(setup: Setup) -> None:
+    device = next(
+        device
+        for device in setup.devices
+        if device.device_url == DHW_DYNAMIC.device_url
+    )
+    device.definition.commands = CommandDefinitions(
+        [
+            command
+            for command in device.definition.commands.values()
+            if command.command_name != OverkizCommand.SET_TARGET_TEMPERATURE
+        ]
+    )
+
+
+async def test_dynamic_set_temperature_not_supported(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the target temperature is not offered without setTargetTemperature."""
+    await setup_overkiz_integration(
+        fixture=DHW_DYNAMIC.fixture, mutate=_remove_dynamic_set_target_temperature
+    )
+
+    state = hass.states.get(DHW_DYNAMIC.entity_id)
+    assert state is not None
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.ON_OFF
+    )
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            "water_heater",
+            "set_temperature",
+            {"entity_id": DHW_DYNAMIC.entity_id, ATTR_TEMPERATURE: 50.0},
+            blocking=True,
+        )
+
+    mock_client.execute_action_group.assert_not_called()
 
 
 @pytest.mark.parametrize(

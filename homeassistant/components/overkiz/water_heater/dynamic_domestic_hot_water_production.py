@@ -26,9 +26,7 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.ON_OFF
+        WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.ON_OFF
     )
 
     def __init__(
@@ -36,6 +34,11 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
+
+        # OGP device definitions differ per installation, and not every
+        # DomesticHotWater device exposes setTargetTemperature.
+        if self.device.supports_command(OverkizCommand.SET_TARGET_TEMPERATURE):
+            self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
         self._attr_target_temperature_step = cast(
             float | None,
