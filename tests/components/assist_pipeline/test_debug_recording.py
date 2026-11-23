@@ -30,6 +30,7 @@ from homeassistant.components.assist_pipeline.debug_recording import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
 WAKE = Path("satellite", "Home Assistant", "1", "00_wake-wake_word.test.wav")
@@ -37,7 +38,9 @@ STT = Path("satellite", "Home Assistant", "1", "01_stt-stt.test.wav")
 OTHER_RUN_STT = Path("Home Assistant", "2", "01_stt-stt.test.wav")
 # The pipeline name "Local/English" adds a directory level.
 NESTED_RUN_STT = Path("satellite", "Local", "English", "3", "01_stt-stt.test.wav")
-RECORDINGS = (WAKE, STT, OTHER_RUN_STT, NESTED_RUN_STT)
+# An empty pipeline name without a device writes the run directly below.
+ROOT_RUN_STT = Path("4", "01_stt-stt.test.wav")
+RECORDINGS = (WAKE, STT, OTHER_RUN_STT, NESTED_RUN_STT, ROOT_RUN_STT)
 OTHER_FILE = Path("notes.txt")
 OTHER_WAV = Path("sounds", "01_doorbell.wav")
 # Numbered audio in a numeric directory, like a shared media directory has.
@@ -123,8 +126,8 @@ async def test_left_over_repair(
     assert issue is not None
     assert issue.is_fixable
     assert issue.translation_placeholders == {
-        "count": "4",
-        "size": "2.0",
+        "count": "5",
+        "size": "2.5",
         "path": str(left_over_dir),
     }
 
@@ -290,8 +293,8 @@ async def test_left_over_repair_delete_failed(
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER)
     assert issue is not None
     assert issue.translation_placeholders == {
-        "count": "3",
-        "size": "1.5",
+        "count": "4",
+        "size": "2.0",
         "path": str(left_over_dir),
     }
 
@@ -376,8 +379,8 @@ async def test_still_enabled_repair(
     assert issue is not None
     assert issue.is_fixable
     assert issue.translation_placeholders == {
-        "count": "4",
-        "size": "2.0",
+        "count": "5",
+        "size": "2.5",
         "path": str(tmp_path),
     }
 
@@ -408,6 +411,26 @@ async def test_still_enabled_checked_daily(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED) is not None
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_failed_save_retried(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the directories are saved again after a write that was lost."""
+    # Store logs a failed write instead of raising it.
+    with patch.object(Store, "async_save"):
+        await _async_setup(hass, tmp_path)
+    assert STORAGE_KEY not in hass_storage
+
+    freezer.tick(timedelta(days=1, minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _stored_dirs(hass_storage) == [str(tmp_path)]
 
 
 def _write_symlinked_recordings(recording_dir: Path, external_dir: Path) -> None:
@@ -453,7 +476,7 @@ async def test_nested_directories(
     for issue_id in (ISSUE_LEFT_OVER, ISSUE_STILL_ENABLED):
         issue = issue_registry.async_get_issue(DOMAIN, issue_id)
         assert issue is not None
-        assert issue.translation_placeholders["count"] == "4"
+        assert issue.translation_placeholders["count"] == "5"
 
     assert await async_setup_component(hass, "repairs", {})
     client = await hass_client()
@@ -484,7 +507,7 @@ async def test_symlinks_not_followed(
 
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED)
     assert issue is not None
-    assert issue.translation_placeholders["count"] == "4"
+    assert issue.translation_placeholders["count"] == "5"
 
     assert await async_setup_component(hass, "repairs", {})
     client = await hass_client()
@@ -513,7 +536,7 @@ async def test_active_run_kept(
 
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED)
     assert issue is not None
-    assert issue.translation_placeholders["count"] == "4"
+    assert issue.translation_placeholders["count"] == "5"
 
     assert await async_setup_component(hass, "repairs", {})
     client = await hass_client()

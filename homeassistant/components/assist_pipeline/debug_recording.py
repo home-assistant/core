@@ -116,10 +116,7 @@ def _scan_debug_recordings(
         if skip:
             dirnames.clear()
             continue
-        if (
-            not run_dir.name.isdigit()
-            or len(run_dir.relative_to(recording_dir).parts) < 2
-        ):
+        if run_dir == recording_dir or not run_dir.name.isdigit():
             continue
         run_recordings, run_failed = _find_run_recordings(run_dir, filenames)
         failed = failed or run_failed
@@ -195,15 +192,17 @@ class DebugRecordings:
         # Directories that were configured before and may still hold recordings.
         self.left_over_dirs: list[Path] = []
         self._store = Store[DebugRecordingsData](hass, STORAGE_VERSION, STORAGE_KEY)
-        self._stored_dirs: list[Path] = []
 
     async def async_setup(self) -> None:
         """Load the previous directories and check for recordings."""
         if stored := await self._store.async_load():
-            self._stored_dirs = [Path(path) for path in stored["recording_dirs"]]
-        self.left_over_dirs = [
-            path for path in self._stored_dirs if path != self.recording_dir
-        ]
+            self.left_over_dirs = [
+                path
+                for path in map(Path, stored["recording_dirs"])
+                if path != self.recording_dir
+            ]
+        if self.recording_dir is None and not self.left_over_dirs:
+            return
         await self.async_check_left_over()
         if self.recording_dir is not None:
             await self.async_check_still_enabled()
@@ -289,19 +288,20 @@ class DebugRecordings:
 
     async def _async_check_interval(self, now: datetime) -> None:
         """Check again once a day, also for recordings skipped as active."""
-        if self.left_over_dirs:
-            await self.async_check_left_over()
+        if self.recording_dir is None and not self.left_over_dirs:
+            return
+        await self.async_check_left_over()
         if self.recording_dir is not None:
             await self.async_check_still_enabled()
 
     async def _async_save(self) -> None:
-        """Store the directories that may hold recordings, if they changed."""
+        """Store the directories that may hold recordings.
+
+        Saved on every check, as the store only logs a failed write.
+        """
         recording_dirs = list(self.left_over_dirs)
         if self.recording_dir is not None:
             recording_dirs.append(self.recording_dir)
-        if recording_dirs == self._stored_dirs:
-            return
-        self._stored_dirs = recording_dirs
         await self._store.async_save(
             {"recording_dirs": [str(path) for path in recording_dirs]}
         )
