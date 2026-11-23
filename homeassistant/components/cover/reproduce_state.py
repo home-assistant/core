@@ -98,7 +98,8 @@ async def _async_set_tilt_position(
             service_data | {CoverServiceArgument.TILT_POSITION: target_tilt_position},
         )
     elif (
-        target_tilt_position == _closed_tilt_position(open_tilt_position)
+        target_tilt_position in (FULL_CLOSE, FULL_OPEN)
+        and target_tilt_position != open_tilt_position
         and CoverEntityFeature.CLOSE_TILT in features
     ):
         await service_call(CoverService.CLOSE_TILT, service_data)

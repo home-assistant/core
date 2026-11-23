@@ -659,6 +659,7 @@ async def test_reproducing_open_tilt_position(
     [
         pytest.param(50, 50, SERVICE_OPEN_COVER_TILT, id="open_in_the_middle"),
         pytest.param(50, 0, SERVICE_CLOSE_COVER_TILT, id="close_from_the_middle"),
+        pytest.param(50, 100, SERVICE_CLOSE_COVER_TILT, id="close_at_the_other_end"),
         pytest.param(0, 0, SERVICE_OPEN_COVER_TILT, id="open_at_0"),
         pytest.param(0, 100, SERVICE_CLOSE_COVER_TILT, id="close_when_open_at_0"),
     ],
