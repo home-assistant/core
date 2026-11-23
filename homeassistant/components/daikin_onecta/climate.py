@@ -254,15 +254,19 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         cc = self._climate_control()
         return cc.setpoint(self._setpoint, operation_mode) if cc is not None else None
 
+    def _get_target_setpoint(self) -> Setpoint | None:
+        """Return the setpoint exposed as the climate target temperature."""
+        # The offset is a temperature difference exposed by the number platform,
+        # so an offset-only climate entity has no target temperature.
+        if self._setpoint == LEAVING_WATER_OFFSET:
+            return None
+        return self._get_setpoint()
+
     def _get_supported_features(self) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
         supported_features = ClimateEntityFeature(0)
-        setpointdict = self._get_setpoint()
-        if (
-            self._setpoint != "leavingWaterOffset"
-            and setpointdict is not None
-            and setpointdict.settable
-        ):
+        setpoint = self._get_target_setpoint()
+        if setpoint is not None and setpoint.settable:
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if len(self._get_preset_modes()) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -297,7 +301,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             cc = self._climate_control()
             sensory_target = (
                 "leavingWaterTemperature"
-                if self._setpoint == "leavingWaterOffset"
+                if self._setpoint == LEAVING_WATER_OFFSET
                 else self._setpoint
             )
             sensory_data = cc.sensory_data(sensory_target) if cc is not None else None
@@ -313,46 +317,42 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_max_temp(self) -> float | None:
         """Return the maximum configurable temperature."""
-        if self._setpoint == "leavingWaterOffset":
+        setpoint = self._get_target_setpoint()
+        if setpoint is None and self._setpoint == LEAVING_WATER_OFFSET:
             return None
-        setpointdict = self._get_setpoint()
         return (
-            setpointdict.max_value
-            if setpointdict is not None and setpointdict.max_value is not None
+            setpoint.max_value
+            if setpoint is not None and setpoint.max_value is not None
             else super().max_temp
         )
 
     def _get_min_temp(self) -> float | None:
         """Return the minimum configurable temperature."""
-        if self._setpoint == "leavingWaterOffset":
+        setpoint = self._get_target_setpoint()
+        if setpoint is None and self._setpoint == LEAVING_WATER_OFFSET:
             return None
-        setpointdict = self._get_setpoint()
         return (
-            setpointdict.min_value
-            if setpointdict is not None and setpointdict.min_value is not None
+            setpoint.min_value
+            if setpoint is not None and setpoint.min_value is not None
             else super().min_temp
         )
 
     def _get_target_temperature(self) -> float | None:
         """Return the configured target temperature."""
-        if self._setpoint == "leavingWaterOffset":
-            return None
         value: float | None = None
-        setpointdict = self._get_setpoint()
-        if setpointdict is not None:
-            value = setpointdict.value
+        setpoint = self._get_target_setpoint()
+        if setpoint is not None:
+            value = setpoint.value
         return value
 
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
-        if self._setpoint == "leavingWaterOffset":
-            return None
         step_value: float | None = None
-        setpointdict = self._get_setpoint()
-        if setpointdict is not None:
+        setpoint = self._get_target_setpoint()
+        if setpoint is not None:
             step_value = (
-                setpointdict.step_value
-                if setpointdict.step_value is not None
+                setpoint.step_value
+                if setpoint.step_value is not None
                 else super().target_temperature_step
             )
         return step_value
