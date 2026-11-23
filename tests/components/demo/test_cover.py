@@ -381,6 +381,42 @@ async def test_set_tilt_position_moving_state(
     assert state.state == expected_state
 
 
+async def test_tilt_moving_state_across_the_open_position(
+    hass: HomeAssistant,
+) -> None:
+    """Test the tilt opens up to the open position and closes after it."""
+    entity_id = "cover.office_blind"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.TILT_POSITION: 0},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPENING
+
+    for _ in range(5):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
+
+    for _ in range(5):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+
 async def test_tilt_only_cover_state(hass: HomeAssistant) -> None:
     """Test a cover without position is closed when its slats are closed."""
     entity_id = "cover.pergola_roof"
