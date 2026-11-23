@@ -176,7 +176,7 @@ def _artifact_topics(
     topic: dict[str, Any] = {
         "topic": str(payload[CONF_TOPIC]),
         "direction": "subscribe",
-        "qos": payload.get(CONF_QOS, DEFAULT_QOS),
+        "qos": int(payload.get(CONF_QOS, DEFAULT_QOS)),
     }
     if include_messages:
         topic["messages"] = debug_info.messages_as_dicts(artifact.messages)
@@ -301,7 +301,10 @@ def websocket_explorer_structure(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return the sources, devices, entities, topics and artifacts of MQTT."""
-    entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+        connection.send_error(msg["id"], "not_loaded", "MQTT is not loaded")
+        return
+    entry = entries[0]
     conf = entry.data | entry.options
     discovery_prefix = _discovery_prefix(entry)
     sources = _Sources(entry)
@@ -452,7 +455,10 @@ def websocket_explorer_details(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return the config and stored messages of an MQTT device, entity or artifact."""
-    entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+        connection.send_error(msg["id"], "not_loaded", "MQTT is not loaded")
+        return
+    entry = entries[0]
     sources = _Sources(entry)
     entity_ids = _entity_ids(hass, entry)
 

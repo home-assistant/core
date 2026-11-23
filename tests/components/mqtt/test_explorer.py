@@ -1066,14 +1066,14 @@ async def test_tag_without_device(
     ]
 
 
-async def test_numbers_for_strings(
+async def test_payload_values_as_validated(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test numbers that discovery accepts for strings are returned as strings."""
+    """Test values that discovery coerces are returned in the validated type."""
     await mqtt_mock_entry()
-    config = {"topic": 123, "origin": {"name": 2, "sw_version": 1.5}}
+    config = {"topic": 123, "qos": "1", "origin": {"name": 2, "sw_version": 1.5}}
     async_fire_mqtt_message(hass, DISCOVERY_TAG_TOPIC, json.dumps(config))
     await hass.async_block_till_done()
     client = await hass_ws_client(hass)
@@ -1085,7 +1085,7 @@ async def test_numbers_for_strings(
         {"id": "origin:2", "type": "discovery", "title": "2", "sw_version": "1.5"}
     ]
     assert response["result"]["artifacts"][0]["topics"] == [
-        {"topic": "123", "direction": "subscribe", "qos": 0}
+        {"topic": "123", "direction": "subscribe", "qos": 1}
     ]
 
     await client.send_json_auto_id(
@@ -1205,3 +1205,32 @@ async def test_requires_admin(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param({"type": "mqtt/explorer/structure"}, id="structure"),
+        pytest.param(
+            {"type": "mqtt/explorer/details", "entity_id": "sensor.test"},
+            id="details",
+        ),
+    ],
+)
+async def test_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test the commands without a loaded MQTT entry."""
+    await mqtt_mock_entry()
+    # The commands stay registered while the entry is unloaded
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_loaded"
