@@ -19,9 +19,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_SERIAL, model_registers
+
+MPPT_MODEL_ID = 160
 
 # The readings someone adds this integration to get, as opposed to the detail
 # ones that stay disabled until they are asked for.
@@ -30,6 +32,8 @@ PRIMARY_SENSORS = {
     "ac_power",
     "dc_power",
     "lifetime_energy",
+    "mppt_1_dc_power",
+    "mppt_2_dc_power",
     "operating_state",
     "temperature",
 }
@@ -53,6 +57,30 @@ async def test_all_entities(
 ) -> None:
     """Test all entities match their snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_mppt_child_devices(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test each MPPT gets a child device of the inverter, carrying its sensors."""
+    for number in (1, 2):
+        mppt = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{MOCK_SERIAL}_mppt_{number}"), init_integration.entry_id
+        )
+        assert mppt is not None
+        assert mppt == snapshot(name=f"mppt_{number}")
+        assert {
+            entry.unique_id
+            for entry in er.async_entries_for_device(entity_registry, mppt.id)
+        } == {
+            f"{MOCK_SERIAL}_mppt_{number}_{key}"
+            for key in ("dc_current", "dc_power", "dc_voltage")
+        }
 
 
 async def test_only_primary_readings_are_enabled_by_default(
@@ -83,6 +111,10 @@ async def test_only_primary_readings_are_enabled_by_default(
         pytest.param("temperature", "46.9", id="temperature"),
         pytest.param("voltage_l1", "226.5", id="voltage_l1"),
         pytest.param("current_l1", "1.64", id="current_l1"),
+        pytest.param("mppt_1_dc_power", "360", id="mppt_1_dc_power"),
+        pytest.param("mppt_1_dc_voltage", "355.1", id="mppt_1_dc_voltage"),
+        pytest.param("mppt_1_dc_current", "1.02", id="mppt_1_dc_current"),
+        pytest.param("mppt_2_dc_power", "650", id="mppt_2_dc_power"),
     ],
 )
 async def test_sensor_values(
@@ -186,29 +218,50 @@ async def test_sensors_go_unavailable_when_the_link_drops(
     assert hass.states.get(power).state == "1000"
 
 
-async def test_an_unreadable_block_takes_its_sensors_unavailable(
+@pytest.mark.parametrize(
+    ("model_id", "failing", "answering"),
+    [
+        pytest.param(INVERTER_MODEL_ID, "ac_power", "mppt_1_dc_power", id="inverter"),
+        pytest.param(MPPT_MODEL_ID, "mppt_1_dc_power", "ac_power", id="mppt"),
+    ],
+)
+async def test_an_unreadable_block_takes_only_its_sensors_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
+    model_id: int,
+    failing: str,
+    answering: str,
 ) -> None:
     """Test a partial poll, where one block fails and the others answer.
 
     A different path from a dead link: the poll still succeeds, so the entry
     stays loaded, and it is the per-component check that takes these entities
-    unavailable. That the *other* components are unaffected is not observable
-    until a second component has entities of its own.
+    unavailable.
     """
-    power = _entity_id(entity_registry, "ac_power")
-    assert hass.states.get(power).state == "1000"
-
+    failing_id = _entity_id(entity_registry, failing)
+    answering_id = _entity_id(entity_registry, answering)
+    failing_value = hass.states.get(failing_id).state
+    answering_value = hass.states.get(answering_id).state
     unit = mock_connection.for_unit(1)
-    for address in model_registers(BLUEPLANET_86TL3, INVERTER_MODEL_ID):
+    addresses = model_registers(BLUEPLANET_86TL3, model_id)
+
+    for address in addresses:
         unit.fail_read(address, ModbusTimeoutError("slow block"))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(power).state == STATE_UNAVAILABLE
+    assert hass.states.get(failing_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(answering_id).state == answering_value
     assert init_integration.state is ConfigEntryState.LOADED
+
+    for address in addresses:
+        unit.fail_read(address, None)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(failing_id).state == failing_value

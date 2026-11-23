@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .conftest import FOUND, HOST, UDN
+from .conftest import FOUND, HOST, LS9, UDN
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -277,3 +277,43 @@ async def test_ssdp_dropped_after_manual_add(hass: HomeAssistant) -> None:
     assert manual["type"] is FlowResultType.CREATE_ENTRY
     assert manual["result"].unique_id == UDN
     assert hass.config_entries.flow.async_progress() == []
+
+
+async def test_user_flow_unsupported_hub(
+    hass: HomeAssistant, mock_probe: AsyncMock, mock_lssdp: AsyncMock
+) -> None:
+    """Test a hub on the LS10 module is refused."""
+    mock_lssdp.return_value = replace(LS9, module="LS10")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_hub"
+    assert result["description_placeholders"] == {"module": "LS10"}
+    mock_lssdp.assert_awaited_once_with(HOST)
+
+
+@pytest.mark.usefixtures("mock_probe_control")
+async def test_ssdp_unsupported_hub(hass: HomeAssistant, mock_lssdp: AsyncMock) -> None:
+    """Test a discovered hub on the LS10 module is refused."""
+    mock_lssdp.return_value = replace(LS9, module="LS10")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_INFO
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_hub"
+    mock_lssdp.assert_awaited_once_with(HOST)
+
+
+@pytest.mark.usefixtures("mock_probe_control")
+async def test_ssdp_no_lssdp_answer(hass: HomeAssistant, mock_lssdp: AsyncMock) -> None:
+    """Test a hub that does not answer on LSSDP is still offered."""
+    mock_lssdp.return_value = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_INFO
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
