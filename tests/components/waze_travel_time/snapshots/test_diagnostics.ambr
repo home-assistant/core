@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_diagnostics[filters_and_base_coordinates]
+  dict({
+    'coordinator_data': dict({
+      'destination': '**REDACTED**',
+      'distance': 300,
+      'duration': 150,
+      'origin': '**REDACTED**',
+      'route': 'E1337 - Teststreet',
+    }),
+    'data': dict({
+      'destination': '**REDACTED**',
+      'origin': '**REDACTED**',
+      'region': 'US',
+    }),
+    'last_update_success': True,
+    'options': dict({
+      'avoid_ferries': False,
+      'avoid_subscription_roads': False,
+      'avoid_toll_roads': False,
+      'base_coordinates': '**REDACTED**',
+      'excl_filter': '**REDACTED**',
+      'incl_filter': '**REDACTED**',
+      'realtime': True,
+      'time_delta': dict({
+        'minutes': 0,
+      }),
+      'units': 'metric',
+      'vehicle_type': 'car',
+    }),
+  })
+# ---
