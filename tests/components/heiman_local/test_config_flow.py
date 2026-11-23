@@ -143,7 +143,7 @@ async def test_zeroconf_flow(
         pytest.param({}, {"online": False}, "cannot_connect", id="unavailable"),
     ],
 )
-async def test_zeroconf_abort(
+async def test_zeroconf_error_recovery(
     hass: HomeAssistant,
     device: WiFiSwitch,
     discovery_info: ZeroconfServiceInfo,
@@ -152,17 +152,29 @@ async def test_zeroconf_abort(
     changes: dict[str, str | bool],
     reason: str,
 ) -> None:
-    """Abort discovery if the advertised device cannot be set up."""
-    for attribute, value in changes.items():
-        monkeypatch.setattr(device, attribute, value)
+    """Retry discovery after the switch becomes available for setup."""
+    with monkeypatch.context() as patch:
+        for attribute, value in changes.items():
+            patch.setattr(device, attribute, value)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=replace(discovery_info, **overrides),
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == reason
+        assert not hass.config_entries.async_entries(DOMAIN)
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=replace(discovery_info, **overrides),
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == device.address
+    assert result["result"].unique_id == _MAC
 
 
 async def test_zeroconf_updates_address(
