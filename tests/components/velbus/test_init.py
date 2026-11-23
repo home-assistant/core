@@ -405,6 +405,26 @@ async def test_remove_config_entry_device(
     )
 
 
+async def test_remove_config_entry_device_without_runtime_data(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Device removal succeeds after the config entry was unloaded."""
+    await init_integration(hass, config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
+    assert device is not None
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) is not None
+    config_entry.runtime_data = None
+
+    assert await async_remove_config_entry_device(hass, config_entry, device) is True
+
+
 async def test_remove_config_entry_device_detaches_subdevices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

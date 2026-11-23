@@ -315,11 +315,12 @@ async def async_remove_config_entry_device(
         child.id
         for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id)
     )
+    data = config_entry.runtime_data
     for entity in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
         if entity.device_id not in removal_device_ids:
             continue
-        if entity.unique_id:
-            config_entry.runtime_data.known_unique_ids.discard(
+        if data is not None and entity.unique_id:
+            data.known_unique_ids.discard(
                 entity_registry_key(entity.domain, entity.unique_id)
             )
     for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
