@@ -116,8 +116,10 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                 ) from err
 
             if err.code == KingspanErrorCode.NO_DATA:
-                _LOGGER.warning("No data available for username '%s'", username)
-                return []
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="no_data",
+                ) from err
 
             if err.code == KingspanErrorCode.TIMEOUT:
                 raise UpdateFailed(

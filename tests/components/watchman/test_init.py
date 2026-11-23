@@ -127,7 +127,7 @@ async def test_auth_missing(hass: HomeAssistant, mock_sensor_client) -> None:
             {"exception": KingspanNoDataError("no level data")},
             logging.WARNING,
             ConfigEntryState.SETUP_RETRY,
-            "No data available for username 'test@example.com'",
+            None,
             None,
             None,
             False,
