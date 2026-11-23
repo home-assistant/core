@@ -64,6 +64,9 @@ async def async_setup_entry(
                     | CoverEntityFeature.CLOSE_TILT
                     | CoverEntityFeature.SET_TILT_POSITION
                 ),
+                open_tilt_position=60,
+                tilt_start_angle=-90,
+                tilt_end_angle=60,
             ),
             DemoCover(
                 hass,
@@ -82,6 +85,17 @@ async def async_setup_entry(
                     | CoverEntityFeature.CLOSE
                     | CoverEntityFeature.STOP
                 ),
+            ),
+            DemoCover(
+                hass,
+                "cover_8",
+                "Office Blind",
+                100,
+                100,
+                device_class=CoverDeviceClass.BLIND,
+                open_tilt_position=50,
+                tilt_start_angle=-90,
+                tilt_end_angle=90,
             ),
         ]
     )
@@ -105,6 +119,9 @@ class DemoCover(CoverEntity):
         supported_features: CoverEntityFeature | None = None,
         supported_speeds: list[str] | None = None,
         translation_key: str | None = None,
+        open_tilt_position: int | None = None,
+        tilt_start_angle: int | None = None,
+        tilt_end_angle: int | None = None,
     ) -> None:
         """Initialize the cover."""
         self.hass = hass
@@ -114,9 +131,15 @@ class DemoCover(CoverEntity):
         self._attr_supported_features = supported_features
         self._attr_supported_speeds = supported_speeds
         self._attr_translation_key = translation_key
+        self._attr_open_tilt_position = open_tilt_position
+        self._attr_tilt_start_angle = tilt_start_angle
+        self._attr_tilt_end_angle = tilt_end_angle
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
+        self._open_tilt_position = (
+            100 if open_tilt_position is None else open_tilt_position
+        )
         self._requested_closing = True
         self._requested_closing_tilt = True
         self._unsub_listener_cover: CALLBACK_TYPE | None = None
@@ -160,6 +183,11 @@ class DemoCover(CoverEntity):
     @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
+        if self._position is None and self._tilt_position is not None:
+            return (
+                self._tilt_position in (0, 100)
+                and self._tilt_position != self._open_tilt_position
+            )
         return self._closed
 
     @property
@@ -198,6 +226,7 @@ class DemoCover(CoverEntity):
 
         self._is_opening_tilt = False
         self._is_closing_tilt = True
+        self._set_tilt_position = None
         self._listen_cover_tilt()
         self._requested_closing_tilt = True
         self.async_write_ha_state()
@@ -221,13 +250,15 @@ class DemoCover(CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        if self._tilt_position in (100, None):
+        open_position = self._open_tilt_position
+        if self._tilt_position is None or self._tilt_position == open_position:
             return
 
         self._is_opening_tilt = True
         self._is_closing_tilt = False
+        self._set_tilt_position = open_position
         self._listen_cover_tilt()
-        self._requested_closing_tilt = False
+        self._requested_closing_tilt = open_position < self._tilt_position
         self.async_write_ha_state()
 
     @override
@@ -259,8 +290,10 @@ class DemoCover(CoverEntity):
         self._requested_closing_tilt = (
             self._tilt_position is not None and tilt_position < self._tilt_position
         )
-        self._is_closing_tilt = self._requested_closing_tilt
-        self._is_opening_tilt = not self._requested_closing_tilt
+        self._is_closing_tilt = self._tilt_position is not None and abs(
+            tilt_position - self._open_tilt_position
+        ) > abs(self._tilt_position - self._open_tilt_position)
+        self._is_opening_tilt = not self._is_closing_tilt
         self.async_write_ha_state()
 
     @override

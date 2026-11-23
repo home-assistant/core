@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverService,
     CoverServiceArgument,
     CoverState,
@@ -70,6 +71,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
         ("cover.pergola_roof", CoverDeviceClass.AWNING),
         ("cover.bedroom_curtains", CoverDeviceClass.CURTAIN),
         ("cover.front_gate", CoverDeviceClass.GATE),
+        ("cover.office_blind", CoverDeviceClass.BLIND),
     ],
 )
 async def test_device_class(
@@ -289,6 +291,119 @@ async def test_open_cover_tilt(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "open_tilt_position", "tilt_start_angle", "tilt_end_angle"),
+    [
+        pytest.param("cover.living_room_window", 100, None, None, id="default"),
+        pytest.param("cover.office_blind", 50, -90, 90, id="angles"),
+        pytest.param("cover.pergola_roof", 60, -90, 60, id="tilt_only"),
+    ],
+)
+async def test_tilt_capability_attributes(
+    hass: HomeAssistant,
+    entity_id: str,
+    open_tilt_position: int,
+    tilt_start_angle: int | None,
+    tilt_end_angle: int | None,
+) -> None:
+    """Test the tilt capability attributes."""
+    state = hass.states.get(entity_id)
+    assert state
+    attributes = state.attributes
+    assert (
+        attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION]
+        == open_tilt_position
+    )
+    assert (
+        attributes.get(CoverEntityCapabilityAttribute.TILT_START_ANGLE)
+        == tilt_start_angle
+    )
+    assert (
+        attributes.get(CoverEntityCapabilityAttribute.TILT_END_ANGLE) == tilt_end_angle
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "tilt_position"),
+    [
+        pytest.param(CoverService.OPEN_TILT, 50, id="open"),
+        pytest.param(CoverService.TOGGLE_TILT, 50, id="toggle"),
+        pytest.param(CoverService.CLOSE_TILT, 0, id="close"),
+    ],
+)
+async def test_tilt_with_open_position_in_the_middle(
+    hass: HomeAssistant, service: str, tilt_position: int
+) -> None:
+    """Test the tilt of a cover that is open in the middle of the scale."""
+    entity_id = "cover.office_blind"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    await hass.services.async_call(
+        COVER_DOMAIN, service, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+    )
+    for _ in range(10):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == tilt_position
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "tilt_position", "expected_state"),
+    [
+        pytest.param("cover.office_blind", 70, CoverState.OPENING, id="toward_open"),
+        pytest.param("cover.pergola_roof", 100, CoverState.CLOSING, id="past_open"),
+        pytest.param("cover.pergola_roof", 20, CoverState.CLOSING, id="toward_0"),
+        pytest.param("cover.living_room_window", 80, CoverState.OPENING, id="default"),
+    ],
+)
+async def test_set_tilt_position_moving_state(
+    hass: HomeAssistant, entity_id: str, tilt_position: int, expected_state: str
+) -> None:
+    """Test the tilt opens when it moves toward the open tilt position."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            CoverServiceArgument.TILT_POSITION: tilt_position,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+
+
+async def test_tilt_only_cover_state(hass: HomeAssistant) -> None:
+    """Test a cover without position is closed when its slats are closed."""
+    entity_id = "cover.pergola_roof"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    for _ in range(10):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
 
 async def test_toggle_cover_tilt(hass: HomeAssistant) -> None:
