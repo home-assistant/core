@@ -167,7 +167,7 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
             if old_minor_version < 10:
                 # Version 1.10 adds co2_entity_id
                 for area in old_data["areas"]:
-                    area["co2_entity_id"] = None
+                    area.setdefault("co2_entity_id", None)
 
         if old_major_version > 1:
             raise NotImplementedError
