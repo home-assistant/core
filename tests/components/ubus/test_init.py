@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import ConfigEntryState
@@ -182,7 +183,9 @@ async def test_remove_config_entry_device(
     clients = mock_ubus.return_value.get_hostapd_clients
     connected = clients.return_value
     clients.return_value = {"clients": {MAC_LAPTOP: {"authorized": True}}}
-    freezer.tick(timedelta(seconds=30))
+    # The client stays connected for CONSIDER_HOME after its last stamp,
+    # so it can only be removed once that stamp has aged out.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

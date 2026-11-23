@@ -30,11 +30,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> Non
     # before its client reports are released and the remaining trackers
     # are signalled.
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    shared: UbusSharedState = hass.data[DOMAIN]
     entry.runtime_data.async_unload()
-    shared.owners = {
-        mac: owner for mac, owner in shared.owners.items() if owner != entry.entry_id
-    }
     if not hass.config_entries.async_entries(DOMAIN):
         hass.data.pop(DOMAIN, None)
 
@@ -85,7 +81,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> Non
                 device_registry.async_update_device(
                     device.id, new_config_entry_id=target.entry_id
                 )
-        shared.owners.pop(mac, None)
+    shared.remove_entry(entry.entry_id)
     async_dispatcher_send(hass, SIGNAL_CLIENTS_UPDATED)
 
 
@@ -99,9 +95,8 @@ async def async_remove_config_entry_device(
     if config_entry.state is not ConfigEntryState.LOADED:
         return True
     shared: UbusSharedState = hass.data[DOMAIN]
-    connected = {dr.format_mac(mac) for mac in shared.reports}
-    return not any(
-        connection in connected
+    return all(
+        shared.latest_stamp(dr.format_mac(connection)) is None
         for connection_type, connection in device_entry.connections
         if connection_type == dr.CONNECTION_NETWORK_MAC
     )

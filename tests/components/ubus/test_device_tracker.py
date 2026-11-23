@@ -10,6 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
@@ -120,8 +121,22 @@ async def test_source_attribute_is_reporting_host(
         entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP)
     )
     assert laptop is not None
+    # The laptop's last stamp is still within CONSIDER_HOME, so it stays
+    # home.
+    assert laptop.state == STATE_HOME
+    assert laptop.attributes["source"] == MOCK_HOST
+
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    laptop = hass.states.get(
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP)
+    )
+    assert laptop is not None
+    # Once the stamps age out, no router reports the device, so the source
+    # attribute is dropped.
     assert laptop.state == STATE_NOT_HOME
-    # No router reports the device, so the source attribute is dropped.
     assert "source" not in laptop.attributes
 
 
@@ -188,9 +203,20 @@ async def test_single_tracker_for_multiple_routers(
         (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
     )
 
-    # The device disconnects from every router.
+    # The device disconnects from every router, but the tracker stays
+    # home while the stamps are recent.
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+    # Once the stamps age out of CONSIDER_HOME, the tracker leaves.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -328,18 +354,17 @@ async def test_roam_keeps_tracker_connected_until_new_router_polls(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_single_router_drop_goes_not_home_without_grace(
+async def test_dropped_client_goes_not_home_after_consider_home(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a dropped client is not kept visible by its dropping router.
+    """Test a dropped client stays home while its last stamp is recent.
 
-    The poll that drops the client starts before the departure is
-    recorded, so the dropping router must not count as one which has not
-    polled since the drop.
+    The dropping router keeps polling after the client drops, but its
+    polls do not extend the client's last stamp.
     """
     mock_ubus.return_value.get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
@@ -356,14 +381,18 @@ async def test_single_router_drop_goes_not_home_without_grace(
     assert state is not None
     assert state.state == STATE_HOME
 
-    # The departure is stamped after the poll started, as in real time, so
-    # the dropping router's poll predates the departure it records.
-    def _dropping_clients(interface: str) -> dict:
-        freezer.tick(timedelta(milliseconds=1))
-        return {"clients": {}}
-
-    mock_ubus.return_value.get_hostapd_clients.side_effect = _dropping_clients
+    mock_ubus.return_value.get_hostapd_clients.return_value = {"clients": {}}
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Once the stamp ages out of CONSIDER_HOME, the client is not home,
+    # though the router is still reachable.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -371,59 +400,6 @@ async def test_single_router_drop_goes_not_home_without_grace(
     assert state is not None
     assert state.state == STATE_NOT_HOME
     assert "source" not in state.attributes
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_tracker_kept_when_owner_entry_reloaded(
-    hass: HomeAssistant,
-    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the owner keeps reporting a client connected to another router."""
-    _mock, ubus = mock_ubus_by_host
-    entry_a, _entry_b = two_router_entries
-
-    # The device is on router A, so entry A owns its tracker.
-    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
-        "clients": {MAC_PHONE: {"authorized": True}}
-    }
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
-    )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
-
-    # The device moves to router B, then entry A is reloaded.
-    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
-    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
-        "clients": {MAC_PHONE: {"authorized": True}}
-    }
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert await hass.config_entries.async_unload(entry_a.entry_id)
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
-
-    # Entry A no longer sees the device but still owns and reports the tracker.
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
-    assert state.attributes["source"] == MOCK_HOST_B
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -462,9 +438,20 @@ async def test_unload_entry_releases_client_claims(
     assert state is not None
     assert state.attributes["source"] == MOCK_HOST_B
 
-    # Unloading entry B stops the device being reported.
+    # Unloading entry B stops it from reporting the device, but the
+    # tracker stays home while entry A's last stamp is recent.
     assert await hass.config_entries.async_unload(entry_b.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # Once the stamp ages out, the device is no longer home.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -479,6 +466,70 @@ async def test_unload_entry_releases_client_claims(
     assert state is not None
     assert state.state == STATE_HOME
     assert state.attributes["source"] == MOCK_HOST_B
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unloaded_entry_tracker_adopted_by_other_entry(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the remaining entry adopts a tracker when its owner unloads.
+
+    The reloaded owner does not take the tracker back; the adopting
+    entry keeps it.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router B, so entry B owns its tracker.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+
+    # The device moves to router A, then entry B unloads.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert await hass.config_entries.async_unload(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    # Entry A adopts the tracker and the client's device, and reports
+    # the client from its own stamps.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
+    )
+
+    # Reloading entry B does not give it the tracker back.
+    assert await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -545,9 +596,8 @@ async def test_late_refresh_after_unload_is_ignored(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The in-flight refresh finishes after the unload; its results are
-    # ignored, so the released report is not restored. Once router B has
-    # polled again, the handover window is over and the tracker leaves.
-    freezer.tick(timedelta(seconds=30))
+    # ignored, so entry B's stamp ages out and the tracker leaves.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -559,14 +609,18 @@ async def test_late_refresh_after_unload_is_ignored(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_unloading_router_with_no_reports_updates_trackers(
+async def test_unloading_router_without_fresh_stamps_updates_trackers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test unloading a router without reports still updates remaining trackers."""
+    """Test unloading a router signals the remaining trackers.
+
+    The unload signals the trackers even when the unloaded router has no
+    fresh stamps, so they re-evaluate their availability.
+    """
     _mock, ubus = mock_ubus_by_host
     _, entry_b = two_router_entries
 
@@ -582,9 +636,6 @@ async def test_unloading_router_with_no_reports_updates_trackers(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
     assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
 
     # The device also connects to router B, then leaves router A.
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
@@ -603,29 +654,36 @@ async def test_unloading_router_with_no_reports_updates_trackers(
     assert state.state == STATE_HOME
     assert state.attributes["source"] == MOCK_HOST_B
 
-    # Router B becomes unreachable, clearing its reports.
-    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
+    # The device leaves router B too, and router A becomes unreachable,
+    # but the recent stamps keep the device home until they age out.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_HOME
 
-    # Unloading router B, which has no reports left, still updates the
-    # remaining tracker, which is available again without router B.
-    assert await hass.config_entries.async_unload(entry_b.entry_id)
-    await hass.async_block_till_done()
-
-    # The handover window ends once router A has polled again.
-    freezer.tick(timedelta(seconds=30))
+    # Once the stamps age out, the tracker is not home but still
+    # available, because router B is reachable.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
+
+    # Unloading router B, which has no fresh stamps, still signals the
+    # remaining tracker, which is unavailable without it.
+    assert await hass.config_entries.async_unload(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1000,13 +1058,17 @@ async def test_removed_tracker_recreated_with_same_entity_id(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
-async def test_tracker_unavailable_while_reporting_router_unreachable(
+async def test_tracker_unavailable_while_all_routers_unreachable(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the tracker is unavailable while the reporting router is unreachable."""
+    """Test the tracker is unavailable only while every router is unreachable.
+
+    A device stays home while its most recent stamp is within
+    CONSIDER_HOME, even when the reporting router is unreachable.
+    """
     _mock, ubus = mock_ubus_by_host
 
     # The device is on router A, so entry A owns its tracker.
@@ -1025,7 +1087,7 @@ async def test_tracker_unavailable_while_reporting_router_unreachable(
     assert state is not None
     assert state.state == STATE_HOME
 
-    # The device moves to router B, then router B becomes unreachable.
+    # The device moves to router B, which then becomes unreachable.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
@@ -1041,6 +1103,28 @@ async def test_tracker_unavailable_while_reporting_router_unreachable(
 
     ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Router A is still reachable, so the tracker is available, and the
+    # device stays home while the stamps are recent.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Router A becomes unreachable too.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Once the stamps age out of CONSIDER_HOME, with no reachable router,
+    # the tracker is unavailable.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1067,7 +1151,11 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test an unavailable tracker recovers when the router's setup retry succeeds."""
+    """Test an entry in setup retry counts as an unreachable router.
+
+    The unavailable tracker recovers when the router's setup retry
+    succeeds.
+    """
     _mock, ubus = mock_ubus_by_host
     entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
     entry_b = MockConfigEntry(
@@ -1107,9 +1195,26 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     assert state.state == STATE_HOME
     assert state.attributes["source"] == MOCK_HOST
 
-    # The device leaves router A; router B still awaits a setup retry.
+    # The device leaves router A; the tracker stays home while the stamp
+    # is recent.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Router A becomes unreachable too.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Once the stamp ages out, with both routers unreachable, the tracker
+    # is unavailable; router B, in setup retry, counts as unreachable.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1120,7 +1225,7 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     # Router B recovers with no clients; the tracker becomes available
     # without waiting for router A's next poll.
     router_b.connect.side_effect = _connect
-    freezer.tick(timedelta(seconds=21))
+    freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry_b.state is ConfigEntryState.LOADED
@@ -1162,6 +1267,24 @@ async def test_tracker_available_after_unreachable_router_recovers(
     router_b = _mock(f"http://{MOCK_HOST_B}/ubus", "root", "password", verify=True)
     router_b.get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The tracker is still available, because router A is reachable, and
+    # the device stays home while the stamp is recent.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Router A becomes unreachable too.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Once the stamp ages out, with no reachable router, the tracker is
+    # unavailable.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

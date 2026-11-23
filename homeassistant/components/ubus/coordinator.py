@@ -7,6 +7,7 @@ from typing import NamedTuple, override
 
 from openwrt.ubus import Ubus
 
+from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -31,18 +32,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
-# A client dropped by its last reporting router is kept visible until every
-# other router has polled again, or one further poll cycle has passed, so a
-# roam is not announced as a departure before the new router has polled.
-DEPARTURE_GRACE = UPDATE_INTERVAL
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
 
 
-class RouterReport(NamedTuple):
-    """The latest report of a client by one router."""
+class ClientStamp(NamedTuple):
+    """The most recent sighting of a client by one config entry."""
 
+    last_seen: datetime
     hostname: str | None
     seq: int
 
@@ -50,53 +48,86 @@ class RouterReport(NamedTuple):
 class UbusSharedState:
     """State shared between the ubus config entries.
 
-    ``reports`` maps a MAC address to the latest report of each router
-    which still sees the client; ``owners`` maps a MAC address to the
-    config entry that owns its device tracker entity; ``health`` maps a
-    router host to the success of its last update; ``departing`` maps a
-    MAC address to the moment its last router stopped seeing it; and
-    ``last_poll`` maps a router host to the time of its last successful
-    poll.
+    ``presence`` maps a normalized (lowercase) MAC address to the most
+    recent stamp of each config entry which has seen the client; ``owners``
+    maps a MAC address to the config entry that owns its device tracker
+    entity; and ``health`` maps a config entry id to the success of its
+    last update.
+
+    A client is home while its most recent stamp is within
+    ``DEFAULT_CONSIDER_HOME``, regardless of which entry stamped it. It is
+    unavailable only while every entry is unhealthy.
     """
 
-    reports: dict[str, dict[str, RouterReport]]
+    presence: dict[str, dict[str, ClientStamp]]
     owners: dict[str, str]
     health: dict[str, bool]
-    departing: dict[str, tuple[datetime, str, RouterReport]]
-    last_poll: dict[str, datetime]
     seq: int
+    _last_signature: tuple | None
 
     def __init__(self) -> None:
         """Initialize the shared state."""
-        self.reports = {}
+        self.presence = {}
         self.owners = {}
         self.health = {}
-        self.departing = {}
-        self.last_poll = {}
         self.seq = 0
+        self._last_signature = None
 
-    def latest_report(self, mac: str) -> tuple[str, RouterReport] | None:
-        """Return the reporting host and latest report of a visible client.
+    @callback
+    def stamp(self, entry_id: str, clients: dict[str, str | None]) -> None:
+        """Record the clients this entry sees right now."""
+        now = dt_util.utcnow()
+        for mac, hostname in clients.items():
+            self.seq += 1
+            self.presence.setdefault(mac.lower(), {})[entry_id] = ClientStamp(
+                now, hostname, self.seq
+            )
 
-        A client which its last router has dropped stays visible, sourced
-        from its last reporter, until every other router has polled again
-        or one further poll cycle has passed, so a roam is not announced as
-        a departure before the new router has polled.
+    def latest_stamp(self, mac: str) -> tuple[str, ClientStamp] | None:
+        """Return the reporting entry id and most recent stamp of a client.
+
+        A client is present while its most recent stamp is within
+        ``DEFAULT_CONSIDER_HOME``, regardless of which entry stamped it.
         """
-        seen_by = self.reports.get(mac)
-        if seen_by:
-            source = max(seen_by, key=lambda host: seen_by[host].seq)
-            return source, seen_by[source]
-        if (departed := self.departing.get(mac)) is None:
+        stamps = self.presence.get(mac.lower())
+        if not stamps:
             return None
-        since, source, report = departed
-        # The dropping router polled before the departure was recorded, so
-        # it cannot still be reporting the client.
-        if dt_util.utcnow() >= since + DEPARTURE_GRACE or not any(
-            last < since for host, last in self.last_poll.items() if host != source
-        ):
+        entry_id = max(stamps, key=lambda entry: stamps[entry].seq)
+        if dt_util.utcnow() - stamps[entry_id].last_seen > DEFAULT_CONSIDER_HOME:
             return None
-        return source, report
+        return entry_id, stamps[entry_id]
+
+    @callback
+    def remove_entry(self, entry_id: str) -> None:
+        """Drop the stamps, claims and health of a config entry."""
+        for stamps in list(self.presence.items()):
+            if entry_id in stamps[1]:
+                del stamps[1][entry_id]
+                if not stamps[1]:
+                    del self.presence[stamps[0]]
+        self.owners = {
+            mac: owner for mac, owner in self.owners.items() if owner != entry_id
+        }
+        self.health.pop(entry_id, None)
+
+    @callback
+    def async_notify(self, hass: HomeAssistant) -> None:
+        """Signal the trackers when the presence or health changed."""
+        signature = self._signature()
+        if signature != self._last_signature:
+            self._last_signature = signature
+            async_dispatcher_send(hass, SIGNAL_CLIENTS_UPDATED)
+
+    def _signature(self) -> tuple:
+        """Return a signature of the current presence and health."""
+        home: list[tuple[str, str | None, str | None, bool]] = []
+        for mac in self.presence:
+            if (latest := self.latest_stamp(mac)) is None:
+                home.append((mac, None, None, False))
+            else:
+                entry_id, stamp = latest
+                home.append((mac, entry_id, stamp.hostname, True))
+        return (tuple(sorted(home)), tuple(sorted(self.health.items())))
 
 
 class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -133,106 +164,31 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     @override
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
-        poll_started = dt_util.utcnow()
         clients = await self.hass.async_add_executor_job(self._update)
-        # A refresh may finish after the entry was unloaded; publishing its
-        # results would restore the clients released during the unload.
+        # A refresh may finish after the entry was unloaded; stamping its
+        # results would resurrect the clients released during the unload.
         if not self._unloaded:
             shared: UbusSharedState = self.hass.data[DOMAIN]
-            shared.last_poll[self.host] = poll_started
-            self._async_publish_clients(clients)
+            shared.stamp(self.config_entry.entry_id, clients)
         return clients
 
     @callback
     @override
     def _async_refresh_finished(self) -> None:
-        """Release claimed clients and record this router's health."""
+        """Record this router's health and signal the changed trackers."""
         if self._unloaded:
             return
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        healthy = self.last_update_success
-        health_changed = shared.health.get(self.host, True) != healthy
-        shared.health[self.host] = healthy
-        if not healthy:
-            self.clear_clients()
-        if health_changed:
-            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
-
-    @callback
-    def _async_publish_clients(self, clients: dict[str, str | None]) -> bool:
-        """Publish which clients this router sees to the shared state.
-
-        Each router keeps its own report for the clients it sees, so a
-        client stays reported while any router still sees it, and the
-        source follows the router which reported it most recently.
-
-        Returns whether a client's visibility changed.
-        """
-        shared: UbusSharedState = self.hass.data[DOMAIN]
-        reports = shared.reports
-
-        def visible_tuple(mac: str) -> tuple[str, str | None, bool] | None:
-            """Return the source, hostname and presence of a current report."""
-            seen_by = reports.get(mac)
-            if seen_by:
-                source = max(seen_by, key=lambda host: seen_by[host].seq)
-                return source, seen_by[source].hostname, True
-            if (departed := shared.departing.get(mac)) is None:
-                return None
-            return departed[1], departed[2].hostname, False
-
-        affected = set(clients)
-        affected.update(mac for mac, seen_by in reports.items() if self.host in seen_by)
-        affected.update(shared.departing)
-        before = {mac: visible_tuple(mac) for mac in affected}
-
-        now = dt_util.utcnow()
-        for mac, hostname in clients.items():
-            shared.seq += 1
-            reports.setdefault(mac, {})[self.host] = RouterReport(hostname, shared.seq)
-            shared.departing.pop(mac, None)
-        for mac, seen_by in list(reports.items()):
-            if self.host in seen_by and mac not in clients:
-                report = seen_by.pop(self.host)
-                if not seen_by:
-                    # The last router stopped seeing the client; keep it
-                    # visible until every other router has polled again.
-                    del reports[mac]
-                    shared.departing[mac] = (now, self.host, report)
-        for mac, (since, source, _report) in list(shared.departing.items()):
-            if now >= since + DEPARTURE_GRACE or not any(
-                last < since
-                for host, last in shared.last_poll.items()
-                if host != source
-            ):
-                del shared.departing[mac]
-
-        changed = any(visible_tuple(mac) != before[mac] for mac in affected)
-        if changed:
-            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
-        return changed
-
-    @callback
-    def clear_clients(self) -> bool:
-        """Release every client claimed by this router.
-
-        Returns whether a client's visibility changed.
-        """
-        return self._async_publish_clients({})
+        shared.health[self.config_entry.entry_id] = self.last_update_success
+        shared.async_notify(self.hass)
 
     @callback
     def async_unload(self) -> None:
-        """Release this router's clients and ignore late refresh results.
-
-        A refresh in flight when the entry unloads is ignored, and the
-        remaining trackers are signalled even if this router has no reports
-        left, so they re-evaluate availability without it.
-        """
+        """Drop this router's stamps and signal the remaining trackers."""
         self._unloaded = True
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        shared.last_poll.pop(self.host, None)
-        if not self.clear_clients():
-            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+        shared.remove_entry(self.config_entry.entry_id)
+        shared.async_notify(self.hass)
 
     def _update(self) -> dict[str, str | None]:
         """Query the router, re-authenticating once if the session expired."""

@@ -190,12 +190,11 @@ def _async_rename_devices(
 
     Rename here, as trackers are disabled by default and get no updates.
     """
-    for mac, seen_by in shared.reports.items():
-        if (report := shared.latest_report(mac)) is None:
+    for mac in shared.presence:
+        if (stamp := shared.latest_stamp(mac)) is None:
             continue
-        source, _ = report
         if (
-            (hostname := seen_by[source].hostname)
+            (hostname := stamp[1].hostname)
             and (
                 device_entry := device_registry.async_get_device_by_connection(
                     (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
@@ -407,27 +406,27 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def is_connected(self) -> bool:
         """Return whether the device is connected to any ubus router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        return shared.latest_report(self._mac) is not None
+        return shared.latest_stamp(self._mac) is not None
 
     @property
     @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if (report := shared.latest_report(self._mac)) is None:
+        if (stamp := shared.latest_stamp(self._mac)) is None:
             return None
-        return report[1].hostname
+        return stamp[1].hostname
 
     @property
     @override
     def available(self) -> bool:
         """Return whether the device state is reported by any ubus router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if self._mac in shared.reports:
+        if shared.latest_stamp(self._mac) is not None:
             return True
         # A router which can't be read may still be connected to the device.
-        return all(
-            shared.health.get(entry.data[CONF_HOST], True)
+        return any(
+            shared.health.get(entry.entry_id, True)
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.state
             in (
@@ -443,9 +442,12 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the source attribute identifying the reporting router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if (report := shared.latest_report(self._mac)) is None:
+        if (stamp := shared.latest_stamp(self._mac)) is None:
             return None
-        return {"source": report[0]}
+        reporter = self.hass.config_entries.async_get_entry(stamp[0])
+        if reporter is None:
+            return None
+        return {"source": reporter.data[CONF_HOST]}
 
     @override
     async def async_added_to_hass(self) -> None:
