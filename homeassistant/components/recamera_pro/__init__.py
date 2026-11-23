@@ -1,10 +1,7 @@
 """reCamera Pro integration."""
 
-import json
 import logging
-from pathlib import Path
 import re
-from typing import Any
 
 import probatio
 from recamera_protocol import (
@@ -14,14 +11,10 @@ from recamera_protocol import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    service,
-)
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -40,7 +33,6 @@ from .const import (
     SERVICE_STOP_DEVICE_CAPTURE,
 )
 from .coordinator import RecameraCoordinator, async_remove_store
-from .entity import effective_integration_language
 from .identity import device_title
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,22 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         config_entry.runtime_data = coordinator
         await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-        await _async_sync_entity_registry_names(hass, config_entry, coordinator)
-        loaded_language = effective_integration_language(hass, config_entry)
-
-        @callback
-        def _handle_core_config_update(_event: object) -> None:
-            if effective_integration_language(hass, config_entry) != loaded_language:
-                hass.async_create_task(
-                    hass.config_entries.async_reload(config_entry.entry_id)
-                )
-
-        config_entry.async_on_unload(
-            hass.bus.async_listen(
-                EVENT_CORE_CONFIG_UPDATE,
-                _handle_core_config_update,
-            )
-        )
     except BaseException:
         await coordinator.async_shutdown()
         raise
@@ -227,92 +203,3 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         1,
         f"{DOMAIN}.capture.{config_entry.entry_id}",
     ).async_remove()
-
-
-def _load_entity_translations(language: str) -> dict[str, Any]:
-    """Load the integration entity translation table for one language."""
-    filename = (
-        "zh-Hans.json" if str(language or "").lower().startswith("zh") else "en.json"
-    )
-    path = Path(__file__).parent / "translations" / filename
-    if not path.exists():
-        return {}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except OSError, ValueError:
-        return {}
-    entity_map = payload.get("entity")
-    return entity_map if isinstance(entity_map, dict) else {}
-
-
-def _resolve_visual_class_name(
-    entry: er.RegistryEntry,
-    coordinator: RecameraCoordinator,
-) -> str | None:
-    """Resolve the class_name placeholder for a visual_class binary sensor."""
-    data = getattr(coordinator, "data", None)
-    catalog = getattr(data, "class_catalog", None) or {}
-    for item in catalog.values():
-        if entry.unique_id == coordinator.class_entity_unique_id(item):
-            return str(item.class_name)
-    original = str(getattr(entry, "original_name", "") or "")
-    match = re.fullmatch(
-        r"(?:检测到\s+(.+)|(.+)\s+detected)",
-        original,
-    )
-    if match:
-        return match.group(1) or match.group(2)
-    return None
-
-
-async def _async_sync_entity_registry_names(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    coordinator: RecameraCoordinator,
-) -> None:
-    """Synchronize original_name in entity registry with active language."""
-    try:
-        registry = er.async_get(hass)
-    except AttributeError, KeyError:
-        return
-    language = effective_integration_language(hass, config_entry)
-    executor = getattr(hass, "async_add_executor_job", None)
-    if executor is not None:
-        entity_map = await executor(_load_entity_translations, language)
-    else:
-        entity_map = _load_entity_translations(language)
-    if not entity_map:
-        return
-    for entry in list(registry.entities.values()):
-        if (
-            entry.platform != DOMAIN
-            or entry.config_entry_id != config_entry.entry_id
-            or getattr(entry, "name", None) is not None
-        ):
-            continue
-        translation_key = getattr(entry, "translation_key", None)
-        if not translation_key:
-            continue
-        domain_map = entity_map.get(entry.domain)
-        if not isinstance(domain_map, dict):
-            continue
-        trans_entry = domain_map.get(translation_key)
-        if not isinstance(trans_entry, dict):
-            continue
-        template = trans_entry.get("name")
-        if not isinstance(template, str) or not template:
-            continue
-        if translation_key == "visual_class":
-            class_name = _resolve_visual_class_name(entry, coordinator)
-            if not class_name:
-                continue
-            target_name = template.replace("{class_name}", class_name)
-        elif "{" in template:
-            continue
-        else:
-            target_name = template
-        if getattr(entry, "original_name", None) != target_name:
-            registry.async_update_entity(
-                entry.entity_id,
-                original_name=target_name,
-            )

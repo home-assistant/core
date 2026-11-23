@@ -11,7 +11,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_HW_VERSION,
-    CONF_LANGUAGE,
     CONF_MAC_ADDRESS,
     CONF_MODEL,
     CONF_SERIAL_NUMBER,
@@ -52,27 +51,6 @@ def recamera_device_info(coordinator: RecameraCoordinator) -> DeviceInfo:
             else data.get(CONF_SW_VERSION)
         ),
         configuration_url=(f"https://{format_url_host(data[CONF_HOST])}"),
-    )
-
-
-def effective_integration_language(
-    hass: object,
-    config_entry: object,
-) -> str:
-    """Return the active display language for this config entry."""
-    options = getattr(config_entry, "options", None) or {}
-    configured = str(options.get(CONF_LANGUAGE) or "").strip()
-    if configured in {"en", "zh-Hans"}:
-        return configured
-    return str(getattr(getattr(hass, "config", None), "language", "") or "en")
-
-
-def picture_settings_name(language: str) -> str:
-    """Return the localized picture settings device name."""
-    return (
-        "画面设置"
-        if str(language or "").lower().startswith("zh")
-        else "Picture settings"
     )
 
 
