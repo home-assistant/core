@@ -1732,3 +1732,45 @@ async def test_offer_go2rtc_error_is_sent_not_logged(
         "message": "Unable to update the stream in go2rtc",
     }
     assert "secret" not in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stream_source_resolved_once(
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a camera's stream source is resolved once per stream update."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+
+    with patch.object(
+        camera, "stream_source", wraps=camera.stream_source
+    ) as stream_source:
+        await camera.webrtc_provider.async_get_image(camera)
+
+    stream_source.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_orientation_not_applied_to_native_source(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test live view of a source FFmpeg can't open isn't transformed."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(orientation=Orientation.ROTATE_180),
+    )
+
+    camera.set_stream_source(None)
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await camera.webrtc_provider.async_get_image(camera)
+
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        ["rtsp://native", f"ffmpeg:{identifier}#audio=opus#query=log_level=debug"],
+    )

@@ -362,7 +362,7 @@ async def async_get_supported_provider(
 ) -> CameraWebRTCProvider | None:
     """Return the first supported provider for the camera."""
     providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
-    if not providers or not (stream_source := await camera.stream_source()):
+    if not providers or not (stream_source := await camera.webrtc_source()):
         return None
 
     for provider in providers:
