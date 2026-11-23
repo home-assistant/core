@@ -1,5 +1,7 @@
 """Support for APCUPSd sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Final, override
 
@@ -24,9 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import LAST_S_TEST
-from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator, APCUPSdData
 from .entity import APCUPSdEntity
 
 PARALLEL_UPDATES = 0
@@ -52,351 +55,377 @@ IGNORED_SENSORS: Final = {
 # "xoffbatt". They are always added, and stay unknown until the event happens.
 EVENT_SENSORS: Final = {LAST_S_TEST, "xoffbatt", "xonbatt"}
 
-SENSORS: dict[str, SensorEntityDescription] = {
-    "alarmdel": SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class APCUPSdSensorEntityDescription(SensorEntityDescription):
+    """Describe an APCUPSd sensor with an optional value function."""
+
+    value_fn: Callable[[APCUPSdData], StateType] | None = None
+    required_resources: frozenset[str] = frozenset()
+
+
+SENSORS: dict[str, APCUPSdSensorEntityDescription] = {
+    "alarmdel": APCUPSdSensorEntityDescription(
         key="alarmdel",
         translation_key="alarm_delay",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "ambtemp": SensorEntityDescription(
+    "ambtemp": APCUPSdSensorEntityDescription(
         key="ambtemp",
         translation_key="ambient_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "badbatts": SensorEntityDescription(
+    "badbatts": APCUPSdSensorEntityDescription(
         key="badbatts",
         translation_key="bad_batteries",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "battdate": SensorEntityDescription(
+    "battdate": APCUPSdSensorEntityDescription(
         key="battdate",
         translation_key="battery_replacement_date",
     ),
-    "battstat": SensorEntityDescription(
+    "battstat": APCUPSdSensorEntityDescription(
         key="battstat",
         translation_key="battery_status",
     ),
-    "battv": SensorEntityDescription(
+    "battv": APCUPSdSensorEntityDescription(
         key="battv",
         translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "bcharge": SensorEntityDescription(
+    "bcharge": APCUPSdSensorEntityDescription(
         key="bcharge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "cable": SensorEntityDescription(
+    "cable": APCUPSdSensorEntityDescription(
         key="cable",
         translation_key="cable_type",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "cumonbatt": SensorEntityDescription(
+    "cumonbatt": APCUPSdSensorEntityDescription(
         key="cumonbatt",
         translation_key="total_time_on_battery",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "dipsw": SensorEntityDescription(
+    "dipsw": APCUPSdSensorEntityDescription(
         key="dipsw",
         translation_key="dip_switch_settings",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "dlowbatt": SensorEntityDescription(
+    "dlowbatt": APCUPSdSensorEntityDescription(
         key="dlowbatt",
         translation_key="low_battery_signal",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "driver": SensorEntityDescription(
+    "driver": APCUPSdSensorEntityDescription(
         key="driver",
         translation_key="driver",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "dshutd": SensorEntityDescription(
+    "dshutd": APCUPSdSensorEntityDescription(
         key="dshutd",
         translation_key="shutdown_delay",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "dwake": SensorEntityDescription(
+    "dwake": APCUPSdSensorEntityDescription(
         key="dwake",
         translation_key="wake_delay",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "extbatts": SensorEntityDescription(
+    "extbatts": APCUPSdSensorEntityDescription(
         key="extbatts",
         translation_key="external_batteries",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "hitrans": SensorEntityDescription(
+    "hitrans": APCUPSdSensorEntityDescription(
         key="hitrans",
         translation_key="transfer_high",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "hostname": SensorEntityDescription(
+    "hostname": APCUPSdSensorEntityDescription(
         key="hostname",
         translation_key="hostname",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "humidity": SensorEntityDescription(
+    "humidity": APCUPSdSensorEntityDescription(
         key="humidity",
         translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "itemp": SensorEntityDescription(
+    "itemp": APCUPSdSensorEntityDescription(
         key="itemp",
         translation_key="internal_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    LAST_S_TEST: SensorEntityDescription(
+    LAST_S_TEST: APCUPSdSensorEntityDescription(
         key=LAST_S_TEST,
         translation_key="last_self_test",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    "lastxfer": SensorEntityDescription(
+    "lastxfer": APCUPSdSensorEntityDescription(
         key="lastxfer",
         translation_key="last_transfer",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "linefail": SensorEntityDescription(
+    "linefail": APCUPSdSensorEntityDescription(
         key="linefail",
         translation_key="line_failure",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "linefreq": SensorEntityDescription(
+    "linefreq": APCUPSdSensorEntityDescription(
         key="linefreq",
         translation_key="line_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "linev": SensorEntityDescription(
+    "linev": APCUPSdSensorEntityDescription(
         key="linev",
         translation_key="line_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "loadpct": SensorEntityDescription(
+    "loadpct": APCUPSdSensorEntityDescription(
         key="loadpct",
         translation_key="load_capacity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "loadapnt": SensorEntityDescription(
+    "loadapnt": APCUPSdSensorEntityDescription(
         key="loadapnt",
         translation_key="apparent_power",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    "lotrans": SensorEntityDescription(
+    "lotrans": APCUPSdSensorEntityDescription(
         key="lotrans",
         translation_key="transfer_low",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "mandate": SensorEntityDescription(
+    "mandate": APCUPSdSensorEntityDescription(
         key="mandate",
         translation_key="manufacture_date",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "masterupd": SensorEntityDescription(
+    "masterupd": APCUPSdSensorEntityDescription(
         key="masterupd",
         translation_key="master_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "maxlinev": SensorEntityDescription(
+    "maxlinev": APCUPSdSensorEntityDescription(
         key="maxlinev",
         translation_key="input_voltage_high",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
-    "maxtime": SensorEntityDescription(
+    "maxtime": APCUPSdSensorEntityDescription(
         key="maxtime",
         translation_key="max_time",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "mbattchg": SensorEntityDescription(
+    "mbattchg": APCUPSdSensorEntityDescription(
         key="mbattchg",
         translation_key="max_battery_charge",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "minlinev": SensorEntityDescription(
+    "minlinev": APCUPSdSensorEntityDescription(
         key="minlinev",
         translation_key="input_voltage_low",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
-    "mintimel": SensorEntityDescription(
+    "mintimel": APCUPSdSensorEntityDescription(
         key="mintimel",
         translation_key="min_time",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "nombattv": SensorEntityDescription(
+    "nombattv": APCUPSdSensorEntityDescription(
         key="nombattv",
         translation_key="battery_nominal_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "nominv": SensorEntityDescription(
+    "nominv": APCUPSdSensorEntityDescription(
         key="nominv",
         translation_key="nominal_input_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "nomoutv": SensorEntityDescription(
+    "nomoutv": APCUPSdSensorEntityDescription(
         key="nomoutv",
         translation_key="nominal_output_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "nompower": SensorEntityDescription(
+    "nompower": APCUPSdSensorEntityDescription(
         key="nompower",
         translation_key="nominal_output_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "nomapnt": SensorEntityDescription(
+    "nomapnt": APCUPSdSensorEntityDescription(
         key="nomapnt",
         translation_key="nominal_apparent_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "numxfers": SensorEntityDescription(
+    "numxfers": APCUPSdSensorEntityDescription(
         key="numxfers",
         translation_key="transfer_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    "outcurnt": SensorEntityDescription(
+    "outcurnt": APCUPSdSensorEntityDescription(
         key="outcurnt",
         translation_key="output_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "outputv": SensorEntityDescription(
+    "outputv": APCUPSdSensorEntityDescription(
         key="outputv",
         translation_key="output_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "reg1": SensorEntityDescription(
+    "reg1": APCUPSdSensorEntityDescription(
         key="reg1",
         translation_key="register_1_fault",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "reg2": SensorEntityDescription(
+    "reg2": APCUPSdSensorEntityDescription(
         key="reg2",
         translation_key="register_2_fault",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "reg3": SensorEntityDescription(
+    "reg3": APCUPSdSensorEntityDescription(
         key="reg3",
         translation_key="register_3_fault",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "retpct": SensorEntityDescription(
+    "retpct": APCUPSdSensorEntityDescription(
         key="retpct",
         translation_key="restore_capacity",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "selftest": SensorEntityDescription(
+    "selftest": APCUPSdSensorEntityDescription(
         key="selftest",
         translation_key="self_test_result",
     ),
-    "sense": SensorEntityDescription(
+    "sense": APCUPSdSensorEntityDescription(
         key="sense",
         translation_key="sensitivity",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "starttime": SensorEntityDescription(
+    "starttime": APCUPSdSensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "statflag": SensorEntityDescription(
+    "statflag": APCUPSdSensorEntityDescription(
         key="statflag",
         translation_key="online_status",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "status": SensorEntityDescription(
+    "status": APCUPSdSensorEntityDescription(
         key="status",
         translation_key="status",
     ),
-    "stesti": SensorEntityDescription(
+    "stesti": APCUPSdSensorEntityDescription(
         key="stesti",
         translation_key="self_test_interval",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "timeleft": SensorEntityDescription(
+    "timeleft": APCUPSdSensorEntityDescription(
         key="timeleft",
         translation_key="time_left",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "tonbatt": SensorEntityDescription(
+    "tonbatt": APCUPSdSensorEntityDescription(
         key="tonbatt",
         translation_key="time_on_battery",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "upsmode": SensorEntityDescription(
+    "upsmode": APCUPSdSensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "xoffbat": SensorEntityDescription(
+    "xoffbat": APCUPSdSensorEntityDescription(
         key="xoffbat",
         translation_key="transfer_from_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "xoffbatt": SensorEntityDescription(
+    "xoffbatt": APCUPSdSensorEntityDescription(
         key="xoffbatt",
         translation_key="transfer_from_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "xonbatt": SensorEntityDescription(
+    "xonbatt": APCUPSdSensorEntityDescription(
         key="xonbatt",
         translation_key="transfer_to_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
+
+DERIVED_SENSORS: Final[tuple[APCUPSdSensorEntityDescription, ...]] = (
+    APCUPSdSensorEntityDescription(
+        key="output_power",
+        translation_key="output_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        required_resources=frozenset({"loadpct", "nompower"}),
+        value_fn=lambda data: (
+            float(infer_unit(data["LOADPCT"])[0])
+            * float(infer_unit(data["NOMPOWER"])[0])
+            / 100
+        ),
+    ),
+)
 
 INFERRED_UNITS = {
     " Minutes": UnitOfTime.MINUTES,
@@ -446,6 +475,12 @@ async def async_setup_entry(
 
         entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
+    entities.extend(
+        APCUPSdSensor(coordinator, description)
+        for description in DERIVED_SENSORS
+        if description.required_resources <= available_resources
+    )
+
     async_add_entities(entities)
 
 
@@ -466,10 +501,12 @@ def infer_unit(value: str) -> tuple[str, str | None]:
 class APCUPSdSensor(APCUPSdEntity, SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
+    entity_description: APCUPSdSensorEntityDescription
+
     def __init__(
         self,
         coordinator: APCUPSdCoordinator,
-        description: SensorEntityDescription,
+        description: APCUPSdSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
@@ -486,6 +523,15 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
 
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
+        if self.entity_description.value_fn is not None:
+            try:
+                self._attr_native_value = self.entity_description.value_fn(
+                    self.coordinator.data
+                )
+            except KeyError, ValueError:
+                self._attr_native_value = None
+            return
+
         key = self.entity_description.key.upper()
         # For most sensors the key will always be available for
         # each refresh. However, some sensors (e.g., "laststest")

@@ -66,26 +66,58 @@ async def test_sensor(
         assert entity_entry.device_id == device_entry.id
 
 
+@pytest.mark.parametrize(
+    (
+        "sensor",
+        "mock_request_status",
+        "initial_value",
+        "updated_status",
+        "updated_value",
+    ),
+    [
+        pytest.param(
+            "load",
+            MOCK_STATUS,
+            "14.0",
+            MOCK_STATUS | {"LOADPCT": "15.0 Percent"},
+            "15.0",
+            id="load",
+        ),
+        pytest.param(
+            "output_power",
+            MOCK_STATUS | {"LOADPCT": "20.0 Percent", "NOMPOWER": "500 Watts"},
+            "100.0",
+            MOCK_STATUS | {"LOADPCT": "30.0 Percent", "NOMPOWER": "500 Watts"},
+            "150.0",
+            id="output-power",
+        ),
+    ],
+    indirect=["mock_request_status"],
+)
 async def test_state_update(
     hass: HomeAssistant,
     mock_request_status: AsyncMock,
+    sensor: str,
+    initial_value: str,
+    updated_status: dict[str, str],
+    updated_value: str,
 ) -> None:
     """Ensure the sensor state changes after updating the data."""
     device_slug = slugify(mock_request_status.return_value["UPSNAME"])
-    state = hass.states.get(f"sensor.{device_slug}_load")
+    state = hass.states.get(f"sensor.{device_slug}_{sensor}")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "14.0"
+    assert state.state == initial_value
 
-    mock_request_status.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+    mock_request_status.return_value = updated_status
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.{device_slug}_load")
+    state = hass.states.get(f"sensor.{device_slug}_{sensor}")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "15.0"
+    assert state.state == updated_value
 
 
 async def test_manual_update_entity(
@@ -175,6 +207,12 @@ async def test_manual_update_entity(
             "sensor.apc_ups_transfer_from_battery",
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
             id="xoffbatt_invalid_time_string",
+        ),
+        pytest.param(
+            MOCK_STATUS | {"LOADPCT": "N/A"},
+            "sensor.myups_output_power",
+            MOCK_STATUS,
+            id="output_power_invalid_load",
         ),
     ],
     indirect=["mock_request_status"],

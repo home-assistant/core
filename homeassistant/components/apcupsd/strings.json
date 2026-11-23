@@ -162,6 +162,9 @@
       "output_current": {
         "name": "Output current"
       },
+      "output_power": {
+        "name": "Output power"
+      },
       "output_voltage": {
         "name": "Output voltage"
       },
