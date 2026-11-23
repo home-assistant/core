@@ -65,18 +65,8 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(_async_update_listener)
-    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, config_entry: EnOceanConfigEntry
-) -> None:
-    """Reload the entry when a device was added or removed."""
-    hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(

@@ -254,3 +254,51 @@ async def test_binary_sensor_of_stored_device(
     await hass.async_block_till_done()
 
     assert len(events) == len(expected_entity_ids)
+
+
+@pytest.mark.parametrize("count", [1, 30])
+async def test_yaml_import_does_not_restart_the_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: Mock,
+    count: int,
+) -> None:
+    """Test that imported devices get their entities without reloading the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: [
+                {"platform": DOMAIN, "id": [0xDE, 0xAD, 0xBE, n], "name": f"button {n}"}
+                for n in range(count)
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(mock_config_entry.subentries) == count
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == count
+    assert mock_gateway.start.call_count == 1
+    mock_gateway.stop.assert_not_called()
+
+
+async def test_removing_a_device_removes_its_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_gateway: Mock
+) -> None:
+    """Test that the entity of a removed device goes without reloading the entry."""
+    config_entry = _config_entry(_stored_device(DEVICE_TYPE_ROCKER_SWITCH))
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.button") is not None
+
+    (subentry_id,) = config_entry.subentries
+    hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.button") is None
+    assert entity_registry.async_get("binary_sensor.button") is None
+    assert mock_gateway.start.call_count == 1
+    mock_gateway.stop.assert_not_called()

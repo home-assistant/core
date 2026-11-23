@@ -17,6 +17,7 @@ SUBENTRY_TYPE_DEVICE = "device"
 # Device types of the enocean-async library
 DEVICE_TYPE_ROCKER_SWITCH = "EEP/F6-02-01"
 
+SIGNAL_DEVICE_ADDED = "enocean.device_added"
 SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"
 SIGNAL_SEND_MESSAGE = "enocean.send_message"
 

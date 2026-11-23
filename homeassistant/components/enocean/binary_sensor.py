@@ -12,9 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -22,7 +24,12 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import EnOceanConfigEntry
-from .const import CONF_DEVICE_TYPE_ID, DEVICE_TYPE_ROCKER_SWITCH, SUBENTRY_TYPE_DEVICE
+from .const import (
+    CONF_DEVICE_TYPE_ID,
+    DEVICE_TYPE_ROCKER_SWITCH,
+    SIGNAL_DEVICE_ADDED,
+    SUBENTRY_TYPE_DEVICE,
+)
 from .entity import EnOceanEntity, combine_hex
 from .yaml_import import async_import_yaml_device
 
@@ -66,9 +73,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensors of the configured devices."""
-    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+
+    @callback
+    def async_add_device(subentry: ConfigSubentry) -> None:
+        """Add the binary sensor of a rocker switch."""
         if subentry.data[CONF_DEVICE_TYPE_ID] != DEVICE_TYPE_ROCKER_SWITCH:
-            continue
+            return
         device_class = subentry.data.get(CONF_DEVICE_CLASS)
         async_add_entities(
             [
@@ -80,6 +90,13 @@ async def async_setup_entry(
             ],
             config_subentry_id=subentry.subentry_id,
         )
+
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+        async_add_device(subentry)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, async_add_device)
+    )
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
