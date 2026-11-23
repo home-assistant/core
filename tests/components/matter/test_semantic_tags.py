@@ -64,30 +64,32 @@ def _channel(number: str) -> ChildDeviceName:
 
 
 @pytest.mark.parametrize(
-    ("tags", "expected"),
+    ("tags", "sibling", "expected"),
     [
-        pytest.param([TOP], "position_top", id="top"),
-        pytest.param([BOTTOM], "position_bottom", id="bottom"),
-        pytest.param([LEFT], "position_left", id="left"),
-        pytest.param([RIGHT], "position_right", id="right"),
-        pytest.param([MIDDLE], "position_middle", id="middle"),
-        pytest.param([TOP, LEFT], "position_top_left", id="top_left"),
-        pytest.param([TOP, MIDDLE], "position_top_middle", id="top_middle"),
-        pytest.param([TOP, RIGHT], "position_top_right", id="top_right"),
-        pytest.param([MIDDLE, LEFT], "position_middle_left", id="middle_left"),
-        pytest.param([MIDDLE, RIGHT], "position_middle_right", id="middle_right"),
-        pytest.param([BOTTOM, LEFT], "position_bottom_left", id="bottom_left"),
-        pytest.param([BOTTOM, MIDDLE], "position_bottom_middle", id="bottom_middle"),
-        pytest.param([BOTTOM, RIGHT], "position_bottom_right", id="bottom_right"),
+        pytest.param([TOP], BOTTOM, "position_top", id="top"),
+        pytest.param([BOTTOM], TOP, "position_bottom", id="bottom"),
+        pytest.param([LEFT], TOP, "position_left", id="left"),
+        pytest.param([RIGHT], TOP, "position_right", id="right"),
+        pytest.param([MIDDLE], TOP, "position_middle", id="middle"),
+        pytest.param([TOP, LEFT], BOTTOM, "position_top_left", id="top_left"),
+        pytest.param([TOP, MIDDLE], BOTTOM, "position_top_middle", id="top_middle"),
+        pytest.param([TOP, RIGHT], BOTTOM, "position_top_right", id="top_right"),
+        pytest.param([MIDDLE, LEFT], TOP, "position_middle_left", id="middle_left"),
+        pytest.param([MIDDLE, RIGHT], TOP, "position_middle_right", id="middle_right"),
+        pytest.param([BOTTOM, LEFT], TOP, "position_bottom_left", id="bottom_left"),
+        pytest.param(
+            [BOTTOM, MIDDLE], TOP, "position_bottom_middle", id="bottom_middle"
+        ),
+        pytest.param([BOTTOM, RIGHT], TOP, "position_bottom_right", id="bottom_right"),
     ],
 )
-def test_position_names(tags: list[int], expected: str) -> None:
+def test_position_names(tags: list[int], sibling: int, expected: str) -> None:
     """Test Common Position spatial tags map to one translation key."""
     node = create_node_from_fixture(
         NODE_FIXTURE,
         {
             "1/29/4": _position(*tags),
-            "2/29/4": _position(TOP if TOP not in tags else BOTTOM),
+            "2/29/4": _position(sibling),
         },
     )
     names = get_child_device_names(node)
@@ -222,33 +224,35 @@ def test_number_names(
     assert get_child_device_names(node) == expected
 
 
-def test_source_precedence() -> None:
+@pytest.mark.parametrize(
+    ("tags_1", "tags_2", "expected"),
+    [
+        pytest.param(
+            [*_position(LEFT), *_number(1)],
+            _number(2),
+            {1: _channel("1"), 2: _channel("2")},
+            id="position_on_one_endpoint",
+        ),
+        pytest.param(
+            [*_position(LEFT), *_number(1)],
+            [*_position(RIGHT), *_number(2)],
+            {1: _key("position_left"), 2: _key("position_right")},
+            id="position_on_both_endpoints",
+        ),
+    ],
+)
+def test_source_precedence(
+    tags_1: list[dict[str, Any]],
+    tags_2: list[dict[str, Any]],
+    expected: dict[int, ChildDeviceName],
+) -> None:
     """Test the first source naming every endpoint is used for the whole group.
 
-    Endpoint 2 has no position tag, so the position source doesn't name the
-    whole group, and the Common Number tags name both endpoints instead.
+    When only endpoint 1 has a position tag, the position source doesn't name
+    the whole group, and the Common Number tags name both endpoints instead.
     """
-    node = create_node_from_fixture(
-        NODE_FIXTURE,
-        {
-            "1/29/4": [*_position(LEFT), *_number(1)],
-            "2/29/4": _number(2),
-        },
-    )
-    assert get_child_device_names(node) == {1: _channel("1"), 2: _channel("2")}
-
-    # With position tags on both endpoints, position wins over the number.
-    node = create_node_from_fixture(
-        NODE_FIXTURE,
-        {
-            "1/29/4": [*_position(LEFT), *_number(1)],
-            "2/29/4": [*_position(RIGHT), *_number(2)],
-        },
-    )
-    assert get_child_device_names(node) == {
-        1: _key("position_left"),
-        2: _key("position_right"),
-    }
+    node = create_node_from_fixture(NODE_FIXTURE, {"1/29/4": tags_1, "2/29/4": tags_2})
+    assert get_child_device_names(node) == expected
 
 
 def test_position_tags_before_vendor_labels() -> None:
@@ -309,7 +313,23 @@ def test_position_and_row_not_combined() -> None:
     assert get_child_device_names(node) == {}
 
 
-def test_manufacturer_namespace_tags() -> None:
+@pytest.mark.parametrize(
+    ("label_1", "label_2", "expected"),
+    [
+        pytest.param(
+            " Kitchen ",
+            "Hall",
+            {1: ChildDeviceName(name="Kitchen"), 2: ChildDeviceName(name="Hall")},
+            id="labels",
+        ),
+        pytest.param(None, None, {}, id="no_labels"),
+    ],
+)
+def test_manufacturer_namespace_tags(
+    label_1: str | None,
+    label_2: str | None,
+    expected: dict[int, ChildDeviceName],
+) -> None:
     """Test tags from a manufacturer namespace.
 
     Their namespace id isn't matched against the standard namespaces, but their
@@ -318,24 +338,11 @@ def test_manufacturer_namespace_tags() -> None:
     node = create_node_from_fixture(
         NODE_FIXTURE,
         {
-            "1/29/4": [_tag(NAMESPACE_COMMON_POSITION, TOP, " Kitchen ", 0xFFF1)],
-            "2/29/4": [_tag(NAMESPACE_COMMON_POSITION, BOTTOM, "Hall", 0xFFF1)],
+            "1/29/4": [_tag(NAMESPACE_COMMON_POSITION, TOP, label_1, 0xFFF1)],
+            "2/29/4": [_tag(NAMESPACE_COMMON_POSITION, BOTTOM, label_2, 0xFFF1)],
         },
     )
-    assert get_child_device_names(node) == {
-        1: ChildDeviceName(name="Kitchen"),
-        2: ChildDeviceName(name="Hall"),
-    }
-
-    # Without a label, a manufacturer namespace tag gives no name.
-    node = create_node_from_fixture(
-        NODE_FIXTURE,
-        {
-            "1/29/4": [_tag(NAMESPACE_COMMON_POSITION, TOP, None, 0xFFF1)],
-            "2/29/4": [_tag(NAMESPACE_COMMON_POSITION, BOTTOM, None, 0xFFF1)],
-        },
-    )
-    assert get_child_device_names(node) == {}
+    assert get_child_device_names(node) == expected
 
 
 def test_standard_label_not_used_as_name() -> None:

@@ -200,11 +200,8 @@ class MatterAdapter:
                 return  # race condition
             if get_device_endpoint(endpoint) != endpoint:
                 # A composed device is represented by a single HA device, which is
-                # only removed once its compose parent endpoint is removed. The
-                # server announces the removal of the parts before their parent's,
-                # and the client drops a part together with its compose relation,
-                # so the parent's removal no longer finds it: remove the part's
-                # own entities now.
+                # only removed once its compose parent endpoint is removed. Parts
+                # are removed before their parent, which then no longer finds them.
                 self._remove_endpoint_entities(node, endpoint)
                 return
             # An endpoint split into its own child device is removed on its own,
