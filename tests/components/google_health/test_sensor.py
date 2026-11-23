@@ -1,6 +1,7 @@
 """Tests for Google Health sensor platform."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -30,10 +31,15 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
-from homeassistant.components.google_health.coordinator import DEVICE_POLLING_INTERVAL
+from homeassistant.components.google_health.coordinator import (
+    DEVICE_POLLING_INTERVAL,
+    POLLING_INTERVAL,
+)
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -43,6 +49,7 @@ from homeassistant.util.unit_system import (
 from .conftest import _list_fixture, _rollup_fixture, paired_devices_fixture
 
 
+@pytest.mark.freeze_time("2026-06-28 12:00:00+00:00")
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_google_health_client"
 )
@@ -204,6 +211,41 @@ async def test_sensor_activity_partial_rollup(
         entity_id: getattr(hass.states.get(entity_id), "state", None)
         for entity_id in expected_states
     } == expected_states
+
+
+@pytest.mark.freeze_time("2026-06-28 23:55:00-07:00")
+async def test_sensor_elevation_negative_and_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test elevation supports negative daily totals and updates last_reset at midnight."""
+    mock_google_health_client.altitude.today.return_value = DailyRollupDataPoint(
+        data=AltitudeRollupValue(gain_millimeters_sum=-40000),
+        civil_start_time=None,
+        civil_end_time=None,
+    )
+
+    assert await integration_setup()
+
+    elevation = hass.states.get("sensor.google_health_elevation")
+    assert elevation is not None
+    assert elevation.state == "-40.0"
+    first_reset = elevation.attributes[ATTR_LAST_RESET]
+    assert first_reset == dt_util.start_of_local_day().isoformat()
+
+    mock_google_health_client.altitude.today.return_value = None
+    freezer.tick(POLLING_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    elevation = hass.states.get("sensor.google_health_elevation")
+    assert elevation is not None
+    assert elevation.state == "0.0"
+    second_reset = elevation.attributes[ATTR_LAST_RESET]
+    assert second_reset == dt_util.start_of_local_day().isoformat()
+    assert second_reset != first_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

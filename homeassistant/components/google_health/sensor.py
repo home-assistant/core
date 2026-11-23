@@ -95,6 +95,7 @@ class GoogleHealthSensorEntityDescription[
 
     value_fn: Callable[[Any], _ValueT]
     suggested_unit_fn: Callable[[UnitSystem], str | None] | None = None
+    last_reset_fn: Callable[[Any], datetime | None] | None = None
 
 
 ACTIVITY_SENSORS: list[
@@ -153,8 +154,9 @@ ACTIVITY_SENSORS: list[
         translation_key="elevation",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: (data.altitude_gain_millimeters or 0) / 1000.0,
+        last_reset_fn=lambda data: data.rollup_start,
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
         key="light_activity",
@@ -627,6 +629,15 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
             return suggested_unit_fn(self.hass.config.units)
 
         return super().suggested_unit_of_measurement
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        if (last_reset_fn := self.entity_description.last_reset_fn) is not None:
+            return last_reset_fn(self.coordinator.data)
+
+        return super().last_reset
 
 
 class GoogleHealthDeviceSensor(

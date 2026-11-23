@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -34,6 +34,7 @@ from google_health_api.model import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -62,6 +63,7 @@ class GoogleHealthActivityData:
     active_minutes: ActiveMinutesRollupValue | None = None
     active_zone_minutes: ActiveZoneMinutesRollupValue | None = None
     sedentary_period: SedentaryPeriodRollupValue | None = None
+    rollup_start: datetime | None = None
 
     @property
     def altitude_gain_millimeters(self) -> int | None:
@@ -221,6 +223,7 @@ class GoogleHealthActivityCoordinator(
         zone. If no data points exist for today yet, the API returns None,
         which the sensors default to 0.
         """
+        rollup_start = dt_util.start_of_local_day()
         (
             steps_rollup,
             distance_rollup,
@@ -269,6 +272,7 @@ class GoogleHealthActivityCoordinator(
             active_minutes=active_minutes,
             active_zone_minutes=active_zone_minutes,
             sedentary_period=sedentary_period,
+            rollup_start=rollup_start,
         )
 
 
