@@ -686,6 +686,57 @@
     'state': 'running',
   })
 # ---
+# name: test_all_entities[sensor.dashy_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_2_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-16T12:46:40+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4818,6 +4869,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.webstack_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_1_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.webstack_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'webstack Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-17T13:46:40+00:00',
   })
 # ---
 # name: test_all_entities[sensor.webstack_type-entry]
