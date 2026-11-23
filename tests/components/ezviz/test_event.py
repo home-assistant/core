@@ -190,6 +190,7 @@ async def test_handled_alarm_restored_after_reload(
                         "alarm_type_code": "10079",
                         "alarm_type_name": "Smart Detection Alarm",
                     },
+                    "last_alarm_time": "2026-11-17 11:00:00",
                 },
             )
         ],
@@ -205,3 +206,29 @@ async def test_handled_alarm_restored_after_reload(
     # A new alarm still fires
     await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:30")
     assert hass.states.get(ENTITY_ID).state == "2026-11-17T12:01:00.000+00:00"
+
+
+async def test_startup_alarm_not_fired_after_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test the alarm skipped at startup does not fire after a reload.
+
+    It was never fired, so it is not in the event attributes: the handled
+    alarm is stored on its own.
+    """
+    freezer.move_to("2026-11-17 12:00:00+00:00")
+    mock_ezviz_client.load_cameras.return_value = _camera("2026-11-17 10:00:00")
+
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    # The first refresh after the reload has no alarm time
+    mock_ezviz_client.load_cameras.return_value = _camera(None)
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 10:00:00")
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN

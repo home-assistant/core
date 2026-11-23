@@ -1,11 +1,13 @@
 """Support for EZVIZ motion events."""
 
+from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
+    EventExtraStoredData,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,6 +26,13 @@ EVENT_TYPE = EventEntityDescription(
     device_class=EventDeviceClass.MOTION,
     event_types=[EVENT_MOTION],
 )
+
+
+@dataclass
+class EzvizEventExtraStoredData(EventExtraStoredData):
+    """Event data plus the last alarm handled, fired or not."""
+
+    last_alarm_time: str | None = None
 
 
 async def async_setup_entry(
@@ -56,11 +65,24 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
         """Restore the last handled alarm when the camera does not report one yet."""
         await super().async_added_to_hass()
         if self._last_alarm_time is None and (
-            last_event := await self.async_get_last_event_data()
+            extra := await self.async_get_last_extra_data()
         ):
-            self._last_alarm_time = (last_event.last_event_attributes or {}).get(
-                ATTR_ALARM_TIME
-            )
+            self._last_alarm_time = extra.as_dict().get("last_alarm_time")
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> EzvizEventExtraStoredData:
+        """Store the last handled alarm, also when it was not fired as an event.
+
+        The alarm already present at startup is handled without firing, so it
+        is not in the event attributes.
+        """
+        event_data = super().extra_restore_state_data
+        return EzvizEventExtraStoredData(
+            event_data.last_event_type,
+            event_data.last_event_attributes,
+            self._last_alarm_time,
+        )
 
     @callback
     @override
