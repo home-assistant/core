@@ -37,7 +37,7 @@ files_diff() {
 }
 # Ignores line numbers and blob IDs, so the same changes on a newer base match.
 diff_id() {
-  grep -v '^index ' "$1" | sed -E 's/^@@ -[0-9,]+ \+[0-9,]+ @@.*/@@/' | sha256sum | cut -d' ' -f1
+  grep -v '^index ' "$1" | sed -E 's/^@@ -[0-9,]+ \+[0-9,]+ @@/@@/' | sha256sum | cut -d' ' -f1
 }
 nothing() {
   jq -n --arg reason "$1" '{review: false, reviewed_head: null, reason: $reason}' > "${OUT}/task.json"
