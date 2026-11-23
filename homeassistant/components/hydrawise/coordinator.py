@@ -245,27 +245,39 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self._re_spread_after_midnight = False
 
     def _next_update_interval(
-        self, fetch_time: datetime, finish_time: datetime
+        self, fetch_time: datetime, finish_time: datetime, *, succeeded: bool
     ) -> timedelta:
         """Compute the next poll interval, targeting before and after midnight."""
         next_midnight = as_utc(
             start_of_local_day(fetch_time.date() + timedelta(days=1))
         )
+        fetch_utc = as_utc(fetch_time)
         finish_utc = as_utc(finish_time)
         pre_midnight_target = next_midnight - self._pre_midnight_offset
-        until_pre_midnight = pre_midnight_target - finish_utc
 
-        if until_pre_midnight < _MIN_PRE_MIDNIGHT_INTERVAL:
+        if (
+            pre_midnight_target - fetch_utc < _MIN_PRE_MIDNIGHT_INTERVAL
+            or finish_utc >= next_midnight
+        ):
             # Schedule the next poll shortly after midnight so daily sensors
             # reset promptly and TOTAL_INCREASING statistics detect the reset.
             self._re_spread_after_midnight = True
+            if not succeeded and finish_utc + _MIN_POST_MIDNIGHT_DELAY < next_midnight:
+                return _MIN_POST_MIDNIGHT_DELAY
             post_midnight_target = next_midnight + self._post_midnight_offset
             return max(
                 _MIN_POST_MIDNIGHT_DELAY,
                 post_midnight_target - finish_utc,
             )
 
+        until_pre_midnight = max(
+            _MIN_POST_MIDNIGHT_DELAY,
+            pre_midnight_target - finish_utc,
+        )
+
         if self._re_spread_after_midnight:
+            if not succeeded:
+                return min(_MIN_POST_MIDNIGHT_DELAY, until_pre_midnight)
             self._re_spread_after_midnight = False
             # Re-spread hourly polls across the hour so instances in the same
             # timezone do not remain phase-locked after the midnight refresh.
@@ -302,6 +314,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         current_time = now()
         start_of_day = start_of_local_day(current_time)
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
+        succeeded = False
         try:
             async with self._handle_api_errors():
                 for controller in self._main_coordinator.data.controllers.values():
@@ -312,8 +325,11 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                         start_of_day,
                         current_time,
                     )
+            succeeded = True
         finally:
-            self.update_interval = self._next_update_interval(current_time, now())
+            self.update_interval = self._next_update_interval(
+                current_time, now(), succeeded=succeeded
+            )
         main_data = self._main_coordinator.data
         return HydrawiseData(
             user=main_data.user,
