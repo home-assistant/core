@@ -29,6 +29,7 @@ from homeassistant.components.daikin_onecta.const import (
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
     has_air_purifier_power_control,
+    has_climate_entity,
     scalar_platform,
     scalar_platform_for_point,
 )
@@ -99,7 +100,7 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
     point = _load_gateway_devices("offlinedevice")[0].management_points_by_type(
         "climateControl"
     )[0]
-    assert scalar_platform_for_point(point, name) is None
+    assert scalar_platform_for_point(point, name, gateway_online=False) is None
 
 
 @pytest.mark.parametrize(
@@ -143,6 +144,24 @@ def test_climate_control_without_supported_setpoint_is_exposed(
         scalar_platform_for_point(point, name, gateway_online=gateway_online)
         is expected_platform
     )
+
+
+def test_read_only_climate_setpoint_does_not_hide_writable_power() -> None:
+    """Expose power when no writable setpoint can create a climate entity."""
+    point = deepcopy(
+        _load_gateway_devices("dry")[0].management_points_by_type("climateControl")[0]
+    )
+    climate_control = point.climate_control
+    assert climate_control is not None
+    assert point.temperature_control is not None
+    for operation in point.temperature_control.value.operation_modes.values():
+        for setpoint in operation.setpoints.values():
+            setpoint.settable = False
+
+    assert not has_climate_entity(point)
+    assert scalar_platform_for_point(point, "onOffMode") is Platform.SWITCH
+    assert has_climate_entity(point, gateway_online=False)
+    assert scalar_platform_for_point(point, "onOffMode", gateway_online=False) is None
 
 
 async def test_switch_platform_is_stable_when_writability_changes(
@@ -861,6 +880,40 @@ async def test_discovering_second_climate_zone_moves_existing_entities_to_child(
     new_climate_entry = entity_registry.async_get(new_climate_entity)
     assert new_climate_entry is not None
     assert new_climate_entry.device_id == second_child.id
+
+
+async def test_climate_zone_rename_updates_child_device_name(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Refresh a zone child device name when Daikin renames the zone."""
+    gateway = _load_gateway_devices("dry")[0]
+    first_zone = gateway.management_points_by_type("climateControl")[0]
+    second_zone = deepcopy(first_zone)
+    second_zone.embedded_id = "second-zone"
+    second_zone.name = Characteristic(value="Second zone")
+    gateway.management_points.append(second_zone)
+    await _async_setup_fixture(hass, config_entry, "dry", gateway_devices=[gateway])
+
+    coordinator = config_entry.runtime_data
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway.id}_{first_zone.embedded_id}"), config_entry.entry_id
+    )
+    assert child is not None
+    assert child.name == first_zone.name.value
+
+    renamed_gateway = deepcopy(gateway)
+    renamed_point = renamed_gateway.management_points_by_type("climateControl")[0]
+    renamed_point.name = Characteristic(value="Renamed zone")
+    mock_onecta_client.get_gateway_devices.return_value = [renamed_gateway]
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    renamed_child = device_registry.async_get(child.id)
+    assert renamed_child is not None
+    assert renamed_child.name == "Renamed zone"
 
 
 async def test_discovering_single_climate_zone_moves_entities_back_to_gateway(

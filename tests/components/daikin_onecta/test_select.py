@@ -158,29 +158,32 @@ async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(
 
 
 async def test_schedule_select_rejects_missing_selection(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Reject a selection through HA when Daikin no longer provides schedules."""
+    """Mark the schedule unavailable when Daikin stops providing it."""
     await _async_setup_fixture(hass, config_entry, "schedule")
     device = next(iter(config_entry.runtime_data.data.values()))
-    point = device.device.management_points[0]
+    point = device.device.management_points_by_type("climateControl")[0]
     point.schedule = None
     config_entry.runtime_data.async_update_listeners()
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: MASTER_SCHEDULE_ENTITY_ID,
-                SelectServiceArgument.OPTION: "Schedule",
-            },
-            blocking=True,
-        )
+    state = hass.states.get(MASTER_SCHEDULE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "unavailable"
 
-    # The select platform rejects the now-absent option before calling the entity.
-    assert err.value.translation_key == "not_valid_option"
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: MASTER_SCHEDULE_ENTITY_ID,
+            SelectServiceArgument.OPTION: "Schedule",
+        },
+        blocking=True,
+    )
+    mock_onecta_client.put_management_point.assert_not_awaited()
 
 
 async def test_schedule_select_rejects_unadvertised_option(

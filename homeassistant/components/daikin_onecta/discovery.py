@@ -34,15 +34,21 @@ def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
     return power is not None and power.settable
 
 
-def has_climate_entity(point: ManagementPoint) -> bool:
-    """Return whether a climate-control point exposes a supported setpoint."""
+def has_climate_entity(point: ManagementPoint, *, gateway_online: bool = True) -> bool:
+    """Return whether a climate entity can own this point's controls."""
     climate_control = point.climate_control
-    return bool(
-        climate_control is not None
-        and any(
-            setpoint_type in CLIMATE_SETPOINT_TYPES
-            for setpoint_type in climate_control.setpoint_types
-        )
+    if climate_control is None:
+        return False
+    supported_setpoint_types = CLIMATE_SETPOINT_TYPES.intersection(
+        climate_control.setpoint_types
+    )
+    if not supported_setpoint_types:
+        return False
+    # Offline gateways temporarily mark controls read-only. Keep their entity
+    # ownership stable until the cloud reports current writability again.
+    return not gateway_online or any(
+        has_settable_climate_setpoint(point, setpoint_type)
+        for setpoint_type in supported_setpoint_types
     )
 
 
@@ -85,7 +91,10 @@ def scalar_platform_for_point(
         and point.management_point_type == "climateControl"
         and (
             not gateway_online
-            or (has_air_purifier_power(point) and not has_climate_entity(point))
+            or (
+                has_air_purifier_power(point)
+                and not has_climate_entity(point, gateway_online=gateway_online)
+            )
         )
     ):
         return None
@@ -94,7 +103,7 @@ def scalar_platform_for_point(
     if (
         name in {"econoMode", "onOffMode", "powerfulMode"}
         and point.management_point_type == "climateControl"
-        and has_climate_entity(point)
+        and has_climate_entity(point, gateway_online=gateway_online)
     ):
         return None
     if name == "onOffMode" and point.management_point_type == "climateControl":

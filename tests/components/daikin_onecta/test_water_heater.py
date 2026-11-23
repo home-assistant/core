@@ -933,12 +933,21 @@ async def test_water_heater_temperature_is_rounded_and_clamped(
     )
 
 
-async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
+@pytest.mark.parametrize(
+    ("requested", "expected"),
+    [
+        pytest.param(40, 44, id="lower-default-bound"),
+        pytest.param(80, 60, id="upper-default-bound"),
+    ],
+)
+async def test_water_heater_clamps_to_ha_defaults_without_daikin_limits(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_onecta_client: MockOnectaClient,
+    requested: float,
+    expected: float,
 ) -> None:
-    """Do not clamp to Home Assistant defaults when Daikin omits tank limits."""
+    """Clamp targets to the limits advertised when Daikin omits tank limits."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
     coordinator.async_execute_command = _execute_typed_command(
@@ -960,17 +969,17 @@ async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
-            WaterHeaterServiceArgument.TEMPERATURE: 40,
+            WaterHeaterServiceArgument.TEMPERATURE: requested,
         },
         blocking=True,
     )
 
-    assert setpoint.value == 40
+    assert setpoint.value == expected
     mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id,
         point.embedded_id,
         "temperatureControl",
-        40,
+        expected,
         path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
     )
 

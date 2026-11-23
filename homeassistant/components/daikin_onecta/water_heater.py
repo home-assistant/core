@@ -216,6 +216,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             dht.min_value,
             dht.max_value,
             default_step=1,
+            fallback_minimum=self.min_temp,
+            fallback_maximum=self.max_temp,
         )
 
     async def _async_write_tank_temperature(self, target_temperature: float) -> None:
