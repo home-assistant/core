@@ -1,6 +1,6 @@
 """Shelly entity helper."""
 
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial, wraps
 from typing import Any, Concatenate, cast, override
@@ -146,7 +146,7 @@ def async_setup_entry_rpc(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    sensors: Mapping[str, RpcEntityDescription],
+    sensors: Iterable[RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up RPC entities."""
@@ -181,7 +181,7 @@ def async_setup_rpc_attribute_entities(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    sensors: Mapping[str, RpcEntityDescription],
+    sensors: Iterable[RpcEntityDescription],
     sensor_class: Callable,
     *,
     skip_registered: bool = False,
@@ -196,15 +196,15 @@ def async_setup_rpc_attribute_entities(
         assert polling_coordinator
 
     entities = []
-    for sensor_id in sensors:
-        description = sensors[sensor_id]
+    for description in sensors:
+        legacy_ids = description.legacy_ids or {}
         key_instances = [
-            key
-            for component in description.components or (description.key,)
+            (key, legacy_ids.get(component, description.key))
+            for component in description.components
             for key in get_rpc_key_instances(coordinator.device.status, component)
         ]
 
-        for key in key_instances:
+        for key, attribute in key_instances:
             # Filter non-existing sensors
             if description.models and coordinator.model not in description.models:
                 continue
@@ -229,7 +229,7 @@ def async_setup_rpc_attribute_entities(
                 entity_class = get_entity_class(sensor_class, description)
                 domain = entity_class.__module__.split(".")[-1]
                 unique_id = entity_class(
-                    coordinator, key, sensor_id, description
+                    coordinator, key, attribute, description
                 ).unique_id
                 LOGGER.debug("Removing Shelly entity with unique_id: %s", unique_id)
                 async_remove_shelly_entity(hass, domain, unique_id)
@@ -237,13 +237,13 @@ def async_setup_rpc_attribute_entities(
                 if not sleep_period:
                     entities.append(
                         get_entity_class(sensor_class, description)(
-                            polling_coordinator, key, sensor_id, description
+                            polling_coordinator, key, attribute, description
                         )
                     )
             else:
                 entities.append(
                     get_entity_class(sensor_class, description)(
-                        coordinator, key, sensor_id, description
+                        coordinator, key, attribute, description
                     )
                 )
 
@@ -268,7 +268,7 @@ def async_restore_rpc_attribute_entities(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     coordinator: ShellyRpcCoordinator,
-    sensors: Mapping[str, RpcEntityDescription],
+    sensors: Iterable[RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Restore RPC attributes entities."""
@@ -278,6 +278,7 @@ def async_restore_rpc_attribute_entities(
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
+    descriptions = get_rpc_descriptions_by_attribute(sensors)
 
     for entry in entries:
         if entry.domain != domain:
@@ -286,7 +287,7 @@ def async_restore_rpc_attribute_entities(
         key = entry.unique_id.split("-")[-2]
         attribute = entry.unique_id.split("-")[-1]
 
-        if description := sensors.get(attribute):
+        if description := descriptions.get(attribute):
             entities.append(
                 get_entity_class(sensor_class, description)(
                     coordinator, key, attribute, description, entry
@@ -304,7 +305,7 @@ def async_setup_entry_rest(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    sensors: Mapping[str, RestEntityDescription],
+    sensors: Iterable[RestEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for REST sensors."""
@@ -312,8 +313,8 @@ def async_setup_entry_rest(
     assert coordinator
 
     async_add_entities(
-        sensor_class(coordinator, sensor_id, sensors[sensor_id])
-        for sensor_id in sensors
+        sensor_class(coordinator, description.key, description)
+        for description in sensors
     )
 
 
@@ -333,9 +334,10 @@ class BlockEntityDescription(EntityDescription):
 class RpcEntityDescription(EntityDescription):
     """Class to describe a RPC entity."""
 
+    components: tuple[str, ...]
     sub_key: str | None = None
-    # Components the description applies to, defaults to the key
-    components: tuple[str, ...] | None = None
+    # Unique ID attribute per component, keeps unique IDs from before a merge
+    legacy_ids: Mapping[str, str] | None = None
 
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
@@ -346,6 +348,19 @@ class RpcEntityDescription(EntityDescription):
     entity_class: Callable | None = None
     role: str | None = None
     models: set[str] | None = None
+
+
+def get_rpc_descriptions_by_attribute(
+    descriptions: Iterable[RpcEntityDescription],
+) -> dict[str, RpcEntityDescription]:
+    """Return the RPC descriptions by the attribute of their unique IDs."""
+    by_attribute: dict[str, RpcEntityDescription] = {}
+    for description in descriptions:
+        for attribute in (description.key, *(description.legacy_ids or {}).values()):
+            if attribute in by_attribute:
+                raise ValueError(f"Duplicate RPC description attribute: {attribute}")
+            by_attribute[attribute] = description
+    return by_attribute
 
 
 @dataclass(frozen=True)

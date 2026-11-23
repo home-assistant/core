@@ -104,6 +104,7 @@ def websocket_get_configuration(
 
     config_dict["pipeline_entity_id"] = satellite.pipeline_entity_id
     config_dict["vad_entity_id"] = satellite.vad_sensitivity_entity_id
+    config_dict["timer_list_entity_id"] = satellite.timer_list_entity_id
 
     connection.send_result(msg["id"], config_dict)
 
