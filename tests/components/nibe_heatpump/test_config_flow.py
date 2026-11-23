@@ -1,7 +1,9 @@
 """Test the Nibe Heat Pump config flow."""
 
+from http import HTTPStatus
+import re
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from nibe.exceptions import (
     AddressInUseException,
@@ -11,11 +13,16 @@ from nibe.exceptions import (
     WriteException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.nibe_heatpump import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
+
+from . import async_add_entry
 
 MOCK_FLOW_NIBEGW_USERDATA = {
     "model": "F1155",
@@ -33,7 +40,17 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+MOCK_ENTRY_NIBEGW_DATA = {
+    **MOCK_FLOW_NIBEGW_USERDATA,
+    "word_swap": True,
+    "connection_type": "nibegw",
+}
+
+MOCK_ENTRY_MODBUS_DATA = {
+    **MOCK_FLOW_MODBUS_USERDATA,
+    "model": "F1155",
+    "connection_type": "modbus",
+}
 
 
 async def _get_connection_form(
@@ -105,6 +122,7 @@ async def test_modbus_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_modbus_invalid_url(
     hass: HomeAssistant, mock_connection_construct: Mock
 ) -> None:
@@ -127,6 +145,7 @@ async def test_modbus_invalid_url(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) -> None:
     """Test we handle invalid auth."""
     result = await _get_connection_form(hass, "nibegw")
@@ -159,6 +178,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("connection_type", "data"),
     [
@@ -186,6 +206,7 @@ async def test_read_timeout(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("connection_type", "data"),
     [
@@ -213,6 +234,7 @@ async def test_write_timeout(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("connection_type", "data"),
     [
@@ -240,6 +262,7 @@ async def test_unexpected_exception(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("connection_type", "data"),
     [
@@ -270,6 +293,7 @@ async def test_nibegw_invalid_host(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("connection_type", "data"),
     [
@@ -295,3 +319,75 @@ async def test_model_missing_coil(
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("data", "supported"),
+    [
+        pytest.param(MOCK_ENTRY_NIBEGW_DATA, True, id="nibegw"),
+        pytest.param(MOCK_ENTRY_MODBUS_DATA, False, id="modbus"),
+    ],
+)
+async def test_options_flow_supported(
+    hass: HomeAssistant, data: dict[str, Any], supported: bool
+) -> None:
+    """Test the options flow is only offered for NibeGW connections."""
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    assert entry.supports_options is supported
+
+
+async def test_options_flow_log_set(hass: HomeAssistant) -> None:
+    """Test the options flow links to the LOG.SET of a loaded entry."""
+    entry = await async_add_entry(hass, MOCK_ENTRY_NIBEGW_DATA)
+
+    with patch(
+        "homeassistant.components.http.auth.async_sign_path", return_value="/signed"
+    ) as mock_sign_path:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert mock_sign_path.call_args.args[1] == (
+        f"/api/nibe_heatpump/{entry.entry_id}/log_set"
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "log_set"
+    assert result["description_placeholders"] == {
+        "link": '<a href="/signed" target="_blank">LOG.SET</a>',
+    }
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_flow_log_set_link(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the link from an options flow opened by an admin downloads the LOG.SET."""
+    entry = await async_add_entry(hass, MOCK_ENTRY_NIBEGW_DATA)
+    assert await async_setup_component(hass, "config", {})
+
+    resp = await (await hass_client()).post(
+        "/api/config/config_entries/options/flow", json={"handler": entry.entry_id}
+    )
+    assert resp.status == HTTPStatus.OK
+    link = (await resp.json())["description_placeholders"]["link"]
+    url = re.fullmatch(r'<a href="([^"]+)" target="_blank">LOG.SET</a>', link)
+    assert url
+
+    resp = await (await hass_client_no_auth()).get(url[1])
+    assert resp.status == HTTPStatus.OK
+
+
+async def test_options_flow_log_set_unavailable(hass: HomeAssistant) -> None:
+    """Test the options flow shows the LOG.SET as unavailable when not loaded."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_NIBEGW_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "log_set_unavailable"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY

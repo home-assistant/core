@@ -636,3 +636,39 @@ async def test_action_request_rejected_by_client(
     ]
     assert any(f"reason={exception.reason}" in r.getMessage() for r in records)
     assert all(r.levelno == logging.DEBUG for r in records)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_invalid_schedule_poll_keeps_entities_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zone_id: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid schedule is logged, and not retried until it is stale."""
+
+    update_interval = SCAN_INTERVAL_DEFAULT
+
+    with patch.object(
+        Zone,
+        "get_schedule",
+        side_effect=evo_exc.InvalidGetScheduleError("Invalid schedule"),
+    ) as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_awaited()  # the schedules were due to be fetched
+    assert "Failed to update the schedule (keeping any previous one)" in caplog.text
+
+    state = hass.states.get(zone_id)
+    assert state is not None and state.state != STATE_UNAVAILABLE
+
+    # unlike a failed GET, an invalid schedule is not retried at the next poll
+    with patch.object(Zone, "get_schedule") as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_not_awaited()
