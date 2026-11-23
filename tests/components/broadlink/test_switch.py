@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -175,3 +176,19 @@ async def test_custom_ir_switch_setup_works(
         blocking=True,
     )
     assert mock_setup.api.send_data.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("option", "value"),
+    [
+        pytest.param("slots", {"slot_1": "Slot 1"}, id="slots"),
+        pytest.param("timeout", 5, id="timeout"),
+        pytest.param("type", "SP1", id="type"),
+    ],
+)
+def test_removed_option(option: str, value: object) -> None:
+    """Test a removed option is rejected with a clear error."""
+    with pytest.raises(
+        probatio.Invalid, match=f"The '{option}' option has been removed"
+    ):
+        PLATFORM_SCHEMA({"platform": DOMAIN, "mac": "34:ea:34:b4:3d:c4", option: value})

@@ -51,5 +51,11 @@
       'wind_direction': 139,
       'wind_speed': 2.5,
     }),
+    'radar': dict({
+      'dbz': 27.6,
+      'image_url': 'https://opendata-download-radar.smhi.se/api/version/latest/area/sweden/product/comp/latest.png',
+      'precipitation': 1.25,
+      'valid_time': '2026-11-10T18:35:00+00:00',
+    }),
   })
 # ---
