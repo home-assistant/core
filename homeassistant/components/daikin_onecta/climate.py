@@ -40,6 +40,7 @@ from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
 
+LEAVING_WATER_OFFSET = "leavingWaterOffset"
 _DAIKIN_SWING_TO_HA = {"stop": SWING_OFF, "swing": SWING_ON}
 
 PRESET_MODES = (PRESET_BOOST, PRESET_AWAY, PRESET_COMFORT, PRESET_ECO)
