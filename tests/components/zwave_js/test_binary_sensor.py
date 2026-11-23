@@ -186,6 +186,54 @@ def _set_opening_state_metadata_states(
     return updated_state
 
 
+def _add_co2_and_gas_notification_values(node_state: dict[str, Any]) -> dict[str, Any]:
+    """Return a node state with CO2 and Gas alarm notification values added."""
+    updated_state = copy.deepcopy(node_state)
+    for notification_type, property_, property_key, states in (
+        (3, "CO2 Alarm", "Sensor status", {"2": "Carbon dioxide detected"}),
+        (
+            3,
+            "CO2 Alarm",
+            "Maintenance status",
+            {"4": "Replacement required"},
+        ),
+        (3, "CO2 Alarm", "Alarm status", {"3": "Carbon dioxide test"}),
+        (
+            18,
+            "Gas alarm",
+            "Toxic gas status",
+            {"4": "Toxic gas detected"},
+        ),
+        (18, "Gas alarm", "Maintenance status", {"6": "Replacement required"}),
+        (18, "Gas alarm", "Alarm status", {"5": "Gas alarm test"}),
+    ):
+        updated_state["values"].append(
+            {
+                "commandClass": 113,
+                "commandClassName": "Notification",
+                "property": property_,
+                "propertyKey": property_key,
+                "propertyName": property_,
+                "propertyKeyName": property_key,
+                "ccVersion": 8,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": property_key,
+                    "ccSpecific": {"notificationType": notification_type},
+                    "min": 0,
+                    "max": 255,
+                    "states": {"0": "idle", **states},
+                    "stateful": True,
+                    "secret": False,
+                },
+                "value": 0,
+            }
+        )
+    return updated_state
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -1387,6 +1435,177 @@ async def test_smoke_co_notification_sensors(
     assert state.state == STATE_ON, (
         f"Expected smoke diagnostic state to be 'on', got '{state.state}'"
     )
+
+
+@pytest.fixture(name="zcombo_co2_gas_alarm")
+def zcombo_co2_gas_alarm_fixture(
+    client: MagicMock, zcombo_smoke_co_alarm_state: NodeDataType
+) -> Node:
+    """Load ZCombo-G Smoke/CO Alarm node with CO2 and Gas alarm values added."""
+    node = Node(
+        client, _add_co2_and_gas_notification_values(zcombo_smoke_co_alarm_state)
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "entity_category"),
+    [
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_carbon_monoxide_detected",
+            BinarySensorDeviceClass.CO,
+            None,
+            id="co_detected",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_replacement_required_end_of_life",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="co_replacement_required_end_of_life",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_alarm_silenced_2",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="co_alarm_silenced",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_carbon_dioxide_detected",
+            BinarySensorDeviceClass.GAS,
+            None,
+            id="co2_detected",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_replacement_required",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="co2_replacement_required",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_carbon_dioxide_test",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="co2_test",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_toxic_gas_detected",
+            BinarySensorDeviceClass.GAS,
+            None,
+            id="gas_detected",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_replacement_required_2",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="gas_replacement_required",
+        ),
+        pytest.param(
+            "binary_sensor.zcombo_g_smoke_co_alarm_gas_alarm_test",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="gas_alarm_test",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("zcombo_co2_gas_alarm", "integration")
+async def test_co_co2_gas_notification_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+    entity_category: EntityCategory | None,
+) -> None:
+    """Test CO, CO2 and Gas alarm notification sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is entity_category
+    assert entity_entry.disabled_by is None
+
+
+@pytest.mark.usefixtures("zcombo_co2_gas_alarm", "integration")
+async def test_co_co2_gas_notification_sensors_count(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that only non-idle states create CO, CO2 and Gas alarm entities."""
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.domain == BINARY_SENSOR_DOMAIN
+                and any(
+                    f"-113-0-{property_}-" in entry.unique_id
+                    for property_ in ("CO Alarm", "CO2 Alarm", "Gas alarm")
+                )
+            ]
+        )
+        == 9
+    )
+
+
+@pytest.mark.parametrize(
+    ("property_", "property_key", "new_value", "entity_id"),
+    [
+        pytest.param(
+            "CO2 Alarm",
+            "Sensor status",
+            2,
+            "binary_sensor.zcombo_g_smoke_co_alarm_carbon_dioxide_detected",
+            id="co2_detected",
+        ),
+        pytest.param(
+            "Gas alarm",
+            "Toxic gas status",
+            4,
+            "binary_sensor.zcombo_g_smoke_co_alarm_toxic_gas_detected",
+            id="gas_detected",
+        ),
+    ],
+)
+async def test_co2_gas_notification_sensors_state_update(
+    hass: HomeAssistant,
+    zcombo_co2_gas_alarm: Node,
+    integration: MockConfigEntry,
+    property_: str,
+    property_key: str,
+    new_value: int,
+    entity_id: str,
+) -> None:
+    """Test CO2 and Gas alarm notification sensors turn on for their state."""
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    zcombo_co2_gas_alarm.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": zcombo_co2_gas_alarm.node_id,
+                "args": {
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
+                    "endpoint": 0,
+                    "property": property_,
+                    "propertyKey": property_key,
+                    "newValue": new_value,
+                    "prevValue": 0,
+                    "propertyName": property_,
+                    "propertyKeyName": property_key,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_hoppe_ehandle_connectsense(
