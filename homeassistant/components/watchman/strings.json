@@ -81,7 +81,7 @@
   },
   "exceptions": {
     "api_error": {
-      "message": "Failed to fetch data from API: {message}"
+      "message": "Failed to fetch data from the Kingspan API."
     },
     "credentials_invalid": {
       "message": "The provided Kingspan credentials are invalid."

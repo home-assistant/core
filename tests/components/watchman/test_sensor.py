@@ -138,8 +138,8 @@ async def test_current_energy_usage(
         ),
         (
             KingspanAPIError("api-test error", KingspanErrorCode.CANNOT_CONNECT),
-            "api-test error",
-            None,
+            "Failed to fetch data from the Kingspan API",
+            "api_error",
         ),
     ],
 )
@@ -167,8 +167,8 @@ async def test_sensor_exceptions(
             await coordinator._async_update_data()
 
     assert str(exc.value).endswith(expected_msg)
-    if translation_key:
-        assert exc.value.translation_key == translation_key
+    assert exc.value.translation_key == translation_key
+    assert exc.value.__cause__ is side_effect
 
 
 @pytest.mark.parametrize(

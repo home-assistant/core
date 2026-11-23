@@ -128,7 +128,6 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"message": err.message},
             ) from err
 
         return results
