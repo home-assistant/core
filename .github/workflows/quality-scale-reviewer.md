@@ -69,7 +69,7 @@ safe-outputs:
   add-comment:
     max: 1
     target: "${{ needs.prepare.outputs.pr_number }}"
-    # Re-runs (reopen, manual dispatch) minimize the previous run's comment.
+    # Re-runs (new commits, reopen, manual dispatch) minimize the previous run's comment.
     hide-older-comments: true
   needs:
     - prepare
@@ -210,8 +210,11 @@ jobs:
           ## Quality scale review
 
           ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
+# One run per pull request: a newer push cancels the review of an older one. The
+# pull request number is not known here for forks, its head repository and
+# branch identify it.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 steps:
