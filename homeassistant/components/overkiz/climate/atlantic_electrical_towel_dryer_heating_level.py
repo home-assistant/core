@@ -19,6 +19,7 @@ from typing import Any, Self, override
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -66,6 +67,7 @@ class TowelDryerExtraStoredData(ExtraStoredData):
 
     assumed_level: str | None
     boost_until: datetime | None
+    override_pending: bool
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -73,6 +75,7 @@ class TowelDryerExtraStoredData(ExtraStoredData):
         return {
             "assumed_level": self.assumed_level,
             "boost_until": self.boost_until.isoformat() if self.boost_until else None,
+            "override_pending": self.override_pending,
         }
 
     @classmethod
@@ -81,11 +84,13 @@ class TowelDryerExtraStoredData(ExtraStoredData):
         try:
             assumed_level = restored["assumed_level"]
             boost_until = restored["boost_until"]
+            override_pending = restored["override_pending"]
         except KeyError:
             return None
         return cls(
             assumed_level=assumed_level,
             boost_until=dt_util.parse_datetime(boost_until) if boost_until else None,
+            override_pending=override_pending,
         )
 
 
@@ -110,12 +115,17 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(
-            TEMPERATURE_SENSOR_DEVICE_INDEX
-        )
+        self._lock = asyncio.Lock()
         self._boost_until: datetime | None = None
         self._unsub_boost_end: CALLBACK_TYPE | None = None
+        # Level the device is on or returns to, while the gateway reports a stale one
         self._assumed_level: str | None = None
+        # A level was sent and the gateway has not reported it yet
+        self._level_pending = False
+        # A boost was started and has not been cancelled, even if it ran out
+        self._override_pending = False
+        # The gateway reported the timer of the boost started from Home Assistant
+        self._boost_timer_seen = False
 
     def _state(self, name: str) -> Any:
         """Return the raw value of a device state, or None."""
@@ -143,18 +153,23 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         return self._transitory_timer not in (None, TIMER_CANCELLED, TIMER_LEVEL_SET)
 
     @property
+    def _reported_level(self) -> str:
+        """Return the heating level reported by the gateway."""
+        return str(self._state(OverkizState.IO_TARGET_HEATING_LEVEL))
+
+    @property
     def _level(self) -> str:
         """Return the heating level the device is on."""
-        if (
-            self._assumed_level is not None
-            and self._transitory_timer != TIMER_LEVEL_SET
+        if self._assumed_level is not None and (
+            self._level_pending or self._transitory_timer != TIMER_LEVEL_SET
         ):
             return self._assumed_level
-        return str(self._state(OverkizState.IO_TARGET_HEATING_LEVEL))
+        return self._reported_level
 
     def _clear_boost(self) -> None:
         """Forget the running boost."""
         self._boost_until = None
+        self._boost_timer_seen = False
         if self._unsub_boost_end:
             self._unsub_boost_end()
             self._unsub_boost_end = None
@@ -166,44 +181,74 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         self._boost_until = None
         self.async_write_ha_state()
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Reconcile the tracked levels with the gateway."""
+        if self._transitory_timer != TIMER_LEVEL_SET:
+            if self._boost_until is not None:
+                self._boost_timer_seen = True
+        elif self._boost_timer_seen:
+            # The boost was cancelled or replaced by another client
+            self._clear_boost()
+            self._override_pending = False
+            self._level_pending = False
+            self._assumed_level = None
+        elif self._level_pending:
+            if self._reported_level == self._assumed_level:
+                self._level_pending = False
+                self._assumed_level = None
+        elif not self._override_pending:
+            self._assumed_level = None
+        super()._handle_coordinator_update()
+
     async def _async_set_level(self, level: str) -> None:
         """Set a heating level, cancelling a boost first."""
-        self._assumed_level = level
-        if (
-            self._boost_end is not None
-            or self._boost_override
-            or self._state(OverkizState.IO_TARGET_HEATING_LEVEL)
-            == OverkizCommandParam.BOOST
-        ):
+        async with self._lock:
+            if (
+                self._override_pending
+                or self._boost_end is not None
+                or self._boost_override
+                or self._reported_level == OverkizCommandParam.BOOST
+            ):
+                await self.executor.async_execute_command(
+                    OverkizCommand.CANCEL_HEATING_LEVEL, OverkizCommandParam.BOOST
+                )
+                self._override_pending = False
+                await asyncio.sleep(CANCEL_SETTLE_DELAY)
             await self.executor.async_execute_command(
-                OverkizCommand.CANCEL_HEATING_LEVEL, OverkizCommandParam.BOOST
+                OverkizCommand.SET_HEATING_LEVEL, level
             )
-            await asyncio.sleep(CANCEL_SETTLE_DELAY)
-        self._clear_boost()
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_HEATING_LEVEL, level
-        )
+            self._clear_boost()
+            self._assumed_level = level
+            self._level_pending = True
+            self.async_write_ha_state()
 
     async def _async_start_boost(self) -> None:
         """Start a timed boost."""
-        level = self._state(OverkizState.IO_TARGET_HEATING_LEVEL)
-        # The device returns to this level after the boost
-        if (
-            self._transitory_timer == TIMER_LEVEL_SET
-            and level != OverkizCommandParam.BOOST
-        ):
-            self._assumed_level = level
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_HEATING_LEVEL_WITH_TIMER,
-            OverkizCommandParam.BOOST,
-            int(BOOST_DURATION.total_seconds() // 60),
-        )
-        self._clear_boost()
-        self._boost_until = dt_util.utcnow() + BOOST_DURATION
-        self._unsub_boost_end = async_call_later(
-            self.hass, BOOST_DURATION, self._boost_ended
-        )
-        self.async_write_ha_state()
+        async with self._lock:
+            # The device returns to this level after the boost
+            return_level = self._assumed_level
+            if (
+                return_level is None
+                and self._transitory_timer == TIMER_LEVEL_SET
+                and self._reported_level != OverkizCommandParam.BOOST
+            ):
+                return_level = self._reported_level
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_HEATING_LEVEL_WITH_TIMER,
+                OverkizCommandParam.BOOST,
+                int(BOOST_DURATION.total_seconds() // 60),
+            )
+            self._clear_boost()
+            self._assumed_level = return_level
+            self._level_pending = False
+            self._override_pending = True
+            self._boost_until = dt_util.utcnow() + BOOST_DURATION
+            self._unsub_boost_end = async_call_later(
+                self.hass, BOOST_DURATION, self._boost_ended
+            )
+            self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -214,6 +259,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         ) is None:
             return
         self._assumed_level = data.assumed_level
+        self._override_pending = data.override_pending
         if data.boost_until is not None and data.boost_until > dt_util.utcnow():
             self._boost_until = data.boost_until
             self._unsub_boost_end = async_call_later(
@@ -225,7 +271,9 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     def extra_restore_state_data(self) -> TowelDryerExtraStoredData:
         """Return the boost tracking to restore."""
         return TowelDryerExtraStoredData(
-            assumed_level=self._assumed_level, boost_until=self._boost_until
+            assumed_level=self._assumed_level,
+            boost_until=self._boost_until,
+            override_pending=self._override_pending,
         )
 
     @override
@@ -302,9 +350,13 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     @override
     def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.temperature_device is None:
+        # Linked devices are replaced when the coordinator reconnects
+        temperature_device = self.executor.linked_device(
+            TEMPERATURE_SENSOR_DEVICE_INDEX
+        )
+        if temperature_device is None:
             return None
-        state = self.temperature_device.states.get(OverkizState.CORE_TEMPERATURE)
+        state = temperature_device.states.get(OverkizState.CORE_TEMPERATURE)
         if state is None or state.value is None:
             return None
         return state.value_as_float
@@ -312,6 +364,8 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, kwargs[ATTR_TEMPERATURE]
         )

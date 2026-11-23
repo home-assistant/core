@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
+from pyoverkiz.exceptions import OverkizError
 from pyoverkiz.models import Event
 import pytest
 from pytest_homeassistant.common import (
@@ -27,6 +28,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, restore_state as rs
 from homeassistant.util import dt as dt_util
 
@@ -619,10 +621,9 @@ async def test_towel_dryer_heating_level_set_temperature(
     )
 
 
-@pytest.mark.usefixtures("no_cancel_settle_delay")
+@pytest.mark.usefixtures("freezer", "no_cancel_settle_delay")
 async def test_towel_dryer_heating_level_boost(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
@@ -655,6 +656,7 @@ async def test_towel_dryer_heating_level_boost(
     assert extra_data.as_dict() == {
         "assumed_level": "eco",
         "boost_until": state.attributes["boost_end"],
+        "override_pending": True,
     }
 
     mock_client.execute_action_group.reset_mock()
@@ -913,7 +915,11 @@ async def test_towel_dryer_heating_level_restore_boost(
         [
             (
                 State(TOWEL_DRYER_HEATING_LEVEL.entity_id, "heat"),
-                {"assumed_level": "eco", "boost_until": boost_until.isoformat()},
+                {
+                    "assumed_level": "eco",
+                    "boost_until": boost_until.isoformat(),
+                    "override_pending": True,
+                },
             )
         ],
     )
@@ -970,3 +976,208 @@ async def test_towel_dryer_heating_level_restore_invalid_data(
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "eco"
     assert state.attributes["boost_end"] is None
+
+
+def towel_dryer_states_event(level: str, timer: int) -> Event:
+    """Return a gateway event with the heating level and the transitory timer."""
+    return device_state_changed_event(
+        device_url=TOWEL_DRYER_HEATING_LEVEL.device_url,
+        device_states=[
+            {"name": OverkizState.IO_TARGET_HEATING_LEVEL, "type": 3, "value": level},
+            {
+                "name": OverkizState.IO_TIMER_FOR_TRANSITORY_STATE,
+                "type": 1,
+                "value": timer,
+            },
+        ],
+    )
+
+
+async def test_towel_dryer_heating_level_boost_cancelled_elsewhere(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a boost cancelled by another client is no longer shown."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "boost"},
+        blocking=True,
+    )
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("comfort", 60)]
+    )
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "boost"
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("off", 65535)]
+    )
+
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes["boost_end"] is None
+
+
+@pytest.mark.usefixtures("no_cancel_settle_delay")
+async def test_towel_dryer_heating_level_cancel_after_boost_ran_out(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the boost is cancelled though the gateway never reported its timer."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "boost"},
+        blocking=True,
+    )
+    freezer.tick(timedelta(minutes=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_client.execute_action_group.reset_mock()
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "eco"},
+        blocking=True,
+    )
+
+    assert sent_commands(mock_client) == [
+        ("cancelHeatingLevel", ["boost"]),
+        ("setHeatingLevel", ["eco"]),
+    ]
+
+
+@pytest.mark.usefixtures("no_cancel_settle_delay")
+async def test_towel_dryer_heating_level_set_level_fails(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the boost is still tracked when the new level can't be sent."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "boost"},
+        blocking=True,
+    )
+
+    mock_client.execute_action_group.side_effect = OverkizError("Server error")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {
+                "entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id,
+                "hvac_mode": HVACMode.OFF,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_PRESET_MODE] == "boost"
+    assert state.attributes["boost_end"] is not None
+
+
+async def test_towel_dryer_heating_level_boost_after_pending_level(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a level not yet reported by the gateway is shown and returned to."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "comfort"},
+        blocking=True,
+    )
+    # The gateway still reports eco
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("eco", 65535)]
+    )
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "comfort"
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "boost"},
+        blocking=True,
+    )
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("eco", 60)]
+    )
+    freezer.tick(timedelta(minutes=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "comfort"
+
+
+async def test_towel_dryer_heating_level_confirmed_level(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the gateway level is followed once it confirms the level sent."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id, ATTR_PRESET_MODE: "comfort"},
+        blocking=True,
+    )
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("comfort", 65535)]
+    )
+    # A change made in another client
+    await async_deliver_events(
+        hass, freezer, mock_client, [towel_dryer_states_event("frostprotection", 65535)]
+    )
+
+    state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "frost_protection"
+
+
+async def test_towel_dryer_heating_level_set_temperature_and_hvac_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the hvac mode is applied before the target temperature."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_HEATING_LEVEL.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": TOWEL_DRYER_HEATING_LEVEL.entity_id,
+            ATTR_TEMPERATURE: 22.0,
+            "hvac_mode": HVACMode.OFF,
+        },
+        blocking=True,
+    )
+
+    assert sent_commands(mock_client) == [
+        ("setHeatingLevel", ["off"]),
+        ("setTargetTemperature", [22.0]),
+    ]
