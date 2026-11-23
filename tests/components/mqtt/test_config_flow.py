@@ -1706,7 +1706,16 @@ async def test_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
+    # Simulate the certificate files cannot be loaded
+    mock_try_connection.side_effect = FileNotFoundError(2, "No such file")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_load_certificates"}
+
     # Simulate re-auth fails
+    mock_try_connection.side_effect = None
     mock_try_connection.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -2866,6 +2875,43 @@ async def test_certificate_file_path_settings_invalid(
     assert result["errors"] == {"base": error}
     mock_try_connection.assert_not_called()
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+async def test_certificate_files_cannot_be_loaded(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+) -> None:
+    """Test an error is shown when the certificates cannot be loaded to connect."""
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # The files were replaced after they were checked
+    mock_try_connection.side_effect = FileNotFoundError(2, "No such file")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_load_certificates"}
+
+    mock_try_connection.side_effect = None
+    mock_try_connection.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
     )

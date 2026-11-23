@@ -4281,13 +4281,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 reauth_entry.data.get(CONF_PASSWORD), substituted_used_data
             )
             new_entry_data = {**reauth_entry.data, **substituted_used_data}
-            if await self.hass.async_add_executor_job(
-                try_connection,
-                new_entry_data,
-            ):
-                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
-
-            errors["base"] = "invalid_auth"
+            try:
+                can_connect = await self.hass.async_add_executor_job(
+                    try_connection,
+                    new_entry_data,
+                )
+            except OSError:
+                errors["base"] = "cannot_load_certificates"
+            else:
+                if can_connect:
+                    return self.async_update_and_abort(
+                        reauth_entry, data=new_entry_data
+                    )
+                errors["base"] = "invalid_auth"
 
         schema = self.add_suggested_values_to_schema(
             REAUTH_SCHEMA,
@@ -5441,10 +5447,16 @@ async def async_validate_broker_settings(
         update_password_from_user_input(
             entry_config.get(CONF_PASSWORD), entry_config_update
         )
-    if await hass.async_add_executor_job(
-        try_connection,
-        entry_config_update,
-    ):
+    try:
+        can_connect = await hass.async_add_executor_job(
+            try_connection,
+            entry_config_update,
+        )
+    except OSError:
+        # The certificate files can be replaced after they were checked
+        errors["base"] = "cannot_load_certificates"
+        return False
+    if can_connect:
         return True
 
     errors["base"] = "cannot_connect"
@@ -5486,7 +5498,7 @@ def check_certicate_chain(config: dict[str, Any]) -> str | None:
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)
-        except SSLError:
+        except OSError:
             return "bad_client_cert_key"
     # try to load the custom CA file
     if ca_cert is None:
@@ -5494,6 +5506,6 @@ def check_certicate_chain(config: dict[str, Any]) -> str | None:
 
     try:
         context.load_verify_locations(ca_cert)
-    except SSLError:
+    except OSError:
         return "bad_certificate"
     return None

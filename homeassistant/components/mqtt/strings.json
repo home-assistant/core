@@ -16,6 +16,7 @@
       "bad_will": "Invalid will topic",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_load_certificates": "The certificates cannot be loaded. Check that the certificate files exist and are readable, and that the private key matches the client certificate",
       "cannot_read_certificate_file": "The custom CA certificate file cannot be read, check the file path",
       "cannot_read_client_cert_file": "The client certificate file cannot be read, check the file path",
       "cannot_read_client_key_file": "The private key file cannot be read, check the file path",
