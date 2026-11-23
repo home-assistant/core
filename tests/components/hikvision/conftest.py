@@ -1,6 +1,9 @@
 """Common fixtures for the Hikvision tests."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
+from dataclasses import dataclass, field
+import threading
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -144,3 +147,52 @@ def mock_hik_nvr(mock_hikcamera: MagicMock) -> MagicMock:
     camera.current_event_states = {}
     camera.get_event_triggers.return_value = {"VMD": [1, 2]}
     return mock_hikcamera
+
+
+@dataclass
+class BlockingSnapshot:
+    """A get_snapshot that waits to be released, as a slow camera does."""
+
+    release: threading.Event = field(default_factory=threading.Event)
+    ended: threading.Event = field(default_factory=threading.Event)
+    taken: list[int] = field(default_factory=list)
+    error: Exception | None = None
+
+    def __call__(self, channel: int) -> bytes:
+        """Take a picture of the channel, once released."""
+        self.taken.append(channel)
+        try:
+            assert self.release.wait(5)
+            if self.error is not None:
+                raise self.error
+            return f"picture {channel}".encode()
+        finally:
+            self.ended.set()
+
+    async def async_wait_started(self, count: int = 1) -> None:
+        """Wait for that many requests to be sent."""
+        async with asyncio.timeout(5):
+            while len(self.taken) < count:
+                await asyncio.sleep(0)
+
+    async def async_wait_ended(self) -> None:
+        """Wait for the request to end, even with nobody waiting for its answer."""
+        await self._async_wait_for(self.ended)
+
+    @staticmethod
+    async def _async_wait_for(event: threading.Event) -> None:
+        async with asyncio.timeout(5):
+            while not event.is_set():
+                await asyncio.sleep(0)
+
+
+@pytest.fixture
+def blocking_snapshot(mock_hikcamera: MagicMock) -> BlockingSnapshot:
+    """Make the camera answer a picture request only once released.
+
+    Not a mock: the test harness runs a mock in the event loop, and this must run
+    in the executor.
+    """
+    snapshot = BlockingSnapshot()
+    mock_hikcamera.return_value.get_snapshot = snapshot
+    return snapshot

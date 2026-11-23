@@ -1,13 +1,15 @@
 """Support for Hikvision cameras."""
 
+import asyncio
 from typing import override
 
-from pyhik.hikvision import VideoChannel
+from pyhik.hikvision import HikCamera, VideoChannel
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.async_ import wait_shared_future
 
 from . import HikvisionConfigEntry
 from .entity import HikvisionEntity
@@ -36,12 +38,52 @@ async def async_setup_entry(
 
     entities: list[HikvisionCamera] = []
     for channel in channels:
-        entities.append(HikvisionCamera(hass, entry, channel))
+        snapshot = _SharedSnapshot(hass, data.camera, channel.id)
+        entities.append(HikvisionCamera(hass, entry, channel, snapshot))
         # Disabled by default: not every channel has a substream
         entities.append(
-            HikvisionCamera(hass, entry, channel, stream_type=STREAM_TYPE_SUB)
+            HikvisionCamera(hass, entry, channel, snapshot, stream_type=STREAM_TYPE_SUB)
         )
     async_add_entities(entities)
+
+
+class _SharedSnapshot:
+    """The snapshot of a channel, shared by its main stream and substream cameras.
+
+    pyHik takes the picture from the main stream for both. The device refuses a
+    second picture request while it answers one, with a 503: a request that comes
+    while one is sent waits for it, and gets the same picture.
+    """
+
+    def __init__(self, hass: HomeAssistant, camera: HikCamera, channel: int) -> None:
+        """Initialize the snapshot of a channel."""
+        self._hass = hass
+        self._camera = camera
+        self._channel = channel
+        self._pending: asyncio.Future[bytes | None] | None = None
+
+    async def async_get(self) -> bytes | None:
+        """Return a picture, from the request being sent if there is one."""
+        pending = self._pending
+        # A request that ended is not reused, even before _ended has run: its
+        # picture, or its error, is from before this call.
+        if pending is None or pending.done():
+            pending = self._pending = self._hass.async_add_executor_job(
+                self._camera.get_snapshot, self._channel
+            )
+            pending.add_done_callback(self._ended)
+        # Not awaited directly: a caller that is cancelled leaves the request to the
+        # others, and an error no caller is left for is not reported.
+        return await wait_shared_future(pending)
+
+    def _ended(self, pending: asyncio.Future[bytes | None]) -> None:
+        """Let the next request be sent."""
+        if self._pending is pending:
+            # Not one started since.
+            self._pending = None
+        if not pending.cancelled():
+            # Retrieved, also when every caller was cancelled.
+            pending.exception()
 
 
 class HikvisionCamera(HikvisionEntity, Camera):
@@ -54,11 +96,13 @@ class HikvisionCamera(HikvisionEntity, Camera):
         hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         channel: VideoChannel,
+        snapshot: _SharedSnapshot,
         stream_type: int = STREAM_TYPE_MAIN,
     ) -> None:
         """Initialize the camera."""
         super().__init__(hass, entry, channel.id)
         self._video_channel = channel
+        self._snapshot = snapshot
         self._stream_type = stream_type
         if stream_type == STREAM_TYPE_MAIN:
             # The main stream is named after its device
@@ -83,9 +127,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
     ) -> bytes | None:
         """Return a still image from the camera."""
         try:
-            return await self.hass.async_add_executor_job(
-                self._camera.get_snapshot, self._video_channel.id
-            )
+            return await self._snapshot.async_get()
         except Exception as err:
             raise HomeAssistantError(
                 f"Error getting image from {self._video_channel.name}: {err}"
