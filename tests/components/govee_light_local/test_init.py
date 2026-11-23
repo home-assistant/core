@@ -458,6 +458,9 @@ async def test_reconfigured_device_answers_at_new_ip(
     assert entity_registry.async_get("light.h615a") is not None
     assert hass.states.get("light.h615a") is not None
     assert coordinator.discovery_queue == set()
+    # Draining the probe must not make the controller forget the lamp.
+    assert coordinator.devices == [manual_device]
+    assert manual_device.is_manual is True
 
 
 async def _async_setup_manual_and_discovered(
@@ -1004,6 +1007,8 @@ async def test_known_lamp_adopted_when_answering_at_added_address(
     assert entity_entry.config_subentry_id == subentry_id
     assert entity_registry.async_get("light.h615b_2") is None
     assert coordinator.discovery_queue == set()
+    # Draining the probe must not make the controller forget the lamp.
+    assert coordinator.devices == [device]
 
 
 async def test_stale_cached_lamp_not_adopted_at_added_address(

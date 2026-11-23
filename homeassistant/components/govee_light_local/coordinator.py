@@ -291,7 +291,14 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             ):
                 desired.add(ip)
         for ip in self.discovery_queue - desired:
-            self.remove_device_from_discovery_queue(ip)
+            # The library also forgets a manual lamp cached at a dequeued
+            # address, which would orphan its entity.
+            if (device := self.get_device_by_ip(ip)) is not None and device.is_manual:
+                device.is_manual = False
+                self.remove_device_from_discovery_queue(ip)
+                device.is_manual = True
+            else:
+                self.remove_device_from_discovery_queue(ip)
         for ip in desired - self.discovery_queue:
             self.add_device_to_discovery_queue(ip)
 

@@ -142,8 +142,21 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
         return True
 
     mock_api.add_device_to_discovery_queue = MagicMock(side_effect=_add_to_queue)
+
+    # Like the library, dequeuing an address also forgets a manual lamp cached
+    # there.
+    def _remove_from_queue(ip: str) -> bool:
+        if ip not in discovery_queue:
+            return False
+        discovery_queue.discard(ip)
+        device = mock_api.get_device_by_ip(ip)
+        if isinstance(device, GoveeDevice) and device.is_manual:
+            mock_api._registry._discovered_devices.pop(device.fingerprint, None)
+            mock_api.devices.remove(device)
+        return True
+
     mock_api.remove_device_from_discovery_queue = MagicMock(
-        side_effect=discovery_queue.discard
+        side_effect=_remove_from_queue
     )
     type(mock_api).discovery_queue = PropertyMock(side_effect=lambda: discovery_queue)
 
