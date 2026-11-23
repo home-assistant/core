@@ -4099,6 +4099,8 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+      <CoverEntityCapabilityAttribute.TILT_END_ANGLE: 'tilt_end_angle'>: 60,
+      <CoverEntityCapabilityAttribute.TILT_START_ANGLE: 'tilt_start_angle'>: -90,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
@@ -4139,6 +4141,8 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
+      <CoverEntityCapabilityAttribute.TILT_END_ANGLE: 'tilt_end_angle'>: 60,
+      <CoverEntityCapabilityAttribute.TILT_START_ANGLE: 'tilt_start_angle'>: -90,
     }),
     'context': <ANY>,
     'entity_id': 'cover.garden_pergola',
