@@ -27,6 +27,20 @@ def _get_obj_holidays_and_language(
     country_options: dict[str, Any],
 ) -> tuple[HolidayBase, str]:
     """Get the object for the requested country and year."""
+    # Without years, no holidays are calculated, but the metadata is available
+    country_data = country_holidays(country)
+    supported_languages = country_data.supported_languages
+    if language == "en":
+        language = next(
+            (lang for lang in supported_languages if lang.startswith("en")), language
+        )
+    if (
+        supported_languages
+        and language not in supported_languages
+        and (default_language := country_data.default_language)
+    ):
+        language = default_language
+
     obj_holidays = country_holidays(
         country,
         subdiv=province,
@@ -35,33 +49,6 @@ def _get_obj_holidays_and_language(
         categories=selected_categories,
         **country_options,
     )
-    if language == "en":
-        for lang in obj_holidays.supported_languages:
-            if lang.startswith("en"):
-                obj_holidays = country_holidays(
-                    country,
-                    subdiv=province,
-                    years={dt_util.now().year, dt_util.now().year + 1},
-                    language=lang,
-                    categories=selected_categories,
-                    **country_options,
-                )
-                language = lang
-                break
-    if (
-        obj_holidays.supported_languages
-        and language not in obj_holidays.supported_languages
-        and (default_language := obj_holidays.default_language)
-    ):
-        obj_holidays = country_holidays(
-            country,
-            subdiv=province,
-            years={dt_util.now().year, dt_util.now().year + 1},
-            language=default_language,
-            categories=selected_categories,
-            **country_options,
-        )
-        language = default_language
 
     return (obj_holidays, language)
 
