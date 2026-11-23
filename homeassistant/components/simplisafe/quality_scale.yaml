@@ -40,7 +40,7 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: todo
-    comment: Same reason as discovery.
+    comment: Since discovery is not yet implemented, this rule is not complete either.
   discovery:
     status: todo
     comment: DHCP discovery is declared in manifest.json, but config_flow.py does not implement the required async_step_dhcp handler.
@@ -56,7 +56,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default:
     status: todo
-    comment: No entities are disabled by default.  Several could be, but that is a conversation probably best had during review.
+    comment: No entities are disabled by default.
   entity-translations:
     status: todo
     comment: Some entities are translated, but not all.
