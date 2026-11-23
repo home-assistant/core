@@ -47,6 +47,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.TTS,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -55,7 +56,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.TTS,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]

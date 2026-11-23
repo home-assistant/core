@@ -14,13 +14,10 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -28,7 +25,7 @@ from homeassistant.components.eheimdigital.const import (
     HEATER_BIO_MODE,
     HEATER_SMART_MODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -134,10 +131,10 @@ async def test_set_preset_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
-                ATTR_PRESET_MODE: preset_mode,
+                TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ClimateServiceArgument.PRESET_MODE: preset_mode,
             },
             blocking=True,
         )
@@ -146,10 +143,10 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
-            ATTR_PRESET_MODE: preset_mode,
+            TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
         },
         blocking=True,
     )
@@ -177,10 +174,10 @@ async def test_set_temperature(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
-                ATTR_TEMPERATURE: 26.0,
+                TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ClimateServiceArgument.TEMPERATURE: 26.0,
             },
             blocking=True,
         )
@@ -189,8 +186,11 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater", ATTR_TEMPERATURE: 26.0},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+            ClimateServiceArgument.TEMPERATURE: 26.0,
+        },
         blocking=True,
     )
 
@@ -222,10 +222,10 @@ async def test_set_hvac_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
-                ATTR_HVAC_MODE: hvac_mode,
+                TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+                ClimateServiceArgument.HVAC_MODE: hvac_mode,
             },
             blocking=True,
         )
@@ -234,10 +234,10 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.mock_aquarium_mock_heater",
-            ATTR_HVAC_MODE: hvac_mode,
+            TargetKey.ENTITY_ID: "climate.mock_aquarium_mock_heater",
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
         },
         blocking=True,
     )

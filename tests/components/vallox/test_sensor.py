@@ -82,8 +82,8 @@ async def test_remaining_time_for_filter(
 @pytest.mark.parametrize(
     ("metrics", "expected_state"),
     [
-        pytest.param(METRICS_PROFILE_AWAY, "Away", id="away"),
-        pytest.param(METRICS_PROFILE_BOOST, "Boost", id="boost"),
+        pytest.param(METRICS_PROFILE_AWAY, "away", id="away"),
+        pytest.param(METRICS_PROFILE_BOOST, "boost", id="boost"),
         pytest.param(METRICS_PROFILE_UNKNOWN, STATE_UNKNOWN, id="unknown_profile"),
     ],
 )
@@ -129,10 +129,10 @@ async def test_fan_speed_sensors(
 @pytest.mark.parametrize(
     ("metrics", "expected_state"),
     [
-        pytest.param({"A_CYC_CELL_STATE": 0}, "Heat Recovery", id="heat_recovery"),
-        pytest.param({"A_CYC_CELL_STATE": 1}, "Cool Recovery", id="cool_recovery"),
-        pytest.param({"A_CYC_CELL_STATE": 2}, "Bypass", id="bypass"),
-        pytest.param({"A_CYC_CELL_STATE": 3}, "Defrosting", id="defrosting"),
+        pytest.param({"A_CYC_CELL_STATE": 0}, "heat_recovery", id="heat_recovery"),
+        pytest.param({"A_CYC_CELL_STATE": 1}, "cool_recovery", id="cool_recovery"),
+        pytest.param({"A_CYC_CELL_STATE": 2}, "bypass", id="bypass"),
+        pytest.param({"A_CYC_CELL_STATE": 3}, "defrosting", id="defrosting"),
         pytest.param({"A_CYC_CELL_STATE": 4}, STATE_UNKNOWN, id="unknown_value"),
         pytest.param({"A_CYC_CELL_STATE": None}, STATE_UNKNOWN, id="missing"),
     ],

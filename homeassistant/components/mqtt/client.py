@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
@@ -332,7 +332,8 @@ class Subscription:
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
     qos: int
     encoding: str | None
-    subscription_id: int
+    # Excluded from comparison so a subscription matches its restored copy
+    subscription_id: int = field(compare=False)
 
 
 class MqttClientSetup:
@@ -1033,14 +1034,30 @@ class MQTT:
 
     @callback
     def _async_remove(self, subscription: Subscription) -> None:
-        """Remove subscription."""
+        """Remove subscription from the current client.
+
+        The client is replaced when the config entry is reloaded,
+        so the subscription may be tracked by another instance.
+        """
+        mqtt_data = self._mqtt_data
+        if subscription in mqtt_data.subscriptions_to_restore:
+            # Not restored on the current client yet
+            mqtt_data.subscriptions_to_restore.remove(subscription)
+            return
+        client: MQTT = mqtt_data.client
+        client._async_remove_tracked_subscription(subscription)
+
+    @callback
+    def _async_remove_tracked_subscription(self, subscription: Subscription) -> None:
+        """Remove a subscription tracked by this client."""
         self._async_untrack_subscription(subscription)
         self._matching_subscriptions.cache_clear()
         if subscription in self._retained_topics:
             del self._retained_topics[subscription]
         # Only unsubscribe if currently connected
-        if self.connected:
-            self._async_unsubscribe(subscription.topic, subscription.subscription_id)
+        if not self.connected:
+            return
+        self._async_unsubscribe(subscription.topic, subscription.subscription_id)
 
     @callback
     def _async_unsubscribe(self, topic: str, subscription_id: int) -> None:

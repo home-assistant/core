@@ -3,9 +3,8 @@
 import logging
 from typing import override
 
-from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
-from pycasperglow import CasperGlow
+from pycasperglow import CasperGlow, CasperGlowError
 
 from homeassistant.components.bluetooth import (
     BluetoothChange,
@@ -82,7 +81,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 
         try:
             await self._async_poll_data(self._last_service_info)
-        except BleakError as exc:
+        except CasperGlowError as exc:
             if self.last_poll_successful:
                 _LOGGER.info("%s is unavailable: %s", self.title, exc)
                 self.last_poll_successful = False

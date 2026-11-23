@@ -4,7 +4,8 @@ import logging
 
 from tuya_sharing import Manager
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -65,6 +66,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> None
     # the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
+
+    async def _async_stop_mq(event: Event) -> None:
+        # Config entries are not unloaded on shutdown, and the MQ thread is
+        # not a daemon, so it would keep the process alive
+        if manager.mq is not None:
+            await hass.async_add_executor_job(manager.mq.stop)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_mq)
+    )
 
 
 async def cleanup_device_registry(

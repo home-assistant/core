@@ -3,9 +3,17 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
+from pyforeca import (
+    CurrentWeather,
+    DailyForecast,
+    HourlyForecast,
+    Location,
+    MinutelyForecast,
+    MinutelyForecastList,
+    Observation,
+)
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
@@ -80,6 +88,27 @@ DAILY = [
         sunrise_epoch=1788318000,
         sunset_epoch=1788368400,
         confidence="g",
+        max_temp_ensemble={
+            "p000": 16.4,
+            "p025": 17.5,
+            "p050": 18.1,
+            "p075": 18.6,
+            "p100": 19.9,
+        },
+        min_temp_ensemble={
+            "p000": 7.2,
+            "p025": 8.4,
+            "p050": 9.1,
+            "p075": 9.6,
+            "p100": 10.8,
+        },
+        precip_accum_ensemble={
+            "p010": None,
+            "p025": 0.3,
+            "p050": 1.1,
+            "p075": 2.4,
+            "p090": 4.7,
+        },
     ),
     DailyForecast(
         date="2026-09-03",
@@ -92,6 +121,16 @@ DAILY = [
     ),
 ]
 
+MINUTELY = MinutelyForecastList(
+    [
+        MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
+        MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.4),
+        MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.27),
+        MinutelyForecast(time="2026-09-01T17:04+03:00", precip_rate=None),
+    ],
+    resolution=1,
+)
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -99,6 +138,29 @@ LOCATION = Location(
     timezone="Europe/Helsinki",
     lon=24.94,
     lat=60.17,
+)
+
+
+OBSERVATION = Observation.from_api(
+    {
+        "station": "Helsinki Kaisaniemi",
+        "distance": "1 km N",
+        "time": "2026-11-05T10:40:00+02:00",
+        "temperature": 8,
+        "feelsLikeTemp": 4,
+        "symbol": "d000",
+        "windDirString": "NW",
+        "windDir": 306,
+        "windSpeed": 6,
+        "windGust": 9,
+        "pressure": 1018.8,
+        "relHumidity": 69,
+        "visibility": 20000,
+        "snowDepth": None,
+        "longitude": 24.94,
+        "latitude": 60.18,
+        "elevation": 4,
+    }
 )
 
 
@@ -129,6 +191,16 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.current = AsyncMock(return_value=CURRENT)
         client.forecast_hourly = AsyncMock(return_value=HOURLY)
         client.forecast_daily = AsyncMock(return_value=DAILY)
+        client.forecast_3hourly = AsyncMock(
+            return_value=[
+                HourlyForecast.from_api(step)
+                for step in load_json_object_fixture("forecast_3hourly.json", DOMAIN)[
+                    "forecast"
+                ]
+            ]
+        )
+        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
+        client.observation_latest = AsyncMock(return_value=OBSERVATION)
         yield client
 
 

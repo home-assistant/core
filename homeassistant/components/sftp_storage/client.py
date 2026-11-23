@@ -25,7 +25,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.async_iterator import ResourceChunkIterator
 
-from .const import BUF_SIZE, LOGGER
+from .const import BUF_SIZE, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData
@@ -120,14 +120,20 @@ class BackupMetadata:
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
-    sftp: SFTPClient
-
     def __init__(self, config: SFTPConfigEntry, hass: HomeAssistant) -> None:
         """Initialize `BackupAgentClient`."""
         self.cfg: SFTPConfigEntry = config
         self.hass: HomeAssistant = hass
         self._ssh: SSHClientConnection | None = None
+        self._sftp: SFTPClient | None = None
         LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
+
+    @property
+    def sftp(self) -> SFTPClient:
+        """Return the SFTP client of an open connection."""
+        if self._sftp is None:
+            raise RuntimeError("The SFTP connection is not open")
+        return self._sftp
 
     async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
@@ -141,9 +147,9 @@ class BackupAgentClient:
         traceback: TracebackType | None,
     ) -> None:
         """Async Context Manager exit routine."""
-        if self.sftp:
-            self.sftp.exit()
-            await self.sftp.wait_closed()
+        if self._sftp:
+            self._sftp.exit()
+            await self._sftp.wait_closed()
 
         if self._ssh:
             self._ssh.close()
@@ -316,28 +322,42 @@ class BackupAgentClient:
             )
         except PermissionDenied as e:
             raise BackupAgentError(
-                "Failure while attempting to establish SSH"
-                " connection. Please check SSH credentials"
-                " and if changed, re-install the integration"
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={
+                    "username": self.cfg.runtime_data.username,
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
         except (OSError, SSHError) as e:
             raise SFTPConnectionError(
-                f"Failed to establish SSH connection to"
-                f" {self.cfg.runtime_data.host}: {e}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
 
         # Configure SFTP Client Connection
         try:
-            self.sftp = await self._ssh.start_sftp_client()
-            await self.sftp.chdir(self.cfg.runtime_data.backup_location)
+            self._sftp = await self._ssh.start_sftp_client()
+            await self._sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
-                "Failed to create SFTP client."
-                " Re-installing integration might be required"
+                translation_domain=DOMAIN,
+                translation_key="backup_location_unavailable",
+                translation_placeholders={
+                    "backup_location": self.cfg.runtime_data.backup_location,
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
         except (OSError, SSHError) as e:
             raise SFTPConnectionError(
-                f"Failed to open SFTP session on {self.cfg.runtime_data.host}: {e}"
+                translation_domain=DOMAIN,
+                translation_key="sftp_session_failed",
+                translation_placeholders={
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
 
         return self

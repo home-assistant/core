@@ -204,6 +204,70 @@
     'state': '88.27',
   })
 # ---
+# name: test_sensors[sensor.freebox_server_r2_connection_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'going_up',
+        'up',
+        'going_down',
+        'down',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_connection_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Connection state',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_state',
+    'unique_id': '68:A3:78:00:00:00 state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_connection_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Connection state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'going_up',
+        'up',
+        'going_down',
+        'down',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_connection_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'up',
+  })
+# ---
 # name: test_sensors[sensor.freebox_server_r2_disque_dur-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -320,6 +384,67 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.freebox_server_r2_download_bandwidth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_download_bandwidth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Download bandwidth',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Download bandwidth',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bandwidth_down',
+    'unique_id': '68:A3:78:00:00:00 bandwidth_down',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_download_bandwidth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Download bandwidth',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_download_bandwidth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000.0',
+  })
+# ---
 # name: test_sensors[sensor.freebox_server_r2_download_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -378,6 +503,537 @@
     'state': '198.9',
   })
 # ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_link_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_link_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 1 link speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 1 link speed',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_link_speed',
+    'unique_id': '68:A3:78:00:00:00 lan_port 1 speed',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_link_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 1 link speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_link_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_receive_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_receive_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 1 receive rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 1 receive rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_rx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 1 rx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_receive_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 1 receive rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_receive_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_transmit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_transmit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 1 transmit rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 1 transmit rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_tx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 1 tx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_1_transmit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 1 transmit rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_1_transmit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_link_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_link_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 2 link speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 2 link speed',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_link_speed',
+    'unique_id': '68:A3:78:00:00:00 lan_port 2 speed',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_link_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 2 link speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_link_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_receive_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_receive_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 2 receive rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 2 receive rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_rx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 2 rx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_receive_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 2 receive rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_receive_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_transmit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_transmit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet 2 transmit rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Ethernet 2 transmit rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_tx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 2 tx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_ethernet_2_transmit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Ethernet 2 transmit rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_ethernet_2_transmit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_link_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_link_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeplug link speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Freeplug link speed',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_link_speed',
+    'unique_id': '68:A3:78:00:00:00 lan_port 5 speed',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_link_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Freeplug link speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_link_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_receive_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_receive_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeplug receive rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Freeplug receive rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_rx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 5 rx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_receive_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Freeplug receive rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_receive_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_transmit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_transmit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeplug transmit rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Freeplug transmit rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_tx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 5 tx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_freeplug_transmit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Freeplug transmit rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_freeplug_transmit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.freebox_server_r2_missed_calls-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -433,6 +1089,183 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_link_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_link_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sfp lan link speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Sfp lan link speed',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_link_speed',
+    'unique_id': '68:A3:78:00:00:00 lan_port 9999 speed',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_link_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Sfp lan link speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_link_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_receive_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_receive_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sfp lan receive rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Sfp lan receive rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_rx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 9999 rx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_receive_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Sfp lan receive rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_receive_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_transmit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_transmit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sfp lan transmit rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Sfp lan transmit rate',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'port_tx_rate',
+    'unique_id': '68:A3:78:00:00:00 lan_port 9999 tx_bytes_rate',
+    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_sfp_lan_transmit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Sfp lan transmit rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_sfp_lan_transmit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.freebox_server_r2_temperature_cpu_b-entry]
@@ -609,6 +1442,67 @@
     'state': '50',
   })
 # ---
+# name: test_sensors[sensor.freebox_server_r2_upload_bandwidth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_upload_bandwidth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upload bandwidth',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': None,
+    'original_name': 'Upload bandwidth',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bandwidth_up',
+    'unique_id': '68:A3:78:00:00:00 bandwidth_up',
+    'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_upload_bandwidth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Upload bandwidth',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_upload_bandwidth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '700.0',
+  })
+# ---
 # name: test_sensors[sensor.freebox_server_r2_upload_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -720,6 +1614,106 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2130',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv4_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv4_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN IPv4 address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN IPv4 address',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv4',
+    'unique_id': '68:A3:78:00:00:00 ipv4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv4_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) WAN IPv4 address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv4_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '82.67.00.00',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv6_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv6_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN IPv6 address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN IPv6 address',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6',
+    'unique_id': '68:A3:78:00:00:00 ipv6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv6_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) WAN IPv6 address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv6_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2a01:e35:ffff:ffff::1',
   })
 # ---
 # name: test_sensors[sensor.ouverture_porte_battery-entry]
