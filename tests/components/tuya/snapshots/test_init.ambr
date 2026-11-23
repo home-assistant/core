@@ -5739,6 +5739,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[kcnwo1caderarfni]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'kcnwo1caderarfni',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Air Conditioner',
+    'model_id': '1ownck',
+    'name': 'Infrared AC',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[kffnst1epj6vr8xnzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
