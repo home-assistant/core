@@ -124,7 +124,9 @@ class DaikinLeavingWaterOffsetNumber(DaikinManagementPointEntity, NumberEntity):
         setpoint = current[1] if current is not None else None
         self._is_settable = setpoint is not None and setpoint.settable
         self._attr_native_value = (
-            float(setpoint.value) if setpoint is not None else None
+            float(setpoint.value)
+            if setpoint is not None and setpoint.value is not None
+            else None
         )
         self._attr_native_min_value = (
             float(setpoint.min_value)

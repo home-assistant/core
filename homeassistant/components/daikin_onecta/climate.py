@@ -399,11 +399,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the HVAC mode and/or target temperature."""
-        if (
-            self._setpoint == LEAVING_WATER_OFFSET
-            and ClimateServiceArgument.TEMPERATURE in kwargs
-        ):
-            self._raise_service_validation_error("climate_temperature_unavailable")
         if ClimateServiceArgument.HVAC_MODE in kwargs:
             await self.async_handle_set_hvac_mode_service(
                 kwargs[ClimateServiceArgument.HVAC_MODE]

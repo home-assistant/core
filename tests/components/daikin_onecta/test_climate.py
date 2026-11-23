@@ -331,7 +331,7 @@ async def test_offset_only_climate_has_mode_controls_without_temperature_target(
     assert state.attributes[ClimateEntityCapabilityAttribute.HVAC_MODES]
 
 
-async def test_leaving_water_offset_climate_rejects_temperature_but_accepts_hvac_mode(
+async def test_offset_only_climate_supports_hvac_mode_but_not_set_temperature(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -352,20 +352,28 @@ async def test_leaving_water_offset_climate_rejects_temperature_but_accepts_hvac
         f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
     )
     assert entity_id is not None
-    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
-    assert isinstance(entity, DaikinClimate)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_temperature(**{ClimateServiceArgument.TEMPERATURE: 5})
-    assert err.value.translation_key == "climate_temperature_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
-
-    await entity.async_set_temperature(
-        **{ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT}
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
     )
     mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         gateway.id, point.embedded_id, "onOffMode", "on", path=None
     )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 5,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_not_supported"
+    mock_onecta_client.patch_characteristic.assert_awaited_once()
 
 
 async def test_climate_platform_skips_points_without_climate_controls(

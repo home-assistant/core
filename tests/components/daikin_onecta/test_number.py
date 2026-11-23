@@ -231,6 +231,31 @@ async def test_leaving_water_offset_number_is_unavailable_when_read_only(
     mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
+async def test_leaving_water_offset_number_handles_missing_value(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Publish an unknown offset when Daikin omits its current value."""
+    entity_id, entity = await _async_setup_offset_number(
+        hass, config_entry, entity_registry, "mc80z"
+    )
+    gateway = config_entry.runtime_data.data[entity._device_id]
+    point = gateway.management_point(entity._embedded_id)
+    assert point is not None and point.temperature_control is not None
+    point.temperature_control.value.operation_modes["heating"].setpoints[
+        LEAVING_WATER_OFFSET
+    ].value = None
+    mock_onecta_client.get_gateway_devices.return_value = [gateway.device]
+
+    await config_entry.runtime_data.async_refresh()
+
+    assert entity.native_value is None
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == "unknown"
+
+
 async def test_leaving_water_offset_number_translates_cloud_write_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
