@@ -4,15 +4,13 @@ import logging
 from typing import Any, override
 
 from hole.exceptions import HoleError
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .const import DOMAIN
 from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
@@ -36,18 +34,6 @@ async def async_setup_entry(
         )
     ]
     async_add_entities(switches, True)
-
-    # register service
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_DISABLE,
-        {
-            vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
-                cv.time_period_str, cv.positive_timedelta
-            ),
-        },
-        "async_disable",
-    )
 
 
 class PiHoleSwitch(PiHoleEntity, SwitchEntity):

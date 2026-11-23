@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

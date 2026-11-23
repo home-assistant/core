@@ -1,28 +1,22 @@
 """Tests for the Buienradar utilities."""
 
-import datetime
-from http import HTTPStatus
+import datetime as dt
 from unittest.mock import patch
 
 from buienradar.constants import MESSAGE, SUCCESS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-TEST_LATITUDE = 51.5
-TEST_LONGITUDE = 5.5
-TEST_CFG_DATA = {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
+from . import setup_integration
 
 WARNING = "Unable to parse data from Buienradar"
 
 
+@pytest.mark.usefixtures("mock_buienradar_feeds")
 @pytest.mark.parametrize(
     ("update_at", "expect_warning"),
     [
@@ -42,7 +36,6 @@ WARNING = "Unable to parse data from Buienradar"
 )
 async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     update_at: str,
@@ -62,34 +55,21 @@ async def test_unparsable_data_is_quiet_during_the_midnight_hour(
     still warn.
     """
     await hass.config.async_set_time_zone("America/Regina")
-    aioclient_mock.get(
-        "https://data.buienradar.nl/2.0/feed/json", status=HTTPStatus.OK, text="{}"
-    )
-    aioclient_mock.get(
-        f"https://gps.buienradar.nl/getrr.php?lat={TEST_LATITUDE}&lon={TEST_LONGITUDE}",
-        status=HTTPStatus.OK,
-        text="",
-    )
 
     update = dt_util.parse_datetime(update_at)
     assert update is not None
-    # A failed update reschedules itself two minutes later, which is the update
-    # the assertion below is about.
-    freezer.move_to(update - datetime.timedelta(minutes=2))
+    # A successful update schedules the next one ten minutes later, which is the
+    # update the assertion below is about.
+    freezer.move_to(update - dt.timedelta(minutes=10))
+    await setup_integration(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
-    entry.add_to_hass(hass)
-
+    caplog.clear()
+    freezer.move_to(update)
     with patch(
         "homeassistant.components.buienradar.util.parse_data",
         return_value={SUCCESS: False, MESSAGE: "no data"},
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        caplog.clear()
-        freezer.move_to(update)
         async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (WARNING in caplog.text) is expect_warning

@@ -65,6 +65,7 @@ from .helpers import async_discovered_service_info
 from .models import DATA_DHCP, DHCPAddressData, DHCPData, DhcpMatchers
 
 __all__ = [
+    "DOMAIN",
     "async_discovered_service_info",
 ]
 

@@ -33,7 +33,6 @@
   "entity": {
     "binary_sensor": {
       "motion": {
-        "name": "Motion",
         "state": {
           "off": "[%key:common::state::stopped%]",
           "on": "Moving"

@@ -10,7 +10,7 @@ from .coordinator import GogoGateConfigEntry
 PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GogoGateConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GogoGateConfigEntry) -> None:
     """Do setup of Gogogate2."""
 
     # Update the config entry.
@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GogoGateConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GogoGateConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GogoGateConfigEntry) -> None:
     """Unload Gogogate2 config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -53,7 +53,7 @@ TEMPERATURE_SENSOR_DEVICE_INDEX = 2
 class SomfyThermostat(OverkizEntity, ClimateEntity):
     """Representation of Somfy Smart Thermostat."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -101,7 +101,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(
@@ -113,7 +113,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.AUTO:
             if self.preset_mode == PRESET_NONE:
@@ -167,12 +167,12 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         elif preset_mode == PRESET_NONE:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATION,
-                self.target_temperature,
+                self.native_target_temperature,
                 OverkizCommandParam.FURTHER_NOTICE,
             )
             await self.executor.async_execute_command(
                 OverkizCommand.SET_MODE_TEMPERATURE,
                 OverkizCommandParam.MANUAL_MODE,
-                self.target_temperature,
+                self.native_target_temperature,
             )
         await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)

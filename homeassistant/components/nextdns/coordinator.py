@@ -24,15 +24,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import NextDnsConfigEntry
-
 from .const import (
     DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
     UPDATE_INTERVAL_CONNECTION,
     UPDATE_INTERVAL_SETTINGS,
 )
+
+if TYPE_CHECKING:
+    from . import NextDnsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

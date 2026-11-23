@@ -181,15 +181,17 @@ def _build_binary_sensor_entities(
         entities.append(VistapoolBinarySensor(coordinator, description))
 
     if coordinator.get_value(PATH_HASHIDRO):
-        is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+        key = (
+            "electrolysis_low"
+            if coordinator.get_value("hidro.is_electrolysis")
+            else "hydrolysis_low"
+        )
         entities.append(
             VistapoolBinarySensor(
                 coordinator,
                 VistapoolBinarySensorEntityDescription(
-                    key="electrolysis_low" if is_electrolysis else "hydrolysis_low",
-                    translation_key=(
-                        "electrolysis_low" if is_electrolysis else "hydrolysis_low"
-                    ),
+                    key=key,
+                    translation_key=key,
                     device_class=BinarySensorDeviceClass.PROBLEM,
                     value_path="hidro.low",
                 ),
@@ -248,7 +250,7 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
-        return value in (True, "1")
+        return bool(value)
 
 
 class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
@@ -273,4 +275,4 @@ class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
                 values.append(value)
         if not values:
             return None
-        return any(value in (True, "1") for value in values)
+        return any(values)

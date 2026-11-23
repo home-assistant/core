@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from numbers import Number
 from typing import TYPE_CHECKING, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 
@@ -249,10 +250,10 @@ def _deprecated_unit_system(value: str) -> str:
     return value
 
 
-validate_unit_system = vol.All(
-    vol.Lower,
+validate_unit_system = probatio.All(
+    probatio.Lower,
     _deprecated_unit_system,
-    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
+    probatio.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
 METRIC_SYSTEM = UnitSystem(
@@ -319,6 +320,24 @@ METRIC_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        # Convert non-metric volume flow rates
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        # There is no L/d unit, so use the closest available time base
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+        ): UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
@@ -409,6 +428,35 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("volume", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("volume", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
         ("volume", UnitOfVolume.MILLILITERS): UnitOfVolume.FLUID_OUNCES,
+        # Convert non-USCS volume flow rates
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        (
+            "volume_flow_rate",
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ): UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,

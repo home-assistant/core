@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
+from . import AirQConfigEntry
+from .coordinator import AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

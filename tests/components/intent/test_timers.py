@@ -1,9 +1,13 @@
 """Tests for intent timers."""
 
 import asyncio
+from collections.abc import Callable
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
 from homeassistant.components.intent import DOMAIN
@@ -20,8 +24,9 @@ from homeassistant.components.intent.timers import (
     async_device_supports_timers,
     async_register_timer_handler,
 )
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -30,13 +35,15 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+DELAYED_COMMAND = "turn on the lights"
+DELAYED_COMMAND_ERROR = "Sorry, I am not aware of any device called lights"
 
 
 @pytest.fixture
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -996,19 +1003,19 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
     timer_manager = TimerManager(hass)
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.cancel_timer("does-not-exist")
+        await timer_manager.async_cancel_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.add_time("does-not-exist", 1)
+        await timer_manager.async_add_time("does-not-exist", timedelta(seconds=1))
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.remove_time("does-not-exist", 1)
+        await timer_manager.async_add_time("does-not-exist", timedelta(seconds=-1))
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.pause_timer("does-not-exist")
+        await timer_manager.async_pause_timer("does-not-exist")
 
     with pytest.raises(TimerNotFoundError):
-        timer_manager.unpause_timer("does-not-exist")
+        await timer_manager.async_unpause_timer("does-not-exist")
 
 
 async def test_timer_manager_pause_unpause(hass: HomeAssistant) -> None:
@@ -1034,22 +1041,22 @@ async def test_timer_manager_pause_unpause(hass: HomeAssistant) -> None:
 
     # Pause
     handle_timer.reset_mock()
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
     handle_timer.assert_called_once()
 
     # Pausing again does not call handler
     handle_timer.reset_mock()
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
     handle_timer.assert_not_called()
 
     # Unpause
     handle_timer.reset_mock()
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
     handle_timer.assert_called_once()
 
     # Unpausing again does not call handler
     handle_timer.reset_mock()
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
     handle_timer.assert_not_called()
 
 
@@ -1086,15 +1093,15 @@ async def test_timers_not_supported(hass: HomeAssistant) -> None:
     unregister()
 
     # All operations on the timer should not crash
-    timer_manager.add_time(timer_id, 1)
+    await timer_manager.async_add_time(timer_id, timedelta(seconds=1))
 
-    timer_manager.remove_time(timer_id, 1)
+    await timer_manager.async_add_time(timer_id, timedelta(seconds=-1))
 
-    timer_manager.pause_timer(timer_id)
+    await timer_manager.async_pause_timer(timer_id)
 
-    timer_manager.unpause_timer(timer_id)
+    await timer_manager.async_unpause_timer(timer_id)
 
-    timer_manager.cancel_timer(timer_id)
+    await timer_manager.async_cancel_timer(timer_id)
 
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
@@ -1487,6 +1494,7 @@ async def test_start_timer_with_conversation_command(
     timer_name = "test timer"
     test_command = "turn on the lights"
     agent_id = "test_agent"
+    request_context = Context(user_id="test_user")
 
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
@@ -1511,6 +1519,7 @@ async def test_start_timer_with_conversation_command(
                 "seconds": {"value": 0},
                 "conversation_command": {"value": test_command},
             },
+            context=request_context,
             device_id=device_id,
             conversation_agent_id=agent_id,
         )
@@ -1524,6 +1533,80 @@ async def test_start_timer_with_conversation_command(
         await hass.async_block_till_done()
         mock_converse.assert_called_once()
         assert mock_converse.call_args.args[1] == test_command
+
+        # The command runs as the user who set the timer, linked to the request.
+        command_context = mock_converse.call_args.kwargs["context"]
+        assert command_context.user_id == request_context.user_id
+        assert command_context.parent_id == request_context.id
+
+
+def _delayed_command_acted() -> intent.IntentResponse:
+    """Return the response of a delayed command that acted."""
+    return intent.IntentResponse(language="en")
+
+
+def _delayed_command_failed() -> intent.IntentResponse:
+    """Return the response of a delayed command that could not act."""
+    response = intent.IntentResponse(language="en")
+    response.async_set_error(
+        intent.IntentResponseErrorCode.NO_VALID_TARGETS, DELAYED_COMMAND_ERROR
+    )
+    return response
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    ("make_response", "expected_warnings"),
+    [
+        pytest.param(_delayed_command_acted, [], id="command_acted"),
+        pytest.param(
+            _delayed_command_failed,
+            [
+                f"Delayed command failed: command={DELAYED_COMMAND},"
+                f" code=no_valid_targets, response={DELAYED_COMMAND_ERROR}"
+            ],
+            id="command_failed",
+        ),
+    ],
+)
+async def test_start_timer_conversation_command_result_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    make_response: Callable[[], intent.IntentResponse],
+    expected_warnings: list[str],
+) -> None:
+    """Test that a delayed command which could not act is logged.
+
+    Nothing listens to the response of a delayed command, so an error is
+    otherwise invisible.
+    """
+    with patch(
+        "homeassistant.components.conversation.async_converse",
+        return_value=conversation.ConversationResult(response=make_response()),
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "seconds": {"value": 0},
+                "conversation_command": {"value": DELAYED_COMMAND},
+            },
+            device_id="test_device",
+            conversation_agent_id="test_agent",
+        )
+
+        assert result.response_type is intent.IntentResponseType.ACTION_DONE
+
+        # The delayed command runs in a background task
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "homeassistant.components.intent.timers"
+        and record.levelno == logging.WARNING
+    ] == expected_warnings
 
 
 async def test_start_timer_with_sentence_trigger_validation(
@@ -1740,6 +1823,7 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     assert not async_device_supports_timers(hass, device_id)
 
     # After intent initialization
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, DOMAIN, {})
     assert not async_device_supports_timers(hass, device_id)
 

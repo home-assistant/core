@@ -1,16 +1,15 @@
 """Tests for Fing config flow."""
 
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import AsyncMock
+from pytest_homeassistant.plugins import MockConfigEntry
 
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import AsyncMock
-from tests.conftest import MockConfigEntry
 
 
 async def test_verify_connection_success(
@@ -70,24 +69,24 @@ async def test_verify_api_version_outdated(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (httpx.NetworkError("Network error"), "cannot_connect"),
-        (httpx.TimeoutException("Timeout error"), "timeout_connect"),
+        (httpx2.NetworkError("Network error"), "cannot_connect"),
+        (httpx2.TimeoutException("Timeout error"), "timeout_connect"),
         (
-            httpx.HTTPStatusError(
-                "HTTP status error - 500", request=None, response=httpx.Response(500)
+            httpx2.HTTPStatusError(
+                "HTTP status error - 500", request=None, response=httpx2.Response(500)
             ),
             "http_status_error",
         ),
         (
-            httpx.HTTPStatusError(
-                "HTTP status error - 401", request=None, response=httpx.Response(401)
+            httpx2.HTTPStatusError(
+                "HTTP status error - 401", request=None, response=httpx2.Response(401)
             ),
             "invalid_api_key",
         ),
-        (httpx.HTTPError("HTTP error"), "unknown"),
-        (httpx.InvalidURL("Invalid URL"), "url_error"),
-        (httpx.CookieConflict("Cookie conflict"), "unknown"),
-        (httpx.StreamError("Stream error"), "unknown"),
+        (httpx2.HTTPError("HTTP error"), "unknown"),
+        (httpx2.InvalidURL("Invalid URL"), "url_error"),
+        (httpx2.CookieConflict("Cookie conflict"), "unknown"),
+        (httpx2.StreamError("Stream error"), "unknown"),
     ],
 )
 async def test_http_error_handling(

@@ -90,8 +90,8 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement used by the device."""
         return (
             UnitOfTemperature.CELSIUS
             if self.hass.config.units is METRIC_SYSTEM
@@ -100,7 +100,7 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         value: str | None = self._values.get(self.gateway.const.SetReq.V_TEMP)
         float_value: float | None = None
@@ -112,7 +112,7 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
         Either V_HVAC_SETPOINT_COOL or V_HVAC_SETPOINT_HEAT may be used.
@@ -125,14 +125,14 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         return float(self._values[set_req.V_HVAC_SETPOINT_COOL])
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         return float(self._values[set_req.V_HVAC_SETPOINT_HEAT])

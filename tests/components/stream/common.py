@@ -1,20 +1,25 @@
 """Collection of test helpers."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from fractions import Fraction
 import functools
 from functools import partial
 import io
+import threading
 
 import av
 import numpy as np
 
 from homeassistant.components.camera import DynamicStreamSettings
+from homeassistant.components.stream import Stream
 from homeassistant.components.stream.core import Orientation, Segment
 from homeassistant.components.stream.fmp4utils import (
     TRANSFORM_MATRIX_TOP,
     XYW_ROW,
     find_box,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 FAKE_TIME = dt_util.utcnow()
@@ -29,6 +34,29 @@ DefaultSegment = partial(
 )
 
 AUDIO_SAMPLE_RATE = 8000
+
+
+@asynccontextmanager
+async def worker_lifetime(
+    hass: HomeAssistant, stream: Stream, *, request_quit: bool = False
+) -> AsyncIterator[threading.Thread]:
+    """Scope a started stream's worker thread; on exit it has finished.
+
+    The thread is captured on entry, before anything yields, because
+    worker_finished() clears stream._thread once the worker exits. With
+    request_quit the worker is told to stop rather than run to completion.
+    The body's exception propagates without joining, so a paused worker fails
+    the test instead of hanging it.
+    """
+    worker = stream._thread
+    assert worker is not None, "start the stream before entering"
+    yield worker
+    if request_quit:
+        stream._thread_quit.set()
+    await hass.async_add_executor_job(worker.join)
+    if stream._thread is worker:
+        stream._thread = None
+    await hass.async_block_till_done()
 
 
 def stream_teardown():
@@ -53,13 +81,13 @@ def generate_audio_frame(pcm_mulaw=False):
 @functools.lru_cache(maxsize=1024)
 def frame_image_data(frame_i, total_frames):
     """Generate image content for a frame of a video."""
-    img = np.empty((480, 320, 3))
-    img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
-    img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
-    img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
-
-    img = np.round(255 * img).astype(np.uint8)
-    return np.clip(img, 0, 255)
+    color = [
+        np.round(
+            255 * (0.5 + 0.5 * np.sin(2 * np.pi * (c / 3 + frame_i / total_frames)))
+        )
+        for c in range(3)
+    ]
+    return np.full((480, 320, 3), color, dtype=np.uint8)
 
 
 def generate_video(encoder, container_format, duration):

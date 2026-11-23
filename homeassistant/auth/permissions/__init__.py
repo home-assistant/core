@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from .const import CAT_ENTITIES
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
@@ -15,7 +15,7 @@ from .util import test_all
 if TYPE_CHECKING:
     from ..models import User
 
-POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
+POLICY_SCHEMA = probatio.Schema({probatio.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
 __all__ = [
     "POLICY_SCHEMA",

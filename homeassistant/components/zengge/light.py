@@ -1,6 +1,6 @@
 """Support for Zengge lights."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICES, CONF_NAME
@@ -9,15 +9,15 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
+DEVICE_SCHEMA = probatio.Schema({probatio.Optional(CONF_NAME): cv.string})
 DOMAIN = "zengge"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+    {probatio.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
 )
 
 
-def async_setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,

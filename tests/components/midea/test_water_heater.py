@@ -10,6 +10,7 @@ from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.devices.e3 import DeviceAttributes as E3Attributes
 from midealocal.devices.e6 import DeviceAttributes as E6Attributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -28,8 +29,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _c3_device() -> DummyDevice:

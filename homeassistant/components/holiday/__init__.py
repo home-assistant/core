@@ -9,12 +9,12 @@ from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import SetupPhases, async_pause_setup
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE
+from .const import CONF_CATEGORIES, CONF_PROVINCE, COUNTRY_OPTIONS
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Holiday from a config entry."""
     country: str = entry.data[CONF_COUNTRY]
     province: str | None = entry.data.get(CONF_PROVINCE)
@@ -33,9 +33,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        options = dict(entry.options)
+        try:
+            country_data = await hass.async_add_import_executor_job(
+                country_holidays, entry.data[CONF_COUNTRY]
+            )
+        except NotImplementedError:
+            supported_options = {}
+        else:
+            supported_options = country_data.get_supported_options()
+        # Store the defaults, so equal calendars are found as duplicates
+        for option in COUNTRY_OPTIONS:
+            if option in supported_options:
+                options.setdefault(option, supported_options[option])
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -11,5 +11,10 @@
         "title": "Pick a hub to add"
       }
     }
+  },
+  "exceptions": {
+    "hub_reset_failed": {
+      "message": "Could not reset the Acmeda hub while unloading"
+    }
   }
 }

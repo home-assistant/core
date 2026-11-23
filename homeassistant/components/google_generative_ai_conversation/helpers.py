@@ -6,8 +6,6 @@ import wave
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import LOGGER
-
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
     """Generate a WAV file header for the given audio data and parameters.
@@ -48,7 +46,6 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
 
     """
     if not mime_type.lower().startswith("audio/l"):
-        LOGGER.warning("Received unexpected MIME type %s", mime_type)
         raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")
 
     bits_per_sample = 16

@@ -2,13 +2,19 @@
 
 from typing import Any, cast
 
+import probatio
 from probatio import UNSUPPORTED, to_field_list
 
 from homeassistant.const import Platform
 from homeassistant.helpers import selector
 
 from .entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
-from .knx_selector import AllSerializeFirst, GroupSelectSchema, KNXSelectorBase
+from .knx_selector import (
+    AllSerializeFirst,
+    GroupSelectSchema,
+    KNXSelectorBase,
+    knx_selector_in,
+)
 
 
 def knx_serializer(schema: Any) -> Any:
@@ -30,6 +36,11 @@ def knx_serializer(schema: Any) -> Any:
         return result
     if isinstance(schema, AllSerializeFirst):
         return to_field_list(schema.validators[0], custom_serializer=knx_serializer)
+    if isinstance(schema, probatio.All):
+        # a dataclass field: the selector in `Annotated` metadata defines the
+        # field, the type annotation and `Coerce` are validation-only
+        if (field_selector := knx_selector_in(schema.validators)) is not None:
+            return knx_serializer(field_selector)
 
     if isinstance(schema, selector.Selector):
         return schema.serialize() | {"type": "ha_selector"}

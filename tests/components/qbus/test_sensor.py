@@ -3,13 +3,16 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
 
 _TOPIC_WEATHER_STATE = "cloudapp/QBUSMQTTGW/UL1/UL60/state"
 

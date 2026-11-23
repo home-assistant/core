@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
-
-from tests.common import snapshot_platform
 
 
 async def test_states(

@@ -73,11 +73,15 @@ class ToloSwitchEntity(ToloSaunaCoordinatorEntity, SwitchEntity):
         return self.entity_description.getter(self.coordinator.data.status)
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.entity_description.setter(self.coordinator.client, True)
+        await self._async_send_command(
+            lambda client: self.entity_description.setter(client, True)
+        )
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.entity_description.setter(self.coordinator.client, False)
+        await self._async_send_command(
+            lambda client: self.entity_description.setter(client, False)
+        )

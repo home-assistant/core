@@ -33,5 +33,18 @@
         "description": "Enter your LoJack/Spireon account credentials."
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "location_last_reported": {
+        "name": "Location last reported"
+      },
+      "odometer": {
+        "name": "Odometer"
+      }
+    }
   }
 }

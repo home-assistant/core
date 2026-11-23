@@ -4,27 +4,26 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntity,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.qbus.climate import STATE_REQUEST_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient
 
 _CURRENT_TEMPERATURE = 21.5
 _SET_TEMPERATURE = 20.5
@@ -74,10 +73,10 @@ async def test_climate(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: _SET_TEMPERATURE,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: _SET_TEMPERATURE,
         },
         blocking=True,
     )
@@ -125,10 +124,10 @@ async def test_climate(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_PRESET_MODE: _REGIME,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: _REGIME,
         },
         blocking=True,
     )
@@ -227,10 +226,10 @@ async def test_climate_with_unknown_preset(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-                ATTR_PRESET_MODE: "What is cooler than being cool?",
+                TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: "What is cooler than being cool?",
             },
             blocking=True,
         )

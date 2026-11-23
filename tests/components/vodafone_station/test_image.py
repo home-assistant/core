@@ -7,6 +7,12 @@ from unittest.mock import AsyncMock, patch
 from aiovodafone.const import WIFI_DATA
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -19,9 +25,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2026-01-05T15:00:00+00:00")

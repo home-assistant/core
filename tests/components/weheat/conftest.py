@@ -6,6 +6,7 @@ from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -27,8 +28,6 @@ from .const import (
     USER_UUID_1,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
@@ -45,7 +44,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_setup_entry():
     """Mock a successful setup."""
     with patch(
-        "homeassistant.components.weheat.async_setup_entry", return_value=True
+        "homeassistant.components.weheat.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -166,6 +165,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
+    mock_heat_pump_instance.thermostat_on_off_state = 1
     mock_heat_pump_instance.raw_content = {
         "heat_pump_id": TEST_HP_UUID,
         "t_water_in": 11,

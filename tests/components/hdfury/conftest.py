@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hdfury.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.123"
 
@@ -18,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hdfury.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -104,8 +103,10 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "htpcmode3": "0",
                 "mutetx0": "1",
                 "mutetx1": "1",
+                "tcpport": "2210",
                 "relay": "0",
                 "macaddr": "c7:1c:df:9d:f6:40",
+                "ipinterrupt": "0",
                 "reboottimer": "0",
                 "unmutecnt": "500",
                 "earcunmutecnt": "0",

@@ -55,6 +55,19 @@
           "options": null
         },
         {
+          "key": "balance",
+          "name": "Balance",
+          "type": "integer",
+          "translation_key": "balance",
+          "translation_params": null,
+          "value": 0,
+          "read_only": false,
+          "min_value": -100,
+          "max_value": 100,
+          "step": 1,
+          "options": null
+        },
+        {
           "key": "treble_ro",
           "name": "Treble RO",
           "type": "integer",
@@ -74,6 +87,19 @@
           "translation_key": "enhancer",
           "translation_params": null,
           "value": false,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
+          "key": "status_light",
+          "name": "Status light",
+          "type": "boolean",
+          "translation_key": "status_light",
+          "translation_params": null,
+          "value": true,
           "read_only": false,
           "min_value": null,
           "max_value": null,

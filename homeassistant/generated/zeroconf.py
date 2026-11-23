@@ -136,6 +136,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Mirror": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Neon": {
         "always_discover": True,
         "domain": "lifx",
@@ -145,6 +149,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Path": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Spot": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -243,6 +255,10 @@ HOMEKIT = {
     "Sensibo": {
         "always_discover": True,
         "domain": "sensibo",
+    },
+    "Slide": {
+        "always_discover": True,
+        "domain": "slide_local",
     },
     "Smart Bridge": {
         "always_discover": False,
@@ -549,6 +565,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -584,6 +605,10 @@ ZEROCONF = {
         {
             "domain": "awair",
             "name": "awair*",
+        },
+        {
+            "domain": "bluetti_modbus",
+            "name": "bluetti hems*",
         },
         {
             "domain": "bosch_shc",
@@ -700,6 +725,16 @@ ZEROCONF = {
             "name": "velux_klf_lan_*",
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",
@@ -710,6 +745,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
+        },
+    ],
     "_iometer._tcp.local.": [
         {
             "domain": "iometer",
@@ -717,10 +757,18 @@ ZEROCONF = {
     ],
     "_ipp._tcp.local.": [
         {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
+        {
             "domain": "ipp",
         },
     ],
     "_ipps._tcp.local.": [
+        {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
         {
             "domain": "ipp",
         },
@@ -740,6 +788,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
         },
     ],
     "_linkplay._tcp.local.": [
@@ -778,6 +831,12 @@ ZEROCONF = {
             "domain": "lutron_caseta",
             "properties": {
                 "SYSTYPE": "ra2select*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
             },
         },
     ],
@@ -893,6 +952,11 @@ ZEROCONF = {
             "domain": "bitvis",
         },
     ],
+    "_powersensor._udp.local.": [
+        {
+            "domain": "powersensor_au",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -942,6 +1006,15 @@ ZEROCONF = {
     "_shelly._tcp.local.": [
         {
             "domain": "shelly",
+        },
+    ],
+    "_ship._tcp.local.": [
+        {
+            "domain": "e3dc",
+            "properties": {
+                "brand": "hager energy",
+                "id": "*",
+            },
         },
     ],
     "_sideplay._tcp.local.": [
@@ -1045,6 +1118,11 @@ ZEROCONF = {
             "domain": "technove",
         },
     ],
+    "_tlight._tcp.local.": [
+        {
+            "domain": "trimlight",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -1071,6 +1149,11 @@ ZEROCONF = {
             "domain": "vizio",
         },
     ],
+    "_voice-support._tcp.local.": [
+        {
+            "domain": "voice_support",
+        },
+    ],
     "_waermeleser._tcp.local.": [
         {
             "domain": "energieleser",
@@ -1089,6 +1172,15 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_workstation._tcp.local.": [
+        {
+            "domain": "hr_energy_qube",
+            "properties": {
+                "ProjectName": "deqsihpb*",
+                "Vendor": "000a5c",
+            },
         },
     ],
     "_ws._tcp.local.": [

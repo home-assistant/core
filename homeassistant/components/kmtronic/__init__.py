@@ -12,7 +12,7 @@ from .coordinator import KMTronicConfigEntry, KMtronicCoordinator
 PLATFORMS = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KMTronicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KMTronicConfigEntry) -> None:
     """Set up kmtronic from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(
@@ -31,8 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: KMTronicConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
-
 
 async def async_update_options(
     hass: HomeAssistant, config_entry: KMTronicConfigEntry
@@ -41,6 +39,6 @@ async def async_update_options(
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: KMTronicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KMTronicConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

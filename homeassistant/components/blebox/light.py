@@ -22,9 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxConfigEntry
 from .const import DOMAIN, LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
 

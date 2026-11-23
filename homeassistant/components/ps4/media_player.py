@@ -282,7 +282,12 @@ class PS4Device(MediaPlayerEntity):
             self._attr_media_content_type = media_type
 
             await self.hass.async_add_executor_job(self.update_list)
-            self.async_write_ha_state()
+
+            # Entities are added with update_before_add, so the poll that
+            # started this fetch can run before the entity has an entity_id.
+            # The platform writes the state it collected once it adds us.
+            if self.entity_id:
+                self.async_write_ha_state()
 
     def update_list(self) -> None:
         """Update Game List, Correct data if different."""

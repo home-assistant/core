@@ -94,13 +94,9 @@ class NextBusDataUpdateCoordinator(
                 try:
                     prediction_results = self.client.predictions_for_stop(stop_id)
                 except NextBusHTTPError as ex:
-                    self.logger.error(
-                        "Error updating %s (executor): %s %s",
-                        str(stop_id),
-                        ex,
-                        getattr(ex, "response", None),
-                    )
-                    raise UpdateFailed("Failed updating nextbus data", ex) from ex
+                    raise UpdateFailed(
+                        f"Failed updating nextbus data for stop {stop_id}: {ex.message}"
+                    ) from ex
                 except NextBusFormatError as ex:
                     raise UpdateFailed("Failed updating nextbus data", ex) from ex
 

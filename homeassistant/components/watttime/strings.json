@@ -49,6 +49,11 @@
       }
     }
   },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Error while authenticating with WattTime"
+    }
+  },
   "options": {
     "step": {
       "init": {

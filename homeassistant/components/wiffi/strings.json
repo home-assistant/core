@@ -14,6 +14,14 @@
       }
     }
   },
+  "exceptions": {
+    "port_in_use": {
+      "message": "Port {port} is already in use"
+    },
+    "start_server_failed": {
+      "message": "Failed to start the wiffi server on port {port}"
+    }
+  },
   "options": {
     "step": {
       "init": {

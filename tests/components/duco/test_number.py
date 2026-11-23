@@ -11,18 +11,23 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
@@ -68,6 +73,7 @@ async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zone
 
 async def test_successful_write_does_not_recover_failed_coordinator(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -96,15 +102,22 @@ async def test_successful_write_does_not_recover_failed_coordinator(
     write_task = asyncio.create_task(
         hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            NumberService.SET_VALUE,
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
             blocking=True,
         )
     )
     await write_started.wait()
 
+    state_changed = asyncio.Event()
+    remove_listener = async_track_state_change_event(
+        hass, _ZONE_1_ENTITY_ID, callback(lambda _: state_changed.set())
+    )
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await state_changed.wait()
+    remove_listener()
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -159,8 +172,8 @@ async def test_set_bypass_supply_temperature_target(
     for value in (20.5, 21.0):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
+            NumberService.SET_VALUE,
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
             blocking=True,
         )
 
@@ -198,8 +211,8 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
         blocking=True,
     )
 
@@ -213,8 +226,8 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
+            NumberService.SET_VALUE,
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
             blocking=True,
         )
 
@@ -239,8 +252,8 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
         blocking=True,
     )
 
@@ -272,8 +285,8 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 76.6},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 76.6},
         blocking=True,
     )
 
@@ -366,7 +379,7 @@ async def test_set_bypass_supply_temperature_target_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            NumberService.SET_VALUE,
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
             blocking=True,
         )

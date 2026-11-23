@@ -6,7 +6,7 @@ import logging
 import sys
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from zeroconf import InterfaceChoice, IPVersion
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -25,11 +25,7 @@ from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
 from .const import DATA_DISCOVERY, DATA_INSTANCE, DOMAIN, ZEROCONF_TYPE
-from .discovery import (  # noqa: F401
-    ZeroconfDiscovery,
-    build_homekit_model_lookups,
-    info_from_service,
-)
+from .discovery import ZeroconfDiscovery, build_homekit_model_lookups, info_from_service
 from .models import HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
@@ -48,21 +44,31 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.deprecated(CONF_DEFAULT_INTERFACE),
             cv.deprecated(CONF_IPV6),
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
-                    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
+                    probatio.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
+                    probatio.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "DOMAIN",
+    "HaAsyncZeroconf",
+    "HaZeroconf",
+    "async_get_async_instance",
+    "async_get_async_zeroconf",
+    "async_get_instance",
+    "info_from_service",
+]
 
 
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
