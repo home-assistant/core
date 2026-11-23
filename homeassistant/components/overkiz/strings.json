@@ -108,6 +108,9 @@
     "climate": {
       "overkiz": {
         "state_attributes": {
+          "boost_end": {
+            "name": "Boost end"
+          },
           "fan_mode": {
             "state": {
               "away": "[%key:common::state::not_home%]",
