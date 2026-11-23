@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +72,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+            TargetKey.ENTITY_ID: BACKUP_RESERVE_ENTITY,
             NumberServiceArgument.VALUE: 25,
         },
         blocking=True,
@@ -99,7 +99,7 @@ async def test_set_value_communication_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+                TargetKey.ENTITY_ID: BACKUP_RESERVE_ENTITY,
                 NumberServiceArgument.VALUE: 25,
             },
             blocking=True,
@@ -123,7 +123,7 @@ async def test_set_value_rejected(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: BACKUP_RESERVE_ENTITY,
+                TargetKey.ENTITY_ID: BACKUP_RESERVE_ENTITY,
                 NumberServiceArgument.VALUE: 25,
             },
             blocking=True,

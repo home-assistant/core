@@ -2,10 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, WEBOSTV_EXCEPTIONS
@@ -16,17 +15,12 @@ class WebOsTvEntity(CoordinatorEntity[WebOsTvDataUpdateCoordinator]):
     """Base entity for the LG webOS TV integration."""
 
     _attr_has_entity_name = True
-    _attr_device_info: DeviceInfo
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(entry.runtime_data)
         self._client = entry.runtime_data.client
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, entry.unique_id))},
-            manufacturer="LG",
-            name=entry.title,
-        )
+        self._attr_device_info = entry.runtime_data.device_info
 
 
 def cmd[_EntityT: WebOsTvEntity, _R, **_P](

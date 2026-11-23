@@ -300,10 +300,10 @@
         "name": "Gas consumed interval"
       },
       "heating_pump_operation_time": {
-        "name": "Central heating pump operation time"
+        "name": "Heating pump operation time"
       },
       "heating_pump_starts": {
-        "name": "Central heating pump starts"
+        "name": "Heating pump starts"
       },
       "heating_setpoint": {
         "name": "Heating setpoint"

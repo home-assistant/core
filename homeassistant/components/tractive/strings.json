@@ -71,6 +71,27 @@
       "rest_time": {
         "name": "Rest time"
       },
+      "resting_heart_rate_status": {
+        "name": "Resting heart rate status",
+        "state": {
+          "elevated": "Elevated",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "resting_respiratory_rate_status": {
+        "name": "Resting respiratory rate status",
+        "state": {
+          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "scratch_status": {
+        "name": "Scratch status",
+        "state": {
+          "infrequent": "Infrequent",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "tracker_state": {
         "name": "Status",
         "state": {

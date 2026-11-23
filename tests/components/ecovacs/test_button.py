@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -221,7 +221,7 @@ async def test_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         device._execute_command.assert_called_with(command)

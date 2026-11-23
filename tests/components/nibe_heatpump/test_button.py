@@ -12,12 +12,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import async_add_model
@@ -72,7 +67,7 @@ async def test_reset_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

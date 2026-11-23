@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -60,7 +60,7 @@ async def test_set_lipsync(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: LIPSYNC_ENTITY_ID,
+            TargetKey.ENTITY_ID: LIPSYNC_ENTITY_ID,
             NumberServiceArgument.VALUE: 75,
         },
         blocking=True,
@@ -97,7 +97,7 @@ async def test_set_trim(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: -6.0,
         },
         blocking=True,

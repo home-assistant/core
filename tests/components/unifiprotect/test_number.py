@@ -1517,3 +1517,29 @@ async def test_number_camera_read_only_user(
     assert entity_registry.async_get_entity_id(
         Platform.NUMBER, DOMAIN, f"{doorbell.mac}_mic_level"
     )
+
+
+async def test_chime_ring_volume_survives_reload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A chime update arriving while the entry unloads does not orphan the entity."""
+    setup_public_chime(ufp, _paired_ring_settings(doorbell, volume=75))
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+    assert hass.states.get(RING_VOLUME_ENTITY).state == "75"
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+
+    async def disconnect_ws() -> None:
+        ufp.devices_ws_subscription(
+            public_device_ws_message(public, changed_data={"ringSettings": []})
+        )
+
+    ufp.api.async_disconnect_ws = disconnect_ws
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RING_VOLUME_ENTITY).state == "75"
+    assert "does not generate unique IDs" not in caplog.text
