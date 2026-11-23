@@ -17,6 +17,9 @@
       },
       "reboot_timer": {
         "default": "mdi:timer-refresh"
+      },
+      "tcp_port": {
+        "default": "mdi:console-network"
       }
     },
     "select": {
@@ -104,6 +107,9 @@
       },
       "htpcmode3": {
         "default": "mdi:desktop-classic"
+      },
+      "ipinterrupt": {
+        "default": "mdi:console-network"
       },
       "iractive": {
         "default": "mdi:remote"

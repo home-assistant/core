@@ -52,6 +52,10 @@ async def test_diagnostics_empty_data(
     mock_google_health_client.active_energy_burned.today.return_value = None
     mock_google_health_client.total_calories.today.return_value = None
     mock_google_health_client.floors.today.return_value = None
+    mock_google_health_client.altitude.today.return_value = None
+    mock_google_health_client.active_minutes.today.return_value = None
+    mock_google_health_client.active_zone_minutes.today.return_value = None
+    mock_google_health_client.sedentary_period.today.return_value = None
 
     mock_google_health_client.weight.list.return_value = ListDataPointResult(
         _ListDataPointsModel(data_points=[])

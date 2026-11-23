@@ -99,7 +99,6 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         key="night_light_level",
         translation_key="night_light_level",
         options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_humidifier(device) and device.supports_nightlight,
         # The select_option service framework ensures that only options specified are
@@ -120,7 +119,6 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
             PURIFIER_NIGHT_LIGHT_LEVEL_ON,
         ],
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
         select_option_fn=_toggle_purifier_nightlight,
@@ -155,7 +153,6 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             OUTLET_NIGHT_LIGHT_LEVEL_ON,
             OUTLET_NIGHT_LIGHT_LEVEL_AUTO,
         ],
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_outlet(device) and device.supports_nightlight,
         select_option_fn=_toggle_outlet_nightlight,

@@ -41,11 +41,14 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
             name=entry.title,
             update_interval=SCAN_INTERVAL,
         )
+        self.last_report: UpdateReport | None = None
         self.device = device
         self._failing: set[str] = set()
 
     @override
     async def _async_update_data(self) -> UpdateReport:
+        # Kept for diagnostics: data only holds the last poll that succeeded
+        self.last_report = None
         try:
             report: UpdateReport = await self.device.async_update()
         except WrongGatewayError as err:
@@ -56,6 +59,7 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="modbus_error"
             ) from err
+        self.last_report = report
         if not report.updated:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="no_component_answered"
