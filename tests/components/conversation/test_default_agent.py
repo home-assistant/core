@@ -3402,6 +3402,53 @@ async def test_name_match_fallback_error(
 
 
 @pytest.mark.usefixtures("init_components")
+async def test_name_match_fallback_empty_answer(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the name match is tried if a query finds no entities."""
+    area_registry.async_get_or_create("bedroom")
+    area_garage = area_registry.async_get_or_create("garage")
+
+    entry = entity_registry.async_get_or_create(
+        "cover", "demo", "named", suggested_object_id="named", original_name="door"
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id=area_garage.id)
+    hass.states.async_set(entry.entity_id, STATE_CLOSED, {ATTR_FRIENDLY_NAME: "door"})
+
+    area = MatchEntity(name="area", value="bedroom", text="bedroom")
+    domain = MatchEntity(name="domain", value="cover", text="")
+    state = MatchEntity(name="state", value="open", text="open")
+    name = MatchEntity(name="name", value="door", text="door")
+    area_result = RecognizeResult(
+        intent=Intent("HassGetState"),
+        intent_data=IntentData([]),
+        entities={"area": area, "domain": domain, "state": state},
+        entities_list=[area, domain, state],
+    )
+    named_result = RecognizeResult(
+        intent=Intent("HassGetState"),
+        intent_data=IntentData([]),
+        entities={"name": name, "state": state},
+        entities_list=[name, state],
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intents",
+        return_value=[area_result, named_result],
+    ):
+        result = await conversation.async_converse(
+            hass, "is the door open", None, Context(), None
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+    assert [state.entity_id for state in result.response.unmatched_states] == [
+        entry.entity_id
+    ]
+
+
+@pytest.mark.usefixtures("init_components")
 async def test_fixed_name_slot_priority(hass: HomeAssistant) -> None:
     """Test that a name from a sentence's fixed slots beats a match without a name."""
     nameless_result = RecognizeResult(
@@ -3912,6 +3959,35 @@ async def test_handle_failed_intents(
         assert response is not None and response.error_code == error_code
     else:
         assert response is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_handle_intents_empty_answer(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test that handle_intents does not return an answer about no entities."""
+    area_registry.async_create("kitchen")
+
+    agent = async_get_agent(hass)
+
+    user_input = ConversationInput(
+        text="are any lights on in the kitchen",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(user_input, chat_log)
+        assert [content.role for content in chat_log.content] == ["system", "user"]
+
+    assert response is None
 
 
 @pytest.mark.usefixtures("init_components")

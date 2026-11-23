@@ -527,21 +527,21 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         *,
-        discard_match_errors: bool = False,
+        discard_no_targets: bool = False,
     ) -> intent.IntentResponse:
         """Process recognized intents in order, until one finds its targets."""
         for result in results[:-1]:
             response = await self._async_process_intent_result(
-                result, user_input, chat_log, discard_match_errors=True
+                result, user_input, chat_log, discard_no_targets=True
             )
-            if response.error_code not in _MATCH_ERROR_CODES:
+            if not _found_no_targets(response):
                 return response
 
         return await self._async_process_intent_result(
             results[-1] if results else None,
             user_input,
             chat_log,
-            discard_match_errors=discard_match_errors,
+            discard_no_targets=discard_no_targets,
         )
 
     async def _async_process_intent_result(
@@ -550,7 +550,7 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         *,
-        discard_match_errors: bool = False,
+        discard_no_targets: bool = False,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -612,8 +612,11 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
-            discard_match_errors=discard_match_errors,
+            discard_no_targets=discard_no_targets,
         )
+
+        if discard_no_targets and _found_no_targets(intent_response):
+            return intent_response
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
             self._gazetteer.async_remember(
@@ -633,7 +636,7 @@ class DefaultAgent(ConversationEntity):
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
         *,
-        discard_match_errors: bool = False,
+        discard_no_targets: bool = False,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
         language = user_input.language or self.hass.config.language
@@ -695,7 +698,7 @@ class DefaultAgent(ConversationEntity):
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
             )
 
-        if discard_match_errors and intent_response.error_code in _MATCH_ERROR_CODES:
+        if discard_no_targets and _found_no_targets(intent_response):
             # The caller moves on to another candidate or agent, so this
             # attempt must leave no tool call behind
             return intent_response
@@ -1700,7 +1703,7 @@ class DefaultAgent(ConversationEntity):
         """Try to match sentence against registered intents and return response.
 
         Only performs strict matching with exposed entities and exact wording.
-        Returns None if no match or a matching error occurred.
+        Returns None if there is no match or the match finds no targets.
         """
         results = await self.async_recognize_intents(
             user_input, strict_intents_only=True
@@ -1713,10 +1716,10 @@ class DefaultAgent(ConversationEntity):
             return None
 
         response = await self._async_process_intent_results(
-            results, user_input, chat_log, discard_match_errors=True
+            results, user_input, chat_log, discard_no_targets=True
         )
-        if response.error_code in _MATCH_ERROR_CODES:
-            # We ignore no matching errors
+        if _found_no_targets(response):
+            # Nothing was found, so leave the sentence to the caller
             return None
         return response
 
@@ -1844,6 +1847,15 @@ def _result_sort_key(
         -result.text_chunks_matched,
         wildcard_text_len,
         result.intent.name,
+    )
+
+
+def _found_no_targets(response: intent.IntentResponse) -> bool:
+    """Check if a response is a match error or an answer about no entities."""
+    return response.error_code in _MATCH_ERROR_CODES or (
+        response.response_type is intent.IntentResponseType.QUERY_ANSWER
+        and not response.matched_states
+        and not response.unmatched_states
     )
 
 
