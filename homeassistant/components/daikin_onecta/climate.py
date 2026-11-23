@@ -114,6 +114,7 @@ def _create_climate_entities(
         climate_control = management_point.climate_control
         if climate_control is None:
             continue
+        setpoint_types = climate_control.setpoint_types
         entities.extend(
             DaikinClimate(
                 device,
@@ -122,7 +123,8 @@ def _create_climate_entities(
                 management_point.embedded_id,
                 description,
             )
-            for setpoint_type in climate_control.setpoint_types
+            for setpoint_type in setpoint_types
+            if not (setpoint_type == "leavingWaterOffset" and len(setpoint_types) > 1)
             if (description := CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type))
             is not None
         )
@@ -256,7 +258,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Return the features supported by this climate entity."""
         supported_features = ClimateEntityFeature(0)
         setpointdict = self._get_setpoint()
-        if setpointdict is not None and setpointdict.settable:
+        if (
+            self._setpoint != "leavingWaterOffset"
+            and setpointdict is not None
+            and setpointdict.settable
+        ):
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if len(self._get_preset_modes()) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -305,8 +311,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         except ValueError:
             return UnitOfTemperature.CELSIUS
 
-    def _get_max_temp(self) -> float:
+    def _get_max_temp(self) -> float | None:
         """Return the maximum configurable temperature."""
+        if self._setpoint == "leavingWaterOffset":
+            return None
         setpointdict = self._get_setpoint()
         return (
             setpointdict.max_value
@@ -314,8 +322,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             else super().max_temp
         )
 
-    def _get_min_temp(self) -> float:
+    def _get_min_temp(self) -> float | None:
         """Return the minimum configurable temperature."""
+        if self._setpoint == "leavingWaterOffset":
+            return None
         setpointdict = self._get_setpoint()
         return (
             setpointdict.min_value
@@ -325,6 +335,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_target_temperature(self) -> float | None:
         """Return the configured target temperature."""
+        if self._setpoint == "leavingWaterOffset":
+            return None
         value: float | None = None
         setpointdict = self._get_setpoint()
         if setpointdict is not None:
@@ -333,6 +345,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_target_temperature_step(self) -> float | None:
         """Return the target temperature increment."""
+        if self._setpoint == "leavingWaterOffset":
+            return None
         step_value: float | None = None
         setpointdict = self._get_setpoint()
         if setpointdict is not None:

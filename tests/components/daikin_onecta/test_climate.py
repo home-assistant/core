@@ -27,6 +27,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityDescription,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
@@ -97,8 +98,8 @@ async def _async_setup_climate_service_fixture(
     return entity_id, gateway_id, management_point, coordinator
 
 
-def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
-    """Create one entity per temperature target, not per operation mode."""
+def test_create_climate_entities_skips_offset_with_other_setpoints() -> None:
+    """Create one climate for each setpoint except the offset when combined."""
     management_point = SimpleNamespace(
         embedded_id="main_zone",
         climate_control=SimpleNamespace(
@@ -133,16 +134,6 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
         (
             (
                 device,
-                "leavingWaterOffset",
-                coordinator,
-                "main_zone",
-                CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterOffset"],
-            ),
-            {},
-        ),
-        (
-            (
-                device,
                 "leavingWaterTemperature",
                 coordinator,
                 "main_zone",
@@ -151,6 +142,78 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
             {},
         ),
     ]
+
+
+def test_create_climate_entities_keeps_offset_when_it_is_the_only_setpoint() -> None:
+    """Keep a mode-only climate entity for offset-only points."""
+    management_point = SimpleNamespace(
+        embedded_id="main_zone",
+        climate_control=SimpleNamespace(setpoint_types=["leavingWaterOffset"]),
+    )
+    device = MagicMock()
+    device.device.management_points_by_type.return_value = [management_point]
+    coordinator = MagicMock()
+
+    with patch(
+        "homeassistant.components.daikin_onecta.climate.DaikinClimate"
+    ) as climate:
+        _create_climate_entities(device, coordinator)
+
+    climate.assert_called_once_with(
+        device,
+        "leavingWaterOffset",
+        coordinator,
+        "main_zone",
+        CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterOffset"],
+    )
+
+
+async def test_offset_only_climate_supports_modes_but_not_temperature(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose the offset-only climate as mode-only, with service validation."""
+    await _async_setup_fixture(hass, config_entry, "altherma3m")
+    coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == CLIMATE_DOMAIN
+        and entry.unique_id.endswith("_leavingWaterOffset")
+    )
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert not (
+        state.attributes["supported_features"] & ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+    assert ClimateEntityStateAttribute.TARGET_TEMPERATURE not in state.attributes
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP) is None
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MAX_TEMP) is None
+    assert (
+        state.attributes.get(ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP) is None
+    )
+
+    coordinator.client.patch_characteristic = AsyncMock()
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entry.entity_id, "temperature": 5},
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_not_supported"
+    coordinator.client.patch_characteristic.assert_not_awaited()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entry.entity_id, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    assert hass.states.get(entry.entity_id).state == HVACMode.HEAT
 
 
 def test_create_climate_entities_skips_management_points_without_climate_control() -> (
@@ -884,6 +947,7 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
 def test_supported_features_require_writable_controls(power_settable: bool) -> None:
     """Only advertise controls that Daikin reports as writable."""
     entity = object.__new__(DaikinClimate)
+    entity._setpoint = "roomTemperature"
     entity._get_setpoint = MagicMock(return_value=None)
     entity._get_preset_modes = MagicMock(return_value=[PRESET_NONE])
     entity._climate_control = MagicMock(

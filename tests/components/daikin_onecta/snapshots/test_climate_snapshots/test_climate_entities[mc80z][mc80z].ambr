@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[mc80z][mc80z]
   dict({
-    'climate.test_floor_heating_leaving_water_offset': dict({
+    'climate.test_floor_heating_leaving_water': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -14,13 +14,12 @@
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
           ]),
-          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'config_entry_id': <ANY>,
@@ -30,7 +29,7 @@
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -38,16 +37,16 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Leaving water offset',
+        'object_id_base': 'Leaving water',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': 'Leaving water offset',
+        'original_name': 'Leaving water',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
-        'supported_features': <ClimateEntityFeature: 401>,
+        'supported_features': <ClimateEntityFeature: 400>,
         'translation_key': 'leaving_water_offset',
         'unique_id': '00000000-0000-4000-8000-000000000109_1_leavingWaterOffset',
         'unit_of_measurement': None,
@@ -55,27 +54,25 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
           ]),
-          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
-          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
             'none',
             'away',
           ]),
-          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
-          <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: -3,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_leaving_water',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
