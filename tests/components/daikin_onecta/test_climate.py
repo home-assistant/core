@@ -72,11 +72,7 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import DOMAIN, MockOnectaClient
-from .platform_helpers import (
-    _async_setup_fixture,
-    _execute_typed_command,
-    _load_gateway_devices,
-)
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 DRY_FIXED_DIRECTION_GATEWAY_ID = "00000000-0000-4000-8000-000000000108"
 
@@ -1518,16 +1514,16 @@ async def test_climate_does_not_advertise_read_only_fan_control(
     assert not entity.supported_features & ClimateEntityFeature.FAN_MODE
 
 
-async def test_climate_does_not_disable_read_only_active_preset(
+async def test_climate_rejects_disabling_read_only_active_preset(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Skip disabling an active preset when Daikin marks it read-only."""
+    """Reject changing presets when an active preset is read-only."""
     (
         entity_id,
-        gateway_id,
+        _,
         management_point,
         coordinator,
     ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
@@ -1535,40 +1531,27 @@ async def test_climate_does_not_disable_read_only_active_preset(
     assert climate_control is not None
     assert climate_control.on_off_mode is not None
     holiday_mode = climate_control.mode_characteristic("holidayMode")
-    powerful_mode = climate_control.mode_characteristic("powerfulMode")
-    assert holiday_mode is not None and powerful_mode is not None
+    assert holiday_mode is not None
     climate_control.on_off_mode.value = "on"
     holiday_mode.value.enabled = True
     holiday_mode.settable = False
     coordinator.async_update_listeners()
-    coordinator.async_execute_command = _execute_typed_command(
-        config_entry, mock_onecta_client
-    )
-
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
     assert entity is not None
     assert entity.preset_mode == PRESET_AWAY
     assert entity.preset_mode in entity.preset_modes
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_BOOST},
-        blocking=True,
-    )
-
-    mock_onecta_client.put_management_point.assert_not_awaited()
-    assert mock_onecta_client.patch_characteristic.await_args_list == [
-        (
-            (
-                gateway_id,
-                management_point.embedded_id,
-                "powerfulMode",
-                "on",
-            ),
-            {"path": None},
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_NONE},
+            blocking=True,
         )
-    ]
+
+    assert err.value.translation_key == "preset_mode_unavailable"
+    mock_onecta_client.put_management_point.assert_not_awaited()
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 async def test_climate_state_reports_enabled_away_preset(

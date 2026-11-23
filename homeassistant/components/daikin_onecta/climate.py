@@ -886,18 +886,16 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             return
 
         active_presets = self._get_active_preset_modes()
-        presets_to_disable = [
-            current_preset
-            for current_preset in active_presets
-            if current_preset != preset_mode
-            and (
-                preset := self._preset_characteristic(
-                    HA_PRESET_TO_DAIKIN[current_preset]
-                )
-            )
-            is not None
-            and preset.settable
-        ]
+        presets_to_disable = []
+        for current_preset in active_presets:
+            if current_preset == preset_mode:
+                continue
+            preset = self._preset_characteristic(HA_PRESET_TO_DAIKIN[current_preset])
+            if preset is None:
+                continue
+            if not preset.settable:
+                self._raise_service_validation_error("preset_mode_unavailable")
+            presets_to_disable.append(current_preset)
         for current_preset in presets_to_disable:
             await self._async_disable_preset_mode(current_preset)
             self._publish_write_update()
