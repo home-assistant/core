@@ -407,3 +407,30 @@ async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PASSWORD] == "fixed-password"
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the username belongs to a different account."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=MOCK_CONFIG[CONF_USERNAME].casefold(),
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "different_account@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+    assert config_entry.data == MOCK_CONFIG
