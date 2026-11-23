@@ -30,6 +30,10 @@ from .conftest import (
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
+SOH_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_state_of_health"
+CALIBRATED_REF_CONS_ENTITY_ID = (
+    "sensor.rivian_r2_2027_standard_long_range_calibrated_ref_cons"
+)
 CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 # Not in the mocked garage, so the stream never subscribes to it.
@@ -193,6 +197,47 @@ async def test_first_frame_creates_only_that_metric(
     assert [entity_registry.async_get(entity_id) for entity_id in absent] == [
         None
     ] * len(absent)
+
+
+@pytest.mark.parametrize(
+    ("telemetry", "entity_id"),
+    [
+        pytest.param(
+            Telemetry(voltage=build_metric_value(400.0)),
+            VOLTAGE_ENTITY_ID,
+            id="voltage",
+        ),
+        pytest.param(
+            Telemetry(soh=build_metric_value(98.0)),
+            SOH_ENTITY_ID,
+            id="soh",
+        ),
+        pytest.param(
+            Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
+            CALIBRATED_REF_CONS_ENTITY_ID,
+            id="calibrated_ref_cons",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_rarely_used_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_telemetry_stream: MagicMock,
+    telemetry: Telemetry,
+    entity_id: str,
+) -> None:
+    """Rarely used sensors are registered but disabled until the user enables them."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, telemetry)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
