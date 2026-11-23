@@ -118,6 +118,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
         | CoverEntityFeature.OPEN_TILT
     )
     _attr_device_class = CoverDeviceClass.BLIND
+    _attr_open_tilt_position = 50
 
     @property
     @override

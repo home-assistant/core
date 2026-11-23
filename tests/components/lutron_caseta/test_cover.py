@@ -7,15 +7,23 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverService,
+    CoverState,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockBridge, MockBridgeWithOpenCloseStopCover, async_setup_integration
+from . import (
+    MockBridge,
+    MockBridgeWithOpenCloseStopCover,
+    MockBridgeWithTiltOnlyBlind,
+    async_setup_integration,
+)
 
 
 @pytest.fixture
@@ -375,3 +383,15 @@ async def test_open_close_stop_cover_uses_raise_lower(
     )
     mock_instance.stop_cover.assert_called_once_with("805")
     mock_instance.set_value.assert_not_called()
+
+
+async def test_tilt_only_blind_open_tilt_position(hass: HomeAssistant) -> None:
+    """Test a tilt only blind is open in the middle of its tilt scale."""
+    await async_setup_integration(hass, MockBridgeWithTiltOnlyBlind)
+
+    state = hass.states.get("cover.basement_bedroom_basement_bedroom_wood_blind")
+
+    assert state is not None
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
