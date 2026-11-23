@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_object_fixture,
@@ -61,13 +62,26 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_turn_on_compatibility_mode(
+@pytest.mark.parametrize(
+    ("service", "target_value", "initial_state", "expected_state"),
+    [
+        pytest.param(SERVICE_TURN_ON, True, STATE_OFF, STATE_ON, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, False, STATE_ON, STATE_OFF, id="turn_off"),
+    ],
+)
+async def test_set_compatibility_mode(
     hass: HomeAssistant,
     mock_device: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
+    target_value: bool,
+    initial_state: str,
+    expected_state: str,
 ) -> None:
-    """Test turning the compatibility mode switch on."""
-    mock_device.device_info.return_value = _device_info(precise_pwm_mode=False)
+    """Test turning the compatibility mode switch on and off."""
+    mock_device.device_info.return_value = _device_info(
+        precise_pwm_mode=not target_value
+    )
 
     with patch.multiple(
         "homeassistant.components.lektrico",
@@ -76,47 +90,19 @@ async def test_turn_on_compatibility_mode(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == initial_state
 
-    mock_device.device_info.return_value = _device_info(precise_pwm_mode=True)
+    mock_device.device_info.return_value = _device_info(precise_pwm_mode=target_value)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: COMPATIBILITY_MODE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    mock_device.set_compatibility_mode.assert_awaited_once_with(True)
-    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == STATE_ON
-
-
-async def test_turn_off_compatibility_mode(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test turning the compatibility mode switch off."""
-    with patch.multiple(
-        "homeassistant.components.lektrico",
-        CHARGERS_PLATFORMS=[Platform.SWITCH],
-        LB_DEVICES_PLATFORMS=[Platform.SWITCH],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == STATE_ON
-
-    mock_device.device_info.return_value = _device_info(precise_pwm_mode=False)
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: COMPATIBILITY_MODE_ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    mock_device.set_compatibility_mode.assert_awaited_once_with(False)
-    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == STATE_OFF
+    mock_device.set_compatibility_mode.assert_awaited_once_with(target_value)
+    assert hass.states.get(COMPATIBILITY_MODE_ENTITY_ID).state == expected_state
 
 
 async def test_compatibility_mode_not_created_for_three_phase_charger(
