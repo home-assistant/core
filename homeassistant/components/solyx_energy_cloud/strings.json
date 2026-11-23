@@ -23,6 +23,16 @@
     }
   },
   "entity": {
+    "select": {
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "direct": "Direct",
+          "muted": "Muted",
+          "normal": "Normal"
+        }
+      }
+    },
     "sensor": {
       "boiler_current": {
         "name": "Boiler current"

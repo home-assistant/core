@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import BASE_URL, CONF_NYMO_CLIENT_ID, CONF_NYMO_CLIENT_SECRET, REALM_ID
 from .coordinator import SolyxEnergyConfigEntry, SolyxEnergyCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) -> None:
