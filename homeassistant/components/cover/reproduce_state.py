@@ -29,6 +29,11 @@ FULL_OPEN: Final = 100
 FULL_CLOSE: Final = 0
 
 
+def _closed_tilt_position(open_tilt_position: int) -> int:
+    """Return a closed end of the tilt scale."""
+    return FULL_OPEN if open_tilt_position == FULL_CLOSE else FULL_CLOSE
+
+
 def _determine_features(current_attrs: dict[str, Any]) -> CoverEntityFeature:
     """Determine supported features based on current attributes."""
     features = CoverEntityFeature(0)
@@ -80,6 +85,7 @@ async def _async_set_tilt_position(
     service_data: dict[str, Any],
     features: CoverEntityFeature,
     target_tilt_position: int,
+    open_tilt_position: int,
 ) -> bool:
     """Set the tilt position of the cover.
 
@@ -92,10 +98,14 @@ async def _async_set_tilt_position(
             service_data | {CoverServiceArgument.TILT_POSITION: target_tilt_position},
         )
     elif (
-        target_tilt_position == FULL_CLOSE and CoverEntityFeature.CLOSE_TILT in features
+        target_tilt_position == _closed_tilt_position(open_tilt_position)
+        and CoverEntityFeature.CLOSE_TILT in features
     ):
         await service_call(CoverService.CLOSE_TILT, service_data)
-    elif target_tilt_position == FULL_OPEN and CoverEntityFeature.OPEN_TILT in features:
+    elif (
+        target_tilt_position == open_tilt_position
+        and CoverEntityFeature.OPEN_TILT in features
+    ):
         await service_call(CoverService.OPEN_TILT, service_data)
     else:
         # Requested a tilt position but the cover doesn't support it
@@ -109,6 +119,7 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
+    open_tilt_position: int,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
     if not set_position:
@@ -125,7 +136,12 @@ async def _async_close_cover(
         elif CoverEntityFeature.SET_TILT_POSITION in features:
             await service_call(
                 CoverService.SET_TILT_POSITION,
-                service_data | {CoverServiceArgument.TILT_POSITION: FULL_CLOSE},
+                service_data
+                | {
+                    CoverServiceArgument.TILT_POSITION: _closed_tilt_position(
+                        open_tilt_position
+                    )
+                },
             )
 
 
@@ -222,12 +238,21 @@ async def _async_reproduce_state(
         service_call, service_data, features, target_position
     )
     set_tilt = target_tilt_position is not None and await _async_set_tilt_position(
-        service_call, service_data, features, target_tilt_position
+        service_call,
+        service_data,
+        features,
+        target_tilt_position,
+        open_tilt_position,
     )
 
     if target_state in CLOSING_STATES:
         await _async_close_cover(
-            service_call, service_data, features, set_position, set_tilt
+            service_call,
+            service_data,
+            features,
+            set_position,
+            set_tilt,
+            open_tilt_position,
         )
 
     elif target_state in OPENING_STATES:
