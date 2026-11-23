@@ -143,7 +143,7 @@ async def async_send_message(  # noqa: C901
         """Service for sending XMPP messages."""
 
         def __init__(self):
-            """Initialize the Jabber Bot."""
+            """Initialize the XMPP bot."""
             super().__init__(sender, password)
 
             self.loop = hass.loop
