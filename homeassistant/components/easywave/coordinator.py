@@ -423,8 +423,17 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "easywave_telegram_listener",
         )
 
+    def _wake_learning(self) -> None:
+        """Unblock an active learning wait so reconnect can proceed."""
+        queue = self._learning_queue
+        if queue is not None:
+            queue.put_nowait(None)
+
     def _stop_telegram_listener(self) -> asyncio.Task[None] | None:
         """Cancel the listener and return the task so callers can await it."""
+        # Learning waits on the queue; notify it on disconnect/offline stop so the
+        # lock is released instead of blocking reconnect for the full timeout.
+        self._wake_learning()
         if self._listener_task is None:
             return None
         task = self._listener_task

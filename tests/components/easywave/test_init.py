@@ -155,14 +155,23 @@ async def test_remove_entry_clears_frequency_repair_issue(
 
 
 async def test_setup_entry_keeps_reconnect_polling_without_entity_listeners(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """Config entry keeps coordinator refresh scheduled without entity listeners."""
-    await async_setup_easywave_entry(hass, mock_config_entry)
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        pref_disable_new_entities=True,
+    )
+    await async_setup_easywave_entry(hass, entry)
 
-    coordinator = mock_config_entry.runtime_data.coordinator
-    assert coordinator._listeners
+    coordinator = entry.runtime_data.coordinator
+    assert len(coordinator._listeners) == 1
     assert coordinator._unsub_refresh is not None
+    assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_setup_entry_deletes_stale_repair_issue(

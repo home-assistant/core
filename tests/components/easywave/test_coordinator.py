@@ -315,6 +315,27 @@ async def test_refresh_skips_reconnect_while_learning(
     coordinator.end_learning()
 
 
+async def test_disconnect_wakes_learning_wait(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Disconnect unblocks learning so the session can release the reconnect lock."""
+    await coordinator.async_config_entry_first_refresh()
+    assert await coordinator.begin_learning() is True
+    waiter = asyncio.create_task(coordinator.wait_for_learning_telegram(30.0))
+    await hass.async_block_till_done()
+
+    mock_transceiver.is_connected = False
+    disconnect_callback = mock_transceiver.set_disconnect_callback.call_args[0][0]
+    disconnect_callback()
+
+    assert await waiter is None
+    assert coordinator.is_offline is True
+    coordinator.end_learning()
+    assert coordinator.is_learning_busy() is False
+
+
 async def test_connected_callback_restores_online_state(
     hass: HomeAssistant,
     coordinator: EasywaveCoordinator,
