@@ -1,4 +1,4 @@
-"""Jabber (XMPP) notification service."""
+"""XMPP notification service."""
 
 from concurrent.futures import TimeoutError as FutTimeoutError
 from http import HTTPStatus
@@ -75,7 +75,7 @@ async def async_get_service(
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> XmppNotificationService:
-    """Get the Jabber (XMPP) notification service."""
+    """Get the XMPP notification service."""
     return XmppNotificationService(
         config.get(CONF_SENDER),
         config.get(CONF_RESOURCE),
@@ -89,7 +89,7 @@ async def async_get_service(
 
 
 class XmppNotificationService(BaseNotificationService):
-    """Implement the notification service for Jabber (XMPP)."""
+    """Implement the notification service for XMPP."""
 
     def __init__(self, sender, resource, password, recipient, tls, verify, room, hass):
         """Initialize the service."""
@@ -140,7 +140,7 @@ async def async_send_message(  # noqa: C901
     """Send a message over XMPP."""
 
     class SendNotificationBot(slixmpp.ClientXMPP):
-        """Service for sending Jabber (XMPP) messages."""
+        """Service for sending XMPP messages."""
 
         def __init__(self):
             """Initialize the Jabber Bot."""
