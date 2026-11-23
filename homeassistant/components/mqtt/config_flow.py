@@ -5470,27 +5470,28 @@ def check_certicate_chain(config: dict[str, Any]) -> str | None:
     )
     private_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(CONF_CLIENT_KEY)
     ca_cert = config.get(CONF_CERTIFICATE_FILE) or get_file_path(CONF_CERTIFICATE)
-    for file_path, error in (
-        (client_certificate, "cannot_read_client_cert_file"),
-        (private_key, "cannot_read_client_key_file"),
-        (ca_cert, "cannot_read_certificate_file"),
-    ):
-        if file_path and not (
-            os.path.isfile(file_path) and os.access(file_path, os.R_OK)
-        ):
-            return error
+    if ca_cert and not (os.path.isfile(ca_cert) and os.access(ca_cert, os.R_OK)):
+        return "cannot_read_certificate_file"
 
     if client_certificate:
         try:
             with open(client_certificate, "rb") as client_certificate_file:
-                load_pem_x509_certificate(client_certificate_file.read())
+                data = client_certificate_file.read()
+        except OSError:
+            return "cannot_read_client_cert_file"
+        try:
+            load_pem_x509_certificate(data)
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
     if private_key:
         try:
             with open(private_key, "rb") as client_key_file:
-                load_pem_private_key(client_key_file.read(), password=None)
+                data = client_key_file.read()
+        except OSError:
+            return "cannot_read_client_key_file"
+        try:
+            load_pem_private_key(data, password=None)
         except TypeError, ValueError, UnsupportedAlgorithm:
             return "client_key_error"
     # Check the certificate chain
