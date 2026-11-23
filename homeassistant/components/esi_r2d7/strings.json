@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_channel_range": "The first channel must not be higher than the last channel.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]",
+          "first_channel": "First channel",
+          "last_channel": "Last channel",
+          "system": "System"
+        },
+        "data_description": {
+          "device": "Serial port the R2D7 is connected to",
+          "first_channel": "Lowest R2D7 channel that has a blind",
+          "last_channel": "Highest R2D7 channel that has a blind",
+          "system": "R2D7 system number set on the controller"
+        },
+        "description": "The R2D7 has no per-blind stop. Stop on any blind stops every moving blind on the same system."
+      }
+    }
+  },
+  "entity": {
+    "cover": {
+      "blind": {
+        "name": "Channel {channel}"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to the ESI R2D7 at {port}"
+    },
+    "command_failed": {
+      "message": "The serial link failed. The command may not have reached the ESI R2D7."
+    }
+  }
+}
