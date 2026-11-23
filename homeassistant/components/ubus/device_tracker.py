@@ -122,13 +122,17 @@ def _async_rehome_devices(
     mac: str,
 ) -> None:
     """Move a device left behind for this client, avoiding a duplicate."""
+    connection = (dr.CONNECTION_NETWORK_MAC, mac)
+    if device_registry.async_get_device_by_connection(connection, config_entry_id):
+        return
     for entry in hass.config_entries.async_entries(DOMAIN):
         if device := device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+            connection, entry.entry_id
         ):
             device_registry.async_update_device(
                 device.id, new_config_entry_id=config_entry_id
             )
+            return
 
 
 @callback
@@ -179,12 +183,22 @@ async def async_setup_entry(
             (dr.CONNECTION_NETWORK_MAC, mac), previous_owner
         )
         if device is not None:
-            device_registry.async_update_device(
-                device.id, new_config_entry_id=config_entry.entry_id
+            target_device = device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
             )
+            if target_device is not None:
+                entity_registry.async_update_entity(
+                    entity_id, device_id=target_device.id
+                )
+            else:
+                device_registry.async_update_device(
+                    device.id, new_config_entry_id=config_entry.entry_id
+                )
 
     @callback
     def _async_update_devices() -> None:
+        if not coordinator.last_update_success:
+            return
         new_macs = [mac for mac in coordinator.data if mac not in tracked]
         claimed: list[str] = []
         for mac in new_macs:
@@ -204,7 +218,21 @@ async def async_setup_entry(
                     # tracker whose owner has no live claim on the MAC (e.g. it
                     # is offline and its platform never loaded, as after a
                     # restart).
-                    if shared.owners.get(mac) is not None:
+                    owner_entry = (
+                        hass.config_entries.async_get_entry(
+                            registry_entry.config_entry_id
+                        )
+                        if registry_entry.config_entry_id is not None
+                        else None
+                    )
+                    if shared.owners.get(mac) is not None or (
+                        owner_entry is not None
+                        and owner_entry.state
+                        in (
+                            ConfigEntryState.LOADED,
+                            ConfigEntryState.SETUP_IN_PROGRESS,
+                        )
+                    ):
                         continue
                     _async_take_over(mac, entity_id, registry_entry.config_entry_id)
             # The claim is made before adding the entity so two entries which
@@ -374,6 +402,7 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
             if entry.state
             in (
                 ConfigEntryState.LOADED,
+                ConfigEntryState.FAILED_UNLOAD,
                 ConfigEntryState.SETUP_IN_PROGRESS,
                 ConfigEntryState.SETUP_RETRY,
             )
