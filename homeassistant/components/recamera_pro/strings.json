@@ -18,450 +18,50 @@
       "unknown": "Unexpected error."
     },
     "step": {
-      "user": {
-        "title": "Add reCamera Pro",
-        "description": "Connect to a reCamera Pro on your local network.",
-        "data": {
-          "host": "IP address",
-          "username": "Device username",
-          "password": "Device password"
-        }
-      },
-      "zeroconf_confirm": {
-        "title": "Set up discovered reCamera Pro",
-        "description": "Home Assistant found {name}. Enter the device credentials to verify its identity.",
-        "data": {
-          "host": "IP address",
-          "username": "Device username",
-          "password": "Device password"
-        }
-      },
       "reauth_confirm": {
-        "title": "Reauthenticate reCamera Pro",
-        "description": "The saved device credentials were rejected.",
         "data": {
-          "username": "Device username",
-          "password": "Device password"
-        }
+          "password": "Device password",
+          "username": "Device username"
+        },
+        "description": "The saved device credentials were rejected.",
+        "title": "Reauthenticate reCamera Pro"
       },
       "reconfigure": {
-        "title": "Reconfigure reCamera Pro",
-        "description": "Update the device address or credentials.",
         "data": {
           "host": "IP address",
-          "username": "Device username",
-          "password": "New password (leave blank to keep current)"
-        }
-      }
-    }
-  },
-  "options": {
-    "abort": {},
-    "error": {
-      "cannot_connect": "Cannot connect to the device.",
-      "invalid_video_bitrate": "The selected bitrate is not supported.",
-      "invalid_video_codec": "The selected video codec is not supported.",
-      "invalid_video_frame_rate": "The selected frame rate is not supported at this resolution.",
-      "invalid_video_gop": "The selected keyframe interval is not supported.",
-      "invalid_video_resolution": "The selected resolution is not supported.",
-      "firmware_busy": "Another firmware operation is already in progress.",
-      "device_busy": "The device is busy. Wait for the current operation to finish and retry.",
-      "invalid_appmgr_response": "The device returned invalid application configuration.",
-      "app_center_lifecycle_unavailable": "The device App Center cannot change this system App. Use its compatible lifecycle API.",
-      "motion_app_not_installed": "The motion-detect App is not installed on the device.",
-      "motion_config_unavailable": "The motion detection configuration is not currently available from the device.",
-      "motion_config_not_applied": "The device did not apply the requested motion detection settings.",
-      "app_operation_failed": "The device reported that the App operation failed.",
-      "app_operation_timeout": "Timed out waiting for the device App operation.",
-      "invalid_motion_config": "The motion detection setting is outside the supported range.",
-      "motion_state_not_confirmed": "The device did not confirm the requested motion detection state.",
-      "motion_transition_timeout": "Motion detection did not finish changing state within 30 seconds.",
-      "motion_transition_in_progress": "Motion detection is already changing state. Wait for the current operation to finish.",
-      "invalid_image_response": "The device returned invalid image configuration.",
-      "invalid_image_section": "The requested image configuration section is invalid.",
-      "invalid_image_day_night_option": "The selected day/night mode is invalid.",
-      "invalid_image_hdr_option": "The selected HDR mode is invalid.",
-      "invalid_image_anti_flicker": "The selected anti-flicker mode is invalid.",
-      "image_scene_busy": "The device Web UI is editing an image scene. Save or close it before retrying.",
-      "image_scene_save_failed": "The device did not save the image scene changes.",
-      "image_scene_exit_failed": "The image changes were saved, but the device did not exit scene editing mode.",
-      "image_update_failed": "The device rejected the image configuration update.",
-      "image_update_not_applied": "The device did not apply the requested image settings.",
-      "unknown": "Unexpected error.",
-      "video_rtsp_restore_failed": "The video settings changed, but live streaming could not be restored.",
-      "video_update_failed": "The device rejected the video settings.",
-      "video_update_not_applied": "The device did not apply the requested video settings.",
-      "connection_error": "Cannot connect to the device.",
-      "invalid_auth": "The device rejected the saved credentials. Reauthenticate the integration.",
-      "protocol_error": "The device returned an invalid response.",
-      "session_expired": "The device session expired. Reauthenticate the integration."
-    },
-    "step": {
-      "init": {
-        "title": "reCamera Pro settings",
-        "description": "Choose a settings category.",
-        "menu_options": {
-          "vision": "Visual recognition",
-          "sound": "Sound recognition",
-          "classes": "Detection classes"
-        }
+          "password": "New password (leave blank to keep current)",
+          "username": "Device username"
+        },
+        "description": "Update the device address or credentials.",
+        "title": "Reconfigure reCamera Pro"
       },
-      "vision": {
-        "title": "Visual recognition settings",
+      "user": {
         "data": {
-          "visual_min_confidence": "Visual confidence threshold",
-          "visual_confirm_seconds": "Visual confirmation time",
-          "class_stale_seconds": "Detection state hold time",
-          "visual_cooldown_seconds": "Visual event cooldown"
+          "host": "IP address",
+          "password": "Device password",
+          "username": "Device username"
         },
-        "data_description": {
-          "visual_min_confidence": "Minimum confidence (0.0–1.0) required before visual detections are accepted; higher values reduce false positives.",
-          "visual_confirm_seconds": "The target must remain detected for this duration before an event is triggered. 0 triggers immediately.",
-          "class_stale_seconds": "How long the detected state remains active after the target was last seen.",
-          "visual_cooldown_seconds": "Minimum time before the same visual class can trigger another event."
-        }
+        "description": "Connect to a reCamera Pro on your local network.",
+        "title": "Add reCamera Pro"
       },
-      "sound": {
-        "title": "Sound recognition settings",
+      "zeroconf_confirm": {
         "data": {
-          "audio_min_confidence": "Sound confidence threshold",
-          "audio_cooldown_seconds": "Sound event cooldown"
+          "host": "IP address",
+          "password": "Device password",
+          "username": "Device username"
         },
-        "data_description": {
-          "audio_min_confidence": "Minimum confidence (0.0–1.0) required before sound detections trigger an event.",
-          "audio_cooldown_seconds": "Minimum time before the same sound class can trigger another event."
-        }
-      },
-      "classes": {
-        "title": "Detection classes",
-        "description": "{class_count} visual classes have been observed. Selected classes create binary_sensor entities.",
-        "data": {
-          "tracked_classes": "Tracked visual classes"
-        },
-        "data_description": {
-          "tracked_classes": "Each selected class creates a binary_sensor entity; unselected classes still emit events."
-        }
+        "description": "Home Assistant found {name}. Enter the device credentials to verify its identity.",
+        "title": "Set up discovered reCamera Pro"
       }
-    }
-  },
-  "services": {
-    "capture_device_snapshot": {
-      "name": "Take device snapshot",
-      "description": "Capture one JPG directly to device /mnt storage. Independent of main/sub RTSP stream state; shares the device's single capture slot.",
-      "fields": {
-        "output": {
-          "name": "Output path",
-          "description": "Must start with /mnt/ (directory or .jpg/.jpeg file). Leave empty to use the active device storage directory."
-        }
-      }
-    },
-    "start_device_recording": {
-      "name": "Start device recording",
-      "description": "Record an MP4 clip directly to device /mnt storage. Independent of main/sub RTSP stream state; rejected if another capture is active.",
-      "fields": {
-        "output": {
-          "name": "Output path",
-          "description": "Must start with /mnt/ (directory or .mp4 file). Leave empty to use the active device storage directory."
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "Recording length in seconds (1–3600)."
-        }
-      }
-    },
-    "stop_device_capture": {
-      "name": "Stop device recording",
-      "description": "Stop the active device recording started by this integration and wait until the file is finalized on /mnt storage."
-    }
-  },
-  "exceptions": {
-    "recamera_error": {
-      "message": "The device action failed: {error}"
-    },
-    "invalid_auth": {
-      "message": "The device rejected the saved credentials. Reauthenticate the integration."
-    },
-    "connection_error": {
-      "message": "The device could not be reached: {error}"
-    },
-    "protocol_error": {
-      "message": "The device returned an invalid response: {error}"
-    },
-    "validation_error": {
-      "message": "The capture request is invalid: {error}"
-    },
-    "device_capture_busy": {
-      "message": "Another capture is already running on this device. Wait for it to finish before retrying."
-    },
-    "device_capture_request_conflict": {
-      "message": "This service call expanded into conflicting capture parameters. Use one camera entity and one set of parameters."
-    },
-    "external_capture_active": {
-      "message": "A capture owned by another client is active. It will not be stopped by this integration."
-    },
-    "capture_ownership_lost": {
-      "message": "The active device capture no longer matches the task owned by this integration. No stop request was sent."
-    },
-    "capture_not_active": {
-      "message": "The owned capture is no longer active. No stop request was sent."
-    },
-    "active_capture_is_not_recording": {
-      "message": "The active capture is not a video recording and cannot be stopped with this action."
-    },
-    "invalid_capture_ready_state": {
-      "message": "The device did not return a valid ready state. Capture was not started."
-    },
-    "invalid_capture_status": {
-      "message": "The device returned an invalid capture status."
-    },
-    "capture_status_timeout": {
-      "message": "Timed out while reading the device capture status."
-    },
-    "missing_capture_id": {
-      "message": "The device response did not include a capture task ID."
-    },
-    "missing_capture_status": {
-      "message": "The device response did not include a capture status."
-    },
-    "invalid_capture_response": {
-      "message": "The device returned an invalid capture response."
-    },
-    "device_storage_full": {
-      "message": "The selected device storage has no free space."
-    },
-    "device_storage_saturated": {
-      "message": "The selected device storage is saturated."
-    },
-    "no_selected_storage": {
-      "message": "No enabled storage slot is selected on the device."
-    },
-    "capture_timeout": {
-      "message": "Timed out while waiting for the device capture to complete."
-    },
-    "capture_completion_timeout": {
-      "message": "The stop request was accepted, but the device did not finalize the capture file in time."
-    },
-    "capture_failed": {
-      "message": "The device reported that capture failed."
-    },
-    "identity_confirm_failed": {
-      "message": "Unable to confirm the stored hardware identity."
-    },
-    "identity_mac_mismatch": {
-      "message": "Authenticated device hardware identity does not match."
-    },
-    "identity_mac_missing": {
-      "message": "Device did not expose its stored hardware identity."
-    },
-    "identity_serial_mismatch": {
-      "message": "Authenticated device serial identity does not match."
-    },
-    "identity_missing": {
-      "message": "Device did not expose a stable hardware identity."
-    },
-    "capture_interrupted": {
-      "message": "The device reported that capture was interrupted."
-    },
-    "capture_canceled": {
-      "message": "The device reported that capture was canceled."
-    },
-    "capture_stop_failed": {
-      "message": "The device rejected the stop capture request."
-    },
-    "start_status_unconfirmed": {
-      "message": "The recording request was interrupted before the device confirmed it. Check the device status before retrying."
-    },
-    "capture_status_unconfirmed": {
-      "message": "The device capture status could not be confirmed before the monitoring deadline. Check the device before starting another capture."
-    },
-    "capture_overdue_unconfirmed": {
-      "message": "The recording did not complete before its expected deadline. Check the device status before starting another capture."
-    },
-    "capture_output_must_start_with_mnt": {
-      "message": "Output must be an absolute path under /mnt on the device."
-    },
-    "capture_output_path_traversal": {
-      "message": "The output path must not contain '..' path traversal."
-    },
-    "capture_output_extension_mismatch": {
-      "message": "Snapshot output files must use .jpg or .jpeg; recordings must use .mp4. Use a path without an extension for a directory."
-    },
-    "unsupported_capture_format": {
-      "message": "The requested capture format is not supported."
-    },
-    "invalid_video_resolution": {
-      "message": "The selected video resolution is invalid."
-    },
-    "invalid_video_frame_rate": {
-      "message": "The selected frame rate is not supported by reCamera Pro."
-    },
-    "invalid_video_bitrate": {
-      "message": "The selected maximum bitrate is outside the supported range."
-    },
-    "invalid_video_gop": {
-      "message": "The selected GOP value is outside the supported range."
-    },
-    "invalid_video_profile": {
-      "message": "The selected H.264 profile is invalid."
-    },
-    "invalid_video_codec": {
-      "message": "The selected video codec is invalid."
-    },
-    "invalid_video_response": {
-      "message": "The device returned an invalid video configuration."
-    },
-    "invalid_video_stream": {
-      "message": "The requested video stream is invalid."
-    },
-    "video_update_not_applied": {
-      "message": "The device did not apply the requested video settings."
-    },
-    "video_rtsp_restore_failed": {
-      "message": "The video settings changed, but RTSP could not be restored."
-    },
-    "video_update_failed": {
-      "message": "The device rejected the video configuration update."
-    },
-    "injected_session_closed": {
-      "message": "The injected HTTP session is closed."
-    },
-    "invalid_device_info": {
-      "message": "The device returned invalid device information."
-    },
-    "invalid_storage_mount": {
-      "message": "The device returned an invalid storage mount path."
-    },
-    "invalid_storage_status": {
-      "message": "The device returned an invalid storage status."
-    },
-    "missing_public_key": {
-      "message": "The device did not provide a login public key."
-    },
-    "request_failed": {
-      "message": "The device request failed after reauthentication."
-    },
-    "session_expired": {
-      "message": "The device session expired and could not be renewed. Reauthenticate the integration."
-    },
-    "websocket_auth_failed": {
-      "message": "The device rejected WebSocket authentication."
-    },
-    "websocket_connect_failed": {
-      "message": "The device WebSocket connection failed."
-    },
-    "firmware_check_failed": {
-      "message": "The device rejected the firmware update check."
-    },
-    "invalid_firmware_update_response": {
-      "message": "The device returned invalid firmware update information."
-    },
-    "firmware_start_failed": {
-      "message": "The device rejected the firmware download request."
-    },
-    "invalid_firmware_progress": {
-      "message": "The device returned invalid firmware download progress."
-    },
-    "firmware_download_failed": {
-      "message": "The device reported a firmware download failure."
-    },
-    "firmware_download_timeout": {
-      "message": "Timed out while waiting for the firmware download."
-    },
-    "firmware_apply_failed": {
-      "message": "The device rejected the firmware apply request."
-    },
-    "firmware_target_unknown": {
-      "message": "The OTA response did not identify the target firmware version."
-    },
-    "firmware_target_mismatch": {
-      "message": "The device reconnected with a firmware version different from the OTA target."
-    },
-    "firmware_no_update": {
-      "message": "No firmware update is currently available."
-    },
-    "firmware_busy": {
-      "message": "Another firmware operation is already in progress."
-    },
-    "motion_app_not_installed": {
-      "message": "The motion-detect App is not installed on the device."
-    },
-    "invalid_appmgr_response": {
-      "message": "The device returned invalid AppMgr data."
-    },
-    "app_center_lifecycle_unavailable": {
-      "message": "The device App Center cannot change this system App. Use its compatible lifecycle API."
-    },
-    "motion_config_unavailable": {
-      "message": "The motion detection configuration is not currently available from the device."
-    },
-    "motion_config_not_applied": {
-      "message": "The device did not apply the requested motion detection settings."
-    },
-    "app_operation_failed": {
-      "message": "The device reported that the App operation failed."
-    },
-    "app_operation_timeout": {
-      "message": "Timed out waiting for the device App operation."
-    },
-    "invalid_motion_config": {
-      "message": "The motion detection setting is outside the supported range."
-    },
-    "motion_state_not_confirmed": {
-      "message": "The device did not confirm the requested motion detection state."
-    },
-    "motion_transition_timeout": {
-      "message": "Motion detection did not finish changing state within 30 seconds."
-    },
-    "motion_transition_in_progress": {
-      "message": "Motion detection is already changing state. Wait for the current operation to finish."
-    },
-    "device_busy": {
-      "message": "The device is busy. Wait for the current operation to finish and retry."
-    },
-    "invalid_image_response": {
-      "message": "The device returned invalid image configuration."
-    },
-    "invalid_image_section": {
-      "message": "The requested image configuration section is invalid."
-    },
-    "invalid_image_day_night_option": {
-      "message": "The selected day/night mode is invalid."
-    },
-    "invalid_image_hdr_option": {
-      "message": "The selected HDR mode is invalid."
-    },
-    "invalid_image_anti_flicker": {
-      "message": "The selected anti-flicker mode is invalid."
-    },
-    "image_scene_busy": {
-      "message": "The device Web UI is editing an image scene. Close or save that editor before changing image settings from Home Assistant."
-    },
-    "image_scene_save_failed": {
-      "message": "The device did not save the image scene changes."
-    },
-    "image_scene_exit_failed": {
-      "message": "The image changes were saved, but the device did not exit scene editing mode."
-    },
-    "image_update_failed": {
-      "message": "The device rejected the image configuration update."
-    },
-    "image_update_not_applied": {
-      "message": "The device did not apply the requested image settings."
-    },
-    "firmware_version_unconfirmed": {
-      "message": "The device reconnected with the same firmware version, so the update cannot be confirmed without an installation result or boot ID."
-    },
-    "firmware_reboot_state_invalid": {
-      "message": "The pending firmware operation has no valid start time. Start the update again."
     }
   },
   "entity": {
     "binary_sensor": {
-      "visual_class": {
-        "name": "{class_name} detection"
-      },
       "motion_active": {
         "name": "Motion active"
+      },
+      "visual_class": {
+        "name": "{class_name} detection"
       }
     },
     "camera": {
@@ -472,56 +72,38 @@
         "name": "Main stream"
       }
     },
-    "select": {
-      "main_resolution": {
-        "name": "Main stream resolution"
+    "event": {
+      "audio_event": {
+        "name": "Sound recognition event"
       },
-      "sub_resolution": {
-        "name": "Sub stream resolution"
+      "motion_event": {
+        "name": "Motion detected"
       },
-      "main_frame_rate": {
-        "name": "Main stream frame rate"
-      },
-      "sub_frame_rate": {
-        "name": "Sub stream frame rate"
-      },
-      "main_encoding": {
-        "name": "Main stream encoding"
-      },
-      "sub_encoding": {
-        "name": "Sub stream encoding"
+      "yolo_event": {
+        "name": "Visual recognition event"
       }
     },
     "number": {
-      "main_max_bitrate": {
-        "name": "Main stream maximum bitrate"
-      },
-      "sub_max_bitrate": {
-        "name": "Sub stream maximum bitrate"
-      },
       "main_frame_rate": {
         "name": "Main stream frame rate"
-      },
-      "sub_frame_rate": {
-        "name": "Sub stream frame rate"
       },
       "main_gop": {
         "name": "Main stream GOP"
       },
-      "sub_gop": {
-        "name": "Sub stream GOP"
+      "main_max_bitrate": {
+        "name": "Main stream maximum bitrate"
       },
-      "yolo_confidence": {
-        "name": "Visual confidence threshold"
+      "motion_hold_seconds": {
+        "name": "Motion hold time"
       },
-      "yolo_confirm_seconds": {
-        "name": "Visual confirmation time"
+      "motion_min_changed_ratio": {
+        "name": "Motion minimum changed area"
       },
-      "yolo_hold_seconds": {
-        "name": "Visual detection state hold time"
+      "motion_sample_fps": {
+        "name": "Motion analysis sample rate"
       },
-      "yolo_cooldown_seconds": {
-        "name": "Visual event cooldown"
+      "motion_sq_diff_threshold": {
+        "name": "Motion pixel difference threshold"
       },
       "sound_confidence": {
         "name": "Sound confidence threshold"
@@ -529,62 +111,480 @@
       "sound_cooldown_seconds": {
         "name": "Sound event cooldown"
       },
-      "motion_sq_diff_threshold": {
-        "name": "Motion pixel difference threshold"
+      "sub_frame_rate": {
+        "name": "Sub stream frame rate"
       },
-      "motion_min_changed_ratio": {
-        "name": "Motion minimum changed area"
+      "sub_gop": {
+        "name": "Sub stream GOP"
       },
-      "motion_hold_seconds": {
-        "name": "Motion hold time"
+      "sub_max_bitrate": {
+        "name": "Sub stream maximum bitrate"
       },
-      "motion_sample_fps": {
-        "name": "Motion analysis sample rate"
+      "yolo_confidence": {
+        "name": "Visual confidence threshold"
+      },
+      "yolo_confirm_seconds": {
+        "name": "Visual confirmation time"
+      },
+      "yolo_cooldown_seconds": {
+        "name": "Visual event cooldown"
+      },
+      "yolo_hold_seconds": {
+        "name": "Visual detection state hold time"
       }
     },
-    "event": {
-      "yolo_event": {
-        "name": "Visual recognition event"
+    "select": {
+      "main_encoding": {
+        "name": "Main stream encoding"
       },
-      "audio_event": {
-        "name": "Sound recognition event"
+      "main_frame_rate": {
+        "name": "Main stream frame rate"
       },
-      "motion_event": {
-        "name": "Motion detected"
+      "main_resolution": {
+        "name": "Main stream resolution"
+      },
+      "sub_encoding": {
+        "name": "Sub stream encoding"
+      },
+      "sub_frame_rate": {
+        "name": "Sub stream frame rate"
+      },
+      "sub_resolution": {
+        "name": "Sub stream resolution"
       }
     },
     "sensor": {
-      "last_detection": {
-        "name": "Recent visual target"
-      },
       "confidence": {
         "name": "Visual confidence"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "last_detection": {
+        "name": "Recent visual target"
       },
       "last_event": {
         "name": "Recent visual event"
       },
       "visual_source_status": {
         "name": "Visual source status"
+      }
+    },
+    "switch": {
+      "main_rtsp_stream": {
+        "name": "Main stream RTSP"
       },
-      "firmware_version": {
-        "name": "Firmware version"
+      "motion_detection": {
+        "name": "Motion detection function"
+      },
+      "sub_rtsp_stream": {
+        "name": "Sub stream RTSP"
       }
     },
     "update": {
       "firmware": {
         "name": "Firmware update"
       }
+    }
+  },
+  "exceptions": {
+    "active_capture_is_not_recording": {
+      "message": "The active capture is not a video recording and cannot be stopped with this action."
     },
-    "switch": {
-      "motion_detection": {
-        "name": "Motion detection function"
+    "app_center_lifecycle_unavailable": {
+      "message": "The device App Center cannot change this system App. Use its compatible lifecycle API."
+    },
+    "app_operation_failed": {
+      "message": "The device reported that the App operation failed."
+    },
+    "app_operation_timeout": {
+      "message": "Timed out waiting for the device App operation."
+    },
+    "capture_canceled": {
+      "message": "The device reported that capture was canceled."
+    },
+    "capture_completion_timeout": {
+      "message": "The stop request was accepted, but the device did not finalize the capture file in time."
+    },
+    "capture_failed": {
+      "message": "The device reported that capture failed."
+    },
+    "capture_interrupted": {
+      "message": "The device reported that capture was interrupted."
+    },
+    "capture_not_active": {
+      "message": "The owned capture is no longer active. No stop request was sent."
+    },
+    "capture_output_extension_mismatch": {
+      "message": "Snapshot output files must use .jpg or .jpeg; recordings must use .mp4. Use a path without an extension for a directory."
+    },
+    "capture_output_must_start_with_mnt": {
+      "message": "Output must be an absolute path under /mnt on the device."
+    },
+    "capture_output_path_traversal": {
+      "message": "The output path must not contain '..' path traversal."
+    },
+    "capture_overdue_unconfirmed": {
+      "message": "The recording did not complete before its expected deadline. Check the device status before starting another capture."
+    },
+    "capture_ownership_lost": {
+      "message": "The active device capture no longer matches the task owned by this integration. No stop request was sent."
+    },
+    "capture_status_timeout": {
+      "message": "Timed out while reading the device capture status."
+    },
+    "capture_status_unconfirmed": {
+      "message": "The device capture status could not be confirmed before the monitoring deadline. Check the device before starting another capture."
+    },
+    "capture_stop_failed": {
+      "message": "The device rejected the stop capture request."
+    },
+    "capture_timeout": {
+      "message": "Timed out while waiting for the device capture to complete."
+    },
+    "connection_error": {
+      "message": "The device could not be reached: {error}"
+    },
+    "device_busy": {
+      "message": "The device is busy. Wait for the current operation to finish and retry."
+    },
+    "device_capture_busy": {
+      "message": "Another capture is already running on this device. Wait for it to finish before retrying."
+    },
+    "device_capture_request_conflict": {
+      "message": "This service call expanded into conflicting capture parameters. Use one camera entity and one set of parameters."
+    },
+    "device_storage_full": {
+      "message": "The selected device storage has no free space."
+    },
+    "device_storage_saturated": {
+      "message": "The selected device storage is saturated."
+    },
+    "external_capture_active": {
+      "message": "A capture owned by another client is active. It will not be stopped by this integration."
+    },
+    "firmware_apply_failed": {
+      "message": "The device rejected the firmware apply request."
+    },
+    "firmware_busy": {
+      "message": "Another firmware operation is already in progress."
+    },
+    "firmware_check_failed": {
+      "message": "The device rejected the firmware update check."
+    },
+    "firmware_download_failed": {
+      "message": "The device reported a firmware download failure."
+    },
+    "firmware_download_timeout": {
+      "message": "Timed out while waiting for the firmware download."
+    },
+    "firmware_no_update": {
+      "message": "No firmware update is currently available."
+    },
+    "firmware_reboot_state_invalid": {
+      "message": "The pending firmware operation has no valid start time. Start the update again."
+    },
+    "firmware_start_failed": {
+      "message": "The device rejected the firmware download request."
+    },
+    "firmware_target_mismatch": {
+      "message": "The device reconnected with a firmware version different from the OTA target."
+    },
+    "firmware_target_unknown": {
+      "message": "The OTA response did not identify the target firmware version."
+    },
+    "firmware_version_unconfirmed": {
+      "message": "The device reconnected with the same firmware version, so the update cannot be confirmed without an installation result or boot ID."
+    },
+    "identity_confirm_failed": {
+      "message": "Unable to confirm the stored hardware identity."
+    },
+    "identity_mac_mismatch": {
+      "message": "Authenticated device hardware identity does not match."
+    },
+    "identity_mac_missing": {
+      "message": "Device did not expose its stored hardware identity."
+    },
+    "identity_missing": {
+      "message": "Device did not expose a stable hardware identity."
+    },
+    "identity_serial_mismatch": {
+      "message": "Authenticated device serial identity does not match."
+    },
+    "image_scene_busy": {
+      "message": "The device Web UI is editing an image scene. Close or save that editor before changing image settings from Home Assistant."
+    },
+    "image_scene_exit_failed": {
+      "message": "The image changes were saved, but the device did not exit scene editing mode."
+    },
+    "image_scene_save_failed": {
+      "message": "The device did not save the image scene changes."
+    },
+    "image_update_failed": {
+      "message": "The device rejected the image configuration update."
+    },
+    "image_update_not_applied": {
+      "message": "The device did not apply the requested image settings."
+    },
+    "injected_session_closed": {
+      "message": "The injected HTTP session is closed."
+    },
+    "invalid_appmgr_response": {
+      "message": "The device returned invalid AppMgr data."
+    },
+    "invalid_auth": {
+      "message": "The device rejected the saved credentials. Reauthenticate the integration."
+    },
+    "invalid_capture_ready_state": {
+      "message": "The device did not return a valid ready state. Capture was not started."
+    },
+    "invalid_capture_response": {
+      "message": "The device returned an invalid capture response."
+    },
+    "invalid_capture_status": {
+      "message": "The device returned an invalid capture status."
+    },
+    "invalid_device_info": {
+      "message": "The device returned invalid device information."
+    },
+    "invalid_firmware_progress": {
+      "message": "The device returned invalid firmware download progress."
+    },
+    "invalid_firmware_update_response": {
+      "message": "The device returned invalid firmware update information."
+    },
+    "invalid_image_anti_flicker": {
+      "message": "The selected anti-flicker mode is invalid."
+    },
+    "invalid_image_day_night_option": {
+      "message": "The selected day/night mode is invalid."
+    },
+    "invalid_image_hdr_option": {
+      "message": "The selected HDR mode is invalid."
+    },
+    "invalid_image_response": {
+      "message": "The device returned invalid image configuration."
+    },
+    "invalid_image_section": {
+      "message": "The requested image configuration section is invalid."
+    },
+    "invalid_motion_config": {
+      "message": "The motion detection setting is outside the supported range."
+    },
+    "invalid_storage_mount": {
+      "message": "The device returned an invalid storage mount path."
+    },
+    "invalid_storage_status": {
+      "message": "The device returned an invalid storage status."
+    },
+    "invalid_video_bitrate": {
+      "message": "The selected maximum bitrate is outside the supported range."
+    },
+    "invalid_video_codec": {
+      "message": "The selected video codec is invalid."
+    },
+    "invalid_video_frame_rate": {
+      "message": "The selected frame rate is not supported by reCamera Pro."
+    },
+    "invalid_video_gop": {
+      "message": "The selected GOP value is outside the supported range."
+    },
+    "invalid_video_profile": {
+      "message": "The selected H.264 profile is invalid."
+    },
+    "invalid_video_resolution": {
+      "message": "The selected video resolution is invalid."
+    },
+    "invalid_video_response": {
+      "message": "The device returned an invalid video configuration."
+    },
+    "invalid_video_stream": {
+      "message": "The requested video stream is invalid."
+    },
+    "missing_capture_id": {
+      "message": "The device response did not include a capture task ID."
+    },
+    "missing_capture_status": {
+      "message": "The device response did not include a capture status."
+    },
+    "missing_public_key": {
+      "message": "The device did not provide a login public key."
+    },
+    "motion_app_not_installed": {
+      "message": "The motion-detect App is not installed on the device."
+    },
+    "motion_config_not_applied": {
+      "message": "The device did not apply the requested motion detection settings."
+    },
+    "motion_config_unavailable": {
+      "message": "The motion detection configuration is not currently available from the device."
+    },
+    "motion_state_not_confirmed": {
+      "message": "The device did not confirm the requested motion detection state."
+    },
+    "motion_transition_in_progress": {
+      "message": "Motion detection is already changing state. Wait for the current operation to finish."
+    },
+    "motion_transition_timeout": {
+      "message": "Motion detection did not finish changing state within 30 seconds."
+    },
+    "no_selected_storage": {
+      "message": "No enabled storage slot is selected on the device."
+    },
+    "protocol_error": {
+      "message": "The device returned an invalid response: {error}"
+    },
+    "recamera_error": {
+      "message": "The device action failed: {error}"
+    },
+    "request_failed": {
+      "message": "The device request failed after reauthentication."
+    },
+    "session_expired": {
+      "message": "The device session expired and could not be renewed. Reauthenticate the integration."
+    },
+    "start_status_unconfirmed": {
+      "message": "The recording request was interrupted before the device confirmed it. Check the device status before retrying."
+    },
+    "unsupported_capture_format": {
+      "message": "The requested capture format is not supported."
+    },
+    "validation_error": {
+      "message": "The capture request is invalid: {error}"
+    },
+    "video_rtsp_restore_failed": {
+      "message": "The video settings changed, but RTSP could not be restored."
+    },
+    "video_update_failed": {
+      "message": "The device rejected the video configuration update."
+    },
+    "video_update_not_applied": {
+      "message": "The device did not apply the requested video settings."
+    },
+    "websocket_auth_failed": {
+      "message": "The device rejected WebSocket authentication."
+    },
+    "websocket_connect_failed": {
+      "message": "The device WebSocket connection failed."
+    }
+  },
+  "options": {
+    "abort": {},
+    "error": {
+      "app_center_lifecycle_unavailable": "The device App Center cannot change this system App. Use its compatible lifecycle API.",
+      "app_operation_failed": "The device reported that the App operation failed.",
+      "app_operation_timeout": "Timed out waiting for the device App operation.",
+      "cannot_connect": "Cannot connect to the device.",
+      "connection_error": "Cannot connect to the device.",
+      "device_busy": "The device is busy. Wait for the current operation to finish and retry.",
+      "firmware_busy": "Another firmware operation is already in progress.",
+      "image_scene_busy": "The device Web UI is editing an image scene. Save or close it before retrying.",
+      "image_scene_exit_failed": "The image changes were saved, but the device did not exit scene editing mode.",
+      "image_scene_save_failed": "The device did not save the image scene changes.",
+      "image_update_failed": "The device rejected the image configuration update.",
+      "image_update_not_applied": "The device did not apply the requested image settings.",
+      "invalid_appmgr_response": "The device returned invalid application configuration.",
+      "invalid_auth": "The device rejected the saved credentials. Reauthenticate the integration.",
+      "invalid_image_anti_flicker": "The selected anti-flicker mode is invalid.",
+      "invalid_image_day_night_option": "The selected day/night mode is invalid.",
+      "invalid_image_hdr_option": "The selected HDR mode is invalid.",
+      "invalid_image_response": "The device returned invalid image configuration.",
+      "invalid_image_section": "The requested image configuration section is invalid.",
+      "invalid_motion_config": "The motion detection setting is outside the supported range.",
+      "invalid_video_bitrate": "The selected bitrate is not supported.",
+      "invalid_video_codec": "The selected video codec is not supported.",
+      "invalid_video_frame_rate": "The selected frame rate is not supported at this resolution.",
+      "invalid_video_gop": "The selected keyframe interval is not supported.",
+      "invalid_video_resolution": "The selected resolution is not supported.",
+      "motion_app_not_installed": "The motion-detect App is not installed on the device.",
+      "motion_config_not_applied": "The device did not apply the requested motion detection settings.",
+      "motion_config_unavailable": "The motion detection configuration is not currently available from the device.",
+      "motion_state_not_confirmed": "The device did not confirm the requested motion detection state.",
+      "motion_transition_in_progress": "Motion detection is already changing state. Wait for the current operation to finish.",
+      "motion_transition_timeout": "Motion detection did not finish changing state within 30 seconds.",
+      "protocol_error": "The device returned an invalid response.",
+      "session_expired": "The device session expired. Reauthenticate the integration.",
+      "unknown": "Unexpected error.",
+      "video_rtsp_restore_failed": "The video settings changed, but live streaming could not be restored.",
+      "video_update_failed": "The device rejected the video settings.",
+      "video_update_not_applied": "The device did not apply the requested video settings."
+    },
+    "step": {
+      "classes": {
+        "data": {
+          "tracked_classes": "Tracked visual classes"
+        },
+        "data_description": {
+          "tracked_classes": "Each selected class creates a binary_sensor entity; unselected classes still emit events."
+        },
+        "description": "{class_count} visual classes have been observed. Selected classes create binary_sensor entities.",
+        "title": "Detection classes"
       },
-      "main_rtsp_stream": {
-        "name": "Main stream RTSP"
+      "init": {
+        "description": "Choose a settings category.",
+        "menu_options": {
+          "classes": "Detection classes",
+          "sound": "Sound recognition",
+          "vision": "Visual recognition"
+        },
+        "title": "reCamera Pro settings"
       },
-      "sub_rtsp_stream": {
-        "name": "Sub stream RTSP"
+      "sound": {
+        "data": {
+          "audio_cooldown_seconds": "Sound event cooldown",
+          "audio_min_confidence": "Sound confidence threshold"
+        },
+        "data_description": {
+          "audio_cooldown_seconds": "Minimum time before the same sound class can trigger another event.",
+          "audio_min_confidence": "Minimum confidence (0.0–1.0) required before sound detections trigger an event."
+        },
+        "title": "Sound recognition settings"
+      },
+      "vision": {
+        "data": {
+          "class_stale_seconds": "Detection state hold time",
+          "visual_confirm_seconds": "Visual confirmation time",
+          "visual_cooldown_seconds": "Visual event cooldown",
+          "visual_min_confidence": "Visual confidence threshold"
+        },
+        "data_description": {
+          "class_stale_seconds": "How long the detected state remains active after the target was last seen.",
+          "visual_confirm_seconds": "The target must remain detected for this duration before an event is triggered. 0 triggers immediately.",
+          "visual_cooldown_seconds": "Minimum time before the same visual class can trigger another event.",
+          "visual_min_confidence": "Minimum confidence (0.0–1.0) required before visual detections are accepted; higher values reduce false positives."
+        },
+        "title": "Visual recognition settings"
       }
+    }
+  },
+  "services": {
+    "capture_device_snapshot": {
+      "description": "Capture one JPG directly to device /mnt storage. Independent of main/sub RTSP stream state; shares the device's single capture slot.",
+      "fields": {
+        "output": {
+          "description": "Must start with /mnt/ (directory or .jpg/.jpeg file). Leave empty to use the active device storage directory.",
+          "name": "Output path"
+        }
+      },
+      "name": "Take device snapshot"
+    },
+    "start_device_recording": {
+      "description": "Record an MP4 clip directly to device /mnt storage. Independent of main/sub RTSP stream state; rejected if another capture is active.",
+      "fields": {
+        "duration": {
+          "description": "Recording length in seconds (1–3600).",
+          "name": "Duration"
+        },
+        "output": {
+          "description": "Must start with /mnt/ (directory or .mp4 file). Leave empty to use the active device storage directory.",
+          "name": "Output path"
+        }
+      },
+      "name": "Start device recording"
+    },
+    "stop_device_capture": {
+      "description": "Stop the active device recording started by this integration and wait until the file is finalized on /mnt storage.",
+      "name": "Stop device recording"
     }
   }
 }
