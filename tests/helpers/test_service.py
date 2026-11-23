@@ -2906,6 +2906,37 @@ async def test_entity_service_call_other_domain_group_member(
     ) in caplog.text
 
 
+async def test_entity_service_call_own_unavailable_entity(
+    hass: HomeAssistant,
+    mock_entities_method: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unavailable entity of the action is only logged.
+
+    Its state may still show the last available value, and an entity without a
+    unique ID has no registry entry that ties it to the integration.
+    """
+    receiver = MockEntity(
+        entity_id="media_player.receiver", available=False, should_poll=False
+    )
+    receiver.hass = hass
+    hass.states.async_set("media_player.receiver", STATE_ON)
+    call = ServiceCall(
+        hass,
+        "test_domain",
+        "test_service",
+        {"entity_id": ["media_player.receiver"]},
+    )
+    await service.entity_service_call(
+        hass, {receiver.entity_id: receiver}, "test_method", call
+    )
+    assert mock_entities_method.call_count == 0
+    assert (
+        "Referenced entities media_player.receiver are missing or not currently "
+        "available"
+    ) in caplog.text
+
+
 async def test_async_extract_entities_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
