@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx2
 import openai
@@ -27,7 +27,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import ai_task, media_source
+from homeassistant.components import ai_task, conversation, media_source
 from homeassistant.components.llama_cpp.const import CONF_STREAMING
 from homeassistant.components.llama_cpp.entity import MAX_TOOL_ITERATIONS
 from homeassistant.const import Platform
@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, llm, selector
 
-ENTITY_ID = "ai_task.gpt_3_5_turbo"
+ENTITY_ID = "ai_task.gpt_3_5_turbo_ai_task"
 
 pytestmark = pytest.mark.usefixtures("setup_integration")
 
@@ -619,6 +619,72 @@ async def test_generate_data_with_attachments(
             },
         ],
     }
+
+
+async def test_attachments_with_previous_user_message(
+    hass: HomeAssistant,
+    mock_completion: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test attachments go to the last user message, not an earlier turn."""
+    mock_completion.return_value = _completion("A red image")
+    entity = hass.data["entity_components"]["ai_task"].get_entity(ENTITY_ID)
+    chat_log = MagicMock(spec=conversation.ChatLog)
+    chat_log.llm_api = None
+    chat_log.conversation_id = "conversation-id"
+    chat_log.unresponded_tool_results = False
+    chat_log.content = [
+        conversation.SystemContent(content="System prompt"),
+        conversation.UserContent(content="An earlier question"),
+        conversation.AssistantContent(agent_id=ENTITY_ID, content="An earlier answer"),
+        conversation.UserContent(
+            content="",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="media-source://media/red.png",
+                    mime_type="image/png",
+                    path=Path("red.png"),
+                )
+            ],
+        ),
+    ]
+
+    async def add_delta_content_stream(
+        agent_id: str, stream: AsyncGenerator[Any]
+    ) -> AsyncGenerator[conversation.AssistantContent]:
+        async for _ in stream:
+            yield conversation.AssistantContent(
+                agent_id=agent_id, content="A red image"
+            )
+
+    chat_log.async_add_delta_content_stream = add_delta_content_stream
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.read_bytes", return_value=b"fake_image_data"),
+    ):
+        await entity._async_handle_chat_log(chat_log)
+
+    assert [
+        (message["role"], message["content"])
+        for message in mock_completion.call_args.kwargs["messages"]
+    ][:4] == [
+        ("system", "System prompt"),
+        ("user", "An earlier question"),
+        ("assistant", "An earlier answer"),
+        (
+            "user",
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,ZmFrZV9pbWFnZV9kYXRh",
+                        "detail": "auto",
+                    },
+                }
+            ],
+        ),
+    ]
 
 
 @pytest.mark.parametrize(

@@ -329,43 +329,41 @@ class LlamaCppBaseLLMEntity(Entity):
             ]
 
         model: str = options.get(CONF_CHAT_MODEL, DEFAULT_MODEL)
+
+        last_content = chat_log.content[-1]
+        attachment_content = (
+            last_content
+            if isinstance(last_content, conversation.UserContent)
+            and last_content.attachments
+            else None
+        )
         messages = [
             m
-            for content in chat_log.content
+            for content in (
+                chat_log.content[:-1] if attachment_content else chat_log.content
+            )
             if (m := _convert_content_to_chat_message(content))
         ]
+        if attachment_content:
+            parts: list[ChatCompletionContentPartParam] = []
+            if attachment_content.content:
+                parts.append(
+                    ChatCompletionContentPartTextParam(
+                        type="text", text=attachment_content.content
+                    )
+                )
+            parts.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass, attachment_content.attachments or []
+                )
+            )
+            messages.append(ChatCompletionUserMessageParam(role="user", content=parts))
 
         response_format: ResponseFormatJSONSchema | Omit = Omit()
         if structure:
             response_format = _format_structured_output(
                 structure_name or "", structure, chat_log.llm_api
             )
-
-        last_content = chat_log.content[-1]
-        if (
-            isinstance(last_content, conversation.UserContent)
-            and last_content.attachments
-        ):
-            files = await async_prepare_files_for_prompt(
-                self.hass, last_content.attachments
-            )
-            for i in range(len(messages) - 1, -1, -1):
-                if messages[i]["role"] == "user":
-                    user_msg = cast(ChatCompletionUserMessageParam, messages[i])
-                    current_content = user_msg.get("content")
-                    if isinstance(current_content, str):
-                        user_msg["content"] = [
-                            ChatCompletionContentPartTextParam(
-                                type="text", text=current_content
-                            ),
-                            *files,
-                        ]
-                    break
-            else:
-                # A user message without text is not converted
-                messages.append(
-                    ChatCompletionUserMessageParam(role="user", content=files)
-                )
 
         client: AsyncOpenAI = self.entry.runtime_data
         streaming = bool(

@@ -69,6 +69,14 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _subentry_title(subentry_type: str, model: str) -> str:
+    """Return the subentry title, telling AI tasks apart from conversation agents."""
+    title = model_name_to_title(model)
+    if subentry_type == "ai_task_data":
+        return f"{title} AI task"
+    return title
+
+
 class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for llama.cpp."""
 
@@ -195,7 +203,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
                                 **base_options,
                             },
-                            "title": model_name_to_title(model),
+                            "title": _subentry_title("conversation", model),
                             "unique_id": None,
                         },
                         {
@@ -204,7 +212,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_RECOMMENDED: True,
                                 CONF_CHAT_MODEL: model,
                             },
-                            "title": model_name_to_title(model),
+                            "title": _subentry_title("ai_task_data", model),
                             "unique_id": None,
                         },
                     ],
@@ -333,7 +341,7 @@ class LlamaCppSubentryFlowHandler(ConfigSubentryFlow):
                     errors={"base": err.translation_key or "unknown"},
                 )
 
-            title = model_name_to_title(user_input[CONF_CHAT_MODEL])
+            title = _subentry_title(self._subentry_type, user_input[CONF_CHAT_MODEL])
             if self.source == "user":
                 return self.async_create_entry(title=title, data=user_input)
             return self.async_update_and_abort(

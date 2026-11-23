@@ -95,7 +95,7 @@ def mock_config_entry_fixture(
                 data={},
                 subentry_id="ai_task_subentry_id",
                 subentry_type="ai_task_data",
-                title="Gpt 3.5 Turbo",
+                title="Gpt 3.5 Turbo AI task",
                 unique_id=None,
             ),
         ],

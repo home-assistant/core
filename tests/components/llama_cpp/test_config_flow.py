@@ -107,7 +107,7 @@ async def test_config_flow(
                 CONF_RECOMMENDED: True,
                 CONF_CHAT_MODEL: "gpt-4",
             },
-            "title": "Gpt 4",
+            "title": "Gpt 4 AI task",
             "unique_id": None,
         },
     ]
@@ -252,7 +252,7 @@ async def test_config_flow_no_streaming(
                 CONF_RECOMMENDED: True,
                 CONF_CHAT_MODEL: "gpt-4",
             },
-            "title": "Gpt 4",
+            "title": "Gpt 4 AI task",
             "unique_id": None,
         },
     ]
@@ -850,7 +850,7 @@ async def test_creating_ai_task_subentry(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Gpt 4"
+    assert result["title"] == "Gpt 4 AI task"
     assert result["data"] == {CONF_RECOMMENDED: True, CONF_CHAT_MODEL: "gpt-4"}
 
 
@@ -883,7 +883,7 @@ async def test_reconfiguring_ai_task_subentry(
     assert result["reason"] == "reconfigure_successful"
 
     updated_subentry = mock_config_entry.subentries[subentry.subentry_id]
-    assert updated_subentry.title == "Gpt 4"
+    assert updated_subentry.title == "Gpt 4 AI task"
     assert updated_subentry.data[CONF_CHAT_MODEL] == "gpt-4"
     assert updated_subentry.data[CONF_TEMPERATURE] == 0.2
 

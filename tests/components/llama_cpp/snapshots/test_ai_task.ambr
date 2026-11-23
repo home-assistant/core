@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[ai_task.gpt_3_5_turbo-entry]
+# name: test_all_entities[ai_task.gpt_3_5_turbo_ai_task-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7,13 +7,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ConfigSubentry subentry_type='ai_task_data' title='Gpt 3.5 Turbo'>,
+    'config_subentry_id': <ConfigSubentry subentry_type='ai_task_data' title='Gpt 3.5 Turbo AI task'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('llama_cpp', 'ai_task_subentry_id')]>,
     'disabled_by': None,
     'domain': 'ai_task',
     'entity_category': None,
-    'entity_id': 'ai_task.gpt_3_5_turbo',
+    'entity_id': 'ai_task.gpt_3_5_turbo_ai_task',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -39,14 +39,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[ai_task.gpt_3_5_turbo-state]
+# name: test_all_entities[ai_task.gpt_3_5_turbo_ai_task-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gpt 3.5 Turbo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gpt 3.5 Turbo AI task',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AITaskEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'ai_task.gpt_3_5_turbo',
+    'entity_id': 'ai_task.gpt_3_5_turbo_ai_task',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
