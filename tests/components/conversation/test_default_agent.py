@@ -3373,6 +3373,70 @@ async def test_name_match_wildcard(
     assert result.entities["search_query"].value == "jazz"
 
 
+@pytest.mark.usefixtures("init_components")
+async def test_name_match_fallback_error(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the name match gives the error if no candidate finds targets."""
+    area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+
+    entry = entity_registry.async_get_or_create(
+        "light", "demo", "named", suggested_object_id="named", original_name="light"
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id=area_bedroom.id)
+    hass.states.async_set(entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: "light"})
+
+    result = await conversation.async_converse(
+        hass, "turn on the light in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any device called light in the kitchen area"
+    )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_fixed_name_slot_priority(hass: HomeAssistant) -> None:
+    """Test that a name from a sentence's fixed slots beats a match without a name."""
+    nameless_result = RecognizeResult(
+        intent=Intent("HassTurnOff"),
+        intent_data=IntentData([]),
+        entities={},
+        entities_list=[],
+    )
+    name = MatchEntity(name="name", value="test light", text="")
+    named_result = RecognizeResult(
+        intent=Intent("HassTurnOn"),
+        intent_data=IntentData([]),
+        entities={"name": name},
+        entities_list=[name],
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[nameless_result, named_result],
+    ):
+        results = await async_get_agent(hass).async_recognize_intents(
+            ConversationInput(
+                text="movie time",
+                context=Context(),
+                conversation_id=None,
+                device_id=None,
+                satellite_id=None,
+                language=hass.config.language,
+                agent_id=None,
+            )
+        )
+
+    assert results == [named_result]
+
+
 async def test_custom_sentences_priority(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
