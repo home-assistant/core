@@ -45,7 +45,6 @@ EMPTY_PLATFORMS = {
     "altherma3m": {Platform.FAN, Platform.SWITCH},
     "altherma_boost": {Platform.FAN, Platform.SWITCH},
     "altherma_firmwareupdate": {
-        Platform.CLIMATE,
         Platform.FAN,
         Platform.SELECT,
         Platform.SWITCH,
@@ -69,8 +68,8 @@ EMPTY_PLATFORMS = {
         Platform.WATER_HEATER,
     },
     "fanmode": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
-    "gas": {Platform.FAN, Platform.SWITCH},
-    "holidaymode": {Platform.CLIMATE, Platform.FAN, Platform.SWITCH},
+    "gas": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "holidaymode": {Platform.FAN, Platform.SWITCH},
     "homehub": {
         Platform.BINARY_SENSOR,
         Platform.CLIMATE,
@@ -89,7 +88,6 @@ EMPTY_PLATFORMS = {
     },
     "nomodel_id": {Platform.FAN, Platform.SWITCH},
     "offlinedevice": {
-        Platform.CLIMATE,
         Platform.FAN,
         Platform.SWITCH,
         Platform.WATER_HEATER,
@@ -103,6 +101,11 @@ SNAPSHOT_CASES = tuple(
     pytest.param(fixture, platform, id=f"{fixture}-{platform}")
     for fixture, platform in product(FIXTURES, PLATFORMS)
     if platform not in EMPTY_PLATFORMS.get(fixture, set())
+)
+EMPTY_PLATFORM_CASES = tuple(
+    pytest.param(fixture, platform, id=f"{fixture}-{platform}-empty")
+    for fixture, platforms in EMPTY_PLATFORMS.items()
+    for platform in platforms
 )
 
 
@@ -123,3 +126,26 @@ async def test_platform_entities(
         await _async_setup_fixture(hass, config_entry, fixture)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(("fixture", "platform"), EMPTY_PLATFORM_CASES)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_empty_platform_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+    platform: Platform,
+) -> None:
+    """Verify every platform excluded from snapshots has no entities."""
+    with patch("homeassistant.components.daikin_onecta.PLATFORMS", [platform]):
+        await _async_setup_fixture(hass, config_entry, fixture)
+
+    platform_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == platform.value
+    ]
+    assert not platform_entries

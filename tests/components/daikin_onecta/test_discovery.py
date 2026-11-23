@@ -146,8 +146,8 @@ def test_climate_control_without_supported_setpoint_is_exposed(
     )
 
 
-def test_read_only_climate_setpoint_does_not_hide_writable_power() -> None:
-    """Expose power when no writable setpoint can create a climate entity."""
+def test_read_only_climate_setpoint_keeps_climate_ownership() -> None:
+    """Keep climate controls on the climate platform when setpoints are read-only."""
     point = deepcopy(
         _load_gateway_devices("dry")[0].management_points_by_type("climateControl")[0]
     )
@@ -158,10 +158,8 @@ def test_read_only_climate_setpoint_does_not_hide_writable_power() -> None:
         for setpoint in operation.setpoints.values():
             setpoint.settable = False
 
-    assert not has_climate_entity(point)
-    assert scalar_platform_for_point(point, "onOffMode") is Platform.SWITCH
-    assert has_climate_entity(point, gateway_online=False)
-    assert scalar_platform_for_point(point, "onOffMode", gateway_online=False) is None
+    assert has_climate_entity(point)
+    assert scalar_platform_for_point(point, "onOffMode") is None
 
 
 async def test_switch_platform_is_stable_when_writability_changes(
@@ -490,7 +488,7 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Keep climate-owned controls off scalar platforms across reconnects."""
+    """Keep the climate entity registered while its gateway is offline."""
     await _async_setup_fixture(hass, config_entry, "offlinedevice")
     coordinator = config_entry.runtime_data
     offline_devices = _load_gateway_devices("offlinedevice")
@@ -511,7 +509,10 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
         DOMAIN,
         f"{device.id}_{point.embedded_id}_roomTemperature",
     )
-    assert climate_entity_id is None
+    assert climate_entity_id is not None
+    climate_state = hass.states.get(climate_entity_id)
+    assert climate_state is not None
+    assert climate_state.state == STATE_UNAVAILABLE
 
     online_devices = deepcopy(offline_devices)
     online_device = online_devices[0]
@@ -536,15 +537,15 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
             entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
             is None
         )
-    climate_entity_id = entity_registry.async_get_entity_id(
+    reconnected_climate_entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE,
         DOMAIN,
         f"{device.id}_{point.embedded_id}_roomTemperature",
     )
-    assert climate_entity_id is not None
-    climate_state = hass.states.get(climate_entity_id)
-    assert climate_state is not None
-    assert climate_state.state != STATE_UNAVAILABLE
+    assert reconnected_climate_entity_id == climate_entity_id
+    reconnected_climate_state = hass.states.get(reconnected_climate_entity_id)
+    assert reconnected_climate_state is not None
+    assert reconnected_climate_state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

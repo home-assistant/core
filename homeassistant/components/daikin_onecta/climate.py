@@ -37,7 +37,6 @@ from homeassistant.util import dt as dt_util
 from .const import CLIMATE_ENTITY_DESCRIPTIONS, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import has_settable_climate_setpoint
 from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
@@ -122,9 +121,7 @@ def _create_climate_entities(
             continue
         for setpoint_type in climate_control.setpoint_types:
             description = CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type)
-            if description is None or not has_settable_climate_setpoint(
-                management_point, setpoint_type
-            ):
+            if description is None:
                 continue
             unique_id = management_point_unique_id(
                 device.id, management_point.embedded_id, setpoint_type

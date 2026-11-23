@@ -24,11 +24,7 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import (
-    energy_description_key,
-    has_settable_climate_setpoint,
-    scalar_characteristics_for_platform,
-)
+from .discovery import energy_description_key, scalar_characteristics_for_platform
 from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
@@ -230,15 +226,19 @@ def add_read_only_setpoint_sensors(
 ) -> None:
     """Expose temperature targets that Daikin never allows users to change."""
     climate_control = management_point.climate_control
-    if not device.gateway_online or climate_control is None:
+    if climate_control is None:
         return
 
     for setpoint_type in climate_control.setpoint_types:
-        if setpoint_type not in SENSOR_DESCRIPTIONS or has_settable_climate_setpoint(
-            management_point, setpoint_type
+        if (
+            setpoint_type != "calculatedLeavingWaterTemperature"
+            or setpoint_type not in SENSOR_DESCRIPTIONS
         ):
             continue
-        if climate_control.setpoint(setpoint_type) is None:
+        if not any(
+            climate_control.setpoint(setpoint_type, operation_mode) is not None
+            for operation_mode in climate_control.operation_modes
+        ):
             continue
         unique_id = _value_sensor_unique_id(
             device.id, management_point.embedded_id, "setpoint", setpoint_type
@@ -446,10 +446,20 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             return None
         if self._sub_type == "setpoint":
             climate_control = point.climate_control
-            return (
-                climate_control.setpoint(self._value)
-                if climate_control is not None
-                else None
+            if climate_control is None:
+                return None
+            return next(
+                (
+                    setpoint
+                    for operation_mode in climate_control.operation_modes
+                    if (
+                        setpoint := climate_control.setpoint(
+                            self._value, operation_mode
+                        )
+                    )
+                    is not None
+                ),
+                None,
             )
         return (
             point.sensory_characteristic(self._value)

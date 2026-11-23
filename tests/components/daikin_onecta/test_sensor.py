@@ -40,12 +40,12 @@ from .platform_helpers import (
 )
 
 
-async def test_read_only_climate_setpoints_are_temperature_sensors(
+async def test_calculated_leaving_water_temperature_is_a_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Expose fixed temperature targets as sensors instead of climate controls."""
+    """Expose Daikin's non-settable calculated temperature as a sensor."""
     await _async_setup_fixture(hass, config_entry, "gas")
     gateway = _load_gateway_devices("gas")[0]
 
@@ -71,13 +71,11 @@ async def test_read_only_climate_setpoints_are_temperature_sensors(
     )
 
     assert calculated_setpoint_sensor is not None
-    assert leaving_water_setpoint_sensor is not None
+    assert leaving_water_setpoint_sensor is None
     calculated_state = hass.states.get(calculated_setpoint_sensor)
-    leaving_water_state = hass.states.get(leaving_water_setpoint_sensor)
     assert calculated_state is not None and calculated_state.state == "50"
-    assert leaving_water_state is not None and leaving_water_state.state == "21"
     assert calculated_climate_entity is None
-    assert leaving_water_climate_entity is None
+    assert leaving_water_climate_entity is not None
 
 
 @pytest.mark.parametrize(

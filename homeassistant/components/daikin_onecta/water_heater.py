@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from daikin_onecta.client import OnectaClient
-from daikin_onecta.models import DomesticHotWater, Setpoint
+from daikin_onecta.models import DomesticHotWater, ManagementPoint, Setpoint
 
 from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
@@ -59,12 +59,28 @@ def _create_water_tanks(
     return [
         DaikinWaterTank(device, coordinator, management_point.embedded_id)
         for device, management_point in iter_management_points(coordinator)
-        if management_point.domestic_hot_water is not None
+        if _has_water_heater_control(management_point)
         and not is_known(
             Platform.WATER_HEATER,
             management_point_unique_id(device.id, management_point.embedded_id),
         )
     ]
+
+
+def _has_water_heater_control(management_point: ManagementPoint) -> bool:
+    """Return whether a point exposes domestic-hot-water control data."""
+    hot_water = management_point.domestic_hot_water
+    return bool(
+        hot_water is not None
+        and any(
+            control is not None
+            for control in (
+                hot_water.power,
+                hot_water.powerful_mode,
+                hot_water.temperature,
+            )
+        )
+    )
 
 
 class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
