@@ -1,6 +1,7 @@
 """Test Kingspan Watchman SENSiT config flow."""
 
 from connectsensor.exceptions import (
+    KingspanAPIError,
     KingspanErrorCode,
     KingspanInvalidCredentialsError,
     KingspanNoDataError,
@@ -20,6 +21,29 @@ from .conftest import MockAsyncClient
 from .const import MOCK_CONFIG
 
 pytestmark = pytest.mark.usefixtures("mock_sensor_client")
+
+CREDENTIAL_ERROR_CASES: list[tuple[Exception, str]] = [
+    (
+        KingspanInvalidCredentialsError("test bad auth"),
+        KingspanErrorCode.AUTH_FAILED.value,
+    ),
+    (
+        KingspanAPIError("cannot connect", KingspanErrorCode.CANNOT_CONNECT),
+        KingspanErrorCode.CANNOT_CONNECT.value,
+    ),
+    (
+        KingspanTimeoutError("timeout"),
+        KingspanErrorCode.TIMEOUT.value,
+    ),
+    (
+        KingspanNoDataError("no level data"),
+        KingspanErrorCode.NO_DATA.value,
+    ),
+    (
+        Exception("unknown"),
+        KingspanErrorCode.UNKNOWN.value,
+    ),
+]
 
 
 async def test_successful_config_flow(hass: HomeAssistant) -> None:
@@ -50,25 +74,14 @@ def test_flow_matching_is_never_true() -> None:
     assert not flow.is_matching(SENSiTFlowHandler())
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (
-            KingspanInvalidCredentialsError("test bad auth"),
-            KingspanErrorCode.AUTH_FAILED.value,
-        ),
-        (KingspanTimeoutError("timeout"), KingspanErrorCode.TIMEOUT.value),
-        (KingspanNoDataError("no level data"), KingspanErrorCode.NO_DATA.value),
-        (Exception("unknown"), KingspanErrorCode.UNKNOWN.value),
-    ],
-)
+@pytest.mark.parametrize(("side_effect", "expected_error"), CREDENTIAL_ERROR_CASES)
 async def test_failed_config_flow(
     hass: HomeAssistant,
     mock_sensor_client: MockAsyncClient,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
-    """Test a failed config flow due to credential validation failure."""
+    """Test user config flow handles all credential errors and recovers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -82,6 +95,7 @@ async def test_failed_config_flow(
     )
 
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
     mock_sensor_client.login.side_effect = None
@@ -90,6 +104,83 @@ async def test_failed_config_flow(
     )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == MOCK_CONFIG
+
+
+@pytest.mark.parametrize(
+    ("flow_source", "step_id", "success_reason", "pass_data"),
+    [
+        (
+            config_entries.SOURCE_RECONFIGURE,
+            "reconfigure",
+            "reconfigure_successful",
+            False,
+        ),
+        (
+            config_entries.SOURCE_REAUTH,
+            "reauth_confirm",
+            "reauth_successful",
+            True,
+        ),
+    ],
+)
+@pytest.mark.parametrize(("side_effect", "expected_error"), CREDENTIAL_ERROR_CASES)
+async def test_credential_update_error_recovery(
+    hass: HomeAssistant,
+    mock_sensor_client: MockAsyncClient,
+    flow_source: str,
+    step_id: str,
+    success_reason: str,
+    pass_data: bool,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth and reconfigure handle all credential errors and recover."""
+    # pylint is generating a false-positive W7441 when assertions are parametrized
+    # pylint: disable=home-assistant-tests-config-flow-error-recovery
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=MOCK_CONFIG[CONF_USERNAME].casefold(),
+    )
+    config_entry.add_to_hass(hass)
+
+    kwargs: dict[str, object] = {
+        "context": {"source": flow_source, "entry_id": config_entry.entry_id}
+    }
+    if pass_data:
+        kwargs["data"] = config_entry.data
+
+    result1 = await hass.config_entries.flow.async_init(DOMAIN, **kwargs)
+    assert result1["type"] == FlowResultType.FORM
+    assert result1["step_id"] == step_id
+
+    mock_sensor_client.login.side_effect = side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={
+            CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: "bad-password",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == step_id
+    assert result2["errors"] == {"base": expected_error}
+
+    mock_sensor_client.login.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: "fixed-password",
+        },
+    )
+
+    assert result3["type"] == FlowResultType.ABORT
+    assert result3["reason"] == success_reason
+    assert config_entry.data[CONF_PASSWORD] == "fixed-password"
 
 
 async def test_duplicate_config_flow_aborts(hass: HomeAssistant) -> None:
