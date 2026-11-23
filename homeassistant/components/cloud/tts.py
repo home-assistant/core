@@ -4,45 +4,35 @@ import logging
 from typing import Any, override
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice import AudioOutput, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
-import probatio
 
 from homeassistant.components.tts import (
-    ATTR_AUDIO_OUTPUT,
-    ATTR_VOICE,
-    CONF_LANG,
-    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TTSAudioRequest,
     TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, Platform
-from homeassistant.core import HomeAssistant, async_get_hass, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_when_setup
 
+from . import CloudConfigEntry
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
     DATA_PLATFORMS_SETUP,
-    DOMAIN,
     TTS_ENTITY_UNIQUE_ID,
     VOICE_STYLE_SEPERATOR,
 )
 from .prefs import CloudPreferences
 
-ATTR_GENDER = "gender"
-
-DEPRECATED_VOICES = {"XiaoxuanNeural": "XiaozhenNeural"}
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 
 DEFAULT_VOICES = {
@@ -204,18 +194,14 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def _prepare_voice_args(
     *,
-    hass: HomeAssistant,
     language: str,
     voice: str,
-    gender: str | None,
 ) -> dict:
     """Prepare voice arguments."""
-    gender = handle_deprecated_gender(hass, gender)
     style: str | None
-    original_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
+    updated_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
     if not style:
         style = None
-    updated_voice = handle_deprecated_voice(hass, original_voice)
     if updated_voice not in TTS_VOICES[language]:
         default_voice = DEFAULT_VOICES[language]
         _LOGGER.debug(
@@ -229,78 +215,31 @@ def _prepare_voice_args(
     return {
         "language": language,
         "voice": updated_voice,
-        "gender": gender,
         "style": style,
     }
-
-
-def _deprecated_platform(value: str) -> str:
-    """Validate if platform is deprecated."""
-    if value == DOMAIN:
-        _LOGGER.warning(
-            "The cloud tts platform configuration is deprecated, "
-            "please remove it from your configuration "
-            "and use the UI to change settings instead"
-        )
-        hass = async_get_hass()
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_tts_platform_config",
-            breaks_in_ha_version="2024.9.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_tts_platform_config",
-        )
-    return value
-
-
-def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
-    """Validate chosen gender or language."""
-    if (lang := value.get(CONF_LANG)) is None:
-        return value
-
-    if (gender := value.get(ATTR_GENDER)) is None:
-        gender = value[ATTR_GENDER] = next(
-            (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
-        )
-
-    if (lang, gender) not in MAP_VOICE:
-        raise probatio.Invalid("Unsupported language and gender specified.")
-
-    return value
-
-
-PLATFORM_SCHEMA = probatio.All(
-    TTS_PLATFORM_SCHEMA.extend(
-        {
-            probatio.Required(CONF_PLATFORM): probatio.All(
-                cv.string, _deprecated_platform
-            ),
-            probatio.Optional(CONF_LANG): str,
-            probatio.Optional(ATTR_GENDER): str,
-        }
-    ),
-    validate_lang,
-)
 
 
 async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CloudProvider:
+) -> CloudProvider | None:
     """Set up Cloud speech component."""
+    if discovery_info is None:
+        _LOGGER.error(
+            "Configuring the cloud text-to-speech platform in YAML is no longer"
+            " supported, remove `platform: cloud` from the `tts:` section"
+        )
+        return None
     cloud = hass.data[DATA_CLOUD]
     cloud_provider = CloudProvider(cloud)
-    if discovery_info is not None:
-        discovery_info["platform_loaded"].set()
+    discovery_info["platform_loaded"].set()
     return cloud_provider
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud text-to-speech platform."""
@@ -313,7 +252,7 @@ async def async_setup_entry(
 class CloudTTSEntity(TextToSpeechEntity):
     """Home Assistant Cloud text-to-speech entity."""
 
-    _attr_name = "Home Assistant Cloud"
+    _attr_name = "Home Assistant Link"
     _attr_unique_id = TTS_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
@@ -336,7 +275,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
+            TextToSpeechCommonOption.AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     @property
@@ -349,8 +288,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.10.0.
-        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [TextToSpeechCommonOption.VOICE, TextToSpeechCommonOption.AUDIO_OUTPUT]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -421,26 +359,24 @@ class CloudTTSEntity(TextToSpeechEntity):
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                output=options[ATTR_AUDIO_OUTPUT],
+                output=options[TextToSpeechCommonOption.AUDIO_OUTPUT],
                 **_prepare_voice_args(
-                    hass=self.hass,
                     language=language,
                     voice=options.get(
-                        ATTR_VOICE,
+                        TextToSpeechCommonOption.VOICE,
                         (
                             self._voice
                             if language == self._language
                             else DEFAULT_VOICES[language]
                         ),
                     ),
-                    gender=options.get(ATTR_GENDER),
                 ),
             )
         except VoiceError as err:
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (options[ATTR_AUDIO_OUTPUT], data)
+        return (options[TextToSpeechCommonOption.AUDIO_OUTPUT], data)
 
     @override
     async def async_stream_tts_audio(
@@ -450,17 +386,15 @@ class CloudTTSEntity(TextToSpeechEntity):
         data_gen = self.cloud.voice.process_tts_stream(
             text_stream=request.message_gen,
             **_prepare_voice_args(
-                hass=self.hass,
                 language=request.language,
                 voice=request.options.get(
-                    ATTR_VOICE,
+                    TextToSpeechCommonOption.VOICE,
                     (
                         self._voice
                         if request.language == self._language
                         else DEFAULT_VOICES[request.language]
                     ),
                 ),
-                gender=request.options.get(ATTR_GENDER),
             ),
         )
 
@@ -475,7 +409,7 @@ class CloudProvider(Provider):
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize cloud provider."""
         self.cloud = cloud
-        self.name = "Home Assistant Cloud"
+        self.name = "Home Assistant Link"
         self._language, self._voice = cloud.client.prefs.tts_default_voice
         cloud.client.prefs.async_listen_updates(self._sync_prefs)
 
@@ -499,8 +433,7 @@ class CloudProvider(Provider):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.10.0.
-        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [TextToSpeechCommonOption.VOICE, TextToSpeechCommonOption.AUDIO_OUTPUT]
 
     @callback
     @override
@@ -546,7 +479,7 @@ class CloudProvider(Provider):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            TextToSpeechCommonOption.AUDIO_OUTPUT: AudioOutput.MP3,
         }
 
     @override
@@ -559,79 +492,21 @@ class CloudProvider(Provider):
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                output=options[ATTR_AUDIO_OUTPUT],
+                output=options[TextToSpeechCommonOption.AUDIO_OUTPUT],
                 **_prepare_voice_args(
-                    hass=self.hass,
                     language=language,
                     voice=options.get(
-                        ATTR_VOICE,
+                        TextToSpeechCommonOption.VOICE,
                         (
                             self._voice
                             if language == self._language
                             else DEFAULT_VOICES[language]
                         ),
                     ),
-                    gender=options.get(ATTR_GENDER),
                 ),
             )
         except VoiceError as err:
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return options[ATTR_AUDIO_OUTPUT], data
-
-
-@callback
-def handle_deprecated_gender(
-    hass: HomeAssistant,
-    gender: Gender | str | None,
-) -> Gender | None:
-    """Handle deprecated gender."""
-    if gender is None:
-        return None
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_gender",
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        breaks_in_ha_version="2024.10.0",
-        translation_key="deprecated_gender",
-        translation_placeholders={
-            "integration_name": "Home Assistant Cloud",
-            "deprecated_option": "gender",
-            "replacement_option": "voice",
-        },
-    )
-    return Gender(gender)
-
-
-@callback
-def handle_deprecated_voice(
-    hass: HomeAssistant,
-    original_voice: str | None,
-) -> str | None:
-    """Handle deprecated voice."""
-    voice = original_voice
-    if (
-        original_voice
-        and voice
-        and (voice := DEPRECATED_VOICES.get(original_voice, original_voice))
-        != original_voice
-    ):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_voice_{original_voice}",
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            breaks_in_ha_version="2024.8.0",
-            translation_key="deprecated_voice",
-            translation_placeholders={
-                "deprecated_voice": original_voice,
-                "replacement_voice": voice,
-            },
-        )
-    return voice
+        return options[TextToSpeechCommonOption.AUDIO_OUTPUT], data

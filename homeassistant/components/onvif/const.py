@@ -26,15 +26,6 @@ DEFAULT_ENABLE_WEBHOOKS = True
 # default so a camera whose snapshot never completes does not stall setup
 SNAPSHOT_TIMEOUT = timedelta(seconds=10)
 
-ATTR_PAN = "pan"
-ATTR_TILT = "tilt"
-ATTR_ZOOM = "zoom"
-ATTR_DISTANCE = "distance"
-ATTR_SPEED = "speed"
-ATTR_MOVE_MODE = "move_mode"
-ATTR_CONTINUOUS_DURATION = "continuous_duration"
-ATTR_PRESET = "preset"
-
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
 DIR_LEFT = "LEFT"
@@ -49,8 +40,6 @@ RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
 STOP_MOVE = "Stop"
-
-SERVICE_PTZ = "ptz"
 
 
 # Some cameras don't support the GetServiceCapabilities call

@@ -4,6 +4,23 @@
       "apiVersion": 1,
       "commands": {},
       "deviceId": "################",
+      "feature": "ess.operationState",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "shutDown"
+        }
+      },
+      "timestamp": "2026-10-31T12:45:31.041Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/################/features/ess.operationState"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "################",
       "feature": "ess.transfer.charge.cumulated",
       "gatewayId": "################",
       "isEnabled": true,

@@ -6,7 +6,7 @@ from typing import cast
 from aiohttp import ClientError
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -35,7 +35,7 @@ class MyUplinkServiceArgument(StrEnum):
 
 SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
         probatio.Required(MyUplinkServiceArgument.DATAPOINT_ID): probatio.All(
             cv.positive_int, probatio.Range(min=1, max=99999)
         ),
@@ -77,7 +77,7 @@ async def async_set_datapoint(call: ServiceCall) -> None:
     config_entry: MyUplinkConfigEntry
 
     device_entry, config_entry = async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
 
     api = config_entry.runtime_data.api
