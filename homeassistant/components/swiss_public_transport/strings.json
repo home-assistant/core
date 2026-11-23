@@ -36,12 +36,14 @@
       },
       "stationboard": {
         "data": {
-          "stations": "Stations"
+          "stations": "Stations",
+          "stops_at": "Stops at"
         },
         "data_description": {
-          "stations": "List of up to 3 stations whose departures are combined into one stationboard"
+          "stations": "List of up to 3 stations whose departures are combined into one stationboard",
+          "stops_at": "Only show departures that later stop at one of these stations. Leave empty to show all departures."
         },
-        "description": "Provide the stations to show the next departures for.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "description": "Provide the stations to show the next departures for, and optionally the stations a departure must stop at.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       },
       "time_fixed": {

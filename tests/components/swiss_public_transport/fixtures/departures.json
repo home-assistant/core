@@ -6,7 +6,41 @@
     "name": "020445",
     "category": "S",
     "number": "24",
-    "to": "Zug"
+    "to": "Zug",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zürich Enge",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Thalwil",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zug",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   },
   {
     "departure": "2024-01-06T18:04:00+0100",
@@ -15,7 +49,33 @@
     "name": "020446",
     "category": "S",
     "number": "15",
-    "to": "Niederweningen"
+    "to": "Niederweningen",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zürich Oerlikon",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Niederweningen",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   },
   {
     "departure": "2024-01-06T18:05:00+0100",
@@ -24,7 +84,33 @@
     "name": "020447",
     "category": "B",
     "number": "31",
-    "to": "Schlieren, Zentrum"
+    "to": "Schlieren, Zentrum",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zürich, Hardplatz",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Schlieren, Zentrum",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   },
   {
     "departure": "2024-01-06T18:06:00+0100",
@@ -33,7 +119,33 @@
     "name": "020448",
     "category": "S",
     "number": "5",
-    "to": "Pfäffikon SZ"
+    "to": "Pfäffikon SZ",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zürich Stadelhofen",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Pfäffikon SZ",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   },
   {
     "departure": "2024-01-06T18:07:00+0100",
@@ -42,7 +154,33 @@
     "name": "020449",
     "category": "IC",
     "number": "1",
-    "to": "Genève-Aéroport"
+    "to": "Genève-Aéroport",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Bern",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Genève-Aéroport",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   },
   {
     "departure": "2024-01-06T18:08:00+0100",
@@ -51,6 +189,40 @@
     "name": "020450",
     "category": "IR",
     "number": null,
-    "to": "Luzern"
+    "to": "Luzern",
+    "pass_list": [
+      {
+        "id": null,
+        "name": "Zürich HB",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Thalwil",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Zug",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      },
+      {
+        "id": null,
+        "name": "Luzern",
+        "arrival": null,
+        "departure": null,
+        "delay": null,
+        "platform": null
+      }
+    ]
   }
 ]

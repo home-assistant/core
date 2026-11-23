@@ -10,6 +10,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
     CONF_STATIONS,
+    CONF_STOPS_AT,
     DOMAIN,
 )
 
@@ -59,11 +60,24 @@ def mock_stationboard_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_location_client() -> Generator[AsyncMock]:
+    """Mock a Opendata location client."""
+    with patch(
+        "homeassistant.components.swiss_public_transport.config_flow.OpendataTransportLocation",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.async_get_data.return_value = None
+        client.locations = [{"name": "Zug"}, {"name": "Zug, Bahnhofplatz"}]
+        yield client
+
+
+@pytest.fixture
 def mock_stationboard_config_entry() -> MockConfigEntry:
     """Mock a stationboard configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_STATIONS: STATIONS},
+        data={CONF_STATIONS: STATIONS, CONF_STOPS_AT: []},
         title=", ".join(STATIONS),
         unique_id=f"stationboard {', '.join(STATIONS)}",
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94U",

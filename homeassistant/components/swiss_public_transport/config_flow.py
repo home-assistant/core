@@ -3,7 +3,11 @@
 import logging
 from typing import Any, override
 
-from opendata_transport import OpendataTransport, OpendataTransportStationboard
+from opendata_transport import (
+    OpendataTransport,
+    OpendataTransportLocation,
+    OpendataTransportStationboard,
+)
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -28,6 +32,7 @@ from .const import (
     CONF_DESTINATION,
     CONF_START,
     CONF_STATIONS,
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
@@ -44,7 +49,12 @@ from .const import (
     TIME_MODE_OPTIONS,
     TRANSPORTATION_OPTIONS,
 )
-from .helper import offset_opendata, unique_id_from_config, unique_id_from_stations
+from .helper import (
+    offset_opendata,
+    title_from_stations,
+    unique_id_from_config,
+    unique_id_from_stations,
+)
 
 USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -85,6 +95,12 @@ USER_DATA_SCHEMA = probatio.Schema(
 STATIONBOARD_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_STATIONS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        probatio.Optional(CONF_STOPS_AT): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
@@ -167,12 +183,20 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             elif err := await self.fetch_departures(stations):
                 errors["base"] = err
             else:
-                await self.async_set_unique_id(unique_id_from_stations(stations))
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=", ".join(stations),
-                    data=user_input,
+                stops_at, err = await self.fetch_station_names(
+                    user_input.get(CONF_STOPS_AT, [])
                 )
+                if err:
+                    errors["base"] = err
+                else:
+                    await self.async_set_unique_id(
+                        unique_id_from_stations(stations, stops_at)
+                    )
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=title_from_stations(stations, stops_at),
+                        data={CONF_STATIONS: stations, CONF_STOPS_AT: stops_at},
+                    )
 
         return self.async_show_form(
             step_id="stationboard",
@@ -280,3 +304,25 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             if not opendata.journeys:
                 return "bad_config"
         return None
+
+    async def fetch_station_names(
+        self, stations: list[str]
+    ) -> tuple[list[str], str | None]:
+        """Look up the name of each station as the API returns it and an error."""
+        session = async_get_clientsession(self.hass)
+        names: list[str] = []
+        for station in stations:
+            opendata = OpendataTransportLocation(session, query=station)
+            try:
+                await opendata.async_get_data()
+            except OpendataTransportConnectionError:
+                return [], "cannot_connect"
+            except OpendataTransportError:
+                return [], "bad_config"
+            except Exception:
+                _LOGGER.exception("Unknown error")
+                return [], "unknown"
+            if not opendata.locations:
+                return [], "bad_config"
+            names.append(opendata.locations[0]["name"])
+        return names, None

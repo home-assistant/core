@@ -14,6 +14,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
     CONF_STATIONS,
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
@@ -324,19 +325,31 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
 
 @pytest.mark.parametrize(
-    ("stations", "config_title"),
+    ("user_input", "stops_at", "config_title"),
     [
-        pytest.param(["Zürich HB"], "Zürich HB", id="single_station"),
         pytest.param(
-            ["Kriens, Mattenhof", "Kriens Mattenhof"],
+            {CONF_STATIONS: ["Zürich HB"]}, [], "Zürich HB", id="single_station"
+        ),
+        pytest.param(
+            {CONF_STATIONS: ["Kriens, Mattenhof", "Kriens Mattenhof"]},
+            [],
             "Kriens, Mattenhof, Kriens Mattenhof",
             id="multiple_stations",
         ),
+        pytest.param(
+            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["zug"]},
+            ["Zug"],
+            "Zürich HB stops at Zug",
+            id="stops_at",
+        ),
     ],
 )
-@pytest.mark.usefixtures("mock_stationboard_client")
+@pytest.mark.usefixtures("mock_stationboard_client", "mock_location_client")
 async def test_flow_stationboard_success(
-    hass: HomeAssistant, stations: list[str], config_title: str
+    hass: HomeAssistant,
+    user_input: dict[str, list[str]],
+    stops_at: list[str],
+    config_title: str,
 ) -> None:
     """Test setting up a stationboard."""
     result = await hass.config_entries.flow.async_init(
@@ -351,12 +364,12 @@ async def test_flow_stationboard_success(
     assert result["step_id"] == "stationboard"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATIONS: stations}
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == config_title
-    assert result["data"] == {CONF_STATIONS: stations}
+    assert result["data"] == {**user_input, CONF_STOPS_AT: stops_at}
     assert result["result"].unique_id == f"stationboard {config_title}"
 
 
@@ -418,7 +431,58 @@ async def test_flow_stationboard_error_and_recover(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_STATIONS: ["Zürich HB"]}
+    assert result["data"] == {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: []}
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "locations", "text_error"),
+    [
+        pytest.param(
+            OpendataTransportConnectionError(),
+            [],
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(OpendataTransportError(), [], "bad_config", id="bad_data"),
+        pytest.param(IndexError(), [], "unknown", id="unknown"),
+        pytest.param(None, [], "bad_config", id="unknown_station"),
+    ],
+)
+@pytest.mark.usefixtures("mock_stationboard_client")
+async def test_flow_stationboard_stops_at_error_and_recover(
+    hass: HomeAssistant,
+    mock_location_client: AsyncMock,
+    raise_error: Exception | None,
+    locations: list[dict[str, str]],
+    text_error: str,
+) -> None:
+    """Test errors looking up the stations a departure must stop at."""
+    user_input = {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug"]}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "stationboard"}
+    )
+
+    valid_locations = mock_location_client.locations
+    mock_location_client.async_get_data.side_effect = raise_error
+    mock_location_client.locations = locations
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_location_client.async_get_data.side_effect = None
+    mock_location_client.locations = valid_locations
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == user_input
 
 
 @pytest.mark.usefixtures("mock_stationboard_client")

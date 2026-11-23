@@ -18,6 +18,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_STATION,
     CONNECTIONS_COUNT,
@@ -32,6 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 # Spare connections which replace departed ones until the next update
 CONNECTIONS_SPARE = 2
 DEPARTED_GRACE = timedelta(seconds=30)
+# Departures to search for the ones which stop at the requested stations
+STOPS_AT_DEPARTURES = 40
 
 type SwissPublicTransportConfigEntry = ConfigEntry[
     SwissPublicTransportDataUpdateCoordinator
@@ -256,6 +259,7 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
+        self._stops_at: set[str] = set(config_entry.data[CONF_STOPS_AT])
 
     @override
     async def _async_update_data(self) -> list[DataDeparture]:
@@ -264,7 +268,7 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
     async def fetch_departures(self, limit: int) -> list[DataDeparture]:
         """Fetch departures using the opendata api."""
         # The limit applies to each station, the merged list is cut below
-        self._opendata.limit = limit
+        self._opendata.limit = STOPS_AT_DEPARTURES if self._stops_at else limit
 
         try:
             await self._opendata.async_get_data()
@@ -278,6 +282,16 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
+        journeys = self._opendata.journeys
+        if self._stops_at:
+            # The first stop is the station the journey departs from
+            journeys = [
+                journey
+                for journey in journeys
+                if self._stops_at.intersection(
+                    stop["name"] for stop in journey["pass_list"][1:]
+                )
+            ]
         return [
             DataDeparture(
                 departure=dt_util.parse_datetime(journey["departure"]),
@@ -286,7 +300,7 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
                 line="".join(filter(None, [journey["category"], journey["number"]])),
                 destination=journey["to"],
             )
-            for journey in self._opendata.journeys[:limit]
+            for journey in journeys[:limit]
         ]
 
     async def fetch_departures_as_json(self, limit: int) -> list[JsonValueType]:
