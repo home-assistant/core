@@ -51,6 +51,13 @@ def _idle_stream_mock(*, preload_stream: bool = False) -> MagicMock:
     return stream
 
 
+def _stream_output_mock(*, has_segment: bool) -> MagicMock:
+    """HLS output mock that does or does not yet have an MPEG segment."""
+    output = MagicMock()
+    output.last_segment = object() if has_segment else None
+    return output
+
+
 def _camera_entity_id(
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
@@ -289,7 +296,7 @@ async def test_watching_keeps_the_cached_stream(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
     stream = _idle_stream_mock()
-    stream.outputs.return_value = {"hls": object()}
+    stream.outputs.return_value = {"hls": _stream_output_mock(has_segment=True)}
     camera.stream = stream
 
     await async_get_stream_source(hass, entity_id)
@@ -297,6 +304,46 @@ async def test_watching_keeps_the_cached_stream(
         hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
     )
     await hass.async_block_till_done()
+
+    stream.stop.assert_not_awaited()
+    assert camera.stream is stream
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_healthy_playback_is_not_dropped_past_startup_timeout(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Outputs that already produce segments are not capped by the startup reschedule limit."""
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = _idle_stream_mock()
+    stream.outputs.return_value = {"hls": _stream_output_mock(has_segment=True)}
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    for _ in range(STREAM_IDLE_MAX_RESCHEDULES + 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+        )
+        await hass.async_block_till_done()
 
     stream.stop.assert_not_awaited()
     assert camera.stream is stream
@@ -333,7 +380,10 @@ async def test_active_stream_is_dropped_after_viewer_leaves(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
     stream = _idle_stream_mock()
-    stream.outputs.side_effect = [{"hls": object()}, {}]
+    stream.outputs.side_effect = [
+        {"hls": _stream_output_mock(has_segment=True)},
+        {},
+    ]
     camera.stream = stream
 
     await async_get_stream_source(hass, entity_id)
@@ -389,10 +439,11 @@ async def test_preload_stream_keeps_stream_without_outputs(
     camera.stream = stream
 
     await async_get_stream_source(hass, entity_id)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
-    )
-    await hass.async_block_till_done()
+    for _ in range(STREAM_IDLE_MAX_RESCHEDULES + 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+        )
+        await hass.async_block_till_done()
 
     stream.stop.assert_not_awaited()
     assert camera.stream is stream
@@ -424,7 +475,7 @@ async def test_stuck_stream_outputs_are_dropped_after_startup_timeout(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
     stream = _idle_stream_mock()
-    stream.outputs.return_value = {"hls": object()}
+    stream.outputs.return_value = {"hls": _stream_output_mock(has_segment=False)}
     camera.stream = stream
 
     await async_get_stream_source(hass, entity_id)

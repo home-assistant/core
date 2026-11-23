@@ -156,10 +156,16 @@ class ImouCamera(ImouEntity, Camera):
 
     def _should_keep_stream(self, stream: Stream) -> bool:
         """Return whether an idle timer should wait before dropping the stream."""
-        if stream.outputs():
-            self._idle_output_reschedules += 1
-            return self._idle_output_reschedules <= STREAM_IDLE_MAX_RESCHEDULES
-        return stream.dynamic_stream_settings.preload_stream
+        if stream.dynamic_stream_settings.preload_stream:
+            return True
+        outputs = stream.outputs()
+        if not outputs:
+            return False
+        if any(output.last_segment is not None for output in outputs.values()):
+            self._idle_output_reschedules = 0
+            return True
+        self._idle_output_reschedules += 1
+        return self._idle_output_reschedules <= STREAM_IDLE_MAX_RESCHEDULES
 
     @override
     @async_wrap_imou_command("get_image_failed")
