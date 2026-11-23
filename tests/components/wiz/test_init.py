@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.wiz.const import DOMAIN
+from homeassistant.components.wiz.const import CONF_SIGNING_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -97,3 +97,26 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
         hass.states.get("switch.mock_title").attributes[ATTR_FRIENDLY_NAME]
         == "Shop Switch"
     )
+
+
+async def test_setup_with_signing_key(hass: HomeAssistant) -> None:
+    """Test the signing key is passed to the device."""
+    signing_key = "00112233445566778899aabbccddeeff"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_MAC,
+        data={CONF_HOST: FAKE_IP, CONF_SIGNING_KEY: signing_key},
+    )
+    entry.add_to_hass(hass)
+    bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
+    with (
+        _patch_discovery(),
+        patch(
+            "homeassistant.components.wiz.wizlight", return_value=bulb
+        ) as mock_wizlight,
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_wizlight.assert_called_once_with(FAKE_IP, signing_key=signing_key)

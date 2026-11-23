@@ -15,11 +15,37 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
-from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_CONNECT_EXCEPTIONS
+from .const import (
+    CONF_SIGNING_KEY,
+    DEFAULT_NAME,
+    DISCOVER_SCAN_TIMEOUT,
+    DOMAIN,
+    WIZ_CONNECT_EXCEPTIONS,
+)
 from .discovery import async_discover_devices
 from .utils import _short_mac, name_from_bulb_type_and_mac
 
 _LOGGER = logging.getLogger(__name__)
+
+SIGNING_KEY_LENGTH = 16
+
+
+def _normalize_signing_key(signing_key: str) -> str | None:
+    """Return the signing key in lowercase hex, or None if it is not valid."""
+    signing_key = signing_key.strip().lower()
+    try:
+        key = bytes.fromhex(signing_key)
+    except ValueError:
+        return None
+    return signing_key if len(key) == SIGNING_KEY_LENGTH else None
+
+
+def _entry_data(host: str, signing_key: str | None) -> dict[str, str]:
+    """Return config entry data, including the signing key only when set."""
+    data = {CONF_HOST: host}
+    if signing_key:
+        data[CONF_SIGNING_KEY] = signing_key
+    return data
 
 
 class WizConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -160,23 +186,24 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            bulb_info, errors = await self._async_validate_host(host)
+            bulb_info, signing_key, errors = await self._async_validate_host(
+                host, user_input.get(CONF_SIGNING_KEY, "")
+            )
             if bulb_info is not None:
                 bulbtype, mac = bulb_info
                 await self.async_set_unique_id(mac, raise_on_progress=False)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                data = _entry_data(host, signing_key)
+                self._abort_if_unique_id_configured(updates=data)
                 name = name_from_bulb_type_and_mac(bulbtype, mac)
-                return self.async_create_entry(
-                    title=name,
-                    data=user_input,
-                )
+                return self.async_create_entry(title=name, data=data)
 
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
-                {probatio.Optional(CONF_HOST, default=""): str}
+                {
+                    probatio.Optional(CONF_HOST, default=""): str,
+                    probatio.Optional(CONF_SIGNING_KEY): str,
+                }
             ),
             errors=errors,
         )
@@ -188,47 +215,55 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            bulb_info, errors = await self._async_validate_host(user_input[CONF_HOST])
+            bulb_info, signing_key, errors = await self._async_validate_host(
+                user_input[CONF_HOST], user_input.get(CONF_SIGNING_KEY, "")
+            )
             if bulb_info is not None:
                 await self.async_set_unique_id(bulb_info[1])
                 self._abort_if_unique_id_mismatch()
+                data = _entry_data(user_input[CONF_HOST], signing_key)
                 # The update listener is only registered after a successful setup
                 if reconfigure_entry.update_listeners:
-                    return self.async_update_and_abort(
-                        reconfigure_entry, data_updates=user_input
-                    )
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=user_input
-                )
+                    return self.async_update_and_abort(reconfigure_entry, data=data)
+                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Optional(CONF_SIGNING_KEY): str,
+                    }
+                ),
                 user_input or reconfigure_entry.data,
             ),
             errors=errors,
         )
 
     async def _async_validate_host(
-        self, host: str
-    ) -> tuple[tuple[BulbType, str] | None, dict[str, str]]:
-        """Connect to the bulb and return its type and MAC, or the errors."""
+        self, host: str, signing_key: str
+    ) -> tuple[tuple[BulbType, str] | None, str | None, dict[str, str]]:
+        """Connect to the bulb and return its type, MAC and signing key, or the errors."""
         if not is_ip_address(host):
-            return None, {"base": "no_ip"}
-        bulb = wizlight(host)
+            return None, None, {"base": "no_ip"}
+        normalized_key: str | None = None
+        if signing_key.strip():
+            if (normalized_key := _normalize_signing_key(signing_key)) is None:
+                return None, None, {CONF_SIGNING_KEY: "invalid_signing_key"}
+        bulb = wizlight(host, signing_key=normalized_key)
         try:
             bulbtype = await bulb.get_bulbtype()
             mac = await bulb.getMac()
         except WizLightTimeOutError:
-            return None, {"base": "bulb_time_out"}
+            return None, None, {"base": "bulb_time_out"}
         except ConnectionRefusedError:
-            return None, {"base": "cannot_connect"}
+            return None, None, {"base": "cannot_connect"}
         except WizLightConnectionError:
-            return None, {"base": "no_wiz_light"}
+            return None, None, {"base": "no_wiz_light"}
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            return None, {"base": "unknown"}
+            return None, None, {"base": "unknown"}
         finally:
             await bulb.async_close()
-        return (bulbtype, mac), {}
+        return (bulbtype, mac), normalized_key, {}

@@ -315,12 +315,13 @@ async def async_setup_integration(
     device: dict[str, Any] | None = None,
     extended_white_range: list[int] | None = None,
     bulb_type: BulbType | None = None,
+    data: dict[str, Any] | None = None,
 ) -> tuple[wizlight, MockConfigEntry]:
     """Set up the integration with a mock device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=FAKE_MAC,
-        data={CONF_HOST: FAKE_IP},
+        data=data or {CONF_HOST: FAKE_IP},
     )
     entry.add_to_hass(hass)
     bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)

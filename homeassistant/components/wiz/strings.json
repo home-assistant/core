@@ -9,6 +9,7 @@
     "error": {
       "bulb_time_out": "Cannot connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_signing_key": "The signing key must be 32 hexadecimal characters.",
       "no_ip": "Not a valid IP address.",
       "no_wiz_light": "The bulb cannot be connected via WiZ integration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -25,12 +26,20 @@
       },
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "signing_key": "[%key:component::wiz::config::step::user::data::signing_key%]"
+        },
+        "data_description": {
+          "signing_key": "[%key:component::wiz::config::step::user::data_description::signing_key%]"
         }
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "signing_key": "Signing key"
+        },
+        "data_description": {
+          "signing_key": "The udp_signing_key from the WiZ app's local integration export. Required to control lights whose firmware only accepts signed commands."
         },
         "description": "If you leave the IP address empty, discovery will be used to find devices."
       }

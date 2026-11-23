@@ -8,7 +8,7 @@ from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
 from homeassistant.components import wiz
-from homeassistant.components.wiz.const import DOMAIN
+from homeassistant.components.wiz.const import CONF_SIGNING_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -766,4 +766,115 @@ async def test_reconfigure_flow_unique_id_mismatch(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == TEST_CONNECTION
+
+
+SIGNING_KEY = "00112233445566778899aabbccddeeff"
+
+
+async def test_form_with_signing_key(hass: HomeAssistant) -> None:
+    """Test the signing key is normalized, stored and used to connect."""
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.wiz.config_flow.wizlight", return_value=bulb
+        ) as mock_wizlight,
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: f" {SIGNING_KEY.upper()} "},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: SIGNING_KEY}
+    mock_wizlight.assert_called_once_with("1.1.1.1", signing_key=SIGNING_KEY)
+
+
+@pytest.mark.parametrize(
+    "signing_key",
+    [
+        pytest.param("not-hex", id="not_hex"),
+        pytest.param("0011223344", id="too_short"),
+        pytest.param(SIGNING_KEY + "00", id="too_long"),
+    ],
+)
+async def test_form_invalid_signing_key(hass: HomeAssistant, signing_key: str) -> None:
+    """Test an invalid signing key is rejected before connecting."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("homeassistant.components.wiz.config_flow.wizlight") as mock_wizlight:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: signing_key},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_SIGNING_KEY: "invalid_signing_key"}
+    mock_wizlight.assert_not_called()
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: SIGNING_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: SIGNING_KEY}
+
+
+async def test_reconfigure_flow_signing_key(hass: HomeAssistant) -> None:
+    """Test a signing key can be added and removed by reconfiguring."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONNECTION, unique_id=FAKE_MAC)
+    entry.add_to_hass(hass)
+
+    for user_input, expected in (
+        (
+            {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: SIGNING_KEY},
+            {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: SIGNING_KEY},
+        ),
+        ({CONF_HOST: "1.1.1.1"}, {CONF_HOST: "1.1.1.1"}),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        with (
+            _patch_wizlight(),
+            patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+            patch("homeassistant.components.wiz.async_setup", return_value=True),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+            await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data == expected
+
+
+async def test_reconfigure_flow_invalid_signing_key(hass: HomeAssistant) -> None:
+    """Test reconfiguring with an invalid signing key shows an error."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONNECTION, unique_id=FAKE_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "1.1.1.1", CONF_SIGNING_KEY: "not-hex"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_SIGNING_KEY: "invalid_signing_key"}
     assert entry.data == TEST_CONNECTION
