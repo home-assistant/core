@@ -1,6 +1,7 @@
 """reCamera Pro integration."""
 
 import logging
+import re
 
 from recamera_protocol import (
     RecameraError,

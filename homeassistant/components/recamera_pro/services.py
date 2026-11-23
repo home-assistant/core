@@ -1,6 +1,6 @@
 """Action registration for reCamera Pro."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import service
@@ -23,7 +23,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_CAPTURE_DEVICE,
         entity_domain="camera",
-        schema={vol.Optional(ATTR_CAPTURE_OUTPUT): str},
+        schema={probatio.Optional(ATTR_CAPTURE_OUTPUT): str},
         func="async_capture_device_snapshot",
         supports_response=SupportsResponse.OPTIONAL,
     )
@@ -33,9 +33,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_RECORD_DEVICE,
         entity_domain="camera",
         schema={
-            vol.Optional(ATTR_CAPTURE_OUTPUT): str,
-            vol.Optional(ATTR_RECORD_DURATION, default=30): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=3600)
+            probatio.Optional(ATTR_CAPTURE_OUTPUT): str,
+            probatio.Optional(ATTR_RECORD_DURATION, default=30): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=3600)
             ),
         },
         func="async_start_device_recording",
