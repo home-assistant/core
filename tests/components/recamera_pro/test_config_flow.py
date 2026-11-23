@@ -13,10 +13,12 @@ from recamera_protocol import (
     RecameraProtocolError,
 )
 
+from homeassistant import data_entry_flow
 from homeassistant.components.recamera_pro.config_flow import (
     RecameraProConfigFlow,
     RecameraProOptionsFlow,
     _any_host_reachable,
+    _async_resolve_zeroconf_service,
     _option_error_key,
     _options_catalog,
     _prioritize_reachable_hosts,
@@ -597,3 +599,168 @@ async def test_video_stream_options_and_zeroconf_existing_entry() -> None:
         res = await flow.async_step_zeroconf(discovery_info)
     assert res["type"] == FlowResultType.ABORT
     assert res["reason"] == "already_configured"
+
+
+@pytest.mark.asyncio
+async def test_probe_hosts_and_pending_discovery_helpers() -> None:
+    """Test existing/new host probing error aggregation and pending flow lookup."""
+    flow = _make_flow()
+    flow.flow_id = "f1"
+    entry = SimpleNamespace(
+        entry_id="e1",
+        unique_id="SN123456",
+        data={
+            CONF_HOST: "192.168.10.22",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "pw",
+            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
+            CONF_SERIAL_NUMBER: "SN123456",
+        },
+    )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=RecameraAuthenticationError("bad")),
+    ):
+        _, _, err = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+            entry, ["192.168.42.1"]
+        )
+        assert err == "invalid_auth"
+        _, _, err_new = await flow._async_probe_new_discovery_hosts(  # noqa: SLF001
+            ["192.168.42.1"], "admin", "bad"
+        )
+        assert err_new == "invalid_auth"
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
+    ):
+        _, _, err_id = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+            entry, ["192.168.42.1"]
+        )
+        assert err_id == "identity_mismatch"
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=RecameraConnectionError("down")),
+    ):
+        _, _, err_conn = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+            entry, ["192.168.42.1"]
+        )
+        assert err_conn == "cannot_connect"
+
+    flow.hass.config_entries.flow.async_progress_by_handler = lambda _d: [
+        {"context": {"source": "zeroconf", "unique_id": "4a:f8:34:07:ab:3d"}}
+    ]
+    assert flow._pending_discovery_flow("4a:f8:34:07:ab:3d") is not None  # noqa: SLF001
+    assert flow._pending_discovery_flow("other") is None  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_resolve_zeroconf_and_refresh_exit() -> None:
+    """Test zeroconf resolution helper and refresh task cancellation/exit."""
+    fake_info = SimpleNamespace(
+        parsed_addresses=lambda: ["192.168.42.1", "169.254.1.2"],
+        port=80,
+        server="reCamera-Pro.local.",
+        properties={b"mac": b"4a:f8:34:07:ab:3d"},
+        decoded_properties={"mac": "4a:f8:34:07:ab:3d"},
+        async_request=AsyncMock(return_value=True),
+    )
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.ha_zeroconf.async_get_async_instance",
+            new=AsyncMock(
+                return_value=SimpleNamespace(
+                    zeroconf=SimpleNamespace(
+                        done=False,
+                        cache=SimpleNamespace(async_all_by_details=lambda *_a: []),
+                    )
+                )
+            ),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.AsyncServiceInfo",
+            return_value=fake_info,
+        ),
+    ):
+        resolved = await _async_resolve_zeroconf_service(
+            SimpleNamespace(), "_recamera._tcp.local.", "recamera._recamera._tcp.local."
+        )
+    assert resolved is not None
+    assert resolved[0] == ["192.168.42.1"]
+    assert resolved[3]["mac"] == "4a:f8:34:07:ab:3d"
+
+    flow = _make_flow()
+    flow.flow_id = "f1"
+    flow.hass.config_entries.flow.async_get = Mock(
+        side_effect=data_entry_flow.UnknownFlow
+    )
+    await flow._async_refresh_discovery("_recamera._tcp.local.", "svc")  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_options_without_runtime_data() -> None:
+    """Test motion and video stream options fallback to direct device client."""
+    entry = SimpleNamespace(
+        entry_id="e1",
+        runtime_data=None,
+        data={CONF_HOST: "192.168.42.1", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"},
+        options={CONF_LANGUAGE: "auto"},
+    )
+    fake_client = SimpleNamespace(
+        async_get_appmgr_config=AsyncMock(
+            return_value={"values": {"sq_diff_threshold": 20}}
+        ),
+        async_update_appmgr_config=AsyncMock(
+            return_value={"config": {"sq_diff_threshold": 25}}
+        ),
+        async_get_stream_encode=AsyncMock(
+            return_value={
+                "encode": {
+                    "sResolution": "1280*720",
+                    "sFrameRate": "15",
+                    "iMaxRate": 1024,
+                    "iGOP": 30,
+                }
+            }
+        ),
+        async_update_stream_encode=AsyncMock(),
+        async_close=AsyncMock(),
+    )
+    options_flow = RecameraProOptionsFlow()
+    options_flow.hass = SimpleNamespace(config=SimpleNamespace(language="en"))
+    options_flow.async_show_form = Mock(
+        side_effect=lambda **kw: {"type": FlowResultType.FORM, **kw}
+    )
+    options_flow.async_create_entry = Mock(
+        side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
+    )
+    with (
+        patch.object(RecameraProOptionsFlow, "config_entry", new=entry),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.RecameraDeviceClient",
+            return_value=fake_client,
+        ),
+    ):
+        m_form = await options_flow.async_step_motion()
+        assert m_form["type"] == FlowResultType.FORM
+        m_ok = await options_flow.async_step_motion(
+            {
+                "sq_diff_threshold": 25,
+                "min_changed_ratio": 0.02,
+                "hold_seconds": 3,
+                "sample_fps": 5,
+            }
+        )
+        assert m_ok["type"] == FlowResultType.CREATE_ENTRY
+
+        v_ok = await options_flow.async_step_sub_stream(
+            {
+                "resolution": "1280*720",
+                "frame_rate": 15,
+                "max_bitrate": 1024,
+                "gop": 30,
+                "codec": "H264",
+            }
+        )
+        assert v_ok["type"] == FlowResultType.CREATE_ENTRY
