@@ -3357,7 +3357,7 @@ async def test_name_match_wildcard(
     satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
     entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
 
-    result = await async_get_agent(hass).async_recognize_intent(
+    [result] = await async_get_agent(hass).async_recognize_intents(
         ConversationInput(
             text="play jazz on kitchen speaker",
             context=Context(),
@@ -3369,7 +3369,6 @@ async def test_name_match_wildcard(
         )
     )
 
-    assert result is not None
     assert result.entities["name"].value == "kitchen speaker"
     assert result.entities["search_query"].value == "jazz"
 
@@ -3584,8 +3583,7 @@ async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
         language=hass.config.language,
         agent_id=None,
     )
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert result.entities["name"].text == "test light"
 
     # Mark this result so we know it is from cache next time
@@ -3593,14 +3591,12 @@ async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
     setattr(result, mark, True)
 
     # Should be from cache this time
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert getattr(result, mark, None) is True
 
     # Unexposing clears the cache
     expose_entity(hass, entity_id, False)
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert getattr(result, mark, None) is None
 
 
@@ -3623,8 +3619,7 @@ async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
         language=hass.config.language,
         agent_id=None,
     )
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert result.entities["name"].text == "test light"
 
     # Mark this result so we know it is from cache next time
@@ -3632,14 +3627,12 @@ async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
     setattr(result, mark, True)
 
     # Should be from cache this time
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert getattr(result, mark, None) is True
 
     # Adding a new entity clears the cache
     hass.states.async_set("light.new_light", "off")
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
+    [result] = await agent.async_recognize_intents(user_input)
     assert getattr(result, mark, None) is None
 
 
@@ -3894,7 +3887,7 @@ async def test_handle_intents_filters_results(
 
     with (
         patch(
-            "homeassistant.components.conversation.default_agent.DefaultAgent._async_recognize_intents",
+            "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intents",
             return_value=[mock_result],
         ) as mock_recognize,
         patch(
