@@ -152,18 +152,14 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
             await self.async_run_script(on_script, context=self._context)
-        if self._is_optimistic_state:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        self.write_optimistic_state(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if off_script := self._action_scripts.get(CONF_TURN_OFF):
             await self.async_run_script(off_script, context=self._context)
-        if self._is_optimistic_state:
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        self.write_optimistic_state(False)
 
     @override
     def restore_last_state_state(self, last_state: State) -> bool:

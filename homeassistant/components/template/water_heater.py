@@ -349,9 +349,7 @@ class AbstractTemplateWaterHeater(
         """Set new target operation mode."""
         await self._async_set_operation_mode(operation_mode)
 
-        if self._is_optimistic_state:
-            self._attr_current_operation = operation_mode
-            self.async_write_ha_state()
+        self.write_optimistic_state(operation_mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

@@ -962,6 +962,56 @@ async def test_non_optimistic_template_with_optimistic_state(
 @pytest.mark.parametrize(
     ("count", "position_template", "config"),
     [
+        (
+            1,
+            "{{ states('sensor.test_position') }}",
+            {**COVER_ACTIONS, "optimistic": True},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_position_cover")
+async def test_optimistic_open_close_sets_position(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test optimistic open and close set the position to 100 and 0."""
+    await async_trigger(hass, TEST_POSITION_ENTITY_ID, 42)
+
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.state == CoverState.OPEN
+    assert state.attributes["current_position"] == 42.0
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
+        blocking=True,
+    )
+    assert_action(TEST_COVER, calls, 1, "close_cover")
+
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.state == CoverState.CLOSED
+    assert state.attributes["current_position"] == 0.0
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
+        blocking=True,
+    )
+    assert_action(TEST_COVER, calls, 2, "open_cover")
+
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.state == CoverState.OPEN
+    assert state.attributes["current_position"] == 100.0
+
+
+@pytest.mark.parametrize(
+    ("count", "position_template", "config"),
+    [
         (1, "{{ 100 }}", SET_COVER_TILT_POSITION),
         (1, "{{ 100 }}", {"tilt_optimistic": False, **SET_COVER_TILT_POSITION}),
     ],

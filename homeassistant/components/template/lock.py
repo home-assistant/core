@@ -241,9 +241,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._is_optimistic_state:
-            self._set_state(LockState.LOCKED)
-            self.async_write_ha_state()
+        self.write_optimistic_state(LockState.LOCKED)
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
@@ -260,9 +258,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._is_optimistic_state:
-            self._set_state(LockState.UNLOCKED)
-            self.async_write_ha_state()
+        self.write_optimistic_state(LockState.UNLOCKED)
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
@@ -279,9 +275,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._is_optimistic_state:
-            self._set_state(LockState.OPEN)
-            self.async_write_ha_state()
+        self.write_optimistic_state(LockState.OPEN)
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 

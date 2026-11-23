@@ -78,6 +78,8 @@ class AbstractTemplateEntity(Entity):
     _is_optimistic_state: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
+    _state_attribute: str | None = None
+    _state_on_update: Callable[[Any], None] | None = None
     _restore_state_extra_data: Any | None = None
     _blocked_attributes: BlockedTemplateAttributes | None = None
 
@@ -148,7 +150,6 @@ class AbstractTemplateEntity(Entity):
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
 
-    @abstractmethod
     def setup_state_template(
         self,
         attribute: str,
@@ -163,6 +164,25 @@ class AbstractTemplateEntity(Entity):
         entities main state option is 'condition', where
         switch is 'state'.
         """
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement"
+                " '_state_option' for 'setup_state_template'."
+            )
+
+        # Stored even without a state template, optimistic entities need it.
+        self._state_attribute = attribute
+        self._state_on_update = on_update
+        self._add_state_template(attribute, validator, on_update)
+
+    @abstractmethod
+    def _add_state_template(
+        self,
+        attribute: str,
+        validator: Callable[[Any], Any] | None,
+        on_update: Callable[[Any], None] | None,
+    ) -> None:
+        """Add the template that manages the main state of the entity."""
 
     @abstractmethod
     def setup_template(
@@ -337,6 +357,24 @@ class AbstractTemplateEntity(Entity):
     def write_assumed_attribute(self, option: str, value: Any) -> None:
         """If the attribute is assumed, write the value to the attribute and update the ha state."""
         if self.update_assumed_attribute(option, value):
+            self.async_write_ha_state()
+
+    def update_optimistic_state(self, state: Any) -> bool:
+        """If the state is optimistic, update the state with the new value."""
+        if not self._is_optimistic_state or self._state_attribute is None:
+            return False
+
+        _LOGGER.debug("Optimistically setting %s state to %s", self.entity_id, state)
+        if self._state_on_update:
+            self._state_on_update(state)
+        else:
+            setattr(self, self._state_attribute, state)
+
+        return True
+
+    def write_optimistic_state(self, state: Any) -> None:
+        """If the state is optimistic, write the new value and update the ha state."""
+        if self.update_optimistic_state(state):
             self.async_write_ha_state()
 
     @override

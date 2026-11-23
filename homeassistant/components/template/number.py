@@ -168,9 +168,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
-        if self._is_optimistic_state:
-            self._attr_native_value = value
-            self.async_write_ha_state()
+        self.write_optimistic_state(value)
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,

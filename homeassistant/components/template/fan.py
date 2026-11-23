@@ -295,9 +295,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
 
-        if self._is_optimistic_state:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        self.write_optimistic_state(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -306,9 +304,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
-        if self._is_optimistic_state:
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        self.write_optimistic_state(False)
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -322,8 +318,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                 context=self._context,
             )
 
-        if self._is_optimistic_state:
-            self._attr_is_on = percentage != 0
+        self.update_optimistic_state(percentage != 0)
 
         if self._is_optimistic_state or CONF_PERCENTAGE not in self._templates:
             self.async_write_ha_state()
@@ -340,8 +335,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                 context=self._context,
             )
 
-        if self._is_optimistic_state:
-            self._attr_is_on = True
+        self.update_optimistic_state(True)
 
         if self._is_optimistic_state or CONF_PRESET_MODE not in self._templates:
             self.async_write_ha_state()

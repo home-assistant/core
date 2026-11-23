@@ -698,9 +698,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         """Set the HVAC mode."""
         await self._async_set_hvac_mode(hvac_mode)
 
-        if self._is_optimistic_state:
-            self._attr_hvac_mode = hvac_mode
-            self.async_write_ha_state()
+        self.write_optimistic_state(hvac_mode)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -781,8 +779,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
             common_params["hvac_mode"] = hvac_mode
             await self._async_set_hvac_mode(HVACMode(hvac_mode))
-            if self._is_optimistic_state:
-                self._attr_hvac_mode = hvac_mode
+            if self.update_optimistic_state(hvac_mode):
                 write_state = True
 
         updates = []
