@@ -3,13 +3,14 @@
 import asyncio
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from PyTado.http import Http
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tado import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -83,4 +84,27 @@ async def test_refresh_token_threading_lock(hass: HomeAssistant) -> None:
 
     assert start2 >= end1, (
         f"Second refresh started before first ended: start2={start2}, end1={end1}."
+    )
+
+
+async def test_tado_x_home_is_rejected_error(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a Tado X (LINE_X generation) home aborts setup with a clear error."""
+    mock_tado_api.get_me.return_value = {
+        "homes": [{"name": "x home", "id": 1, "generation": "LINE_X"}]
+    }
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == (
+        'The home "x home" uses Tado X devices, which are not supported by this'
+        " integration. Tado X uses a different API that Tado does not allow"
+        " third parties to access. To use these devices with Home Assistant,"
+        " set them up via the Matter integration with a Thread border router"
+        " instead"
     )
