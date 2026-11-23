@@ -21,25 +21,28 @@ from homeassistant.setup import async_setup_component
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
-
-async def test_unload_config_entry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Unload all platforms and shut down the coordinator."""
-    await _async_setup_fixture(hass, config_entry, "minimal_data")
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
 GATEWAY_DEVICES_URL = "https://api.onecta.daikineurope.com/v1/gateway-devices"
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "issue_841_gateway_devices.json"
 _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER = (
     DOMAIN,
     "00000000-0000-4000-8000-000000000105_domesticHotWaterTank",
 )
+
+
+async def test_unload_config_entry_cancels_post_write_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Cancel a pending post-write refresh when unloading the entry."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    coordinator.schedule_post_write_refresh()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert coordinator._unsub_post_write_refresh is not None
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert coordinator._unsub_post_write_refresh is None
 
 
 async def test_setup_with_gateway_missing_management_points(

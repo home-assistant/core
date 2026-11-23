@@ -27,7 +27,6 @@
       "heatupmode": { "default": "mdi:alphabetical" },
       "ipaddress": { "default": "mdi:ip-network" },
       "operationmode": { "default": "mdi:alphabetical" },
-      "powerfulmode": { "default": "mdi:rocket-launch" },
       "ratelimitremainingday": { "default": "mdi:information-outline" },
       "regioncode": { "default": "mdi:information-outline" },
       "setpointmode": { "default": "mdi:alphabetical" },
@@ -41,6 +40,7 @@
     "switch": {
       "economode": { "default": "mdi:leaf" },
       "onoffmode": { "default": "mdi:power" },
+      "powerfulmode": { "default": "mdi:rocket-launch" },
       "streamermode": { "default": "mdi:air-filter" }
     },
     "update": {

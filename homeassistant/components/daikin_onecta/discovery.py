@@ -86,14 +86,6 @@ def scalar_platform_for_point(
     if name == "onOffMode" and point.management_point_type == "climateControl":
         if point.air_purification is not None:
             return None
-    # Keep climate controls off alternate scalar platforms while offline,
-    # when Daikin may temporarily report them as read-only.
-    if (
-        name in {"onOffMode", "powerfulMode"}
-        and point.management_point_type == "climateControl"
-        and not gateway_online
-    ):
-        return Platform.SWITCH if name in SWITCH_KEYS else None
     # Keep water-heater power controls on the typed entity.
     if name in {"onOffMode", "powerfulMode"} and (
         point.management_point_type
