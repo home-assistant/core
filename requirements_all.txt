@@ -500,7 +500,7 @@ aiotractive==2.1.1
 aiotrimlight==0.4.0
 
 # homeassistant.components.unifi
-aiounifi==101
+aiounifi==102
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
