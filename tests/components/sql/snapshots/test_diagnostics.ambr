@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_diagnostics[custom_db]
+  dict({
+    'data': dict({
+      'db_url': '**REDACTED**',
+    }),
+    'db_driver': 'mysql+pymysql',
+    'options': dict({
+      'additional_options': dict({
+        'device_class': 'data_size',
+        'state_class': 'total',
+        'unit_of_measurement': 'MiB',
+        'value_template': '{{ value }}',
+      }),
+      'column': 'value',
+      'query': 'SELECT 5 as value',
+    }),
+    'uses_recorder_db': False,
+  })
+# ---
+# name: test_diagnostics[recorder_db]
+  dict({
+    'data': dict({
+    }),
+    'db_driver': 'sqlite',
+    'options': dict({
+      'additional_options': dict({
+        'device_class': 'data_size',
+        'state_class': 'total',
+        'unit_of_measurement': 'MiB',
+        'value_template': '{{ value }}',
+      }),
+      'column': 'value',
+      'query': 'SELECT 5 as value',
+    }),
+    'uses_recorder_db': True,
+  })
+# ---
