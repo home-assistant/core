@@ -191,9 +191,6 @@
       "manual_clean": {
         "name": "Manual clean"
       },
-      "start_cleaning": {
-        "name": "Start cleaning"
-      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -211,6 +208,9 @@
       },
       "snooze": {
         "name": "Snooze"
+      },
+      "start_cleaning": {
+        "name": "Start cleaning"
       }
     },
     "cover": {
