@@ -28,7 +28,7 @@ from .entity import (
 )
 from .utils import round_temperature_to_step, temperature_unit_or_celsius
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 LEAVING_WATER_OFFSET_DESCRIPTION = NumberEntityDescription(
     key="leaving_water_offset",
