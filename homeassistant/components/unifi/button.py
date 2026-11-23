@@ -88,6 +88,15 @@ async def async_network_restart_device_control_fn(
     await api.network.devices.restart(api.network.devices[obj_id].device_id)
 
 
+@callback
+def async_network_port_power_cycle_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a port of the Integration API is online and has PoE enabled."""
+    if not async_network_device_available_fn(hub, obj_id):
+        return False
+    port = hub.network_ports.get(obj_id)
+    return port is not None and port.poe_enabled
+
+
 async def async_network_power_cycle_port_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
@@ -184,7 +193,7 @@ def make_network_api_descriptions(
             entity_category=EntityCategory.CONFIG,
             device_class=ButtonDeviceClass.RESTART,
             api_handler_fn=lambda _: hub.network_ports,
-            available_fn=async_network_device_available_fn,
+            available_fn=async_network_port_power_cycle_available_fn,
             control_fn=async_network_power_cycle_port_control_fn,
             device_info_fn=async_network_device_device_info_fn,
             object_fn=lambda _, obj_id: hub.network_ports[obj_id],

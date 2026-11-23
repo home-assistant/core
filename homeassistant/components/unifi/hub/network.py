@@ -33,6 +33,11 @@ class NetworkPort(ApiItem):
         """Port index."""
         return self.raw["idx"]
 
+    @property
+    def poe_enabled(self) -> bool:
+        """Whether PoE is enabled on the port."""
+        return (poe := self.raw.get("poe")) is not None and poe["enabled"]
+
 
 class _DerivedHandler[ItemT: ApiItem](APIHandler[ItemT]):
     """Handler filled from per device requests instead of a list endpoint."""
@@ -93,7 +98,7 @@ class _DerivedHandler[ItemT: ApiItem](APIHandler[ItemT]):
 
 
 class NetworkPorts(_DerivedHandler[NetworkPort]):
-    """PoE capable ports, fetched once per device as they change with hardware."""
+    """PoE capable ports of every device, a failed device keeps its known ports."""
 
     item_cls = NetworkPort
 
@@ -109,17 +114,13 @@ class NetworkPorts(_DerivedHandler[NetworkPort]):
 
     @override
     async def update(self) -> None:
-        """Fetch the ports of devices seen for the first time."""
+        """Fetch the ports of every supported device, PoE state can change."""
         self._forget_removed_devices()
-        new = [
-            mac
-            for mac, device in self.devices.items()
-            if mac not in self._ports and device.supported
-        ]
+        supported = [mac for mac, device in self.devices.items() if device.supported]
         try:
-            details = await self._fetch_per_device(new, self.devices.get_details)
+            details = await self._fetch_per_device(supported, self.devices.get_details)
         except TimeoutError, aiounifi.AiounifiException:
-            # Known ports stay usable, the new devices are tried again
+            # Known ports stay usable, every device is tried again
             if not self._ports:
                 raise
             details = {}

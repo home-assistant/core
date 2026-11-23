@@ -229,8 +229,14 @@ async def test_client_tracker_follows_polls(
         {CONF_TRACK_WIRED_CLIENTS: False},
         {CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: [WIRED_CLIENT_MAC]},
+        {CONF_TRACK_WIRED_CLIENTS: False, CONF_CLIENT_SOURCE: [WIRED_CLIENT_MAC]},
     ],
-    ids=["no_wired_clients", "no_clients_or_devices", "client_source_ignored"],
+    ids=[
+        "no_wired_clients",
+        "no_clients_or_devices",
+        "client_source_without_tracking",
+        "client_source_without_wired",
+    ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_options(
@@ -968,6 +974,55 @@ async def test_new_device_failing_keeps_known_ports(
     for seconds in (11, 61):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
         await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNKNOWN
+
+
+async def test_port_details_follow_poe_changes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Port details are polled again, the button follows the PoE setting."""
+    assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNKNOWN
+    port = SWITCH_DETAILS["interfaces"]["ports"][0]
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{SWITCH_ID}",
+        json={
+            **SWITCH_DETAILS,
+            "interfaces": {
+                "ports": [{**port, "poe": {**port["poe"], "enabled": False}}]
+            },
+        },
+    )
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=62))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("network_config_entry_setup")
+async def test_known_ports_kept_when_details_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+) -> None:
+    """A failed refresh of the details keeps the known ports."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{SITE_URL}/devices/{SWITCH_ID}", status=500)
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNKNOWN
 

@@ -47,8 +47,10 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-# Ports and statistics take one request per device
-DEVICE_DATA_UPDATE_INTERVAL = timedelta(seconds=60)
+# Ports and statistics take one request per device. Ports follow the
+# device list poll of a local user without a websocket, PoE can change.
+PORT_UPDATE_INTERVAL = timedelta(seconds=30)
+STATISTICS_UPDATE_INTERVAL = timedelta(seconds=60)
 
 
 class UnifiEntityLoader:
@@ -156,9 +158,12 @@ class UnifiEntityLoader:
         }
         return coordinators | {
             id(handler): UnifiDataUpdateCoordinator(
-                hub, handler, update_interval=DEVICE_DATA_UPDATE_INTERVAL
+                hub, handler, update_interval=interval
             )
-            for handler in (hub.network_ports, hub.network_statistics)
+            for handler, interval in (
+                (hub.network_ports, PORT_UPDATE_INTERVAL),
+                (hub.network_statistics, STATISTICS_UPDATE_INTERVAL),
+            )
         }
 
     async def async_load_sites(self) -> None:

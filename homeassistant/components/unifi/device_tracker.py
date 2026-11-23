@@ -160,6 +160,9 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if a client of the Integration API is allowed."""
+    if obj_id in hub.config.option_supported_clients:
+        return True
+
     if not hub.config.option_track_clients:
         return False
 

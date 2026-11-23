@@ -640,8 +640,16 @@
     'state': '2026-11-07T09:00:00+00:00',
   })
 # ---
-# name: test_tracker_options[client_source_ignored]
+# name: test_tracker_options[client_source_without_tracking]
   list([
+    'device_tracker.desktop',
+    'device_tracker.switch',
+  ])
+# ---
+# name: test_tracker_options[client_source_without_wired]
+  list([
+    'device_tracker.desktop',
+    'device_tracker.phone',
     'device_tracker.switch',
   ])
 # ---
