@@ -994,6 +994,17 @@ async def websocket_update_prefs(
     changes.pop("id")
     changes.pop("type")
 
+    if (
+        changes.get(PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE)
+        and hass.http.ssl_peer_certificate is None
+    ):
+        connection.send_error(
+            msg["id"],
+            "no_ssl_peer_certificate",
+            "Configure an SSL peer certificate in the network settings first.",
+        )
+        return
+
     # If we turn alexa linking on, validate that we can fetch access token
     if changes.get(PREF_ALEXA_REPORT_STATE):
         alexa_config = await cloud.client.get_alexa_config()

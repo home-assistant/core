@@ -1856,19 +1856,20 @@ async def test_websocket_update_preferences(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {
-            "type": "cloud/update_prefs",
-            "alexa_enabled": False,
-            "google_enabled": False,
-            "google_secure_devices_pin": "1234",
-            "tts_default_voice": ["en-GB", "RyanNeural"],
-            "remote_allow_remote_enable": False,
-            "remote_require_client_certificate": True,
-            "cloud_ice_servers_enabled": False,
-        }
-    )
-    response = await client.receive_json()
+    with patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"):
+        await client.send_json_auto_id(
+            {
+                "type": "cloud/update_prefs",
+                "alexa_enabled": False,
+                "google_enabled": False,
+                "google_secure_devices_pin": "1234",
+                "tts_default_voice": ["en-GB", "RyanNeural"],
+                "remote_allow_remote_enable": False,
+                "remote_require_client_certificate": True,
+                "cloud_ice_servers_enabled": False,
+            }
+        )
+        response = await client.receive_json()
 
     assert response["success"]
     assert not cloud.client.prefs.google_enabled
@@ -1878,6 +1879,41 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.remote_require_client_certificate is True
     assert cloud.client.prefs.cloud_ice_servers_enabled is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+
+
+async def test_websocket_require_client_certificate_without_ca(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test client certificates can't be required without an SSL peer certificate."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/update_prefs",
+            "alexa_enabled": False,
+            "remote_require_client_certificate": True,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "no_ssl_peer_certificate"
+    # The whole update is rejected, not only the client certificate preference
+    assert cloud.client.prefs.alexa_enabled
+    assert cloud.client.prefs.remote_require_client_certificate is False
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/update_prefs",
+            "remote_require_client_certificate": False,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
 
 
 @pytest.mark.parametrize(
