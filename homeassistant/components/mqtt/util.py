@@ -243,8 +243,9 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
-            # Await the client setup or an error state was received
-            return await state_reached_future
+            # Await the client setup or an error state was received,
+            # a timeout must not cancel the future for other waiters and retries
+            return await asyncio.shield(state_reached_future)
     except TimeoutError:
         return False
 

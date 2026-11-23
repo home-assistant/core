@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from copy import deepcopy
+import dataclasses
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -254,6 +255,11 @@ def _generate_certificate(
             Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()
         ),
     )
+
+
+# cryptography caches the datetime class it sees first. Generate a certificate
+# before a test freezes the time, as the frozen time replaces the datetime class.
+_generate_certificate(dt_util.utcnow() + timedelta(days=1))
 
 
 def _install_certificate(
@@ -607,6 +613,44 @@ async def test_ignored_client_certificate_issue_changes(
     assert issue is not None
     assert issue.translation_key == "client_certificate_renewed"
     assert issue.dismissed_version is None
+
+
+async def test_ignored_client_certificate_issue_restored(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test an ignored issue stays ignored after it was restored on a restart."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_CLIENT_CERTIFICATE,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="client_certificate_file_expiring",
+        translation_placeholders={
+            "broker": "mock-broker",
+            "expiry": "2026-11-04",
+            "client_cert_file": str(tmp_path / "client.crt"),
+        },
+    )
+    issue_registry.async_ignore(DOMAIN, ISSUE_CLIENT_CERTIFICATE, True)
+    # Non persistent issues are restored as inactive issues without details
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    issue_registry.issues[(DOMAIN, ISSUE_CLIENT_CERTIFICATE)] = dataclasses.replace(
+        issue, active=False, severity=None, translation_key=None
+    )
+
+    expiry = dt_util.utcnow() + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    await _async_setup_entry(hass, mqtt_mock_entry, _certificate_file_data(tmp_path))
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.active
+    assert issue.translation_key == "client_certificate_file_expiring"
+    assert issue.dismissed_version is not None
 
 
 async def test_renewed_client_certificate_not_yet_valid(

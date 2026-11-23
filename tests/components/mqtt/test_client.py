@@ -37,7 +37,6 @@ from homeassistant.components.mqtt.const import (
 )
 from homeassistant.components.mqtt.models import (
     DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     MessageCallbackType,
     ReceiveMessage,
 )
@@ -50,6 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
@@ -1979,20 +1979,20 @@ async def test_setup_uses_certificate_files(
     ],
 )
 @pytest.mark.parametrize(
-    ("protocol", "cleanup_calls"),
+    "protocol",
     [
-        pytest.param("5", 1, id="protocol_5"),
-        # Setup first tries to migrate the protocol, before the client is created
-        pytest.param("3.1.1", 0, id="protocol_311_migration"),
+        pytest.param("5", id="protocol_5"),
+        # Setup first tries to migrate the protocol
+        pytest.param("3.1.1", id="protocol_311_migration"),
     ],
 )
 async def test_setup_certificates_cannot_be_loaded(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mock_try_connection_protocol_check: MagicMock,
+    issue_registry: ir.IssueRegistry,
     error: OSError,
     protocol: str,
-    cleanup_calls: int,
 ) -> None:
     """Test setup is retried when the certificate files cannot be loaded."""
     mqtt_client_mock.tls_set.side_effect = error
@@ -2024,16 +2024,26 @@ async def test_setup_certificates_cannot_be_loaded(
         "and that the private key matches the client certificate"
     )
     # The listeners of the client that failed to set up are removed
-    assert mock_cleanup.call_count == cleanup_calls
+    assert mock_cleanup.call_count == 1
+    # The protocol migration is tried again when the setup is retried
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
 
-    # Waiters are told the client is not available, and a retry gets a new future
-    assert await waiter is False
-    assert DATA_MQTT_AVAILABLE not in hass.data
-
-    # The client that failed to set up is not used
-    assert DATA_MQTT not in hass.data
-    with pytest.raises(HomeAssistantError):
+    # Publishing is refused cleanly while the setup is retried
+    with pytest.raises(
+        HomeAssistantError, match='Cannot publish to topic "test-topic"'
+    ):
         await mqtt.async_publish(hass, "test-topic", "test-payload")
+
+    # Waiters keep waiting while the setup is retried
+    assert not waiter.done()
+
+    mqtt_client_mock.tls_set.side_effect = None
+    mock_try_connection_protocol_check.side_effect = None
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert await waiter is True
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(

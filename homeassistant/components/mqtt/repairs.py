@@ -191,14 +191,17 @@ async def async_setup_client_certificate_check(
         severity = (
             ir.IssueSeverity.ERROR if loaded_expiry <= now else ir.IssueSeverity.WARNING
         )
-        # Recreate a changed issue, so it is shown again when the user ignored it
+        # Recreate a changed issue, so it is shown again when the user ignored it.
+        # An issue restored after a restart is inactive and has no translation key.
         if (
-            issue := ir.async_get(hass).async_get_issue(
-                DOMAIN, ISSUE_CLIENT_CERTIFICATE
+            (
+                issue := ir.async_get(hass).async_get_issue(
+                    DOMAIN, ISSUE_CLIENT_CERTIFICATE
+                )
             )
-        ) is not None and (issue.translation_key, issue.severity) != (
-            translation_key,
-            severity,
+            is not None
+            and issue.active
+            and (issue.translation_key, issue.severity) != (translation_key, severity)
         ):
             ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
         ir.async_create_issue(

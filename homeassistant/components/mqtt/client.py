@@ -165,16 +165,13 @@ async def async_publish(
     message_expiry_interval: int | None = None,
 ) -> None:
     """Publish message to a MQTT topic."""
-    # The client is not available while the initial setup is retried
-    if (
-        not mqtt_config_entry_enabled(hass)
-        or (mqtt_data := hass.data.get(DATA_MQTT)) is None
-    ):
+    if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
+    mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
     if not isinstance(payload, bytes) and payload is not None:
         if not encoding:
@@ -551,13 +548,13 @@ class MQTT:
         """Handle HA stop."""
         await self.async_disconnect()
 
-    @callback
-    def async_start(
+    async def async_start(
         self,
         mqtt_data: MqttData,
     ) -> None:
         """Start Home Assistant MQTT client."""
         self._mqtt_data = mqtt_data
+        await self.async_init_client()
 
     @property
     def subscriptions(self) -> set[Subscription]:
@@ -781,6 +778,13 @@ class MQTT:
         message_expiry_interval: int | None = None,
     ) -> None:
         """Publish a MQTT message."""
+        # The paho client is not set while the setup is retried
+        if not hasattr(self, "_mqttc"):
+            raise HomeAssistantError(
+                translation_key="mqtt_not_setup_cannot_publish",
+                translation_domain=DOMAIN,
+                translation_placeholders={"topic": topic},
+            )
         properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)  # type: ignore[no-untyped-call]
         if message_expiry_interval is not None:
             if not self.is_mqttv5:
