@@ -244,6 +244,21 @@
     "capture_failed": {
       "message": "The device reported that capture failed."
     },
+    "identity_confirm_failed": {
+      "message": "Unable to confirm the stored hardware identity."
+    },
+    "identity_mac_mismatch": {
+      "message": "Authenticated device hardware identity does not match."
+    },
+    "identity_mac_missing": {
+      "message": "Device did not expose its stored hardware identity."
+    },
+    "identity_serial_mismatch": {
+      "message": "Authenticated device serial identity does not match."
+    },
+    "identity_missing": {
+      "message": "Device did not expose a stable hardware identity."
+    },
     "capture_interrupted": {
       "message": "The device reported that capture was interrupted."
     },

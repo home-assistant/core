@@ -35,11 +35,11 @@ except ImportError:
 
 from recamera_protocol import RecameraError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import RecameraConfigEntry
 from .coordinator import RecameraCoordinator
 from .entity import RecameraEntity, recamera_service_error
 
@@ -61,8 +61,8 @@ def _load_stream_off_image() -> bytes | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RecameraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up low-bandwidth and high-quality camera entities."""
     coordinator: RecameraCoordinator = config_entry.runtime_data
@@ -119,6 +119,7 @@ class RecameraCamera(RecameraEntity, Camera):
         await super().async_will_remove_from_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Reset media objects after host change or stream toggle."""
         was_on = getattr(self, "_was_on", True)
@@ -190,6 +191,7 @@ class RecameraCamera(RecameraEntity, Camera):
             self.coordinator.data is not None and self.coordinator.data.motion.running
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Enable RTSP streaming for this camera stream."""
         try:
@@ -201,6 +203,7 @@ class RecameraCamera(RecameraEntity, Camera):
         self._still_failure_key = None
         self._still_failure_until = 0.0
 
+    @override
     async def async_turn_off(self) -> None:
         """Disable RTSP streaming for this camera stream and drop media consumers."""
         try:
@@ -209,6 +212,7 @@ class RecameraCamera(RecameraEntity, Camera):
             raise recamera_service_error(err) from err
         await self._async_reset_media_after_host_change()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable the device-side motion-detect App."""
         try:
@@ -216,6 +220,7 @@ class RecameraCamera(RecameraEntity, Camera):
         except RecameraError as err:
             raise recamera_service_error(err) from err
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable the device-side motion-detect App."""
         try:
@@ -230,6 +235,7 @@ class RecameraCamera(RecameraEntity, Camera):
         return False
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | bool | None]:
         """Expose the current stream identity, codec, and RTSP state."""
         data = self.coordinator.data

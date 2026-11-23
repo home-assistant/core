@@ -80,6 +80,7 @@ class RecameraEntity(CoordinatorEntity[RecameraCoordinator]):
         self._attr_device_info = recamera_device_info(coordinator)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device metadata with the active connection URL."""
         info = recamera_device_info(self.coordinator)

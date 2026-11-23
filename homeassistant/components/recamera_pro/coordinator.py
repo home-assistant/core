@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, override
 from urllib.parse import quote, urlsplit, urlunsplit
 
 import aiohttp
@@ -1240,6 +1240,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             return True
         return False
 
+    @override
     async def _async_update_data(self) -> RecameraRuntimeData:
         """Refresh metadata and non-blocking capability information."""
         previous = self.data
@@ -2579,6 +2580,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             except TimeoutError:
                 _LOGGER.debug("Timed out waiting for reCamera websocket close")
 
+    @override
     async def async_shutdown(self) -> None:
         """Stop background tasks and release the API session."""
         if self._unsub_stop is not None:

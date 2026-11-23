@@ -8,10 +8,7 @@ import pytest
 from recamera_protocol import RecameraDeviceInfo, RecameraProtocolError
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.recamera_pro import (
-    _async_register_services,
-    _normalize_entry_title,
-)
+from homeassistant.components.recamera_pro import _normalize_entry_title
 from homeassistant.components.recamera_pro.camera import (
     RecameraMainstreamCamera,
     RecameraSubstreamCamera,
@@ -26,15 +23,16 @@ from homeassistant.components.recamera_pro.coordinator import (
     FirmwareUpdateState,
     RecameraCoordinator,
 )
+from homeassistant.components.recamera_pro.services import async_setup_services
 from homeassistant.const import CONF_HOST
 
 
 def test_register_services_and_custom_title_preservation() -> None:
     """Test platform service registration and custom entry title preservation."""
     with patch(
-        "homeassistant.components.recamera_pro.service.async_register_platform_entity_service"
+        "homeassistant.components.recamera_pro.services.service.async_register_platform_entity_service"
     ) as register:
-        _async_register_services(SimpleNamespace())
+        async_setup_services(SimpleNamespace())
     assert register.call_count == 3
 
     updated = Mock()

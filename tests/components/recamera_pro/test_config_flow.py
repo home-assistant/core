@@ -145,7 +145,7 @@ async def test_zeroconf_filters_bridge_and_other_entry_hosts() -> None:
     )
     with patch(
         "homeassistant.components.recamera_pro.config_flow._prioritize_reachable_hosts",
-        new=AsyncMock(side_effect=lambda hosts: list(hosts)),
+        new=AsyncMock(side_effect=list),
     ):
         res = await flow.async_step_zeroconf(discovery_info)
     assert res["type"] == FlowResultType.FORM
@@ -176,6 +176,7 @@ async def test_zeroconf_confirm_does_not_trust_unverified_mdns_serial() -> None:
             }
         )
     assert res["type"] == FlowResultType.CREATE_ENTRY
+    assert flow.async_set_unique_id.call_args.args[0] == "fe47bc57260a"
     assert res["data"].get(CONF_SERIAL_NUMBER) is None
 
 
@@ -277,6 +278,8 @@ async def test_options_flow_steps() -> None:
         )
     assert res["type"] == FlowResultType.CREATE_ENTRY
     assert res["data"][CONF_VISUAL_CONFIDENCE] == 0.65
+    assert entry.entry_id == "e1"
+    assert getattr(entry, "unique_id", "SN123456") == "SN123456"
 
 
 @pytest.mark.asyncio
@@ -361,6 +364,15 @@ async def test_manual_and_reconfigure_error_paths() -> None:
             {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "bad"}
         )
     assert reconf_err["errors"]["base"] == "invalid_auth"
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        reconf_ok = await flow.async_step_reconfigure(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "newpw"}
+        )
+    assert reconf_ok["type"] == FlowResultType.ABORT
+    assert reconf_ok["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.asyncio
@@ -441,6 +453,15 @@ async def test_zeroconf_confirm_error_paths_and_existing_entry_update() -> None:
             {CONF_HOST: "192.168.42.1", CONF_USERNAME: "admin", CONF_PASSWORD: "ok"}
         )
     assert mismatch["errors"]["base"] == "identity_mismatch"
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        recovered = await flow.async_step_zeroconf_confirm(
+            {CONF_HOST: "192.168.42.1", CONF_USERNAME: "admin", CONF_PASSWORD: "ok"}
+        )
+    assert recovered["type"] == FlowResultType.CREATE_ENTRY
+    assert flow.async_set_unique_id.call_args.args[0] == "SN123456"
 
 
 @pytest.mark.asyncio
