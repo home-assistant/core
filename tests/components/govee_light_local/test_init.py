@@ -1006,6 +1006,88 @@ async def test_known_lamp_adopted_when_answering_at_added_address(
     assert coordinator.discovery_queue == set()
 
 
+async def test_stale_cached_lamp_not_adopted_at_added_address(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a lamp only cached at an added address is not adopted there."""
+
+    stale = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="stale-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [stale])
+
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The cached lamp is gone and its address now belongs to another lamp,
+    # which the user adds manually.
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.50"}
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data
+    subentry_id = next(iter(config_entry.subentries))
+
+    # Without a scan reply the cache is no evidence of who is at the address.
+    assert stale.is_manual is False
+    stale_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, stale.fingerprint), config_entry.entry_id
+    )
+    assert stale_entry is not None
+    assert stale_entry.config_subentry_id is None
+    assert coordinator.discovery_queue == {"192.168.1.50"}
+
+    # The lamp really at the address answers the probe.
+    current = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="current-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    # The library marks whatever answers a queued probe.
+    current.is_manual = True
+    set_mocked_devices(mock_govee_api, [stale, current])
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    discovery_callback(current, True)
+    await hass.async_block_till_done()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    current_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, current.fingerprint), config_entry.entry_id
+    )
+    assert current_entry is not None
+    assert current_entry.config_subentry_id == subentry_id
+    stale_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, stale.fingerprint), config_entry.entry_id
+    )
+    assert stale_entry is not None
+    assert stale_entry.config_subentry_id is None
+    assert coordinator.discovery_queue == set()
+
+
 async def test_reconfigure_queued_device(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
@@ -1100,8 +1182,9 @@ async def test_add_subentry_adopts_discovered_device(
 ) -> None:
     """Test adding a subentry for an already-discovered lamp claims it.
 
-    The lamp must become manual and its registrations must move under the
-    subentry, so deleting the subentry later cascades to them.
+    Once it answers the probe, the lamp must become manual and its
+    registrations must move under the subentry, so deleting the subentry later
+    cascades to them.
     """
     discovered = GoveeDevice(
         controller=mock_govee_api,
@@ -1128,9 +1211,16 @@ async def test_add_subentry_adopts_discovered_device(
     await hass.async_block_till_done()
 
     subentry_id = next(iter(config_entry.subentries))
-    mock_govee_api.add_device_to_discovery_queue.assert_not_called()
-    assert discovered.is_manual is True
+    # The cached address alone is not trusted, so the lamp is probed.
+    assert config_entry.runtime_data.discovery_queue == {discovered.ip}
+    assert discovered.is_manual is False
 
+    # The lamp answers the probe: known fingerprint at the configured address.
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    discovery_callback(discovered, False)
+    await hass.async_block_till_done()
+
+    assert discovered.is_manual is True
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, discovered.fingerprint), config_entry.entry_id
     )

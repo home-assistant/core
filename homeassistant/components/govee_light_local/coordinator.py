@@ -269,22 +269,25 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
     @callback
     def async_reconcile_subentries(self) -> None:
-        """Align the probe queue and lamp ownership with the device subentries.
+        """Align the probe queue with the device subentries.
 
         The queue is derived state: exactly the configured addresses whose
-        subentry's own lamp has not answered there. A lamp found at a
-        configured address is claimed on the way. Runs on configuration
+        subentry's own lamp has not answered there. Runs on configuration
         changes and on every poll, so event-order races, such as a probe the
         library consumed for another subentry's lamp, heal within one scan
         interval.
+
+        A lamp merely cached at a configured address is not adopted here: the
+        cache never expires, so only a scan reply proves who is there.
         """
         desired: set[str] = set()
         for subentry in self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
             ip = subentry.data[CONF_DEVICE_IP]
-            device = self.get_device_by_ip(ip)
-            if (
-                device is None
-                or self.async_adopt_device(device) != subentry.subentry_id
+            # A stale lamp and the real one can share a cached address.
+            if not any(
+                device.ip == ip
+                and self._async_owned_subentry_id(device) == subentry.subentry_id
+                for device in self.devices
             ):
                 desired.add(ip)
         for ip in self.discovery_queue - desired:

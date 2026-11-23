@@ -44,6 +44,9 @@ async def async_setup_entry(
                 [GoveeLight(coordinator, device)],
                 config_subentry_id=coordinator.async_claim_subentry(device),
             )
+        else:
+            # A scan reply from a known lamp proves its current address.
+            coordinator.async_adopt_device(device)
         return True
 
     for govee_device in coordinator.devices:
