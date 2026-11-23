@@ -90,6 +90,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="HoursOfSun",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: cast(float, data),
         translation_key="hours_of_sun",

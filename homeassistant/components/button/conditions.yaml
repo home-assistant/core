@@ -1,0 +1,17 @@
+is_being_held:
+  target:
+    entity:
+      - domain: event
+        device_class: button
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:

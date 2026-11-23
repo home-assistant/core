@@ -19,11 +19,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN, TargetKey
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -272,7 +268,7 @@ async def test_set_time_format(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: TIME_FORMAT_ENTITY_ID,
+                TargetKey.ENTITY_ID: TIME_FORMAT_ENTITY_ID,
                 SelectServiceArgument.OPTION: expected_state,
             },
             blocking=True,
@@ -323,7 +319,7 @@ async def test_standing_fan_night_light_select(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.test_name_night_light",
+                TargetKey.ENTITY_ID: "select.test_name_night_light",
                 SelectServiceArgument.OPTION: option,
             },
             blocking=True,

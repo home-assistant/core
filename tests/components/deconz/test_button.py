@@ -10,7 +10,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -96,7 +96,7 @@ async def test_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: expected["entity_id"]},
+        {TargetKey.ENTITY_ID: expected["entity_id"]},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == expected["request_data"]

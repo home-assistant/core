@@ -106,6 +106,11 @@ async def async_validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> tuple[dict[str, str], str]:
     """Manage MJPEG IP Camera options."""
+    return await hass.async_add_executor_job(_validate_input, user_input)
+
+
+def _validate_input(user_input: dict[str, Any]) -> tuple[dict[str, str], str]:
+    """Validate the stream and still image URLs."""
     errors = {}
     field = "base"
     authentication = HTTP_BASIC_AUTHENTICATION
@@ -113,8 +118,7 @@ async def async_validate_input(
         for field in (CONF_MJPEG_URL, CONF_STILL_IMAGE_URL):
             if not (url := user_input.get(field)):
                 continue
-            authentication = await hass.async_add_executor_job(
-                validate_url,
+            authentication = validate_url(
                 url,
                 user_input.get(CONF_USERNAME),
                 user_input[CONF_PASSWORD],

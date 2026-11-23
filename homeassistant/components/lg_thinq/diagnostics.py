@@ -39,7 +39,6 @@ async def async_get_config_entry_diagnostics(
                 "model_name": device.model_name,
                 "sub_id": coordinator.sub_id,
                 "reportable": device.reportable,
-                "connected": coordinator.device_connected,
                 "last_update_success": coordinator.last_update_success,
                 "properties": _properties(profile, device),
                 "locations": locations,

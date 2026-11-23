@@ -27,12 +27,7 @@ from homeassistant.components.lock import (
     LockState,
 )
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -67,7 +62,7 @@ async def test_lock_service_calls(
         LOCK_DOMAIN,
         LockService.LOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -82,7 +77,7 @@ async def test_lock_service_calls(
         LOCK_DOMAIN,
         LockService.UNLOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -97,7 +92,7 @@ async def test_lock_service_calls(
         LOCK_DOMAIN,
         LockService.OPEN,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -145,7 +140,7 @@ async def test_lock_without_pullspring(
             LOCK_DOMAIN,
             LockService.OPEN,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_2c3d",
+                TargetKey.ENTITY_ID: "lock.lock_2c3d",
             },
             blocking=True,
         )
@@ -165,7 +160,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             LockService.LOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -177,7 +172,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -189,7 +184,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             LockService.OPEN,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
