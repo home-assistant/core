@@ -1,5 +1,6 @@
 """Global fixtures for Kingspan Watchman SENSiT integration."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -139,14 +140,16 @@ class MockAsyncClient(AsyncMock):
     def __init__(self, *args, **kwargs) -> None:
         """Create a mock AsyncClient configured via the fixture."""
         injected_client = kwargs.pop("client", None)
+        version = kwargs.pop("version", None)
 
         super().__init__(*args, **kwargs)
 
         self._injected_client = injected_client
+        self._version = version
         self._level = kwargs.get("tank_level", MOCK_TANK_LEVEL)
         self._history_type = kwargs.get("history_type", HistoryType.DECREASING)
         self._num_tanks = kwargs.get("num_tanks", 1)
-        self._exception = kwargs.get("exception")
+        self.login = AsyncMock(side_effect=kwargs.get("exception"), return_value=None)
 
     @property
     async def tanks(self):
@@ -164,14 +167,9 @@ class MockAsyncClient(AsyncMock):
             for tank_num in range(1, self._num_tanks + 1)
         ]
 
-    async def login(self, username: str, password: str) -> None:
-        """Mock AsyncClient login supporting configurable exceptions."""
-        if self._exception:
-            raise (self._exception)
-
 
 @pytest_asyncio.fixture(name="mock_sensor_client")  # pyright: ignore[reportArgumentType]
-def mock_sensor_client(request: pytest.FixtureRequest):
+def mock_sensor_client(request: pytest.FixtureRequest) -> Generator[MockAsyncClient]:
     """Replace the AsyncSensorClient with a mock context manager."""
     params = getattr(request, "param", {})
     tank_level = params.get("tank_level", MOCK_TANK_LEVEL)
@@ -186,6 +184,9 @@ def mock_sensor_client(request: pytest.FixtureRequest):
         patch(
             "homeassistant.components.watchman.coordinator.AsyncSensorClient"
         ) as ha_mock_client,
+        patch(
+            "homeassistant.components.watchman.config_flow.AsyncSensorClient"
+        ) as flow_mock_client,
     ):
         mock_client.return_value.__aenter__.return_value = MockAsyncClient(
             tank_level=tank_level,
@@ -199,4 +200,11 @@ def mock_sensor_client(request: pytest.FixtureRequest):
             num_tanks=num_tanks,
             exception=exception,
         )
-        yield
+        flow_client = MockAsyncClient(
+            tank_level=tank_level,
+            history_type=history_type,
+            num_tanks=num_tanks,
+            exception=exception,
+        )
+        flow_mock_client.return_value.__aenter__.return_value = flow_client
+        yield flow_client

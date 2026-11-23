@@ -1,7 +1,5 @@
 """Test Kingspan Watchman SENSiT config flow."""
 
-from unittest.mock import patch
-
 from connectsensor.exceptions import (
     KingspanErrorCode,
     KingspanInvalidCredentialsError,
@@ -9,7 +7,6 @@ from connectsensor.exceptions import (
     KingspanTimeoutError,
 )
 import pytest
-import pytest_asyncio
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
@@ -19,23 +16,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MockAsyncClient
 from .const import MOCK_CONFIG
 
-
-@pytest_asyncio.fixture(autouse=True)  # pyright: ignore[reportArgumentType]
-def bypass_setup_fixture():
-    """Prevent setup and globally mock login to succeed for standard flow testing."""
-    with (
-        patch(
-            "homeassistant.components.watchman.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "connectsensor.client.AsyncSensorClient.login",
-            return_value=None,
-        ),
-    ):
-        yield
+pytestmark = pytest.mark.usefixtures("mock_sensor_client")
 
 
 async def test_successful_config_flow(hass: HomeAssistant) -> None:
@@ -79,7 +63,10 @@ def test_flow_matching_is_never_true() -> None:
     ],
 )
 async def test_failed_config_flow(
-    hass: HomeAssistant, side_effect, expected_error
+    hass: HomeAssistant,
+    mock_sensor_client: MockAsyncClient,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
     """Test a failed config flow due to credential validation failure."""
     result = await hass.config_entries.flow.async_init(
@@ -89,20 +76,18 @@ async def test_failed_config_flow(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Locally mock to override the fixture success
-    with patch("connectsensor.client.AsyncSensorClient.login", side_effect=side_effect):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG
-        )
+    mock_sensor_client.login.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    # Recover from error
-    with patch("connectsensor.client.AsyncSensorClient.login", return_value=None):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG
-        )
+    mock_sensor_client.login.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
@@ -240,7 +225,11 @@ async def test_credential_update_success(
     ],
 )
 async def test_credential_update_invalid_auth(
-    hass: HomeAssistant, flow_source, step_id, pass_data
+    hass: HomeAssistant,
+    mock_sensor_client: MockAsyncClient,
+    flow_source: str,
+    step_id: str,
+    pass_data: bool,
 ) -> None:
     """Test reauth and reconfigure steps handle invalid credentials correctly."""
     # pylint is generating a false-positive W7441
@@ -261,31 +250,27 @@ async def test_credential_update_invalid_auth(
     assert result1["type"] == FlowResultType.FORM
     assert result1["step_id"] == step_id
 
-    with patch(
-        "connectsensor.client.AsyncSensorClient.login",
-        side_effect=KingspanInvalidCredentialsError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={
-                CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
-                CONF_PASSWORD: "bad-password",
-            },
-        )
+    mock_sensor_client.login.side_effect = KingspanInvalidCredentialsError
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={
+            CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: "bad-password",
+        },
+    )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == step_id
     assert result2["errors"] == {"base": KingspanErrorCode.AUTH_FAILED.value}
 
-    # Recover from error
-    with patch("connectsensor.client.AsyncSensorClient.login", return_value=None):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            user_input={
-                CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
-                CONF_PASSWORD: "fixed-password",
-            },
-        )
+    mock_sensor_client.login.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: "fixed-password",
+        },
+    )
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == (
