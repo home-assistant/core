@@ -490,10 +490,12 @@ async def test_late_refresh_after_unload_is_ignored(
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     # Wait for router A's poll to be in flight, then unload entry A.
-    await hass.async_add_executor_job(poll_started.wait)
-    assert await hass.config_entries.async_unload(entry_a.entry_id)
-    await hass.async_block_till_done()
-    release.set()
+    try:
+        assert await hass.async_add_executor_job(poll_started.wait, 10)
+        assert await hass.config_entries.async_unload(entry_a.entry_id)
+        await hass.async_block_till_done()
+    finally:
+        release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The in-flight refresh finishes after the unload; its results are

@@ -131,12 +131,13 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     @override
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
+        poll_started = dt_util.utcnow()
         clients = await self.hass.async_add_executor_job(self._update)
         # A refresh may finish after the entry was unloaded; publishing its
         # results would restore the clients released during the unload.
         if not self._unloaded:
             shared: UbusSharedState = self.hass.data[DOMAIN]
-            shared.last_poll[self.host] = dt_util.utcnow()
+            shared.last_poll[self.host] = poll_started
             self._async_publish_clients(clients)
         return clients
 
@@ -168,15 +169,15 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         shared: UbusSharedState = self.hass.data[DOMAIN]
         reports = shared.reports
 
-        def visible_tuple(mac: str) -> tuple[str, RouterReport] | None:
-            """Return the client's reporting source, ignoring the handover window."""
+        def visible_tuple(mac: str) -> tuple[str, str | None, bool] | None:
+            """Return the source, hostname and presence of a current report."""
             seen_by = reports.get(mac)
             if seen_by:
                 source = max(seen_by, key=lambda host: seen_by[host].seq)
-                return source, seen_by[source]
+                return source, seen_by[source].hostname, True
             if (departed := shared.departing.get(mac)) is None:
                 return None
-            return departed[1], departed[2]
+            return departed[1], departed[2].hostname, False
 
         affected = set(clients)
         affected.update(mac for mac, seen_by in reports.items() if self.host in seen_by)
@@ -224,6 +225,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         left, so they re-evaluate availability without it.
         """
         self._unloaded = True
+        shared: UbusSharedState = self.hass.data[DOMAIN]
+        shared.last_poll.pop(self.host, None)
         if not self.clear_clients():
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 

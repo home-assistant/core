@@ -74,10 +74,18 @@ async def async_remove_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> Non
                 (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
             )
         ) is not None:
-            device_registry.async_update_device(
-                device.id, new_config_entry_id=target.entry_id
+            target_device = device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, mac), target.entry_id
             )
-        shared.owners[mac] = target.entry_id
+            if target_device is not None:
+                entity_registry.async_update_entity(
+                    registry_entry.entity_id, device_id=target_device.id
+                )
+            else:
+                device_registry.async_update_device(
+                    device.id, new_config_entry_id=target.entry_id
+                )
+        shared.owners.pop(mac, None)
     async_dispatcher_send(hass, SIGNAL_CLIENTS_UPDATED)
 
 
