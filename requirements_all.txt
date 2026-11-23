@@ -996,7 +996,7 @@ energyid-webhooks==0.0.17
 energyzero==5.1.1
 
 # homeassistant.components.enocean
-enocean-async==0.16.0
+enocean-async==0.17.0
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
@@ -1387,7 +1387,7 @@ hyperion-py==0.7.6
 hyponcloud==1.0.2
 
 # homeassistant.components.iammeter
-iammeter==0.2.1
+iammeter==0.3.0
 
 # homeassistant.components.iaqualink
 iaqualink==0.7.0
@@ -3478,7 +3478,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.8.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.11.5
+victron-mqtt==2026.11.6
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.14

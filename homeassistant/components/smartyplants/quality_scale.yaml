@@ -57,7 +57,11 @@ rules:
   integration-owner: done
   log-when-unavailable:
     status: done
-    comment: Handled by the coordinator.
+    comment: |
+      Handled by the coordinator, which logs once when the backend stops
+      answering and once when it recovers. A sensor the backend reports as
+      offline is not logged separately: the service itself is reachable, and
+      an account can hold many sensors that go quiet and come back routinely.
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
