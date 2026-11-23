@@ -35,6 +35,7 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    substitute_translation_placeholders,
 )
 from homeassistant.helpers.service import (
     async_get_all_descriptions,
@@ -434,9 +435,7 @@ def _describe_action(
     def text(config: dict[str, Any], item: str, translation_key: str) -> str:
         """Return a text of the description, else its translation."""
         value = config.get(item) or translations.get(translation_key, "")
-        for placeholder, replacement in placeholders.items():
-            value = value.replace(f"{{{placeholder}}}", replacement)
-        return value
+        return substitute_translation_placeholders(value, placeholders) or ""
 
     fields: dict[str, dict[str, Any]] = {}
     for field, config in _action_fields(action_description["fields"]):
