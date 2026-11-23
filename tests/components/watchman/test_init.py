@@ -1,5 +1,6 @@
 """Test Kingspan Watchman SENSiT setup process."""
 
+from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -10,18 +11,22 @@ from connectsensor.exceptions import (
     KingspanNoDataError,
     KingspanTimeoutError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.watchman import (
     SENSiTDataUpdateCoordinator,
     async_remove_config_entry_device,
 )
-from homeassistant.components.watchman.const import CONF_USAGE_WINDOW, DOMAIN
+from homeassistant.components.watchman.const import (
+    CONF_USAGE_WINDOW,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import MOCK_CONFIG, MOCK_TANK_SERIAL_NUMBER
 
@@ -113,7 +118,7 @@ async def test_auth_missing(hass: HomeAssistant, mock_sensor_client) -> None:
             {"exception": KingspanTimeoutError("test timeout")},
             logging.WARNING,
             ConfigEntryState.SETUP_RETRY,
-            "Error communicating with Kingspan API: test timeout",
+            None,
             "reason",
             "Timed out while connecting to the Kingspan service",
             False,
@@ -191,9 +196,13 @@ async def test_setup_entry_no_data_return_false(
     ],
 )
 async def test_coordinator_logs_available_again(
-    hass: HomeAssistant, mock_sensor_client, caplog: pytest.LogCaptureFixture, exception
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_sensor_client,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Coordinator should log a recovery message after a previously failed refresh."""
+    """Coordinator should log outage and recovery transitions once via scheduled refresh."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
 
@@ -201,10 +210,12 @@ async def test_coordinator_logs_available_again(
     await hass.async_block_till_done()
 
     coordinator = config_entry.runtime_data
+    assert coordinator.last_update_success is True
+
     caplog.set_level(logging.INFO)
     caplog.clear()
 
-    # Scope the failure patch tightly so recovery correctly reverts to the original working mock
+    # Scope the failure patch tightly so recovery reverts to the working mock
     with patch(
         "homeassistant.components.watchman.coordinator.AsyncSensorClient"
     ) as mock_class:
@@ -213,24 +224,30 @@ async def test_coordinator_logs_available_again(
         mock_instance.login.side_effect = exception
         mock_class.return_value = mock_instance
 
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()
+        freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert coordinator.last_update_success is False
 
-    warnings = [
+        freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert coordinator.last_update_success is False
+
+    error_logs = [
         record
         for record in caplog.records
-        if "Error communicating with Kingspan API" in record.message
+        if f"Error fetching {DOMAIN} data:" in record.message
     ]
-    assert len(warnings) == 1
-    assert coordinator._unavailable_logged is True
+    assert len(error_logs) == 1
 
-    # Call again with the patch disabled to test recovery mode
-    await coordinator._async_update_data()
+    # Advance time again with the patch exited to verify single recovery log
+    freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert "Kingspan service is available again" in caplog.text
-    assert coordinator._unavailable_logged is False
+    assert coordinator.last_update_success is True
+    assert f"Fetching {DOMAIN} data recovered" in caplog.text
 
 
 async def test_remove_stale_device(

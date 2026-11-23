@@ -47,7 +47,6 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
     ) -> None:
         """Initialize."""
         self._httpx_client = httpx_client
-        self._unavailable_logged = False
         self.added_tanks: set[str] = set()
         super().__init__(
             hass,
@@ -120,12 +119,6 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                 _LOGGER.warning("No data available for username '%s'", username)
                 return []
 
-            if not self._unavailable_logged:
-                _LOGGER.warning(
-                    "Error communicating with Kingspan API: %s", err.message
-                )
-                self._unavailable_logged = True
-
             if err.code == KingspanErrorCode.TIMEOUT:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -137,9 +130,5 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                 translation_key="api_error",
                 translation_placeholders={"message": err.message},
             ) from err
-
-        if self._unavailable_logged:
-            _LOGGER.info("Kingspan service is available again")
-            self._unavailable_logged = False
 
         return results
