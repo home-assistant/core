@@ -93,6 +93,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         self._mac2name: dict[str, str] | None = None
         self._unnamed: set[str] = set()
         self._last_lease_read = datetime.min.replace(tzinfo=dt_util.UTC)
+        self._unloaded = False
 
         super().__init__(
             hass,
@@ -106,13 +107,18 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
         clients = await self.hass.async_add_executor_job(self._update)
-        self._async_publish_clients(clients)
+        # A refresh may finish after the entry was unloaded; publishing its
+        # results would restore the clients released during the unload.
+        if not self._unloaded:
+            self._async_publish_clients(clients)
         return clients
 
     @callback
     @override
     def _async_refresh_finished(self) -> None:
         """Release claimed clients and record this router's health."""
+        if self._unloaded:
+            return
         shared: UbusSharedState = self.hass.data[DOMAIN]
         healthy = self.last_update_success
         health_changed = shared.health.get(self.host, True) != healthy
@@ -123,12 +129,14 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     @callback
-    def _async_publish_clients(self, clients: dict[str, str | None]) -> None:
+    def _async_publish_clients(self, clients: dict[str, str | None]) -> bool:
         """Publish which clients this router sees to the shared state.
 
         Each router keeps its own report for the clients it sees, so a
         client stays reported while any router still sees it, and the
         source follows the router which reported it most recently.
+
+        Returns whether a client's visibility changed.
         """
         shared: UbusSharedState = self.hass.data[DOMAIN]
         reports = shared.reports
@@ -151,13 +159,30 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 if not seen_by:
                     del reports[mac]
 
-        if any(visible(mac) != before[mac] for mac in affected):
+        changed = any(visible(mac) != before[mac] for mac in affected)
+        if changed:
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
+        return changed
 
     @callback
-    def clear_clients(self) -> None:
-        """Release every client claimed by this router."""
-        self._async_publish_clients({})
+    def clear_clients(self) -> bool:
+        """Release every client claimed by this router.
+
+        Returns whether a client's visibility changed.
+        """
+        return self._async_publish_clients({})
+
+    @callback
+    def async_unload(self) -> None:
+        """Release this router's clients and ignore late refresh results.
+
+        A refresh in flight when the entry unloads is ignored, and the
+        remaining trackers are signalled even if this router has no reports
+        left, so they re-evaluate availability without it.
+        """
+        self._unloaded = True
+        if not self.clear_clients():
+            async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     def _update(self) -> dict[str, str | None]:
         """Query the router, re-authenticating once if the session expired."""

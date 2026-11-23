@@ -25,10 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None
 async def async_unload_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
     """Unload a config entry."""
     # The platforms are unloaded first, so the entry's trackers are gone
-    # before their client reports are released from the shared state.
+    # before its client reports are released and the remaining trackers
+    # are signalled.
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     shared: UbusSharedState = hass.data[DOMAIN]
-    entry.runtime_data.clear_clients()
+    entry.runtime_data.async_unload()
     shared.owners = {
         mac: owner for mac, owner in shared.owners.items() if owner != entry.entry_id
     }

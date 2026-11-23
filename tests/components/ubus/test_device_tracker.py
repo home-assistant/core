@@ -401,6 +401,119 @@ async def test_unload_entry_releases_client_claims(
     assert state.attributes["source"] == MOCK_HOST_B
 
 
+async def test_late_refresh_after_unload_is_ignored(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a refresh finishing after an unload doesn't restore its clients."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The device is reported by router A.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The coordinator is captured before the entry is unloaded, as its
+    # runtime_data is removed from the entry on unload.
+    coordinator_a = entry_a.runtime_data
+    assert await hass.config_entries.async_unload(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # A refresh which was in flight during the unload now finishes; its
+    # results are ignored, so the released reports are not restored.
+    await coordinator_a._async_update_data()
+    coordinator_a._async_refresh_finished()
+
+    assert MOCK_HOST not in hass.data[DOMAIN].reports.get(MAC_PHONE, {})
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unloading_router_with_no_reports_updates_trackers(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading a router without reports still updates remaining trackers."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # The device also connects to router B, then leaves router A.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+    # Router B becomes unreachable, clearing its reports.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Unloading router B, which has no reports left, still updates the
+    # remaining tracker, which is available again without router B.
+    assert await hass.config_entries.async_unload(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_failed_unload_keeps_client_reported(
     hass: HomeAssistant,
