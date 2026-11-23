@@ -118,3 +118,80 @@ async def test_import_flow_errors(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_ember: MagicMock
+) -> None:
+    """Test entering a new password after it was rejected."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["username"] == MOCK_USERNAME
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: "new-password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (EphEmberError("Cannot connect to Ember"), "cannot_connect"),
+        (RuntimeError("Unable to login."), "invalid_auth"),
+        (ValueError("Unexpected"), "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ember: MagicMock,
+    error: Exception,
+    message: str,
+) -> None:
+    """Test errors are shown and the user can try again."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_ember.messenging_credentials.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": message}
+
+    mock_ember.messenging_credentials.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_other_account(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_ember: MagicMock
+) -> None:
+    """Test a password for a different EPH Ember account is refused."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_ember.messenging_credentials.return_value = {
+        "user_id": "99999",
+        "token": "token",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == MOCK_PASSWORD
