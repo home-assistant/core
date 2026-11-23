@@ -1,14 +1,15 @@
-"""WEM2067 parsing, entity selection, optional NET discovery and lifecycle."""
+"""WEM2067 entity selection and lifecycle."""
 
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.iammeter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -49,14 +50,22 @@ def make_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-async def test_setup_without_net(
+@pytest.mark.parametrize(
+    "rows",
+    [
+        pytest.param([A, B], id="two-rows"),
+        pytest.param([A, B, NET], id="with-net-row"),
+    ],
+)
+async def test_setup(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    rows: list[list[float]],
 ) -> None:
     """Expose the two physical channels, preserving energy semantics and IDs."""
-    mock_readings(aioclient_mock, [A, B])
+    mock_readings(aioclient_mock, rows)
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -85,85 +94,36 @@ async def test_setup_without_net(
     assert device.model == "WEM2067"
 
 
-async def test_setup_with_net(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Treat the third row as NET and retain the existing NET measurement keys."""
-    mock_readings(aioclient_mock, [A, B, NET])
-    entry = make_entry(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert len(entities) == 20
-    assert not any(entity.unique_id.endswith("_C") for entity in entities)
-    net_power = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{SERIAL}_Power_Net"
-    )
-    net_energy = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{SERIAL}_ImportEnergy_Net"
-    )
-    net_pf = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{SERIAL}_PF_Net"
-    )
-    entity_registry.async_update_entity(net_power, disabled_by=None)
-    entity_registry.async_update_entity(net_energy, disabled_by=None)
-    entity_registry.async_update_entity(net_pf, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get(net_power).state == "710.0"
-    assert hass.states.get(net_power).attributes["friendly_name"].endswith("Net power")
-    assert hass.states.get(net_energy).state == "44.0"
-    assert hass.states.get(net_energy).attributes["state_class"] == "total_increasing"
-    assert hass.states.get(net_pf).state == "0.94"
-    assert "unit_of_measurement" not in hass.states.get(net_pf).attributes
-
-
-async def test_net_discovery_loss_and_recovery(
+async def test_net_row_appearance_keeps_two_channels(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Discover NET once, then mark it unavailable without disrupting A/B."""
+    """Keep updating A and B when the meter starts returning a NET row."""
     mock_readings(aioclient_mock, [A, B])
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{SERIAL}_Power_Net"
-        )
-        is None
-    )
-    mock_readings(aioclient_mock, [A, B, NET])
-    freezer.tick(timedelta(seconds=31))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    net_power = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{SERIAL}_Power_Net"
-    )
-    assert net_power is not None
-    entity_registry.async_update_entity(net_power, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get(net_power).state == "710.0"
-    mock_readings(aioclient_mock, [A, B])
-    freezer.tick(timedelta(seconds=31))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(net_power).state == STATE_UNAVAILABLE
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    entity_ids = {entity.entity_id for entity in entities}
     power_b = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{SERIAL}_Power_B"
     )
     assert hass.states.get(power_b).state == "480.0"
-    mock_readings(aioclient_mock, [A, B, NET])
+
+    updated_b = B.copy()
+    updated_b[2] = 500.0
+    mock_readings(aioclient_mock, [A, updated_b, NET])
     freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(net_power).state == "710.0"
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 20
+
+    assert hass.states.get(power_b).state == "500.0"
+    assert {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == entity_ids
 
 
 async def test_unload_removes_discovery_listener(

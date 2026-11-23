@@ -45,7 +45,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import migrate_pf_unit
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_2067, DOMAIN
 from .coordinator import (
     IammeterConfigEntry,
     IammeterDataUpdateCoordinator,
@@ -79,6 +79,8 @@ def _migrate_to_new_unique_id(
     ]
     phase_list = ["A", "B", "C", "Net"]
     id_phase_range = 1 if model in SINGLE_PHASE_MODELS else 4
+    if model == DEVICE_2067:
+        id_phase_range = 2
     id_name_range = 5 if model in SINGLE_PHASE_MODELS else 7
     for row in range(id_phase_range):
         for idx in range(id_name_range):
@@ -349,7 +351,6 @@ SENSOR_TYPES_3080T = (
 SENSOR_TYPES_2067 = (
     *_phase_descriptions("A"),
     *_phase_descriptions("B"),
-    *NET_DESCRIPTIONS,
 )
 SENSOR_TYPES_BY_MODEL = dict.fromkeys(
     ("WEM3080T", "WEM3046T", "WEM3050T", "WEM3063T"), SENSOR_TYPES_3080T
@@ -358,6 +359,6 @@ SENSOR_TYPES_BY_MODEL.update(
     {
         "WEM3080": SENSOR_TYPES_3080,
         "WEM3162": SENSOR_TYPES_3080,
-        "WEM2067": SENSOR_TYPES_2067,
+        DEVICE_2067: SENSOR_TYPES_2067,
     }
 )

@@ -97,22 +97,19 @@ async def test_all_models_and_metadata(
     assert device.configuration_url == "http://192.0.2.1/"
 
 
-@pytest.mark.parametrize(
-    ("method", "count"), [("2-x", 3), ("3-x", 3), ("4-x", 3), ("5-x", 2), ("6-x", 3)]
-)
+@pytest.mark.parametrize("method", ["2-x", "3-x", "4-x", "6-x"])
 async def test_dynamic_net_and_reactive(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     method: str,
-    count: int,
 ) -> None:
     """Discover optional fields once and recover them without zeroing or duplicates."""
     payload = {
         "method": method,
         "SN": "test-meter",
-        "Datas": [ROW] * count,  # codespell:ignore datas
+        "Datas": [ROW] * 3,  # codespell:ignore datas
     }
     aioclient_mock.get(ENDPOINT, json=payload)
     entry = MockConfigEntry(
@@ -126,8 +123,8 @@ async def test_dynamic_net_and_reactive(
         ENDPOINT,
         json={
             **payload,
-            "Datas": [ROW] * (count + 1),  # codespell:ignore datas
-            "EA": {"Reactive": [[10, 20, 30]] * count},
+            "Datas": [ROW] * 4,  # codespell:ignore datas
+            "EA": {"Reactive": [[10, 20, 30]] * 3},
         },
     )
     freezer.tick(timedelta(seconds=31))
@@ -154,8 +151,8 @@ async def test_dynamic_net_and_reactive(
         ENDPOINT,
         json={
             **payload,
-            "Datas": [ROW] * (count + 1),  # codespell:ignore datas
-            "EA": {"Reactive": [[10, 20, 30]] * count},
+            "Datas": [ROW] * 4,  # codespell:ignore datas
+            "EA": {"Reactive": [[10, 20, 30]] * 3},
         },
     )
     freezer.tick(timedelta(seconds=31))
