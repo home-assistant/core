@@ -1605,6 +1605,25 @@ async def test_reconfigure_api_key_unknown_site(
     assert network_config_entry_setup.unique_id == NETWORK_SITE_ID
 
 
+async def test_reconfigure_entry_without_unique_id(
+    hass: HomeAssistant,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the entry has no site to match."""
+    hass.config_entries.async_update_entry(network_config_entry_setup, unique_id=None)
+    mock_network_requests()
+    result = await network_config_entry_setup.start_reconfigure_flow(hass)
+    result = await _select_menu(hass, result, "reconfigure_api_key")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=API_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_site_id"
+
+
 async def test_api_key_flow_multiple_sites(
     hass: HomeAssistant,
     mock_network_requests: Callable[[], None],

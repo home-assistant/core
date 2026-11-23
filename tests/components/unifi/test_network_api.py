@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import json
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -361,6 +362,26 @@ async def test_prunes_disabled_tracker_of_unlisted_client(
     assert device_registry.async_get(device.id) is None
 
 
+async def test_keeps_user_disabled_tracker_of_unlisted_client(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    network_config_entry: MockConfigEntry,
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """A tracker the user disabled keeps its settings while its client is away."""
+    entry = entity_registry.async_get_or_create(
+        Platform.DEVICE_TRACKER,
+        DOMAIN,
+        f"{DEFAULT_SITE}-00:00:00:00:00:03",
+        config_entry=network_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await network_config_entry_factory()
+
+    assert entity_registry.async_get(entry.entity_id) is not None
+
+
 async def test_keeps_disabled_tracker_when_client_list_fails(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -487,6 +508,37 @@ async def test_setup_errors(
         any(network_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         is reauth
     )
+
+
+async def test_missing_integration_api_logs_no_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A console without the Integration API is retried without error logs."""
+    aioclient_mock.get(f"{NETWORK_URL}/info", status=404)
+
+    await hass.config_entries.async_setup(network_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert network_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+
+
+async def test_entry_without_unique_id(
+    hass: HomeAssistant,
+    network_config_entry: MockConfigEntry,
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """An entry without a site to match fails to set up."""
+    hass.config_entries.async_update_entry(network_config_entry, unique_id=None)
+
+    config_entry = await network_config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Reported as a missing site rather than an unexpected error
+    assert config_entry.reason is not None
 
 
 @pytest.mark.parametrize("status", [401, 403])
@@ -1042,6 +1094,46 @@ async def test_device_removed_while_ports_are_fetched(
         f"{SWITCH_MAC}_1" not in network_config_entry_setup.runtime_data.network_ports
     )
     assert "Unexpected error" not in caplog.text
+
+
+async def test_device_removed_while_its_request_is_queued(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A device removed before its turn to be fetched is skipped."""
+    devices = network_config_entry_setup.runtime_data.api.network.devices
+    other_id = "6ff3bc5f-6d39-3d2e-9bfd-0f2bf6c3f1d6"
+    other = {**ACCESS_POINT, "id": other_id, "macAddress": "00:00:00:00:01:03"}
+
+    async def remove_other(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        devices.reconcile([SWITCH, ACCESS_POINT])
+        return AiohttpClientMockResponse(method, url, json=ACCESS_POINT)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{SITE_URL}/devices", json=network_page([SWITCH, ACCESS_POINT, other])
+    )
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{ACCESS_POINT_ID}", side_effect=remove_other
+    )
+    for device_id in (ACCESS_POINT_ID, other_id):
+        aioclient_mock.get(f"{SITE_URL}/devices/{device_id}/statistics/latest", json={})
+    mock_network_requests()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.unifi")
+    with patch("homeassistant.components.unifi.hub.network.MAX_PARALLEL_REQUESTS", 1):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not any(
+        str(url).endswith(f"/devices/{other_id}")
+        for _, url, _, _ in aioclient_mock.mock_calls
+    )
+    assert "KeyError" not in caplog.text
 
 
 @pytest.mark.freeze_time("2026-11-07 10:05:00+00:00")

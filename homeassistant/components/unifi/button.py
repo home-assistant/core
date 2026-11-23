@@ -180,7 +180,7 @@ def make_network_api_descriptions(
         ),
         UnifiButtonEntityDescription[NetworkPorts, NetworkPort](
             key="PoE power cycle",
-            translation_key="port_power_cycle",
+            translation_key="network_port_power_cycle",
             entity_category=EntityCategory.CONFIG,
             device_class=ButtonDeviceClass.RESTART,
             api_handler_fn=lambda _: hub.network_ports,
@@ -188,7 +188,7 @@ def make_network_api_descriptions(
             control_fn=async_network_power_cycle_port_control_fn,
             device_info_fn=async_network_device_device_info_fn,
             object_fn=lambda _, obj_id: hub.network_ports[obj_id],
-            translation_placeholders_fn=lambda port: {"port_name": f"Port {port.idx}"},
+            translation_placeholders_fn=lambda port: {"port_idx": str(port.idx)},
             unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
         ),
     )

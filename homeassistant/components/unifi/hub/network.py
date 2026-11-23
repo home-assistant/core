@@ -66,9 +66,12 @@ class _DerivedHandler[ItemT: ApiItem](APIHandler[ItemT]):
         """Fetch data per device, raise only if every request failed."""
         semaphore = asyncio.Semaphore(MAX_PARALLEL_REQUESTS)
 
-        async def fetch_one(mac: str) -> T:
+        async def fetch_one(mac: str) -> T | None:
             async with semaphore:
-                return await fetch(self.devices[mac].device_id)
+                # The device can be removed while its request is queued
+                if (device := self.devices.get(mac)) is None:
+                    return None
+                return await fetch(device.device_id)
 
         results = await asyncio.gather(
             *(fetch_one(mac) for mac in macs), return_exceptions=True
@@ -76,11 +79,13 @@ class _DerivedHandler[ItemT: ApiItem](APIHandler[ItemT]):
         fetched: dict[str, T] = {}
         errors: list[BaseException] = []
         for mac, result in zip(macs, results, strict=True):
+            # The device can be removed while its request is in flight
+            if mac not in self.devices:
+                continue
             if isinstance(result, BaseException):
                 LOGGER.debug("Could not fetch UniFi device %s data: %r", mac, result)
                 errors.append(result)
-            # The device can be removed while its request is in flight
-            elif mac in self.devices:
+            elif result is not None:
                 fetched[mac] = result
         if errors and not fetched:
             raise errors[0]

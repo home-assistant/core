@@ -230,8 +230,7 @@ class UnifiHub:
         """Make the site of the entry the one the Integration API uses."""
         network = self.api.network
         unique_id = self.config.entry.unique_id
-        assert unique_id is not None
-        if unique_id not in network.sites:
+        if unique_id is not None and unique_id not in network.sites:
             unique_id = update_site_unique_id(
                 self.hass,
                 self.config.entry,
@@ -242,7 +241,7 @@ class UnifiHub:
                     for site in network.sites.values()
                 },
             )
-        if unique_id not in network.sites:
+        if unique_id is None or unique_id not in network.sites:
             raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="site_not_found"
             )

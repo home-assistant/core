@@ -346,8 +346,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         sites: dict[str, SiteChoice],
     ) -> ConfigFlowResult:
         """Store validated connection data and the site it resolves to."""
-        old_id = config_entry.unique_id
-        assert old_id is not None
+        if (old_id := config_entry.unique_id) is None:
+            raise AbortFlow("unknown_site_id")
         unique_id: str | None = old_id
         if unique_id not in sites:
             unique_id = self._async_match_moved_site(

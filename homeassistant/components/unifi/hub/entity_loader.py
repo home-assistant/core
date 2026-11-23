@@ -244,7 +244,7 @@ class UnifiEntityLoader:
 
     @callback
     def _restore_network_clients(self) -> None:
-        """Keep enabled trackers of unlisted clients, prune disabled ones.
+        """Keep trackers of unlisted clients, prune those the integration disabled.
 
         The Integration API only lists connected clients and keeps no history,
         a disabled tracker is created again once its client connects.
@@ -261,7 +261,10 @@ class UnifiEntityLoader:
                 (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
             )
             entry = entity_registry.async_get(entity_id)
-            if entry is not None and entry.disabled:
+            if (
+                entry is not None
+                and entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+            ):
                 if not listed:
                     continue
                 entity_registry.async_remove(entity_id)

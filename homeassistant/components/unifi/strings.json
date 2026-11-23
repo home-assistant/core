@@ -120,6 +120,9 @@
   },
   "entity": {
     "button": {
+      "network_port_power_cycle": {
+        "name": "Port {port_idx} power cycle"
+      },
       "port_power_cycle": {
         "name": "{port_name} power cycle"
       },

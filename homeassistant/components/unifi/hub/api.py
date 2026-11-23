@@ -74,7 +74,7 @@ async def get_unifi_api(
                 try:
                     await api.network.get_info()
                 except aiounifi.EndpointNotFound as err:
-                    LOGGER.error(
+                    LOGGER.debug(
                         "UniFi Network at %s does not offer the Integration API: %s",
                         config[CONF_HOST],
                         err,
