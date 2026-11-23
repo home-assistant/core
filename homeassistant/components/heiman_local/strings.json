@@ -1,13 +1,17 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This switch is already configured."
+      "already_configured": "This switch is already configured.",
+      "cannot_connect": "[%key:component::heiman_local::config::error::cannot_connect%]",
+      "no_ipv4_address": "The discovered switch did not advertise an IPv4 address.",
+      "unsupported_device": "[%key:component::heiman_local::config::error::unsupported_device%]"
     },
     "error": {
       "cannot_connect": "Could not connect to the switch or read its power state.",
       "invalid_host": "Enter a valid IPv4 address.",
       "unsupported_device": "The device does not report a supported Heiman Wi-Fi switch."
     },
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
@@ -19,6 +23,10 @@
           "port": "The HTTP port configured on the switch. The default is 80."
         },
         "description": "Enter the local address of your Heiman Wi-Fi switch."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Heiman Wi-Fi switch **{name}**?",
+        "title": "Discovered Heiman Wi-Fi switch"
       }
     }
   },

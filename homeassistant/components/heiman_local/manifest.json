@@ -8,5 +8,12 @@
   "documentation": "https://www.home-assistant.io/integrations/heiman_local",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["heiman-local-client==0.1.0"]
+  "requirements": ["heiman-local-client==0.1.0"],
+  "zeroconf": [
+    {
+      "name": "heiman-sw-*",
+      "type": "_http._tcp.local."
+    },
+    "_heiman._tcp.local."
+  ]
 }
