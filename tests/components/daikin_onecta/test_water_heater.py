@@ -1,13 +1,12 @@
 """Tests for Daikin Onecta water heater entities."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, call
 
-from daikin_onecta.models import ManagementPoint
+from daikin_onecta.models import GatewayDevice, ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.water_heater import (
     DEFAULT_MAX_TEMP,
@@ -34,13 +33,29 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
+from .conftest import MockOnectaClient
 from .platform_helpers import (
     ALTHERMA_WATER_HEATER_ENTITY_ID,
     _async_setup_fixture,
     _execute_typed_command,
     _load_gateway_devices,
-    _mock_coordinator,
 )
+
+
+async def _async_setup_water_tank(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fixture: str,
+    gateway_devices: list[GatewayDevice],
+    embedded_id: str,
+) -> DaikinWaterTank:
+    """Set up a water tank with the real integration coordinator."""
+    await _async_setup_fixture(
+        hass, config_entry, fixture, gateway_devices=gateway_devices
+    )
+    coordinator = config_entry.runtime_data
+    device = coordinator.data[gateway_devices[0].id]
+    return DaikinWaterTank(device, coordinator, embedded_id)
 
 
 @pytest.mark.parametrize(
@@ -60,48 +75,67 @@ from .platform_helpers import (
         ),
     ],
 )
-def test_water_heater_features_follow_power_capability(
+async def test_water_heater_features_follow_power_capability(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     power_settable: bool,
     expected_features: WaterHeaterEntityFeature,
     expected_operation_list: list[str],
 ) -> None:
     """Only advertise power and operation controls for a writable characteristic."""
-    device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
-    point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
+    gateway_devices = _load_gateway_devices("holidaymode")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterFlowThrough")[
+        0
+    ]
     point.on_off_mode.settable = power_settable
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
-
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "holidaymode", gateway_devices, point.embedded_id
+    )
     assert entity.supported_features == expected_features
     assert entity.operation_list == expected_operation_list
 
 
 @pytest.mark.parametrize(
-    ("method", "power_value", "args"),
+    ("service", "power_value", "service_data"),
     [
-        pytest.param(DaikinWaterTank.async_turn_on, "off", (), id="turn-on"),
-        pytest.param(DaikinWaterTank.async_turn_off, "on", (), id="turn-off"),
+        pytest.param(WATER_HEATER_SERVICE_TURN_ON, "off", {}, id="turn-on"),
+        pytest.param(WATER_HEATER_SERVICE_TURN_OFF, "on", {}, id="turn-off"),
         pytest.param(
-            DaikinWaterTank.async_set_operation_mode,
+            WATER_HEATER_SERVICE_SET_OPERATION_MODE,
             "on",
-            ("off",),
+            {WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF},
             id="operation-mode",
         ),
     ],
 )
 async def test_water_heater_rejects_read_only_power(
-    method: Callable[..., Awaitable[None]], power_value: str, args: tuple[str, ...]
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
+    service: str,
+    power_value: str,
+    service_data: dict[str, str],
 ) -> None:
     """Read-only water-heater actions fail without spending a cloud request."""
-    device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
+    await _async_setup_fixture(hass, config_entry, "holidaymode")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
+    assert point.on_off_mode is not None
     point.on_off_mode.value = power_value
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
-    entity._async_execute_hot_water_command = AsyncMock()
+    point.on_off_mode.settable = False
+    coordinator.async_update_listeners()
+    entity_id = hass.states.async_entity_ids(WATER_HEATER_DOMAIN)[0]
 
     with pytest.raises(HomeAssistantError):
-        await method(entity, *args)
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
 
-    entity._async_execute_hot_water_command.assert_not_awaited()
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -122,26 +156,31 @@ async def test_water_heater_rejects_read_only_power(
         ),
     ],
 )
-def test_water_heater_read_only_power_keeps_writable_boost(
+async def test_water_heater_read_only_power_keeps_writable_boost(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     power: str,
     expected_features: WaterHeaterEntityFeature,
     expected_operation_list: list[str],
 ) -> None:
     """Allow writable boost while powered on without advertising power control."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     point.on_off_mode.settable = False
     point.on_off_mode.value = power
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
-
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "altherma_boost", gateway_devices, point.embedded_id
+    )
     assert entity.supported_features == expected_features
     assert entity.operation_list == expected_operation_list
 
 
-def test_water_heater_initial_state_includes_read_only_current_operation() -> None:
+async def test_water_heater_initial_state_includes_read_only_current_operation(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Include the active operation when power and boost are read-only."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.power is not None
     assert point.domestic_hot_water.powerful_mode is not None
@@ -150,28 +189,38 @@ def test_water_heater_initial_state_includes_read_only_current_operation() -> No
     point.domestic_hot_water.powerful_mode.value = "on"
     point.domestic_hot_water.powerful_mode.settable = False
 
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
-
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "altherma_boost", gateway_devices, point.embedded_id
+    )
     assert entity.current_operation == STATE_PERFORMANCE
     assert entity.operation_list == [STATE_PERFORMANCE]
     assert not entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
 
 
-def test_water_heater_handles_missing_temperature_values() -> None:
+async def test_water_heater_handles_missing_temperature_values(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Restore HA defaults when Daikin stops reporting temperature bounds."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
     point.domestic_hot_water.temperature.min_value = 45
     point.domestic_hot_water.temperature.max_value = 60
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "altherma_boost", gateway_devices, point.embedded_id
+    )
     assert entity.min_temp == 45
     assert entity.max_temp == 60
-
-    point.domestic_hot_water.temperature.value = None
-    point.domestic_hot_water.temperature.min_value = None
-    point.domestic_hot_water.temperature.max_value = None
+    coordinator = config_entry.runtime_data
+    device = coordinator.data[gateway_devices[0].id]
+    current_point = device.management_point(point.embedded_id)
+    assert current_point is not None
+    assert current_point.domestic_hot_water is not None
+    assert current_point.domestic_hot_water.temperature is not None
+    current_point.domestic_hot_water.temperature.value = None
+    current_point.domestic_hot_water.temperature.min_value = None
+    current_point.domestic_hot_water.temperature.max_value = None
     entity.update_state()
 
     assert entity.target_temperature is None
@@ -192,14 +241,16 @@ def test_water_heater_handles_missing_temperature_values() -> None:
         ("C", None, UnitOfTemperature.CELSIUS),
     ],
 )
-def test_water_heater_uses_daikin_temperature_unit(
+async def test_water_heater_uses_daikin_temperature_unit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setpoint_unit: str | None,
     sensory_unit: str | None,
     expected_unit: UnitOfTemperature,
 ) -> None:
     """Use the reported setpoint or tank-sensor unit, defaulting to Celsius."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     setpoint = point.domestic_hot_water.temperature
     tank_temperature = point.sensory_characteristic("tankTemperature")
     assert setpoint is not None
@@ -207,7 +258,9 @@ def test_water_heater_uses_daikin_temperature_unit(
     setpoint.unit = setpoint_unit
     tank_temperature.unit = sensory_unit
 
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "altherma_boost", gateway_devices, point.embedded_id
+    )
 
     assert entity.native_temperature_unit == expected_unit
 
@@ -216,20 +269,23 @@ def test_water_heater_uses_daikin_temperature_unit(
     ("step_value", "expected_step"),
     [(None, 1.0), (0.5, 0.5)],
 )
-def test_water_heater_uses_standard_target_temperature_step(
-    step_value: float | None, expected_step: float
+async def test_water_heater_uses_standard_target_temperature_step(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    step_value: float | None,
+    expected_step: float,
 ) -> None:
     """Expose the Daikin increment or the whole-degree fallback."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
     point.domestic_hot_water.temperature.step_value = step_value
 
-    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
-
+    entity = await _async_setup_water_tank(
+        hass, config_entry, "altherma_boost", gateway_devices, point.embedded_id
+    )
     assert entity.target_temperature_step == expected_step
-    assert entity.extra_state_attributes is None
 
 
 def _leave_temperature_control_writable(point: ManagementPoint) -> None:

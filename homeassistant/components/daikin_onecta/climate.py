@@ -870,6 +870,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Set the active preset mode."""
         if preset_mode not in self._get_preset_modes():
             self._raise_service_validation_error("preset_mode_unavailable")
+        if preset_mode == self.preset_mode:
+            return
 
         active_presets = self._get_active_preset_modes()
         presets_to_disable = [

@@ -1,17 +1,16 @@
 """Snapshot tests for each Daikin Onecta entity platform."""
 
 from datetime import UTC, datetime
-from pathlib import Path
+from itertools import product
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.syrupy import HomeAssistantSnapshotExtension
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
-from syrupy.extensions.single_file import SingleFileAmberSnapshotExtension
-from syrupy.location import PyTestLocation
 
 from homeassistant.components.daikin_onecta import PLATFORMS
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,21 +40,64 @@ FIXTURES = (
     "ururu",
 )
 
+EMPTY_PLATFORMS = {
+    "altherma": {Platform.FAN, Platform.UPDATE},
+    "altherma3m": {Platform.FAN, Platform.SWITCH},
+    "altherma_boost": {Platform.FAN, Platform.SWITCH},
+    "altherma_firmwareupdate": {Platform.FAN, Platform.SELECT, Platform.SWITCH},
+    "altherma_schedule": {Platform.FAN, Platform.SWITCH},
+    "climate_fixedfanmode": {
+        Platform.FAN,
+        Platform.SWITCH,
+        Platform.WATER_HEATER,
+    },
+    "climate_floorheatingairflow": {
+        Platform.FAN,
+        Platform.UPDATE,
+        Platform.WATER_HEATER,
+    },
+    "dry": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "dry2": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "dx4_firmwareavailable": {
+        Platform.FAN,
+        Platform.SWITCH,
+        Platform.WATER_HEATER,
+    },
+    "fanmode": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "gas": {Platform.FAN, Platform.SWITCH},
+    "holidaymode": {Platform.FAN, Platform.SWITCH},
+    "homehub": {
+        Platform.BINARY_SENSOR,
+        Platform.CLIMATE,
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SWITCH,
+        Platform.UPDATE,
+        Platform.WATER_HEATER,
+    },
+    "mc80z": {Platform.SWITCH},
+    "minimal_data": {
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SWITCH,
+        Platform.UPDATE,
+    },
+    "nomodel_id": {Platform.FAN, Platform.SWITCH},
+    "offlinedevice": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "skyair": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "schedule": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "ururu": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+}
 
-class SingleFileHomeAssistantSnapshotExtension(
-    HomeAssistantSnapshotExtension, SingleFileAmberSnapshotExtension
-):
-    """Store platform snapshots in separate files."""
-
-    @classmethod
-    def dirname(cls, *, test_location: PyTestLocation) -> str:
-        """Return the per-test snapshot directory."""
-        return str(
-            Path(test_location.filepath).parent / "snapshots" / test_location.basename
-        )
+SNAPSHOT_CASES = tuple(
+    pytest.param(fixture, platform, id=f"{fixture}-{platform}")
+    for fixture, platform in product(FIXTURES, PLATFORMS)
+    if platform not in EMPTY_PLATFORMS.get(fixture, set())
+)
 
 
-@pytest.mark.parametrize("fixture", FIXTURES)
+@pytest.mark.parametrize(("fixture", "platform"), SNAPSHOT_CASES)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -63,22 +105,11 @@ async def test_platform_entities(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     fixture: str,
+    platform: Platform,
 ) -> None:
-    """Snapshot the entities created by each platform for every response fixture."""
+    """Snapshot each entity platform for every response fixture."""
     freezer.move_to(datetime(2026, 10, 15, 12, tzinfo=UTC))
-    await _async_setup_fixture(hass, config_entry, fixture)
+    with patch("homeassistant.components.daikin_onecta.PLATFORMS", [platform]):
+        await _async_setup_fixture(hass, config_entry, fixture)
 
-    entries_by_platform = {platform: {} for platform in PLATFORMS}
-    for entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-        entries_by_platform[entry.domain][entry.entity_id] = {
-            "entry": entry,
-            "state": hass.states.get(entry.entity_id),
-        }
-
-    for platform, entities in entries_by_platform.items():
-        assert entities == snapshot(
-            name=f"{fixture}_{platform}",
-            extension_class=SingleFileHomeAssistantSnapshotExtension,
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

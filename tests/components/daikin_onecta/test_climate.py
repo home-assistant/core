@@ -3,8 +3,7 @@
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import replace
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, call
 
 from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import (
@@ -37,14 +36,8 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.components.daikin_onecta.climate import (
-    DaikinClimate,
-    _create_climate_entities,
-)
-from homeassistant.components.daikin_onecta.const import (
-    CLIMATE_ENTITY_DESCRIPTIONS,
-    FANMODE_FIXED,
-)
+from homeassistant.components.daikin_onecta.climate import DaikinClimate
+from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
@@ -231,75 +224,30 @@ async def test_climate_swing_write_failure_preserves_entity_state(
     assert state_after_failure.attributes[state_attribute] == original_swing_state
 
 
-def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
-    """Create one entity per temperature target, not per operation mode."""
-    management_point = SimpleNamespace(
-        embedded_id="main_zone",
-        climate_control=SimpleNamespace(
-            setpoint_types=[
-                "roomTemperature",
-                "leavingWaterOffset",
-                "leavingWaterTemperature",
-                "unknownTemperature",
-            ]
-        ),
-    )
-    device = MagicMock()
-    device.id = "gateway"
-    device.device.management_points_by_type.return_value = [management_point]
-    coordinator = MagicMock()
+async def test_climate_entities_are_deduplicated_by_management_point(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Create one climate entity per supported target on a real gateway."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
 
-    with patch(
-        "homeassistant.components.daikin_onecta.climate.DaikinClimate"
-    ) as climate:
-        _create_climate_entities(device, coordinator, lambda *_: False)
-
-    assert climate.call_args_list == [
-        (
-            (
-                device,
-                "roomTemperature",
-                coordinator,
-                "main_zone",
-                CLIMATE_ENTITY_DESCRIPTIONS["roomTemperature"],
-            ),
-            {},
-        ),
-        (
-            (
-                device,
-                "leavingWaterOffset",
-                coordinator,
-                "main_zone",
-                CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterOffset"],
-            ),
-            {},
-        ),
-        (
-            (
-                device,
-                "leavingWaterTemperature",
-                coordinator,
-                "main_zone",
-                CLIMATE_ENTITY_DESCRIPTIONS["leavingWaterTemperature"],
-            ),
-            {},
-        ),
-    ]
+    assert set(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == {
+        "climate.altherma_leaving_water_offset",
+        "climate.altherma_room_temperature",
+        "climate.altherma_leaving_water_temperature",
+        "climate.test_bedroom_1_room_temperature",
+        "climate.test_bedroom_2_room_temperature",
+        "climate.test_living_room_room_temperature",
+        "climate.test_office_room_temperature",
+    }
 
 
-def test_create_climate_entities_skips_management_points_without_climate_control() -> (
-    None
-):
-    """Skip management points that do not expose climate controls."""
-    management_point = SimpleNamespace(
-        embedded_id="zone",
-        climate_control=None,
-    )
-    device = MagicMock()
-    device.device.management_points_by_type.return_value = [management_point]
+async def test_climate_platform_skips_points_without_climate_controls(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not create climate entities for a gateway without climate controls."""
+    await _async_setup_fixture(hass, config_entry, "homehub")
 
-    assert _create_climate_entities(device, MagicMock(), lambda *_: False) == []
+    assert hass.states.async_entity_ids(CLIMATE_DOMAIN) == []
 
 
 def _keep_climate_available(
@@ -1315,6 +1263,29 @@ async def test_climate_service_aborts_preset_replacement_after_failed_disable(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes[ClimateEntityStateAttribute.PRESET_MODE] == PRESET_BOOST
+
+
+async def test_climate_service_keeps_hidden_holiday_when_selected_preset_is_current(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Selecting the displayed preset must not disable a hidden active mode."""
+    await _async_setup_fixture(hass, config_entry, "gas")
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ClimateEntityStateAttribute.PRESET_MODE] == PRESET_BOOST
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_BOOST},
+        blocking=True,
+    )
+
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    mock_onecta_client.post_management_point.assert_not_awaited()
 
 
 @pytest.mark.parametrize("power_settable", [False, True])

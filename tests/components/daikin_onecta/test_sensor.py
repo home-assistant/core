@@ -13,7 +13,6 @@ from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity import EntityIdChecker
 from homeassistant.components.daikin_onecta.sensor import (
     SENSOR_DESCRIPTIONS,
@@ -38,7 +37,6 @@ from .platform_helpers import (
     _async_fire_coordinator_update,
     _async_setup_fixture,
     _load_gateway_devices,
-    _mock_coordinator,
 )
 
 
@@ -373,19 +371,27 @@ def test_unsupported_energy_period_is_skipped() -> None:
     ("reported_unit", "expected_unit"),
     [("°F", "°F"), (None, UnitOfTemperature.CELSIUS)],
 )
-def test_value_sensor_uses_daikin_unit(
-    reported_unit: str | None, expected_unit: str
+async def test_value_sensor_uses_daikin_unit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reported_unit: str | None,
+    expected_unit: str,
 ) -> None:
     """Prefer Daikin's characteristic unit and retain the description fallback."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    gateway_devices = _load_gateway_devices("altherma_boost")
+    point = gateway_devices[0].management_points_by_type("domesticHotWaterTank")[0]
     characteristic = point.sensory_characteristic("tankTemperature")
     assert characteristic is not None
     characteristic.unit = reported_unit
 
+    await _async_setup_fixture(
+        hass, config_entry, "altherma_boost", gateway_devices=gateway_devices
+    )
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
     entity = DaikinValueSensor(
         device,
-        _mock_coordinator(device),
+        coordinator,
         SENSOR_DESCRIPTIONS["tankTemperature"],
         ValueSensorDetails(point.embedded_id, "sensoryData", "tankTemperature"),
     )
@@ -397,14 +403,16 @@ def test_value_sensor_uses_daikin_unit(
     ("reported_unit", "expected_unit"),
     [("MJ", "MJ"), (None, "kWh")],
 )
-def test_energy_sensor_uses_daikin_unit(
-    reported_unit: str | None, expected_unit: str
+async def test_energy_sensor_uses_daikin_unit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reported_unit: str | None,
+    expected_unit: str,
 ) -> None:
     """Prefer Daikin's energy-source unit and retain the description fallback."""
-    device = DaikinOnectaDevice(_load_gateway_devices("altherma")[0])
-    point = next(
-        point for point in device.device.management_points if point.energy_aggregates
-    )
+    gateway_devices = _load_gateway_devices("altherma")
+    device = gateway_devices[0]
+    point = next(point for point in device.management_points if point.energy_aggregates)
     aggregate = point.energy_aggregates[0]
     assert aggregate.data_type == "consumption"
     energy_data = point.consumption
@@ -412,13 +420,18 @@ def test_energy_sensor_uses_daikin_unit(
     source = energy_data.source(aggregate.source)
     assert source is not None
     source.unit = reported_unit
+    await _async_setup_fixture(
+        hass, config_entry, "altherma", gateway_devices=gateway_devices
+    )
+    coordinator = config_entry.runtime_data
+    current_device = coordinator.data[device.id]
     description_key = (
         f"{aggregate.operation_mode.capitalize()}Daily"
         f"{aggregate.source.capitalize()}{aggregate.data_type.capitalize()}"
     )
     entity = DaikinEnergySensor(
-        device,
-        _mock_coordinator(device),
+        current_device,
+        coordinator,
         SENSOR_DESCRIPTIONS[description_key],
         EnergySensorDetails(
             point.embedded_id,

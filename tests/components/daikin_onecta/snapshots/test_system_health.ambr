@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_system_health_info
+  dict({
+    'api_status': 'ok',
+    'max_day': 200,
+    'max_minute': 10,
+    'oauth2_status': 'ok',
+    'oauth2_token_valid': True,
+    'ratelimit_reset': None,
+    'remaining_day': 199,
+    'remaining_minute': 9,
+    'retry_after': None,
+  })
+# ---

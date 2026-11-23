@@ -5,10 +5,13 @@ from unittest.mock import MagicMock
 from daikin_onecta.client import ONECTA_API_URL
 from daikin_onecta.rate_limit import RateLimit
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.syrupy import HomeAssistantSnapshotExtension
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.daikin_onecta.const import DOMAIN, OAUTH2_AUTHORIZE
 from homeassistant.components.daikin_onecta.system_health import (
+    _entry_info,
     async_register,
     system_health_info,
 )
@@ -26,6 +29,36 @@ def test_system_health_register() -> None:
     register.async_register_info.assert_called_once_with(system_health_info)
 
 
+def test_system_health_reads_rate_limits_once() -> None:
+    """Build all health fields from one cached rate-limit snapshot."""
+
+    class RuntimeData:
+        rate_limit_reads = 0
+        session = MagicMock(valid_token=True)
+
+        @property
+        def rate_limits(self) -> dict[str, int | None]:
+            self.rate_limit_reads += 1
+            return {
+                "minute": 10,
+                "day": 200,
+                "remaining_minutes": 9,
+                "remaining_day": 199,
+                "retry_after": None,
+                "ratelimit_reset": None,
+            }
+
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    runtime_data = RuntimeData()
+    config_entry.runtime_data = runtime_data
+
+    info = _entry_info(config_entry)
+
+    assert info["max_minute"] == 10
+    assert info["remaining_day"] == 199
+    assert runtime_data.rate_limit_reads == 1
+
+
 async def test_system_health_ignores_unloaded_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -39,6 +72,7 @@ async def test_system_health_info(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Report rate limit and token information for a loaded entry."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -50,13 +84,10 @@ async def test_system_health_info(
     aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)
     info = await system_health_info(hass)
 
-    assert info["max_minute"] == 10
-    assert info["max_day"] == 200
-    assert info["remaining_minute"] == 9
-    assert info["remaining_day"] == 199
-    assert info["oauth2_token_valid"] is True
-    assert await info["api_status"] == "ok"
-    assert await info["oauth2_status"] == "ok"
+    info["api_status"] = await info["api_status"]
+    info["oauth2_status"] = await info["oauth2_status"]
+
+    assert info == snapshot(extension_class=HomeAssistantSnapshotExtension)
 
 
 async def test_system_health_reports_every_loaded_account(
