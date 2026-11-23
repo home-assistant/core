@@ -80,7 +80,8 @@ def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
             translation_domain=DOMAIN, translation_key="request_invalid"
         )
 
-    if mode in ec2.ZoneMode:  # a zone/DHW override (DHW uses ZoneMode too)
+    # a zone/DHW override (DHW uses ZoneMode too); a system mode can't be unknown
+    if mode in ec2.ZoneMode and err.reason != ec2.RequestErrorReason.MODE_UNKNOWN:
         return ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=(

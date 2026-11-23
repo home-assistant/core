@@ -518,6 +518,10 @@ _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
         "mode_unknown",
     ),
     (
+        {EvoServiceArgument.MODE: "FollowSchedule"},  # a zone mode, not a system mode
+        "mode_unknown",
+    ),
+    (
         {EvoServiceArgument.MODE: "Cool"},  # a valid mode, but not for this system
         "mode_not_supported",
     ),
