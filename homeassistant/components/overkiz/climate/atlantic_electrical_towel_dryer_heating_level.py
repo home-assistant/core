@@ -176,7 +176,9 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     def _level(self) -> str:
         """Return the heating level the device is on."""
         if self._assumed_level is not None and (
-            self._level_pending or self._transitory_timer != TIMER_LEVEL_SET
+            self._level_pending
+            or self._override_pending
+            or self._transitory_timer != TIMER_LEVEL_SET
         ):
             return self._assumed_level
         return self._reported_level
@@ -234,12 +236,14 @@ class AtlanticElectricalTowelDryerHeatingLevel(
                         OverkizCommand.CANCEL_HEATING_LEVEL, OverkizCommandParam.BOOST
                     )
                     self._override_pending = False
+                    self._clear_boost()
                     await asyncio.sleep(CANCEL_SETTLE_DELAY)
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_HEATING_LEVEL, level
                 )
             except HomeAssistantError:
                 self._assumed_level, self._level_pending_until = previous
+                self.async_write_ha_state()
                 raise
             self._clear_boost()
             self.async_write_ha_state()
@@ -248,13 +252,12 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         """Start a timed boost."""
         async with self._lock:
             # The device returns to this level after the boost
-            return_level = self._assumed_level
-            if (
-                return_level is None
-                and self._transitory_timer == TIMER_LEVEL_SET
-                and self._reported_level != OverkizCommandParam.BOOST
+            return_level: str | None = self._level
+            if return_level == OverkizCommandParam.BOOST or (
+                self._assumed_level is None
+                and self._transitory_timer != TIMER_LEVEL_SET
             ):
-                return_level = self._reported_level
+                return_level = None
             await self.executor.async_execute_command(
                 OverkizCommand.SET_HEATING_LEVEL_WITH_TIMER,
                 OverkizCommandParam.BOOST,
