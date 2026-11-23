@@ -35,8 +35,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -182,7 +182,7 @@ async def test_switch_action_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.enyaq_coupe_charging"},
+            {TargetKey.ENTITY_ID: "switch.enyaq_coupe_charging"},
             blocking=True,
         )
 

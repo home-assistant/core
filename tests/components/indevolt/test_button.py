@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -52,7 +52,7 @@ async def test_button_press_standby(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
+        {TargetKey.ENTITY_ID: ENTITY_ID_GEN2},
         blocking=True,
     )
 
@@ -85,7 +85,7 @@ async def test_button_press_standby_already_in_realtime_mode(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
+        {TargetKey.ENTITY_ID: ENTITY_ID_GEN2},
         blocking=True,
     )
 
@@ -112,7 +112,7 @@ async def test_button_press_standby_rejected_command(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
+            {TargetKey.ENTITY_ID: ENTITY_ID_GEN2},
             blocking=True,
         )
 
@@ -140,7 +140,7 @@ async def test_button_press_standby_portable_mode_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
+            {TargetKey.ENTITY_ID: ENTITY_ID_GEN2},
             blocking=True,
         )
 

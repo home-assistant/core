@@ -10,7 +10,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,7 +58,7 @@ async def test_scenes(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: expected["entity_id"]},
+        {TargetKey.ENTITY_ID: expected["entity_id"]},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {}

@@ -15,7 +15,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -143,7 +143,7 @@ async def test_time_set_value(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             TimeServiceArgument.TIME: time_value,
         },
         blocking=True,
@@ -173,7 +173,7 @@ async def test_time_set_value_raises_on_api_error(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "time.my_pool_filtration_interval_1_start",
+                TargetKey.ENTITY_ID: "time.my_pool_filtration_interval_1_start",
                 TimeServiceArgument.TIME: "12:30:00",
             },
             blocking=True,
@@ -237,7 +237,7 @@ async def test_light_schedule_time_set_value(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "time.my_pool_light_schedule_start",
+            TargetKey.ENTITY_ID: "time.my_pool_light_schedule_start",
             TimeServiceArgument.TIME: "21:30:00",
         },
         blocking=True,
