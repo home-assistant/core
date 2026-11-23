@@ -93,6 +93,29 @@ async def test_prepare_connection_sets_gateway_target(
     mock_gateway.stop.assert_awaited()
 
 
+async def test_adopt_connected_identity_follows_replacement_stick(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """After a swap, the next resolve uses the replacement serial and path."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(
+            hass,
+            {"usb_serial_number": "old", "device_path": "/dev/ttyACM0"},
+        )
+    mock_gateway.usb_serial_number = "new-stick"
+    mock_gateway.device_path = "/dev/ttyACM1"
+    transceiver.adopt_connected_identity()
+
+    with (
+        patch(GATEWAY_PATH, return_value=mock_gateway),
+        patch(RESOLVE_PATH, return_value="/dev/ttyACM1") as resolve,
+    ):
+        assert await transceiver._prepare_connection() is True
+
+    assert resolve.call_args.kwargs["usb_serial"] == "new-stick"
+    assert resolve.call_args.kwargs["device_path"] == "/dev/ttyACM1"
+
+
 async def test_prepare_connection_falls_back_to_sole_rx11_when_serial_missing(
     hass: HomeAssistant, mock_gateway: MagicMock
 ) -> None:
@@ -349,13 +372,13 @@ def test_resolve_gateway_port_rejects_replacement_when_disabled() -> None:
         )
 
 
-def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
-    """Port resolution stays unresolved when multiple RX11s are present."""
+def test_resolve_gateway_port_picks_lowest_serial_when_several_remain() -> None:
+    """Several replacement sticks resolve to the lowest serial, independent of order."""
     port_a = MagicMock(
-        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111"
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222"
     )
     port_b = MagicMock(
-        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="222"
+        device="/dev/ttyACM1", vid=0x155A, pid=0x1014, serial_number="111"
     )
 
     with patch(
@@ -366,6 +389,14 @@ def test_resolve_gateway_port_returns_none_for_ambiguous_replacement() -> None:
             resolve_gateway_port(
                 SUPPORTED_USB_IDS,
                 usb_serial="missing",
+            )
+            == "/dev/ttyACM1"
+        )
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+                allow_replacement=False,
             )
             is None
         )
@@ -393,8 +424,8 @@ def test_resolve_gateway_port_matches_configured_device_path() -> None:
         )
 
 
-def test_resolve_gateway_port_rejects_path_owned_by_other_serial() -> None:
-    """Do not claim a reused path that belongs to a different serialized RX11."""
+def test_resolve_gateway_port_picks_replacement_when_path_has_other_serial() -> None:
+    """A missing stick is replaced by the lowest serial, even if one reused its path."""
     other_stick = MagicMock(
         device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="other"
     )
@@ -412,7 +443,7 @@ def test_resolve_gateway_port_rejects_path_owned_by_other_serial() -> None:
                 usb_serial="configured",
                 device_path="/dev/ttyACM0",
             )
-            is None
+            == "/dev/ttyACM0"
         )
 
 

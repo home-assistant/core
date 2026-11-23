@@ -141,7 +141,7 @@ async def test_sync_transmitter_battery_state_preserves_live_state(
     coordinator: EasywaveCoordinator,
 ) -> None:
     """Restored battery state must not overwrite a live telegram update."""
-    coordinator._battery_state["tx1"] = "low"
+    coordinator._batteries.observe("tx1", low_battery=True)
 
     coordinator.sync_transmitter_battery_state("tx1", "ok")
 
@@ -877,9 +877,53 @@ async def test_dispatch_low_battery_fires_event_without_battery_entity(
     )
     await hass.async_block_till_done()
 
-    assert len(events) == 1
-    assert events[0].data["type"] == EVENT_TYPE_BATTERY_LOW
+    assert [event.data["type"] for event in events] == [EVENT_TYPE_BATTERY_LOW]
     assert events[0].data["subtype"] == "low"
+
+
+async def test_dispatch_button_then_low_battery_pair(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Press and release stay the button. 0x80 plus the next release is battery only."""
+    entry = _entry_with_subentries(_transmitter_device_record())
+    entry.add_to_hass(hass)
+    coordinator = EasywaveCoordinator(hass, mock_easywave_transceiver(), entry)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Test Transmitter",
+    )
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+    serial = bytes.fromhex(MOCK_TRANSMITTER_SERIAL)
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=serial,
+            button=EasywaveButton.A,
+            function=ButtonFunction.DEFAULT,
+            should_ignore=False,
+        )
+    )
+    coordinator._dispatch_button_release(ButtonReleaseEvent(transmitter_serial=serial))
+    coordinator._dispatch_button_push(
+        ButtonPushEvent(
+            transmitter_serial=serial,
+            button=EasywaveButton.A,
+            function=ButtonFunction.LOW_BATTERY,
+            should_ignore=False,
+        )
+    )
+    coordinator._dispatch_button_release(ButtonReleaseEvent(transmitter_serial=serial))
+    await hass.async_block_till_done()
+
+    assert [event.data["type"] for event in events] == [
+        EVENT_TYPE_BUTTON_PRESS,
+        EVENT_TYPE_BUTTON_RELEASE,
+        EVENT_TYPE_BATTERY_LOW,
+    ]
+    assert events[0].data["subtype"] == "a"
+    assert events[1].data["subtype"] == "released"
+    assert events[2].data["subtype"] == "low"
 
 
 async def test_unregister_transmitter_entity_keeps_listener_for_configured_device(
@@ -995,7 +1039,7 @@ async def test_dispatch_battery_normal_requires_known_low_state(
     await hass.async_block_till_done()
 
     assert all(event.data["type"] != EVENT_TYPE_BATTERY_NORMAL for event in events)
-    assert coordinator._battery_state[MOCK_TRANSMITTER_DEVICE_ID] == "ok"
+    assert coordinator.transmitter_battery_state(MOCK_TRANSMITTER_DEVICE_ID) == "ok"
 
 
 async def test_gateway_connected_event_fires_from_coordinator_callback(

@@ -23,6 +23,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_LOW,
     EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
@@ -141,15 +142,14 @@ async def test_button_press_telegram_fires_device_event(
 async def test_button_press_low_battery_skips_press_event(
     hass: HomeAssistant,
 ) -> None:
-    """Low-battery telegrams do not fire button press automation events."""
+    """A 0x80 push is battery_low only, not a press and not a release."""
     transceiver = mock_easywave_transceiver()
     entry = _entry_with_subentries(_transmitter_device_record())
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_events() -> None:
-        assert not any(
-            event.data.get("type") == EVENT_TYPE_BUTTON_PRESS for event in events
-        )
+        assert [event.data.get("type") for event in events] == [EVENT_TYPE_BATTERY_LOW]
+        assert events[0].data.get("subtype") == "low"
         # pylint: disable-next=home-assistant-tests-registry-fixtures
         entity_id = er.async_get(hass).async_get_entity_id(
             "sensor",

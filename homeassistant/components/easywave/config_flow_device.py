@@ -40,7 +40,8 @@ def _normalize_learned_transmitter(telegram: Any) -> dict[str, Any] | None:
     """Return learned transmitter data from a codec event."""
     if not isinstance(telegram, ButtonPushEvent):
         return None
-    if telegram.should_ignore:
+    # 0x80 is button A with should_ignore false. is_button_press rejects it.
+    if not telegram.is_button_press:
         return None
     return {
         "serial": telegram.transmitter_serial,

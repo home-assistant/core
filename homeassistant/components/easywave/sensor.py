@@ -4,6 +4,8 @@ import logging
 from typing import Any, override
 
 from easywave_home_control.codec import (
+    BATTERY_LOW,
+    BATTERY_OK,
     ButtonPushEvent,
     ButtonReleaseEvent,
     SensorTelegramEvent,
@@ -324,16 +326,14 @@ class EasywaveTransmitterLastButtonSensor(EasywaveTransmitterEntity, RestoreSens
                 self.async_write_ha_state()
 
 
-_BATTERY_STATE_OK = "ok"
-_BATTERY_STATE_LOW = "low"
-_BATTERY_OPTIONS = [_BATTERY_STATE_OK, _BATTERY_STATE_LOW]
+_BATTERY_OPTIONS = [BATTERY_OK, BATTERY_LOW]
 
 
 class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor):
     """Diagnostic battery-state sensor for an Easywave transmitter.
 
-    State transitions are owned by the coordinator; this entity mirrors that
-    state for the UI.
+    State transitions come from TransmitterBatteryTracker; this entity mirrors
+    the coordinator's copy for the UI.
     """
 
     _attr_device_class = SensorDeviceClass.ENUM
@@ -376,9 +376,9 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
     @property
     def icon(self) -> str:
         """Return a battery icon reflecting the current state."""
-        if self._native_value == _BATTERY_STATE_LOW:
+        if self._native_value == BATTERY_LOW:
             return "mdi:battery-alert"
-        if self._native_value == _BATTERY_STATE_OK:
+        if self._native_value == BATTERY_OK:
             return "mdi:battery"
         return "mdi:battery-unknown"
 

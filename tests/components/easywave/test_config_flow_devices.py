@@ -163,6 +163,19 @@ def test_normalize_learned_transmitter_rejects_should_ignore() -> None:
     assert _normalize_learned_transmitter(telegram) is None
 
 
+def test_normalize_learned_transmitter_rejects_low_battery() -> None:
+    """A 0x80 warning is button A with should_ignore false, and is not learned."""
+    telegram = ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        button=EasywaveButton.A,
+        function=ButtonFunction.LOW_BATTERY,
+        should_ignore=False,
+    )
+
+    assert telegram.is_button_press is False
+    assert _normalize_learned_transmitter(telegram) is None
+
+
 def _make_sensor_learn_telegram(
     serial_hex: str = MOCK_SENSOR_SERIAL,
     *,

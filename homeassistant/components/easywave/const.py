@@ -5,6 +5,8 @@ from datetime import timedelta
 from enum import IntFlag
 from typing import Any, Final
 
+from easywave_home_control.codec.battery import EVENT_BATTERY_LOW, EVENT_BATTERY_NORMAL
+
 DOMAIN: Final = "easywave"
 
 # Home Assistant requires integrations to verify that RF hardware is permitted
@@ -147,8 +149,8 @@ EVENT_EASYWAVE: Final = f"{DOMAIN}_event"
 # Device trigger event types
 EVENT_TYPE_BUTTON_PRESS: Final = "button_press"
 EVENT_TYPE_BUTTON_RELEASE: Final = "button_release"
-EVENT_TYPE_BATTERY_LOW: Final = "battery_low"
-EVENT_TYPE_BATTERY_NORMAL: Final = "battery_normal"
+EVENT_TYPE_BATTERY_LOW: Final = EVENT_BATTERY_LOW
+EVENT_TYPE_BATTERY_NORMAL: Final = EVENT_BATTERY_NORMAL
 EVENT_TYPE_GATEWAY_CONNECTED: Final = "gateway_connected"
 EVENT_TYPE_GATEWAY_DISCONNECTED: Final = "gateway_disconnected"
 

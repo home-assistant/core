@@ -2,7 +2,12 @@
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.easywave.const import CONF_USB_PRODUCT, DOMAIN
+from homeassistant.components.easywave.const import (
+    CONF_DEVICE_PATH,
+    CONF_USB_PRODUCT,
+    CONF_USB_SERIAL_NUMBER,
+    DOMAIN,
+)
 from homeassistant.components.easywave.gateway_device import update_gateway_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -186,3 +191,69 @@ async def test_update_gateway_device_updates_existing_entry(
     assert device is not None
     assert device.hw_version == "RX11 v1.0"
     assert device.sw_version == "FW 2.3.4"
+
+
+async def test_update_gateway_device_stores_replacement_serial(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A replacement RX11 replaces the stored serial, path, and unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_12345",
+    )
+    entry.add_to_hass(hass)
+
+    transceiver = type(
+        "Transceiver",
+        (),
+        {
+            "usb_serial_number": "67890",
+            "device_path": "/dev/ttyACM1",
+            "hw_version": "1.0",
+            "fw_version": "2.0",
+        },
+    )()
+
+    update_gateway_device(hass, entry, transceiver)
+
+    assert entry.data[CONF_USB_SERIAL_NUMBER] == "67890"
+    assert entry.data[CONF_DEVICE_PATH] == "/dev/ttyACM1"
+    assert entry.unique_id == "easywave_67890"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.serial_number == "67890"
+
+
+async def test_update_gateway_device_keeps_serial_when_replacement_has_none(
+    hass: HomeAssistant,
+) -> None:
+    """A failed serial lookup does not erase the configured RX11 identity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        unique_id="easywave_12345",
+    )
+    entry.add_to_hass(hass)
+
+    transceiver = type(
+        "Transceiver",
+        (),
+        {
+            "usb_serial_number": None,
+            "device_path": "/dev/ttyACM1",
+            "hw_version": "1.0",
+            "fw_version": "2.0",
+        },
+    )()
+
+    update_gateway_device(hass, entry, transceiver)
+
+    assert entry.data[CONF_USB_SERIAL_NUMBER] == "12345"
+    assert entry.data[CONF_DEVICE_PATH] == "/dev/ttyACM1"
+    assert entry.unique_id == "easywave_12345"

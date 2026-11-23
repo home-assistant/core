@@ -97,10 +97,17 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_validate_device_connection(self, device_path: str) -> bool:
-        """Verify that an RX11 transceiver is reachable on the given port."""
+    async def _async_validate_device_connection(
+        self, device_path: str, usb_serial: str | None = None
+    ) -> bool:
+        """Verify that the selected RX11 is still the stick on this port."""
         transceiver = RX11Transceiver(
-            self.hass, device_path=device_path, allow_replacement=False
+            self.hass,
+            {
+                CONF_DEVICE_PATH: device_path,
+                CONF_USB_SERIAL_NUMBER: usb_serial,
+            },
+            allow_replacement=False,
         )
         try:
             connected = await transceiver.connect()
@@ -220,7 +227,9 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             d = self._device
             try:
-                connected = await self._async_validate_device_connection(d["device"])
+                connected = await self._async_validate_device_connection(
+                    d["device"], d["serial_number"]
+                )
             except Exception:
                 _LOGGER.exception(
                     "Unexpected error validating RX11 connection on %s", d["device"]

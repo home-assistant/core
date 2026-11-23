@@ -311,6 +311,72 @@ async def test_easywave_button_press_a_trigger_ignores_area_device_whose_entity_
     assert len(service_calls) == 1
 
 
+async def test_battery_trigger_follows_battery_sensor_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """A battery trigger uses the battery sensor, not the last-button sensor."""
+    await _async_setup_entry(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
+    )
+    battery_entity = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_TRANSMITTER_DEVICE_ID}_battery_warning"
+    )
+    assert device is not None
+    assert battery_entity is not None
+
+    living_room = area_registry.async_get_or_create("living_room")
+    kitchen = area_registry.async_get_or_create("kitchen")
+    device_registry.async_update_device(device.id, area_id=living_room.id)
+    entity_registry.async_update_entity(battery_entity, area_id=kitchen.id)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "trigger": {
+                        "trigger": "easywave.battery_low",
+                        "target": {"area_id": living_room.id},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"area": "living_room"},
+                    },
+                },
+                {
+                    "trigger": {
+                        "trigger": "easywave.battery_low",
+                        "target": {"area_id": kitchen.id},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"area": "kitchen"},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_BATTERY_LOW,
+            "subtype": "low",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert [call.data["area"] for call in service_calls] == ["kitchen"]
+
+
 async def test_easywave_button_press_a_trigger_fires_for_group_target(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

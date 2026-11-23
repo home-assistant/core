@@ -6,12 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from easywave_home_control.codec import (
-    ButtonFunction,
     ButtonPushEvent,
     ButtonReleaseEvent,
     EwbRcvEvent,
     SensorMeasurementPayload,
     SensorTelegramEvent,
+    TransmitterBatteryTracker,
 )
 from easywave_home_control.codec.sensors import SensorLearnPayload
 
@@ -27,8 +27,6 @@ from .const import (
     DOMAIN,
     ENTRY_TYPE_TRANSMITTER,
     EVENT_EASYWAVE,
-    EVENT_TYPE_BATTERY_LOW,
-    EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
@@ -43,10 +41,6 @@ if TYPE_CHECKING:
     from . import EasywaveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-_BATTERY_STATE_OK = "ok"
-_BATTERY_STATE_LOW = "low"
-_BATTERY_CLEAR_THRESHOLD = 2
 
 
 def _serial_hex_matches(device_serial: bytes, configured_serial: str) -> bool:
@@ -83,8 +77,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._shutting_down = False
         self._ha_started = self.hass.state is CoreState.running
         self._gateway_last_status = "disconnected"
-        self._battery_ok_streak: dict[str, int] = {}
-        self._battery_state: dict[str, str] = {}
+        self._batteries = TransmitterBatteryTracker()
         # Stay false until platforms finish restoring entity state so early
         # telegrams cannot race restored battery transition state.
         self._telegram_reception_ready = False
@@ -342,44 +335,26 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return None
 
     @callback
-    def _handle_transmitter_battery_status(self, device_id: str, is_low: bool) -> None:
-        """Update battery state and fire device automation events."""
-        if is_low:
-            self._battery_ok_streak[device_id] = 0
-            if self._battery_state.get(device_id) != _BATTERY_STATE_LOW:
-                self._battery_state[device_id] = _BATTERY_STATE_LOW
-                self.fire_device_event(device_id, EVENT_TYPE_BATTERY_LOW, subtype="low")
-            return
-        # Only treat OK telegrams as recovery after a known low state.
-        if self._battery_state.get(device_id) != _BATTERY_STATE_LOW:
-            self._battery_state[device_id] = _BATTERY_STATE_OK
-            self._battery_ok_streak[device_id] = 0
-            return
-        self._battery_ok_streak[device_id] = (
-            self._battery_ok_streak.get(device_id, 0) + 1
-        )
-        if self._battery_ok_streak[device_id] >= _BATTERY_CLEAR_THRESHOLD:
-            self._battery_state[device_id] = _BATTERY_STATE_OK
-            self._battery_ok_streak[device_id] = 0
-            self.fire_device_event(device_id, EVENT_TYPE_BATTERY_NORMAL, subtype="ok")
+    def _handle_transmitter_battery_status(
+        self, device_id: str, event: ButtonPushEvent
+    ) -> None:
+        """Forward a library battery event onto the Home Assistant bus."""
+        change = self._batteries.observe_push(device_id, event)
+        if change is not None:
+            self.fire_device_event(device_id, change.event_type, subtype=change.subtype)
 
     def transmitter_battery_state(self, device_id: str) -> str | None:
-        """Return the coordinator-owned battery state for a transmitter."""
-        return self._battery_state.get(device_id)
+        """Return the library-owned battery state for a transmitter."""
+        return self._batteries.state_of(device_id)
 
     @callback
     def sync_transmitter_battery_state(self, device_id: str, state: str) -> None:
         """Seed battery event state from a restored battery sensor.
 
         Live telegram updates win over restored persistence: only seed when
-        the coordinator has not already established a state for this device.
+        the tracker has not already established a state for this device.
         """
-        if state not in (_BATTERY_STATE_OK, _BATTERY_STATE_LOW):
-            return
-        if device_id in self._battery_state:
-            return
-        self._battery_state[device_id] = state
-        self._battery_ok_streak[device_id] = 0
+        self._batteries.seed(device_id, state)
 
     def enable_telegram_reception(self) -> None:
         """Allow telegram reception after platforms have finished setup."""
@@ -519,24 +494,23 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _dispatch_button_push(self, event: ButtonPushEvent) -> None:
         """Dispatch a button push event to matching entities and automations."""
+        if event.is_low_battery:
+            self._dispatch_low_battery(event)
+            return
+
         serial_hex = event.transmitter_serial.hex()
-        is_low_battery = event.function == ButtonFunction.LOW_BATTERY
         device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
 
-        # Update coordinator-owned battery state before entities mirror it.
         if device_id is not None:
-            self._handle_transmitter_battery_status(device_id, is_low_battery)
+            self._handle_transmitter_battery_status(device_id, event)
 
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
-                if not is_low_battery:
-                    entity.handle_telegram(event)
-                entity.handle_battery_status(is_low_battery)
+                entity.handle_telegram(event)
+                entity.handle_battery_status(False)
 
         if device_id is None:
             _LOGGER.debug("Received EW push from unknown transmitter: %s", serial_hex)
-            return
-        if is_low_battery:
             return
         button_letter = "abcd"[event.button] if event.button < 4 else None
         if button_letter is not None:
@@ -547,9 +521,32 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
     @callback
+    def _dispatch_low_battery(self, event: ButtonPushEvent) -> None:
+        """Forward a ``0x80`` push as battery_low and not as a button press.
+
+        The matching release is the second half of the same warning. It is
+        dropped in ``_dispatch_button_release``.
+        """
+        device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
+        if device_id is not None:
+            self._handle_transmitter_battery_status(device_id, event)
+        else:
+            _LOGGER.debug(
+                "Received EW low-battery from unknown transmitter: %s",
+                event.transmitter_serial.hex(),
+            )
+        for entity in list(self._transmitter_entities):
+            if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
+                entity.handle_battery_status(True)
+
+    @callback
     def _dispatch_button_release(self, event: ButtonReleaseEvent) -> None:
         """Dispatch a button release event to matching entities and automations."""
         device_id = self._transmitter_device_id_for_serial(event.transmitter_serial)
+        if device_id is not None and self._batteries.take_low_battery_release(
+            device_id
+        ):
+            return
         for entity in list(self._transmitter_entities):
             if _serial_hex_matches(event.transmitter_serial, entity.transmitter_serial):
                 entity.handle_telegram(event)

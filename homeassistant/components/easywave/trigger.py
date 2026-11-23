@@ -8,8 +8,7 @@ import probatio
 from homeassistant.const import CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device import async_entity_id_to_device_id
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
@@ -30,6 +29,8 @@ from .const import (
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
     EVENT_TYPE_GATEWAY_DISCONNECTED,
+    EasywaveGatewayFeature,
+    EasywaveTransmitterFeature,
 )
 
 CONF_SUBTYPE = "subtype"
@@ -49,8 +50,9 @@ class EasywaveEventTrigger(Trigger, ABC):
     _event_type: str
     _subtype: str | None = None
     _schema = _TRIGGER_SCHEMA
-    # Match triggers.yaml: gateway triggers include diagnostic status entities.
+    # Match triggers.yaml: gateway and battery triggers include diagnostic entities.
     _primary_entities_only: ClassVar[bool] = True
+    _required_feature: ClassVar[int]
 
     @override
     @classmethod
@@ -76,11 +78,18 @@ class EasywaveEventTrigger(Trigger, ABC):
             TargetSelection(self._target),
             primary_entities_only=self._primary_entities_only,
         )
-        # Area expansion keeps a device whose state entity was moved out.
+        # Only entities that carry this trigger's feature may contribute a device.
+        # Otherwise a button sensor left in the area fires a battery trigger.
+        registry = er.async_get(self._hass)
         device_ids: set[str] = set()
         for entity_id in referenced.referenced | referenced.indirectly_referenced:
-            if device_id := async_entity_id_to_device_id(self._hass, entity_id):
-                device_ids.add(device_id)
+            if (entry := registry.async_get(entity_id)) is None:
+                continue
+            if entry.device_id is None:
+                continue
+            if not entry.supported_features & self._required_feature:
+                continue
+            device_ids.add(entry.device_id)
         return device_ids
 
     @override
@@ -114,12 +123,15 @@ class EasywaveEventTrigger(Trigger, ABC):
         return self._hass.bus.async_listen(EVENT_EASYWAVE, handle_event)
 
 
-def _make_button_press_trigger(button: str) -> type[Trigger]:
+def _make_button_press_trigger(
+    button: str, feature: EasywaveTransmitterFeature
+) -> type[Trigger]:
     """Create a trigger class for a specific button press."""
 
     class _EasywaveButtonPressTrigger(EasywaveEventTrigger):
         _event_type = EVENT_TYPE_BUTTON_PRESS
         _subtype = button
+        _required_feature = feature
 
     _EasywaveButtonPressTrigger.__name__ = f"EasywaveButtonPress{button.upper()}Trigger"
     _EasywaveButtonPressTrigger.__qualname__ = _EasywaveButtonPressTrigger.__name__
@@ -131,6 +143,7 @@ class EasywaveButtonReleaseTrigger(EasywaveEventTrigger):
 
     _event_type = EVENT_TYPE_BUTTON_RELEASE
     _subtype = "released"
+    _required_feature = EasywaveTransmitterFeature.BUTTON_RELEASE
 
 
 class EasywaveGatewayConnectedTrigger(EasywaveEventTrigger):
@@ -139,6 +152,7 @@ class EasywaveGatewayConnectedTrigger(EasywaveEventTrigger):
     _event_type = EVENT_TYPE_GATEWAY_CONNECTED
     _subtype = "connected"
     _primary_entities_only = False
+    _required_feature = EasywaveGatewayFeature.GATEWAY_STATUS
 
 
 class EasywaveGatewayDisconnectedTrigger(EasywaveEventTrigger):
@@ -147,6 +161,7 @@ class EasywaveGatewayDisconnectedTrigger(EasywaveEventTrigger):
     _event_type = EVENT_TYPE_GATEWAY_DISCONNECTED
     _subtype = "disconnected"
     _primary_entities_only = False
+    _required_feature = EasywaveGatewayFeature.GATEWAY_STATUS
 
 
 class EasywaveBatteryLowTrigger(EasywaveEventTrigger):
@@ -156,6 +171,7 @@ class EasywaveBatteryLowTrigger(EasywaveEventTrigger):
     _subtype = "low"
     # The battery sensor is diagnostic, so area targets must include it.
     _primary_entities_only = False
+    _required_feature = EasywaveTransmitterFeature.BATTERY
 
 
 class EasywaveBatteryNormalTrigger(EasywaveEventTrigger):
@@ -164,13 +180,22 @@ class EasywaveBatteryNormalTrigger(EasywaveEventTrigger):
     _event_type = EVENT_TYPE_BATTERY_NORMAL
     _subtype = "ok"
     _primary_entities_only = False
+    _required_feature = EasywaveTransmitterFeature.BATTERY
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "button_press_a": _make_button_press_trigger("a"),
-    "button_press_b": _make_button_press_trigger("b"),
-    "button_press_c": _make_button_press_trigger("c"),
-    "button_press_d": _make_button_press_trigger("d"),
+    "button_press_a": _make_button_press_trigger(
+        "a", EasywaveTransmitterFeature.BUTTON_A
+    ),
+    "button_press_b": _make_button_press_trigger(
+        "b", EasywaveTransmitterFeature.BUTTON_B
+    ),
+    "button_press_c": _make_button_press_trigger(
+        "c", EasywaveTransmitterFeature.BUTTON_C
+    ),
+    "button_press_d": _make_button_press_trigger(
+        "d", EasywaveTransmitterFeature.BUTTON_D
+    ),
     "button_release": EasywaveButtonReleaseTrigger,
     "gateway_connected": EasywaveGatewayConnectedTrigger,
     "gateway_disconnected": EasywaveGatewayDisconnectedTrigger,

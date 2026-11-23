@@ -443,7 +443,8 @@ async def test_user_flow_offers_proxy_rx11_when_no_local_stick(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "easywave_12345"
     assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
-    assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.args[1][CONF_DEVICE_PATH] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.args[1][CONF_USB_SERIAL_NUMBER] == "12345"
     assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
 
 
@@ -473,7 +474,8 @@ async def test_usb_discovery_validates_proxy_url(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "easywave_12345"
     assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
-    assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.args[1][CONF_DEVICE_PATH] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.args[1][CONF_USB_SERIAL_NUMBER] == "12345"
     assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
 
 
@@ -597,6 +599,36 @@ async def test_usb_discovery_flow_creates_entry(
     assert result["data"][CONF_USB_PID] == 0x1014
 
 
+async def test_usb_discovery_recovers_after_cannot_connect(
+    hass: HomeAssistant, mock_usb_discovery_info: UsbServiceInfo
+) -> None:
+    """USB confirm can create the entry after a failed connection attempt."""
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(side_effect=[False, True])
+    mock_transceiver.dispose = AsyncMock()
+
+    with patch(TRANSCEIVER_PATH, return_value=mock_transceiver) as mock_cls:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=mock_usb_discovery_info,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
+    assert mock_transceiver.connect.await_count == 2
+    assert mock_cls.call_args.args[1][CONF_USB_SERIAL_NUMBER] == "12345"
+    assert mock_cls.call_args.kwargs["allow_replacement"] is False
+
+
 async def test_usb_discovery_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -682,8 +714,16 @@ async def test_validate_device_connection_disables_replacement_fallback(
     mock_transceiver.dispose = AsyncMock()
 
     with patch(TRANSCEIVER_PATH, return_value=mock_transceiver) as mock_cls:
-        assert await flow._async_validate_device_connection("/dev/ttyACM0") is True
+        assert (
+            await flow._async_validate_device_connection("/dev/ttyACM0", "12345")
+            is True
+        )
 
     mock_cls.assert_called_once_with(
-        hass, device_path="/dev/ttyACM0", allow_replacement=False
+        hass,
+        {
+            CONF_DEVICE_PATH: "/dev/ttyACM0",
+            CONF_USB_SERIAL_NUMBER: "12345",
+        },
+        allow_replacement=False,
     )

@@ -119,8 +119,9 @@ def resolve_gateway_port(
 
     Prefers the configured USB serial or device path. ``ports`` may include an
     ``esphome-hass://`` URL from the USB scan. When the configured hardware is
-    absent and ``allow_replacement`` is true, the sole remaining compatible
-    stick is accepted so a replacement RX11 can be used without reconfiguration.
+    absent and ``allow_replacement`` is true, one remaining compatible stick is
+    accepted. Several candidates are ordered by serial number, then path, so the
+    same replacement is chosen on every scan.
     """
     if ports is None:
         try:
@@ -147,14 +148,30 @@ def resolve_gateway_port(
                 continue
             return port.device
 
-    if allow_replacement and len(matched) == 1:
-        if usb_serial or device_path:
+    if allow_replacement and matched and (usb_serial or device_path):
+        chosen = min(
+            matched,
+            key=lambda port: (
+                port.serial_number is None,
+                port.serial_number or "",
+                port.device or "",
+            ),
+        )
+        if len(matched) == 1:
             _LOGGER.warning(
                 "Configured RX11 %s is unavailable; using the only other compatible stick on %s",
                 usb_serial or device_path,
-                matched[0].device,
+                chosen.device,
             )
-        return matched[0].device
+        else:
+            _LOGGER.warning(
+                "Configured RX11 %s is unavailable; %s compatible sticks are present, using %s (serial %s)",
+                usb_serial or device_path,
+                len(matched),
+                chosen.device,
+                chosen.serial_number,
+            )
+        return chosen.device
 
     return None
 
@@ -220,6 +237,15 @@ class RX11Transceiver:
     def fw_version(self) -> str | None:
         """Return the firmware version reported by the transceiver."""
         return self._gateway.fw_version
+
+    def adopt_connected_identity(self) -> None:
+        """Remember the stick that connected, including a replacement RX11."""
+        serial = self.usb_serial_number
+        if isinstance(serial, str) and (normalized := normalized_usb_serial(serial)):
+            self._usb_serial = normalized
+        path = self.device_path
+        if isinstance(path, str) and path:
+            self._configured_path = path
 
     def set_disconnect_callback(self, callback: Callable[[], None] | None) -> None:
         """Register a callback for connection loss."""
