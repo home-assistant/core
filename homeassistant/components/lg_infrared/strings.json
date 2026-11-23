@@ -24,6 +24,16 @@
         "description": "Select an infrared emitter and the modes your LG AC supports.",
         "title": "Set up LG AC"
       },
+      "home_theater": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select an infrared emitter to use with your LG Home Theater.",
+        "title": "Set up LG Home Theater"
+      },
       "reconfigure": {
         "data": {
           "hvac_modes": "[%key:component::lg_infrared::config::step::ac::data::hvac_modes%]",
@@ -54,6 +64,7 @@
         "description": "Select the type of LG device to set up.",
         "menu_options": {
           "ac": "Air conditioner",
+          "home_theater": "Home theater",
           "tv": "[%key:common::generic::tv%]"
         },
         "title": "Set up LG IR Remote"
@@ -65,14 +76,29 @@
       "ai_convertible": {
         "name": "AI mode"
       },
+      "asterisk": {
+        "name": "Asterisk"
+      },
       "audio": {
         "name": "Toggle beep"
+      },
+      "audio_track": {
+        "name": "Audio track"
       },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
       },
+      "blue": {
+        "name": "Blue"
+      },
+      "clear": {
+        "name": "Clear"
+      },
       "diagnose": {
         "name": "Diagnose"
+      },
+      "disc_menu": {
+        "name": "Disc menu"
       },
       "down": {
         "name": "[%key:common::entity::button::down::name%]"
@@ -82,6 +108,12 @@
       },
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
+      },
+      "fast_forward": {
+        "name": "Fast forward"
+      },
+      "green": {
+        "name": "Green"
       },
       "guide": {
         "name": "[%key:common::entity::button::guide::name%]"
@@ -152,6 +184,12 @@
       "ok": {
         "name": "[%key:common::entity::button::ok::name%]"
       },
+      "open_close": {
+        "name": "Open/close"
+      },
+      "optical_tv_sound": {
+        "name": "Optical/TV sound"
+      },
       "power": {
         "name": "[%key:common::entity::button::power::name%]"
       },
@@ -161,11 +199,38 @@
       "power_on": {
         "name": "[%key:common::entity::button::power_on::name%]"
       },
+      "record": {
+        "name": "Record"
+      },
+      "red": {
+        "name": "Red"
+      },
+      "repeat": {
+        "name": "Repeat"
+      },
+      "rewind": {
+        "name": "Rewind"
+      },
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
       },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "sound_effect": {
+        "name": "Sound effect"
+      },
+      "speaker_level": {
+        "name": "Speaker level"
+      },
+      "subtitle": {
+        "name": "Subtitle"
+      },
       "swing_v_toggle": {
         "name": "Toggle vertical swing"
+      },
+      "title_popup": {
+        "name": "Title/popup"
       },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
@@ -175,6 +240,9 @@
       },
       "wifi": {
         "name": "Start Wi-Fi pairing"
+      },
+      "yellow": {
+        "name": "Yellow"
       }
     },
     "climate": {

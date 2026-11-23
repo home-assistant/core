@@ -10,12 +10,7 @@ import probatio
 from pysqueezebox import Server, async_discover
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -29,6 +24,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import SqueezeboxConfigEntry
 from .const import (
     CONF_BROWSE_LIMIT,
     CONF_HTTPS,
@@ -85,7 +81,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: SqueezeboxConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 

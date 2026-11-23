@@ -164,6 +164,12 @@
     },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
+    },
+    "no_floodlight": {
+      "message": "{device_type} <{device_name}> does not have a floodlight."
+    },
+    "persons_not_registered": {
+      "message": "Person(s) not registered: {persons}."
     }
   },
   "issues": {

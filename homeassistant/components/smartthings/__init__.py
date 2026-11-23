@@ -1,9 +1,11 @@
 """Support for SmartThings Cloud."""
 
+import asyncio
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -41,7 +43,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestBaseError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -49,7 +55,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import Undefined
 
 from .const import (
     BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES,
@@ -65,6 +72,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+TOKEN_CHECK_INTERVAL = timedelta(minutes=1)
+
 
 def format_zigbee_address(address: str) -> str:
     """Format a zigbee address to be more readable."""
@@ -79,6 +88,7 @@ class SmartThingsData:
     scenes: dict[str, Scene]
     rooms: dict[str, str]
     client: SmartThings
+    subscription_task: asyncio.Task[None]
 
 
 @dataclass
@@ -139,6 +149,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
+    refresh_failing = False
+
+    # The event stream makes no requests, so nothing else refreshes the token,
+    # and SmartThings stops delivering events once it has expired.
+    async def _async_keep_token_valid(_: datetime) -> None:
+        nonlocal refresh_failing
+        try:
+            await session.async_ensure_token_valid()
+        except (OAuth2TokenRequestBaseError, TimeoutError) as err:
+            if not refresh_failing:
+                _LOGGER.warning("Error refreshing the token: %s", err)
+            refresh_failing = True
+        else:
+            refresh_failing = False
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_keep_token_valid, TOKEN_CHECK_INTERVAL)
+    )
+
     def _handle_max_connections() -> None:
         _LOGGER.debug(
             "We hit the limit of max connections or we could"
@@ -179,7 +208,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     try:
         subscription = await client.create_subscription(
             entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         raise ConfigEntryNotReady(
@@ -190,15 +218,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
-    entry.async_create_background_task(
+    subscription_task = entry.async_create_background_task(
         hass,
         client.subscribe(
             entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
             subscription,
         ),
         "smartthings_socket",
     )
+    # The task is kept for unload, so asyncio would only report its error then
+    subscription_task.add_done_callback(_log_subscription_error)
 
     device_status: dict[str, FullDevice] = {}
     try:
@@ -266,6 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         client=client,
         scenes=scenes,
         rooms=rooms,
+        subscription_task=subscription_task,
     )
 
     # Events are deprecated and will be removed in 2025.10
@@ -293,7 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     async def _handle_shutdown(_: Event) -> None:
         """Handle shutdown."""
-        await client.delete_subscription(subscription_id)
+        await _async_release_subscription(entry, client, subscription_task)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_shutdown)
@@ -320,14 +350,36 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SmartThingsConfigEntry
 ) -> None:
     """Unload a config entry."""
-    client = entry.runtime_data.client
-    if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        with contextlib.suppress(SmartThingsConnectionError):
-            await client.delete_subscription(subscription_id)
+    await _async_release_subscription(
+        entry, entry.runtime_data.client, entry.runtime_data.subscription_task
+    )
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _log_subscription_error(task: asyncio.Task[None]) -> None:
+    """Log why the event stream ended."""
+    if not task.cancelled() and (err := task.exception()) is not None:
+        _LOGGER.error("SmartThings event stream ended: %s", err, exc_info=err)
+
+
+async def _async_release_subscription(
+    entry: SmartThingsConfigEntry, client: SmartThings, task: asyncio.Task[None]
+) -> None:
+    """Stop the event stream, then delete its current subscription."""
+    # The stream creates a new subscription when its current one is deleted
+    if not task.done():
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    # Reconnects replace the subscription, so the one from the setup may be gone
+    if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        with contextlib.suppress(SmartThingsConnectionError):
+            await client.delete_subscription(subscription_id)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry
+) -> None:
     """Handle config entry migration."""
 
     if entry.version < 3:
@@ -541,7 +593,7 @@ def create_devices(
             connections = {(dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))}
             if (
                 device.device.device_manufacturer_code
-                and device_info.manufacturer is UNDEFINED
+                and device_info.manufacturer is Undefined
             ):
                 device_info.manufacturer = device.device.device_manufacturer_code
         if (matter := device.device.matter) is not None:
@@ -557,7 +609,7 @@ def create_devices(
                 device_info.serial_number = cast(
                     str | None, device_identification[Attribute.SERIAL_NUMBER].value
                 )
-                if device_info.model_id is UNDEFINED:
+                if device_info.model_id is Undefined:
                     device_info.model_id = cast(
                         str | None, device_identification[Attribute.MODEL_NAME].value
                     )

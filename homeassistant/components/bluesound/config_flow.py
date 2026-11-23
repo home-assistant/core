@@ -1,7 +1,7 @@
 """Config flow for bluesound."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 from pyblu import Player, SyncStatus
@@ -114,8 +114,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the zeroconf setup."""
-        assert self._sync_status is not None
-        assert self._host is not None
+        if TYPE_CHECKING:
+            assert self._sync_status is not None
+            assert self._host is not None
 
         if user_input is not None:
             return self.async_create_entry(

@@ -1,0 +1,38 @@
+{
+  "cityName": "Antwerp",
+  "country": "BE",
+  "obs": {
+    "temp": 25,
+    "timestamp": "2025-06-18T18:40:00+02:00",
+    "ww": 0,
+    "dayNight": "d"
+  },
+  "for": {
+    "daily": [],
+    "hourly": [],
+    "showWarningTab": true,
+    "warning": [
+      {
+        "icon_country": "BE",
+        "warningType": {
+          "id": "10",
+          "name": {
+            "fr": "Chaleur",
+            "nl": "Hitte",
+            "en": "Heat",
+            "de": "Hitze"
+          }
+        },
+        "warningLevel": "1",
+        "text": {
+          "fr": "Les températures maximales atteindront ou dépasseront les 25 degrés dans de nombreux endroits, excepté au littoral et sur le relief ardennais. De vendredi à dimanche, elles oscilleront même autour de 30 degrés ou les dépasseront dans certaines régions.",
+          "nl": "Op veel plaatsen klimmen de maxima naar 25 graden of meer, behalve in de Kuststreek en op het Ardense reliëf. Vanaf vrijdag tot en met zondag schommelen de maxima zelfs rond 30 graden of meer op sommige plaatsen.",
+          "en": "By such temperatures, measures should be taken to protect older and weaker persons by giving them more often to drink and to not let them stand or sit in direct sunlight. Be careful.",
+          "de": "Bei solchen Temperaturwerten können Maßnahmen zum Schutz älterer und schwächerer Menschen ergriffen werden durch: mehr trinken, keinem direkten Sonnenlicht aussetzen. Seien Sie vorsichtig."
+        },
+        "fromTimestamp": "2025-06-18T00:00:00+02:00",
+        "toTimestamp": "2025-06-23T00:00:00+02:00"
+      }
+    ]
+  }
+}

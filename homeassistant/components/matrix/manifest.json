@@ -3,6 +3,7 @@
   "name": "Matrix",
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@PaarthShah"],
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],

@@ -156,6 +156,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         data: dict[str, Any] = {
             ClimateEntityCapabilityAttribute.HVAC_MODES: self.hvac_modes,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+                hass.config.units.temperature_unit
+            ),
             ClimateEntityCapabilityAttribute.MIN_TEMP: show_temp(
                 hass, self.min_temp, native_temperature_unit, precision
             ),
@@ -210,9 +213,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.native_current_temperature,
                 native_temperature_unit,
                 precision,
-            ),
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
-                hass.config.units.temperature_unit
             ),
         }
 
@@ -719,7 +719,7 @@ class ClimateExtraStoredData(ExtraStoredData):
                 ClimateEntityStateAttribute.TARGET_TEMP_LOW
             ),
             native_temperature_unit=attributes.get(
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT, default_unit
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT, default_unit
             ),
         )
 

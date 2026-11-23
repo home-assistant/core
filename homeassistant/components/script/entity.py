@@ -12,7 +12,6 @@ from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_DESCRIPTION,
@@ -39,8 +38,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
-    ATTR_CUR,
-    ATTR_MAX,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
@@ -54,13 +51,12 @@ from homeassistant.util.dt import parse_datetime
 
 from .config import ValidationStatus
 from .const import (
-    ATTR_LAST_ACTION,
-    ATTR_LAST_TRIGGERED,
     CONF_FIELDS,
     CONF_TRACE,
     DOMAIN,
     ENTITY_ID_FORMAT,
     EVENT_SCRIPT_STARTED,
+    ScriptEntityStateAttribute,
 )
 from .trace import trace_script
 
@@ -71,7 +67,13 @@ class BaseScriptEntity(ToggleEntity, ABC):
     """Base class for script entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, ATTR_LAST_ACTION}
+        {
+            ScriptEntityStateAttribute.LAST_TRIGGERED,
+            ScriptEntityStateAttribute.MODE,
+            ScriptEntityStateAttribute.CURRENT,
+            ScriptEntityStateAttribute.MAX,
+            ScriptEntityStateAttribute.LAST_ACTION,
+        }
     )
 
     raw_config: ConfigType | None
@@ -276,15 +278,15 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         script = self.script
-        attrs = {
-            ATTR_LAST_TRIGGERED: script.last_triggered,
-            ATTR_MODE: script.script_mode,
-            ATTR_CUR: script.runs,
+        attrs: dict[str, Any] = {
+            ScriptEntityStateAttribute.LAST_TRIGGERED: script.last_triggered,
+            ScriptEntityStateAttribute.MODE: script.script_mode,
+            ScriptEntityStateAttribute.CURRENT: script.runs,
         }
         if script.supports_max:
-            attrs[ATTR_MAX] = script.max_runs
+            attrs[ScriptEntityStateAttribute.MAX] = script.max_runs
         if script.last_action:
-            attrs[ATTR_LAST_ACTION] = script.last_action
+            attrs[ScriptEntityStateAttribute.LAST_ACTION] = script.last_action
         return attrs
 
     @property
@@ -456,7 +458,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
 
         if (state := await self.async_get_last_state()) and (
-            last_triggered := state.attributes.get("last_triggered")
+            last_triggered := state.attributes.get(
+                ScriptEntityStateAttribute.LAST_TRIGGERED
+            )
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
 

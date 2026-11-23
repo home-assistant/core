@@ -4,12 +4,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -35,6 +30,7 @@ from .const import (
     NAME,
     SCHOOLS,
 )
+from .coordinator import IslamicPrayerTimesConfigEntry
 
 
 class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -47,7 +43,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IslamicPrayerTimesConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler()

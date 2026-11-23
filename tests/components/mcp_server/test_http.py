@@ -339,6 +339,7 @@ async def test_options_flow_closes_sessions(
     assert "Could not find session ID" in response_data
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("method", "path"),
     [
@@ -354,17 +355,31 @@ async def test_options_flow_closes_sessions(
 )
 async def test_http_requires_authentication(
     hass: HomeAssistant,
-    setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
     path: str,
 ) -> None:
-    """Test every MCP endpoint requires authentication."""
-
+    """Test every MCP endpoint requires authentication and advertises RFC9728 metadata."""
+    assert await async_setup_component(hass, "auth", {})
     client = await hass_client_no_auth()
+    base_url = f"http://{client.host}:{client.port}"
+    hass.config.internal_url = base_url
 
     response = await client.request(method, path)
     assert response.status == HTTPStatus.UNAUTHORIZED
+    expected_metadata_url = f"{base_url}/.well-known/oauth-protected-resource{path}"
+    assert (
+        response.headers["WWW-Authenticate"]
+        == f'Bearer resource_metadata="{expected_metadata_url}"'
+    )
+
+    metadata_response = await client.get(f"/.well-known/oauth-protected-resource{path}")
+    assert metadata_response.status == HTTPStatus.OK
+    assert await metadata_response.json() == {
+        "resource": str(client.make_url(path)),
+        "authorization_servers": [base_url],
+        "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
+    }
 
 
 @pytest.fixture(params=["sse", "streamable"])
@@ -447,7 +462,9 @@ async def test_server_icons(
         client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
     )
     base_url = str(URL(mcp_url).origin())
-    hass.config.internal_url = base_url
+    # The icon URL follows the origin of the request, not the configured URLs
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://example.com"
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         assert session.server_info is not None

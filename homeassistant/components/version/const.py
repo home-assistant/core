@@ -25,7 +25,6 @@ CONF_IMAGE: Final = "image"
 CONF_VERSION_SOURCE: Final = "version_source"
 
 ATTR_CHANNEL: Final = CONF_CHANNEL
-ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE
 ATTR_SOURCE: Final = CONF_SOURCE
 
 SOURCE_DOCKER: Final = "docker"  # Kept to not break existing configurations

@@ -3,6 +3,7 @@
   "name": "Garadget",
   "categories": ["blinds_curtains"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/garadget",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy"

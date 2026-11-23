@@ -14,9 +14,10 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@sairon"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/rapt_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["rapt-ble==2.0.0"]
+  "requirements": ["rapt-ble==2.0.1"]
 }

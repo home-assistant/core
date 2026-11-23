@@ -40,9 +40,6 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
-    "device_not_found": {
-      "message": "Device {device_id} not found"
-    },
     "failed_to_discover_devices": {
       "message": "Failed to discover devices"
     },

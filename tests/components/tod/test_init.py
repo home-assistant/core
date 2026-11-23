@@ -3,6 +3,7 @@
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
 from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -38,8 +39,12 @@ async def test_setup_and_remove_config_entry(
     # Check the state of the entity is as expected
     state = hass.states.get("binary_sensor.my_tod")
     assert state.state == "off"
-    assert state.attributes["after"] == "2022-03-16T10:00:00-07:00"
-    assert state.attributes["before"] == "2022-03-16T18:05:00-07:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2022-03-16T10:00:00-07:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2022-03-16T18:05:00-07:00"
+    )
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)

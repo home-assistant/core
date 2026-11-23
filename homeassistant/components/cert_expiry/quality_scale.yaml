@@ -55,7 +55,7 @@ rules:
     comment: Consider creating a mock_config_entry fixture and use that throughout tests.
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: todo
   discovery-update-info: todo
   docs-data-update: todo
@@ -84,4 +84,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done
