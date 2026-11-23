@@ -50,7 +50,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 ## Good practices
 
 - Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
-- Changing the `quality_scale` level in an integration's manifest.json must be done in its own PR, not combined with the changes that implement the rules.
+- Keep quality scale changes in separate PRs. Marking one rule `done` comes only with that rule's code and tests. Marking several rules `done`, adding `quality_scale.yaml` to an existing integration, or changing the tier in manifest.json comes with no code or test changes besides the hassfest lists. A new `quality_scale.yaml` does not set the tier, and a tier change, which re-reviews every rule of the tier, preferably changes no rule status. Do not ask for the tier change when the last rule is done.
 - When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
 - When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
 - Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all.
