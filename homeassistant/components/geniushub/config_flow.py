@@ -154,6 +154,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if CONF_TOKEN in reauth_entry.data:
             if user_input is not None:
+                self._async_abort_entries_match(user_input)
                 errors = await self._async_validate_cloud(user_input[CONF_TOKEN])
                 if not errors:
                     return self.async_update_reload_and_abort(

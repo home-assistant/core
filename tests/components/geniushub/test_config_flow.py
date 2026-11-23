@@ -357,6 +357,27 @@ async def test_local_reauth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_geniushub_client")
+async def test_cloud_reauth_token_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_cloud_config_entry: MockConfigEntry,
+) -> None:
+    """Test cloud reauthentication aborts for a token of another entry."""
+    mock_cloud_config_entry.add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data={CONF_TOKEN: "other-token"}).add_to_hass(hass)
+    result = await mock_cloud_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: "other-token"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_cloud_config_entry.data == {CONF_TOKEN: "abcdef"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_local_reauth_wrong_account(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
