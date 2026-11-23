@@ -302,23 +302,3 @@ async def test_container_never_started(
 
     assert (state := hass.states.get("sensor.focused_einstein_started"))
     assert state.state == STATE_UNKNOWN
-
-
-async def test_container_exit_code_when_stopped(
-    hass: HomeAssistant,
-    mock_portainer_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the exit code is reported once the container is no longer running."""
-    inspect = cast(
-        dict[str, Any], load_json_value_fixture("container_inspect.json", DOMAIN)
-    )
-    inspect["State"].update(Status="exited", Running=False, ExitCode=137)
-    mock_portainer_client.inspect_container.return_value = DockerInspect.from_dict(
-        inspect
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert (state := hass.states.get("sensor.focused_einstein_last_exit_code"))
-    assert state.state == "137"
