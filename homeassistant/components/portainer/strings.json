@@ -246,6 +246,9 @@
         "name": "Containers",
         "unit_of_measurement": "containers"
       },
+      "stack_last_deployed": {
+        "name": "Last deployed"
+      },
       "stack_type": {
         "name": "Type",
         "state": {
