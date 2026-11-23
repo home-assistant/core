@@ -38,7 +38,9 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: data.networking.mqtt_connected,
+        value_fn=lambda data: (
+            data.networking.mqtt_connected if data.networking else None
+        ),
         translation_key="mqtt_connected",
         key="mqtt_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -46,7 +48,9 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: data.networking.wifi_connected,
+        value_fn=lambda data: (
+            data.networking.wifi_connected if data.networking else None
+        ),
         translation_key="wifi_connected",
         key="wifi_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
