@@ -2,7 +2,7 @@
 
 from hashlib import sha256
 from types import MappingProxyType
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import OnectaConnectionError, Site
 import pytest
@@ -60,10 +60,16 @@ async def test_diagnostics(
         ]
     )
 
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    )
-    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    with patch(
+        "homeassistant.components.daikin_onecta.diagnostics.secrets.token_bytes",
+        side_effect=[b"first diagnostic salt", b"second diagnostic salt"],
+    ):
+        diagnostics = await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+        second_diagnostics = await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
 
     assert diagnostics["config_entry"]["data"]["token"] == REDACTED
     assert diagnostics["config_entry"]["title"] == REDACTED
@@ -80,9 +86,15 @@ async def test_diagnostics(
     assert diagnostics["sites"]["data"][0]["name"] == REDACTED
     gateway_id = next(iter(coordinator.data))
     assert diagnostics["sites"]["gateway_membership"][0] == {
-        "gateway_id_hash": sha256(gateway_id.encode()).hexdigest()[:8],
+        "gateway_id_hash": sha256(
+            b"first diagnostic salt" + gateway_id.encode()
+        ).hexdigest()[:8],
         "linked_to_site": True,
     }
+    assert (
+        diagnostics["sites"]["gateway_membership"][0]["gateway_id_hash"]
+        != second_diagnostics["sites"]["gateway_membership"][0]["gateway_id_hash"]
+    )
     assert gateway_id not in repr(diagnostics["sites"])
     coordinator.client.get_sites.assert_awaited_once_with()
     coordinator.client.get_gateway_devices.assert_not_awaited()

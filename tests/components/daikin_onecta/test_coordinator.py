@@ -777,6 +777,25 @@ class TestOnectaDataUpdateCoordinator:
         assert caplog.text.count("Daikin polling rate-limit backoff ended") == 1
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    def test_restarting_polling_backoff_does_not_log_it_ended(
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """A new rate limit replaces an expired deadline without an end log."""
+        caplog.set_level(logging.INFO)
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+
+        coordinator._set_polling_backoff(60)
+        mock_utcnow.return_value = now + timedelta(seconds=61)
+        coordinator._set_polling_backoff(60)
+
+        assert caplog.text.count("Daikin rate-limited cloud requests") == 2
+        assert "Daikin polling rate-limit backoff ended" not in caplog.text
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     def test_polling_backoff_remaining_rounds_up_fractional_seconds(
         self,
         mock_utcnow: MagicMock,

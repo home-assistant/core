@@ -332,8 +332,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Retain Daikin's Retry-After deadline for every later refresh."""
         if retry_after is None or retry_after <= 0:
             return
-        was_active = self._polling_backoff_remaining() is not None
-        retry_at = dt_util.utcnow() + timedelta(seconds=retry_after)
+        now = dt_util.utcnow()
+        was_active = (
+            self._polling_backoff_until is not None
+            and self._polling_backoff_until > now
+        )
+        retry_at = now + timedelta(seconds=retry_after)
         if (
             self._polling_backoff_until is None
             or retry_at > self._polling_backoff_until

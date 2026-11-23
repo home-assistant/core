@@ -16,8 +16,8 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 
 SELECT_DESCRIPTIONS = {
@@ -49,27 +49,23 @@ def _create_schedule_selects(
     is_known: EntityIdChecker,
 ) -> list[DaikinScheduleSelect]:
     """Create schedule selects from the current cloud model."""
-    sensors: list[DaikinScheduleSelect] = []
-    for device in present_devices(coordinator):
-        sensors.extend(
-            DaikinScheduleSelect(
-                device,
-                coordinator,
-                management_point.embedded_id,
-                SELECT_DESCRIPTIONS["schedule"],
-                "schedule",
-            )
-            for management_point in device.device.management_points
-            if management_point.schedule_state is not None
-            and not is_known(
-                Platform.SELECT,
-                management_point_unique_id(
-                    device.id, management_point.embedded_id, "schedule"
-                ),
-            )
+    return [
+        DaikinScheduleSelect(
+            device,
+            coordinator,
+            management_point.embedded_id,
+            SELECT_DESCRIPTIONS["schedule"],
+            "schedule",
         )
-
-    return sensors
+        for device, management_point in iter_management_points(coordinator)
+        if management_point.schedule_state is not None
+        and not is_known(
+            Platform.SELECT,
+            management_point_unique_id(
+                device.id, management_point.embedded_id, "schedule"
+            ),
+        )
+    ]
 
 
 class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
@@ -90,11 +86,16 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             self._device_id, self._embedded_id, self._value
         )
         self.entity_description = description
+        self._cached_schedule_options: list[tuple[str, str]] = []
         self.update_state()
 
     @override
     def update_state(self) -> None:
         """Refresh the available and selected schedule options."""
+        selection = self.selection()
+        self._cached_schedule_options = (
+            self._schedule_options(selection) if selection is not None else []
+        )
         self._attr_options = self.get_options()
         self._attr_current_option = self.get_current_option()
 
@@ -135,7 +136,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         return next(
             (
                 label
-                for label, schedule_id in self._schedule_options(selection)
+                for label, schedule_id in self._cached_schedule_options
                 if schedule_id == selection.selected
             ),
             None,
@@ -158,7 +159,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             selected_schedule_id = next(
                 (
                     schedule_id
-                    for label, schedule_id in self._schedule_options(selection)
+                    for label, schedule_id in self._cached_schedule_options
                     if label == option
                 ),
                 None,
@@ -199,7 +200,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             not selection.enabled and not selection.enabled_settable
         ):
             return []
-        schedule_options = self._schedule_options(selection)
+        schedule_options = self._cached_schedule_options
         if not self._selection_is_settable(selection):
             schedule_options = [
                 (label, schedule_id)

@@ -15,13 +15,22 @@ from .const import (
 )
 
 
-def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
-    """Return whether the air-purifier power characteristic is writable."""
+def has_air_purifier_power(point: ManagementPoint | None) -> bool:
+    """Return whether the management point exposes air-purifier power."""
     if point is None or point.management_point_type != "climateControl":
         return False
     air_purification = point.air_purification
-    return bool(
-        air_purification is not None
+    return air_purification is not None and air_purification.power is not None
+
+
+def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
+    """Return whether the air-purifier power characteristic is writable."""
+    if point is None:
+        return False
+    air_purification = point.air_purification
+    return (
+        point.management_point_type == "climateControl"
+        and air_purification is not None
         and air_purification.power is not None
         and air_purification.power.settable
     )
@@ -64,7 +73,7 @@ def scalar_platform_for_point(
         and point.management_point_type == "climateControl"
         and (
             not gateway_online
-            or (has_air_purifier_power_control(point) and not has_climate_entity(point))
+            or (has_air_purifier_power(point) and not has_climate_entity(point))
         )
     ):
         return None

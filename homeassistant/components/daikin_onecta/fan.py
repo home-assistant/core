@@ -17,7 +17,11 @@ from homeassistant.util.percentage import (
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import has_air_purifier_power_control, has_climate_entity
+from .discovery import (
+    has_air_purifier_power,
+    has_air_purifier_power_control,
+    has_climate_entity,
+)
 from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
@@ -58,7 +62,7 @@ def _create_air_purifiers(
             for management_point in device.device.management_points_by_type(
                 "climateControl"
             )
-            if has_air_purifier_power_control(management_point)
+            if has_air_purifier_power(management_point)
             and not has_climate_entity(management_point)
             and not is_known(
                 Platform.FAN,

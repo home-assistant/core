@@ -264,7 +264,7 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Expose purifier mode only when its fan entity cannot control power."""
+    """Keep purifier controls on their stable platforms when power is read-only."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
     device = next(iter(coordinator.data.values()))
@@ -310,13 +310,14 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
     mock_onecta_client.get_gateway_devices.return_value = read_only_devices
     await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    mode_sensor_entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+        )
+        is None
     )
-    assert mode_sensor_entity_id is not None
-    mode_sensor_state = hass.states.get(mode_sensor_entity_id)
-    assert mode_sensor_state is not None
-    assert mode_sensor_state.state != STATE_UNAVAILABLE
+    fan_state = hass.states.get(fan_entity_id)
+    assert fan_state is not None and fan_state.state == STATE_UNAVAILABLE
 
     mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("mc80z")
     await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -325,11 +326,62 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
         entity_registry.async_get_entity_id(
             Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
         )
-        == mode_sensor_entity_id
+        is None
     )
-    mode_sensor_state = hass.states.get(mode_sensor_entity_id)
+    fan_state = hass.states.get(fan_entity_id)
+    assert fan_state is not None and fan_state.state != STATE_UNAVAILABLE
+
+
+async def test_read_only_air_purifier_keeps_fan_ownership_stable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Create the fan even when power is initially read-only."""
+    read_only_devices = deepcopy(_load_gateway_devices("mc80z"))
+    gateway = read_only_devices[0]
+    point = gateway.management_points_by_type("climateControl")[0]
+    assert point.air_purification is not None
+    assert point.air_purification.power is not None
+    point.air_purification.power.settable = False
+
+    await _async_setup_fixture(
+        hass,
+        config_entry,
+        "mc80z",
+        gateway_devices=read_only_devices,
+    )
+
+    coordinator = config_entry.runtime_data
+    fan_unique_id = f"{gateway.id}_{point.embedded_id}_air_purifier"
+    mode_unique_id = f"{gateway.id}_{point.embedded_id}_airPurificationMode"
+    fan_entity_id = entity_registry.async_get_entity_id(
+        Platform.FAN.value, DOMAIN, fan_unique_id
+    )
+    assert fan_entity_id is not None
+    fan_state = hass.states.get(fan_entity_id)
+    assert fan_state is not None and fan_state.state == STATE_UNAVAILABLE
     assert (
-        mode_sensor_state is not None and mode_sensor_state.state == STATE_UNAVAILABLE
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_unique_id
+        )
+        is None
+    )
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("mc80z")
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.FAN.value, DOMAIN, fan_unique_id)
+        == fan_entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_unique_id
+        )
+        is None
     )
     fan_state = hass.states.get(fan_entity_id)
     assert fan_state is not None and fan_state.state != STATE_UNAVAILABLE

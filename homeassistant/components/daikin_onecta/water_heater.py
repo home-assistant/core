@@ -23,8 +23,8 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 from .utils import (
     round_temperature_to_step,
@@ -56,18 +56,15 @@ def _create_water_tanks(
     is_known: EntityIdChecker,
 ) -> list[DaikinWaterTank]:
     """Create water heaters for management points with typed tank data."""
-    entities: list[DaikinWaterTank] = []
-    for device in present_devices(coordinator):
-        entities.extend(
-            DaikinWaterTank(device, coordinator, management_point.embedded_id)
-            for management_point in device.device.management_points
-            if management_point.domestic_hot_water is not None
-            and not is_known(
-                Platform.WATER_HEATER,
-                management_point_unique_id(device.id, management_point.embedded_id),
-            )
+    return [
+        DaikinWaterTank(device, coordinator, management_point.embedded_id)
+        for device, management_point in iter_management_points(coordinator)
+        if management_point.domestic_hot_water is not None
+        and not is_known(
+            Platform.WATER_HEATER,
+            management_point_unique_id(device.id, management_point.embedded_id),
         )
-    return entities
+    ]
 
 
 class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):

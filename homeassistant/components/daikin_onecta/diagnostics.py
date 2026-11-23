@@ -1,6 +1,7 @@
 """Diagnostics support for Daikin Onecta."""
 
 from hashlib import sha256
+import secrets
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -55,11 +56,14 @@ async def async_get_config_entry_diagnostics(
             }
         }
     else:
+        salt = secrets.token_bytes(16)
         site_diagnostics = {
             "data": [site.to_dict() for site in site_lookup.sites],
             "gateway_membership": [
                 {
-                    "gateway_id_hash": sha256(device.id.encode()).hexdigest()[:8],
+                    "gateway_id_hash": sha256(salt + device.id.encode()).hexdigest()[
+                        :8
+                    ],
                     "linked_to_site": site_lookup.gateway_membership(device.id),
                 }
                 for device in (coordinator.data or {}).values()

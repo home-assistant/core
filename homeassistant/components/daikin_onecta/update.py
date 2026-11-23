@@ -23,8 +23,8 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
+    iter_management_points,
     management_point_unique_id,
-    present_devices,
 )
 
 PARALLEL_UPDATES = 1
@@ -69,8 +69,7 @@ def _create_firmware_entities(
             device,
             management_point,
         )
-        for device in present_devices(coordinator)
-        for management_point in device.device.management_points
+        for device, management_point in iter_management_points(coordinator)
         if management_point.firmware is not None
         and not is_known(
             Platform.UPDATE,
