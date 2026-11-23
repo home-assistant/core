@@ -4,6 +4,7 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -15,12 +16,13 @@ from .const import (
 )
 from .coordinator import WazeTravelTimeConfigEntry
 
-# Street filters are often streets near home or work, so they can reveal them.
+# The name and the street filters often point to home or work.
 TO_REDACT = {
     CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
+    CONF_NAME,
     CONF_ORIGIN,
 }
 

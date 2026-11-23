@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[filters_and_base_coordinates]
+# name: test_diagnostics[name_filters_and_base_coordinates]
   dict({
     'coordinator_data': dict({
       'destination': '**REDACTED**',
@@ -10,6 +10,7 @@
     }),
     'data': dict({
       'destination': '**REDACTED**',
+      'name': '**REDACTED**',
       'origin': '**REDACTED**',
       'region': 'US',
     }),

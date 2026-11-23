@@ -11,7 +11,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_INCL_FILTER,
     DEFAULT_OPTIONS,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
@@ -21,14 +21,14 @@ from .const import MOCK_CONFIG
     ("data", "options"),
     [
         pytest.param(
-            MOCK_CONFIG,
+            {**MOCK_CONFIG, CONF_NAME: "Home to work"},
             {
                 **DEFAULT_OPTIONS,
                 CONF_INCL_FILTER: ["IncludeThis"],
                 CONF_EXCL_FILTER: ["ExcludeThis"],
                 CONF_BASE_COORDINATES: {CONF_LATITUDE: 52.52, CONF_LONGITUDE: 13.4},
             },
-            id="filters_and_base_coordinates",
+            id="name_filters_and_base_coordinates",
         )
     ],
 )
