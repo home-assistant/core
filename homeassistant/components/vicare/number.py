@@ -7,7 +7,6 @@ import logging
 from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -353,9 +352,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                device.serial,
-                device.config,
-                device.api,
+                device,
             )
             for description in DEVICE_ENTITY_DESCRIPTIONS
             if is_supported(description.key, description.value_getter, device.api)
@@ -364,9 +361,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                device.serial,
-                device.config,
-                device.api,
+                device,
                 circuit,
             )
             for circuit in get_circuits(device.api)
@@ -398,15 +393,11 @@ class ViCareNumber(ViCareEntity, NumberEntity):
     def __init__(
         self,
         description: ViCareNumberEntityDescription,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(
-            description.key, device_serial, device_config, device, component
-        )
+        super().__init__(description.key, device, component)
         self.entity_description = description
 
     @property

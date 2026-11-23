@@ -11,7 +11,7 @@ from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.enums import RepositoryCategory
 from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -133,7 +133,7 @@ async def test_switch_turn_on_and_off(hass: HomeAssistant, switch_entity: str) -
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch_entity},
+        {TargetKey.ENTITY_ID: switch_entity},
         blocking=True,
     )
 
@@ -143,7 +143,7 @@ async def test_switch_turn_on_and_off(hass: HomeAssistant, switch_entity: str) -
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: switch_entity},
+        {TargetKey.ENTITY_ID: switch_entity},
         blocking=True,
     )
 
@@ -161,7 +161,7 @@ async def test_switch_keeps_the_last_fetched_time(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch_entity},
+        {TargetKey.ENTITY_ID: switch_entity},
         blocking=True,
     )
 

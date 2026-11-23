@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -60,7 +60,7 @@ async def test_zone_services_update_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
+        {TargetKey.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -72,7 +72,7 @@ async def test_zone_services_update_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
+        {TargetKey.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -108,7 +108,7 @@ async def test_zone_start_failure_does_not_update_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
+            {TargetKey.ENTITY_ID: ZONE_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -139,7 +139,7 @@ async def test_zone_stop_failure_does_not_update_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
+        {TargetKey.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -152,7 +152,7 @@ async def test_zone_stop_failure_does_not_update_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
+            {TargetKey.ENTITY_ID: ZONE_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()

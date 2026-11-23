@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -36,7 +36,7 @@ async def test_cover_async_setup_entry(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -45,7 +45,7 @@ async def test_cover_async_setup_entry(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -62,7 +62,7 @@ async def test_cover_async_setup_entry(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -72,7 +72,7 @@ async def test_cover_async_setup_entry(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -103,7 +103,7 @@ async def test_things_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -112,7 +112,7 @@ async def test_things_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()

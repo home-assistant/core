@@ -12,22 +12,20 @@ from switchbot_api import Device, SwitchBotAPI
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -106,7 +104,10 @@ async def test_turn_on(
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
     ):
         await hass.services.async_call(
-            FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            FAN_DOMAIN,
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called()
 
@@ -150,7 +151,10 @@ async def test_turn_off(
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
     ):
         await hass.services.async_call(
-            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            FAN_DOMAIN,
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called()
 
@@ -195,8 +199,8 @@ async def test_set_percentage(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 5},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 5},
             blocking=True,
         )
     mock_send_command.assert_called()
@@ -239,8 +243,8 @@ async def test_set_preset_mode(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "baby"},
+            FanService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "baby"},
             blocking=True,
         )
     mock_send_command.assert_called_once()
@@ -283,8 +287,8 @@ async def test_power_state(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "baby"},
+            FanService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "baby"},
             blocking=True,
         )
     mock_send_command.assert_called_once()

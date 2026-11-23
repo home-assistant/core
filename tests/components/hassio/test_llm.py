@@ -1,22 +1,18 @@
 """Tests for the Hass.io LLM tools."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonState
+from aiohasupervisor.models import AddonState, LogFormat, LogsOptions, Plugin
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hassio.const import DATA_ADDONS_LIST
-from homeassistant.components.hassio.handler import (
-    KEY_SUPERVISOR_PASSTHROUGH_CLIENT,
-    HassioAPIError,
-)
 from homeassistant.components.hassio.llm import (
     SupervisorGetAppsTool,
     SupervisorGetLogsTool,
@@ -27,23 +23,33 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 LOGS = {
-    "/core/logs": (
+    "core": (
         "2026-10-20 13:55:00.000+02:00 ERROR (MainThread) "
         "[homeassistant.components.mqtt] Disconnected\n"
         "2026-10-20 13:57:00.000+02:00 INFO (MainThread) "
         "[homeassistant.components.mqtt] Connected\n"
     ),
-    "/supervisor/logs": (
+    "supervisor": (
         "2026-10-20 13:56:00.000+02:00 INFO (MainThread) "
         "[supervisor.apps.app] App core_mosquitto restarted\n"
     ),
-    "/host/logs": (
-        "2026-10-20 13:54:00.000+02:00 homeassistant kernel: Out of memory\n"
-    ),
-    "/addons/core_mosquitto/logs": (
+    "host": ("2026-10-20 13:54:00.000+02:00 homeassistant kernel: Out of memory\n"),
+    "app:core_mosquitto": (
         "2026-10-20 13:54:30.000+02:00 homeassistant addon_core_mosquitto[1]: Exiting\n"
     ),
+    "dns": "2026-10-20 13:53:00.000+02:00 homeassistant hassio_dns[1]: Started\n",
 }
+DEFAULT_RANGE = "realtime=1792496700.000000:1792497601:2000"
+
+
+def _stream(text: str) -> AsyncIterator[str]:
+    """Return the lines of a log as the client streams them."""
+
+    async def _lines() -> AsyncIterator[str]:
+        for line in text.splitlines():
+            yield line
+
+    return _lines()
 
 
 @pytest.fixture
@@ -59,18 +65,31 @@ def llm_context() -> llm.LLMContext:
 
 
 @pytest.fixture
-def send_command(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> AsyncMock:
-    """Mock the Supervisor log requests and freeze the time after the logs."""
-
-    async def _send_command(command: str, **kwargs: object) -> str:
-        if command not in LOGS:
-            raise HassioAPIError
-        return LOGS[command]
-
-    mock = AsyncMock(side_effect=_send_command)
-    hass.data[KEY_SUPERVISOR_PASSTHROUGH_CLIENT] = Mock(send_command=mock)
+def supervisor_logs(
+    supervisor_client: AsyncMock, freezer: FrozenDateTimeFactory
+) -> list[AsyncMock]:
+    """Mock the Supervisor logs and freeze the time after them."""
+    supervisor_client.homeassistant.logs.side_effect = lambda options: _stream(
+        LOGS["core"]
+    )
+    supervisor_client.supervisor.logs.side_effect = lambda options: _stream(
+        LOGS["supervisor"]
+    )
+    supervisor_client.host.logs.side_effect = lambda options: _stream(LOGS["host"])
+    supervisor_client.addons.addon_logs.side_effect = lambda addon, options: _stream(
+        LOGS[f"app:{addon}"]
+    )
+    supervisor_client.plugins.logs.side_effect = lambda plugin, options: _stream(
+        LOGS[plugin]
+    )
     freezer.move_to("2026-10-20 12:00:00+00:00")
-    return mock
+    return [
+        supervisor_client.homeassistant.logs,
+        supervisor_client.supervisor.logs,
+        supervisor_client.host.logs,
+        supervisor_client.addons.addon_logs,
+        supervisor_client.plugins.logs,
+    ]
 
 
 def _app(slug: str, name: str) -> Mock:
@@ -102,15 +121,9 @@ async def test_async_get_tools(
 
 
 @pytest.fixture
-def installed_apps(
-    supervisor_client: AsyncMock, addons_list: AsyncMock
-) -> Generator[AsyncMock]:
+def installed_apps(addons_list: AsyncMock) -> AsyncMock:
     """Mock the installed-apps endpoint used by the tool."""
-    with patch(
-        "homeassistant.components.hassio.llm.get_supervisor_client",
-        return_value=supervisor_client,
-    ):
-        yield addons_list
+    return addons_list
 
 
 async def test_get_apps(
@@ -191,10 +204,11 @@ async def test_get_apps_error(
         await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
 
 
+@pytest.mark.usefixtures("supervisor_logs")
 async def test_get_logs_default(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
-    send_command: AsyncMock,
+    supervisor_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the core and Supervisor logs are merged by default."""
@@ -203,16 +217,11 @@ async def test_get_logs_default(
     result = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
 
     assert result == snapshot
-    assert send_command.mock_calls == [
-        call(
-            f"/{source}/logs",
-            method="get",
-            return_text=True,
-            params={"format": "plain", "no_colors": ""},
-            range_header="realtime=1792496700.000000:1792497601:2000",
-        )
-        for source in ("core", "supervisor")
+    expected = [
+        call(LogsOptions(format=LogFormat.PLAIN, no_colors=True, range=DEFAULT_RANGE))
     ]
+    assert supervisor_client.homeassistant.logs.mock_calls == expected
+    assert supervisor_client.supervisor.logs.mock_calls == expected
 
 
 @pytest.mark.parametrize(
@@ -236,10 +245,11 @@ async def test_get_logs_default(
         ),
     ],
 )
+@pytest.mark.usefixtures("supervisor_logs")
 async def test_get_logs_time_window(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
-    send_command: AsyncMock,
+    supervisor_client: AsyncMock,
     tool_args: dict[str, str],
     expected_range: str,
 ) -> None:
@@ -252,11 +262,12 @@ async def test_get_logs_time_window(
         llm_context,
     )
 
-    assert send_command.mock_calls[0].kwargs["range_header"] == expected_range
+    assert supervisor_client.host.logs.mock_calls[0].args[0].range == expected_range
 
 
+@pytest.mark.usefixtures("supervisor_logs")
 async def test_get_logs_host_and_app(
-    hass: HomeAssistant, llm_context: llm.LLMContext, send_command: AsyncMock
+    hass: HomeAssistant, llm_context: llm.LLMContext, supervisor_client: AsyncMock
 ) -> None:
     """Test reading the host and app logs in the verbose format."""
     tool = SupervisorGetLogsTool({"core_mosquitto": "Mosquitto broker"})
@@ -271,19 +282,41 @@ async def test_get_logs_host_and_app(
         "host",
         "app:core_mosquitto",
     ]
-    assert [
-        (command, kwargs["params"]["format"])
-        for _, (command,), kwargs in send_command.mock_calls
-    ] == [
-        ("/host/logs", "verbose"),
-        ("/addons/core_mosquitto/logs", "verbose"),
+    options = LogsOptions(format=LogFormat.VERBOSE, no_colors=True, range=DEFAULT_RANGE)
+    assert supervisor_client.host.logs.mock_calls == [call(options)]
+    assert supervisor_client.addons.addon_logs.mock_calls == [
+        call("core_mosquitto", options)
     ]
 
 
+@pytest.mark.usefixtures("supervisor_logs")
+async def test_get_logs_plugin(
+    hass: HomeAssistant, llm_context: llm.LLMContext, supervisor_client: AsyncMock
+) -> None:
+    """Test a plugin log is read in the verbose format."""
+    tool = SupervisorGetLogsTool({})
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"source": ["dns"]}), llm_context
+    )
+
+    assert [record["message"] for record in result.data["records"]] == [
+        "homeassistant hassio_dns[1]: Started"
+    ]
+    assert supervisor_client.plugins.logs.mock_calls == [
+        call(
+            Plugin.DNS,
+            LogsOptions(format=LogFormat.VERBOSE, no_colors=True, range=DEFAULT_RANGE),
+        )
+    ]
+
+
+@pytest.mark.usefixtures("supervisor_logs")
 async def test_get_logs_source_error(
-    hass: HomeAssistant, llm_context: llm.LLMContext, send_command: AsyncMock
+    hass: HomeAssistant, llm_context: llm.LLMContext, supervisor_client: AsyncMock
 ) -> None:
     """Test a source that cannot be read does not hide the other sources."""
+    supervisor_client.plugins.logs.side_effect = SupervisorError
     tool = SupervisorGetLogsTool({})
 
     result = await tool.async_call(
@@ -310,7 +343,7 @@ async def test_get_logs_source_error(
 async def test_get_logs_invalid_source(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
-    send_command: AsyncMock,
+    supervisor_logs: list[AsyncMock],
     source: list[str],
 ) -> None:
     """Test only available sources are accepted, so no request is sent."""
@@ -321,7 +354,8 @@ async def test_get_logs_invalid_source(
             hass, llm.ToolInput(tool.name, {"source": source}), llm_context
         )
 
-    send_command.assert_not_called()
+    for logs in supervisor_logs:
+        logs.assert_not_called()
 
 
 def _microseconds(time: str) -> int:
@@ -332,36 +366,38 @@ def _microseconds(time: str) -> int:
     ) // timedelta(microseconds=1)
 
 
-def _mock_journal(hass: HomeAssistant, journal: list[tuple[str, str]]) -> None:
+def _mock_journal(supervisor_client: AsyncMock, journal: list[tuple[str, str]]) -> None:
     """Mock the Supervisor with core lines by the time the journal received them."""
 
-    async def _send_command(
-        command: str, *, range_header: str, **kwargs: object
-    ) -> str:
-        start, end, lines = range_header.removeprefix("realtime=").split(":")
-        return "\n".join(
-            [
-                "2026-10-20 {}+02:00 INFO (MainThread) [core] {}".format(
-                    *line.split(" ", 1)
-                )
-                for received, line in journal
-                if int(start.replace(".", ""))
-                <= _microseconds(received)
-                <= int(end) * 1_000_000
-            ][: int(lines)]
+    def _logs(options: LogsOptions) -> AsyncIterator[str]:
+        assert options.range is not None
+        start, end, lines = options.range.removeprefix("realtime=").split(":")
+        return _stream(
+            "\n".join(
+                [
+                    "2026-10-20 {}+02:00 INFO (MainThread) [core] {}".format(
+                        *line.split(" ", 1)
+                    )
+                    for received, line in journal
+                    if int(start.replace(".", ""))
+                    <= _microseconds(received)
+                    <= int(end) * 1_000_000
+                ][: int(lines)]
+            )
         )
 
-    hass.data[KEY_SUPERVISOR_PASSTHROUGH_CLIENT] = Mock(
-        send_command=AsyncMock(side_effect=_send_command)
-    )
+    supervisor_client.homeassistant.logs.side_effect = _logs
 
 
 async def test_get_logs_received_after_end_time(
-    hass: HomeAssistant, llm_context: llm.LLMContext, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    supervisor_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a record at the end time that the journal received later is read."""
     freezer.move_to("2026-10-20 12:00:00+00:00")
-    _mock_journal(hass, [("13:55:00.002", "13:55:00.000 At the end")])
+    _mock_journal(supervisor_client, [("13:55:00.002", "13:55:00.000 At the end")])
     tool = SupervisorGetLogsTool({})
 
     result = await tool.async_call(
@@ -415,13 +451,14 @@ async def test_get_logs_received_after_end_time(
 async def test_get_logs_pages(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
+    supervisor_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     journal: list[tuple[str, str]],
     pages: list[tuple[list[str], str | None]],
 ) -> None:
     """Test following next_start_time returns every record once."""
     freezer.move_to("2026-10-20 12:00:00+00:00")
-    _mock_journal(hass, journal)
+    _mock_journal(supervisor_client, journal)
     tool = SupervisorGetLogsTool({})
     start_time = "2026-10-20T13:45:00+02:00"
 
