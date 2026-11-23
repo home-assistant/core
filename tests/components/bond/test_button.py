@@ -398,7 +398,7 @@ async def test_toggle_power_ignores_assumed_state(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_fan_toggle_power"},
+            {TargetKey.ENTITY_ID: "button.test_fan_toggle_power"},
             blocking=True,
         )
         await hass.async_block_till_done()
