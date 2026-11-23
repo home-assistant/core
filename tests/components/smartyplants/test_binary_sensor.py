@@ -1,6 +1,5 @@
 """Tests for the SmartyPlants binary sensor platform."""
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -9,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.smartyplants.const import DOMAIN, STALE_AFTER
+from homeassistant.components.smartyplants.const import DOMAIN
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -19,12 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import setup_added_entry, setup_integration
 
 ONLINE = "binary_sensor.monstera_connectivity"
-STALE = "binary_sensor.monstera_readings_outdated"
 ATTENTION = "binary_sensor.monstera_needs_attention"
 
 
@@ -44,37 +41,27 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("is_online", "expected"),
+    [
+        pytest.param(True, STATE_ON, id="online"),
+        pytest.param(False, STATE_OFF, id="offline"),
+    ],
+)
 @pytest.mark.usefixtures("mock_smartyplants_client")
-async def test_fresh_sensor_is_connected(
+async def test_connectivity_follows_the_backend(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     sensor_payloads: list[dict[str, Any]],
+    is_online: bool,
+    expected: str,
 ) -> None:
-    """Test a sensor that reported just now reads as connected and current."""
-    sensor_payloads[0]["lastDataReceived"] = dt_util.utcnow().isoformat()
+    """Test connectivity reports what the backend says, as it says it."""
+    sensor_payloads[0]["isOnline"] = is_online
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(ONLINE).state == STATE_ON
-    assert hass.states.get(STALE).state == STATE_OFF
-
-
-@pytest.mark.usefixtures("mock_smartyplants_client")
-async def test_stale_readings_read_as_disconnected(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    sensor_payloads: list[dict[str, Any]],
-) -> None:
-    """Test readings older than the window are not presented as a connection."""
-    sensor_payloads[0]["lastDataReceived"] = (
-        dt_util.utcnow() - STALE_AFTER - timedelta(minutes=1)
-    ).isoformat()
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(STALE).state == STATE_ON
-    # The backend still calls the sensor online, so this is the staleness rule.
-    assert hass.states.get(ONLINE).state == STATE_OFF
+    assert hass.states.get(ONLINE).state == expected
 
 
 @pytest.mark.usefixtures("mock_smartyplants_client")
@@ -83,14 +70,13 @@ async def test_connectivity_survives_going_offline(
     mock_config_entry: MockConfigEntry,
     sensor_payloads: list[dict[str, Any]],
 ) -> None:
-    """Test the diagnostics still answer once the sensor goes offline."""
+    """Test connectivity still answers once the sensor goes offline."""
     sensor_payloads[0]["isOnline"] = False
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(ONLINE).state == STATE_OFF
-    assert hass.states.get(STALE).state != STATE_UNAVAILABLE
-    # Health is a reading, so it goes with the rest of them.
+    assert hass.states.get(ONLINE).state != STATE_UNAVAILABLE
+    # Health is derived from readings, so it goes with the rest of them.
     assert hass.states.get(ATTENTION).state == STATE_UNAVAILABLE
 
 

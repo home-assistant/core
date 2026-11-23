@@ -6,17 +6,9 @@ from pysmartyplants import Sensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER, MODEL, STALE_AFTER
+from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import SmartyPlantsCoordinator
-
-
-def is_stale(sensor: Sensor) -> bool:
-    """Return True when the last reading is too old to describe the plant."""
-    if sensor.last_data_received is None:
-        return True
-    return dt_util.utcnow() - sensor.last_data_received > STALE_AFTER
 
 
 class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
-from .entity import SmartyPlantsEntity, is_stale
+from .entity import SmartyPlantsEntity
 
 # Read-only and coordinator-driven, so updates need not be serialized.
 PARALLEL_UPDATES = 0
@@ -43,17 +43,7 @@ BINARY_SENSOR_TYPES: tuple[SmartyPlantsBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         requires_online=False,
-        # Readings that stopped arriving hours ago are not a live connection,
-        # so staleness reads as disconnected here.
-        is_on_fn=lambda sensor: sensor.is_online and not is_stale(sensor),
-    ),
-    SmartyPlantsBinarySensorDescription(
-        key="stale",
-        translation_key="stale",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        requires_online=False,
-        is_on_fn=is_stale,
+        is_on_fn=lambda sensor: sensor.is_online,
     ),
     SmartyPlantsBinarySensorDescription(
         key="needs_attention",

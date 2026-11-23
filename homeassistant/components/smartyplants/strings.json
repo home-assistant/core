@@ -79,9 +79,6 @@
     "binary_sensor": {
       "needs_attention": {
         "name": "Needs attention"
-      },
-      "stale": {
-        "name": "Readings outdated"
       }
     },
     "sensor": {
