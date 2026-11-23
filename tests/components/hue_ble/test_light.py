@@ -44,12 +44,18 @@ async def test_light(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "supports_effects_api",
+    [pytest.param(False, id="legacy_api"), pytest.param(True, id="effects_api")],
+)
 async def test_light_control_basic(
     hass: HomeAssistant,
     mock_light: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    supports_effects_api: bool,
 ) -> None:
     """Test on/off and brightness control."""
+    mock_light.supports_effects = supports_effects_api
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
