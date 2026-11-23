@@ -171,8 +171,8 @@
     "unload_platforms_failed": {
       "message": "Failed to unload one or more platforms."
     },
-    "update_failed_connection": {
-      "message": "Could not connect to fetch the data"
+    "update_failed": {
+      "message": "Failed to fetch the data"
     },
     "update_failed_timeout": {
       "message": "Timed out while fetching the data"

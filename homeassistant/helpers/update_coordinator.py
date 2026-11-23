@@ -84,7 +84,7 @@ def _setup_retry_translation_key(cause: BaseException | None) -> str | None:
             urllib.error.URLError,
         ),
     ):
-        return "update_failed_connection"
+        return "update_failed"
     return None
 
 
