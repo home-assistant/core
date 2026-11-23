@@ -67,25 +67,52 @@ def _normalize_url(url: str) -> str:
     return str(parsed.with_path(path))
 
 
-async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
+async def _get_models(
+    hass: HomeAssistant,
+    url: str,
+    api_key: str | None,
+    modes: frozenset[str] | None = None,
+) -> list[str]:
     """Fetch the available model names from the LiteLLM proxy.
 
     Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
-    serves with the configured model names.
+    serves with the configured model names. When `modes` is given, the models
+    whose LiteLLM mode is in `modes` or unknown are kept.
     """
     client = AsyncOpenAI(
         base_url=url,
         api_key=api_key or PLACEHOLDER_API_KEY,
         http_client=get_async_client(hass),
-    )
+    ).with_options(timeout=10.0)
     try:
-        return [
-            model.id async for model in client.with_options(timeout=10.0).models.list()
-        ]
+        models = [model.id async for model in client.models.list()]
     except (AuthenticationError, PermissionDeniedError) as err:
         raise InvalidAuth from err
     except OpenAIError as err:
         raise CannotConnect from err
+
+    if modes is None:
+        return models
+
+    # Keys limited to a subset of routes may not reach `/model/info`
+    try:
+        info = await client.get("/model/info", cast_to=dict[str, Any])
+    except OpenAIError as err:
+        _LOGGER.debug("Could not fetch model modes from the proxy: %s", err)
+        return models
+
+    model_modes: dict[str, set[str | None]] = {}
+    for deployment in info["data"]:
+        model_modes.setdefault(deployment["model_name"], set()).add(
+            deployment["model_info"].get("mode")
+        )
+    # Custom backends often have no mode, so they stay selectable
+    allowed = {None, *modes}
+    return [
+        model
+        for model in models
+        if model not in model_modes or not model_modes[model].isdisjoint(allowed)
+    ]
 
 
 class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -192,20 +219,27 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
 class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for LiteLLM."""
 
+    model_modes: frozenset[str]
+
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         self.models: list[str] = []
 
     async def _fetch_models(self) -> None:
-        """Fetch models from the LiteLLM proxy."""
+        """Fetch the models of this subentry's modes from the LiteLLM proxy."""
         entry = self._get_entry()
         self.models = await _get_models(
-            self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
+            self.hass,
+            entry.data[CONF_URL],
+            entry.data.get(CONF_API_KEY),
+            self.model_modes,
         )
 
 
 class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle conversation subentry flow."""
+
+    model_modes = frozenset({"chat", "responses"})
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -318,6 +352,8 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
 
 class STTFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle STT subentry flow."""
+
+    model_modes = frozenset({"audio_transcription"})
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""

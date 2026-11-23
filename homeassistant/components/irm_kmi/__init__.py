@@ -3,10 +3,28 @@
 from irm_kmi_api import IrmKmiApiClientHa
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
-from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
+from .const import DOMAIN, IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
+from .coordinator import (
+    IrmKmiConfigEntry,
+    IrmKmiCoordinator,
+    IrmKmiPollenCoordinator,
+    IrmKmiRuntimeData,
+)
+from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the IRM KMI integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
@@ -17,9 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> No
         cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
     )
 
-    entry.runtime_data = IrmKmiCoordinator(hass, entry, api_client)
+    weather_coordinator = IrmKmiCoordinator(hass, entry, api_client)
+    await weather_coordinator.async_config_entry_first_refresh()
 
-    await entry.runtime_data.async_config_entry_first_refresh()
+    # The pollen link comes from the forecast, so this refresh runs after it.
+    # A pollen outage only makes the pollen sensors unavailable.
+    pollen_coordinator = IrmKmiPollenCoordinator(hass, entry, api_client)
+    await pollen_coordinator.async_refresh()
+
+    entry.runtime_data = IrmKmiRuntimeData(
+        weather=weather_coordinator, pollen=pollen_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

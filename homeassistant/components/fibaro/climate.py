@@ -128,7 +128,7 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         self, fibaro_device: DeviceModel, controller: FibaroController
     ) -> None:
         """Initialize the Fibaro device."""
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
         self._temp_sensor_device: DeviceModel | None = None
         self._target_temp_device: DeviceModel | None = None
         self._op_mode_device: DeviceModel | None = None
