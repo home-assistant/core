@@ -1,0 +1,692 @@
+# serializer version: 1
+# name: test_update_automation_config_with_error[blueprint_generated_config_error-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Service 5 does not match format <domain>.<name>',
+        'path': list([
+          'use_blueprint',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Service 5 does not match format <domain>.<name> at 'use_blueprint'",
+  })
+# ---
+# name: test_update_automation_config_with_error[blueprint_instance_key_and_generated_config_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Service 5 does not match format <domain>.<name>',
+        'path': list([
+          'use_blueprint',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Service 5 does not match format <domain>.<name> at 'use_blueprint'",
+  })
+# ---
+# name: test_update_automation_config_with_error[blueprint_instance_key_error-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: value must be one of ['parallel', 'queued', 'restart', 'single'] at 'mode'",
+  })
+# ---
+# name: test_update_automation_config_with_error[blueprint_missing_input-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Missing input a_number, service_to_call, trigger_event',
+        'path': list([
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': 'Message malformed: Missing input a_number, service_to_call, trigger_event',
+  })
+# ---
+# name: test_update_automation_config_with_error[blueprint_not_found-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Failed to load blueprint: Unable to find not_found.yaml',
+        'path': list([
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': 'Message malformed: Failed to load blueprint: Unable to find not_found.yaml',
+  })
+# ---
+# name: test_update_automation_config_with_error[missing_key-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'triggers'",
+  })
+# ---
+# name: test_update_automation_config_with_error[missing_key_and_platform_error-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'actions',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'triggers'",
+  })
+# ---
+# name: test_update_automation_config_with_error[nested_blocks-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'actions',
+          0,
+          'else',
+          'choose',
+          0,
+          'sequence',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'conditions',
+          0,
+          'or',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'actions',
+          0,
+          'if',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'actions',
+          0,
+          'then',
+          0,
+          'wait_for_trigger',
+          0,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'actions',
+          0,
+          'else',
+          'choose',
+          0,
+          'conditions',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'actions[0].else.choose[0].sequence[0].delay'",
+  })
+# ---
+# name: test_update_automation_config_with_error[platform_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+          1,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': "Integration 'automation' does not provide trigger support",
+        'path': list([
+          'triggers',
+          2,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'conditions',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'actions',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'triggers[1].entity_id'",
+  })
+# ---
+# name: test_update_automation_config_with_error[schema_and_platform_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'actions',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+          0,
+          'event_type',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+          1,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'actions',
+          1,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': "Integration 'automation' does not provide trigger support",
+        'path': list([
+          'actions',
+          2,
+          'wait_for_trigger',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'actions[0].delay'",
+  })
+# ---
+# name: test_update_automation_config_with_error[schema_error_and_platform_errors_in_other_sections-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'actions',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+          0,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'conditions',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'actions[0].delay'",
+  })
+# ---
+# name: test_update_automation_config_with_error[schema_error_at_root_and_platform_error_singular_key-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'trigger',
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: value must be one of ['parallel', 'queued', 'restart', 'single'] at 'mode'",
+  })
+# ---
+# name: test_update_automation_config_with_error[schema_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'actions',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'extra_keys_not_allowed',
+        'message': 'not a valid option',
+        'path': list([
+          'actions',
+          1,
+          'bogus',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'not_a_valid_option',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'actions[0].delay'",
+  })
+# ---
+# name: test_update_automation_config_with_error[schema_errors_in_all_sections-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_a_dictionary',
+        'message': 'expected a mapping',
+        'path': list([
+          'triggers',
+          1,
+        ]),
+        'translation_domain': None,
+        'translation_key': 'expected_mapping',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'conditions',
+          0,
+          'state',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'actions',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: expected a mapping at 'triggers[1]'",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_key_single_action-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'action',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at 'action'",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_key_single_condition-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'condition',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at 'condition'",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_key_single_trigger-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "Integration 'automation' does not provide trigger support",
+        'path': list([
+          'trigger',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Integration 'automation' does not provide trigger support at 'trigger'",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_keys_platform_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'trigger',
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'condition',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'action',
+          1,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'trigger.entity_id'",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_keys_schema_errors-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'action',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'condition',
+          'state',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'trigger',
+          0,
+          'event_type',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'action[0].delay'",
+  })
+# ---
