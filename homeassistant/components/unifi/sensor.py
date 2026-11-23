@@ -1024,6 +1024,15 @@ def async_network_device_state_value_fn(
 
 
 @callback
+def async_network_statistics_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check the device is online and its latest statistics were fetched."""
+    return (
+        async_network_device_available_fn(hub, obj_id)
+        and obj_id not in hub.network_statistics.failed
+    )
+
+
+@callback
 def async_network_device_uptime_value_fn(
     hub: UnifiHub, statistics: DeviceStatistics
 ) -> datetime | None:
@@ -1079,7 +1088,7 @@ def make_network_api_descriptions(
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             api_handler_fn=lambda _: hub.network_statistics,
-            available_fn=async_network_device_available_fn,
+            available_fn=async_network_statistics_available_fn,
             device_info_fn=async_network_device_device_info_fn,
             supported_fn=async_network_device_supported_fn,
             object_fn=lambda _, obj_id: hub.network_statistics[obj_id],
@@ -1093,7 +1102,7 @@ def make_network_api_descriptions(
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             api_handler_fn=lambda _: hub.network_statistics,
-            available_fn=async_network_device_available_fn,
+            available_fn=async_network_statistics_available_fn,
             device_info_fn=async_network_device_device_info_fn,
             supported_fn=async_network_device_supported_fn,
             object_fn=lambda _, obj_id: hub.network_statistics[obj_id],

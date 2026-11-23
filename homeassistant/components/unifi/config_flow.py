@@ -61,6 +61,7 @@ from .const import (
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
     LOGGER,
+    NETWORK_MIN_DETECTION_TIME,
 )
 from .errors import (
     AuthenticationRequired,
@@ -737,10 +738,16 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 ): bool,
                                 probatio.Optional(
                                     CONF_DETECTION_TIME,
-                                    default=int(
-                                        config.option_detection_time.total_seconds()
+                                    default=max(
+                                        int(
+                                            config.option_detection_time.total_seconds()
+                                        ),
+                                        NETWORK_MIN_DETECTION_TIME,
                                     ),
-                                ): int,
+                                ): probatio.All(
+                                    int,
+                                    probatio.Range(min=NETWORK_MIN_DETECTION_TIME),
+                                ),
                                 probatio.Optional(
                                     CONF_IGNORE_LOCAL_MAC,
                                     default=config.option_ignore_local_mac,

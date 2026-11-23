@@ -137,6 +137,12 @@ class NetworkStatistics(_DerivedHandler[DeviceStatistics]):
     item_cls = DeviceStatistics
     keep_missing = True
 
+    def __init__(self, api: aiounifi.Controller) -> None:
+        """Initialize."""
+        super().__init__(api)
+        self.failed: set[str] = set()
+        """Devices whose last statistics request failed, their sample is stale."""
+
     @override
     async def update(self) -> None:
         """Fetch the statistics of every online device."""
@@ -146,6 +152,9 @@ class NetworkStatistics(_DerivedHandler[DeviceStatistics]):
             if device.state is DeviceState.ONLINE
         ]
         statistics = await self._fetch_per_device(online, self.devices.get_statistics)
+        self.failed = {
+            mac for mac in online if mac in self.devices and mac not in statistics
+        }
         self.reconcile(
             [{**stats.raw, OBJ_ID: mac} for mac, stats in statistics.items()]
         )

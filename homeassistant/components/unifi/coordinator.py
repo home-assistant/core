@@ -10,6 +10,7 @@ from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.network.v1.interfaces.api_handlers import APIHandler as NetworkApiHandler
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -241,13 +242,24 @@ class UnifiDataUpdateCoordinator[HandlerT: UnifiApiHandler](
                 )
 
 
-class UnifiDeviceDataUpdateCoordinator(UnifiDataUpdateCoordinator[Devices]):
+class _FirmwareTrackingCoordinator[HandlerT: Devices | NetworkDevices](
+    UnifiDataUpdateCoordinator[HandlerT]
+):
     """Synchronize device firmware metadata independently of entities."""
 
-    def __init__(self, hub: UnifiHub) -> None:
+    def __init__(
+        self,
+        hub: UnifiHub,
+        handler: HandlerT,
+        update_interval: timedelta | None = None,
+    ) -> None:
         """Initialize device version tracking."""
         self._device_versions: dict[str, str] = {}
-        super().__init__(hub, hub.api.devices)
+        super().__init__(hub, handler, update_interval=update_interval)
+
+    def _device_firmware(self, obj_id: str) -> tuple[str, str] | None:
+        """Return the MAC address and reported firmware version of a device."""
+        raise NotImplementedError
 
     @callback
     @override
@@ -255,20 +267,51 @@ class UnifiDeviceDataUpdateCoordinator(UnifiDataUpdateCoordinator[Devices]):
         """Update registry metadata only when a reported version changes."""
         if event is ItemEvent.DELETED:
             self._device_versions.pop(obj_id, None)
-        else:
-            device = self.handler[obj_id]
-            if "version" in device.raw:
-                version = device.version
-                if self._device_versions.get(obj_id) != version:
-                    device_registry = dr.async_get(self.hass)
-                    device_entry = device_registry.async_get_device_by_connection(
-                        (dr.CONNECTION_NETWORK_MAC, device.mac),
-                        self._connection.config_entry.entry_id,
+        elif (firmware := self._device_firmware(obj_id)) is not None:
+            mac, version = firmware
+            if self._device_versions.get(obj_id) != version:
+                device_registry = dr.async_get(self.hass)
+                device_entry = device_registry.async_get_device_by_connection(
+                    (dr.CONNECTION_NETWORK_MAC, mac),
+                    self._connection.config_entry.entry_id,
+                )
+                if device_entry is not None and device_entry.sw_version != version:
+                    device_registry.async_update_device(
+                        device_entry.id, sw_version=version
                     )
-                    if device_entry is not None and device_entry.sw_version != version:
-                        device_registry.async_update_device(
-                            device_entry.id, sw_version=version
-                        )
-                    self._device_versions[obj_id] = version
+                self._device_versions[obj_id] = version
 
         super()._async_handle_update(event, obj_id)
+
+
+class UnifiDeviceDataUpdateCoordinator(_FirmwareTrackingCoordinator[Devices]):
+    """Devices of the local user API, pushed over the websocket."""
+
+    def __init__(self, hub: UnifiHub) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hub, hub.api.devices)
+
+    @override
+    def _device_firmware(self, obj_id: str) -> tuple[str, str] | None:
+        """Return the firmware of a device that reports it."""
+        device = self.handler[obj_id]
+        firmware = None
+        if "version" in device.raw:
+            firmware = device.mac, device.version
+        return firmware
+
+
+class NetworkDeviceDataUpdateCoordinator(_FirmwareTrackingCoordinator[NetworkDevices]):
+    """Devices of the Integration API, polled at a fixed interval."""
+
+    def __init__(self, hub: UnifiHub) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hub, hub.api.network.devices, update_interval=POLL_INTERVAL)
+
+    @override
+    def _device_firmware(self, obj_id: str) -> tuple[str, str] | None:
+        """Return the firmware of a device that reports it."""
+        device = self.handler[obj_id]
+        if device.firmware_version is None:
+            return None
+        return device.mac_address, device.firmware_version

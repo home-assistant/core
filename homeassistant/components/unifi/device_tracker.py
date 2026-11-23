@@ -31,11 +31,13 @@ from homeassistant.components.device_tracker import (
     ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
+from .const import CLIENT_TYPE_OPTION, DOMAIN, NETWORK_MIN_DETECTION_TIME
 from .coordinator import UnifiApiHandler
 from .entity import (
     UnifiEntity,
@@ -170,6 +172,26 @@ def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_network_client_heartbeat_timedelta_fn(
+    hub: UnifiHub, obj_id: str
+) -> timedelta:
+    """Return the detection time, never shorter than the polls allow."""
+    return max(
+        hub.config.option_detection_time,
+        timedelta(seconds=NETWORK_MIN_DETECTION_TIME),
+    )
+
+
+@callback
+def async_network_client_type_fn(api: aiounifi.Controller, obj_id: str) -> str | None:
+    """Return the connection type of a client, None while it is not known."""
+    client_type = api.network.clients[obj_id].type
+    if client_type is NetworkClientType.UNKNOWN:
+        return None
+    return client_type.value
+
+
+@callback
 def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta:
     """Check if device object is disabled."""
     device = hub.api.devices[obj_id]
@@ -183,6 +205,7 @@ class UnifiTrackerEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem
     """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
+    client_type_fn: Callable[[aiounifi.Controller, str], str | None] | None = None
     ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
     is_connected_fn: Callable[[UnifiHub, str], bool]
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
@@ -233,7 +256,8 @@ NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.network.clients,
         device_info_fn=async_network_client_device_info_fn,
-        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
+        heartbeat_timedelta_fn=async_network_client_heartbeat_timedelta_fn,
+        client_type_fn=async_network_client_type_fn,
         is_connected_fn=lambda hub, obj_id: hub.api.network.clients.is_connected(
             obj_id
         ),
@@ -370,6 +394,7 @@ class UnifiScannerEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
             return
 
         obj_id = self._obj_id
+        self._async_store_client_type()
         if is_connected := description.is_connected_fn(hub, obj_id):
             self._is_connected = is_connected
             self.hub.update_heartbeat(
@@ -398,10 +423,28 @@ class UnifiScannerEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
             + self.entity_description.heartbeat_timedelta_fn(hub, obj_id),
         )
 
+    @callback
+    def _async_store_client_type(self) -> None:
+        """Remember the connection type so a restored client keeps its filters."""
+        type_fn = self.entity_description.client_type_fn
+        if (
+            type_fn is None
+            or self.registry_entry is None
+            or (client_type := type_fn(self.api, self._obj_id)) is None
+        ):
+            return
+        stored: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN) or {}
+        if stored.get(CLIENT_TYPE_OPTION) == client_type:
+            return
+        er.async_get(self.hass).async_update_entity_options(
+            self.entity_id, DOMAIN, {CLIENT_TYPE_OPTION: client_type}
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        self._async_store_client_type()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

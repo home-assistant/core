@@ -30,6 +30,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_MORE_OPTIONS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -47,6 +48,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import InvalidData
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -264,6 +266,71 @@ async def test_restores_disconnected_client(
 
     assert hass.states.get(WIRELESS_TRACKER).state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.desktop").state == STATE_HOME
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_IGNORE_LOCAL_MAC: True}])
+async def test_restores_wired_client_with_private_mac(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    network_config_entry: MockConfigEntry,
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """A wired client keeps its type while away, private MACs only skip Wi-Fi."""
+    for mac, name, client_type in (
+        ("02:00:00:00:00:05", "printer", "WIRED"),
+        ("02:00:00:00:00:06", "tablet", "WIRELESS"),
+    ):
+        entry = entity_registry.async_get_or_create(
+            Platform.DEVICE_TRACKER,
+            DOMAIN,
+            f"{DEFAULT_SITE}-{mac}",
+            suggested_object_id=name,
+            config_entry=network_config_entry,
+        )
+        entity_registry.async_update_entity_options(
+            entry.entity_id, DOMAIN, {"client_type": client_type}
+        )
+
+    await network_config_entry_factory()
+
+    assert hass.states.get("device_tracker.printer").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.tablet") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_stores_client_type(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """The connection type of a listed client is kept for its restore."""
+    entry = entity_registry.async_get("device_tracker.desktop")
+
+    assert entry.options[DOMAIN] == {"client_type": "WIRED"}
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_DETECTION_TIME: 10}])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_detection_time_not_shorter_than_polls(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_factory: ConfigEntryFactoryType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A stored detection time shorter than the minimum is extended."""
+    await network_config_entry_factory()
+
+    mock_clients(aioclient_mock, mock_network_requests, [WIRED_CLIENT])
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(WIRELESS_TRACKER).state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(WIRELESS_TRACKER).state == STATE_NOT_HOME
 
 
 async def test_prunes_disabled_tracker_of_unlisted_client(
@@ -548,6 +615,31 @@ async def test_options_flow(
     assert network_config_entry_setup.options[CONF_DETECTION_TIME] == 60
 
 
+@pytest.mark.parametrize("config_entry_options", [{CONF_DETECTION_TIME: 10}])
+async def test_options_flow_minimum_detection_time(
+    hass: HomeAssistant, network_config_entry_setup: MockConfigEntry
+) -> None:
+    """The detection time can not be shorter than the polls allow."""
+    result = await hass.config_entries.options.async_init(
+        network_config_entry_setup.entry_id
+    )
+    more_options = result["data_schema"].schema[CONF_MORE_OPTIONS].schema.schema
+    detection_time = next(
+        marker for marker in more_options if marker == CONF_DETECTION_TIME
+    )
+    assert detection_time.default() == 60
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_TRACK_CLIENTS: True,
+                CONF_TRACK_DEVICES: True,
+                CONF_MORE_OPTIONS: {CONF_DETECTION_TIME: 30},
+            },
+        )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
@@ -642,6 +734,69 @@ async def test_device_data_of_one_device_fails(
     assert hass.states.get(POWER_CYCLE_BUTTON).state == STATE_UNKNOWN
     assert hass.states.get("sensor.switch_uptime").state != STATE_UNKNOWN
     assert hass.states.get("sensor.access_point_uptime").state == STATE_UNKNOWN
+
+
+async def test_statistics_of_one_device_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_factory: ConfigEntryFactoryType,
+    network_device_payload: list[dict[str, Any]],
+    network_device_details_payload: dict[str, dict[str, Any]],
+    network_device_statistics_payload: dict[str, dict[str, Any]],
+) -> None:
+    """A stale sample is unavailable until the device's statistics load again."""
+    network_device_payload.append(ACCESS_POINT)
+    network_device_details_payload[ACCESS_POINT_ID] = ACCESS_POINT
+    network_device_statistics_payload[ACCESS_POINT_ID] = SWITCH_STATISTICS
+    await network_config_entry_factory()
+    assert hass.states.get("sensor.access_point_cpu_utilization").state == "12.5"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{ACCESS_POINT_ID}/statistics/latest", status=500
+    )
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        hass.states.get("sensor.access_point_cpu_utilization").state
+        == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("sensor.switch_cpu_utilization").state == "12.5"
+
+    aioclient_mock.clear_requests()
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=122))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.access_point_cpu_utilization").state == "12.5"
+
+
+async def test_firmware_version_follows_polls(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+) -> None:
+    """A firmware update shows on the device without a reload."""
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SWITCH_MAC), network_config_entry_setup.entry_id
+    )
+    assert device.sw_version == "7.1.26"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{SITE_URL}/devices",
+        json=network_page([{**SWITCH, "firmwareVersion": "7.2.0"}]),
+    )
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device.id).sw_version == "7.2.0"
 
 
 async def test_device_data_fails(

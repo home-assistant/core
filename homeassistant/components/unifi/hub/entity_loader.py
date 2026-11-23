@@ -5,7 +5,8 @@ Make sure expected clients are available for platforms.
 """
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterator, Sequence
+from collections.abc import Callable, Coroutine, Iterator, Mapping, Sequence
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -24,10 +25,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
+from ..const import (
+    CLIENT_RESTORE_MAX_AGE,
+    CLIENT_TYPE_OPTION,
+    DOMAIN,
+    LOGGER,
+    UNIFI_WIRELESS_CLIENTS,
+)
 from ..coordinator import (
     POLL_INTERVAL,
     UPDATE_TIMEOUT,
+    NetworkDeviceDataUpdateCoordinator,
     UnifiApiHandler,
     UnifiDataUpdateCoordinator,
     UnifiDeviceDataUpdateCoordinator,
@@ -140,12 +148,13 @@ class UnifiEntityLoader:
         hub = self.hub
         network = hub.api.network
         # Without a websocket an idle interval would delay the first arrivals
-        return {
-            id(handler): UnifiDataUpdateCoordinator(
-                hub, handler, update_interval=POLL_INTERVAL
-            )
-            for handler in (network.clients, network.devices)
-        } | {
+        coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
+            id(network.clients): UnifiDataUpdateCoordinator(
+                hub, network.clients, update_interval=POLL_INTERVAL
+            ),
+            id(network.devices): NetworkDeviceDataUpdateCoordinator(hub),
+        }
+        return coordinators | {
             id(handler): UnifiDataUpdateCoordinator(
                 hub, handler, update_interval=DEVICE_DATA_UPDATE_INTERVAL
             )
@@ -261,13 +270,19 @@ class UnifiEntityLoader:
                 ):
                     device_registry.async_remove_device(device.id)
                 continue
+            client_type = ClientType.UNKNOWN
+            if entry is not None:
+                stored: Mapping[str, Any] = entry.options.get(DOMAIN) or {}
+                if (value := stored.get(CLIENT_TYPE_OPTION)) is not None:
+                    with suppress(ValueError):
+                        client_type = ClientType(value)
             clients.restore(
                 ClientData(
                     access={"type": ClientAccessType.DEFAULT},
                     id="",
                     macAddress=mac,
                     name=(device.name if device else None) or mac,
-                    type=ClientType.UNKNOWN,
+                    type=client_type,
                 )
             )
 

@@ -64,6 +64,12 @@ DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True
 DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
+# Integration API clients are polled, a shorter time could expire between polls
+NETWORK_MIN_DETECTION_TIME = 60
+
+# Entity registry option remembering the connection type of an Integration API
+# client, which the API no longer reports once the client disconnects
+CLIENT_TYPE_OPTION = "client_type"
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
 

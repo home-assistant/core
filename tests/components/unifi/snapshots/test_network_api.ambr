@@ -248,6 +248,9 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'unifi': dict({
+        'client_type': 'WIRED',
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -307,6 +310,9 @@
     'name': None,
     'object_id_base': None,
     'options': dict({
+      'unifi': dict({
+        'client_type': 'WIRELESS',
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
