@@ -59,6 +59,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "circulate": "Circulate",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "voice_event": {
         "name": "Voice event",

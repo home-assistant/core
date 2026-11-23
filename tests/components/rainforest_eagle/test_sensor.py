@@ -17,7 +17,7 @@ from . import MOCK_200_RESPONSE_WITH_PRICE, MOCK_200_RESPONSE_WITHOUT_PRICE
 
 async def test_sensors_200(hass: HomeAssistant, setup_rainforest_200) -> None:
     """Test the sensors."""
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     demand = hass.states.get("sensor.eagle_200_power_demand")
     assert demand is not None
@@ -40,7 +40,7 @@ async def test_sensors_200(hass: HomeAssistant, setup_rainforest_200) -> None:
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
     price = hass.states.get("sensor.eagle_200_energy_price")
     assert price is not None

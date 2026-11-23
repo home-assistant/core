@@ -14,11 +14,12 @@ from aiotankerkoenig import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tankerkoenig.const import DOMAIN
 from homeassistant.components.tankerkoenig.services import TankerkoenigService
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 
@@ -33,7 +34,7 @@ async def get_opening_times(hass: HomeAssistant) -> ServiceResponse:
     return await hass.services.async_call(
         DOMAIN,
         TankerkoenigService.GET_OPENING_TIMES,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -153,3 +154,29 @@ async def test_get_opening_times_fetch_fails(
     with pytest.raises(HomeAssistantError) as err:
         await get_opening_times(hass)
     assert err.value.translation_key == translation_key
+
+
+async def test_get_opening_times_station_from_cache(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+) -> None:
+    """Test a station restored from the cache fetches its details for opening times."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Restored from the cache: no details request, and no opening times cached
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    tankerkoenig.station_details.reset_mock()
+
+    changed: Station = replace(STATION, overrides=[OVERRIDE])
+    tankerkoenig.station_details.return_value = changed
+    response = await get_opening_times(hass)
+
+    assert response[ENTITY_ID]["overrides"] == [OVERRIDE]
+    tankerkoenig.station_details.assert_called_once_with(STATION.id)
+
+    # Fetched now, so the next request within the hour uses it
+    await get_opening_times(hass)
+    tankerkoenig.station_details.assert_called_once()
