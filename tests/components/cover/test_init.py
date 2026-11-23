@@ -175,8 +175,8 @@ TILT_FEATURES = (
                 "supported_features": CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
             },
-            {},
-            id="no_tilt_position",
+            {"open_tilt_position": 100},
+            id="open_and_close_tilt_only",
         ),
         pytest.param(
             {"supported_features": TILT_FEATURES},

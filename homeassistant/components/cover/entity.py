@@ -24,6 +24,13 @@ class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: CoverDeviceClass | None = None
 
 
+TILT_FEATURES = (
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+    | CoverEntityFeature.SET_TILT_POSITION
+)
+
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "current_cover_position",
     "current_cover_tilt_position",
@@ -237,7 +244,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if speeds := self.supported_speeds:
             data[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] = speeds
 
-        if self.supported_features & CoverEntityFeature.SET_TILT_POSITION:
+        if self.supported_features & TILT_FEATURES:
             data[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] = (
                 self._resolved_open_tilt_position()
             )
