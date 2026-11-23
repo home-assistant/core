@@ -13,13 +13,19 @@ from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_SERIAL_NUMBER, DISCOVERY_TIMEOUT, GREENCELL_DISC_TOPIC
+from .const import (
+    CONF_SERIAL_NUMBER,
+    DISCOVERY_TIMEOUT,
+    GREENCELL_DISC_TOPIC,
+    SIGNAL_ACCESS_CHANGED,
+)
 from .models import GreencellConfigEntry, GreencellRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 def make_ready_handler(
@@ -73,8 +79,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) ->
     except HomeAssistantError as err:
         raise ConfigEntryNotReady(f"MQTT error: {err}") from err
 
+    access = GreencellAccess(GreencellHaAccessLevel.EXECUTE)
+
+    @callback
+    def access_changed() -> None:
+        async_dispatcher_send(hass, SIGNAL_ACCESS_CHANGED.format(serial))
+
+    access.register_listener(access_changed)
+
     entry.runtime_data = GreencellRuntimeData(
-        access=GreencellAccess(GreencellHaAccessLevel.EXECUTE),
+        access=access,
         current_data=ElecData3Phase(),
         voltage_data=ElecData3Phase(),
         power_data=ElecDataSinglePhase(),

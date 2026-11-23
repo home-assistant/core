@@ -5,7 +5,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -19,6 +18,7 @@ from .const import (
     DOMAIN,
     ELECTRICITY_INTERVALS,
 )
+from .coordinator import EnergyZeroConfigEntry
 
 
 class EnergyZeroFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -29,7 +29,9 @@ class EnergyZeroFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> EnergyZeroOptionsFlow:
+    def async_get_options_flow(
+        config_entry: EnergyZeroConfigEntry,
+    ) -> EnergyZeroOptionsFlow:
         """Return the options flow."""
         return EnergyZeroOptionsFlow()
 

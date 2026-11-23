@@ -8,7 +8,6 @@ import wsdot as wsdot_api
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -18,6 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
+from . import WsdotConfigEntry
 from .const import DOMAIN, SUBENTRY_TRAVEL_TIMES
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: WsdotConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by wsdot."""
         return {SUBENTRY_TRAVEL_TIMES: TravelTimeSubentryFlowHandler}

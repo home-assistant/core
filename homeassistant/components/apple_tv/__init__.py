@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> N
     await manager.init()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> None:
     """Unload an Apple TV config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
@@ -132,7 +132,7 @@ class AppleTVManager(DeviceListener):
     _connection_was_lost = False
     _task: asyncio.Task[None] | None = None
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: AppleTvConfigEntry) -> None:
         """Initialize power manager."""
         self.config_entry = config_entry
         self.hass = hass
@@ -168,8 +168,9 @@ class AppleTVManager(DeviceListener):
         if self.atv:
             self.atv.close()
             self.atv = None
-        self._dispatch_send(SIGNAL_DISCONNECTED)
         self._start_connect_loop()
+        # Entities must see reconnection before handling the lost transport.
+        self._dispatch_send(SIGNAL_DISCONNECTED)
 
     async def connect(self) -> None:
         """Connect to device."""

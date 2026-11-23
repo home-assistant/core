@@ -222,6 +222,8 @@ async def _async_validate_config_item(  # noqa: C901
         probatio.Invalid,
         HomeAssistantError,
     ) as err:
+        if isinstance(err, probatio.Invalid):
+            err.prepend([CONF_TRIGGERS])
         _log_invalid_automation(
             err, automation_name, "failed to setup triggers", validated_config
         )
@@ -241,6 +243,8 @@ async def _async_validate_config_item(  # noqa: C901
             probatio.Invalid,
             HomeAssistantError,
         ) as err:
+            if isinstance(err, probatio.Invalid):
+                err.prepend([CONF_CONDITIONS])
             _log_invalid_automation(
                 err, automation_name, "failed to setup conditions", validated_config
             )
@@ -262,6 +266,8 @@ async def _async_validate_config_item(  # noqa: C901
         probatio.Invalid,
         HomeAssistantError,
     ) as err:
+        if isinstance(err, probatio.Invalid):
+            err.prepend([CONF_ACTIONS])
         _log_invalid_automation(
             err, automation_name, "failed to setup actions", validated_config
         )

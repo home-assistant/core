@@ -113,6 +113,7 @@ class WithingsMeasurementDataUpdateCoordinator(
         super().__init__(hass, config_entry, client)
         self.notification_categories = {
             NotificationCategory.WEIGHT,
+            NotificationCategory.TEMPERATURE,
             NotificationCategory.PRESSURE,
         }
         self._previous_data: dict[

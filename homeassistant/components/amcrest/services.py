@@ -1,31 +1,55 @@
 """Services for Amcrest IP cameras."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_COLOR_BW, CBW, DOMAIN, MOV
+from .const import CBW, DOMAIN, MOV
 
-_ATTR_PRESET = "preset"
-_ATTR_PTZ_MOV = "movement"
-_ATTR_PTZ_TT = "travel_time"
 _DEFAULT_TT = 0.2
+
+
+class AmcrestService(StrEnum):
+    """Store keys for Amcrest services."""
+
+    ENABLE_RECORDING = "enable_recording"
+    DISABLE_RECORDING = "disable_recording"
+    ENABLE_AUDIO = "enable_audio"
+    DISABLE_AUDIO = "disable_audio"
+    ENABLE_MOTION_RECORDING = "enable_motion_recording"
+    DISABLE_MOTION_RECORDING = "disable_motion_recording"
+    GOTO_PRESET = "goto_preset"
+    SET_COLOR_BW = "set_color_bw"
+    START_TOUR = "start_tour"
+    STOP_TOUR = "stop_tour"
+    PTZ_CONTROL = "ptz_control"
+
+
+class AmcrestServiceArgument(StrEnum):
+    """Store keys for Amcrest service arguments."""
+
+    PRESET = "preset"
+    COLOR_BW = "color_bw"
+    MOVEMENT = "movement"
+    TRAVEL_TIME = "travel_time"
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Amcrest IP Camera services."""
     for service_name, func in (
-        ("enable_recording", "async_enable_recording"),
-        ("disable_recording", "async_disable_recording"),
-        ("enable_audio", "async_enable_audio"),
-        ("disable_audio", "async_disable_audio"),
-        ("enable_motion_recording", "async_enable_motion_recording"),
-        ("disable_motion_recording", "async_disable_motion_recording"),
-        ("start_tour", "async_start_tour"),
-        ("stop_tour", "async_stop_tour"),
+        (AmcrestService.ENABLE_RECORDING, "async_enable_recording"),
+        (AmcrestService.DISABLE_RECORDING, "async_disable_recording"),
+        (AmcrestService.ENABLE_AUDIO, "async_enable_audio"),
+        (AmcrestService.DISABLE_AUDIO, "async_disable_audio"),
+        (AmcrestService.ENABLE_MOTION_RECORDING, "async_enable_motion_recording"),
+        (AmcrestService.DISABLE_MOTION_RECORDING, "async_disable_motion_recording"),
+        (AmcrestService.START_TOUR, "async_start_tour"),
+        (AmcrestService.STOP_TOUR, "async_stop_tour"),
     ):
         service.async_register_platform_entity_service(
             hass,
@@ -39,10 +63,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "goto_preset",
+        AmcrestService.GOTO_PRESET,
         entity_domain=CAMERA_DOMAIN,
         schema={
-            probatio.Required(_ATTR_PRESET): probatio.All(
+            probatio.Required(AmcrestServiceArgument.PRESET): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=1)
             )
         },
@@ -51,19 +75,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_color_bw",
+        AmcrestService.SET_COLOR_BW,
         entity_domain=CAMERA_DOMAIN,
-        schema={probatio.Required(ATTR_COLOR_BW): probatio.In(CBW)},
+        schema={probatio.Required(AmcrestServiceArgument.COLOR_BW): probatio.In(CBW)},
         func="async_set_color_bw",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "ptz_control",
+        AmcrestService.PTZ_CONTROL,
         entity_domain=CAMERA_DOMAIN,
         schema={
-            probatio.Required(_ATTR_PTZ_MOV): probatio.In(MOV),
-            probatio.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
+            probatio.Required(AmcrestServiceArgument.MOVEMENT): probatio.In(MOV),
+            probatio.Optional(
+                AmcrestServiceArgument.TRAVEL_TIME, default=_DEFAULT_TT
+            ): cv.small_float,
         },
         func="async_ptz_control",
     )

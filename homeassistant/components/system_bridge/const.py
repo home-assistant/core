@@ -25,6 +25,11 @@ AUDIO_MIN_VERSION: Final = (5, 16, 0)
 # Backends before 5.23.0 list players without their controls or details
 PLAYER_DETAILS_MIN_VERSION: Final = (5, 23, 0)
 
+# Backends before 5.20.0 don't report notification clicks or closes
+NOTIFICATION_EVENTS_MIN_VERSION: Final = (5, 20, 0)
+
+SIGNAL_NOTIFICATION_EVENT: Final = "system_bridge_notification_event_{}"
+
 AUDIO_OUTPUT: Final = "output"
 AUDIO_INPUT: Final = "input"
 

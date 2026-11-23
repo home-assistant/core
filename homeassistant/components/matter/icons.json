@@ -54,6 +54,14 @@
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       },
+      "night_vision": {
+        "default": "mdi:weather-night",
+        "state": {
+          "auto": "mdi:weather-night-partly-cloudy",
+          "off": "mdi:weather-sunny",
+          "on": "mdi:weather-night"
+        }
+      },
       "power_level": {
         "default": "mdi:power-settings"
       },
@@ -73,6 +81,9 @@
       },
       "battery_charge_state": {
         "default": "mdi:battery-charging"
+      },
+      "battery_quantity": {
+        "default": "mdi:battery-plus-outline"
       },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"

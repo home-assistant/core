@@ -49,8 +49,6 @@ EVENT_DESCRIPTION = EventEntityDescription(
     device_class=EventDeviceClass.BUTTON,
 )
 
-# Duo button-specific descriptions with translation keys
-# Duo buttons support all standard events plus swipe gestures and rotation
 DUO_BUTTON_EVENT_TYPES: list[str] = [
     EVENT_TYPE_UP,
     EVENT_TYPE_DOWN,
@@ -79,7 +77,6 @@ DUO_BIG_BUTTON_DESCRIPTION = EventEntityDescription(
     device_class=EventDeviceClass.BUTTON,
 )
 
-# Flic Twist description for SELECTOR mode - rotation and selector events
 TWIST_SELECTOR_BUTTON_DESCRIPTION = EventEntityDescription(
     key=f"{EVENT_CLASS_BUTTON}_twist",
     translation_key="button_twist",
@@ -96,7 +93,7 @@ TWIST_SELECTOR_BUTTON_DESCRIPTION = EventEntityDescription(
     device_class=EventDeviceClass.BUTTON,
 )
 
-# Flic Twist description for DEFAULT mode - increment/decrement events
+# Also used in continuous mode, which fires the same events
 TWIST_DEFAULT_BUTTON_DESCRIPTION = EventEntityDescription(
     key=f"{EVENT_CLASS_BUTTON}_twist",
     translation_key="button_twist_default",
@@ -174,14 +171,12 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         """Register event callbacks when entity is added."""
         await super().async_added_to_hass()
 
-        # Subscribe to button events via direct callback
         self.async_on_remove(
             self._client.register_button_event_callback(
                 self._async_handle_event,
             )
         )
 
-        # Subscribe to rotate events if device supports rotation
         if self._client.capabilities.has_rotation:
             self.async_on_remove(
                 self._client.register_rotate_event_callback(
@@ -192,7 +187,6 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
     @callback
     def _async_handle_event(self, event_type: str, event_data: dict[str, Any]) -> None:
         """Handle button event from client."""
-        # Only trigger if the event type is in this entity's allowed event types
         if (
             self.entity_description.event_types is not None
             and event_type not in self.entity_description.event_types
@@ -203,7 +197,6 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         if self._button_index is not None:
             event_button_index = event_data.get("button_index")
             if event_button_index != self._button_index:
-                # This event is for a different button
                 return
 
         self._trigger_event(event_type, event_data)
@@ -214,14 +207,12 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         self, event_type: str, event_data: dict[str, Any]
     ) -> None:
         """Handle rotate event from client."""
-        # Only trigger if the event type is in this entity's allowed event types
         if (
             self.entity_description.event_types is not None
             and event_type not in self.entity_description.event_types
         ):
             return
 
-        # For Twist, accept all matching rotate events (no button_index filtering)
         if self._is_twist:
             self._trigger_event(event_type, event_data)
             self.async_write_ha_state()
@@ -231,7 +222,6 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         if self._button_index is not None:
             event_button_index = event_data.get("button_index")
             if event_button_index != self._button_index:
-                # This rotate event is for a different button
                 return
 
         self._trigger_event(event_type, event_data)

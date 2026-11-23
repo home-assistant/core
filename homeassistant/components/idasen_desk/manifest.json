@@ -9,6 +9,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@abmantis"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/idasen_desk",
   "integration_type": "device",

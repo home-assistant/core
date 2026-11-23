@@ -3,6 +3,7 @@
   "name": "KEF",
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@basnijholt"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/kef",
   "iot_class": "local_polling",
   "loggers": ["aiokef", "tenacity"],

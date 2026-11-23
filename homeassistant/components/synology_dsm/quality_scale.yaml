@@ -4,7 +4,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow:
     status: todo
     comment: |
@@ -84,7 +84,7 @@ rules:
   icon-translations:
     status: todo
     comment: button still has icons
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: todo

@@ -3,7 +3,7 @@
 from typing import Literal, override
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -33,7 +33,7 @@ class LlamaCppConversationEntity(
 ):
     """llama.cpp conversation agent."""
 
-    def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(self, entry: LlamaCppConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         super().__init__(entry, subentry)
         self._attr_supports_streaming = bool(entry.data.get(CONF_STREAMING, False))

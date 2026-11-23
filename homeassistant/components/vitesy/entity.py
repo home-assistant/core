@@ -1,10 +1,13 @@
 """Base entity for the Vitesy integration."""
 
+from collections.abc import Callable, Iterable
 from typing import override
 
 from aiovitesy.api import VitesyDevice
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -49,3 +52,32 @@ class VitesyEntity(CoordinatorEntity[VitesyDataUpdateCoordinator]):
             and self._device_id in self.coordinator.data
             and self.device.connected
         )
+
+
+@callback
+def async_add_device_entities(
+    coordinator: VitesyDataUpdateCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entities_for_device: Callable[[str, VitesyDevice], Iterable[VitesyEntity]],
+) -> None:
+    """Add entities for every device, including devices added to the account later."""
+    known_devices: set[str] = set()
+
+    @callback
+    def _add_new_devices() -> None:
+        # Forget removed devices so they get entities again if re-added.
+        known_devices.intersection_update(coordinator.data)
+        new_devices = coordinator.data.keys() - known_devices
+        if not new_devices:
+            return
+        known_devices.update(new_devices)
+        async_add_entities(
+            entity
+            for device_id in new_devices
+            for entity in entities_for_device(device_id, coordinator.data[device_id])
+        )
+
+    _add_new_devices()
+    coordinator.config_entry.async_on_unload(
+        coordinator.async_add_listener(_add_new_devices)
+    )

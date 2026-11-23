@@ -2958,6 +2958,21 @@ async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
     assert result["reason"] == "discovery_requires_supervisor"
 
 
+@pytest.mark.usefixtures("supervisor")
+async def test_usb_discovery_serial_proxy(hass: HomeAssistant) -> None:
+    """Test usb discovery of an ESPHome serial proxy port is aborted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=dataclasses.replace(
+            USB_DISCOVERY_INFO,
+            device="esphome-hass://esphome/abc123?port_udev_id=usb-test_zwave-if00",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "serial_proxy_not_supported"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_usb_discovery_same_device(
     hass: HomeAssistant,
@@ -6618,6 +6633,42 @@ async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
         assert "/dev/ttyUSB0" in device_paths
         assert "/dev/ttyUSB1" in device_paths
         assert "/dev/ttyUSB2" in device_paths
+
+
+async def test_get_usb_ports_skips_serial_proxy(hass: HomeAssistant) -> None:
+    """Test get_usb_ports leaves out ESPHome serial proxy ports."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        SerialDevice(
+            device="esphome-hass://esphome/abc123?port_name=uart",
+            serial_number=None,
+            manufacturer=None,
+            description="uart",
+        ),
+        USBDevice(
+            device="esphome-hass://esphome/abc123?port_udev_id=usb-test_zwave-if00",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
+
+    assert list(result) == ["/dev/ttyUSB0"]
 
 
 async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:

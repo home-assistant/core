@@ -6,6 +6,7 @@ from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,6 +51,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
             coordinator.client, coordinator.data.parsed[device_id]
         )
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

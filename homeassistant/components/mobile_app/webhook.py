@@ -39,8 +39,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_NAME,
@@ -68,6 +66,8 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -198,6 +198,11 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
         return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
+    if config_entry.data[CONF_WEBHOOK_ID] != webhook_id:
+        # The app registered again, possibly for another user, while the
+        # request was received
+        return Response(status=HTTPStatus.GONE)
+
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
         and config_entry.data[ATTR_SUPPORTS_ENCRYPTION]
@@ -264,8 +269,14 @@ async def handle_webhook(
     )
 
     # Shield so we make sure we finish the webhook, even if sender hangs up.
+    # Start eagerly, so the command reads the registration validated above
+    # before the app can register again.
     return await asyncio.shield(
-        WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload)
+        hass.async_create_task(
+            WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload),
+            f"mobile_app webhook {webhook_type}",
+            eager_start=True,
+        )
     )
 
 
@@ -336,14 +347,16 @@ async def webhook_conversation_process(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
     """Handle a conversation process webhook."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     result = await conversation.async_converse(
         hass,
         text=data["text"],
         language=data.get("language"),
         conversation_id=data.get("conversation_id"),
-        context=registration_context(config_entry.data),
+        context=registration_context(registration),
     )
-    return webhook_response(result.as_dict(), registration=config_entry.data)
+    return webhook_response(result.as_dict(), registration=registration)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
@@ -352,10 +365,12 @@ async def webhook_stream_camera(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:
     """Handle a request to HLS-stream a camera."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
-            registration=config_entry.data,
+            registration=registration,
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -376,7 +391,7 @@ async def webhook_stream_camera(
     else:
         resp["hls_path"] = None
 
-    return webhook_response(resp, registration=config_entry.data)
+    return webhook_response(resp, registration=registration)
 
 
 @lru_cache
@@ -728,10 +743,12 @@ async def webhook_get_config(
     hass: HomeAssistant, config_entry: ConfigEntry, data: Any
 ) -> Response:
     """Handle a get config webhook."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     hass_config = hass.config.as_dict()
 
     device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][
-        config_entry.data[CONF_WEBHOOK_ID]
+        registration[CONF_WEBHOOK_ID]
     ]
 
     resp = {
@@ -749,14 +766,14 @@ async def webhook_get_config(
     }
 
     if cloud.async_active_subscription(hass) and not await async_is_local_only_user(
-        hass, config_entry.data[CONF_USER_ID]
+        hass, registration[CONF_USER_ID]
     ):
-        if CONF_CLOUDHOOK_URL in config_entry.data:
-            resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
+        if CONF_CLOUDHOOK_URL in registration:
+            resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    webhook_id = registration[CONF_WEBHOOK_ID]
 
     entities = {}
     for entry in er.async_entries_for_config_entry(
@@ -771,7 +788,7 @@ async def webhook_get_config(
 
     resp["entities"] = entities
 
-    return webhook_response(resp, registration=config_entry.data)
+    return webhook_response(resp, registration=registration)
 
 
 @WEBHOOK_COMMANDS.register("scan_tag")

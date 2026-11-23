@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import override
 
 from infrared_protocols.codes.lg.ac import LGACCode
+from infrared_protocols.codes.lg.home_theater import LGHomeTheaterCode
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -23,7 +24,7 @@ PARALLEL_UPDATES = 1
 class LgIrButtonEntityDescription(ButtonEntityDescription):
     """Describes LG IR button entity."""
 
-    command_code: LGTVCode | LGACCode
+    command_code: LGTVCode | LGACCode | LGHomeTheaterCode
 
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
@@ -171,13 +172,161 @@ AC_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     ),
 )
 
+HOME_THEATER_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
+    LgIrButtonEntityDescription(
+        key="power", translation_key="power", command_code=LGHomeTheaterCode.POWER
+    ),
+    LgIrButtonEntityDescription(
+        key="home", translation_key="home", command_code=LGHomeTheaterCode.HOME
+    ),
+    LgIrButtonEntityDescription(
+        key="input",
+        translation_key="input",
+        command_code=LGHomeTheaterCode.FUNCTION,
+    ),
+    LgIrButtonEntityDescription(
+        key="info",
+        translation_key="info",
+        command_code=LGHomeTheaterCode.INFO_MENU,
+    ),
+    LgIrButtonEntityDescription(
+        key="disc_menu",
+        translation_key="disc_menu",
+        command_code=LGHomeTheaterCode.DISC_MENU,
+    ),
+    LgIrButtonEntityDescription(
+        key="title_popup",
+        translation_key="title_popup",
+        command_code=LGHomeTheaterCode.TITLE_POPUP,
+    ),
+    LgIrButtonEntityDescription(
+        key="up", translation_key="up", command_code=LGHomeTheaterCode.NAV_UP
+    ),
+    LgIrButtonEntityDescription(
+        key="down", translation_key="down", command_code=LGHomeTheaterCode.NAV_DOWN
+    ),
+    LgIrButtonEntityDescription(
+        key="left", translation_key="left", command_code=LGHomeTheaterCode.NAV_LEFT
+    ),
+    LgIrButtonEntityDescription(
+        key="right", translation_key="right", command_code=LGHomeTheaterCode.NAV_RIGHT
+    ),
+    LgIrButtonEntityDescription(
+        key="ok", translation_key="ok", command_code=LGHomeTheaterCode.OK
+    ),
+    LgIrButtonEntityDescription(
+        key="back", translation_key="back", command_code=LGHomeTheaterCode.BACK
+    ),
+    LgIrButtonEntityDescription(
+        key="clear", translation_key="clear", command_code=LGHomeTheaterCode.CLEAR
+    ),
+    LgIrButtonEntityDescription(
+        key="num_0", translation_key="num_0", command_code=LGHomeTheaterCode.NUM_0
+    ),
+    LgIrButtonEntityDescription(
+        key="num_1", translation_key="num_1", command_code=LGHomeTheaterCode.NUM_1
+    ),
+    LgIrButtonEntityDescription(
+        key="num_2", translation_key="num_2", command_code=LGHomeTheaterCode.NUM_2
+    ),
+    LgIrButtonEntityDescription(
+        key="num_3", translation_key="num_3", command_code=LGHomeTheaterCode.NUM_3
+    ),
+    LgIrButtonEntityDescription(
+        key="num_4", translation_key="num_4", command_code=LGHomeTheaterCode.NUM_4
+    ),
+    LgIrButtonEntityDescription(
+        key="num_5", translation_key="num_5", command_code=LGHomeTheaterCode.NUM_5
+    ),
+    LgIrButtonEntityDescription(
+        key="num_6", translation_key="num_6", command_code=LGHomeTheaterCode.NUM_6
+    ),
+    LgIrButtonEntityDescription(
+        key="num_7", translation_key="num_7", command_code=LGHomeTheaterCode.NUM_7
+    ),
+    LgIrButtonEntityDescription(
+        key="num_8", translation_key="num_8", command_code=LGHomeTheaterCode.NUM_8
+    ),
+    LgIrButtonEntityDescription(
+        key="num_9", translation_key="num_9", command_code=LGHomeTheaterCode.NUM_9
+    ),
+    LgIrButtonEntityDescription(
+        key="asterisk",
+        translation_key="asterisk",
+        command_code=LGHomeTheaterCode.ASTERISK,
+    ),
+    LgIrButtonEntityDescription(
+        key="open_close",
+        translation_key="open_close",
+        command_code=LGHomeTheaterCode.OPEN_CLOSE,
+    ),
+    LgIrButtonEntityDescription(
+        key="optical_tv_sound",
+        translation_key="optical_tv_sound",
+        command_code=LGHomeTheaterCode.OPTICAL_TV_SOUND,
+    ),
+    LgIrButtonEntityDescription(
+        key="sound_effect",
+        translation_key="sound_effect",
+        command_code=LGHomeTheaterCode.SOUND_EFFECT,
+    ),
+    LgIrButtonEntityDescription(
+        key="speaker_level",
+        translation_key="speaker_level",
+        command_code=LGHomeTheaterCode.SPEAKER_LEVEL,
+    ),
+    LgIrButtonEntityDescription(
+        key="audio_track",
+        translation_key="audio_track",
+        command_code=LGHomeTheaterCode.AUDIO,
+    ),
+    LgIrButtonEntityDescription(
+        key="subtitle",
+        translation_key="subtitle",
+        command_code=LGHomeTheaterCode.SUBTITLE,
+    ),
+    LgIrButtonEntityDescription(
+        key="sleep", translation_key="sleep", command_code=LGHomeTheaterCode.SLEEP
+    ),
+    LgIrButtonEntityDescription(
+        key="record", translation_key="record", command_code=LGHomeTheaterCode.RECORD
+    ),
+    LgIrButtonEntityDescription(
+        key="repeat", translation_key="repeat", command_code=LGHomeTheaterCode.REPEAT
+    ),
+    LgIrButtonEntityDescription(
+        key="rewind",
+        translation_key="rewind",
+        command_code=LGHomeTheaterCode.SCAN_BACKWARD,
+    ),
+    LgIrButtonEntityDescription(
+        key="fast_forward",
+        translation_key="fast_forward",
+        command_code=LGHomeTheaterCode.SCAN_FORWARD,
+    ),
+    LgIrButtonEntityDescription(
+        key="red", translation_key="red", command_code=LGHomeTheaterCode.RED
+    ),
+    LgIrButtonEntityDescription(
+        key="green", translation_key="green", command_code=LGHomeTheaterCode.GREEN
+    ),
+    LgIrButtonEntityDescription(
+        key="yellow", translation_key="yellow", command_code=LGHomeTheaterCode.YELLOW
+    ),
+    LgIrButtonEntityDescription(
+        key="blue", translation_key="blue", command_code=LGHomeTheaterCode.BLUE
+    ),
+)
+
 _DEVICE_BUTTONS: dict[LGDeviceType, tuple[LgIrButtonEntityDescription, ...]] = {
     LGDeviceType.TV: TV_BUTTON_DESCRIPTIONS,
     LGDeviceType.AC: AC_BUTTON_DESCRIPTIONS,
+    LGDeviceType.HOME_THEATER: HOME_THEATER_BUTTON_DESCRIPTIONS,
 }
 _DEVICE_NAMES: dict[LGDeviceType, str] = {
     LGDeviceType.TV: "LG TV",
     LGDeviceType.AC: "LG AC",
+    LGDeviceType.HOME_THEATER: "LG Home Theater",
 }
 
 

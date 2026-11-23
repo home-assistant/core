@@ -2,25 +2,19 @@
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
 from homeassistant.components.switch_as_x.const import (
     CONF_INVERT,
     CONF_TARGET_DOMAIN,
     DOMAIN,
 )
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveState,
 )
+from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -73,8 +67,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -84,8 +78,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -95,8 +89,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -106,8 +100,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -117,8 +111,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -128,8 +122,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TOGGLE,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -162,8 +156,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -173,8 +167,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -184,8 +178,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {CONF_ENTITY_ID: "valve.decorative_lights"},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: "valve.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -195,8 +189,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -206,8 +200,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -217,8 +211,8 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TOGGLE,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()

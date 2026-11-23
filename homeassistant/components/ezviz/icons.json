@@ -43,9 +43,6 @@
     }
   },
   "services": {
-    "set_alarm_detection_sensibility": {
-      "service": "mdi:motion-sensor"
-    },
     "wake_device": {
       "service": "mdi:sleep-off"
     }

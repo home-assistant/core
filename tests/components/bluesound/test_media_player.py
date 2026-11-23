@@ -13,7 +13,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.bluesound.const import ATTR_MASTER
+from homeassistant.components.bluesound.const import ATTR_MASTER, DOMAIN
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -21,7 +21,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -32,18 +31,16 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SERVICE_SHUFFLE_SET,
-    SERVICE_UNJOIN,
-    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     BrowseMedia,
     MediaClass,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
 from homeassistant.components.media_source import PlayMedia
@@ -54,6 +51,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -95,8 +93,11 @@ async def test_volume_set(
     """Test the media player volume set."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+        },
         blocking=True,
     )
 
@@ -109,8 +110,8 @@ async def test_volume_mute(
     """Test the media player volume mute."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", "is_volume_muted": True},
+        MediaPlayerService.VOLUME_MUTE,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111", "is_volume_muted": True},
         blocking=True,
     )
 
@@ -123,8 +124,8 @@ async def test_volume_up(
     """Test the media player volume up."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -137,8 +138,8 @@ async def test_volume_down(
     """Test the media player volume down."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -164,8 +165,11 @@ async def test_select_input_source(
     """Test the media player select input source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: input},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.SOURCE: input,
+        },
     )
 
     player_mocks.player_data.player.play_url.assert_called_once_with(url)
@@ -177,8 +181,11 @@ async def test_select_preset_source(
     """Test the media player select preset source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "preset1"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.SOURCE: "preset1",
+        },
     )
 
     player_mocks.player_data.player.load_preset.assert_called_once_with(1)
@@ -414,8 +421,8 @@ async def test_volume_up_from_6_to_7(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -531,10 +538,10 @@ async def test_join_players(
     """Test the media_player.join action."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_GROUP_MEMBERS: "media_player.player_name2222",
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: "media_player.player_name2222",
         },
         blocking=True,
     )
@@ -559,10 +566,10 @@ async def test_join_players_after_entity_id_change(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_GROUP_MEMBERS: "media_player.player_name2222",
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: "media_player.player_name2222",
         },
         blocking=True,
     )
@@ -570,10 +577,10 @@ async def test_join_players_after_entity_id_change(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_GROUP_MEMBERS: "media_player.renamed_member",
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: "media_player.renamed_member",
         },
         blocking=True,
     )
@@ -586,16 +593,21 @@ async def test_join_player_cannot_join_to_self(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
     """Test that joining to self is not allowed."""
-    with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
+    with pytest.raises(
+        ServiceValidationError, match="Cannot join player to itself"
+    ) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.player_name1111",
-                ATTR_GROUP_MEMBERS: "media_player.player_name1111",
+                TargetKey.ENTITY_ID: "media_player.player_name1111",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: "media_player.player_name1111",
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "cannot_join_self"
 
 
 async def test_unjoin_player(
@@ -617,8 +629,8 @@ async def test_unjoin_player(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -666,8 +678,8 @@ async def test_unjoin_player_error(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_UNJOIN,
-            {ATTR_ENTITY_ID: "media_player.player_name1111"},
+            MediaPlayerService.UNJOIN,
+            {TargetKey.ENTITY_ID: "media_player.player_name1111"},
             blocking=True,
         )
 
@@ -829,16 +841,22 @@ async def test_select_unknown_source(
     hass: HomeAssistant, setup_config_entry: None
 ) -> None:
     """Test selecting an unknown source raises an error."""
-    with pytest.raises(ServiceValidationError, match="Source unknown not found"):
+    with pytest.raises(
+        ServiceValidationError, match="Source unknown not found"
+    ) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: "media_player.player_name1111",
-                ATTR_INPUT_SOURCE: "unknown",
+                TargetKey.ENTITY_ID: "media_player.player_name1111",
+                MediaPlayerServiceArgument.SOURCE: "unknown",
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "source_not_found"
+    assert exc_info.value.translation_placeholders == {"source": "unknown"}
 
 
 async def test_media_seek(
@@ -854,8 +872,11 @@ async def test_media_seek(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_MEDIA_SEEK_POSITION: 30},
+        MediaPlayerService.MEDIA_SEEK,
+        {
+            TargetKey.ENTITY_ID: "media_player.player_name1111",
+            MediaPlayerServiceArgument.SEEK_POSITION: 30,
+        },
         blocking=True,
     )
 
@@ -876,8 +897,8 @@ async def test_unjoin_player_as_leader(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -898,11 +919,11 @@ async def test_play_media_source(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.player_name1111",
-                ATTR_MEDIA_CONTENT_TYPE: "music",
-                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
+                TargetKey.ENTITY_ID: "media_player.player_name1111",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
             },
             blocking=True,
         )

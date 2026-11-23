@@ -57,5 +57,8 @@ LEGACY_HACS_SYSTEM_ID = (
 WARNING_VERSION = 1
 CONF_WARNING_ACCEPTED = "warning_accepted"
 
+# The id of the download profile, in the options of the config entry
+CONF_PROFILE = "profile"
+
 # Installs that need a restart get an issue per repository and version
 RESTART_ISSUE_PREFIX = "restart_required_"

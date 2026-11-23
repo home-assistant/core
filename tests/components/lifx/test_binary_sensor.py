@@ -14,6 +14,7 @@ async def test_hev_cycle_state(
 ) -> None:
     """Test HEV cycle state follows typed HEV state."""
     device = create_mock_hev_light()
+    device.state.hev_cycle.remaining_s = 30
     await async_setup_lifx_entry(hass, device)
 
     entity_id = "binary_sensor.my_group_my_bulb_clean_cycle"

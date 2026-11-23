@@ -82,7 +82,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -126,6 +126,13 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.DLQ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="power_on_behavior",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -227,7 +234,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -258,7 +265,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -375,7 +382,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -387,7 +394,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -437,7 +444,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
     DeviceCategory.ZNJDQ: (
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
             entity_category=EntityCategory.CONFIG,
         ),
         TuyaSelectEntityDescription(
