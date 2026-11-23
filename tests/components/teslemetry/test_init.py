@@ -3998,6 +3998,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
     mock_energy_info_stream: MagicMock,
+    mock_energy_tariff_stream: MagicMock,
     entry_factory: Callable[[], MockConfigEntry],
     release: Callable[[HomeAssistant, MagicMock, str], Awaitable[None]],
     platform: Platform,
@@ -4007,7 +4008,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     commanded: str,
     confirmed: str,
 ) -> None:
-    """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
+    """A cloud-owned command value holds through other updates until the next cloud site_info."""
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
@@ -4028,6 +4029,11 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     assert hass.states.get(entity_id).state == commanded
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get(entity_id).state == commanded
+
+    # A tariff push republishes the coordinator view without a new site_info.
+    mock_energy_tariff_stream.send(None)
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == commanded
 
     # The cloud has not taken the command, and the off-grid reserve moved.

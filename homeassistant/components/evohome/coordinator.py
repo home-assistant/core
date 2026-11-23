@@ -138,9 +138,7 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
             return
 
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
+        await self._async_refresh(log_failures=False)
 
 
 class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
@@ -424,7 +422,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 raise
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
             return  # the GET failed, so retry it at the next poll
-        except ec2.InvalidScheduleError as err:
+        except ec2.InvalidGetScheduleError as err:
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
         else:
             self.logger.debug("%s: Schedule = %s", child, schedule)

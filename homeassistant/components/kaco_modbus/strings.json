@@ -39,6 +39,11 @@
       }
     }
   },
+  "device": {
+    "mppt": {
+      "name": "MPPT {number}"
+    }
+  },
   "entity": {
     "sensor": {
       "ac_current": {

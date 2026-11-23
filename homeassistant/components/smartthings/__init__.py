@@ -1,5 +1,6 @@
 """Support for SmartThings Cloud."""
 
+import asyncio
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
@@ -87,6 +88,7 @@ class SmartThingsData:
     scenes: dict[str, Scene]
     rooms: dict[str, str]
     client: SmartThings
+    subscription_task: asyncio.Task[None]
 
 
 @dataclass
@@ -216,7 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
-    entry.async_create_background_task(
+    subscription_task = entry.async_create_background_task(
         hass,
         client.subscribe(
             entry.data[CONF_LOCATION_ID],
@@ -224,6 +226,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         ),
         "smartthings_socket",
     )
+    # The task is kept for unload, so asyncio would only report its error then
+    subscription_task.add_done_callback(_log_subscription_error)
 
     device_status: dict[str, FullDevice] = {}
     try:
@@ -291,6 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         client=client,
         scenes=scenes,
         rooms=rooms,
+        subscription_task=subscription_task,
     )
 
     # Events are deprecated and will be removed in 2025.10
@@ -318,7 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     async def _handle_shutdown(_: Event) -> None:
         """Handle shutdown."""
-        await client.delete_subscription(subscription_id)
+        await _async_release_subscription(entry, client, subscription_task)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_shutdown)
@@ -345,11 +350,31 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SmartThingsConfigEntry
 ) -> None:
     """Unload a config entry."""
-    client = entry.runtime_data.client
+    await _async_release_subscription(
+        entry, entry.runtime_data.client, entry.runtime_data.subscription_task
+    )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+def _log_subscription_error(task: asyncio.Task[None]) -> None:
+    """Log why the event stream ended."""
+    if not task.cancelled() and (err := task.exception()) is not None:
+        _LOGGER.error("SmartThings event stream ended: %s", err, exc_info=err)
+
+
+async def _async_release_subscription(
+    entry: SmartThingsConfigEntry, client: SmartThings, task: asyncio.Task[None]
+) -> None:
+    """Stop the event stream, then delete its current subscription."""
+    # The stream creates a new subscription when its current one is deleted
+    if not task.done():
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    # Reconnects replace the subscription, so the one from the setup may be gone
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
         with contextlib.suppress(SmartThingsConnectionError):
             await client.delete_subscription(subscription_id)
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
