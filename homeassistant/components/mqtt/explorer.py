@@ -50,9 +50,11 @@ ARTIFACT_TAG = "tag"
 
 
 def _origin_as_dict(origin: dict[str, Any]) -> dict[str, Any]:
+    # Kept as received, while discovery accepts numbers for these strings
+    sw_version = origin.get("sw_version")
     return {
-        "name": origin["name"],
-        "sw_version": origin.get("sw_version"),
+        "name": str(origin["name"]),
+        "sw_version": None if sw_version is None else str(sw_version),
         "support_url": origin.get("support_url"),
     }
 
@@ -80,7 +82,7 @@ class _Sources:
             "id": source_id,
             "type": source_type,
             "title": title,
-            "sw_version": origin.get("sw_version") if origin else None,
+            "sw_version": _origin_as_dict(origin)["sw_version"] if origin else None,
         }
         return source_id
 
@@ -89,7 +91,7 @@ class _Sources:
         """Return the source ID for a discovery payload."""
         if (origin := discovery_payload.get(CONF_ORIGIN)) is None:
             return self.add(SOURCE_DISCOVERY, SOURCE_DISCOVERY)
-        name: str = origin["name"]
+        name = str(origin["name"])
         return self.add(f"origin:{name}", SOURCE_DISCOVERY, name, origin)
 
     @callback
@@ -172,7 +174,7 @@ def _artifact_topics(
     """Return the topic a device trigger or tag subscribes to."""
     payload = artifact.discovery_data[ATTR_DISCOVERY_PAYLOAD]
     topic: dict[str, Any] = {
-        "topic": payload[CONF_TOPIC],
+        "topic": str(payload[CONF_TOPIC]),
         "direction": "subscribe",
         "qos": payload.get(CONF_QOS, DEFAULT_QOS),
     }

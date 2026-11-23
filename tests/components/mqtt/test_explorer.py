@@ -1066,6 +1066,41 @@ async def test_tag_without_device(
     ]
 
 
+async def test_numbers_for_strings(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test numbers that discovery accepts for strings are returned as strings."""
+    await mqtt_mock_entry()
+    config = {"topic": 123, "origin": {"name": 2, "sw_version": 1.5}}
+    async_fire_mqtt_message(hass, DISCOVERY_TAG_TOPIC, json.dumps(config))
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "mqtt/explorer/structure"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["sources"] == [
+        {"id": "origin:2", "type": "discovery", "title": "2", "sw_version": "1.5"}
+    ]
+    assert response["result"]["artifacts"][0]["topics"] == [
+        {"topic": "123", "direction": "subscribe", "qos": 0}
+    ]
+
+    await client.send_json_auto_id(
+        {"type": "mqtt/explorer/details", "artifact_id": "tag:z2m_tag"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["configs"][0]["origin"] == {
+        "name": "2",
+        "sw_version": "1.5",
+        "support_url": None,
+    }
+    assert response["result"]["topics"][0]["topic"] == "123"
+
+
 async def test_topic_qos_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
