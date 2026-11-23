@@ -66,7 +66,7 @@ rules:
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: The only configurable values are the credentials, which are updated through the reauthentication flow.
+    comment: The username and token are issued once by the vendor and cannot be changed; the reauthentication flow only adds them when a device that needs a token is discovered.
   repair-issues: done
   stale-devices: done
 
