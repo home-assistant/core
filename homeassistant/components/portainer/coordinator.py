@@ -269,8 +269,9 @@ class PortainerCoordinator(
         self._event_listeners: dict[int, PortainerEventListener] = {}
         self._event_listeners_enabled = False
         self._container_ids_by_endpoint: dict[int, dict[str, str]] = {}
-        # Last successful fetch per endpoint, kept across timed-out polls
+        # Last successful fetch per endpoint, kept across failed polls
         self._last_endpoint_data: dict[int, PortainerCoordinatorData] = {}
+        self._unavailable_endpoints: set[int] = set()
 
     @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -304,7 +305,7 @@ class PortainerCoordinator(
         ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
-        timed_out_endpoints: set[int] = set()
+        unavailable_endpoints: set[int] = set()
         for endpoint in endpoints:
             if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
@@ -312,6 +313,7 @@ class PortainerCoordinator(
                     endpoint.name,
                     endpoint.id,
                 )
+                unavailable_endpoints.add(endpoint.id)
                 continue
 
             try:
@@ -469,21 +471,33 @@ class PortainerCoordinator(
                     volumes=volume_map,
                     stacks=stack_map,
                 )
-            except PortainerTimeoutError:
-                _LOGGER.warning(
-                    "Timed out fetching data for endpoint: %s (ID: %d). Skipping data fetch",
-                    endpoint.name,
-                    endpoint.id,
-                )
-                timed_out_endpoints.add(endpoint.id)
+            except PortainerAuthenticationError:
+                raise
+            except PortainerError as err:
+                if endpoint.id not in self._unavailable_endpoints:
+                    _LOGGER.warning(
+                        "Endpoint %s (ID: %d) is unavailable: %s",
+                        endpoint.name,
+                        endpoint.id,
+                        err,
+                    )
+                unavailable_endpoints.add(endpoint.id)
                 continue
+
+        for endpoint_id in self._unavailable_endpoints & mapped_endpoints.keys():
+            _LOGGER.info(
+                "Endpoint %s (ID: %d) is available again",
+                mapped_endpoints[endpoint_id].name,
+                endpoint_id,
+            )
+        self._unavailable_endpoints = unavailable_endpoints
 
         self._last_endpoint_data = {
             endpoint_id: data
             for endpoint_id, data in self._last_endpoint_data.items()
-            if endpoint_id in timed_out_endpoints
+            if endpoint_id in unavailable_endpoints
         } | mapped_endpoints
-        self._async_add_remove_endpoints(mapped_endpoints, timed_out_endpoints)
+        self._async_add_remove_endpoints(mapped_endpoints, unavailable_endpoints)
         self._async_sync_event_listeners(mapped_endpoints)
 
         return mapped_endpoints
@@ -544,15 +558,15 @@ class PortainerCoordinator(
     def _async_add_remove_endpoints(
         self,
         mapped_endpoints: dict[int, PortainerCoordinatorData],
-        timed_out_endpoints: set[int],
+        unavailable_endpoints: set[int],
     ) -> None:
         """Add new endpoints, remove non-existing endpoints.
 
-        Timed-out endpoints keep their known entities, so they aren't added
+        Unavailable endpoints keep their known entities, so they aren't added
         again once the endpoint answers.
         """
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
-        self.known_endpoints &= current_endpoints | timed_out_endpoints
+        self.known_endpoints &= current_endpoints | unavailable_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
 
         # The stack ID is part of the key because it is part of the stack device
@@ -566,7 +580,7 @@ class PortainerCoordinator(
         self.known_stacks = {
             stack
             for stack in self.known_stacks
-            if stack in current_stacks or stack[0] in timed_out_endpoints
+            if stack in current_stacks or stack[0] in unavailable_endpoints
         }
         new_stacks = current_stacks - self.known_stacks
 
@@ -597,7 +611,7 @@ class PortainerCoordinator(
         self.known_containers = {
             container
             for container in self.known_containers
-            if container in current_containers or container[0] in timed_out_endpoints
+            if container in current_containers or container[0] in unavailable_endpoints
         }
         new_containers = current_containers - self.known_containers
         if new_containers:
@@ -623,7 +637,7 @@ class PortainerCoordinator(
         self.known_volumes = {
             volume
             for volume in self.known_volumes
-            if volume in current_volumes or volume[0] in timed_out_endpoints
+            if volume in current_volumes or volume[0] in unavailable_endpoints
         }
         new_volumes = current_volumes - self.known_volumes
         if new_volumes:

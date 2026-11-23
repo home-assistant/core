@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerError,
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import EndpointStatus
@@ -22,7 +23,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -112,13 +113,23 @@ async def test_refresh_containers_exceptions(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_endpoint_timeout_only_marks_that_endpoint_unavailable(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(PortainerTimeoutError("timeout"), id="timeout"),
+        pytest.param(PortainerConnectionError("cannot connect"), id="connection"),
+        pytest.param(PortainerError("error"), id="error"),
+    ],
+)
+async def test_endpoint_error_only_marks_that_endpoint_unavailable(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: PortainerError,
 ) -> None:
-    """Test a timeout fetching one endpoint's data doesn't affect other endpoints."""
+    """Test an error fetching one endpoint's data doesn't affect other endpoints."""
     endpoints = cast(
         list[dict[str, Any]],
         await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
@@ -138,17 +149,109 @@ async def test_endpoint_timeout_only_marks_that_endpoint_unavailable(
 
     async def _docker_version(endpoint_id: int) -> Any:
         if endpoint_id == 42:
-            raise PortainerTimeoutError("timeout")
+            raise exception
         return docker_version
 
     mock_portainer_client.docker_version.side_effect = _docker_version
+    # Both fixture endpoints share stack IDs, which logs duplicates at setup
+    caplog.clear()
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done(wait_background_tasks=True)
+    for _ in range(2):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert (state := hass.states.get("binary_sensor.my_edge_offline_status"))
     assert state.state == STATE_UNAVAILABLE
     assert (state := hass.states.get("binary_sensor.my_environment_status"))
     assert state.state != STATE_UNAVAILABLE
+    assert caplog.text.count("Endpoint my-edge-offline (ID: 42) is unavailable") == 1
+
+    mock_portainer_client.docker_version.side_effect = None
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("binary_sensor.my_edge_offline_status"))
+    assert state.state != STATE_UNAVAILABLE
+    assert "Endpoint my-edge-offline (ID: 42) is available again" in caplog.text
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_endpoint_down_only_marks_that_endpoint_unavailable(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an endpoint going down keeps its entities until it is up again."""
+    endpoints = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
+    )
+    for endpoint in endpoints:
+        endpoint["Status"] = EndpointStatus.UP
+    mock_portainer_client.get_endpoints.return_value = [
+        Endpoint.from_dict(endpoint) for endpoint in endpoints
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+    assert (state := hass.states.get("binary_sensor.my_edge_offline_status"))
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_portainer_client.get_endpoints.return_value = [
+        Endpoint.from_dict(
+            endpoint | {"Status": EndpointStatus.DOWN}
+            if endpoint["Id"] == 42
+            else endpoint
+        )
+        for endpoint in endpoints
+    ]
+    # Both fixture endpoints share stack IDs, which logs duplicates at setup
+    caplog.clear()
+
+    for _ in range(2):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("binary_sensor.my_edge_offline_status"))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get("binary_sensor.my_environment_status"))
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_portainer_client.get_endpoints.return_value = [
+        Endpoint.from_dict(endpoint) for endpoint in endpoints
+    ]
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("binary_sensor.my_edge_offline_status"))
+    assert state.state != STATE_UNAVAILABLE
+    assert "Endpoint my-edge-offline (ID: 42) is available again" in caplog.text
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_endpoint_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an authentication error fetching endpoint data starts reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_portainer_client.docker_version.side_effect = PortainerAuthenticationError(
+        "bad creds"
+    )
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
