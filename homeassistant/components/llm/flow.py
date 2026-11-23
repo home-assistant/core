@@ -4,12 +4,12 @@ Integrations exposing DataEntryFlow-based workflows (such as config, options,
 or repair fix flows) as LLM tools can compose these helpers to handle common
 flow interaction mechanics consistently:
 
-1. Call `validate_flow_step_input` before resolving a flow to reject mutually
+1. Call `validate_step_input` before resolving a flow to reject mutually
    exclusive `user_input` and `next_step_id` arguments early.
-2. Call `async_configure_flow_step` to inspect, advance, poll progress on, or
+2. Call `async_configure_step` to inspect, advance, poll progress on, or
    abort an in-progress flow step. It returns either an error/abort `ToolResult`
    or the next `FlowResult`.
-3. Call `format_flow_result` to serialize the resulting `FlowResult` (`form`,
+3. Call `format_result` to serialize the resulting `FlowResult` (`form`,
    `menu`, `progress`, `create_entry`, or `abort`) with translated titles,
    descriptions, schema fields, and errors.
 """
@@ -90,7 +90,7 @@ def _enrich_schema_fields(
     return fields  # type: ignore[return-value]
 
 
-def format_flow_result(
+def format_result(
     result: data_entry_flow.FlowResult[Any, Any],
     translations: Mapping[str, str],
     base_prefix: str,
@@ -209,7 +209,7 @@ def format_flow_result(
     return formatted
 
 
-def validate_flow_step_input(
+def validate_step_input(
     user_input: dict[str, Any] | None,
     next_step_id: str | None,
 ) -> ToolResult | None:
@@ -229,7 +229,7 @@ def validate_flow_step_input(
     return None
 
 
-async def async_configure_flow_step[
+async def async_configure_step[
     _FlowContextT: data_entry_flow.FlowContext,
     _FlowResultT: data_entry_flow.FlowResult[Any, Any],
     _HandlerT,
@@ -248,7 +248,7 @@ async def async_configure_flow_step[
     match the current step type, or when `async_configure` raises `InvalidData`
     or `UnknownFlow`. Otherwise returns the next `FlowResult` (or the current
     `SHOW_PROGRESS` step while its progress task is still running) for the
-    caller to format with `format_flow_result`.
+    caller to format with `format_result`.
     """
     flow_id = flow_handler.flow_id
     cur_step = flow_handler.cur_step

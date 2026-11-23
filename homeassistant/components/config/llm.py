@@ -9,12 +9,7 @@ from typing import Any, Literal, cast, override
 import probatio
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.llm import (
-    LLMTools,
-    async_configure_flow_step,
-    format_flow_result,
-    validate_flow_step_input,
-)
+from homeassistant.components.llm import LLMTools, flow as llm_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -539,7 +534,7 @@ async def _async_finalize_flow_step(
                 f"component.homeassistant.config.abort.{reason}"
             )
 
-    formatted = format_flow_result(
+    formatted = llm_flow.format_result(
         result,
         trans,
         base_prefix,
@@ -852,7 +847,7 @@ class ConfigureFlowTool(Tool):
         abort: bool = args["abort"]
 
         if (
-            input_error := validate_flow_step_input(user_input, next_step_id)
+            input_error := llm_flow.validate_step_input(user_input, next_step_id)
         ) is not None:
             return input_error
 
@@ -878,7 +873,7 @@ class ConfigureFlowTool(Tool):
             )
 
         try:
-            step_result = await async_configure_flow_step(
+            step_result = await llm_flow.async_configure_step(
                 flow_mgr,
                 flow_handler,
                 short_flow_id,
