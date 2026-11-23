@@ -26,6 +26,7 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.helpers.validation_errors
 homeassistant.loader
 homeassistant.requirements
 homeassistant.runner
@@ -508,6 +509,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
+homeassistant.components.proxmoxve.*
 homeassistant.components.prusalink.*
 homeassistant.components.ptdevices.*
 homeassistant.components.pure_energie.*
@@ -647,10 +649,12 @@ homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
+homeassistant.components.tile_ble.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
 homeassistant.components.timer.*
+homeassistant.components.timer_list.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*

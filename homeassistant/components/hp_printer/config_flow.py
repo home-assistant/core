@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, SECTION_ADVANCED_SETTINGS
+from .const import DOMAIN, LOGGER, SECTION_ADVANCED_SETTINGS
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -173,5 +173,6 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             # Updates fail without the status endpoint, so check it too.
             await client.status()
         except HpPrinterError:
+            LOGGER.debug("Cannot connect to HP printer at %s:", host, exc_info=True)
             return None
         return device
