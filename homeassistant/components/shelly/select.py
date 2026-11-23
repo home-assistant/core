@@ -174,9 +174,10 @@ class RpcUiLedModeSelect(RpcSelect):
         await method({"leds": {"mode": option}})
 
 
-RPC_SELECT_ENTITIES: Final = {
-    "cury_mode": RpcSelectDescription(
-        key="cury",
+RPC_SELECT_ENTITIES: Final = (
+    RpcSelectDescription(
+        key="cury_mode",
+        components=("cury",),
         sub_key="mode",
         translation_key="cury_mode",
         options=[
@@ -191,8 +192,9 @@ RPC_SELECT_ENTITIES: Final = {
         method="cury_set_mode",
         entity_class=RpcCuryModeSelect,
     ),
-    "enum_generic": RpcSelectDescription(
-        key="enum",
+    RpcSelectDescription(
+        key="enum_generic",
+        components=("enum",),
         sub_key="value",
         removal_condition=lambda config, _status, key: (
             not is_view_for_platform(config, key, SELECT_DOMAIN)
@@ -200,16 +202,18 @@ RPC_SELECT_ENTITIES: Final = {
         method="enum_set",
         role=ROLE_GENERIC,
     ),
-    "ledstrip_palette": RpcSelectDescription(
-        key="ledstrip",
+    RpcSelectDescription(
+        key="ledstrip_palette",
+        components=("ledstrip",),
         sub_key="palette",
         translation_key="effect_palette",
         method="ledstrip_set",
         supported=lambda _: True,
         entity_class=RpcLedStripPaletteSelect,
     ),
-    "plugs_ui_led_mode": RpcSelectDescription(
-        key="plugs_ui",
+    RpcSelectDescription(
+        key="plugs_ui_led_mode",
+        components=("plugs_ui",),
         translation_key="led_mode",
         entity_category=EntityCategory.CONFIG,
         options=["power", "switch", "off"],
@@ -217,8 +221,9 @@ RPC_SELECT_ENTITIES: Final = {
         supported=lambda _: True,
         entity_class=RpcUiLedModeSelect,
     ),
-    "powerstrip_ui_led_mode": RpcSelectDescription(
-        key="powerstrip_ui",
+    RpcSelectDescription(
+        key="powerstrip_ui_led_mode",
+        components=("powerstrip_ui",),
         translation_key="led_mode",
         entity_category=EntityCategory.CONFIG,
         options=["power", "switch", "off"],
@@ -226,7 +231,7 @@ RPC_SELECT_ENTITIES: Final = {
         supported=lambda _: True,
         entity_class=RpcUiLedModeSelect,
     ),
-}
+)
 
 
 async def async_setup_entry(

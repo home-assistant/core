@@ -22,7 +22,7 @@ from homeassistant.components.wilight.switch import (
     ATTR_TRIGGER_3,
     ATTR_TRIGGER_4,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -101,7 +101,7 @@ async def test_on_off_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering"},
+        {TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering"},
         blocking=True,
     )
 
@@ -114,7 +114,7 @@ async def test_on_off_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering"},
+        {TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering"},
         blocking=True,
     )
 
@@ -127,7 +127,7 @@ async def test_on_off_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause"},
+        {TargetKey.ENTITY_ID: "switch.wl000000000099_2_pause"},
         blocking=True,
     )
 
@@ -140,7 +140,7 @@ async def test_on_off_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause"},
+        {TargetKey.ENTITY_ID: "switch.wl000000000099_2_pause"},
         blocking=True,
     )
 
@@ -162,7 +162,7 @@ async def test_switch_services(
         WiLightService.SET_WATERING_TIME,
         {
             WiLightServiceArgument.WATERING_TIME: 30,
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
     )
@@ -178,7 +178,7 @@ async def test_switch_services(
         WiLightService.SET_PAUSE_TIME,
         {
             WiLightServiceArgument.PAUSE_TIME: 18,
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_2_pause",
         },
         blocking=True,
     )
@@ -195,7 +195,7 @@ async def test_switch_services(
         {
             WiLightServiceArgument.TRIGGER_INDEX: "1",
             WiLightServiceArgument.TRIGGER: "12715301",
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
     )
@@ -212,7 +212,7 @@ async def test_switch_services(
         {
             WiLightServiceArgument.TRIGGER_INDEX: "2",
             WiLightServiceArgument.TRIGGER: "12707301",
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
     )
@@ -229,7 +229,7 @@ async def test_switch_services(
         {
             WiLightServiceArgument.TRIGGER_INDEX: "3",
             WiLightServiceArgument.TRIGGER: "00015301",
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
     )
@@ -246,7 +246,7 @@ async def test_switch_services(
         {
             WiLightServiceArgument.TRIGGER_INDEX: "4",
             WiLightServiceArgument.TRIGGER: "00008300",
-            CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_1_watering",
+            TargetKey.ENTITY_ID: "switch.wl000000000099_1_watering",
         },
         blocking=True,
     )
@@ -263,7 +263,7 @@ async def test_switch_services(
             WiLightService.SET_WATERING_TIME,
             {
                 WiLightServiceArgument.WATERING_TIME: 30,
-                CommonServiceArgument.ENTITY_ID: "switch.wl000000000099_2_pause",
+                TargetKey.ENTITY_ID: "switch.wl000000000099_2_pause",
             },
             blocking=True,
         )

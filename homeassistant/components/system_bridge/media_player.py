@@ -506,7 +506,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             model.player = player.id
         try:
             response = await self.coordinator.websocket_client.media_control(model)
-        except ConnectionClosedException as e:
+        except (ConnectionClosedException, ConnectionResetError) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",

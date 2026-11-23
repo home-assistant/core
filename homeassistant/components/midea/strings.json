@@ -36,7 +36,7 @@
       },
       "auto": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select the discovered device to configure"

@@ -166,9 +166,12 @@ class WellKnownProtectedResourceView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
+    extra_urls = ["/.well-known/oauth-protected-resource/{resource_path:.+}"]
     name = "well-known/oauth-protected-resource"
 
-    async def get(self, request: web.Request) -> web.Response:
+    async def get(
+        self, request: web.Request, resource_path: str | None = None
+    ) -> web.Response:
         """Return the protected resource metadata."""
         hass = request.app[KEY_HASS]
         try:
@@ -176,9 +179,19 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         except NoURLAvailableError:
             return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
 
+        raw_suffix = (
+            request.rel_url.raw_path.removeprefix(self.url)
+            if resource_path is not None
+            else ""
+        )
+        if raw_suffix and not await hass.http.async_path_requires_auth(
+            request, raw_suffix
+        ):
+            return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
+
         return self.json(
             {
-                "resource": url_prefix,
+                "resource": f"{url_prefix}{raw_suffix}",
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
                     "https://contributors.home-assistant.io/core/internals/auth-api/"

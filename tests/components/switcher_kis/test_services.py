@@ -12,7 +12,7 @@ from homeassistant.components.switcher_kis.services import (
     SwitcherService,
     SwitcherServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_validation import time_period_str
@@ -56,7 +56,7 @@ async def test_turn_on_with_timer_service(
             DOMAIN,
             SwitcherService.TURN_ON_WITH_TIMER,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
@@ -96,7 +96,7 @@ async def test_turn_on_with_timer_service_token_needed(
             DOMAIN,
             SwitcherService.TURN_ON_WITH_TIMER,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
@@ -126,7 +126,7 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
             DOMAIN,
             SwitcherService.SET_AUTO_OFF,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
             },
             blocking=True,
@@ -156,7 +156,7 @@ async def test_set_auto_off_service_token_needed(
             DOMAIN,
             SwitcherService.SET_AUTO_OFF,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
             },
             blocking=True,
@@ -186,7 +186,7 @@ async def test_set_auto_off_service_fail(
                 DOMAIN,
                 SwitcherService.SET_AUTO_OFF,
                 {
-                    ATTR_ENTITY_ID: entity_id,
+                    TargetKey.ENTITY_ID: entity_id,
                     SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
                 },
                 blocking=True,
@@ -223,7 +223,7 @@ async def test_set_auto_off_service_fail_token_needed(
             DOMAIN,
             SwitcherService.SET_AUTO_OFF,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
             },
             blocking=True,
@@ -253,7 +253,7 @@ async def test_plug_unsupported_services(
             DOMAIN,
             SwitcherService.TURN_ON_WITH_TIMER,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
             },
             blocking=True,
@@ -267,7 +267,7 @@ async def test_plug_unsupported_services(
             DOMAIN,
             SwitcherService.SET_AUTO_OFF,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SwitcherServiceArgument.AUTO_OFF: DUMMY_AUTO_OFF_SET,
             },
             blocking=True,

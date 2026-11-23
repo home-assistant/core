@@ -35,7 +35,7 @@ def mock_ble_device() -> Generator[AsyncMock]:
     """Override async_scanner_count."""
     with patch(
         "homeassistant.components.hue_ble.async_ble_device_from_address",
-        return_value=generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+        return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
     ) as mock:
         yield mock
 

@@ -294,52 +294,16 @@
       "gas_price_offtake_excl_vat_with_ean": {
         "default": "mdi:meter-gas"
       },
-      "gas_price_offtake_offpeak": {
+      "gas_price_offtake_per_m3": {
         "default": "mdi:meter-gas"
       },
-      "gas_price_offtake_offpeak_excl_vat": {
+      "gas_price_offtake_per_m3_excl_vat": {
         "default": "mdi:meter-gas"
       },
-      "gas_price_offtake_offpeak_excl_vat_with_ean": {
+      "gas_price_offtake_per_m3_excl_vat_with_ean": {
         "default": "mdi:meter-gas"
       },
-      "gas_price_offtake_offpeak_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_peak": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_peak_excl_vat": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_peak_excl_vat_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_peak_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_excl_vat": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_excl_vat_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_superoffpeak": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_superoffpeak_excl_vat": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_superoffpeak_excl_vat_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_superoffpeak_with_ean": {
+      "gas_price_offtake_per_m3_with_ean": {
         "default": "mdi:meter-gas"
       },
       "gas_price_offtake_with_ean": {

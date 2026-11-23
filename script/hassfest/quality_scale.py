@@ -1575,7 +1575,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "p1_monitor",
     "panasonic_bluray",
     "panasonic_viera",
-    "palazzetti",
     "panel_iframe",
     "peco",
     "pencom",

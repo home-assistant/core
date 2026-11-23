@@ -25,7 +25,7 @@ from homeassistant.components.mealie.services import (
     MealieService,
     MealieServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import CommonServiceArgument, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -107,7 +107,7 @@ async def test_service_add_ingredient(
         DOMAIN,
         MealieService.ADD_INGREDIENT,
         data,
-        target={ATTR_ENTITY_ID: "todo.mealie_special_groceries"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_special_groceries"},
         blocking=True,
     )
 
@@ -165,7 +165,7 @@ async def test_service_add_ingredient_invalid(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             data,
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -202,7 +202,7 @@ async def test_service_add_ingredient_requires_food_or_note(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             data,
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -226,7 +226,7 @@ async def test_service_add_ingredient_error(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             {MealieServiceArgument.NOTE: "Apples"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
