@@ -1,6 +1,7 @@
 """Support for OpenWrt (ubus) routers as a device tracker."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+from functools import partial
 from typing import TYPE_CHECKING, override
 
 import probatio
@@ -156,6 +157,54 @@ def _async_release_removed_claim(
             shared.owners.pop(mac, None)
 
 
+def _can_take_over_tracker(
+    hass: HomeAssistant,
+    shared: UbusSharedState,
+    mac: str,
+    owner_entry_id: str | None,
+) -> bool:
+    """Check whether a tracker can be taken over from its owner.
+
+    A loaded owner keeps its claim, so only a tracker whose owner has no
+    live claim on the MAC and isn't loading (e.g. it is offline and its
+    platform never loaded, as after a restart) can be taken over.
+    """
+    if shared.owners.get(mac) is not None:
+        return False
+    if owner_entry_id is None:
+        return True
+    owner_entry = hass.config_entries.async_get_entry(owner_entry_id)
+    return owner_entry is None or owner_entry.state not in (
+        ConfigEntryState.LOADED,
+        ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+
+
+@callback
+def _async_rename_devices(
+    shared: UbusSharedState,
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+) -> None:
+    """Rename devices when a client hostname is seen.
+
+    Rename here, as trackers are disabled by default and get no updates.
+    """
+    for mac, seen_by in shared.reports.items():
+        if (source := shared.source(mac)) is None:
+            continue
+        if (
+            (hostname := seen_by[source].hostname)
+            and (
+                device_entry := device_registry.async_get_device_by_connection(
+                    (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
+                )
+            )
+            and device_entry.name != hostname
+        ):
+            device_registry.async_update_device(device_entry.id, name=hostname)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UbusConfigEntry,
@@ -214,24 +263,8 @@ async def async_setup_entry(
                     registry_entry is not None
                     and registry_entry.config_entry_id != config_entry.entry_id
                 ):
-                    # A loaded owner keeps its claim, so only take over a
-                    # tracker whose owner has no live claim on the MAC (e.g. it
-                    # is offline and its platform never loaded, as after a
-                    # restart).
-                    owner_entry = (
-                        hass.config_entries.async_get_entry(
-                            registry_entry.config_entry_id
-                        )
-                        if registry_entry.config_entry_id is not None
-                        else None
-                    )
-                    if shared.owners.get(mac) is not None or (
-                        owner_entry is not None
-                        and owner_entry.state
-                        in (
-                            ConfigEntryState.LOADED,
-                            ConfigEntryState.SETUP_IN_PROGRESS,
-                        )
+                    if not _can_take_over_tracker(
+                        hass, shared, mac, registry_entry.config_entry_id
                     ):
                         continue
                     _async_take_over(mac, entity_id, registry_entry.config_entry_id)
@@ -248,23 +281,6 @@ async def async_setup_entry(
             claimed.append(mac)
         if claimed:
             async_add_entities(UbusScannerEntity(coordinator, mac) for mac in claimed)
-
-    @callback
-    def _async_rename_devices() -> None:
-        # Rename here, as trackers are disabled by default and get no updates.
-        for mac, seen_by in shared.reports.items():
-            if (source := shared.source(mac)) is None:
-                continue
-            if (
-                (hostname := seen_by[source].hostname)
-                and (
-                    device_entry := device_registry.async_get_device_by_connection(
-                        (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
-                    )
-                )
-                and device_entry.name != hostname
-            ):
-                device_registry.async_update_device(device_entry.id, name=hostname)
 
     @callback
     def _async_device_removed(
@@ -329,7 +345,16 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_CLIENTS_UPDATED, _async_rename_devices)
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_CLIENTS_UPDATED,
+            partial(
+                _async_rename_devices,
+                shared,
+                device_registry,
+                config_entry.entry_id,
+            ),
+        )
     )
     config_entry.async_on_unload(
         hass.bus.async_listen(
@@ -346,7 +371,7 @@ async def async_setup_entry(
         )
     )
     _async_update_devices()
-    _async_rename_devices()
+    _async_rename_devices(shared, device_registry, config_entry.entry_id)
 
 
 class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEntity):
