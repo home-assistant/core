@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import logging
 import operator
+import threading
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
@@ -14,6 +15,7 @@ from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
+    PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -147,6 +149,13 @@ def is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
     return err.code == AppleAuthError.TWO_FACTOR_REQUIRED
 
 
+def _is_mfa_challenge(err: BaseException) -> bool:
+    """Return True if iCloud says a verification code is outstanding."""
+    return isinstance(err, PyiCloud2FARequiredException) or (
+        isinstance(err, PyiCloudAPIResponseException) and is_2fa_status(err)
+    )
+
+
 def code_can_be_delivered(api: PyiCloudService | None) -> bool:
     """Return whether iCloud has a route to send a verification code.
 
@@ -227,6 +236,10 @@ class IcloudAccount:
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
         self._retried_fetch = False
+        # Guards the one silent login that may replace a rejected session.
+        # Normal polls do not take it, so a slow service read never blocks
+        # another poll; only the recovery decision is serialized.
+        self._recovery_lock = threading.Lock()
         self._config_entry = config_entry
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
@@ -265,16 +278,21 @@ class IcloudAccount:
             self._fetch_interval = self._max_interval
             self._schedule_next_fetch()
 
+    def _create_service(self, *, authenticate: bool = True) -> PyiCloudService:
+        """Build a service reusing the stored session, unless told not to."""
+        return PyiCloudService(
+            self._username,
+            self._password,
+            self._icloud_dir.path,
+            with_family=self._with_family,
+            authenticate=authenticate,
+            refresh_interval=None,
+        )
+
     def _setup(self) -> None:
         """Log in and read the account's devices."""
         try:
-            self.api = PyiCloudService(
-                self._username,
-                self._password,
-                self._icloud_dir.path,
-                with_family=self._with_family,
-                refresh_interval=None,
-            )
+            self.api = self._create_service()
 
         except PyiCloudConnectionException as err:
             # iCloud is unreachable; this says nothing about the credentials, so
@@ -468,6 +486,7 @@ class IcloudAccount:
         _LOGGER.debug("Updating devices")
 
         if self.api.requires_2fa:
+            self.requires_verification_code = True
             self._require_reauth()
             # Keep the timer running so polling resumes by itself once the
             # user has entered their verification code.
@@ -545,7 +564,11 @@ class IcloudAccount:
                 # to keep it current: skipping the update would leave the
                 # battery and location it has stopped reporting on show.
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
-                if self._devices[device_id].update(status):
+                wrapper = self._devices[device_id]
+                # A recovered session replaces the Apple device objects; keep
+                # the entities bound to the ones the current session owns.
+                wrapper.attach(device)
+                if wrapper.update(status):
                     new_device = True
                 continue
 
@@ -798,6 +821,74 @@ class IcloudAccount:
             ),
         ).result()
 
+    def _poll_devices(self) -> None:
+        """Update the devices once, recovering a rejected session if needed."""
+        service = self.api
+        if service is None:
+            # A poll ahead of this one was refused and handed the account to
+            # the user; it has already scheduled its own next fetch.
+            return
+        try:
+            service.authenticate()
+            self.update_devices()
+        except Exception as err:
+            if not _is_auth_failure(err) or self._reauth_pending():
+                raise
+            _LOGGER.debug("iCloud rejected the session, logging in again: %r", err)
+            self._recover_rejected_session(service)
+
+    def _recover_rejected_session(self, rejected: PyiCloudService) -> None:
+        """Try one login with the stored session before asking the user.
+
+        iCloud turns down the forced login of an existing service while the
+        stored session is usually still good. Building a new service reuses it,
+        so one silent attempt is worth making before a repair is raised.
+        """
+        with self._recovery_lock:
+            if self.api is not rejected:
+                # Another poll already recovered this rejection for both of us.
+                return
+
+            try:
+                replacement = self._create_service(authenticate=False)
+            except PyiCloudConnectionException:
+                # An outage says nothing about the credentials. Keep the old
+                # session and let the next poll try again.
+                raise
+            except PyiCloudException as login_err:
+                # Nothing left to send a code through: let reauthentication
+                # start from the password so a fresh challenge can be issued.
+                self.api = None
+                self._handle_auth_required(
+                    two_factor=_is_mfa_challenge(login_err), keep_session=False
+                )
+                return
+
+            try:
+                replacement.authenticate()
+            except Exception as login_err:
+                if _is_mfa_challenge(login_err):
+                    # The new service is the one carrying the challenge; keep
+                    # it so the reauth flow can validate the code on it.
+                    self.api = replacement
+                    self._handle_auth_required(two_factor=True, keep_session=True)
+                    return
+                if _is_auth_failure(login_err):
+                    self.api = None
+                    self._handle_auth_required(two_factor=False, keep_session=False)
+                    return
+                # An unreachable iCloud leaves the old session intact.
+                raise
+
+            self.api = replacement
+            try:
+                self.update_devices()
+            except Exception as update_err:
+                if _is_mfa_challenge(update_err) or replacement.requires_2fa:
+                    self._handle_auth_required(two_factor=True, keep_session=True)
+                    return
+                raise
+
     def keep_alive(self, now=None) -> None:
         """Keep the API alive.
 
@@ -829,35 +920,32 @@ class IcloudAccount:
             return
 
         try:
-            try:
-                self.api.authenticate()
-                self.update_devices()
-            except PyiCloudAPIResponseException as err:
-                if not is_auth_error(err):
-                    # Not an authentication failure. Hand it to the transient
-                    # handling below so it keeps being retried, rather than
-                    # parking the account for credentials that are not at fault.
-                    raise
+            self._poll_devices()
+        except PyiCloudAPIResponseException as err:
+            if is_auth_error(err):
                 self._ask_to_authenticate(err)
                 self._fetch_interval = self._max_interval
-                self._schedule_next_fetch()
-            except (
-                PyiCloud2FARequiredException,
-                PyiCloudFailedLoginException,
-                PyiCloudAuthRequiredException,
-                PyiCloudAcceptTermsException,
-            ) as err:
-                # None of these comes back on its own, so ask the user instead
-                # of retrying every couple of minutes forever.
-                self._ask_to_authenticate(err)
-                self._fetch_interval = self._max_interval
-                self._schedule_next_fetch()
+            else:
+                # Not an authentication failure: credentials are not at fault,
+                # so keep retrying rather than parking the account for them.
+                _LOGGER.exception("Error updating iCloud devices, will retry")
+                self._fetch_interval = 2
+        except (
+            PyiCloud2FARequiredException,
+            PyiCloudFailedLoginException,
+            PyiCloudAuthRequiredException,
+            PyiCloudAcceptTermsException,
+        ) as err:
+            # None of these comes back on its own, so ask the user instead of
+            # retrying every couple of minutes forever.
+            self._ask_to_authenticate(err)
+            self._fetch_interval = self._max_interval
         except Exception:
             # update_devices() reschedules itself on the errors it handles;
             # this covers the rest, such as a device missing fields.
             _LOGGER.exception("Error updating iCloud devices, will retry")
             self._fetch_interval = 2
-            self._schedule_next_fetch()
+        self._schedule_next_fetch()
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
@@ -925,6 +1013,7 @@ class IcloudDevice:
         self._status = status
 
         self._name = self._status[DEVICE_NAME]
+
         self._device_id = self._status[DEVICE_ID]
         self._device_class = self._status[DEVICE_CLASS]
         self._device_model = self._status[DEVICE_DISPLAY_NAME]
@@ -944,6 +1033,10 @@ class IcloudDevice:
             ]
         elif account.owner_fullname is not None:
             self._attrs[ATTR_OWNER_NAME] = account.owner_fullname
+
+    def attach(self, device: AppleDevice) -> None:
+        """Point the entity at the device object of the current session."""
+        self._device = device
 
     def update(self, status) -> bool:
         """Update the iCloud device.
