@@ -321,12 +321,11 @@ async def async_setup_entry(
                 ForecaSensor(coordinators.observation, subentry_id, description)
                 for description in OBSERVATION_SENSORS
             ),
-        ]
-        if coordinators.air_quality is not None:
-            entities.extend(
+            *(
                 ForecaSensor(coordinators.air_quality, subentry_id, description)
                 for description in AIR_QUALITY_SENSORS
-            )
+            ),
+        ]
         async_add_entities(entities, config_subentry_id=subentry_id)
 
 

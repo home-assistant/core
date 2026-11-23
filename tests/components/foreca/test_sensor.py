@@ -264,58 +264,6 @@ async def test_observations_missing_from_plan_keep_the_entry_loaded(
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_air_quality_not_on_plan(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_foreca_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a plan without air quality gets no air quality sensors or requests.
-
-    The key and the other sensors keep working, and the request that found
-    air quality missing from the plan is not repeated.
-    """
-    mock_foreca_client.air_quality_hourly.side_effect = ForecaProductUnavailableError
-    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not hass.config_entries.flow.async_progress()
-    assert hass.states.get(AIR_QUALITY_INDEX) is None
-    assert len(hass.states.async_all(Platform.SENSOR)) == 15
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == "8"
-
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_foreca_client.current.await_count == 2
-    assert mock_foreca_client.air_quality_hourly.await_count == 1
-
-
-async def test_air_quality_removed_from_plan(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_foreca_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test air quality dropped from the plan while running stops its requests."""
-    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, mock_config_entry)
-    assert hass.states.get(AIR_QUALITY_INDEX).state == "31"
-
-    mock_foreca_client.air_quality_hourly.side_effect = ForecaProductUnavailableError
-    for _ in range(2):
-        freezer.tick(UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(AIR_QUALITY_INDEX).state == STATE_UNKNOWN
-    assert not hass.config_entries.flow.async_progress()
-    assert mock_foreca_client.air_quality_hourly.await_count == 2
-
-
 async def test_unknown_pollutant(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

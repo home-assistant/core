@@ -48,9 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> No
         coordinators[subentry.subentry_id] = ForecaLocationCoordinators(
             weather=weather,
             observation=observation,
-            # A plan without air quality gets no air quality sensors, so this
-            # coordinator has no listeners and makes no further requests.
-            air_quality=air_quality if air_quality.on_plan else None,
+            air_quality=air_quality,
         )
 
     entry.runtime_data = coordinators
