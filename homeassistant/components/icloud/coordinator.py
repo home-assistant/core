@@ -1,7 +1,8 @@
 """Coordinators for the iCloud integration."""
 
 import asyncio
-from dataclasses import dataclass, field
+from collections.abc import Collection
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, tzinfo
 import logging
 from typing import override
@@ -13,7 +14,7 @@ from pyicloud.services.reminders.service import RemindersService
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -303,6 +304,9 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self._warned_undecoded = False
         self._skipped_undecoded = False
         self._zone_missing = False
+        # Counts confirmed writes, so a fetch that overlapped one can tell its
+        # snapshot may not include it.
+        self._change_count = 0
         # Fetching years of completed reminders means paging through tens of
         # thousands of CloudKit records on every refresh, which is what made
         # setup hang. The default excludes them; the option brings them back.
@@ -345,9 +349,39 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
 
         return result
 
+    @callback
+    def async_apply_changes(
+        self,
+        list_id: str,
+        saved: Collection[IcloudReminder],
+        deleted: Collection[str],
+    ) -> None:
+        """Apply writes iCloud has confirmed to the cached reminders.
+
+        The refresh after a write runs in the background, and the to-do
+        services fill fields missing from an update with the cached item, so
+        the cache has to reflect the write before the action returns.
+        Otherwise a second update in quick succession writes old values back.
+        """
+        self._change_count += 1
+        if self.data is None or (reminder_list := self.data.get(list_id)) is None:
+            return
+
+        pending = {reminder.uid: reminder for reminder in saved}
+        reminders = [
+            pending.pop(reminder.uid, reminder)
+            for reminder in reminder_list.reminders
+            if reminder.uid not in deleted
+        ]
+        reminders.extend(pending.values())
+        self.async_set_updated_data(
+            {**self.data, list_id: replace(reminder_list, reminders=reminders)}
+        )
+
     @override
     async def _async_update_data(self) -> dict[str, IcloudReminderList]:
         """Fetch reminders from iCloud."""
+        change_count = self._change_count
         try:
             async with asyncio.timeout(FETCH_TIMEOUT):
                 data = await self.hass.async_add_executor_job(self._fetch)
@@ -363,6 +397,11 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
 
         self._handle_zone_restored()
         self._warn_if_undecoded()
+        if change_count != self._change_count and self.data is not None:
+            # A write was confirmed while this fetch ran, so the snapshot may
+            # predate it. Keep the cache; the refresh that write requested
+            # fetches again.
+            return self.data
         return data
 
     def _handle_missing_zone(self) -> None:

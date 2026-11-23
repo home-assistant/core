@@ -1,5 +1,7 @@
 """Support for iCloud Reminders."""
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import override
 
@@ -26,12 +28,21 @@ from .coordinator import (
     UNDECODED_TITLE,
     IcloudReminder,
     IcloudRemindersCoordinator,
+    _as_reminder,
 )
 
 # Every action is a blocking read-modify-write against one shared reminders
 # service, so two concurrent calls could read the same reminder and then
 # overwrite each other.
 PARALLEL_UPDATES = 1
+
+
+@dataclass(slots=True)
+class _Changes:
+    """Writes iCloud has confirmed during one action."""
+
+    saved: list[IcloudReminder] = field(default_factory=list)
+    deleted: list[str] = field(default_factory=list)
 
 
 async def async_setup_entry(
@@ -155,7 +166,7 @@ class IcloudTodoListEntity(
         """Return the reminders service. Runs in the executor."""
         return self.coordinator.reminders
 
-    def _create(self, item: TodoItem) -> None:
+    def _create(self, changes: _Changes, item: TodoItem) -> None:
         """Create a reminder. Runs in the executor."""
         due, all_day = _as_due(item.due)
         if isinstance(item.due, datetime):
@@ -163,7 +174,7 @@ class IcloudTodoListEntity(
         else:
             time_zone = None
 
-        self._service().create(
+        created = self._service().create(
             list_id=self._list_id,
             title=item.summary or "",
             desc=item.description or "",
@@ -171,8 +182,9 @@ class IcloudTodoListEntity(
             all_day=all_day,
             time_zone=time_zone,
         )
+        changes.saved.append(_as_reminder(created))
 
-    def _update(self, item: TodoItem) -> None:
+    def _update(self, changes: _Changes, item: TodoItem) -> None:
         """Apply an update. Runs in the executor."""
         service = self._service()
         reminder = service.get(item.uid)
@@ -205,28 +217,37 @@ class IcloudTodoListEntity(
             reminder.completed = item.status == TodoItemStatus.COMPLETED
 
         service.update(reminder)
+        changes.saved.append(_as_reminder(reminder))
 
-    def _delete(self, uids: list[str]) -> None:
+    def _delete(self, changes: _Changes, uids: list[str]) -> None:
         """Delete reminders. Runs in the executor."""
         service = self._service()
         for uid in uids:
             service.delete(service.get(uid))
+            changes.deleted.append(uid)
 
-    async def _async_call(self, func, *args, **kwargs) -> None:
+    async def _async_call[T](self, func: Callable[[_Changes, T], None], arg: T) -> None:
         """Run a blocking call and refresh the list afterwards."""
+        changes = _Changes()
         try:
-            await self.hass.async_add_executor_job(lambda: func(*args, **kwargs))
+            await self.hass.async_add_executor_job(func, changes, arg)
         except REMINDERS_ERRORS as err:
             raise HomeAssistantError(f"Error updating reminders: {err}") from err
         finally:
-            # A batch that failed part of the way through still changed things
-            # in iCloud, so refresh either way rather than showing reminders
-            # that are already gone until the next poll.
+            # Show what iCloud confirmed straight away, including the part of
+            # a batch that succeeded before a failure. Updates fill omitted
+            # fields from the cached item, so a stale cache would undo them.
+            if changes.saved or changes.deleted:
+                self.coordinator.async_apply_changes(
+                    self._list_id, changes.saved, changes.deleted
+                )
+            # Still refresh, rather than waiting for the next poll, to pick up
+            # anything the write changed that the cache can't derive.
             #
-            # The change is already saved in iCloud, so the action does not
-            # wait for the refresh. Listing every list can take tens of seconds
-            # on a large account, and voice assistants hold their reply until
-            # the action returns, so waiting left users repeating themselves.
+            # The action does not wait for the refresh. Listing every list can
+            # take tens of seconds on a large account, and voice assistants
+            # hold their reply until the action returns, so waiting left users
+            # repeating themselves.
             self.coordinator.config_entry.async_create_background_task(
                 self.hass,
                 self.coordinator.async_request_refresh(),
