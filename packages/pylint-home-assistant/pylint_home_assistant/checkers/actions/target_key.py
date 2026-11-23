@@ -100,11 +100,11 @@ def _keyword_value(node: nodes.Call, name: str) -> nodes.NodeNG | None:
     return None
 
 
-def _call_data(node: nodes.Call) -> nodes.NodeNG | None:
-    """Return the data argument of an action call."""
-    if len(node.args) >= 3:
-        return node.args[2]
-    return _keyword_value(node, "service_data")
+def _argument(node: nodes.Call, position: int, name: str) -> nodes.NodeNG | None:
+    """Return an argument of a call, passed by position or by keyword."""
+    if len(node.args) > position:
+        return node.args[position]
+    return _keyword_value(node, name)
 
 
 class TargetKeyChecker(BaseChecker):
@@ -142,11 +142,12 @@ class TargetKeyChecker(BaseChecker):
 
     def _check_data(self, node: nodes.Call) -> None:
         """Report the entity_id key of the data of an action with a target."""
-        data = _call_data(node)
-        if len(node.args) < 2 or not isinstance(data, nodes.Dict):
+        action = _argument(node, 1, "service")
+        data = _argument(node, 2, "service_data")
+        if action is None or not isinstance(data, nodes.Dict):
             return
         keys = [key for key, _ in data.items if key.as_string() in _ENTITY_ID_KEYS]
-        if not keys or not _declares_target(node.args[1]):
+        if not keys or not _declares_target(action):
             return
         for key in keys:
             self._report(key, "TargetKey.ENTITY_ID")

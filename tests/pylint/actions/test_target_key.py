@@ -237,6 +237,17 @@ hass.services.async_call(
             "CONF_ENTITY_ID",
             id="service_data_keyword",
         ),
+        pytest.param(
+            """
+hass.services.async_call(
+    domain="light",
+    service=LightService.TURN_ON,
+    service_data={ATTR_ENTITY_ID: "light.kitchen"},
+)
+""",
+            "ATTR_ENTITY_ID",
+            id="service_keyword",
+        ),
     ],
 )
 def test_data_message(
