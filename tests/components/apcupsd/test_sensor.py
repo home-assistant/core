@@ -67,6 +67,35 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
+    ("mock_request_status", "entity_id"),
+    [
+        pytest.param(
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_output_power",
+            id="missing-both-resources",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS | {"LOADPCT": "14.0 Percent"},
+            "sensor.apc_ups_output_power",
+            id="missing-nominal-power",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS | {"NOMPOWER": "330 Watts"},
+            "sensor.apc_ups_output_power",
+            id="missing-load",
+        ),
+    ],
+    indirect=["mock_request_status"],
+)
+async def test_sensor_not_created(
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+) -> None:
+    """Do not create sensors when required resources are missing."""
+    assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
     (
         "sensor",
         "mock_request_status",
