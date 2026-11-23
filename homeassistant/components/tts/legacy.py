@@ -17,10 +17,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config import config_per_platform
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
-    CommonServiceArgument,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -87,7 +87,7 @@ SCHEMA_SERVICE_SAY = probatio.Schema(
     {
         probatio.Required(ATTR_MESSAGE): cv.string,
         probatio.Optional(ATTR_CACHE): cv.boolean,
-        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.comp_entity_ids,
+        probatio.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         probatio.Optional(ATTR_LANGUAGE): cv.string,
         probatio.Optional(ATTR_OPTIONS): dict,
     }
@@ -147,7 +147,7 @@ async def async_setup_legacy(
 
         async def async_say_handle(service: ServiceCall) -> None:
             """Service handle for say."""
-            entity_ids = service.data[CommonServiceArgument.ENTITY_ID]
+            entity_ids = service.data[ATTR_ENTITY_ID]
 
             await hass.services.async_call(
                 MP_DOMAIN,
