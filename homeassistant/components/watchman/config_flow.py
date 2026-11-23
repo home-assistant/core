@@ -189,7 +189,7 @@ class SENSiTFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
     """Handles options flow for the component."""
 
     async def async_step_init(
