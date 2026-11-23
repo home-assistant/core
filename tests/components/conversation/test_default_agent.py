@@ -3927,6 +3927,53 @@ async def test_handle_intents_filters_results(
 
 
 @pytest.mark.usefixtures("init_components")
+async def test_handle_intents_filters_candidates(hass: HomeAssistant) -> None:
+    """Test that handle_intents only tries the candidates that pass the filter."""
+    agent = async_get_agent(hass)
+
+    user_input = ConversationInput(
+        text="turn on the lights",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    filtered_result, passed_result = (
+        RecognizeResult(
+            intent=Intent(intent_name),
+            intent_data=IntentData([]),
+            entities={},
+            entities_list=[],
+        )
+        for intent_name in ("HassGetState", "HassTurnOn")
+    )
+
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intents",
+            return_value=[filtered_result, passed_result],
+        ),
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+        ) as mock_process,
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        response = await agent.async_handle_intents(
+            user_input,
+            chat_log,
+            intent_filter=lambda result: result.intent.name == "HassGetState",
+        )
+
+    assert response is not None
+    assert mock_process.call_count == 1
+    assert mock_process.call_args.args[0] is passed_result
+
+
+@pytest.mark.usefixtures("init_components")
 async def test_state_names_are_not_translated(
     hass: HomeAssistant,
     init_components: None,
