@@ -24,18 +24,31 @@ async def test_entry_diagnostics(
     )
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param(
+            "https://user:secret-password@sonarr.example.com:443/",
+            id="user_and_password",
+        ),
+        pytest.param(
+            "https://:secret-token@sonarr.example.com:443/", id="password_only"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_sonarr")
 async def test_entry_diagnostics_url_credentials(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    url: str,
 ) -> None:
     """Test config entry diagnostics redact credentials in the URL."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
         data={
-            CONF_URL: "https://user:secret-password@sonarr.example.com:443/",
+            CONF_URL: url,
             CONF_API_KEY: "MOCK_API_KEY",
             CONF_VERIFY_SSL: True,
         },

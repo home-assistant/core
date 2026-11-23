@@ -17,7 +17,8 @@ TO_REDACT = {CONF_API_KEY}
 def _redact_url_credentials(url: str) -> str:
     """Redact the user and password of a URL, for example of a proxy."""
     parsed = URL(url)
-    if parsed.user is None:
+    # A token can be the password without a user, which yarl reports as no user
+    if parsed.user is None and parsed.password is None:
         return url
     return str(parsed.with_user(REDACTED).with_password(None))
 
