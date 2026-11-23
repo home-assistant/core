@@ -31,6 +31,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+# A client dropped by its last reporting router is kept visible until every
+# router has polled again, or one further poll cycle has passed, so a roam is
+# not announced as a departure before the new router has polled.
+DEPARTURE_GRACE = UPDATE_INTERVAL
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
@@ -49,12 +53,17 @@ class UbusSharedState:
     ``reports`` maps a MAC address to the latest report of each router
     which still sees the client; ``owners`` maps a MAC address to the
     config entry that owns its device tracker entity; ``health`` maps a
-    router host to the success of its last update.
+    router host to the success of its last update; ``departing`` maps a
+    MAC address to the moment its last router stopped seeing it; and
+    ``last_poll`` maps a router host to the time of its last successful
+    poll.
     """
 
     reports: dict[str, dict[str, RouterReport]]
     owners: dict[str, str]
     health: dict[str, bool]
+    departing: dict[str, tuple[datetime, str, RouterReport]]
+    last_poll: dict[str, datetime]
     seq: int
 
     def __init__(self) -> None:
@@ -62,14 +71,30 @@ class UbusSharedState:
         self.reports = {}
         self.owners = {}
         self.health = {}
+        self.departing = {}
+        self.last_poll = {}
         self.seq = 0
 
-    def source(self, mac: str) -> str | None:
-        """Return the host of the router which last reported the client."""
+    def latest_report(self, mac: str) -> tuple[str, RouterReport] | None:
+        """Return the reporting host and latest report of a visible client.
+
+        A client which its last router has dropped stays visible, sourced
+        from its last reporter, until every router has polled again or one
+        further poll cycle has passed, so a roam is not announced as a
+        departure before the new router has polled.
+        """
         seen_by = self.reports.get(mac)
-        if not seen_by:
+        if seen_by:
+            source = max(seen_by, key=lambda host: seen_by[host].seq)
+            return source, seen_by[source]
+        if (departed := self.departing.get(mac)) is None:
             return None
-        return max(seen_by, key=lambda host: seen_by[host].seq)
+        since, source, report = departed
+        if dt_util.utcnow() >= since + DEPARTURE_GRACE or not any(
+            last < since for last in self.last_poll.values()
+        ):
+            return None
+        return source, report
 
 
 class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
@@ -110,6 +135,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         # A refresh may finish after the entry was unloaded; publishing its
         # results would restore the clients released during the unload.
         if not self._unloaded:
+            shared: UbusSharedState = self.hass.data[DOMAIN]
+            shared.last_poll[self.host] = dt_util.utcnow()
             self._async_publish_clients(clients)
         return clients
 
@@ -141,25 +168,41 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         shared: UbusSharedState = self.hass.data[DOMAIN]
         reports = shared.reports
 
-        def visible(mac: str) -> tuple[str, str | None] | None:
-            if (source := shared.source(mac)) is None:
+        def visible_tuple(mac: str) -> tuple[str, RouterReport] | None:
+            """Return the client's reporting source, ignoring the handover window."""
+            seen_by = reports.get(mac)
+            if seen_by:
+                source = max(seen_by, key=lambda host: seen_by[host].seq)
+                return source, seen_by[source]
+            if (departed := shared.departing.get(mac)) is None:
                 return None
-            return source, reports[mac][source].hostname
+            return departed[1], departed[2]
 
         affected = set(clients)
         affected.update(mac for mac, seen_by in reports.items() if self.host in seen_by)
-        before = {mac: visible(mac) for mac in affected}
+        affected.update(shared.departing)
+        before = {mac: visible_tuple(mac) for mac in affected}
 
+        now = dt_util.utcnow()
         for mac, hostname in clients.items():
             shared.seq += 1
             reports.setdefault(mac, {})[self.host] = RouterReport(hostname, shared.seq)
+            shared.departing.pop(mac, None)
         for mac, seen_by in list(reports.items()):
             if self.host in seen_by and mac not in clients:
-                del seen_by[self.host]
+                report = seen_by.pop(self.host)
                 if not seen_by:
+                    # The last router stopped seeing the client; keep it
+                    # visible until every router has polled again.
                     del reports[mac]
+                    shared.departing[mac] = (now, self.host, report)
+        for mac, (since, _source, _report) in list(shared.departing.items()):
+            if now >= since + DEPARTURE_GRACE or not any(
+                last < since for last in shared.last_poll.values()
+            ):
+                del shared.departing[mac]
 
-        changed = any(visible(mac) != before[mac] for mac in affected)
+        changed = any(visible_tuple(mac) != before[mac] for mac in affected)
         if changed:
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
         return changed

@@ -278,6 +278,73 @@ async def test_roaming_device_stays_on_single_tracker(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_roam_keeps_tracker_connected_until_new_router_polls(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a roam is not announced as a departure before the new router polls."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The device is connected to router A.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # Router B comes online a half poll cycle later, so its polls are
+    # staggered against router A's.
+    freezer.tick(timedelta(seconds=15))
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    # The device roams to router B, which has not polled since the roam.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The tracker stays connected until router B reports the device.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_kept_when_owner_entry_reloaded(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -508,6 +575,11 @@ async def test_unloading_router_with_no_reports_updates_trackers(
     # remaining tracker, which is available again without router B.
     assert await hass.config_entries.async_unload(entry_b.entry_id)
     await hass.async_block_till_done()
+
+    # The handover window ends once router A has polled again.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
