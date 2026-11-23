@@ -938,3 +938,32 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
     assert isinstance(call_args.schedule, TemporarySchedule)
     assert call_args.schedule.start == datetime(2026, 9, 1, 8, 0, 0)
     assert call_args.schedule.end == datetime(2026, 9, 1, 18, 0, 0)
+
+
+async def test_add_code_service_temporary_pin_ambiguous_dst(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects datetimes during an ambiguous DST fall-back."""
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # 2026-11-01 05:30:00 UTC is 01:30 EDT (first 1 AM hour before 2 AM fall-back).
+    start_utc = datetime(2026, 11, 1, 5, 30, 0, tzinfo=UTC)
+    end_utc = datetime(2026, 11, 1, 12, 0, 0, tzinfo=UTC)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SchlageService.ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "temp_user",
+                "code": "1234",
+                "start_datetime": start_utc.isoformat(),
+                "end_datetime": end_utc.isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_invalid_schedule_timezone"
+    mock_lock.refresh_access_codes.assert_not_called()

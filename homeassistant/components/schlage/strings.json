@@ -79,6 +79,9 @@
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."
     },
+    "schlage_invalid_schedule_timezone": {
+      "message": "Start or end datetime falls within an ambiguous or invalid daylight saving time transition."
+    },
     "schlage_name_exists": {
       "message": "A PIN code with the name \"{name}\" already exists on the lock."
     },
