@@ -839,6 +839,21 @@ WEBOS_23_TV_SPEAKER_SYNCABLE = {
     "volumeSyncable": True,
     "adjustVolume": True,
 }
+WEBOS_24_TV_AND_OPTICAL_NOT_SYNCABLE = {
+    "volumeLimitable": True,
+    "activeStatus": True,
+    "maxVolume": 100,
+    "ossActivate": False,
+    "volumeLimiter": "none",
+    "soundOutput": "tv_external_speaker",
+    "volume": 1,
+    "dedicatedSpeakerConnected": False,
+    "mode": "normal",
+    "externalDeviceControl": False,
+    "muteStatus": False,
+    "volumeSyncable": False,
+    "adjustVolume": True,
+}
 WEBOS_4_ARC_NO_SUPPORT_VOLUME = {
     "returnValue": True,
     "volumeMax": 100,
@@ -897,6 +912,18 @@ SUPPORT_WEBOSTV_VOLUME_SET = (
             WEBOS_23_TV_SPEAKER_SYNCABLE,
             SUPPORT_WEBOSTV_VOLUME_SET,
             id="webos_23_tv_speaker",
+        ),
+        pytest.param(
+            "tv_external_speaker",
+            WEBOS_24_TV_AND_OPTICAL_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_24_tv_and_optical_not_syncable",
+        ),
+        pytest.param(
+            "tv_speaker",
+            WEBOS_24_ARC_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="webos_22_not_syncable_stale_sound_output",
         ),
         pytest.param(
             "external_arc",

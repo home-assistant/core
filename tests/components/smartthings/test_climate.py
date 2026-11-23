@@ -77,6 +77,26 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_without_drlc_status(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an AC with the drlc capability but without a drlc status is added."""
+    set_attribute_value(
+        devices,
+        Capability.DEMAND_RESPONSE_LOAD_CONTROL,
+        Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
+        None,
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state
+    assert not any(attribute.startswith("drlc_") for attribute in state.attributes)
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_fan_mode(
     hass: HomeAssistant,
     devices: AsyncMock,

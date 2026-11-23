@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
+import socket
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -429,6 +430,44 @@ async def test_async_poll_manual_hosts_uid_http_error(
     assert "media_player.living_room" not in entity_registry.entities
 
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_lookup_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a host that can not be resolved does not stop the manual polling."""
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    dns_down = True
+
+    def gethostbyname(host: str) -> str:
+        if dns_down and host == "10.10.10.1":
+            raise socket.gaierror(socket.EAI_AGAIN, "Temporary failure")
+        return host
+
+    with patch("socket.gethostbyname", side_effect=gethostbyname):
+        await _setup_hass(hass)
+        assert "media_player.bedroom" in entity_registry.entities
+        assert "media_player.living_room" not in entity_registry.entities
+
+        # Still failing, so not logged as a warning again
+        caplog.clear()
+        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not resolve Sonos host" in rec.message
+        ] == ["DEBUG", "DEBUG"]
+
+        # The next poll still runs and picks the speaker up
+        dns_down = False
+        async_fire_time_changed(hass, dt_util.utcnow() + 2 * DISCOVERY_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "media_player.living_room" in entity_registry.entities
 
 
 async def test_async_poll_manual_hosts_2(

@@ -748,6 +748,9 @@ class Config:
         unit_system: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
+        # First, so an invalid time zone raises before anything changes
+        if time_zone is not None:
+            await self.async_set_time_zone(time_zone)
         self.config_source = source
         if country is not UNDEFINED:
             self.country = country
@@ -769,8 +772,6 @@ class Config:
             self.longitude = longitude
         if radius is not None:
             self.radius = radius
-        if time_zone is not None:
-            await self.async_set_time_zone(time_zone)
         if unit_system is not None:
             try:
                 self.units = get_unit_system(unit_system)

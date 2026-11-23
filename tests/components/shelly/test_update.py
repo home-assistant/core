@@ -406,6 +406,64 @@ async def test_rpc_update(
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
 
 
+async def test_rpc_update_device_reconnect_without_final_ota_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC update progress is cleared when the device reconnects."""
+    entity_id = "update.test_name_firmware"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {
+            "stable": {"version": "2"},
+        },
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "event": "ota_progress",
+                    "id": 1,
+                    "ts": 1668522399.2,
+                    "progress_percent": 96,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 96
+
+    # Device reboots and rolls back without sending ota_success or ota_error
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
 async def test_rpc_lora_update(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
