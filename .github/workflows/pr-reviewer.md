@@ -2,17 +2,11 @@
 name: PR reviewer
 run-name: "PR reviewer: ${{ github.event.workflow_run.display_title || format('#{0}', inputs.pull_request_number) }}"
 description: >
-  Reviews pull requests to `dev`. Triggered by completion of the trigger
-  workflow, which runs when a pull request is opened, updated or marked ready
-  for review. The `prepare` job resolves the pull request and checks there is
-  something to review. The agent job waits for earlier runs on the same pull
-  request to finish posting, then collects the pull request's metadata, its
-  diff, every review and comment, and what changed since this workflow's last
-  review with `script/pr_reviewer/collect.sh`. Follows the repository's
-  `ha-pr-reviewer` skill and posts its findings as one review with inline
-  comments. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests
-  above the size limit, and runs after the workflow's daily AI-credit budget is
-  used up are not reviewed.
+  Reviews pull requests to `dev` when they are opened, updated or marked ready
+  for review. Follows the repository's `ha-pr-reviewer` skill and posts one
+  review with inline comments. Drafts, pull requests labeled
+  `pr-reviewer-muted`, pull requests above the size limit, and runs after the
+  daily AI-credit budget is used up are not reviewed.
 intent: >
   Pull requests get a first code review with inline comments soon after they
   are opened or updated, before a human reviews them.
@@ -98,12 +92,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: read
       pull-requests: read
     outputs:
       skip: ${{ steps.pr.outputs.skip || steps.task.outputs.skip }}
-      pr_number: ${{ steps.task.outputs.pr_number }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
       head_sha: ${{ steps.task.outputs.head_sha }}
     steps:
       - name: Check out the default branch
@@ -114,14 +107,10 @@ jobs:
       - name: Resolve the pull request
         id: pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
           INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_TITLE: ${{ github.event.workflow_run.display_title }}
-          RUN_EVENT: ${{ github.event.workflow_run.event }}
-          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
         run: |
           set -euo pipefail
           skip() {
@@ -136,43 +125,24 @@ jobs:
           fi
           # The run name can come from a fork's copy of the trigger: never echo it.
           [[ "${RUN_TITLE}" =~ ^#([1-9][0-9]{0,9})$ ]] || skip "No pull request number in the name of trigger run ${RUN_ID}"
-          PR_NUMBER="${BASH_REMATCH[1]}"
-          # A run whose only job the trigger's filter skipped can still conclude as success.
-          TRIGGER=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" \
-            --jq '[.jobs[] | select(.name == "Trigger the PR review") | .conclusion][0] // ""')
-          [ "${TRIGGER}" = "success" ] || skip "The trigger job of run ${RUN_ID} concluded '${TRIGGER}'"
-
-          [ "${RUN_EVENT}" = "pull_request" ] || skip "Unexpected trigger event ${RUN_EVENT}"
-          # Runs the pull request's own copy of the trigger: its run name must match the run's commit.
-          # A deleted fork leaves both repositories empty.
-          if ! PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" 2> error.txt); then
-            grep -q 'HTTP 404' error.txt || { cat error.txt >&2; exit 1; }
-            skip "#${PR_NUMBER} is not a pull request"
-          fi
-          jq -e --arg sha "${RUN_HEAD_SHA}" --arg repo "${RUN_HEAD_REPO}" \
-            '.head.sha == $sha and (.head.repo.full_name // "") == $repo' \
-            <<< "${PR}" > /dev/null \
-            || skip "#${PR_NUMBER} doesn't match the trigger run's commit ${RUN_HEAD_REPO}@${RUN_HEAD_SHA}"
-          echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+          echo "pr_number=${BASH_REMATCH[1]}" >> "${GITHUB_OUTPUT}"
       - name: Check there is something to review
         id: task
         if: steps.pr.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
           OUT="${RUNNER_TEMP}/pr-reviewer"
-          script/pr_reviewer/collect.sh "${PR_NUMBER}" "${OUT}"
+          # A fork's trigger run can name any pull request: collect.sh skips unless it is at the run's commit.
+          script/pr_reviewer/collect.sh "${PR_NUMBER}" "${OUT}" "${RUN_HEAD_SHA}"
           if ! jq -e '.review' "${OUT}/task.json" > /dev/null; then
-            echo "::notice title=PR review skipped::$(jq -r '.reason // "No new diff to review"' "${OUT}/task.json")"
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
-          {
-            echo "pr_number=${PR_NUMBER}"
-            echo "head_sha=$(jq -r '.head_sha' "${OUT}/pr.json")"
-          } >> "${GITHUB_OUTPUT}"
+          echo "head_sha=$(jq -r '.head_sha' "${OUT}/pr.json")" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
@@ -227,16 +197,10 @@ steps:
       git checkout --detach FETCH_HEAD
       # Agent configuration must come from the trusted default branch, not from the PR.
       # Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.
-      git diff -z --name-only --no-renames "${BASE_SHA}" FETCH_HEAD -- '*.md' \
-        | while IFS= read -r -d '' path; do
-          rm -rf -- "${path}"
-          git checkout "${BASE_SHA}" -- "${path}" 2>/dev/null || true
-        done
-      for path in .github .agents .claude .codex .gemini .pi; do
-        rm -rf -- "${path}"
+      for path in '*.md' .github .agents .claude .codex .gemini .pi .mcp.json; do
+        git rm -rqf --ignore-unmatch -- "${path}"
         git checkout "${BASE_SHA}" -- "${path}" 2>/dev/null || true
       done
-      rm -f .mcp.json
       # Only the skills from the frontmatter are in scope for the agent.
       find .claude/skills -mindepth 1 -maxdepth 1 \
         ! -name ha-pr-reviewer ! -name ha-review ! -name ha-pr-comment-audit ! -name ha-integration-knowledge \
@@ -265,8 +229,8 @@ Read these files in `/tmp/gh-aw/agent/` instead of calling GitHub for the same d
   - `review`: whether to review the PR. When false, the other files may be missing.
   - `reviewed_head`: the commit of your last review, or null.
   - `reason`: why not to review, when set.
-- `pr.json`: number, title, body, author, head SHA, head repository, base branch, labels and change counts.
-- `pr.diff`: the PR diff, without test snapshot (`.ambr`) files. When GitHub refused the whole diff, it's built from per-file patches, and files without one are missing.
+- `pr.json`: number, title, body, author, head SHA, base branch and labels.
+- `pr.diff`: the PR diff, without test snapshot (`.ambr`) files.
 - `since-review.diff`: the changes on the PR branch since `reviewed_head`. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev`: ignore those not in `pr.diff`.
 - `reviews.json`, `review-comments.json`, `issue-comments.json`: every review, review comment and PR conversation comment. In reviews and review comments, `ours: true` marks yours. A review comment's `thread` is the ID of its thread's first comment.
 - `threads.json`: the resolved and outdated state of each review thread, by `thread`.
@@ -275,7 +239,7 @@ The workspace is the PR head, except that every Markdown file and the `.github`,
 
 ## Review
 
-Only when `task.review` is true.
+When `task.review` is false, post nothing, call `noop` with a one-line reason, and stop.
 
 - Follow the `ha-pr-reviewer` skill and the skills it names, with these changes:
   - Their rule to give feedback only in the console and not act on GitHub is replaced by Posting a review below.
@@ -284,15 +248,13 @@ Only when `task.review` is true.
   - Skip the quality scale verification: the quality scale reviewer workflow covers it.
   - Use the `ha-pr-comment-audit` results only to skip points already raised and to check your earlier requested changes. Don't post the audit.
   - Architecture discussion: when one is required and the PR body links none, flag it. Never check whether a linked one is approved or matches the implementation, and never say it isn't approved.
-  - Findings tagged `[NIT]` go in the review (see Posting a review).
-  - Findings tagged `[PRE-EXISTING]` or `[SUGGESTION]` are not posted.
+  - Tag every finding. Post those tagged `[CRITICAL]`, `[PROBLEM]` or `[NIT]`; drop any tagged `[SUGGESTION]` or `[PRE-EXISTING]`, even with another tag.
 - Read the surrounding code in the workspace.
 - Read the existing reviews and comments. Skip points already raised.
 - With a `reviewed_head`: check each change you requested earlier against the head, and review the changes in `since-review.diff` (all of `pr.diff` if it's missing).
 
 ## Posting a review
 
-- Give each finding a severity: `critical`, `problem` or `nit`.
 - Each finding on a line inside a hunk of `pr.diff` goes only in an inline comment: `create_pull_request_review_comment` with `path`, `line`, optional `start_line`, and `side: RIGHT`. No severity tag; start nits with `nit: `. Add a `suggestion` block when the fix is a small, exact replacement of those lines. At most 20 inline comments: put findings on other lines, and any beyond 20, in the body.
 - Then `submit_pull_request_review` with event `COMMENT`. Every review ends with it, also one without findings. This body:
   - With critical or problem findings:
@@ -301,7 +263,3 @@ Only when `task.review` is true.
     - On a re-review: the numbered list holds the earlier requested changes still open and the new findings not in an inline comment; the fixed ones go in a separate list, without `[CRITICAL]` or `[PROBLEM]`.
   - Without: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
   - Nits not in an inline comment go last, in a list, each starting with `nit: `, with file and line.
-
-## Nothing to post
-
-When `task.review` is false, post nothing and call `noop` with a one-line reason.
