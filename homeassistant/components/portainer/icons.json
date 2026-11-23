@@ -116,6 +116,9 @@
       "stack_containers_count": {
         "default": "mdi:server"
       },
+      "stack_last_deployed": {
+        "default": "mdi:rocket-launch"
+      },
       "stack_type": {
         "default": "mdi:server"
       },

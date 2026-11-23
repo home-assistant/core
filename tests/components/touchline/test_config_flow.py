@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytouchline_extended import TouchlineConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.touchline.const import DOMAIN
@@ -42,7 +43,7 @@ async def test_form_success(
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (ConnectionError, "cannot_connect"),
+        (TouchlineConnectionError, "cannot_connect"),
         (Exception("Unexpected backend explosion"), "unknown"),
     ],
 )
@@ -80,6 +81,33 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOST
     assert result["data"] == TEST_DATA
+    assert result["result"].unique_id == TEST_UNIQUE_ID
+
+
+async def test_form_missing_controller_id(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
+    """Test a missing controller ID is reported as a connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_pytouchline.get_controller_id.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_DATA,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_pytouchline.get_controller_id.return_value = TEST_UNIQUE_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_UNIQUE_ID
 
 
