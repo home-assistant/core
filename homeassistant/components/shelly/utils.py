@@ -653,6 +653,15 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
+def get_virtual_component_view(component_config: dict[str, Any]) -> str:
+    """Return the view of a virtual component, the platform follows from it."""
+    # The Wall Display sends no meta and firmware 2.2.0 can leave out the view;
+    # without one only a button component gets an entity
+    ui = (component_config.get("meta") or {}).get("ui") or {}
+    view: str = ui.get("view", "button")
+    return view
+
+
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
@@ -664,9 +673,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
             k
             for k, v in config.items()
             if k.startswith(comp_type)
-            # default to button view if not set, workaround for Wall Display
-            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
-            in component["modes"]
+            and get_virtual_component_view(v) in component["modes"]
         )
 
     return ids
@@ -675,8 +682,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
-    view = config[key]["meta"]["ui"]["view"]
-    return view in component["modes"]
+    return get_virtual_component_view(config[key]) in component["modes"]
 
 
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
