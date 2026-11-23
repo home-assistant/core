@@ -8,7 +8,7 @@ from matter_server.client.models import device_types
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.event import (
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     ButtonEventType,
     EventDeviceClass,
     EventEntity,
@@ -36,20 +36,9 @@ EVENT_TYPES_MAP = {
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
 
-# mapping from raw event IDs to standard button event types
-STANDARD_EVENT_TYPES_MAP: dict[int, str] = {
-    clusters.Switch.Events.SwitchLatched.event_id: "switch_latched",
-    clusters.Switch.Events.InitialPress.event_id: ButtonEventType.PRESS_START,
-    clusters.Switch.Events.LongPress.event_id: ButtonEventType.LONG_PRESS_START,
-    clusters.Switch.Events.ShortRelease.event_id: ButtonEventType.PRESS_END,
-    clusters.Switch.Events.LongRelease.event_id: ButtonEventType.LONG_PRESS_END,
-    clusters.Switch.Events.MultiPressOngoing.event_id: (
-        ButtonEventType.MULTI_PRESS_ONGOING
-    ),
-    clusters.Switch.Events.MultiPressComplete.event_id: (
-        ButtonEventType.MULTI_PRESS_END
-    ),
-}
+# Matter-specific event types of the standard button event entity
+EVENT_TYPE_INITIAL_PRESS = "initial_press"
+EVENT_TYPE_SWITCH_LATCHED = "switch_latched"
 
 
 async def async_setup_entry(
@@ -112,8 +101,6 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
 class MatterButtonEventEntity(MatterEventEntityBase):
     """Matter Event entity using the standard button event types."""
 
-    _map_initial_press_to_press_end: bool = False
-
     @override
     @callback
     def _update_from_device(self) -> None:
@@ -124,33 +111,27 @@ class MatterButtonEventEntity(MatterEventEntityBase):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
         )
-        # a momentary switch without release support (and no action switch)
-        # only emits InitialPress, and such single-event interactions
-        # map to the matching end event type
-        self._map_initial_press_to_press_end = bool(
-            feature_map & SwitchFeature.kMomentarySwitch
-        ) and not feature_map & (
-            SwitchFeature.kMomentarySwitchRelease | SwitchFeature.kActionSwitch
-        )
         if feature_map & SwitchFeature.kLatchingSwitch:
             # a latching switch only supports the switch_latched event
-            event_types.append("switch_latched")
+            event_types.append(EVENT_TYPE_SWITCH_LATCHED)
         elif feature_map & SwitchFeature.kMomentarySwitch:
-            if self._map_initial_press_to_press_end:
-                event_types.append(ButtonEventType.PRESS_END)
-            else:
+            action_switch = bool(feature_map & SwitchFeature.kActionSwitch)
+            if not action_switch:
+                # InitialPress is sent when the button goes down
                 event_types.append(ButtonEventType.PRESS_START)
-                if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                    event_types.append(ButtonEventType.PRESS_END)
+            if feature_map & SwitchFeature.kMomentarySwitchRelease:
+                event_types.append(ButtonEventType.PRESS_END)
             if feature_map & SwitchFeature.kMomentarySwitchLongPress:
                 event_types.append(ButtonEventType.LONG_PRESS_START)
                 event_types.append(ButtonEventType.LONG_PRESS_END)
             if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
-                if not feature_map & SwitchFeature.kActionSwitch:
-                    # an action switch reports only the final result
-                    # of a multi-press sequence
-                    event_types.append(ButtonEventType.MULTI_PRESS_ONGOING)
-                event_types.append(ButtonEventType.MULTI_PRESS_END)
+                event_types.append(ButtonEventType.SINGLE_PRESS)
+                event_types.append(ButtonEventType.MULTI_PRESS)
+            if action_switch:
+                # an action switch sends InitialPress only once per
+                # multi-press sequence, so it is not a press_start
+                # and is passed on as a Matter-specific event type
+                event_types.append(EVENT_TYPE_INITIAL_PRESS)
 
         self._attr_event_types = event_types
 
@@ -158,30 +139,42 @@ class MatterButtonEventEntity(MatterEventEntityBase):
     @callback
     def _handle_switch_event(self, data: MatterNodeEvent) -> None:
         """Handle a Switch cluster event."""
-        if (event_type := STANDARD_EVENT_TYPES_MAP.get(data.event_id)) is None:
-            return
-        if (
-            self._map_initial_press_to_press_end
-            and data.event_id == clusters.Switch.Events.InitialPress.event_id
-        ):
-            event_type = ButtonEventType.PRESS_END
-        if event_type not in self.event_types:
+        # pass the event data as-is (such as the advanced Position data)
+        event_data = dict(data.data or {})
+        event_type: str | None
+        match data.event_id:
+            case clusters.Switch.Events.SwitchLatched.event_id:
+                event_type = EVENT_TYPE_SWITCH_LATCHED
+            case clusters.Switch.Events.InitialPress.event_id:
+                event_type = ButtonEventType.PRESS_START
+                if ButtonEventType.PRESS_START not in self.event_types:
+                    event_type = EVENT_TYPE_INITIAL_PRESS
+            case clusters.Switch.Events.ShortRelease.event_id:
+                event_type = ButtonEventType.PRESS_END
+            case clusters.Switch.Events.LongPress.event_id:
+                event_type = ButtonEventType.LONG_PRESS_START
+            case clusters.Switch.Events.LongRelease.event_id:
+                event_type = ButtonEventType.LONG_PRESS_END
+            case clusters.Switch.Events.MultiPressComplete.event_id:
+                presses = event_data.get("totalNumberOfPressesCounted", 1)
+                if not isinstance(presses, int) or presses < 1:
+                    # a count of 0 means the multi-press sequence was aborted,
+                    # e.g. because the number of presses exceeded MultiPressMax
+                    return
+                if presses == 1:
+                    event_type = ButtonEventType.SINGLE_PRESS
+                else:
+                    event_type = ButtonEventType.MULTI_PRESS
+                    event_data[ATTR_PRESS_COUNT] = presses
+            case _:
+                # MultiPressOngoing is not mapped, the result of
+                # a multi-press sequence is reported by MultiPressComplete
+                event_type = None
+
+        if event_type is None or event_type not in self.event_types:
             # this should not happen, but guard for bad things
             # some remotes send events that they do not report as supported (sigh...)
             return
-
-        # pass the event data as-is (such as the advanced Position data)
-        event_data = dict(data.data or {})
-        if data.event_id == clusters.Switch.Events.MultiPressOngoing.event_id:
-            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
-                "currentNumberOfPressesCounted", 2
-            )
-        elif data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
-            # NOTE: a count of 0 means the multi-press sequence was aborted,
-            # e.g. because the number of presses exceeded MultiPressMax
-            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
-                "totalNumberOfPressesCounted", 1
-            )
 
         self._trigger_event(event_type, event_data)
         self.async_write_ha_state()

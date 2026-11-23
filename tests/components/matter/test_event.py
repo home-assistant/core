@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import (
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
@@ -106,8 +106,8 @@ async def test_generic_switch_node(
         "press_end",
         "long_press_start",
         "long_press_end",
-        "multi_press_ongoing",
-        "multi_press_end",
+        "single_press",
+        "multi_press",
     ]
 
 
@@ -177,7 +177,10 @@ async def test_legacy_event_entity(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == expected_event_types
+    assert (
+        state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES]
+        == expected_event_types
+    )
     # trigger firing an event from the device
     await trigger_switch_event(hass, matter_client, matter_node, event_id, event_data)
     state = hass.states.get(entity_id)
@@ -202,8 +205,8 @@ async def test_generic_switch_multi_node(
         "press_end",
         "long_press_start",
         "long_press_end",
-        "multi_press_ongoing",
-        "multi_press_end",
+        "single_press",
+        "multi_press",
     ]
     # check button 2
     state_button_2 = hass.states.get("event.mock_generic_switch_button_fancy_button")
@@ -213,21 +216,37 @@ async def test_generic_switch_multi_node(
     # ha_entitylabel 'Fancy Button'
     assert state_button_2.name == "Mock Generic Switch Button (Fancy Button)"
 
-    # trigger firing a MultiPressOngoing event from the device
+    # a MultiPressOngoing event from the device is ignored
     await trigger_switch_event(
         hass, matter_client, matter_node, 5, {"currentNumberOfPressesCounted": 2}
     )
     state = hass.states.get("event.mock_generic_switch_button_1")
-    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_ongoing"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 2
+    assert state.state == "unknown"
 
     # trigger firing a MultiPressComplete event from the device
     await trigger_switch_event(
         hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 3}
     )
     state = hass.states.get("event.mock_generic_switch_button_1")
-    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_end"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 3
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
+    assert state.attributes[ATTR_PRESS_COUNT] == 3
+
+    # a MultiPressComplete event with a single press is a single_press
+    await trigger_switch_event(
+        hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 1}
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "single_press"
+    assert ATTR_PRESS_COUNT not in state.attributes
+    last_changed = state.last_changed
+
+    # a MultiPressComplete event for an aborted sequence is ignored
+    await trigger_switch_event(
+        hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 0}
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "single_press"
+    assert state.last_changed == last_changed
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
@@ -241,12 +260,14 @@ async def test_momentary_switch_without_release(
     state = hass.states.get("event.mock_generic_switch_button")
     assert state
     # a switch with featuremap 2 (0b10) only emits InitialPress,
-    # which maps to press_end for single-event interactions
-    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == ["press_end"]
+    # which is sent when the button goes down
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "press_start"
+    ]
     # trigger firing an InitialPress event from the device
     await trigger_switch_event(hass, matter_client, matter_node, 1)
     state = hass.states.get("event.mock_generic_switch_button")
-    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "press_end"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "press_start"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_doorbell"])
@@ -274,7 +295,9 @@ async def test_latching_switch_node(
     assert state
     assert state.state == "unknown"
     # check event_types from featuremap 1 (0b1)
-    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == ["switch_latched"]
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "switch_latched"
+    ]
     # trigger firing a SwitchLatched event from the device
     await trigger_switch_event(hass, matter_client, matter_node, 0, {"newPosition": 1})
     state = hass.states.get("event.mock_latching_switch_button")
@@ -293,50 +316,53 @@ async def test_action_switch_node(
     assert state
     assert state.state == "unknown"
     # check event_types from featuremap 58 (0b111010):
-    # an action switch does not emit ShortRelease and MultiPressOngoing events
+    # an action switch does not emit ShortRelease and MultiPressOngoing events,
+    # and it sends InitialPress only once per multi-press sequence
     assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
-        "press_start",
         "long_press_start",
         "long_press_end",
-        "multi_press_end",
+        "single_press",
+        "multi_press",
+        "initial_press",
     ]
+    # an InitialPress event is passed on as the Matter-specific initial_press
+    await trigger_switch_event(hass, matter_client, matter_node, 1)
+    state = hass.states.get("event.mock_action_switch_button")
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "initial_press"
+    last_changed = state.last_changed
     # a ShortRelease event from the device should be ignored
     await trigger_switch_event(hass, matter_client, matter_node, 3)
-    state = hass.states.get("event.mock_action_switch_button")
-    assert state.state == "unknown"
+    # a MultiPressOngoing event from the device should be ignored
+    await trigger_switch_event(
+        hass, matter_client, matter_node, 5, {"currentNumberOfPressesCounted": 2}
+    )
     # an unknown event id from the device should be ignored
     await trigger_switch_event(hass, matter_client, matter_node, 7)
-    state = hass.states.get("event.mock_action_switch_button")
-    assert state.state == "unknown"
     # an event from another cluster should be ignored
     await trigger_switch_event(hass, matter_client, matter_node, 1, cluster_id=8)
     state = hass.states.get("event.mock_action_switch_button")
-    assert state.state == "unknown"
+    assert state.last_changed == last_changed
     # trigger firing a MultiPressComplete event from the device
     await trigger_switch_event(
         hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 4}
     )
     state = hass.states.get("event.mock_action_switch_button")
-    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_end"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 4
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
+    assert state.attributes[ATTR_PRESS_COUNT] == 4
 
 
 @pytest.mark.parametrize("node_fixture", ["ikea_scroll_wheel"])
 @pytest.mark.parametrize(
-    ("presses_counted", "multi_press_count"),
-    [
-        (11, 11),
-        # a count of 0 means the sequence exceeded MultiPressMax (18)
-        (0, 0),
-    ],
-    ids=["11_presses", "aborted_sequence"],
+    ("presses_counted", "press_count"),
+    [(11, 11), (18, 18)],
+    ids=["11_presses", "max_presses"],
 )
 async def test_scroll_wheel_press_count(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     presses_counted: int,
-    multi_press_count: int,
+    press_count: int,
 ) -> None:
     """Test the press count is passed through uncapped for a scroll wheel."""
     state = hass.states.get("event.bilresa_scroll_wheel_button_1")
@@ -345,8 +371,8 @@ async def test_scroll_wheel_press_count(
     assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "press_start",
         "press_end",
-        "multi_press_ongoing",
-        "multi_press_end",
+        "single_press",
+        "multi_press",
     ]
     # trigger firing a MultiPressComplete event from the device
     await trigger_switch_event(
@@ -357,5 +383,5 @@ async def test_scroll_wheel_press_count(
         {"totalNumberOfPressesCounted": presses_counted},
     )
     state = hass.states.get("event.bilresa_scroll_wheel_button_1")
-    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_end"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == multi_press_count
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
+    assert state.attributes[ATTR_PRESS_COUNT] == press_count

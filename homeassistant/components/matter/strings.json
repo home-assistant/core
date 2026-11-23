@@ -183,6 +183,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "initial_press": "Pressed",
               "switch_latched": "Switch latched"
             }
           }
@@ -193,7 +194,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "initial_press": "Pressed",
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
               "long_press": "Held down",
               "long_release": "Released after being held down",
               "multi_press_1": "Pressed once",
