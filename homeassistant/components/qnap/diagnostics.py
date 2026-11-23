@@ -3,14 +3,16 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .coordinator import QnapConfigEntry
 
 TO_REDACT = {
+    CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    "ip",
     "mac",
     "serial",
     "serial_number",

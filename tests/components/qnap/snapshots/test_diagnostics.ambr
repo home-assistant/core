@@ -46,7 +46,7 @@
         'nics': dict({
           'eth0': dict({
             'err_packets': 0,
-            'ip': '1.2.3.4',
+            'ip': '**REDACTED**',
             'link_status': 'Up',
             'mac': '**REDACTED**',
             'mask': '255.255.255.0',
@@ -94,7 +94,7 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': '1.2.3.4',
+        'host': '**REDACTED**',
         'password': '**REDACTED**',
         'port': 8080,
         'ssl': False,
