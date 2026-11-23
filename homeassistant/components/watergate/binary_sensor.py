@@ -32,15 +32,13 @@ class WatergateBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: data.state.water_flow_indicator if data.state else None,
+        value_fn=lambda data: data.state.water_flow_indicator,
         translation_key="water_flowing",
         key="water_flowing",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: (
-            data.networking.mqtt_connected if data.networking else None
-        ),
+        value_fn=lambda data: data.networking.mqtt_connected,
         translation_key="mqtt_connected",
         key="mqtt_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -48,9 +46,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: (
-            data.networking.wifi_connected if data.networking else None
-        ),
+        value_fn=lambda data: data.networking.wifi_connected,
         translation_key="wifi_connected",
         key="wifi_connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -58,9 +54,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: (
-            "external" in data.state.power_supply if data.state else None
-        ),
+        value_fn=lambda data: "external" in data.state.power_supply,
         translation_key="external_power",
         key="external_power",
         device_class=BinarySensorDeviceClass.PLUG,

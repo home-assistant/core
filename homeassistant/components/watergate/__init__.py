@@ -122,9 +122,10 @@ def get_webhook_handler(
             await coordinator.async_request_refresh()
             return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
-        if not (coordinator_data := coordinator.data):
-            pass
-        elif isinstance(data, ValveEventData):
+        if (coordinator_data := coordinator.data_or_none) is None:
+            return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
+
+        if isinstance(data, ValveEventData):
             coordinator_data.state.valve_state = data.state
         elif isinstance(data, TelemetryEventData):
             errors = data.errors or []

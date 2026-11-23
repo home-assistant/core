@@ -62,7 +62,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             data.state.water_meter_positive.volume
-            if data.state and data.state.water_meter_positive
+            if data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_volume",
@@ -74,7 +74,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             data.state.water_meter_positive.duration
-            if data.state and data.state.water_meter_positive
+            if data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_duration",
@@ -86,7 +86,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             data.state.water_meter_negative.volume
-            if data.state and data.state.water_meter_negative
+            if data.state.water_meter_negative
             else None
         ),
         translation_key="water_meter_negative_volume",
@@ -98,7 +98,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             data.state.water_meter_negative.duration
-            if data.state and data.state.water_meter_negative
+            if data.state.water_meter_negative
             else None
         ),
         translation_key="water_meter_negative_duration",
@@ -108,7 +108,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.rssi if data.networking else None,
+        value_fn=lambda data: data.networking.rssi,
         key="rssi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -117,12 +117,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (
-            dt_util.as_utc(
-                dt_util.now() - timedelta(milliseconds=data.networking.wifi_uptime)
-            )
-            if data.networking
-            else None
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(milliseconds=data.networking.wifi_uptime)
         ),
         translation_key="wifi_up_since",
         key="wifi_up_since",
@@ -131,12 +127,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (
-            dt_util.as_utc(
-                dt_util.now() - timedelta(milliseconds=data.networking.mqtt_uptime)
-            )
-            if data.networking
-            else None
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(milliseconds=data.networking.mqtt_uptime)
         ),
         translation_key="mqtt_up_since",
         key="mqtt_up_since",
@@ -145,9 +137,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (
-            data.telemetry.water_temperature if data.telemetry else None
-        ),
+        value_fn=lambda data: data.telemetry.water_temperature,
         translation_key="water_temperature",
         key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -155,7 +145,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.telemetry.pressure if data.telemetry else None,
+        value_fn=lambda data: data.telemetry.pressure,
         translation_key="water_pressure",
         key="water_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
@@ -164,9 +154,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.telemetry.flow / 1000
-            if data.telemetry and data.telemetry.flow is not None
-            else None
+            data.telemetry.flow / 1000 if data.telemetry.flow is not None else None
         ),
         key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -174,10 +162,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (
-            dt_util.as_utc(dt_util.now() - timedelta(seconds=data.state.uptime))
-            if data.state
-            else None
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(seconds=data.state.uptime)
         ),
         translation_key="up_since",
         key="up_since",
@@ -197,14 +183,10 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (
-            PowerSupplyMode(
-                data.state.power_supply.replace("+", "_").replace(
-                    "external_battery", "battery_external"
-                )
+        value_fn=lambda data: PowerSupplyMode(
+            data.state.power_supply.replace("+", "_").replace(
+                "external_battery", "battery_external"
             )
-            if data.state
-            else None
         ),
         translation_key="power_supply_mode",
         key="power_supply_mode",

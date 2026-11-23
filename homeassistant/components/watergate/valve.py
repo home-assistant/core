@@ -47,9 +47,7 @@ class SonicValve(WatergateEntity, ValveEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, ENTITY_NAME)
-        self._valve_state = (
-            coordinator.data.state.valve_state if coordinator.data.state else None
-        )
+        self._valve_state = coordinator.data.state.valve_state
 
     @property
     @override
@@ -73,12 +71,7 @@ class SonicValve(WatergateEntity, ValveEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
-        self._attr_available = self.coordinator.data is not None
-        self._valve_state = (
-            self.coordinator.data.state.valve_state
-            if self.coordinator.data.state
-            else None
-        )
+        self._valve_state = self.coordinator.data.state.valve_state
         self.async_write_ha_state()
 
     @override
@@ -106,9 +99,3 @@ class SonicValve(WatergateEntity, ValveEntity):
             ) from exc
         self._valve_state = ValveState.CLOSING
         self.async_write_ha_state()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data.state is not None
