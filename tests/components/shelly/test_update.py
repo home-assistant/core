@@ -425,8 +425,8 @@ async def test_rpc_update_device_reconnect_without_final_ota_event(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        UpdateService.INSTALL,
-        {TargetKey.ENTITY_ID: entity_id},
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
