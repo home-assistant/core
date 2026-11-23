@@ -2,41 +2,7 @@
 # name: test_platform_entities[gas][gas_binary_sensor]
   dict({
     'binary_sensor.my_living_room_is_holiday_mode_active': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000115')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.my_living_room_is_holiday_mode_active',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is holiday mode active',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is holiday mode active',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isholidaymodeactive',
-        'unique_id': '00000000-0000-4000-8000-000000000115_1_isHolidayModeActive',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Is holiday mode active',
@@ -48,43 +14,10 @@
         'last_updated': <ANY>,
         'state': 'on',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000115_1_isHolidayModeActive',
     }),
     'binary_sensor.my_living_room_is_powerful_mode_active': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000115')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.my_living_room_is_powerful_mode_active',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is powerful mode active',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is powerful mode active',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '00000000-0000-4000-8000-000000000115_1_isPowerfulModeActive',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Is powerful mode active',
@@ -96,6 +29,7 @@
         'last_updated': <ANY>,
         'state': 'on',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000115_1_isPowerfulModeActive',
     }),
   })
 # ---

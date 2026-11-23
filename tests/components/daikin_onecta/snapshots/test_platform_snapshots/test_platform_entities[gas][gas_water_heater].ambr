@@ -2,46 +2,7 @@
 # name: test_platform_entities[gas][gas_water_heater]
   dict({
     'water_heater.domestic_hot_water_tank': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': dict({
-          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
-          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 43.3,
-          <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
-          <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
-        }),
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000115_2')]>,
-        'disabled_by': None,
-        'domain': 'water_heater',
-        'entity_category': None,
-        'entity_id': 'water_heater.domestic_hot_water_tank',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': None,
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': None,
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': None,
-        'unique_id': '00000000-0000-4000-8000-000000000115_2',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 40.0,
@@ -62,6 +23,7 @@
         'last_updated': <ANY>,
         'state': 'unknown',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000115_2',
     }),
   })
 # ---

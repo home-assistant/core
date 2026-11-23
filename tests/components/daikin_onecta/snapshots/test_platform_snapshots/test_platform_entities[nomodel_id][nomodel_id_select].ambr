@@ -2,48 +2,7 @@
 # name: test_platform_entities[nomodel_id][nomodel_id_select]
   dict({
     'select.altherma_schedule': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': dict({
-          <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            'User defined 1',
-            'User defined 2',
-            'User defined 3',
-            'home_assistant_schedule_is_disabled',
-          ]),
-        }),
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000113')]>,
-        'disabled_by': None,
-        'domain': 'select',
-        'entity_category': None,
-        'entity_id': 'select.altherma_schedule',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Schedule',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Schedule',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'schedule',
-        'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_schedule',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Schedule',
@@ -61,47 +20,10 @@
         'last_updated': <ANY>,
         'state': 'User defined 1',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000113_climateControlMainZone_schedule',
     }),
     'select.domestic_hot_water_tank_schedule': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': dict({
-          <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            'User defined',
-          ]),
-        }),
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000113_domesticHotWaterTank')]>,
-        'disabled_by': None,
-        'domain': 'select',
-        'entity_category': None,
-        'entity_id': 'select.domestic_hot_water_tank_schedule',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Schedule',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Schedule',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'schedule',
-        'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_schedule',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Domestic hot water tank Schedule',
@@ -116,6 +38,7 @@
         'last_updated': <ANY>,
         'state': 'User defined',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000113_domesticHotWaterTank_schedule',
     }),
   })
 # ---

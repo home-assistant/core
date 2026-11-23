@@ -73,7 +73,8 @@ async def test_platform_entities(
         entity_registry, config_entry.entry_id
     ):
         entries_by_platform[entry.domain][entry.entity_id] = {
-            "entry": entry,
+            "unique_id": entry.unique_id,
+            "disabled_by": entry.disabled_by,
             "state": hass.states.get(entry.entity_id),
         }
 

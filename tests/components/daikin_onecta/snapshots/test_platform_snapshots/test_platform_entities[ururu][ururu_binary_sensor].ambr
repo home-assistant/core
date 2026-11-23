@@ -2,41 +2,7 @@
 # name: test_platform_entities[ururu][ururu_binary_sensor]
   dict({
     'binary_sensor.test_room_is_firmware_update_supported': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000116')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.test_room_is_firmware_update_supported',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is firmware update supported',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is firmware update supported',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '00000000-0000-4000-8000-000000000116_gateway_isFirmwareUpdateSupported',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room Is firmware update supported',
@@ -48,43 +14,10 @@
         'last_updated': <ANY>,
         'state': 'on',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000116_gateway_isFirmwareUpdateSupported',
     }),
     'binary_sensor.test_room_is_holiday_mode_active': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000116')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.test_room_is_holiday_mode_active',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is holiday mode active',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is holiday mode active',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isholidaymodeactive',
-        'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isHolidayModeActive',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room Is holiday mode active',
@@ -96,43 +29,10 @@
         'last_updated': <ANY>,
         'state': 'off',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isHolidayModeActive',
     }),
     'binary_sensor.test_room_is_in_error_state': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000116')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.test_room_is_in_error_state',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is in error state',
-        'options': dict({
-        }),
-        'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': None,
-        'original_name': 'Is in error state',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isinerrorstate',
-        'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isInErrorState',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
@@ -145,43 +45,10 @@
         'last_updated': <ANY>,
         'state': 'off',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isInErrorState',
     }),
     'binary_sensor.test_room_is_powerful_mode_active': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000116')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.test_room_is_powerful_mode_active',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is powerful mode active',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is powerful mode active',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isPowerfulModeActive',
-        'unit_of_measurement': None,
-      }),
+      'disabled_by': None,
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room Is powerful mode active',
@@ -193,6 +60,7 @@
         'last_updated': <ANY>,
         'state': 'off',
       }),
+      'unique_id': '00000000-0000-4000-8000-000000000116_climateControl_isPowerfulModeActive',
     }),
   })
 # ---
