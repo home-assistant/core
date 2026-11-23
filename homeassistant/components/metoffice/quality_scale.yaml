@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not support discovery.
@@ -81,4 +81,7 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'datapoint==0.12.1' does not conform to PEP 561 (no py.typed file).

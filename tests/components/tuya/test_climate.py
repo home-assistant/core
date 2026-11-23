@@ -30,9 +30,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
@@ -262,8 +264,11 @@ async def test_set_switch_only_hvac_mode_with_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
@@ -436,10 +441,10 @@ async def test_temperature_unit_conversion(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.air_conditioner",
-            ATTR_TEMPERATURE: service_temperature,
+            TargetKey.ENTITY_ID: "climate.air_conditioner",
+            ClimateServiceArgument.TEMPERATURE: service_temperature,
         },
         blocking=True,
     )

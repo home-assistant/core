@@ -4,7 +4,8 @@ from datetime import UTC, datetime, timedelta
 import math
 from typing import override
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import ResponseLineIterator, SupervisorError
+from aiohasupervisor.models import LogFormat, LogsOptions, Plugin
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.system_log.llm import SystemLogGetLogsTool  # pylint: disable=home-assistant-component-root-import
@@ -20,11 +21,7 @@ from homeassistant.helpers.llm import (
 )
 
 from .const import DATA_ADDONS_LIST, DOMAIN
-from .handler import (
-    HassioAPIError,
-    get_supervisor_client,
-    get_supervisor_passthrough_client,
-)
+from .handler import get_supervisor_client
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -130,32 +127,41 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
         lines: int,
     ) -> list[str]:
         """Return the oldest lines of the log of a source in the time window."""
-        if source.startswith(APP_SOURCE_PREFIX):
-            command = f"/addons/{source.removeprefix(APP_SOURCE_PREFIX)}/logs"
-        else:
-            command = f"/{source}/logs"
-
-        supervisor = get_supervisor_passthrough_client(hass)
+        options = LogsOptions(
+            # Verbose adds the timestamp and the process to each line
+            format=LogFormat.PLAIN if source in _PLAIN_SOURCES else LogFormat.VERBOSE,
+            no_colors=True,
+            # The journal has lines received after the record was created,
+            # so read until the next second and filter the rest out later
+            range=(
+                f"realtime={_journal_time(start_time)}"
+                f":{math.floor(end_time.timestamp()) + 1}:{lines}"
+            ),
+        )
         try:
-            text: str = await supervisor.send_command(
-                command,
-                method="get",
-                return_text=True,
-                params={
-                    # Verbose adds the timestamp and the process to each line
-                    "format": "plain" if source in _PLAIN_SOURCES else "verbose",
-                    "no_colors": "",
-                },
-                # The journal has lines received after the record was created,
-                # so read until the next second and filter the rest out later
-                range_header=(
-                    f"realtime={_journal_time(start_time)}"
-                    f":{math.floor(end_time.timestamp()) + 1}:{lines}"
-                ),
-            )
-        except HassioAPIError as err:
+            stream = await _async_open_log(hass, source, options)
+            return [line async for line in stream]
+        except SupervisorError as err:
             raise HomeAssistantError(f"Could not read the {source} log") from err
-        return text.splitlines()
+
+
+async def _async_open_log(
+    hass: HomeAssistant, source: str, options: LogsOptions
+) -> ResponseLineIterator:
+    """Open the log of a source."""
+    client = get_supervisor_client(hass)
+    if source.startswith(APP_SOURCE_PREFIX):
+        return await client.addons.addon_logs(
+            source.removeprefix(APP_SOURCE_PREFIX), options
+        )
+    match source:
+        case "core":
+            return await client.homeassistant.logs(options)
+        case "supervisor":
+            return await client.supervisor.logs(options)
+        case "host":
+            return await client.host.logs(options)
+    return await client.plugins.logs(Plugin(source), options)
 
 
 @callback

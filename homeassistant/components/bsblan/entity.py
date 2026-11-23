@@ -105,8 +105,8 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
     def _circuit_config(self) -> StaticState | None:
         """Return the slow-polled config for this circuit."""
         return (
-            self.slow_coordinator.data.heating_config.get(self._circuit)
-            if self.slow_coordinator.data
+            data.heating_config.get(self._circuit)
+            if (data := self.slow_coordinator.data_or_none)
             else None
         )
 
@@ -204,11 +204,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
 
         It may still be pending when the platform is set up.
         """
-        return (
-            self.slow_coordinator.data.dhw_config
-            if self.slow_coordinator.data
-            else None
-        )
+        return data.dhw_config if (data := self.slow_coordinator.data_or_none) else None
 
     @property
     def _setpoint_max(self) -> float:

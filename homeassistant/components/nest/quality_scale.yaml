@@ -51,7 +51,7 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: todo
   docs-examples:
     status: todo

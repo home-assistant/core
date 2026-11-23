@@ -179,4 +179,4 @@ async def test_release_notes(
         {"type": "update/release_notes", "entity_id": entity_id}
     )
     result = await client.receive_json()
-    assert result["result"] == expected_notes
+    assert result["result"]["release_notes"] == expected_notes
