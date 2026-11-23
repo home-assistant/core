@@ -1,6 +1,7 @@
 """The tests for the evohome coordinator."""
 
 from contextlib import AbstractContextManager
+import logging
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import evohomeasync as ec1
@@ -25,7 +26,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
@@ -517,6 +518,118 @@ async def test_failed_schedule_poll_keeps_entities_available(
         await hass.async_block_till_done()
 
     mock_fcn.assert_awaited()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.MODE_UNSUPPORTED,
+                mode="heating_off",
+            ),
+            "mode_not_supported",
+            {"mode": "HeatingOff"},
+            id="mode_unsupported",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_REQUIRED,
+                mode="away",
+                required_timing_mode="period",
+            ),
+            "mode_timespan_required",
+            {"mode": "Away"},
+            id="timespan_required",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+                mode="auto_with_eco",
+                timing_mode="duration",
+            ),
+            "mode_timespan_not_in_future",
+            {"mode": "AutoWithEco"},
+            id="timespan_not_in_future",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_UNSUPPORTED,
+                mode="away",
+                timing_mode="duration",
+                required_timing_mode="period",
+            ),
+            "mode_cant_have_duration",
+            {"mode": "Away"},
+            id="timespan_unsupported",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_OUT_OF_RANGE,
+                mode="away",
+                timing_mode="period",
+            ),
+            "mode_request_invalid",
+            {"mode": "Away"},
+            id="fallback",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=evo_exc.RequestErrorReason.TIMESPAN_CONFLICTING
+            ),
+            "request_invalid",
+            None,
+            id="no_mode",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_action_request_rejected_by_client(
+    hass: HomeAssistant,
+    ctl_id: str,
+    caplog: pytest.LogCaptureFixture,
+    exception: evo_exc.BadApiRequestError,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test a request the client rejects raises a translated ServiceValidationError.
+
+    The client's error is chained to it, and logged (only) as debug.
+    """
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.evohome")
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=exception,
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
+    assert exc_info.value.__cause__ is exception
+
+    records = [
+        r
+        for r in caplog.records
+        if r.name.startswith("homeassistant.components.evohome")
+    ]
+    assert any(f"reason={exception.reason}" in r.getMessage() for r in records)
+    assert all(r.levelno == logging.DEBUG for r in records)
 
 
 @pytest.mark.parametrize("install", ["default"])
