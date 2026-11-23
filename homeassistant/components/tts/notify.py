@@ -9,12 +9,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CommonServiceArgument,
-    TargetKey,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME, TargetKey
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -85,7 +80,7 @@ class TTSNotificationService(BaseNotificationService):
         service_name = ""
 
         if self._tts_service:
-            data[CommonServiceArgument.ENTITY_ID] = self._media_player
+            data[ATTR_ENTITY_ID] = self._media_player
             service_name = self._tts_service
         elif self._target:
             data[TargetKey.ENTITY_ID] = self._target
