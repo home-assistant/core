@@ -529,6 +529,8 @@ async def test_refresh_started_before_change_does_not_undo_it(
 
     started = threading.Event()
     release = threading.Event()
+    follow_up_started = threading.Event()
+    release_follow_up = threading.Event()
     stale = MagicMock(reminders=[_reminder("r1", "Milk")])
     fresh = MagicMock(
         reminders=[
@@ -540,6 +542,8 @@ async def test_refresh_started_before_change_does_not_undo_it(
 
     def _slow_list_reminders(**kwargs: object) -> MagicMock:
         if started.is_set():
+            follow_up_started.set()
+            release_follow_up.wait(5)
             return fresh
         started.set()
         release.wait(5)
@@ -558,7 +562,13 @@ async def test_refresh_started_before_change_does_not_undo_it(
             blocking=True,
         )
         release.set()
-        # The poll and the follow-up fetch run as background tasks.
+
+        # The follow-up fetch only starts once the overlapping poll is done,
+        # which kept the cache (with "Eggs") rather than its stale snapshot.
+        assert await hass.async_add_executor_job(follow_up_started.wait, 5)
+        assert await _summaries(hass) == ["Milk", "Bread", "Eggs"]
+
+        release_follow_up.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert await _summaries(hass) == ["Milk", "Eggs", "Tea"]
