@@ -9,7 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN, LOGGER
 
@@ -46,7 +50,7 @@ class HpPrinterDataUpdateCoordinator(DataUpdateCoordinator[HpPrinterData]):
         # The library swallows errors and reports a printer that does not
         # answer its status endpoint (e.g. powered off) as offline.
         if not data.online:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"host": self.config_entry.data[CONF_HOST]},

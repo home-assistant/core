@@ -6,6 +6,7 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 from pathlib import Path
+import re
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -61,7 +62,7 @@ from homeassistant.components.go2rtc.util import (
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, TargetKey
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -1062,6 +1063,50 @@ async def test_async_get_image(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_stream_with_credentials_not_added_again(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a stream with credentials is only added again when its source changes."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        # go2rtc 1.9.15+ masks the userinfo of producer URLs in API responses
+        server_streams[name] = Stream(
+            [Producer(re.sub(r"://[^/@]+@", "://***@", source)) for source in sources]
+        )
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    camera.set_stream_source("rtsp://user:pass@192.168.1.124:554/stream1")
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 1
+
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 1
+
+    camera.set_stream_source("rtsp://user:new_pass@192.168.1.124:554/stream1")
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 2
+    assert rest_client.streams.add.call_args[0] == (
+        identifier,
+        [
+            "rtsp://user:new_pass@192.168.1.124:554/stream1",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+    # A restarted go2rtc server has no streams, so the stream is added again
+    server_streams.clear()
+    await camera.webrtc_provider.async_get_image(camera)
+    assert rest_client.streams.add.call_count == 3
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_async_get_image_go2rtc_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -1104,7 +1149,7 @@ async def test_snapshot_service_go2rtc_error(
             CAMERA_DOMAIN,
             CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: init_test_integration.entity_id,
+                TargetKey.ENTITY_ID: init_test_integration.entity_id,
                 CameraServiceArgument.FILENAME: str(snapshot_file),
             },
             blocking=True,

@@ -1,10 +1,11 @@
 """Update coordinator for Bravia TV integration."""
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, Final, override
+from typing import TYPE_CHECKING, Any, Concatenate, Final, override
 
 from pybravia import (
     BraviaAuthError,
@@ -19,12 +20,13 @@ from pybravia import (
 from homeassistant.components.media_player import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceValidationError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -160,6 +162,23 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 if label and label.lower() != title.lower():
                     self.source_list.append(label)
 
+    @callback
+    def _async_update_device(self) -> None:
+        """Update the device registry entry with the fetched system info."""
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id is not None
+
+        device_registry = dr.async_get(self.hass)
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.config_entry.unique_id), self.config_entry.entry_id
+        ):
+            device_registry.async_update_device(
+                device.id,
+                model_id=self.system_info.get("model"),
+                hw_version=self.system_info.get("generation"),
+                serial_number=self.system_info.get("serial"),
+            )
+
     @override
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
@@ -187,6 +206,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
             if not self.system_info:
                 self.system_info = await self.client.get_system_info()
+                self._async_update_device()
 
             if self.is_on is False:
                 return
@@ -337,7 +357,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     @catch_braviatv_errors
     async def async_turn_off(self) -> None:
         """Turn off device."""
-        await self.client.turn_off()
+        with suppress(BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+            await self.client.turn_off()
 
     @catch_braviatv_errors
     async def async_set_volume_level(self, volume: float) -> None:

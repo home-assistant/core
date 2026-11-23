@@ -1,0 +1,48 @@
+{
+  "traceId": "1234",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "1234",
+    "code": 0,
+    "result": {
+      "statusList": [
+        {
+          "cookStatus": "cooking",
+          "startTime": 1768667721,
+          "recipeType": 3,
+          "recipeId": 14,
+          "recipeName": "Frittura ad aria",
+          "upc": "",
+          "holdTime": 0,
+          "cookSetTime": 1200,
+          "cookTemp": 200,
+          "mode": "AirFry",
+          "currentRemainingTime": 1140,
+          "totalTimeRemaining": 1140,
+          "chamber": 1
+        },
+        {
+          "cookStatus": "standby",
+          "startTime": 0,
+          "recipeType": 3,
+          "recipeId": 14,
+          "recipeName": "",
+          "upc": "",
+          "holdTime": 0,
+          "cookSetTime": 0,
+          "cookTemp": 0,
+          "mode": "AirFry",
+          "currentRemainingTime": 0,
+          "totalTimeRemaining": 0,
+          "chamber": 2
+        }
+      ],
+      "tempUnit": "c",
+      "syncType": 0,
+      "workChamber": 1
+    }
+  }
+}

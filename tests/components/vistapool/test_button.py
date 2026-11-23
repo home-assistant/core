@@ -13,7 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.vistapool.button import _LED_PULSE_DELAY_SECONDS
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -87,7 +87,7 @@ async def test_sync_time_button_writes_local_wall_clock(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: _SYNC_TIME_BUTTON},
+        {TargetKey.ENTITY_ID: _SYNC_TIME_BUTTON},
         blocking=True,
     )
 
@@ -112,7 +112,7 @@ async def test_button_press_when_light_off(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: _BUTTON},
+        {TargetKey.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -139,7 +139,7 @@ async def test_button_press_when_light_on(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: _BUTTON},
+        {TargetKey.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -171,7 +171,7 @@ async def test_button_press_rapid_repeat_after_off(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: _BUTTON},
+        {TargetKey.ENTITY_ID: _BUTTON},
         blocking=True,
     )
     mock_vistapool_client.set_value.assert_awaited_once_with(
@@ -184,7 +184,7 @@ async def test_button_press_rapid_repeat_after_off(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: _BUTTON},
+        {TargetKey.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -225,7 +225,7 @@ async def test_button_press_raises_on_api_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

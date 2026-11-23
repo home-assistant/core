@@ -1,5 +1,6 @@
 """Test the Bravia TV media player."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
@@ -38,7 +39,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -48,6 +48,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.const import (
@@ -59,6 +61,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -356,8 +359,11 @@ async def test_select_source_not_found(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI 9"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "HDMI 9",
+            },
             blocking=True,
         )
 
@@ -442,8 +448,8 @@ async def test_select_source_by_label(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: source},
         blocking=True,
     )
 
@@ -500,11 +506,11 @@ async def test_play_media(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
@@ -523,11 +529,11 @@ async def test_play_media_invalid_type(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "song",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "song",
             },
             blocking=True,
         )
@@ -565,8 +571,56 @@ async def test_command_error(
 
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            MediaPlayerService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        pytest.param(BraviaConnectionError, nullcontext(), id="connection_error"),
+        pytest.param(BraviaConnectionTimeout, nullcontext(), id="connection_timeout"),
+        pytest.param(BraviaTurnedOff, nullcontext(), id="turned_off"),
+        pytest.param(
+            BraviaNotFound,
+            pytest.raises(
+                HomeAssistantError, match="the Bravia API service is reloading"
+            ),
+            id="not_found",
+        ),
+        pytest.param(
+            BraviaError,
+            pytest.raises(
+                HomeAssistantError,
+                match="Error sending command to BRAVIA TV-Model: BraviaError",
+            ),
+            id="bravia_error",
+        ),
+    ],
+)
+async def test_turn_off_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+    exception: type[BraviaError],
+    expected: AbstractContextManager[object],
+) -> None:
+    """Test turn-off suppresses only errors indicating the TV is offline."""
+    await init_integration(hass, mock_config_entry)
+    mock_braviatv_client.turn_off.side_effect = exception
+
+    with expected:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_braviatv_client.turn_off.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(

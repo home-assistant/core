@@ -29,12 +29,12 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
 
-if TYPE_CHECKING:
-    from opendisplay.models import FirmwareVersion
-
 from .const import CONF_ENCRYPTION_KEY, DOMAIN
 from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
+
+if TYPE_CHECKING:
+    from opendisplay.models import FirmwareVersion
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

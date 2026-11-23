@@ -10,7 +10,7 @@
   "iot_class": "local_polling",
   "loggers": ["hotspring"],
   "quality_scale": "platinum",
-  "requirements": ["python-hotspring==4.0.2"],
+  "requirements": ["python-hotspring==5.0.0"],
   "zeroconf": [
     {
       "name": "watkins_spa*",
