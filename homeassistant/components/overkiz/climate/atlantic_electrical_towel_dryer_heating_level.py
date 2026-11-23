@@ -30,6 +30,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
@@ -57,6 +58,8 @@ TEMPERATURE_SENSOR_DEVICE_INDEX = 7
 BOOST_DURATION = timedelta(minutes=60)  # same as the boost button on the device
 # The cancel fails once the boost is over, so it runs separately from the new level
 CANCEL_SETTLE_DELAY = 5
+# The gateway may reject a level without the entity knowing it
+LEVEL_CONFIRM_TIMEOUT = timedelta(minutes=2)
 TIMER_CANCELLED = 0
 TIMER_LEVEL_SET = 65535
 
@@ -68,6 +71,7 @@ class TowelDryerExtraStoredData(ExtraStoredData):
     assumed_level: str | None
     boost_until: datetime | None
     override_pending: bool
+    boost_timer_seen: bool
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -76,6 +80,7 @@ class TowelDryerExtraStoredData(ExtraStoredData):
             "assumed_level": self.assumed_level,
             "boost_until": self.boost_until.isoformat() if self.boost_until else None,
             "override_pending": self.override_pending,
+            "boost_timer_seen": self.boost_timer_seen,
         }
 
     @classmethod
@@ -85,12 +90,14 @@ class TowelDryerExtraStoredData(ExtraStoredData):
             assumed_level = restored["assumed_level"]
             boost_until = restored["boost_until"]
             override_pending = restored["override_pending"]
+            boost_timer_seen = restored["boost_timer_seen"]
         except KeyError:
             return None
         return cls(
             assumed_level=assumed_level,
             boost_until=dt_util.parse_datetime(boost_until) if boost_until else None,
             override_pending=override_pending,
+            boost_timer_seen=boost_timer_seen,
         )
 
 
@@ -121,7 +128,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         # Level the device is on or returns to, while the gateway reports a stale one
         self._assumed_level: str | None = None
         # A level was sent and the gateway has not reported it yet
-        self._level_pending = False
+        self._level_pending_until: datetime | None = None
         # A boost was started and has not been cancelled, even if it ran out
         self._override_pending = False
         # The gateway reported the timer of the boost started from Home Assistant
@@ -151,6 +158,14 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     def _boost_override(self) -> bool:
         """Return True while the gateway still holds a boost override."""
         return self._transitory_timer not in (None, TIMER_CANCELLED, TIMER_LEVEL_SET)
+
+    @property
+    def _level_pending(self) -> bool:
+        """Return True while waiting for the gateway to report the level sent."""
+        return (
+            self._level_pending_until is not None
+            and dt_util.utcnow() < self._level_pending_until
+        )
 
     @property
     def _reported_level(self) -> str:
@@ -185,43 +200,48 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     @override
     def _handle_coordinator_update(self) -> None:
         """Reconcile the tracked levels with the gateway."""
-        if self._transitory_timer != TIMER_LEVEL_SET:
+        if self._boost_override:
             if self._boost_until is not None:
                 self._boost_timer_seen = True
         elif self._boost_timer_seen:
-            # The boost was cancelled or replaced by another client
+            # The boost was cancelled, possibly by another client
             self._clear_boost()
             self._override_pending = False
-            self._level_pending = False
-            self._assumed_level = None
-        elif self._level_pending:
-            if self._reported_level == self._assumed_level:
-                self._level_pending = False
-                self._assumed_level = None
-        elif not self._override_pending:
+        if (
+            self._transitory_timer == TIMER_LEVEL_SET
+            and not self._override_pending
+            and (not self._level_pending or self._reported_level == self._assumed_level)
+        ):
+            self._level_pending_until = None
             self._assumed_level = None
         super()._handle_coordinator_update()
 
     async def _async_set_level(self, level: str) -> None:
         """Set a heating level, cancelling a boost first."""
         async with self._lock:
-            if (
-                self._override_pending
-                or self._boost_end is not None
-                or self._boost_override
-                or self._reported_level == OverkizCommandParam.BOOST
-            ):
-                await self.executor.async_execute_command(
-                    OverkizCommand.CANCEL_HEATING_LEVEL, OverkizCommandParam.BOOST
-                )
-                self._override_pending = False
-                await asyncio.sleep(CANCEL_SETTLE_DELAY)
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_HEATING_LEVEL, level
-            )
-            self._clear_boost()
+            previous = (self._assumed_level, self._level_pending_until)
+            # Shown while the cancel resets the timer, before the level is set
             self._assumed_level = level
-            self._level_pending = True
+            self._level_pending_until = dt_util.utcnow() + LEVEL_CONFIRM_TIMEOUT
+            try:
+                if (
+                    self._override_pending
+                    or self._boost_end is not None
+                    or self._boost_override
+                    or self._reported_level == OverkizCommandParam.BOOST
+                ):
+                    await self.executor.async_execute_command(
+                        OverkizCommand.CANCEL_HEATING_LEVEL, OverkizCommandParam.BOOST
+                    )
+                    self._override_pending = False
+                    await asyncio.sleep(CANCEL_SETTLE_DELAY)
+                await self.executor.async_execute_command(
+                    OverkizCommand.SET_HEATING_LEVEL, level
+                )
+            except HomeAssistantError:
+                self._assumed_level, self._level_pending_until = previous
+                raise
+            self._clear_boost()
             self.async_write_ha_state()
 
     async def _async_start_boost(self) -> None:
@@ -242,7 +262,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
             )
             self._clear_boost()
             self._assumed_level = return_level
-            self._level_pending = False
+            self._level_pending_until = None
             self._override_pending = True
             self._boost_until = dt_util.utcnow() + BOOST_DURATION
             self._unsub_boost_end = async_call_later(
@@ -260,6 +280,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
             return
         self._assumed_level = data.assumed_level
         self._override_pending = data.override_pending
+        self._boost_timer_seen = data.boost_timer_seen
         if data.boost_until is not None and data.boost_until > dt_util.utcnow():
             self._boost_until = data.boost_until
             self._unsub_boost_end = async_call_later(
@@ -274,6 +295,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
             assumed_level=self._assumed_level,
             boost_until=self._boost_until,
             override_pending=self._override_pending,
+            boost_timer_seen=self._boost_timer_seen,
         )
 
     @override
