@@ -86,7 +86,7 @@ async def test_last_sync_sensor_none_handling(
     mock_nintendo_device.last_sync = None
     freezer.tick(60)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
