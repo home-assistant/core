@@ -2374,7 +2374,7 @@ class ModesTrait(_Trait):
             requested_effect = settings["effect"]
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
                     TargetKey.ENTITY_ID: self.state.entity_id,
                     LightServiceArgument.EFFECT: requested_effect,
