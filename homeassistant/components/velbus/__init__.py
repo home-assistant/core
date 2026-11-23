@@ -315,7 +315,7 @@ async def async_remove_config_entry_device(
         child.id
         for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id)
     )
-    data = config_entry.runtime_data
+    data = getattr(config_entry, "runtime_data", None)
     for entity in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
         if entity.device_id not in removal_device_ids:
             continue
