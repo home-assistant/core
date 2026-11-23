@@ -37,7 +37,7 @@ jobs:
       # skips cancelled runs, so only the last push of a burst is reviewed.
       - name: Wait for further pushes
         if: github.event.action == 'synchronize'
-        run: sleep 600
+        run: sleep 300
       - name: Report the pull request
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
