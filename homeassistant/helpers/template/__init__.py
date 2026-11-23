@@ -393,6 +393,7 @@ def _render_json_path(
             return None
         value = value[key]
     try:
+        # Same output as jinja while TemplateEnvironment uses this finalize
         return str(_finalize_output(value)).strip()
     except RecursionError:
         return None
@@ -697,39 +698,32 @@ class Template:
             except JSON_DECODE_EXCEPTIONS:
                 value_json = Undefined
 
-        if (
-            value_json is not Undefined
-            and (json_path := self._get_json_path())
-            and (
-                render_result := _render_json_path(
-                    value_json, json_path, self._json_path_guarded
-                )
+        render_result: str | None = None
+        if value_json is not Undefined and (json_path := self._get_json_path()):
+            render_result = _render_json_path(
+                value_json, json_path, self._json_path_guarded
             )
-            is not None
-        ):
-            if not parse_result or (self.hass and self.hass.config.legacy_templates):
-                return render_result
-            return _parse_result(render_result)
 
-        variables = dict(variables or {})
-        variables["value"] = value
-        if value_json is not Undefined:
-            variables["value_json"] = value_json
+        if render_result is None:
+            variables = dict(variables or {})
+            variables["value"] = value
+            if value_json is not Undefined:
+                variables["value_json"] = value_json
 
-        try:
-            render_result = render_with_context(
-                self.template, compiled, **variables
-            ).strip()
-        # A cyclic value makes the finalize hook recurse until RecursionError.
-        except (jinja2.TemplateError, RecursionError) as ex:
-            if error_value is _SENTINEL:
-                _LOGGER.error(
-                    "Error parsing value: %s (value: %s, template: %s)",
-                    ex,
-                    value,
-                    self.template,
-                )
-            return value if error_value is _SENTINEL else error_value
+            try:
+                render_result = render_with_context(
+                    self.template, compiled, **variables
+                ).strip()
+            # A cyclic value makes the finalize hook recurse until RecursionError.
+            except (jinja2.TemplateError, RecursionError) as ex:
+                if error_value is _SENTINEL:
+                    _LOGGER.error(
+                        "Error parsing value: %s (value: %s, template: %s)",
+                        ex,
+                        value,
+                        self.template,
+                    )
+                return value if error_value is _SENTINEL else error_value
 
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
@@ -748,7 +742,9 @@ class Template:
             if match := _JSON_PATH_TEMPLATE.fullmatch(self.template):
                 json_path = self._parse_json_path(match["path"])
             elif match := _GUARDED_JSON_PATH_TEMPLATE.fullmatch(self.template):
-                guard = match["single"] or match["double"]
+                guard = (
+                    match["single"] if match["single"] is not None else match["double"]
+                )
                 json_path = self._parse_json_path(match["path"])
                 # Only a guard on the first key makes a missing key render empty
                 if json_path and json_path[0] == guard:
