@@ -1380,7 +1380,7 @@ async def test_camera_image_raises_exception(
     with pytest.raises(Exception) as excinfo:
         await camera.async_get_image(hass, camera_entity_indoor)
 
-    assert excinfo.value.args == ("Unable to get image",)
+    assert excinfo.value.translation_key == "image_unavailable"
     assert fake_post_hits == 9
 
 
@@ -1480,8 +1480,9 @@ async def test_camera_initial_setup_and_images(
         assert hass.states.get(camera_entity).attributes.get("alim_status") == 1
 
         # Validate image fetch raises exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
+        with pytest.raises(HomeAssistantError) as excinfo:
             await camera.async_get_image(hass, camera_entity)
+        assert excinfo.value.translation_key == "camera_off"
 
 
 @pytest.mark.parametrize(
