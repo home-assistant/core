@@ -214,9 +214,11 @@ jobs:
           ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
 # One run per pull request: a newer push cancels the review of an older one as
 # soon as its trigger run is requested. The pull request number is not known
-# here for forks, its head repository and branch identify it.
+# here for forks, its head repository and branch identify it. Completions of
+# cancelled or failed trigger runs get their own group, so a late one cannot
+# cancel a newer review.
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.pull_request_number || format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || (github.event.action == 'completed' && github.event.workflow_run.conclusion != 'success' && github.run_id) || format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 steps:
