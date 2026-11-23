@@ -42,10 +42,10 @@
         "name": "Battery temperature"
       },
       "battery_temperature_max": {
-        "name": "Battery temperature max"
+        "name": "Maximum battery temperature"
       },
       "battery_temperature_min": {
-        "name": "Battery temperature min"
+        "name": "Minimum battery temperature"
       },
       "cabin_temperature": {
         "name": "Cabin temperature"
