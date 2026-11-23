@@ -48,7 +48,7 @@ from .platform_helpers import (
     [
         pytest.param(
             False,
-            WaterHeaterEntityFeature.OPERATION_MODE,
+            WaterHeaterEntityFeature(0),
             [STATE_HEAT_PUMP],
             id="read-only",
         ),
@@ -116,8 +116,7 @@ async def test_water_heater_rejects_read_only_power(
         ),
         pytest.param(
             "off",
-            WaterHeaterEntityFeature.TARGET_TEMPERATURE
-            | WaterHeaterEntityFeature.OPERATION_MODE,
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE,
             [STATE_OFF],
             id="off",
         ),
@@ -155,7 +154,7 @@ def test_water_heater_initial_state_includes_read_only_current_operation() -> No
 
     assert entity.current_operation == STATE_PERFORMANCE
     assert entity.operation_list == [STATE_PERFORMANCE]
-    assert entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
+    assert not entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
 
 
 def test_water_heater_handles_missing_temperature_values() -> None:

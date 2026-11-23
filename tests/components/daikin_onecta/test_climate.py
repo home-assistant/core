@@ -73,7 +73,7 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
-from .platform_helpers import _async_setup_fixture
+from .platform_helpers import _async_setup_fixture, _execute_typed_command
 
 DRY_FIXED_DIRECTION_GATEWAY_ID = "00000000-0000-4000-8000-000000000108"
 
@@ -1376,6 +1376,80 @@ async def test_climate_state_omits_read_only_presets(
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
     assert entity is not None
     assert entity.preset_modes == [PRESET_NONE]
+
+
+async def test_climate_does_not_advertise_read_only_fan_control(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Do not advertise fan control when all fan characteristics are read-only."""
+    (
+        entity_id,
+        _,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    fan_operation = climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_speed is not None
+    fan_operation.fan_speed.current_mode.settable = False
+    fan_operation.fan_speed.current_mode.value = FANMODE_FIXED
+    fixed = fan_operation.fan_speed.modes[FANMODE_FIXED]
+    fixed.settable = False
+    fixed.value = 3
+    coordinator.async_update_listeners()
+
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert entity is not None
+    assert entity.fan_modes
+    assert not entity.supported_features & ClimateEntityFeature.FAN_MODE
+
+
+async def test_climate_does_not_disable_read_only_active_preset(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Skip disabling an active preset when Daikin marks it read-only."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    assert climate_control.on_off_mode is not None
+    holiday_mode = climate_control.mode_characteristic("holidayMode")
+    powerful_mode = climate_control.mode_characteristic("powerfulMode")
+    assert holiday_mode is not None and powerful_mode is not None
+    climate_control.on_off_mode.value = "on"
+    holiday_mode.value.enabled = True
+    holiday_mode.settable = False
+    coordinator.async_update_listeners()
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_BOOST},
+        blocking=True,
+    )
+
+    coordinator.client.put_management_point.assert_not_awaited()
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        (
+            (
+                gateway_id,
+                management_point.embedded_id,
+                "powerfulMode",
+                "on",
+            ),
+            {"path": None},
+        )
+    ]
 
 
 async def test_climate_state_reports_enabled_away_preset(

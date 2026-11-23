@@ -298,6 +298,22 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     err.retry_after,
                 )
                 return False
+            except OnectaConnectionError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed to connect: %s",
+                    err.method,
+                    err.path,
+                    err,
+                )
+                return False
+            except OnectaApiError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed with HTTP %s",
+                    err.method,
+                    err.path,
+                    err.status,
+                )
+                return False
             except OnectaRequestError as err:
                 _LOGGER.debug(
                     "Daikin request %s %s failed: %s", err.method, err.path, err

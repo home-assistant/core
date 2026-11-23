@@ -162,7 +162,12 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             sf |= WaterHeaterEntityFeature.ON_OFF
         if operation_list is None:
             operation_list = self.get_operation_list()
-        if operation_list:
+        hot_water_power = hot_water.power if hot_water is not None else None
+        powerful_mode = hot_water.powerful_mode if hot_water is not None else None
+        if len(operation_list) > 1 and (
+            (hot_water_power is not None and hot_water_power.settable)
+            or (powerful_mode is not None and powerful_mode.settable)
+        ):
             sf |= WaterHeaterEntityFeature.OPERATION_MODE
         dht = self.domestic_hotwater_temperature
         if dht and dht.settable:

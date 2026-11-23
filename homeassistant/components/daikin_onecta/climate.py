@@ -305,7 +305,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 supported_features |= (
                     ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
                 )
-            if self._attr_fan_modes:
+            if self._attr_fan_modes and self._fan_mode_is_settable():
                 supported_features |= ClimateEntityFeature.FAN_MODE
             if self._attr_swing_modes:
                 supported_features |= ClimateEntityFeature.SWING_MODE
@@ -313,6 +313,17 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         return supported_features
+
+    def _fan_mode_is_settable(self) -> bool:
+        """Return whether any fan mode control is writable."""
+        fan_operation = self._fan_operation()
+        fan_speed = fan_operation.fan_speed if fan_operation is not None else None
+        if fan_speed is None:
+            return False
+        if fan_speed.current_mode.settable:
+            return True
+        fixed = (fan_speed.modes or {}).get(FANMODE_FIXED)
+        return fixed is not None and fixed.settable
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature for this setpoint."""
@@ -865,6 +876,13 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             current_preset
             for current_preset in active_presets
             if current_preset != preset_mode
+            and (
+                preset := self._preset_characteristic(
+                    HA_PRESET_TO_DAIKIN[current_preset]
+                )
+            )
+            is not None
+            and preset.settable
         ]
         for current_preset in presets_to_disable:
             await self._async_disable_preset_mode(current_preset)

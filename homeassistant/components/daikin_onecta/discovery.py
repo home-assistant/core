@@ -17,23 +17,21 @@ from .const import (
 
 def has_air_purifier_power(point: ManagementPoint | None) -> bool:
     """Return whether the management point exposes air-purifier power."""
+    return _air_purifier_power(point) is not None
+
+
+def _air_purifier_power(point: ManagementPoint | None) -> Characteristic[str] | None:
+    """Return the air-purifier power characteristic when it is exposed."""
     if point is None or point.management_point_type != "climateControl":
-        return False
+        return None
     air_purification = point.air_purification
-    return air_purification is not None and air_purification.power is not None
+    return air_purification.power if air_purification is not None else None
 
 
 def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
     """Return whether the air-purifier power characteristic is writable."""
-    if point is None:
-        return False
-    air_purification = point.air_purification
-    return (
-        point.management_point_type == "climateControl"
-        and air_purification is not None
-        and air_purification.power is not None
-        and air_purification.power.settable
-    )
+    power = _air_purifier_power(point)
+    return power is not None and power.settable
 
 
 def has_climate_entity(point: ManagementPoint) -> bool:
@@ -88,7 +86,7 @@ def scalar_platform_for_point(
     if name == "onOffMode" and point.management_point_type == "climateControl":
         if point.air_purification is not None:
             return None
-    # Typed entities own these controls while the gateway is offline.
+    # Keep water-heater power controls on the typed entity.
     if name in {"onOffMode", "powerfulMode"} and (
         point.management_point_type
         in {"domesticHotWaterFlowThrough", "domesticHotWaterTank"}
