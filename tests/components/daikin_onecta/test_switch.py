@@ -1,16 +1,10 @@
 """Tests for Daikin Onecta switch entities."""
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock
-
 from daikin_onecta.models import Characteristic, ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.switch import (
-    async_setup_entry as async_setup_switches,
-)
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF as SWITCH_SERVICE_TURN_OFF,
@@ -164,32 +158,27 @@ async def test_switch_rejects_unknown_state(
     execute_command.assert_not_awaited()
 
 
-async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
+async def test_unknown_characteristic_is_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Do not create untranslated switches for unknown characteristics."""
-    management_point = SimpleNamespace(
-        embedded_id="point",
-        management_point_type="futureType",
-        scalar_characteristics=lambda: {
-            "futureCharacteristic": Characteristic(
-                value="on", settable=True, values=["on", "off"]
-            )
-        },
+    gateway_devices = _load_gateway_devices("minimal_data")
+    point = gateway_devices[0].management_points_by_type("climateControl")[0]
+    point.characteristics["futureCharacteristic"] = Characteristic(
+        value="on", settable=True, values=["on", "off"]
     )
-    device = SimpleNamespace(
-        device=SimpleNamespace(management_points=[management_point]),
-        present_in_cloud=True,
-        gateway_online=True,
-    )
-    coordinator = SimpleNamespace(
-        data={"gateway": device},
-        cloud_update_sequence=1,
-        async_add_listener=MagicMock(return_value=MagicMock()),
-    )
-    config_entry = SimpleNamespace(
-        runtime_data=coordinator, async_on_unload=MagicMock()
-    )
-    async_add_entities = MagicMock()
 
-    await async_setup_switches(hass, config_entry, async_add_entities)
+    await _async_setup_fixture(
+        hass, config_entry, "minimal_data", gateway_devices=gateway_devices
+    )
 
-    async_add_entities.assert_not_called()
+    assert (
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN,
+            DOMAIN,
+            f"{gateway_devices[0].id}_{point.embedded_id}_futureCharacteristic",
+        )
+        is None
+    )

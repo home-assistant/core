@@ -1,15 +1,11 @@
 """Tests for Daikin binary sensors."""
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from daikin_onecta.models import Characteristic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.binary_sensor import (
-    async_setup_entry as async_setup_binary_sensors,
-)
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import Platform
@@ -19,34 +15,28 @@ from homeassistant.helpers import entity_registry as er
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
-async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
+async def test_unknown_characteristic_is_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Do not create untranslated binary sensors for unknown values."""
-    management_point = SimpleNamespace(
-        embedded_id="point",
-        management_point_type="climateControl",
-        air_purification=None,
-        scalar_characteristics=lambda: {
-            "futureCharacteristic": Characteristic(value=True)
-        },
-    )
-    device = SimpleNamespace(
-        device=SimpleNamespace(management_points=[management_point]),
-        present_in_cloud=True,
-        gateway_online=True,
-    )
-    coordinator = SimpleNamespace(
-        data={"gateway": device},
-        cloud_update_sequence=1,
-        async_add_listener=MagicMock(return_value=MagicMock()),
-    )
-    config_entry = SimpleNamespace(
-        runtime_data=coordinator, async_on_unload=MagicMock()
-    )
-    async_add_entities = MagicMock()
+    gateway_devices = _load_gateway_devices("minimal_data")
+    point = gateway_devices[0].management_points_by_type("climateControl")[0]
+    point.characteristics["futureCharacteristic"] = Characteristic(value=True)
 
-    await async_setup_binary_sensors(hass, config_entry, async_add_entities)
+    await _async_setup_fixture(
+        hass, config_entry, "minimal_data", gateway_devices=gateway_devices
+    )
 
-    async_add_entities.assert_not_called()
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            f"{gateway_devices[0].id}_{point.embedded_id}_futureCharacteristic",
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

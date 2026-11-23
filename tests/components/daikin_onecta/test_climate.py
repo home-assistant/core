@@ -1944,7 +1944,6 @@ async def test_climate_service_rejects_unavailable_power(
 
     assert err.value.translation_key == "climate_power_unavailable"
     mock_onecta_client.patch_characteristic.assert_not_awaited()
-    assert coordinator._last_patch_call is None
 
 
 @pytest.mark.parametrize(

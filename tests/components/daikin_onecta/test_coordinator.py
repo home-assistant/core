@@ -16,6 +16,7 @@ from daikin_onecta import (
     OnectaRateLimitError,
     OnectaResponseError,
 )
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaRequestError
 from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
@@ -595,7 +596,6 @@ class TestOnectaDataUpdateCoordinator:
     ) -> None:
         """Apply Daikin's reported daily limit after a cloud refresh."""
         _move_to_local_time(freezer, datetime(2023, 1, 1, 10, 0))
-        coordinator._last_patch_call = None
         coordinator.client.rate_limit = RateLimit(day_limit=400)
         coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
 
@@ -747,24 +747,30 @@ class TestOnectaDataUpdateCoordinator:
         assert not coordinator.last_update_success
         assert isinstance(coordinator.last_exception, UpdateFailed)
         assert coordinator.last_exception.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
-        assert coordinator._polling_backoff_remaining() == timedelta(
-            seconds=EXPECTED_RATE_LIMIT_RETRY_AFTER
-        )
 
     async def test_polling_backoff_logs_start_and_end(
         self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
         coordinator: OnectaDataUpdateCoordinator,
         caplog: pytest.LogCaptureFixture,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Log once when the polling backoff starts and ends."""
         caplog.set_level(logging.INFO)
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         _move_to_local_time(freezer, now)
 
-        coordinator._set_polling_backoff(60)
-        freezer.tick(timedelta(seconds=60))
-        assert coordinator._polling_backoff_remaining() is None
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+            RateLimit(retry_after=60),
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        mock_onecta_client.get_gateway_devices.side_effect = None
+        mock_onecta_client.get_gateway_devices.return_value = []
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
         assert caplog.text.count("Daikin rate-limited cloud requests") == 1
         assert caplog.text.count("Daikin polling rate-limit backoff ended") == 1
@@ -774,30 +780,56 @@ class TestOnectaDataUpdateCoordinator:
         coordinator: OnectaDataUpdateCoordinator,
         caplog: pytest.LogCaptureFixture,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """A new rate limit replaces an expired deadline without an end log."""
         caplog.set_level(logging.INFO)
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         _move_to_local_time(freezer, now)
 
-        coordinator._set_polling_backoff(60)
+        mock_onecta_client.patch_characteristic.side_effect = [
+            OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            ),
+            OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            ),
+        ]
+
+        async def write_power(client: OnectaClient) -> None:
+            await client.patch_characteristic("gateway", "point", "power", "on")
+
+        assert not await coordinator.async_execute_command(write_power)
         freezer.tick(timedelta(seconds=61))
-        coordinator._set_polling_backoff(60)
+        assert not await coordinator.async_execute_command(write_power)
 
         assert caplog.text.count("Daikin rate-limited cloud requests") == 2
         assert "Daikin polling rate-limit backoff ended" not in caplog.text
 
     async def test_polling_backoff_remaining_rounds_up_fractional_seconds(
         self,
+        hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
         freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Round up remaining backoff so scheduled refreshes aren't early."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         _move_to_local_time(freezer, now)
-        coordinator._polling_backoff_until = now + timedelta(milliseconds=500)
+        coordinator.update_interval = timedelta(milliseconds=500)
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+            RateLimit(retry_after=0.5),
+            method="GET",
+            path="/v1/gateway-devices",
+        )
 
-        assert coordinator._polling_backoff_remaining() == timedelta(seconds=1)
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+        assert coordinator.update_interval == timedelta(seconds=1)
 
     async def test_manual_update_respects_get_retry_after(
         self,
@@ -826,7 +858,7 @@ class TestOnectaDataUpdateCoordinator:
         await async_update_entity(hass, entity_id)
 
         mock_onecta_client.get_gateway_devices.assert_not_awaited()
-        assert coordinator._polling_backoff_remaining() == timedelta(seconds=60)
+        assert coordinator.update_interval == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
 
     async def test_manual_update_rate_limit_keeps_cached_state_available(
@@ -852,7 +884,7 @@ class TestOnectaDataUpdateCoordinator:
 
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
         assert coordinator.last_update_success
-        assert coordinator._polling_backoff_until is not None
+        assert coordinator.update_interval == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
 
     async def test_manual_update_respects_write_polling_backoff(
@@ -879,7 +911,7 @@ class TestOnectaDataUpdateCoordinator:
         await async_update_entity(hass, entity_id)
 
         mock_onecta_client.get_gateway_devices.assert_not_awaited()
-        assert coordinator._polling_backoff_remaining() == timedelta(seconds=60)
+        assert coordinator.update_interval == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
 
     async def test_manual_updates_for_multiple_entities_are_debounced(
@@ -1038,31 +1070,6 @@ class TestOnectaDataUpdateCoordinator:
         mock_onecta_client.get_gateway_devices.assert_not_awaited()
         assert coordinator.last_update_success
         assert hass.states.get(entity_id) == state_before
-
-    async def test_successful_write_clears_polling_backoff(
-        self,
-        coordinator: OnectaDataUpdateCoordinator,
-        freezer: FrozenDateTimeFactory,
-    ) -> None:
-        """Allow commands through during polling backoff and clear it on success."""
-        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        _move_to_local_time(freezer, now)
-        rate_limited_command = AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
-                method="PATCH",
-                path="/v1/management-points/point/characteristics/power",
-            )
-        )
-        assert not await coordinator.async_execute_command(
-            lambda _client: rate_limited_command()
-        )
-        command = AsyncMock()
-
-        assert await coordinator.async_execute_command(lambda _client: command())
-
-        command.assert_awaited_once()
-        assert coordinator._polling_backoff_until is None
 
     async def test_successful_write_reschedules_poll_after_cooldown(
         self,
