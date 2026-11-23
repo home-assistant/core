@@ -244,6 +244,8 @@ async def test_generic_switch_multi_node(
     await trigger_switch_event(
         hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 0}
     )
+    # a MultiPressComplete event without a count is ignored as well
+    await trigger_switch_event(hass, matter_client, matter_node, 6)
     state = hass.states.get("event.mock_generic_switch_button_1")
     assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "single_press"
     assert state.last_changed == last_changed
