@@ -26,9 +26,10 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import as_snake_case
 
@@ -156,7 +157,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     _evo_state_attr_names = (SZ_SETPOINT_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.Zone
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.Zone
     ) -> None:
         """Initialize an evohome-compatible heating zone."""
 
@@ -164,7 +165,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         self._attr_unique_id = unique_zone_id(evo_device)
 
-        if coordinator.client_v1:
+        if coordinator.account.client_v1:
             self._attr_precision = PRECISION_TENTHS
         else:
             self._attr_precision = self._evo_device.setpoint_capabilities[
@@ -251,7 +252,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs[ATTR_TEMPERATURE]
+        temperature = kwargs[ClimateServiceArgument.TEMPERATURE]
 
         if (until := kwargs.get(SZ_UNTIL)) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
@@ -330,7 +331,7 @@ class EvoController(EvoClimateEntity):
     _evo_state_attr_names = (SZ_SYSTEM_MODE_STATUS,)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.ControlSystem
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.ControlSystem
     ) -> None:
         """Initialize an evohome-compatible controller."""
 
@@ -400,16 +401,9 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set a Controller to any of its native operating modes."""
         until = dt_util.as_utc(until) if until else None
-        try:
-            await self.coordinator.call_client_api(
-                self._evo_device.set_mode(mode, until=until)
-            )
-        except evo.InvalidModeRequestError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_system_mode",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.coordinator.call_client_api(
+            self._evo_device.set_mode(mode, until=until)
+        )
 
     @property
     @override

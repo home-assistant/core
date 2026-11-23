@@ -1,7 +1,7 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
@@ -361,6 +361,33 @@ def async_get_match_preferences(
     )
 
 
+def rank_name_match(
+    query: str, names: Iterable[str], aliases: Iterable[str], other: Iterable[str]
+) -> int | None:
+    """Return the rank of an item for a casefolded query, or None if no match.
+
+    Rank 0 is an exact name match, rank 1 an exact alias match, rank 2 a
+    partial name match and rank 3 a partial alias match or a match on another
+    field. Each field is only read when it can still improve the rank.
+    """
+    rank = None
+    for name in names:
+        folded = name.casefold()
+        if folded == query:
+            return 0
+        if query in folded:
+            rank = 2
+    for alias in aliases:
+        folded = alias.casefold()
+        if folded == query:
+            return 1
+        if rank is None and query in folded:
+            rank = 3
+    if rank is None and any(query in value.casefold() for value in other):
+        rank = 3
+    return rank
+
+
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -609,7 +636,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
+        return probatio.to_openapi(probatio.Schema([cv.CONDITION_SCHEMA]))
 
     if isinstance(schema, selector.ConstantSelector):
         return probatio.to_openapi(probatio.Schema(schema.config["value"]))

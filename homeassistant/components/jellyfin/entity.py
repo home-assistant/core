@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -73,3 +74,13 @@ class JellyfinClientEntity(JellyfinEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.session_id in self.coordinator.data
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # A client can post its capabilities after its session starts, or change them
+        # later, while the session ID stays the same.
+        if self.available:
+            self.capabilities = self.session_data["Capabilities"]
+        super()._handle_coordinator_update()

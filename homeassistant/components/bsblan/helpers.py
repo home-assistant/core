@@ -5,7 +5,7 @@ from bsblan import BSBLAN, BSBLANError, EntityInfo, StaticState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, Setpoint
 
 
 def first_temperature(*sources: EntityInfo[float] | None) -> float | None:
@@ -58,6 +58,26 @@ def validate_setpoint_order(
         translation_key=translation_key,
         translation_placeholders={"temperature": str(temperature), "limit": str(limit)},
     )
+
+
+def setpoint_to_change(
+    temperature: float,
+    *,
+    current: float | None,
+    normal: float | None,
+    reduced: float | None,
+) -> Setpoint:
+    """Return the setpoint a new target temperature changes.
+
+    The reduced setpoint changes when it is the one in effect. When both
+    setpoints are equal, either one could be in effect, so lowering changes
+    the reduced one and raising the normal one to keep them in order.
+    """
+    if current is None or current != reduced:
+        return Setpoint.NORMAL
+    if current != normal or temperature < current:
+        return Setpoint.REDUCED
+    return Setpoint.NORMAL
 
 
 async def async_sync_device_time(client: BSBLAN, device_name: str) -> None:

@@ -93,6 +93,11 @@
         "name": "Video mismatch"
       }
     },
+    "camera": {
+      "substream": {
+        "name": "Substream"
+      }
+    },
     "event": {
       "field_detection": {
         "name": "[%key:component::hikvision::entity::binary_sensor::field_detection::name%]",

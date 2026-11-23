@@ -155,7 +155,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda data: data.wind.gust.value,
+        value_fn=lambda data: data.wind.gust.value if data.wind.gust else None,
         translation_key="wind_gust_speed",
     ),
     GoogleWeatherSensorDescription(

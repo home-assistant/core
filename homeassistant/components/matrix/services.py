@@ -4,23 +4,19 @@ from typing import TYPE_CHECKING
 
 import probatio
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_FORMAT,
     ATTR_IMAGES,
-    ATTR_MESSAGE_ID,
-    ATTR_REACTION,
-    ATTR_ROOM,
     ATTR_THREAD_ID,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
     FORMAT_TEXT,
-    SERVICE_REACT,
-    SERVICE_SEND_MESSAGE,
+    MatrixService,
+    MatrixServiceArgument,
 )
 
 if TYPE_CHECKING:
@@ -33,8 +29,8 @@ DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 SERVICE_SCHEMA_SEND_MESSAGE = probatio.Schema(
     {
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Optional(ATTR_DATA, default={}): {
+        probatio.Required(MatrixServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(MatrixServiceArgument.DATA, default={}): {
             probatio.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): probatio.In(
                 MESSAGE_FORMATS
             ),
@@ -43,7 +39,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = probatio.Schema(
             ),
             probatio.Optional(ATTR_THREAD_ID): cv.string,
         },
-        probatio.Required(ATTR_TARGET): probatio.All(
+        probatio.Required(MatrixServiceArgument.TARGET): probatio.All(
             probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
         ),
     }
@@ -51,9 +47,11 @@ SERVICE_SCHEMA_SEND_MESSAGE = probatio.Schema(
 
 SERVICE_SCHEMA_REACT = probatio.Schema(
     {
-        probatio.Required(ATTR_REACTION): cv.string,
-        probatio.Required(ATTR_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
-        probatio.Required(ATTR_MESSAGE_ID): cv.string,
+        probatio.Required(MatrixServiceArgument.REACTION): cv.string,
+        probatio.Required(MatrixServiceArgument.ROOM): cv.matches_regex(
+            CONF_ROOMS_REGEX
+        ),
+        probatio.Required(MatrixServiceArgument.MESSAGE_ID): cv.string,
     }
 )
 
@@ -76,14 +74,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        MatrixService.SEND_MESSAGE,
         _handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REACT,
+        MatrixService.REACT,
         _handle_react,
         schema=SERVICE_SCHEMA_REACT,
     )

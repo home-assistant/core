@@ -17,8 +17,9 @@ from homeassistant.components.unifi.const import (
     DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -461,3 +462,75 @@ async def test_device_without_loaded_entities_readopted(
 
     assert device_entry()
     assert update_entity_id()
+
+
+@pytest.mark.parametrize("device_payload", [[ADOPTED_PENDING_DEVICE]])
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("switch.device_2_port_1_poe", id="entity_id"),
+        pytest.param("switch.device_2_poe", id="renamed_entity_id"),
+    ],
+)
+async def test_disabled_entity_removed_from_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Verify a disabled entity is recreated once its registry entry is removed.
+
+    A disabled entity is never added, so only the registry tells it is gone.
+    """
+    entry = entity_registry.async_update_entity(
+        "switch.device_2_port_1_poe", new_entity_id=entity_id
+    )
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is None
+
+    # Any scan for entities recreates it, here the one for updated options,
+    # under the ID the registry restores for a deleted entity
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_CLIENTS: False}
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("device_payload", [[ADOPTED_PENDING_DEVICE]])
+async def test_entity_not_added_retried(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Verify an entity the platform does not add is tried again on the next scan."""
+    entity_id = entity_registry.async_get_or_create(
+        Platform.UPDATE,
+        DOMAIN,
+        f"device_update-{PENDING_MAC}",
+        config_entry=config_entry,
+        suggested_object_id="device_2_firmware",
+    ).entity_id
+    # The platform does not add an entity whose entity ID is in use
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await config_entry_factory()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    hass.states.async_remove(entity_id)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_TRACK_CLIENTS: False}
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION]
+        == ADOPTED_PENDING_DEVICE["version"]
+    )
