@@ -68,13 +68,27 @@ class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[int, FuelPricesDKStatio
         except ClientResponseError as exc:
             if exc.status == 401:
                 raise ConfigEntryAuthFailed(exc) from exc
-            if exc.status == 429 or 500 <= exc.status < 600:
-                raise UpdateFailedUnreachable(f"HTTP {exc.status}") from exc
+            if exc.status == 429:
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limit_exceeded",
+                ) from exc
+            if 500 <= exc.status < 600:
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="server_error",
+                ) from exc
             raise
         except TimeoutError as exc:
-            raise UpdateFailedUnreachable("Request timed out") from exc
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="request_timeout",
+            ) from exc
         except ClientConnectionError as exc:
-            raise UpdateFailedUnreachable(str(exc)) from exc
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from exc
 
         return {
             item["station"]["id"]: FuelPricesDKStation(

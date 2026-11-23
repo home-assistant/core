@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, call
 
+from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pybraendstofpriser import Flist
 import pytest
@@ -125,12 +126,39 @@ async def test_stations_use_flist(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "expected_translation"),
     [
-        (client_error(401), ConfigEntryState.SETUP_ERROR),
-        (client_error(500), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            client_error(401),
+            ConfigEntryState.SETUP_ERROR,
+            (None, None),
+            id="auth_failed",
+        ),
+        pytest.param(
+            client_error(429),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "rate_limit_exceeded"),
+            id="rate_limit",
+        ),
+        pytest.param(
+            client_error(500),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "server_error"),
+            id="server_error",
+        ),
+        pytest.param(
+            TimeoutError(),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "request_timeout"),
+            id="timeout",
+        ),
+        pytest.param(
+            ClientConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "cannot_connect"),
+            id="cannot_connect",
+        ),
     ],
-    ids=["auth_failed", "cannot_connect"],
 )
 async def test_setup_error_handling(
     hass: HomeAssistant,
@@ -138,6 +166,7 @@ async def test_setup_error_handling(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    expected_translation: tuple[str | None, str | None],
 ) -> None:
     """Test setup handles API errors during the first refresh."""
     mock_braendstofpriser.get_prices_bulk.side_effect = side_effect
@@ -145,6 +174,10 @@ async def test_setup_error_handling(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+    assert (
+        mock_config_entry.error_reason_translation_domain,
+        mock_config_entry.error_reason_translation_key,
+    ) == expected_translation
 
 
 @pytest.mark.parametrize(
