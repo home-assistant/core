@@ -42,6 +42,17 @@
         "default": "mdi:heat-wave"
       }
     },
+    "sensor": {
+      "carbon_filter_life": {
+        "default": "mdi:air-filter"
+      },
+      "filter_remaining_days": {
+        "default": "mdi:calendar-clock"
+      },
+      "pre_filter_life": {
+        "default": "mdi:filter"
+      }
+    },
     "switch": {
       "auto_off_config": {
         "default": "mdi:timer-off"
