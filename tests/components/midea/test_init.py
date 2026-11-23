@@ -1,5 +1,6 @@
 """Tests for midea __init__.py."""
 
+from collections.abc import Callable
 import logging
 from unittest.mock import patch
 
@@ -22,10 +23,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import DummyDevice
+from .conftest import DummyDevice, default_ac_device
 from .const import (
     CONF_KEY,
     CONF_SUBTYPE,
@@ -326,3 +327,63 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
     assert entry.minor_version == 2
     assert CONF_MAC not in entry.data
     assert CONF_SN not in entry.data
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "supported"),
+    [
+        pytest.param("select", "rate_select", False, id="rate_select"),
+        pytest.param("select", "wind_lr_angle", False, id="wind_lr_angle"),
+        pytest.param("select", "wind_ud_angle", False, id="wind_ud_angle"),
+        pytest.param("sensor", "indoor_humidity", True, id="indoor_humidity"),
+        pytest.param("switch", "anion", False, id="anion"),
+        pytest.param("switch", "screen_display", False, id="screen_display"),
+        pytest.param("switch", "sound", False, id="sound"),
+    ],
+)
+async def test_setup_removes_unsupported_capability_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    platform: str,
+    key: str,
+    supported: bool,
+) -> None:
+    """Test AC entities left over from hardcoded capabilities are removed."""
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{TEST_DEVICE_ID}_{key}", config_entry=config_entry
+    )
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=default_ac_device(),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert (
+        entity_registry.async_get_entity_id(platform, DOMAIN, f"{TEST_DEVICE_ID}_{key}")
+        is not None
+    ) is supported
+
+
+async def test_setup_keeps_non_ac_capability_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test the cleanup does not touch device types without capability entities."""
+    device = DummyDevice(DeviceType.A1)
+    config_entry = mock_config_entry(device)
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "switch", DOMAIN, f"{TEST_DEVICE_ID}_anion", config_entry=config_entry
+    )
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert entity_registry.async_get_entity_id(
+        "switch", DOMAIN, f"{TEST_DEVICE_ID}_anion"
+    )
