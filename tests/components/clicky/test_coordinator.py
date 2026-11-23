@@ -1,14 +1,14 @@
 """Tests for the Clicky coordinator."""
 
 import asyncio
-from datetime import timedelta
+from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
-from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError, Report
+from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -18,78 +18,186 @@ from homeassistant.components.clicky.const import (
     DOMAIN,
     UPDATE_INTERVAL,
 )
-from homeassistant.components.clicky.coordinator import ClickyCoordinator
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .common import _make_empty_report, _make_report
+from .common import _make_report
 from .const import TEST_SITE_ID, TEST_SITEKEY
 
 
-def test_coordinator_init(hass: HomeAssistant) -> None:
-    """Test coordinator initialization."""
+async def _hang(**kwargs: Any) -> None:
+    """Simulate a request that never completes."""
+    await asyncio.Event().wait()
 
-    entry = Mock()
-    client = Mock()
 
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=entry,
-        client=client,
+# (side effect of the API call, config entry state when the first refresh
+# fails, translation key of the error, type of its cause)
+FAILURES = [
+    pytest.param(
+        AuthenticationError("Invalid sitekey"),
+        ConfigEntryState.SETUP_ERROR,
+        "invalid_auth",
+        AuthenticationError,
+        id="auth_failure",
+    ),
+    pytest.param(
+        ConnectionError("Connection refused"),
+        ConfigEntryState.SETUP_RETRY,
+        "cannot_connect",
+        ConnectionError,
+        id="connection_error",
+    ),
+    pytest.param(
+        TimeoutError(),
+        ConfigEntryState.SETUP_RETRY,
+        "cannot_connect",
+        TimeoutError,
+        id="request_timeout",
+    ),
+    pytest.param(
+        ClickyAPIError("Unexpected Error"),
+        ConfigEntryState.SETUP_RETRY,
+        "api_error",
+        ClickyAPIError,
+        id="api_error",
+    ),
+]
+
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add a Clicky config entry to Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SITE_ID: TEST_SITE_ID,
+            CONF_SITEKEY: TEST_SITEKEY,
+        },
     )
-
-    assert coordinator.client is client
-    assert coordinator.name == DOMAIN
-    assert coordinator.update_interval == timedelta(minutes=1)
+    entry.add_to_hass(hass)
+    return entry
 
 
-@pytest.mark.asyncio
-async def test_async_update_data_auth_failure(hass: HomeAssistant) -> None:
-    """Test that authentication errors become ConfigEntryAuthFailed."""
-
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
-
-    client.visitors_online.side_effect = AuthenticationError
-
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
-
-    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "invalid_auth"
+@pytest.fixture
+def mock_visitors_online() -> Generator[AsyncMock]:
+    """Mock the Clicky API calls, returning the visitors online mock."""
+    with (
+        patch(
+            "pyclicky.ClickyClient.visitors_online",
+            AsyncMock(return_value=_make_report(5)),
+        ) as mock_visitors_online,
+        patch(
+            "pyclicky.ClickyClient.time_total",
+            AsyncMock(return_value=_make_report(120)),
+        ),
+    ):
+        yield mock_visitors_online
 
 
-@pytest.mark.asyncio
-async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
-    """Test that connection errors become UpdateFailed."""
+def _sensor_states(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> set[str]:
+    """Return the states of the Clicky sensors."""
+    states = set()
+    for key in ("visitorsOnline", "timeTotal"):
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{TEST_SITE_ID}_{key}"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        states.add(state.state)
+    return states
 
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
 
-    client.visitors_online.side_effect = ConnectionError("Connection refused")
+@pytest.mark.parametrize(
+    ("side_effect", "entry_state", "translation_key", "cause"),
+    FAILURES,
+)
+async def test_first_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_visitors_online: AsyncMock,
+    side_effect: Exception,
+    entry_state: ConfigEntryState,
+    translation_key: str,
+    cause: type[Exception],
+) -> None:
+    """Test that a failing first refresh fails the config entry setup."""
+    mock_visitors_online.side_effect = side_effect
 
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
+    assert mock_config_entry.state is entry_state
+    assert not hass.states.async_all("sensor")
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert exc_info.value.translation_placeholders is None
-    assert exc_info.value.__cause__ is client.visitors_online.side_effect
+
+async def test_first_refresh_request_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_visitors_online: AsyncMock,
+) -> None:
+    """Test that a hanging request times out and the setup is retried."""
+    mock_visitors_online.side_effect = _hang
+
+    with patch("homeassistant.components.clicky.coordinator.REQUEST_TIMEOUT", 0):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.states.async_all("sensor")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "entry_state", "translation_key", "cause"),
+    FAILURES,
+)
+async def test_scheduled_refresh_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_visitors_online: AsyncMock,
+    side_effect: Exception,
+    entry_state: ConfigEntryState,
+    translation_key: str,
+    cause: type[Exception],
+) -> None:
+    """Test that a failing scheduled refresh makes the sensors unavailable."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _sensor_states(hass, entity_registry) == {"5", "120"}
+
+    mock_visitors_online.side_effect = side_effect
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _sensor_states(hass, entity_registry) == {STATE_UNAVAILABLE}
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.last_exception.translation_domain == DOMAIN
+    assert coordinator.last_exception.translation_key == translation_key
+    assert isinstance(coordinator.last_exception.__cause__, cause)
+
+    if entry_state is ConfigEntryState.SETUP_ERROR:
+        # An authentication failure stops polling until the entry is reloaded.
+        return
+
+    # The sensors recover once the API responds again.
+    mock_visitors_online.side_effect = None
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _sensor_states(hass, entity_registry) == {"5", "120"}
 
 
 async def test_http_error_hides_sitekey(
@@ -153,127 +261,3 @@ async def test_http_error_hides_sitekey(
     assert coordinator.last_exception.__suppress_context__
     assert caplog.records
     assert TEST_SITEKEY not in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_async_update_data_request_timeout(hass: HomeAssistant) -> None:
-    """Test that a hanging request times out and becomes UpdateFailed."""
-
-    async def _hang(**kwargs: Any) -> None:
-        await asyncio.Event().wait()
-
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
-
-    client.visitors_online.side_effect = _hang
-
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
-
-    with (
-        patch("homeassistant.components.clicky.coordinator.REQUEST_TIMEOUT", 0),
-        pytest.raises(UpdateFailed) as exc_info,
-    ):
-        await coordinator._async_update_data()
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "cannot_connect"
-    assert isinstance(exc_info.value.__cause__, TimeoutError)
-
-
-@pytest.mark.asyncio
-async def test_async_update_data_success(hass: HomeAssistant) -> None:
-    """Test successful update."""
-
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
-
-    client.visitors_online.return_value = _make_report(12)
-    client.time_total.return_value = _make_report(345)
-
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
-
-    data = await coordinator._async_update_data()
-
-    assert data == {
-        "visitorsOnline": 12,
-        "timeTotal": 345,
-    }
-
-    assert client.visitors_online.await_count == 1
-    assert client.time_total.await_count == 1
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("visitors_online_report", "time_total_report", "expected"),
-    [
-        (
-            _make_empty_report(),
-            _make_report(345),
-            {"visitorsOnline": 0, "timeTotal": 345},
-        ),
-        (
-            _make_report(12),
-            _make_empty_report(),
-            {"visitorsOnline": 12, "timeTotal": 0},
-        ),
-    ],
-    ids=["visitors_online_empty", "time_total_empty"],
-)
-async def test_async_update_data_empty_report(
-    hass: HomeAssistant,
-    visitors_online_report: Report,
-    time_total_report: Report,
-    expected: dict[str, int],
-) -> None:
-    """Test that a report without a value falls back to zero."""
-
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
-
-    client.visitors_online.return_value = visitors_online_report
-    client.time_total.return_value = time_total_report
-
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
-
-    assert await coordinator._async_update_data() == expected
-
-
-@pytest.mark.asyncio
-async def test_async_update_data_failure(hass: HomeAssistant) -> None:
-    """Test that API errors become UpdateFailed."""
-
-    client = AsyncMock()
-    client.__aenter__.return_value = client
-    client.__aexit__.return_value = None
-
-    client.visitors_online.side_effect = ClickyAPIError("Unexpected Error")
-
-    coordinator = ClickyCoordinator(
-        hass=hass,
-        config_entry=Mock(),
-        client=client,
-    )
-
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "api_error"
-    assert exc_info.value.translation_placeholders is None
-    assert exc_info.value.__cause__ is client.visitors_online.side_effect
