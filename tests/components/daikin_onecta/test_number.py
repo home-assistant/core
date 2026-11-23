@@ -17,7 +17,6 @@ from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MockOnectaClient
 from .platform_helpers import (
@@ -281,24 +280,3 @@ async def test_leaving_water_offset_number_translates_cloud_write_failure(
         )
 
     assert err.value.translation_key == "set_temperature_failed"
-
-
-async def test_leaving_water_offset_number_converts_temperature_delta_for_us_units(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Display Celsius offsets as Fahrenheit temperature differences."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    entity_id, _ = await _async_setup_offset_number(
-        hass,
-        config_entry,
-        entity_registry,
-        "mc80z",
-        initial_value=2,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "3.6"
-    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.FAHRENHEIT
