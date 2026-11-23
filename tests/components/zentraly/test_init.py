@@ -172,6 +172,38 @@ async def test_setup_retries_when_persistent_connection_times_out(
     mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
 
 
+async def test_setup_retries_when_connection_drops_before_initial_read(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """A brief connection cannot complete setup without the initial state read."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    mock_api.connected = False
+
+    def subscribe(listener: Callable[[bool], None]) -> MagicMock:
+        hass.loop.call_soon(connection_state, True)
+        hass.loop.call_soon(connection_state, False)
+        return MagicMock()
+
+    mock_api.add_connection_state_listener.side_effect = subscribe
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "setup_cannot_connect"
+    assert hass.states.get(ENTITY_ID) is None
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+    mock_api.add_connection_state_listener.side_effect = None
+    mock_api.connected = True
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
 async def test_setup_unexpected_mac(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:

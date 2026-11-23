@@ -1,5 +1,6 @@
 """Config flow for the Zentraly integration."""
 
+from ipaddress import IPv4Address
 import logging
 from typing import Any, override
 
@@ -30,6 +31,7 @@ from . import get_device_platforms
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_PORT = 80
 PASSWORD_SCHEMA = probatio.Schema(
     {
         probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
@@ -37,6 +39,13 @@ PASSWORD_SCHEMA = probatio.Schema(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
         )
+    }
+)
+MANUAL_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_DEVICE_ID): TextSelector(),
+        **PASSWORD_SCHEMA.schema,
     }
 )
 
@@ -118,41 +127,11 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
         """Handle password authentication."""
 
         errors: dict[str, str] = {}
-
         if user_input is not None:
-            password = user_input[CONF_PASSWORD]
-
-            api = ZentralyApi(
-                session=async_get_clientsession(self.hass),
-                host=self.data[CONF_HOST],
-                port=self.data[CONF_PORT],
-                password=password,
-                device_id=self.data[CONF_DEVICE_ID],
-            )
-
-            try:
-                mac = await api.async_validate_password()
-
-            except ZentralyAuthenticationError:
-                errors["base"] = "invalid_auth"
-
-            except ZentralyConnectionError:
-                errors["base"] = "cannot_connect"
-
-            else:
-                self.data[CONF_PASSWORD] = password
-                self.data[CONF_MAC] = mac
-
-                _LOGGER.debug(
-                    "Zentraly device validated: device_id=%s mac=%s ip=%s",
-                    self.data[CONF_DEVICE_ID],
-                    mac,
-                    self.data[CONF_HOST],
-                )
-
+            errors = await self._async_validate_input(user_input)
+            if not errors:
                 return self.async_create_entry(
-                    title=self.data[CONF_DEVICE_ID],
-                    data=self.data,
+                    title=self.data[CONF_DEVICE_ID], data=self.data
                 )
 
         return self.async_show_form(
@@ -162,9 +141,75 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate credentials through the public library API."""
+        errors: dict[str, str] = {}
+
+        password = user_input[CONF_PASSWORD]
+
+        api = ZentralyApi(
+            session=async_get_clientsession(self.hass),
+            host=self.data[CONF_HOST],
+            port=self.data[CONF_PORT],
+            password=password,
+            device_id=self.data[CONF_DEVICE_ID],
+        )
+
+        try:
+            mac = await api.async_validate_password()
+
+        except ZentralyAuthenticationError:
+            errors["base"] = "invalid_auth"
+
+        except ZentralyConnectionError:
+            errors["base"] = "cannot_connect"
+
+        else:
+            self.data[CONF_PASSWORD] = password
+            self.data[CONF_MAC] = mac
+
+            _LOGGER.debug(
+                "Zentraly device validated: device_id=%s mac=%s ip=%s",
+                self.data[CONF_DEVICE_ID],
+                mac,
+                self.data[CONF_HOST],
+            )
+
+        return errors
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Explain that supported thermostats must be discovered locally."""
-        return self.async_abort(reason="zeroconf_only")
+        """Choose how to add a Zentraly device."""
+        return self.async_show_menu(step_id="user", menu_options=["manual"])
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a supported thermostat using its connection details."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            device_id = user_input[CONF_DEVICE_ID].strip()
+            host = user_input[CONF_HOST].strip()
+            try:
+                IPv4Address(host)
+            except ValueError:
+                errors[CONF_HOST] = "invalid_host"
+            if not get_device_platforms(device_id):
+                errors[CONF_DEVICE_ID] = "unsupported_device"
+            if not errors:
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
+                self.data = {
+                    CONF_HOST: host,
+                    CONF_PORT: DEFAULT_PORT,
+                    CONF_DEVICE_ID: device_id,
+                }
+                errors = await self._async_validate_input(user_input)
+                if not errors:
+                    return self.async_create_entry(title=device_id, data=self.data)
+
+        return self.async_show_form(
+            step_id="manual", data_schema=MANUAL_SCHEMA, errors=errors
+        )

@@ -143,6 +143,12 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
     async def _async_update_data(self) -> dict[object, Any]:
         """Read the state without treating a missing connection as a data loss."""
         if not self.device.connected:
+            if not self._initial_refresh_complete:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_cannot_connect",
+                    translation_placeholders={"device_id": self.device.device_id},
+                )
             return self.data
         data = await self._async_read()
         self._initial_refresh_complete = True
