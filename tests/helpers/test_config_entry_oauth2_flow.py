@@ -1410,7 +1410,10 @@ async def test_device_flow_check_activation(
 
     token = await device_impl.async_check_device_activation(_device_authorization())
 
-    assert token == expected_token
+    assert token == {
+        **expected_token,
+        "expires_at": time.time() + expected_token["expires_in"],
+    }
     assert poll_sleep.delays == [DEVICE_INTERVAL] * len(responses)
     assert aioclient_mock.call_count == len(responses)
 
@@ -1488,6 +1491,24 @@ async def test_device_flow_check_activation_errors(
         ),
         pytest.param(
             5,
+            [{"error": "slow_down", "interval": 7}],
+            [5, 10],
+            id="server_interval_below_increment",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 5}],
+            [5, 10],
+            id="server_interval_equal",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 2}],
+            [5, 10],
+            id="server_interval_lower",
+        ),
+        pytest.param(
+            5,
             [{"error": "slow_down", "interval": 600}],
             [5, 600],
             id="server_interval_above_cap",
@@ -1499,6 +1520,7 @@ async def test_device_flow_check_activation_errors(
             id="invalid_server_interval",
         ),
         pytest.param(118, [{"error": "slow_down"}], [118, 120], id="increment_capped"),
+        pytest.param(120, [{"error": "slow_down"}], [120, 120], id="increment_at_cap"),
         pytest.param(
             5,
             [{"error": "slow_down", "interval": 130}, {"error": "slow_down"}],
@@ -1511,7 +1533,7 @@ async def test_device_flow_check_activation_errors(
                 {"error": "slow_down", "interval": 20},
                 {"error": "slow_down", "interval": 10},
             ],
-            [5, 20, 20],
+            [5, 20, 25],
             id="server_interval_never_lowers",
         ),
     ],
@@ -1535,7 +1557,7 @@ async def test_device_flow_slow_down(
         _device_authorization(interval=interval)
     )
 
-    assert token == TOKEN_RESPONSE
+    assert token == {**TOKEN_RESPONSE, "expires_at": time.time() + 60}
     assert poll_sleep.delays == expected_delays
 
 
@@ -1584,7 +1606,7 @@ async def test_device_flow_connection_failure_backs_off(
         _device_authorization(interval=interval)
     )
 
-    assert token == TOKEN_RESPONSE
+    assert token == {**TOKEN_RESPONSE, "expires_at": time.time() + 60}
     assert poll_sleep.delays == expected_delays
 
 
@@ -1607,6 +1629,31 @@ async def test_device_flow_deadline(
     # The last sleep is capped to the remaining lifetime of the device code.
     assert poll_sleep.delays == [4, 4, 2]
     assert aioclient_mock.call_count == 2
+
+
+@pytest.mark.usefixtures("device_flow_handler", "mock_device_integration", "poll_sleep")
+async def test_device_flow_expiry_set_when_token_received(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the token expiry counts from receipt, not from completing the flow."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(aioclient_mock, [{"json": TOKEN_RESPONSE}])
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+    await hass.async_block_till_done()
+    expected_expires_at = time.time() + 60
+    # The user closed the dialog and only reopens it later
+    freezer.tick(45)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["token"]["expires_at"] == expected_expires_at
 
 
 @pytest.mark.usefixtures("device_flow_handler", "mock_device_integration", "poll_sleep")

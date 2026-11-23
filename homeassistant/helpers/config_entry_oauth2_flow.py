@@ -572,10 +572,10 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
         Each poll posts grant_type device_code, the device_code and
         client_id (RFC 8628 section 3.4). Error codes (section 3.5):
         authorization_pending keeps polling, slow_down adds 5 seconds (up to
-        120) or takes the server's interval, never lowering the current
-        interval, access_denied raises
-        DeviceFlowUnauthorized, expired_token raises DeviceFlowTimeout and any
-        other raises DeviceFlowError. Connection timeouts, 429 and 5xx double the interval.
+        120) or takes the server's interval when that is higher, access_denied
+        raises DeviceFlowUnauthorized, expired_token raises DeviceFlowTimeout
+        and any other raises DeviceFlowError. Connection timeouts, 429 and 5xx
+        double the interval. The returned token has its expires_at set.
         """
         deadline = time.monotonic() + device.expires_in
         interval = device.interval
@@ -611,14 +611,24 @@ class DeviceFlowImplementation(OAuth2TokenEndpointMixin):
                 case None:
                     if not response.get("access_token"):
                         raise DeviceFlowError("Token response without access_token")
-                    return self._with_default_expiry(response)
+                    token = self._with_default_expiry(response)
+                    # Force int for non-compliant oauth2 providers
+                    try:
+                        token["expires_in"] = int(token["expires_in"])
+                    except (TypeError, ValueError) as err:
+                        raise DeviceFlowError(
+                            "Token response with invalid expires_in"
+                        ) from err
+                    # The flow may complete much later than the token was issued
+                    token["expires_at"] = time.time() + token["expires_in"]
+                    return token
                 case "authorization_pending":
                     pass
                 case "slow_down":
-                    new_interval = min(interval + 5, 120)
+                    server_interval = 0
                     with suppress(KeyError, TypeError, ValueError):
-                        new_interval = int(response["interval"])
-                    interval = max(interval, new_interval)
+                        server_interval = int(response["interval"])
+                    interval = max(interval, min(interval + 5, 120), server_interval)
                     _LOGGER.debug("Asked to slow down, polling every %s s", interval)
                 case "access_denied":
                     raise DeviceFlowUnauthorized
@@ -761,19 +771,7 @@ class AbstractOAuth2BaseFlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta
     async def _async_create_entry_from_token(
         self, token: dict
     ) -> config_entries.ConfigFlowResult:
-        """Normalise the token expiry and create the entry."""
-        if "expires_in" not in token:
-            _LOGGER.warning("Invalid token: %s", token)
-            return self.async_abort(reason="oauth_error")
-
-        # Force int for non-compliant oauth2 providers
-        try:
-            token["expires_in"] = int(token["expires_in"])
-        except (TypeError, ValueError) as err:
-            _LOGGER.warning("Error converting expires_in to int: %s", err)
-            return self.async_abort(reason="oauth_error")
-        token["expires_at"] = time.time() + token["expires_in"]
-
+        """Create the entry from a token with its expiry set."""
         self.logger.info("Successfully authenticated")
 
         return await self.async_oauth_create_entry(
@@ -913,6 +911,18 @@ class AbstractOAuth2FlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=ABCMeta
             if isinstance(err, OAuth2TokenRequestReauthError):
                 return self.async_abort(reason="oauth_unauthorized")
             return self.async_abort(reason="oauth_failed")
+
+        if "expires_in" not in token:
+            _LOGGER.warning("Invalid token: %s", token)
+            return self.async_abort(reason="oauth_error")
+
+        # Force int for non-compliant oauth2 providers
+        try:
+            token["expires_in"] = int(token["expires_in"])
+        except (TypeError, ValueError) as err:
+            _LOGGER.warning("Error converting expires_in to int: %s", err)
+            return self.async_abort(reason="oauth_error")
+        token["expires_at"] = time.time() + token["expires_in"]
 
         return await self._async_create_entry_from_token(token)
 
