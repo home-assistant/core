@@ -22,9 +22,10 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -247,7 +248,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs[ATTR_TEMPERATURE]
+        temperature = kwargs[ClimateServiceArgument.TEMPERATURE]
 
         if (until := kwargs.get(SZ_UNTIL)) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
