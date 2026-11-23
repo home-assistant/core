@@ -15,7 +15,7 @@
       "register_failed": "The link button was not pressed within 60 seconds. Please try again."
     },
     "progress": {
-      "wait_for_button": "Press the link button on the Hue bridge at {host}. Home Assistant continues automatically when you press it."
+      "wait_for_button": "Press the link button on the Hue bridge at {host}."
     },
     "step": {
       "init": {
