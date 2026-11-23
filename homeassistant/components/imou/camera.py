@@ -3,7 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import override
+from typing import TYPE_CHECKING, override
+
+if TYPE_CHECKING:
+    from homeassistant.components.stream import Stream
 
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
@@ -13,6 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.components.stream.const import OUTPUT_STARTUP_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -34,6 +38,9 @@ PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 # An established pull keeps the cloud ticket valid. About 10s after the last
 # viewer, drop the cached Stream so the next open fetches a new URL.
 STREAM_IDLE_CHECK = timedelta(seconds=10)
+STREAM_IDLE_MAX_RESCHEDULES = max(
+    1, OUTPUT_STARTUP_TIMEOUT // int(STREAM_IDLE_CHECK.total_seconds())
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -96,6 +103,7 @@ class ImouCamera(ImouEntity, Camera):
         Camera.__init__(self)
         super().__init__(coordinator, description, device)
         self._idle_unsub: Callable[[], None] | None = None
+        self._idle_output_reschedules = 0
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -112,6 +120,7 @@ class ImouCamera(ImouEntity, Camera):
             self.entity_description.resolution,
             PYIMOUAPI_LIVE_PROTOCOL,
         )
+        self._idle_output_reschedules = 0
         self._schedule_idle_check()
         return url
 
@@ -135,14 +144,22 @@ class ImouCamera(ImouEntity, Camera):
         """Keep the URL while someone is watching; drop it when they leave."""
         self._idle_unsub = None
         stream = self.stream
-        if stream is not None and stream.outputs():
+        if stream is not None and self._should_keep_stream(stream):
             self._schedule_idle_check()
             return
         if stream is not None:
             # Clear before awaiting stop so a concurrent create_stream does not
             # reuse this instance (and its expired RTSP URL) while shutdown yields.
+            self._idle_output_reschedules = 0
             self.stream = None
             await stream.stop()
+
+    def _should_keep_stream(self, stream: Stream) -> bool:
+        """Return whether an idle timer should wait before dropping the stream."""
+        if stream.outputs():
+            self._idle_output_reschedules += 1
+            return self._idle_output_reschedules <= STREAM_IDLE_MAX_RESCHEDULES
+        return stream.dynamic_stream_settings.preload_stream
 
     @override
     @async_wrap_imou_command("get_image_failed")

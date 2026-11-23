@@ -24,6 +24,7 @@ from homeassistant.components.imou.camera import (
     PYIMOUAPI_LIVE_PROTOCOL,
     PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
     STREAM_IDLE_CHECK,
+    STREAM_IDLE_MAX_RESCHEDULES,
 )
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
@@ -38,6 +39,16 @@ from .const import create_online_device
 
 TEST_STREAM_URL = "rtsp://example.com/live"
 TEST_IMAGE_BYTES = b"fake-image-bytes"
+
+
+def _idle_stream_mock(*, preload_stream: bool = False) -> MagicMock:
+    """Stream mock for idle-drop tests with preload_stream disabled by default."""
+    stream = MagicMock()
+    stream.outputs.return_value = {}
+    stream.stop = AsyncMock()
+    stream.set_update_callback = MagicMock()
+    stream.dynamic_stream_settings = MagicMock(preload_stream=preload_stream)
+    return stream
 
 
 def _camera_entity_id(
@@ -223,15 +234,8 @@ async def test_idle_stream_is_dropped_so_the_next_open_fetches_again(
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
 
-    def _mock_stream() -> MagicMock:
-        stream = MagicMock()
-        stream.outputs.return_value = {}
-        stream.stop = AsyncMock()
-        stream.set_update_callback = MagicMock()
-        return stream
-
-    first_stream = _mock_stream()
-    second_stream = _mock_stream()
+    first_stream = _idle_stream_mock()
+    second_stream = _idle_stream_mock()
 
     with patch(
         "homeassistant.components.camera.entity.create_stream",
@@ -284,9 +288,8 @@ async def test_watching_keeps_the_cached_stream(
     mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
-    stream = MagicMock()
+    stream = _idle_stream_mock()
     stream.outputs.return_value = {"hls": object()}
-    stream.stop = AsyncMock()
     camera.stream = stream
 
     await async_get_stream_source(hass, entity_id)
@@ -297,6 +300,147 @@ async def test_watching_keeps_the_cached_stream(
 
     stream.stop.assert_not_awaited()
     assert camera.stream is stream
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_active_stream_is_dropped_after_viewer_leaves(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """When outputs go idle, the stream is dropped so the next open uses a new ticket."""
+    first_url = "rtsp://example.com/live1"
+    second_url = "rtsp://example.com/live2"
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = [
+        first_url,
+        second_url,
+    ]
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = _idle_stream_mock()
+    stream.outputs.side_effect = [{"hls": object()}, {}]
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+    stream.stop.assert_not_awaited()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+    stream.stop.assert_awaited_once()
+    assert camera.stream is None
+
+    second_stream = _idle_stream_mock()
+    with patch(
+        "homeassistant.components.camera.entity.create_stream",
+        return_value=second_stream,
+    ) as create_stream:
+        assert await camera.async_create_stream() is second_stream
+        assert create_stream.call_args.args[1] == second_url
+        assert mock_imou_ha_device_manager.async_get_device_stream.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_preload_stream_keeps_stream_without_outputs(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Preloaded streams stay cached when outputs are empty but the worker keeps running."""
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = _idle_stream_mock(preload_stream=True)
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+
+    stream.stop.assert_not_awaited()
+    assert camera.stream is stream
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_stuck_stream_outputs_are_dropped_after_startup_timeout(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Outputs that never produce segments do not reschedule forever."""
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = _idle_stream_mock()
+    stream.outputs.return_value = {"hls": object()}
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    for _ in range(STREAM_IDLE_MAX_RESCHEDULES):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+        )
+        await hass.async_block_till_done()
+        stream.stop.assert_not_awaited()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+    stream.stop.assert_awaited_once()
+    assert camera.stream is None
 
 
 @pytest.mark.parametrize(
