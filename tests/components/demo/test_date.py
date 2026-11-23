@@ -5,11 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.date import (
-    ATTR_DATE,
     DOMAIN as DATE_DOMAIN,
-    SERVICE_SET_VALUE,
+    DateService,
+    DateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -45,8 +45,8 @@ async def test_set_datetime(hass: HomeAssistant) -> None:
     """Test set datetime service."""
     await hass.services.async_call(
         DATE_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_DATE, ATTR_DATE: "2021-02-03"},
+        DateService.SET_VALUE,
+        {TargetKey.ENTITY_ID: ENTITY_DATE, DateServiceArgument.DATE: "2021-02-03"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_DATE)

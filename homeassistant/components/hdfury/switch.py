@@ -131,6 +131,13 @@ SWITCHES: tuple[HDFurySwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=lambda client, value: client.set_tx1_force_5v(value),
     ),
+    HDFurySwitchEntityDescription(
+        key="ipinterrupt",
+        translation_key="ipinterrupt",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_ip_interrupt(value),
+    ),
 )
 
 
