@@ -145,6 +145,9 @@
     "device_unavailable": {
       "message": "Sonic device is unavailable"
     },
+    "empty_response": {
+      "message": "Sonic device returned an empty response"
+    },
     "reboot_failed": {
       "message": "Failed to reboot the device"
     },

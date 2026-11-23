@@ -31,6 +31,13 @@ from .const import DEFAULT_DEVICE_STATE_V2, MOCK_WEBHOOK_ID
 
 NEGATIVE_VOLUME_ENTITY_ID = "sensor.sonic_water_meter_negative_volume"
 
+REQUIRED_READS = [
+    "async_get_device_state_v2",
+    "async_get_telemetry_data",
+    "async_get_networking",
+    "async_get_auto_shut_off",
+]
+
 
 async def test_async_setup_entry(
     hass: HomeAssistant,
@@ -187,7 +194,7 @@ async def test_device_state_missing_from_the_v1_fallback(
     mock_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a device reporting no state at all leaves the coordinator without one."""
+    """Test that a device reporting no state at all fails the update."""
     mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
         "Unsupported media type"
     )
@@ -199,6 +206,69 @@ async def test_device_state_missing_from_the_v1_fallback(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sonic_water_meter_volume").state == STATE_UNAVAILABLE
+    assert mock_entry.runtime_data.last_update_success is False
+
+
+@pytest.mark.parametrize("read", REQUIRED_READS)
+async def test_setup_retry_on_empty_response(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    read: str,
+) -> None:
+    """Setup is retried when the device answers a read with an empty response."""
+    getattr(mock_watergate_client, read).return_value = None
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("read", REQUIRED_READS)
+async def test_update_fails_on_empty_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    read: str,
+) -> None:
+    """An empty response fails the update, and webhooks are still handled."""
+    await init_integration(hass, mock_entry)
+    client = await hass_client_no_auth()
+
+    getattr(mock_watergate_client, read).return_value = None
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    error = mock_entry.runtime_data.last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "empty_response"
+    assert {state.state for state in hass.states.async_all()} == {STATE_UNAVAILABLE}
+
+    for body in (
+        {"type": "valve", "data": {"state": "closed"}},
+        {
+            "type": "telemetry",
+            "data": {"flow": 12, "pressure": 3000, "temperature": 20.5, "errors": None},
+        },
+        {
+            "type": "wifi-changed",
+            "data": {
+                "ip": "192.168.1.2",
+                "gateway": "192.168.1.1",
+                "subnet": "255.255.255.0",
+                "ssid": "Sonic",
+                "rssi": -60,
+            },
+        },
+    ):
+        await client.post(f"/api/webhook/{MOCK_WEBHOOK_ID}", json=body)
+    data = mock_entry.runtime_data.data
+    assert data.state.valve_state == "closed"
+    assert data.telemetry.flow == 12
+    assert data.networking.rssi == -60
 
 
 async def test_device_state_v2_is_not_probed_again_after_falling_back(

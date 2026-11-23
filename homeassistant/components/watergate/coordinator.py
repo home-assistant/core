@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import (
@@ -98,13 +98,17 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
             ) from exc
-        if TYPE_CHECKING:
-            # The client raises rather than returning None when a read genuinely
-            # fails, so these asserts only narrow the types for mypy.
-            assert state is not None
-            assert telemetry is not None
-            assert networking is not None
-            assert auto_shut_off is not None
+        # The client returns None when the device answers with an empty response
+        if (
+            state is None
+            or telemetry is None
+            or networking is None
+            or auto_shut_off is None
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="empty_response",
+            )
         return WatergateAgregatedRequests(
             state, telemetry, networking, auto_shut_off, power
         )

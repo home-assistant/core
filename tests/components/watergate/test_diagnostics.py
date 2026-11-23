@@ -80,6 +80,23 @@ async def test_diagnostics_without_negative_water_meter(
     }
 
 
+async def test_diagnostics_without_battery(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test diagnostics of a mains-only device, which has no battery voltage."""
+    state = copy.copy(DEFAULT_DEVICE_STATE_V2)
+    state.power_supply = "external"
+    mock_watergate_client.async_get_device_state_v2.return_value = state
+    await init_integration(hass, mock_entry)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
+
+    assert result["data"]["power"] is None
+
+
 async def test_diagnostics_without_device_state(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -87,7 +104,7 @@ async def test_diagnostics_without_device_state(
     mock_watergate_client: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test diagnostics are still provided when the device reports no state."""
+    """Test diagnostics keep the last data when the device reports no state."""
     mock_watergate_client.async_get_device_state_v2.side_effect = WatergateApiException(
         "Unsupported media type"
     )
@@ -100,7 +117,8 @@ async def test_diagnostics_without_device_state(
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
 
-    assert result["data"]["state"] is None
+    assert result["last_update_success"] is False
+    assert result["data"]["state"]["valve_state"] == "open"
     assert result["data"]["telemetry"]["flow"] == 0.0
 
 
