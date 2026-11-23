@@ -16,19 +16,11 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.wiz.fan import PRESET_MODE_BREEZE
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -93,7 +85,10 @@ async def test_command_fails(hass: HomeAssistant) -> None:
         HomeAssistantError, match="Error while communicating with the WiZ device"
     ):
         await hass.services.async_call(
-            FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            FAN_DOMAIN,
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
 
 
@@ -104,7 +99,7 @@ async def test_turn_on_off(hass: HomeAssistant) -> None:
     params = INITIAL_PARAMS.copy()
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     calls = device.fan_turn_on.mock_calls
     assert len(calls) == 1
@@ -117,8 +112,11 @@ async def test_turn_on_off(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_BREEZE},
+        FanService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
+        },
         blocking=True,
     )
     calls = device.fan_turn_on.mock_calls
@@ -133,8 +131,8 @@ async def test_turn_on_off(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     calls = device.fan_turn_on.mock_calls
@@ -149,7 +147,7 @@ async def test_turn_on_off(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_PRESET_MODE] is None
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        FAN_DOMAIN, FanService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     calls = device.fan_turn_off.mock_calls
     assert len(calls) == 1
@@ -167,8 +165,11 @@ async def test_fan_set_preset_mode(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_BREEZE},
+        FanService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
+        },
         blocking=True,
     )
     calls = device.fan_set_state.mock_calls
@@ -190,8 +191,8 @@ async def test_fan_set_percentage(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     calls = device.fan_set_state.mock_calls
@@ -206,8 +207,8 @@ async def test_fan_set_percentage(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     calls = device.fan_turn_off.mock_calls
@@ -227,8 +228,11 @@ async def test_fan_set_direction(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DIRECTION: DIRECTION_REVERSE},
+        FanService.SET_DIRECTION,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
+        },
         blocking=True,
     )
     calls = device.fan_set_state.mock_calls
@@ -243,8 +247,11 @@ async def test_fan_set_direction(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DIRECTION: DIRECTION_FORWARD},
+        FanService.SET_DIRECTION,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            FanServiceArgument.DIRECTION: DIRECTION_FORWARD,
+        },
         blocking=True,
     )
     calls = device.fan_set_state.mock_calls

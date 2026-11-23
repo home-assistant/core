@@ -121,6 +121,7 @@ async def async_migrate_entry(
             hass,
             DOMAIN,
             "update_redirect_uri",
+            config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="update_redirect_uri",

@@ -1,8 +1,10 @@
 """Fixtures for the shared hassfest package."""
 
+from collections.abc import Generator
 from pathlib import Path
+from unittest.mock import patch
 
-from hassfest.model import Config
+from hassfest.model import Config, Integration
 import pytest
 
 
@@ -15,3 +17,10 @@ def config(tmp_path: Path) -> Config:
         action="validate",
         requirements=False,
     )
+
+
+@pytest.fixture
+def mock_core_integration() -> Generator[None]:
+    """Mock Integration to be a core one."""
+    with patch.object(Integration, "core", return_value=True):
+        yield

@@ -1,6 +1,6 @@
 """Support for ASUSWRT devices."""
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -50,6 +50,9 @@ async def async_remove_config_entry_device(
         return False
     if get_device_identifier(config_entry) in device_entry.identifiers:
         return False
+    # Clients are restored from trackers, which are removed with the device
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
     router = config_entry.runtime_data
     macs = {
         mac

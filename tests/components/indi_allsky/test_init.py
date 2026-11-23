@@ -3,14 +3,17 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+import yarl
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from . import setup_integration
 
@@ -93,6 +96,29 @@ async def test_setup_with_credentials(
         mock_client_cls.assert_called_once()
         assert mock_client_cls.call_args.kwargs["username"] == "test_username"
         assert mock_client_cls.call_args.kwargs["password"] == "test_password"
+
+
+async def test_entry_session_accepts_ip_cookies(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry session uses a cookie jar that accepts cookies from IP hosts."""
+    with patch(
+        "homeassistant.components.indi_allsky.coordinator.async_create_clientsession",
+        wraps=async_create_clientsession,
+    ) as mock_create_session:
+        await setup_integration(hass, mock_config_entry)
+
+    mock_create_session.assert_called_once()
+    kwargs = mock_create_session.call_args.kwargs
+    assert kwargs["verify_ssl"] is True
+    cookie_jar: aiohttp.CookieJar = kwargs["cookie_jar"]
+    assert mock_config_entry.runtime_data.session.cookie_jar is cookie_jar
+
+    login_url = yarl.URL("https://127.0.0.1/indi-allsky/login")
+    cookie_jar.update_cookies({"session": "abc"}, response_url=login_url)
+    assert "session" in cookie_jar.filter_cookies(login_url)
 
 
 async def test_background_sensor_fetch_auth_failure_triggers_reauth(

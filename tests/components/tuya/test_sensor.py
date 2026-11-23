@@ -64,6 +64,23 @@ async def test_meter_channel_child_devices(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_device_code", ["sp_8zrzjldq07tlxnlv"])
+async def test_camera_pet_feeder(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test pet feeder sensors on a camera (sp) device."""
+    # The feeder datapoints are only provided by a quirk
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [
@@ -449,8 +466,15 @@ async def test_hwsb_sensors_with_quirk(
 ) -> None:
     """Test HWSB outdoor equipment sensors with quirk applied."""
     mock_device.status["speed_current"] = 80
+    mock_device.status["flow_rate"] = 45
     mock_device.status["add_ele"] = 0
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state_flow = hass.states.get("sensor.inverflow_volume_flow_rate")
+    assert state_flow is not None
+    assert float(state_flow.state) == pytest.approx(170.34353028)
+    assert state_flow.attributes["unit_of_measurement"] == "L/min"
+    assert state_flow.attributes["device_class"] == "volume_flow_rate"
 
     state_speed = hass.states.get("sensor.inverflow_speed")
     assert state_speed is not None

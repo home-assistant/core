@@ -9,13 +9,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.components.forecast_solar.services import (
-    ATTR_CONFIG_ENTRY,
-    ATTR_END,
-    ATTR_RESOLUTION,
-    ATTR_START,
     RESOLUTION_HOURLY,
     RESOLUTION_RAW,
-    SERVICE_GET_FORECAST,
+    ForecastSolarService,
+    ForecastSolarServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -49,10 +46,10 @@ async def test_get_forecast_raw(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        ForecastSolarService.GET_FORECAST,
         {
-            ATTR_CONFIG_ENTRY: init_integration.entry_id,
-            ATTR_RESOLUTION: RESOLUTION_RAW,
+            ForecastSolarServiceArgument.CONFIG_ENTRY: init_integration.entry_id,
+            ForecastSolarServiceArgument.RESOLUTION: RESOLUTION_RAW,
         },
         blocking=True,
         return_response=True,
@@ -108,10 +105,10 @@ async def test_get_forecast_hourly_aggregation(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        ForecastSolarService.GET_FORECAST,
         {
-            ATTR_CONFIG_ENTRY: init_integration.entry_id,
-            ATTR_RESOLUTION: RESOLUTION_HOURLY,
+            ForecastSolarServiceArgument.CONFIG_ENTRY: init_integration.entry_id,
+            ForecastSolarServiceArgument.RESOLUTION: RESOLUTION_HOURLY,
         },
         blocking=True,
         return_response=True,
@@ -144,11 +141,15 @@ async def test_get_forecast_filters_by_time_range(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        ForecastSolarService.GET_FORECAST,
         {
-            ATTR_CONFIG_ENTRY: init_integration.entry_id,
-            ATTR_START: datetime(2026, 6, 19, 9, 0, tzinfo=api_tz),
-            ATTR_END: datetime(2026, 6, 19, 18, 0, tzinfo=api_tz),
+            ForecastSolarServiceArgument.CONFIG_ENTRY: init_integration.entry_id,
+            ForecastSolarServiceArgument.START: datetime(
+                2026, 6, 19, 9, 0, tzinfo=api_tz
+            ),
+            ForecastSolarServiceArgument.END: datetime(
+                2026, 6, 19, 18, 0, tzinfo=api_tz
+            ),
         },
         blocking=True,
         return_response=True,
@@ -191,12 +192,12 @@ async def test_get_forecast_accepts_naive_datetimes(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        ForecastSolarService.GET_FORECAST,
         {
-            ATTR_CONFIG_ENTRY: init_integration.entry_id,
+            ForecastSolarServiceArgument.CONFIG_ENTRY: init_integration.entry_id,
             # Naive datetimes, as produced by ``cv.datetime`` from the UI.
-            ATTR_START: datetime(2026, 6, 19, 9, 0),
-            ATTR_END: datetime(2026, 6, 19, 18, 0),
+            ForecastSolarServiceArgument.START: datetime(2026, 6, 19, 9, 0),
+            ForecastSolarServiceArgument.END: datetime(2026, 6, 19, 18, 0),
         },
         blocking=True,
         return_response=True,
@@ -219,11 +220,15 @@ async def test_get_forecast_rejects_end_before_start(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECAST,
+            ForecastSolarService.GET_FORECAST,
             {
-                ATTR_CONFIG_ENTRY: init_integration.entry_id,
-                ATTR_START: datetime(2026, 6, 19, 18, 0, tzinfo=tz),
-                ATTR_END: datetime(2026, 6, 19, 9, 0, tzinfo=tz),
+                ForecastSolarServiceArgument.CONFIG_ENTRY: init_integration.entry_id,
+                ForecastSolarServiceArgument.START: datetime(
+                    2026, 6, 19, 18, 0, tzinfo=tz
+                ),
+                ForecastSolarServiceArgument.END: datetime(
+                    2026, 6, 19, 9, 0, tzinfo=tz
+                ),
             },
             blocking=True,
             return_response=True,

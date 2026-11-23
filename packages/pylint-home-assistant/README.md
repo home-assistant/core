@@ -107,6 +107,9 @@ Every check has a code following the
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
+| `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
+| `C7464` | [`home-assistant-type-checking-block-position`](#c7464-home-assistant-type-checking-block-position) | `if TYPE_CHECKING:` block should come after all module-level imports |
+| `C7465` | [`home-assistant-action-target-key`](#c7465-home-assistant-action-target-key) | Target keys of action calls should use `TargetKey` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -123,6 +126,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7406` | [`home-assistant-tests-snapshot-enable-entities`](#r7406-home-assistant-tests-snapshot-enable-entities) | Use the `entity_registry_enabled_by_default` fixture instead of enabling entities before `snapshot_platform` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -172,7 +176,11 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
+| `W7455` | [`home-assistant-coordinator-entity-should-poll`](#w7455-home-assistant-coordinator-entity-should-poll) | `_attr_should_poll` has no effect on a `CoordinatorEntity` |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
+| `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
+| `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
 
 ## `home_assistant_logger` checker
 
@@ -244,6 +252,30 @@ Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
 used to preload platforms) are allowed, as are imports inside functions or
 classes, which cannot be exported through `__all__`.
 
+
+## `home_assistant_type_checking_block` checker
+
+Checks the position of the module-level `if TYPE_CHECKING:` block. Neither
+ruff nor pylint flag imports after it, because both allow conditional blocks
+between imports.
+
+### `C7464`: `home-assistant-type-checking-block-position`
+
+A module-level import follows the `if TYPE_CHECKING:` block. Move the block
+below the last import.
+
+```python
+# Bad
+if TYPE_CHECKING:
+    from . import MyConfigEntry
+from .const import DOMAIN
+
+# Good
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import MyConfigEntry
+```
 
 ## `home_assistant_init_first` checker
 
@@ -328,6 +360,21 @@ called from the event loop without scheduling.
 Pytest fixture has invalid scope or autouse configuration. For example,
 `session`-scoped fixtures in component tests should use `package` scope
 or lower.
+
+### `W7463`: `home-assistant-callback-override-missing-decorator`
+
+A sync method that overrides a method decorated with `@callback`, such as
+`_handle_coordinator_update` of a coordinator entity or a method of an
+integration's own base class, should be decorated with `@callback` as well.
+The decorator isn't inherited, and it marks the override as running in the
+event loop, where it must not do blocking I/O:
+
+```python
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        ...
+```
 
 
 ## `home_assistant_inheritance` checker
@@ -432,6 +479,26 @@ assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
 
 
+## `home_assistant_runtime_data_typed_entry` checker
+
+Checks that config entries that set `runtime_data` are typed.
+
+### `W7460`: `home-assistant-runtime-data-untyped-config-entry`
+
+`ConfigEntry` is generic over its `runtime_data`. When `runtime_data` is set
+on a config entry that is annotated as a plain `ConfigEntry`, that
+`runtime_data` is `Any` and isn't type checked. Define a typed config entry and
+use it instead:
+
+```python
+type MyConfigEntry = ConfigEntry[MyData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+    entry.runtime_data = MyData(...)
+```
+
+
 ## `home_assistant_coordinator_entity_available` checker
 
 Checks `available` overrides on coordinator entities.
@@ -459,6 +526,18 @@ or `_attr_available`, are not flagged. Neither are entities of a push
 coordinator, one that never sets an `update_interval` and gets its data
 through `async_set_updated_data`: its `last_update_success` doesn't show
 whether the device is reachable.
+
+
+## `home_assistant_coordinator_entity_should_poll` checker
+
+Checks for `_attr_should_poll` on coordinator entities.
+
+### `W7455`: `home-assistant-coordinator-entity-should-poll`
+
+`CoordinatorEntity` overrides `should_poll` to always return `False`, as the
+coordinator tells its entities when it has new data. `_attr_should_poll` is
+only read by `Entity.should_poll`, so setting it on a coordinator entity has
+no effect and can be removed.
 
 
 ## `home_assistant_log_and_raise` checker
@@ -1100,6 +1179,60 @@ The placeholders passed in code (e.g. `translation_placeholders={...}`)
 don't match the `{placeholder}` slots in the `strings.json` message.
 
 
+## `home_assistant_placeholder_keys` checker
+
+Checks the keys of translation placeholder dicts. A placeholder key refers to
+a `{placeholder}` slot in `strings.json`, not to a configuration key or
+attribute.
+
+A dict literal is checked when its name ends in `placeholders`: a keyword
+argument such as `description_placeholders=`, an assignment such as
+`self.context["title_placeholders"] = {...}` or `placeholders = {...}`, or a
+dict entry such as `{"title_placeholders": {...}}`.
+
+### `C7459`: `home-assistant-placeholder-key`
+
+Use a string literal for the placeholder key instead of an unrelated constant
+such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
+`PLACEHOLDER_*` constant or a `*Placeholder` enum.
+
+```python
+# Bad
+description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+
+# Good
+description_placeholders={"username": entry.data[CONF_USERNAME]}
+
+# Bad
+self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
+
+# Good
+self.context["title_placeholders"] = {"host": discovery_info.host}
+```
+
+## `home_assistant_target_key` checker
+
+Checks the target keys of `hass.services.async_call` calls: the keys of a
+`target=` dict literal, including the keys of its `exclude` dict literal.
+
+### `C7465`: `home-assistant-action-target-key`
+
+Target keys select what the action applies to, so they use `TargetKey`: every
+constant key of the `target=` dict, such as `ATTR_ENTITY_ID`, `ATTR_AREA_ID` or
+`CommonServiceArgument.DEVICE_ID`, should be the matching `TargetKey` member.
+
+```python
+# Bad
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, target={ATTR_AREA_ID: "kitchen"}
+)
+
+# Good
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, target={TargetKey.AREA_ID: "kitchen"}
+)
+```
+
 ## `home_assistant_mdi_icons` checker
 
 Validates that `mdi:` icon references in code and `icons.json` refer to
@@ -1191,6 +1324,60 @@ flows without
 `data` are not flagged. The checker is scoped to test modules.
 
 
+## `home_assistant_tests_snapshot_enable_entities` checker
+
+Detects snapshot tests that enable entities by hand. A test that calls
+`snapshot_platform` should snapshot every entity, including the ones that
+are disabled by default. The `entity_registry_enabled_by_default` fixture
+enables them before the integration is set up, so there is no need to
+update the registry and reload the config entry in the test.
+
+### `R7406`: `home-assistant-tests-snapshot-enable-entities`
+
+A `test_*` function calls `snapshot_platform` and also calls
+`<registry>.async_update_entity(..., disabled_by=None)`:
+
+```python
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        entity_registry.async_update_entity(  # <-- flagged
+            entry.entity_id, disabled_by=None
+        )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry.entry_id
+    )
+```
+
+Use the fixture instead:
+
+```python
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry.entry_id
+    )
+```
+
+Calls in nested helpers defined inside the test are checked too. Tests
+that enable an entity without calling `snapshot_platform` (for example,
+to test what happens when a user enables it) are not flagged. The checker
+is scoped to test modules.
+
 ## `home_assistant_test_determinism` checker
 
 `if` and `match` statements inside test functions create non-deterministic
@@ -1263,6 +1450,24 @@ statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
 should be combined into a single executor job that performs all the work,
 avoiding unnecessary context switches back to the event loop between
 blocking calls. The rule applies to integration modules only.
+
+
+## `home_assistant_sequential_add_entities` checker
+
+Detects consecutive `async_add_entities` calls in integration modules that
+could be grouped into a single call.
+
+### `W7454`: `home-assistant-sequential-add-entities`
+
+Two or more `async_add_entities` (or `add_entities`) calls appearing as
+consecutive statements (uninterrupted by control flow such as
+`if`/`try`/`with`/`for`) should be combined into a single call that adds all
+entities at once. Calls with different arguments besides the entities, such
+as a different `config_subentry_id` when adding entities for multiple
+subentries or a different `update_before_add`, cannot be combined and are not
+flagged. Only calls to the callback passed to the platform setup function
+(`async_setup_entry`, `async_setup_platform` or `setup_platform`) are checked.
+The rule applies to integration modules only.
 
 
 ## `home_assistant_has_entity_name` checker
