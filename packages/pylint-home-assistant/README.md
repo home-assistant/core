@@ -1091,31 +1091,22 @@ renamed keyword, a transformed value, an extra or a missing argument, or any
 further statement in the body -- means the constructor does work of its own
 and is not flagged.
 
-Removing the override also has to leave existing call sites working, so the
-checker resolves the `__init__` the class would inherit -- the first one
-along the MRO after the class itself, which is the same function
-`super().__init__` already calls -- and compares signatures. Positional
-parameters must line up by index; a parent declaring the same names in
-another order would silently receive swapped arguments. Every parameter a
-caller may pass by keyword, and every parameter the override forwards *by
-keyword*, must also keep its name: the parent must declare it under that
-exact name at that same index, and accept it by keyword too, rather than
-renaming it, making it positional-only, or absorbing it into `**kwargs`.
-Keyword-only parameters need only to exist in the parent, since they could
-never be passed positionally to begin with. A parent taking more parameters
-is fine: the extra ones have defaults, or the delegating call would already
-fail, so dropping the override only widens what callers may pass.
+Removing the override must leave existing call sites working. The checker
+finds the `__init__` the class would inherit, which is the one
+`super().__init__` already calls, and compares the signatures. Positional
+parameters must line up by index. A parameter that callers can pass by
+keyword, or that the override forwards by keyword, must keep its name and
+stay keyword-capable in the parent. Keyword-only parameters only need to
+exist in the parent. Extra parameters in the parent are fine.
 
-Four cases are deliberately out of scope. A constructor that declares
-**default values** is skipped, because the parent's defaults may differ and
-removing the override would then change behaviour. A **decorated**
-`__init__` is skipped, since the decorator can give the override a purpose
-the body does not show. A **decorated inherited** `__init__` is skipped as
-well: an `@abstractmethod` constructor needs the override to make the class
-concrete, and a wrapper can change how the parent is called. A constructor
-in a **decorated class** is skipped too: `@dataclass` and friends synthesize
-an `__init__` of their own, which the hand-written one currently suppresses,
-so removing it would not fall through to the parent at all.
+The checker skips these cases:
+
+- A constructor with **default values**, because the parent's defaults may differ.
+- A **decorated** `__init__`, because the decorator can give the override a purpose.
+- A **decorated inherited** `__init__`, such as an `@abstractmethod` constructor.
+- A constructor in a **decorated class**, such as a `@dataclass`, which makes its own `__init__`.
+- An **overloaded** `__init__`.
+- A class whose `super().__init__` call a **subclass in the same module** sends to another `__init__`.
 
 
 ## `home_assistant_redundant_translation_key` checker
