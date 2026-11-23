@@ -162,10 +162,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': dict({
-                '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-              }),
+              'open_tilt_position': 100,
             }),
             'categories': dict({
             }),
@@ -200,10 +197,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Bath East',
                 'is_closed': True,
-                'open_tilt_position': dict({
-                  '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                  'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-                }),
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -510,10 +504,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': dict({
-                '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-              }),
+              'open_tilt_position': 100,
             }),
             'categories': dict({
             }),
@@ -548,10 +539,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Bath South',
                 'is_closed': True,
-                'open_tilt_position': dict({
-                  '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                  'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-                }),
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -858,10 +846,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': dict({
-                '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-              }),
+              'open_tilt_position': 100,
             }),
             'categories': dict({
             }),
@@ -896,10 +881,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen North',
                 'is_closed': True,
-                'open_tilt_position': dict({
-                  '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                  'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-                }),
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -1206,10 +1188,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'open_tilt_position': dict({
-                '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-              }),
+              'open_tilt_position': 100,
             }),
             'categories': dict({
             }),
@@ -1244,10 +1223,7 @@
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen West',
                 'is_closed': True,
-                'open_tilt_position': dict({
-                  '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                  'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-                }),
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -2541,10 +2517,7 @@
           ]),
           'area_id': None,
           'capabilities': dict({
-            'open_tilt_position': dict({
-              '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-              'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-            }),
+            'open_tilt_position': 100,
           }),
           'categories': dict({
           }),
@@ -2579,10 +2552,7 @@
               'device_class': 'shade',
               'friendly_name': 'Kitchen North',
               'is_closed': True,
-              'open_tilt_position': dict({
-                '__type': "<class 'aiopvapi.resources.shade.ShadePosition'>",
-                'repr': 'ShadePosition(primary=None, secondary=None, tilt=50, velocity=None)',
-              }),
+              'open_tilt_position': 100,
               'room_name': 'Spindle',
               'supported_features': 176,
             }),
