@@ -235,7 +235,7 @@ async def test_corrupt_database_files_scan_failed(
     )
 
     with patch(
-        "homeassistant.components.recorder.core.find_corrupt_database_files",
+        "homeassistant.components.recorder.util.Path.iterdir",
         side_effect=PermissionError,
     ):
         instance = await async_setup_recorder_instance(hass)

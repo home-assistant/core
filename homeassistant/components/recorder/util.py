@@ -5,7 +5,6 @@ import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
-import glob
 import hashlib
 import logging
 import os
@@ -438,20 +437,21 @@ def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
     """Return the files move_away_broken_database kept, with their size."""
     # The path from a sqlite://// URL starts with //, which resolve() normalizes.
     path = Path(dbfile).resolve()
+    postfixes = "|".join(re.escape(postfix) for postfix in SQLITE3_POSTFIXES)
+    corrupt_name = re.compile(
+        rf"{re.escape(path.name)}(?:{postfixes})\.corrupt\.{CORRUPT_DATABASE_TIME.pattern}"
+    )
     corrupt_files: dict[Path, int] = {}
-    for postfix in SQLITE3_POSTFIXES:
-        prefix = f"{path.name}{postfix}.corrupt."
-        for corrupt_file in path.parent.glob(f"{glob.escape(prefix)}*"):
-            if not CORRUPT_DATABASE_TIME.fullmatch(
-                corrupt_file.name.removeprefix(prefix)
-            ):
-                continue
-            try:
-                file_stat = corrupt_file.stat()
-            except FileNotFoundError:
-                continue
-            if stat.S_ISREG(file_stat.st_mode):
-                corrupt_files[corrupt_file] = file_stat.st_size
+    # Unlike glob, iterdir raises when the directory can't be listed.
+    for corrupt_file in path.parent.iterdir():
+        if not corrupt_name.fullmatch(corrupt_file.name):
+            continue
+        try:
+            file_stat = corrupt_file.stat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISREG(file_stat.st_mode):
+            corrupt_files[corrupt_file] = file_stat.st_size
     return corrupt_files
 
 
