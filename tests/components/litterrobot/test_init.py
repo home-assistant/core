@@ -14,15 +14,11 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_START,
     VacuumActivity,
+    VacuumService,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -41,8 +37,8 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_START,
-        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+        VacuumService.START,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
         blocking=True,
     )
     mock_account.robots[0].start_cleaning.assert_called_once()
