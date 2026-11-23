@@ -2,13 +2,12 @@
 
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -32,25 +31,26 @@ from .const import (
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
+from .coordinator import ProximityConfigEntry
 
 RESULT_SUCCESS = "success"
 
 
 def _base_schema(user_input: dict[str, Any]) -> VolDictType:
     return {
-        vol.Required(
+        probatio.Required(
             CONF_TRACKED_ENTITIES, default=user_input.get(CONF_TRACKED_ENTITIES, [])
         ): EntitySelector(
             EntitySelectorConfig(
                 domain=[DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN], multiple=True
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_IGNORED_ZONES, default=user_input.get(CONF_IGNORED_ZONES, [])
         ): EntitySelector(
             EntitySelectorConfig(domain=ZONE_DOMAIN, multiple=True),
         ),
-        vol.Required(
+        probatio.Required(
             CONF_TOLERANCE,
             default=user_input.get(CONF_TOLERANCE, DEFAULT_TOLERANCE),
         ): NumberSelector(
@@ -64,14 +64,16 @@ def _base_schema(user_input: dict[str, Any]) -> VolDictType:
 class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a proximity config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
-    def _user_form_schema(self, user_input: dict[str, Any] | None = None) -> vol.Schema:
+    def _user_form_schema(
+        self, user_input: dict[str, Any] | None = None
+    ) -> probatio.Schema:
         if user_input is None:
             user_input = {}
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_ZONE,
                     default=user_input.get(
                         CONF_ZONE, f"{ZONE_DOMAIN}.{DEFAULT_PROXIMITY_ZONE}"
@@ -86,7 +88,9 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> ProximityOptionsFlow:
+    def async_get_options_flow(
+        config_entry: ProximityConfigEntry,
+    ) -> ProximityOptionsFlow:
         """Get the options flow for this handler."""
         return ProximityOptionsFlow()
 
@@ -110,7 +114,9 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
                 tries += 1
                 possible_title = f"{title} {tries}"
 
-            return self.async_create_entry(title=possible_title, data=user_input)
+            return self.async_create_entry(
+                title=possible_title, data={}, options=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -121,20 +127,19 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 class ProximityOptionsFlow(OptionsFlowWithReload):
     """Handle a option flow."""
 
-    def _user_form_schema(self, user_input: dict[str, Any]) -> vol.Schema:
-        return vol.Schema(_base_schema(user_input))
+    def _user_form_schema(self, user_input: dict[str, Any]) -> probatio.Schema:
+        return probatio.Schema(_base_schema(user_input))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data={**self.config_entry.data, **user_input}
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
             )
-            return self.async_create_entry(title=self.config_entry.title, data={})
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self._user_form_schema(dict(self.config_entry.data)),
+            data_schema=self._user_form_schema(dict(self.config_entry.options)),
         )

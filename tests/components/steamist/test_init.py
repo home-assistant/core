@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from discovery30303 import AIODiscovery30303
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import steamist
 from homeassistant.components.steamist.const import DOMAIN
@@ -26,8 +27,6 @@ from . import (
     _async_setup_entry_with_status,
     _patch_status,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -108,8 +107,8 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS), config_entry.entry_id
     )
     assert isinstance(device_entry, dr.DeviceEntry)
     assert device_entry.name == DEVICE_NAME

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from knocki import KnockiConnectionError, KnockiInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.knocki.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 DEVICE_ID = "KNC1-W-00000214"
 FORMATTED_MAC = "aa:bb:cc:dd:ee:ff"
@@ -156,7 +155,9 @@ async def test_dhcp_mac(
     """Test updating the mac address in the DHCP discovery."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "KNC1-W-00000214")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "KNC1-W-00000214"), mock_config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -166,7 +167,9 @@ async def test_dhcp_mac(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "KNC1-W-00000214")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "KNC1-W-00000214"), mock_config_entry.entry_id
+    )
     assert device
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
 

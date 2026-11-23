@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -15,8 +16,6 @@ from homeassistant.components.tado import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 CHILD_LOCK_SWITCH_ENTITY = "switch.baseboard_heater_baseboard_heater_child_lock"
 

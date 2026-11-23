@@ -2,14 +2,13 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from . import MockSchlageConfigEntry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # The raw device JSON as pyschlage redacts it: everything outside the library's
 # allow-list is replaced with "<REDACTED>", lists collapse to a single redacted
@@ -42,15 +41,17 @@ LOCK_DIAGNOSTICS = {
         "lockAndLeaveEnabled": 1,
         "lockState": 0,
         "lockStateMetadata": {
-            "actAlarmState": 0,
-            "alarmState": 0,
-            "attributeName": "lockState",
-            "clientId": None,
-            "mainFirmwareVersion": "10.00.00264232",
-            "newValue": 0,
-            "oldValue": 1,
-            "serialNumber": "d0d0d0d0",
-            "wifiFirmwareVersion": "03.00.00250052",
+            "actAlarmState": "<REDACTED>",
+            "actionType": "thumbTurn",
+            "alarmState": "<REDACTED>",
+            "attributeName": "<REDACTED>",
+            "clientId": "<REDACTED>",
+            "mainFirmwareVersion": "<REDACTED>",
+            "newValue": "<REDACTED>",
+            "oldValue": "<REDACTED>",
+            "serialNumber": "<REDACTED>",
+            "UUID": "<REDACTED>",
+            "wifiFirmwareVersion": "<REDACTED>",
         },
         "macAddress": "<REDACTED>",
         "mainFirmwareVersion": "10.00.00264232",

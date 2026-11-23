@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 from bluetooth_data_tools import human_readable_name
 from pycasperglow import CasperGlowError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.casper_glow.const import DOMAIN
@@ -18,13 +24,6 @@ from . import (
     CASPER_GLOW_DISCOVERY_INFO,
     NOT_CASPER_GLOW_DISCOVERY_INFO,
     SAMSUNG_EARBUDS_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
 )
 
 
@@ -181,6 +180,20 @@ async def test_user_step_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
+
+    with (
+        patch("homeassistant.components.casper_glow.config_flow.CasperGlow.handshake"),
+        patch(
+            "homeassistant.components.casper_glow.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: CASPER_GLOW_DISCOVERY_INFO.address},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(

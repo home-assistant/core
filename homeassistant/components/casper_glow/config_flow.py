@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
+import probatio
 from pycasperglow import CasperGlow, CasperGlowError
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -81,7 +81,6 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info.address,
             )
             return self.async_abort(reason="unknown")
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -139,9 +138,9 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: human_readable_name(
                             None, service_info.name, service_info.address

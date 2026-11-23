@@ -17,6 +17,7 @@ from onedrive_personal_sdk.models.items import (
     User,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -33,8 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET, IDENTITY_SET, TENANT_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="scopes")
@@ -78,7 +77,8 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             CONF_FOLDER_ID: "my_folder_id",
             CONF_TENANT_ID: TENANT_ID,
         },
-        unique_id="mock_drive_id",
+        unique_id="MOCK_DRIVE_ID",
+        minor_version=2,
     )
 
 
@@ -216,6 +216,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.onedrive_for_business.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry

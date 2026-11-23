@@ -1,78 +1,68 @@
 """Library for working with CalDAV api."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-import logging
+from typing import NamedTuple, cast
 
-import caldav
-from caldav.lib.error import DAVError
+from caldav.calendarobjectresource import CalendarObjectResource
+from caldav.collection import Calendar
+from caldav.davclient import DAVClient
+from caldav.elements import ical
 
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+class CalDavCalendar(NamedTuple):
+    """A calendar with its name and the components it supports."""
 
-ASSUMED_COMPONENTS = frozenset({"VEVENT", "VTODO"})
+    calendar: Calendar
+    name: str | None
+    components: list[str]
 
 
-async def async_get_calendars(
-    hass: HomeAssistant, client: caldav.DAVClient, component: str
-) -> list[caldav.Calendar]:
-    """Get all calendars that support the specified component."""
-
-    def _get_calendars() -> tuple[
-        list[caldav.Calendar], list[tuple[str, str | None, str]]
-    ]:
-        calendars = []
-        needs_warning: list[tuple[str, str | None, str]] = []
-        for calendar in client.principal().calendars():
-            try:
-                supported_components = calendar.get_supported_components()
-            except KeyError, DAVError:
-                needs_warning.append((str(calendar.url), calendar.name, component))
-
-                if component in ASSUMED_COMPONENTS:
-                    # If the server does not specify supported components, we assume
-                    # the calendar is supported for the requested component.
-                    supported_components = [component]
-                else:
-                    supported_components = []
-
-            if component in supported_components:
-                calendars.append(calendar)
-        return calendars, needs_warning
-
-    calendars, needs_warning = await hass.async_add_executor_job(_get_calendars)
-
-    if needs_warning:
-        warned_calendars: set[tuple[str, str]] = hass.data.setdefault(
-            DOMAIN, {}
-        ).setdefault("warned_calendars", set())
-        for url, name, comp in needs_warning:
-            # This workaround and warning can be removed when we upgrade to caldav 3.0
-            if (url, comp) not in warned_calendars:
-                warned_calendars.add((url, comp))
-                if comp in ASSUMED_COMPONENTS:
-                    _LOGGER.warning(
-                        "CalDAV server does not report supported"
-                        " components for calendar %s, "
-                        "assuming it supports the requested component '%s'",
-                        name or url,
-                        comp,
-                    )
-                else:
-                    _LOGGER.warning(
-                        "CalDAV server does not report supported"
-                        " components for calendar %s. "
-                        "Not assuming support for requested component '%s'",
-                        name or url,
-                        comp,
-                    )
-
+def get_calendars(client: DAVClient, components: set[str]) -> list[CalDavCalendar]:
+    """Get the calendars that support any of the components, with their name."""
+    calendars = []
+    for calendar in cast(list[Calendar], client.get_principal().get_calendars()):
+        supported = cast(list[str], calendar.get_supported_components())
+        if components.intersection(supported):
+            name = cast(str | None, calendar.get_display_name())
+            calendars.append(CalDavCalendar(calendar, name, supported))
     return calendars
 
 
-def get_attr_value(obj: caldav.CalendarObjectResource, attribute: str) -> str | None:
+def calendars_supporting(
+    calendars: list[CalDavCalendar], component: str
+) -> list[tuple[Calendar, str | None]]:
+    """Return the calendars that support the specified component."""
+    return [
+        (calendar.calendar, calendar.name)
+        for calendar in calendars
+        if component in calendar.components
+    ]
+
+
+async def async_get_calendars(
+    hass: HomeAssistant, client: DAVClient, component: str
+) -> list[tuple[Calendar, str | None]]:
+    """Get all calendars that support the specified component."""
+    calendars = await hass.async_add_executor_job(get_calendars, client, {component})
+    return calendars_supporting(calendars, component)
+
+
+async def async_get_calendar_color(
+    hass: HomeAssistant, calendar: Calendar
+) -> str | None:
+    """Get the color of a calendar, None if it has none."""
+    color = cast(
+        str | None,
+        await hass.async_add_executor_job(calendar.get_property, ical.CalendarColor()),
+    )
+    # Apple Calendar, DAVx5 and SOGo append an alpha channel.
+    if color and color.startswith("#") and len(color) == 9:
+        return color[:7]
+    return color
+
+
+def get_attr_value(obj: CalendarObjectResource, attribute: str) -> str | None:
     """Return the value of the CalDav object attribute if defined."""
     if hasattr(obj, attribute):
         return getattr(obj, attribute).value

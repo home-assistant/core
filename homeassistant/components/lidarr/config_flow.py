@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp import ClientConnectorError
 from aiopyarr import exceptions
 from aiopyarr.lidarr_client import LidarrClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -34,7 +34,6 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_user()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
     @override
@@ -73,11 +72,13 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-                    vol.Optional(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Required(
+                        CONF_URL, default=user_input.get(CONF_URL, "")
+                    ): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),
                     ): bool,

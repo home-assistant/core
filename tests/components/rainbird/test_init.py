@@ -2,9 +2,11 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbird.const import DOMAIN
@@ -25,9 +27,6 @@ from .conftest import (
     mock_response,
     mock_response_error,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 async def test_init_success(
@@ -56,8 +55,8 @@ async def test_device_registry(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
     )
     assert device_entry == snapshot
 
@@ -254,6 +253,41 @@ async def test_fix_unique_id_duplicate(
 
 
 @pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [(MAC_ADDRESS_UNIQUE_ID)],
+)
+async def test_fix_unique_id_duplicate_setup_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    responses: list[AiohttpClientMockResponse],
+) -> None:
+    """Test the setup error reason of a duplicate config entry."""
+    other_entry = MockConfigEntry(
+        unique_id=None,
+        domain=DOMAIN,
+        data=CONFIG_ENTRY_DATA_OLD_FORMAT,
+    )
+    other_entry.add_to_hass(hass)
+    responses.extend(
+        [
+            mock_response(MODEL_AND_VERSION_RESPONSE),
+            mock_json_response(WIFI_PARAMS_RESPONSE),
+        ]
+    )
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert other_entry.state is ConfigEntryState.SETUP_ERROR
+    assert other_entry.reason == (
+        "Another entry already exists for this Rain Bird controller, this entry will"
+        " be removed"
+    )
+    mock_remove.assert_awaited_once_with(other_entry.entry_id)
+
+
+@pytest.mark.parametrize(
     (
         "config_entry_unique_id",
         "serial_number",
@@ -341,7 +375,6 @@ async def test_fix_entity_unique_ids(
     device_entry = device_registry.async_get_or_create(
         identifiers={(DOMAIN, device_identifier)},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -351,8 +384,8 @@ async def test_fix_entity_unique_ids(
     assert entity_entry
     assert entity_entry.unique_id == expected_unique_id
 
-    device_entry = device_registry.async_get_device(
-        {(DOMAIN, expected_device_identifier)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, expected_device_identifier), config_entry.entry_id
     )
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, expected_device_identifier)}
@@ -444,14 +477,12 @@ async def test_fix_duplicate_device_ids(
     entry1 = device_registry.async_get_or_create(
         identifiers={(DOMAIN, str(SERIAL_NUMBER))},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
     device_registry.async_update_device(entry1.id, **entry1_updates)
 
     entry2 = device_registry.async_get_or_create(
         identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
     device_registry.async_update_device(entry2.id, **entry2_updates)
 
@@ -469,7 +500,9 @@ async def test_fix_duplicate_device_ids(
     )
     assert len(device_entries) == 1
 
-    device_entry = device_registry.async_get_device({(DOMAIN, MAC_ADDRESS_UNIQUE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS_UNIQUE_ID), config_entry.entry_id
+    )
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
     assert device_entry.name_by_user == expected_device_name
@@ -528,8 +561,8 @@ async def test_reload_migration_with_leading_zero_mac(
     await hass.async_block_till_done()
 
     # Verify the device and entity were migrated to the new format
-    migrated_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mac_address_unique_id}-1")}
+    migrated_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mac_address_unique_id}-1"), config_entry.entry_id
     )
     assert migrated_device_entry is not None
     migrated_entity_entry = entity_registry.async_get(entity_entry.entity_id)
@@ -572,7 +605,7 @@ async def test_options_listener(
     # Changing options triggers reload
     with patch(
         "homeassistant.components.rainbird.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
         await hass.async_block_till_done()

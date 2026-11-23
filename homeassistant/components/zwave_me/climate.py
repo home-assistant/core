@@ -61,13 +61,13 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the temperature_unit."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement reported by the device."""
         return self.device.scaleTitle
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the state of the sensor."""
         return self.device.level
 

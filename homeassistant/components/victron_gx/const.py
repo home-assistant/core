@@ -3,6 +3,7 @@
 DOMAIN = "victron_gx"
 
 CONF_INSTALLATION_ID = "installation_id"
+CONF_MQTT_TOKEN_PAIRING = "mqtt_token_pairing"
 CONF_SERIAL = "serial"
 
 # Binary sensor enum ids must be "on" for on and "off" for off.

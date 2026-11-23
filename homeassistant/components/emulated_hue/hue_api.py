@@ -24,39 +24,45 @@ from homeassistant.components import (
     script,
 )
 from homeassistant.components.climate import (
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
 )
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntityFeature,
+    FanEntityStateAttribute,
+    FanServiceArgument,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.humidifier import ATTR_HUMIDITY, SERVICE_SET_HUMIDITY
+from homeassistant.components.humidifier import (
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
+)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_VOLUME_SET,
     STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
@@ -388,7 +394,7 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain == light.DOMAIN:
             color_modes = (
                 entity.attributes.get(
-                    light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+                    LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
                 )
                 or []
             )
@@ -479,7 +485,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     light.brightness_supported(color_modes)
                     and parsed[STATE_BRIGHTNESS] is not None
                 ):
-                    data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                    data[LightServiceArgument.BRIGHTNESS] = hue_brightness_to_hass(
                         parsed[STATE_BRIGHTNESS]
                     )
 
@@ -499,16 +505,16 @@ class HueOneLightChangeView(HomeAssistantView):
                         hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
                         sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
 
-                        data[ATTR_HS_COLOR] = (hue, sat)
+                        data[LightServiceArgument.HS_COLOR] = (hue, sat)
 
                     if parsed[STATE_XY] is not None:
-                        data[ATTR_XY_COLOR] = parsed[STATE_XY]
+                        data[LightServiceArgument.XY_COLOR] = parsed[STATE_XY]
 
                 if (
                     light.color_temp_supported(color_modes)
                     and parsed[STATE_COLOR_TEMP] is not None
                 ):
-                    data[ATTR_COLOR_TEMP_KELVIN] = (
+                    data[LightServiceArgument.COLOR_TEMP_KELVIN] = (
                         color_util.color_temperature_mired_to_kelvin(
                             parsed[STATE_COLOR_TEMP]
                         )
@@ -518,7 +524,9 @@ class HueOneLightChangeView(HomeAssistantView):
                     entity_features & LightEntityFeature.TRANSITION
                     and parsed[STATE_TRANSITION] is not None
                 ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
+                    data[LightServiceArgument.TRANSITION] = (
+                        parsed[STATE_TRANSITION] / 10
+                    )
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -540,16 +548,16 @@ class HueOneLightChangeView(HomeAssistantView):
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
-                service = SERVICE_SET_TEMPERATURE
-                data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+                service = ClimateService.SET_TEMPERATURE
+                data[ClimateServiceArgument.TEMPERATURE] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a humidifier, set the humidity
         elif entity.domain == humidifier.DOMAIN:
             if parsed[STATE_BRIGHTNESS] is not None:
                 turn_on_needed = True
                 domain = entity.domain
-                service = SERVICE_SET_HUMIDITY
-                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
+                service = HumidifierService.SET_HUMIDITY
+                data[HumidifierServiceArgument.HUMIDITY] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
@@ -559,25 +567,27 @@ class HueOneLightChangeView(HomeAssistantView):
             ):
                 turn_on_needed = True
                 domain = entity.domain
-                service = SERVICE_VOLUME_SET
+                service = MediaPlayerService.VOLUME_SET
                 # Convert 0-100 to 0.0-1.0
-                data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+                data[MediaPlayerServiceArgument.VOLUME_LEVEL] = (
+                    parsed[STATE_BRIGHTNESS] / 100.0
+                )
 
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
             if service == SERVICE_TURN_ON:
-                service = SERVICE_OPEN_COVER
+                service = CoverService.OPEN
             else:
-                service = SERVICE_CLOSE_COVER
+                service = CoverService.CLOSE
 
             if (
                 entity_features & CoverEntityFeature.SET_POSITION
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
-                service = SERVICE_SET_COVER_POSITION
-                data[ATTR_POSITION] = parsed[STATE_BRIGHTNESS]
+                service = CoverService.SET_POSITION
+                data[CoverServiceArgument.POSITION] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a fan, convert to speed
         elif (
@@ -587,7 +597,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             domain = entity.domain
             # Convert 0-100 to a fan speed
-            data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
+            data[FanServiceArgument.PERCENTAGE] = parsed[STATE_BRIGHTNESS]
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:
@@ -704,9 +714,9 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     attributes = entity.attributes
     if is_on:
         data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
-            attributes.get(ATTR_BRIGHTNESS) or 0
+            attributes.get(LightEntityStateAttribute.BRIGHTNESS) or 0
         )
-        if (hue_sat := attributes.get(ATTR_HS_COLOR)) is not None:
+        if (hue_sat := attributes.get(LightEntityStateAttribute.HS_COLOR)) is not None:
             hue = hue_sat[0]
             sat = hue_sat[1]
             # Convert hass hs values back to hue hs values
@@ -715,7 +725,7 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         else:
             data[STATE_HUE] = HUE_API_STATE_HUE_MIN
             data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-        kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+        kelvin = attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN)
         data[STATE_COLOR_TEMP] = (
             color_util.color_temperature_kelvin_to_mired(kelvin)
             if kelvin is not None
@@ -729,23 +739,26 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         data[STATE_COLOR_TEMP] = 0
 
     if entity.domain == climate.DOMAIN:
-        temperature = attributes.get(ATTR_TEMPERATURE, 0)
+        temperature = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == humidifier.DOMAIN:
-        humidity = attributes.get(ATTR_HUMIDITY, 0)
+        humidity = attributes.get(HumidifierEntityStateAttribute.HUMIDITY, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == media_player.DOMAIN:
-        level = attributes.get(ATTR_MEDIA_VOLUME_LEVEL, 1.0 if is_on else 0.0)
+        level = attributes.get(
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+            1.0 if is_on else 0.0,
+        )
         # Convert 0.0-1.0 to 0-254
         data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
     elif entity.domain == fan.DOMAIN:
-        percentage = attributes.get(ATTR_PERCENTAGE) or 0
+        percentage = attributes.get(FanEntityStateAttribute.PERCENTAGE) or 0
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == cover.DOMAIN:
-        level = attributes.get(ATTR_CURRENT_POSITION, 0)
+        level = attributes.get(CoverEntityStateAttribute.CURRENT_POSITION, 0)
         data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     _clamp_values(data)
     return data
@@ -777,8 +790,7 @@ def _entity_unique_id(entity_id: str) -> str:
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
     color_modes = (
-        state.attributes.get(light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
-        or []
+        state.attributes.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES) or []
     )
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)

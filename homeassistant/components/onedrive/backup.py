@@ -12,10 +12,12 @@ from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     HashMismatchError,
     OneDriveException,
+    UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
@@ -26,6 +28,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import json_loads_object
 
 from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -36,6 +39,7 @@ MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 10
 
 
 async def async_get_backup_agents(
@@ -81,24 +85,31 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
             self._entry.async_start_reauth(self._hass)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise BackupAgentError("Authentication error") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_authentication_failed",
+            ) from err
         except OneDriveException as err:
             _LOGGER.error(
-                "Error during backup in %s:, message %s",
+                "Error during backup in %s: %s: %s",
                 func.__name__,
+                type(err).__name__,
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise BackupAgentError("Backup operation failed") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
+            ) from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
             )
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise BackupAgentError("Backup operation timed out") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_timed_out",
+            ) from err
 
     return wrapper
 
@@ -160,12 +171,6 @@ class OneDriveBackupAgent(BackupAgent):
             expires_at - time(),
         )
         backup_filename, metadata_filename = suggested_filenames(backup)
-        file = FileInfo(
-            backup_filename,
-            backup.size,
-            self._folder_id,
-            await open_stream(),
-        )
 
         # determine chunk based on target chunks
         upload_chunk_size = backup.size / TARGET_CHUNKS
@@ -176,10 +181,15 @@ class OneDriveBackupAgent(BackupAgent):
         # ensure minimum chunk size of 320KB
         upload_chunk_size = max(upload_chunk_size, 320 * 1024)
 
-        try:
+        async def upload() -> None:
             await LargeFileUploadClient.upload(
                 self._token_function,
-                file,
+                FileInfo(
+                    backup_filename,
+                    backup.size,
+                    self._folder_id,
+                    await open_stream(),
+                ),
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
                 smart_chunk_size=True,
@@ -187,10 +197,17 @@ class OneDriveBackupAgent(BackupAgent):
                     bytes_uploaded=bytes_uploaded
                 ),
             )
+
+        try:
+            try:
+                await upload()
+            except UploadSessionExpired:
+                _LOGGER.debug("Upload session expired, retrying with a new session")
+                await upload()
         except HashMismatchError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                "Hash validation failed, backup file might be corrupt"
+                translation_domain=DOMAIN,
+                translation_key="hash_mismatch",
             ) from err
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
@@ -276,7 +293,7 @@ class OneDriveBackupAgent(BackupAgent):
             item.name for item in items if item.name and item.name.endswith(".tar")
         }
 
-        metadata_files: dict[str, AgentBackup] = {}
+        metadata_item_ids: list[str] = []
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
@@ -288,10 +305,15 @@ class OneDriveBackupAgent(BackupAgent):
                         item.name,
                     )
                     continue
-                if metadata := await _download_metadata(item.id):
-                    metadata_files[metadata.backup_id] = metadata
+                metadata_item_ids.append(item.id)
 
-        self._cache_backup_metadata = metadata_files
+        metadata_contents = await gather_with_limited_concurrency(
+            METADATA_DOWNLOAD_CONCURRENCY,
+            *(_download_metadata(item_id) for item_id in metadata_item_ids),
+        )
+        self._cache_backup_metadata = {
+            metadata.backup_id: metadata for metadata in metadata_contents if metadata
+        }
         self._cache_expiration = time() + CACHE_TTL
         return self._cache_backup_metadata
 
@@ -301,5 +323,8 @@ class OneDriveBackupAgent(BackupAgent):
         if backup := metadata_files.get(backup_id):
             return backup
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )

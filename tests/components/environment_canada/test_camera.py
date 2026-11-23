@@ -6,8 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.environment_canada.camera import SERVICE_SET_RADAR_TYPE
 from homeassistant.components.environment_canada.const import DOMAIN
+from homeassistant.components.environment_canada.services import (
+    EnvironmentCanadaService,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
@@ -45,7 +47,7 @@ async def test_set_radar_type(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_RADAR_TYPE,
+        EnvironmentCanadaService.SET_RADAR_TYPE,
         {"entity_id": "camera.home_radar", "radar_type": radar_type},
         blocking=True,
     )
@@ -89,7 +91,7 @@ async def test_set_radar_type_auto(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_RADAR_TYPE,
+            EnvironmentCanadaService.SET_RADAR_TYPE,
             {"entity_id": "camera.home_radar", "radar_type": "Auto"},
             blocking=True,
         )
@@ -109,7 +111,7 @@ async def test_set_radar_type_clears_cache(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_RADAR_TYPE,
+        EnvironmentCanadaService.SET_RADAR_TYPE,
         {"entity_id": "camera.home_radar", "radar_type": "Rain"},
         blocking=True,
     )

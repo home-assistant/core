@@ -1,8 +1,10 @@
 {
   "domain": "ondilo_ico",
   "name": "Ondilo ICO",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@JeromeHXP"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
   "integration_type": "hub",

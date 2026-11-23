@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymediaroom import (
     COMMANDS,
     PyMediaroomError,
@@ -10,7 +11,6 @@ from pymediaroom import (
     State,
     install_mediaroom_protocol,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -46,10 +46,10 @@ SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -127,21 +127,6 @@ class MediaroomDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY
     )
 
-    def set_state(self, mediaroom_state):
-        """Map pymediaroom state to HA state."""
-
-        state_map = {
-            State.OFF: MediaPlayerState.OFF,
-            State.STANDBY: MediaPlayerState.IDLE,
-            State.PLAYING_LIVE_TV: MediaPlayerState.PLAYING,
-            State.PLAYING_RECORDED_TV: MediaPlayerState.PLAYING,
-            State.PLAYING_TIMESHIFT_TV: MediaPlayerState.PLAYING,
-            State.STOPPED: MediaPlayerState.PAUSED,
-            State.UNKNOWN: None,
-        }
-
-        self._attr_state = state_map[mediaroom_state]
-
     def __init__(self, host, device_id, optimistic=False, timeout=DEFAULT_TIMEOUT):
         """Initialize the device."""
 
@@ -161,6 +146,21 @@ class MediaroomDevice(MediaPlayerEntity):
             self._unique_id = device_id
         else:
             self._unique_id = None
+
+    def set_state(self, mediaroom_state):
+        """Map pymediaroom state to HA state."""
+
+        state_map = {
+            State.OFF: MediaPlayerState.OFF,
+            State.STANDBY: MediaPlayerState.IDLE,
+            State.PLAYING_LIVE_TV: MediaPlayerState.PLAYING,
+            State.PLAYING_RECORDED_TV: MediaPlayerState.PLAYING,
+            State.PLAYING_TIMESHIFT_TV: MediaPlayerState.PLAYING,
+            State.STOPPED: MediaPlayerState.PAUSED,
+            State.UNKNOWN: None,
+        }
+
+        self._attr_state = state_map[mediaroom_state]
 
     @property
     @override

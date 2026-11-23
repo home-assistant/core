@@ -3,16 +3,15 @@
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockConfigEntry, MockUser
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_ENTITY, Client
-
-from tests.common import CLIENT_ID, MockConfigEntry, MockUser
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def generate_new_hass_access_token(

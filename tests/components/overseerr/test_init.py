@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_overseerr import OverseerrAuthenticationError, OverseerrConnectionError
 from python_overseerr.models import WebhookNotificationOptions
 from syrupy.assertion import SnapshotAssertion
@@ -23,7 +24,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
 from tests.components.cloud import mock_cloud
 
 
@@ -58,8 +58,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

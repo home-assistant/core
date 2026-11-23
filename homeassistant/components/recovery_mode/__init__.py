@@ -9,6 +9,10 @@ DOMAIN = "recovery_mode"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Recovery Mode component."""
@@ -18,6 +22,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Home Assistant is running in recovery mode. Check [the error"
             " log](/config/logs) to see what went wrong."
         ),
-        "Recovery Mode",
+        "Recovery mode",
     )
     return True

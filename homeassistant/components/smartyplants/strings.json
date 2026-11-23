@@ -1,0 +1,105 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "The API key belongs to a different SmartyPlants account. Enter a key for the account that was set up originally."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "forbidden": "SmartyPlants refused the request. If this API key is restricted to particular IP addresses, check that it allows the address this Home Assistant connects from.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]"
+        },
+        "description": "SmartyPlants rejected the stored API key. Create a new key in the SmartyPlants app, under Settings, and enter it below."
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "The signing secret from the SmartyPlants app. Leave it empty to use polling only."
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. The webhook URL is unchanged, so there is nothing to update in the SmartyPlants app.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
+        "title": "Reconfigure SmartyPlants"
+      },
+      "reconfigure_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]"
+        },
+        "description": "Update the API key. This integration was set up without a webhook, so there is no signing secret to change and readings arrive by polling.",
+        "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
+      },
+      "reconfigure_secret": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::reconfigure::data_description::webhook_secret%]"
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. Home Assistant currently has no address reachable from the internet, so the webhook URL cannot be shown. The webhook you already added in the SmartyPlants app is unaffected, and its secret can still be changed here, or cleared to use polling only.",
+        "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Create this in the SmartyPlants app, under Settings. It identifies your account to Home Assistant."
+        },
+        "description": "Enter the API key from the SmartyPlants app, under Settings.",
+        "title": "Connect SmartyPlants"
+      },
+      "webhook": {
+        "data": {
+          "webhook_secret": "Webhook secret"
+        },
+        "data_description": {
+          "webhook_secret": "The signing secret the SmartyPlants app shows after you add the webhook URL. It is used to verify that pushed updates really came from SmartyPlants."
+        },
+        "description": "Optional: for instant updates in addition to polling every minute, add this webhook URL in the SmartyPlants app, then paste the signing secret it gives you below.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
+        "title": "Enable live updates"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fertilize": {
+        "name": "Fertilize in"
+      },
+      "health_score": {
+        "name": "Health score"
+      },
+      "light_quality": {
+        "name": "Light quality"
+      },
+      "moisture": {
+        "name": "Soil moisture"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not reach SmartyPlants: {error}"
+    },
+    "forbidden": {
+      "message": "SmartyPlants refused the request: {error}"
+    },
+    "invalid_auth": {
+      "message": "The SmartyPlants API key was rejected. Re-authenticate the integration with a new key."
+    }
+  }
+}

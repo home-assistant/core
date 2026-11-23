@@ -5,27 +5,22 @@ from unittest.mock import MagicMock, patch
 
 from py_aosmith.models import OperationMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_HEAT_PUMP,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
+from homeassistant.const import EntityStateAttribute, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +54,7 @@ async def test_state_away_mode_unsupported(
     """Test away mode unsupported if water heater lacks vacation mode."""
     state = hass.states.get("water_heater.basement_my_water_heater")
     assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
         == WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
@@ -83,10 +78,10 @@ async def test_set_operation_mode(
     """Test setting the operation mode."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.basement_my_water_heater",
-            ATTR_OPERATION_MODE: hass_mode,
+            TargetKey.ENTITY_ID: "water_heater.basement_my_water_heater",
+            WaterHeaterServiceArgument.OPERATION_MODE: hass_mode,
         },
     )
     await hass.async_block_till_done()
@@ -103,10 +98,10 @@ async def test_unsupported_operation_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.basement_my_water_heater",
-                ATTR_OPERATION_MODE: "unsupported_mode",
+                TargetKey.ENTITY_ID: "water_heater.basement_my_water_heater",
+                WaterHeaterServiceArgument.OPERATION_MODE: "unsupported_mode",
             },
             blocking=True,
         )
@@ -120,10 +115,10 @@ async def test_set_temperature(
     """Test setting the target temperature."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.basement_my_water_heater",
-            ATTR_TEMPERATURE: 120,
+            TargetKey.ENTITY_ID: "water_heater.basement_my_water_heater",
+            WaterHeaterServiceArgument.TEMPERATURE: 120,
         },
     )
     await hass.async_block_till_done()
@@ -150,10 +145,10 @@ async def test_away_mode(
     """Test turning away mode on/off."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
+        WaterHeaterService.SET_AWAY_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.basement_my_water_heater",
-            ATTR_AWAY_MODE: hass_away_mode,
+            TargetKey.ENTITY_ID: "water_heater.basement_my_water_heater",
+            WaterHeaterServiceArgument.AWAY_MODE: hass_away_mode,
         },
     )
     await hass.async_block_till_done()

@@ -3,9 +3,10 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar, cast, override
+from typing import cast, override
 
-from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit import ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit.api import ComelitHttpApi
 from aiocomelit.const import (
     ALARM_AREA,
     ALARM_ZONE,
@@ -34,24 +35,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, ObjectClassType
 
+type _ComelitDataType = dict[str, Mapping[int, ObjectClassType]]
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
 
-T = TypeVar(
-    "T",
-    bound=dict[
-        str,
-        Mapping[int, ObjectClassType],
-    ],
-)
-
-
-class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
+class ComelitBaseCoordinator[T: _ComelitDataType](DataUpdateCoordinator[T]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
     config_entry: ComelitConfigEntry
-    api: ComelitCommonApi
+    api: ComelitHttpApi
 
     def __init__(
         self, hass: HomeAssistant, entry: ComelitConfigEntry, device: str, host: str
@@ -70,8 +63,8 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
         )
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
-            configuration_url=self.api.base_url,
             config_entry_id=entry.entry_id,
+            configuration_url=self.api.base_url,
             identifiers={(DOMAIN, entry.entry_id)},
             model=device,
             name=f"{device} ({self._host})",
@@ -156,7 +149,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     device_registry.async_remove_device(device.id)
 
 
-class ComelitSerialBridge(ComelitBaseCoordinator[T]):
+class ComelitSerialBridge[T: _ComelitDataType](ComelitBaseCoordinator[T]):
     """Queries Comelit Serial Bridge."""
 
     _hw_version = "20003101"
@@ -201,7 +194,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator[T]):
         return cast(T, data)
 
 
-class ComelitVedoSystem(ComelitBaseCoordinator[T]):
+class ComelitVedoSystem[T: _ComelitDataType](ComelitBaseCoordinator[T]):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform, UnitOfTemperature
@@ -13,8 +14,6 @@ from homeassistant.util.unit_system import (
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "Device already detected. Check discovered devices.",
       "cannot_connect": "Failed to connect to the device. Please try again.",
       "timeout_connect": "Timed out connecting. Ensure VegeHub is awake, and try again.",
       "unknown_error": "[%key:common::config_flow::error::unknown%]"

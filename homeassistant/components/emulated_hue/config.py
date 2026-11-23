@@ -253,7 +253,9 @@ class Config:
             return not self._entities_with_hidden_attr_in_config[state.entity_id]
 
         if not self.expose_by_default:
-            return False
+            # Listing an entity is the documented way to expose just a few
+            # devices when expose_by_default is off
+            return state.entity_id in self.entities
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed

@@ -6,7 +6,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -16,7 +16,7 @@ PLATFORMS = [Platform.LIGHT]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Kuler Sky from a config entry."""
     ble_device = async_ble_device_from_address(
         hass, entry.data[CONF_ADDRESS], connectable=True
@@ -28,15 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -45,11 +43,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # supports core bluetooth discovery
     if config_entry.version == 1:
         dev_reg = dr.async_get(hass)
-        devices = dev_reg.devices.get_devices_for_config_entry_id(config_entry.entry_id)
+        devices = dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)
 
         if len(devices) == 0:
-            _LOGGER.error("Unable to migrate; No devices registered")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="no_devices_registered",
+            )
 
         first_device = devices[0]
         domain_identifiers = [i for i in first_device.identifiers if i[0] == DOMAIN]
@@ -76,5 +76,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True

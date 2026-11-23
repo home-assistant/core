@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zcc import (
     ControlPoint,
     ControlPointCannotConnectError,
@@ -29,10 +29,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 5003
-STEP_MANUAL_DATA_SCHEMA = vol.Schema(
+STEP_MANUAL_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -92,9 +92,9 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             for description in self.api_descriptions
         ]
 
-        available_schema = vol.Schema(
+        available_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     SELECTED_HOST_AND_PORT, default=available_options[0]["value"]
                 ): SelectSelector(
                     SelectSelectorConfig(

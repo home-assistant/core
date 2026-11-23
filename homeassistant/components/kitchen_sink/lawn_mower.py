@@ -1,10 +1,12 @@
 """Demo platform that has a couple fake lawn mowers."""
 
+from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
+    LawnMowerEntityEntityDescription,
     LawnMowerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +18,67 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
+@dataclass(frozen=True, kw_only=True)
+class DemoLawnMowerEntityDescription(LawnMowerEntityEntityDescription):
+    """Describes a demo lawn mower."""
+
+    activity: LawnMowerActivity
+    features: LawnMowerEntityFeature
+
+
+LAWN_MOWERS = (
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_001",
+        name="Mower can mow",
+        activity=LawnMowerActivity.DOCKED,
+        features=LawnMowerEntityFeature.START_MOWING,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_002",
+        name="Mower can return",
+        activity=LawnMowerActivity.RETURNING,
+        features=LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_003",
+        name="Mower can dock",
+        activity=LawnMowerActivity.MOWING,
+        features=LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.START_MOWING,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_004",
+        name="Mower can pause",
+        activity=LawnMowerActivity.DOCKED,
+        features=LawnMowerEntityFeature.PAUSE | LawnMowerEntityFeature.START_MOWING,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_005",
+        name="Mower can do all",
+        activity=LawnMowerActivity.DOCKED,
+        features=LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING
+        | LawnMowerEntityFeature.STOP,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_006",
+        name="Mower is paused",
+        activity=LawnMowerActivity.PAUSED,
+        features=LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING,
+    ),
+    DemoLawnMowerEntityDescription(
+        key="kitchen_sink_mower_007",
+        name="Mower can stop",
+        activity=LawnMowerActivity.MOWING,
+        features=LawnMowerEntityFeature.STOP | LawnMowerEntityFeature.START_MOWING,
+    ),
+)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -23,52 +86,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo lawn mowers."""
-    async_add_entities(
-        [
-            DemoLawnMower(
-                "kitchen_sink_mower_001",
-                "Mower can mow",
-                LawnMowerActivity.DOCKED,
-                LawnMowerEntityFeature.START_MOWING,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_002",
-                "Mower can return",
-                LawnMowerActivity.RETURNING,
-                LawnMowerEntityFeature.DOCK
-                | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.START_MOWING,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_003",
-                "Mower can dock",
-                LawnMowerActivity.MOWING,
-                LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.START_MOWING,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_004",
-                "Mower can pause",
-                LawnMowerActivity.DOCKED,
-                LawnMowerEntityFeature.PAUSE | LawnMowerEntityFeature.START_MOWING,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_005",
-                "Mower can do all",
-                LawnMowerActivity.DOCKED,
-                LawnMowerEntityFeature.DOCK
-                | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.START_MOWING,
-            ),
-            DemoLawnMower(
-                "kitchen_sink_mower_006",
-                "Mower is paused",
-                LawnMowerActivity.PAUSED,
-                LawnMowerEntityFeature.DOCK
-                | LawnMowerEntityFeature.PAUSE
-                | LawnMowerEntityFeature.START_MOWING,
-            ),
-        ]
-    )
+    async_add_entities(DemoLawnMower(description) for description in LAWN_MOWERS)
 
 
 async def async_setup_entry(
@@ -83,18 +101,14 @@ async def async_setup_entry(
 class DemoLawnMower(LawnMowerEntity):
     """Representation of a Demo lawn mower."""
 
-    def __init__(
-        self,
-        unique_id: str,
-        name: str,
-        activity: LawnMowerActivity,
-        features: LawnMowerEntityFeature = LawnMowerEntityFeature(0),
-    ) -> None:
+    entity_description: DemoLawnMowerEntityDescription
+
+    def __init__(self, description: DemoLawnMowerEntityDescription) -> None:
         """Initialize the lawn mower."""
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self._attr_supported_features = features
-        self._attr_activity = activity
+        self.entity_description = description
+        self._attr_unique_id = description.key
+        self._attr_supported_features = description.features
+        self._attr_activity = description.activity
 
     @override
     async def async_start_mowing(self) -> None:
@@ -112,4 +126,10 @@ class DemoLawnMower(LawnMowerEntity):
     async def async_pause(self) -> None:
         """Pause mower."""
         self._attr_activity = LawnMowerActivity.PAUSED
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop(self) -> None:
+        """Stop mower."""
+        self._attr_activity = LawnMowerActivity.IDLE
         self.async_write_ha_state()

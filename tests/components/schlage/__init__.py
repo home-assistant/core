@@ -1,7 +1,7 @@
 """Tests for the Schlage integration."""
 
-from homeassistant.components.schlage.coordinator import SchlageDataUpdateCoordinator
+from pytest_homeassistant.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
+from homeassistant.components.schlage.coordinator import SchlageDataUpdateCoordinator
 
 type MockSchlageConfigEntry = MockConfigEntry[SchlageDataUpdateCoordinator]

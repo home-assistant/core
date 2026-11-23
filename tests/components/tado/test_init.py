@@ -7,13 +7,12 @@ from unittest.mock import patch
 
 from PyTado.http import Http
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tado import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_v1_migration(hass: HomeAssistant) -> None:

@@ -1,44 +1,56 @@
 """Services for Google Mail integration."""
 
 from datetime import datetime, timedelta
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from googleapiclient.http import HttpRequest
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import (
-    ATTR_ENABLED,
-    ATTR_END,
-    ATTR_ME,
-    ATTR_MESSAGE,
-    ATTR_PLAIN_TEXT,
-    ATTR_RESTRICT_CONTACTS,
-    ATTR_RESTRICT_DOMAIN,
-    ATTR_START,
-    ATTR_TITLE,
-    DOMAIN,
-)
+from .const import ATTR_ME, DOMAIN
 
 if TYPE_CHECKING:
     from . import GoogleMailConfigEntry
 
-SERVICE_SET_VACATION = "set_vacation"
 
-SERVICE_VACATION_SCHEMA = vol.All(
+class GoogleMailService(StrEnum):
+    """Store keys for Google Mail services."""
+
+    SET_VACATION = "set_vacation"
+
+
+class GoogleMailServiceArgument(StrEnum):
+    """Store keys for Google Mail service arguments."""
+
+    ENABLED = "enabled"
+    TITLE = "title"
+    MESSAGE = "message"
+    PLAIN_TEXT = "plain_text"
+    RESTRICT_CONTACTS = "restrict_contacts"
+    RESTRICT_DOMAIN = "restrict_domain"
+    START = "start"
+    END = "end"
+
+
+SERVICE_VACATION_SCHEMA = probatio.All(
     cv.make_entity_service_schema(
         {
-            vol.Required(ATTR_ENABLED, default=True): cv.boolean,
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_PLAIN_TEXT, default=True): cv.boolean,
-            vol.Optional(ATTR_RESTRICT_CONTACTS): cv.boolean,
-            vol.Optional(ATTR_RESTRICT_DOMAIN): cv.boolean,
-            vol.Optional(ATTR_START): cv.date,
-            vol.Optional(ATTR_END): cv.date,
+            probatio.Required(
+                GoogleMailServiceArgument.ENABLED, default=True
+            ): cv.boolean,
+            probatio.Optional(GoogleMailServiceArgument.TITLE): cv.string,
+            probatio.Required(GoogleMailServiceArgument.MESSAGE): cv.string,
+            probatio.Optional(
+                GoogleMailServiceArgument.PLAIN_TEXT, default=True
+            ): cv.boolean,
+            probatio.Optional(GoogleMailServiceArgument.RESTRICT_CONTACTS): cv.boolean,
+            probatio.Optional(GoogleMailServiceArgument.RESTRICT_DOMAIN): cv.boolean,
+            probatio.Optional(GoogleMailServiceArgument.START): cv.date,
+            probatio.Optional(GoogleMailServiceArgument.END): cv.date,
         },
     )
 )
@@ -65,23 +77,25 @@ async def _gmail_service(call: ServiceCall) -> None:
         service = await auth.get_resource()
 
         _settings = {
-            "enableAutoReply": call.data[ATTR_ENABLED],
-            "responseSubject": call.data.get(ATTR_TITLE),
+            "enableAutoReply": call.data[GoogleMailServiceArgument.ENABLED],
+            "responseSubject": call.data.get(GoogleMailServiceArgument.TITLE),
         }
-        if contacts := call.data.get(ATTR_RESTRICT_CONTACTS):
+        if contacts := call.data.get(GoogleMailServiceArgument.RESTRICT_CONTACTS):
             _settings["restrictToContacts"] = contacts
-        if domain := call.data.get(ATTR_RESTRICT_DOMAIN):
+        if domain := call.data.get(GoogleMailServiceArgument.RESTRICT_DOMAIN):
             _settings["restrictToDomain"] = domain
-        if _date := call.data.get(ATTR_START):
+        if _date := call.data.get(GoogleMailServiceArgument.START):
             _dt = datetime.combine(_date, datetime.min.time())
             _settings["startTime"] = _dt.timestamp() * 1000
-        if _date := call.data.get(ATTR_END):
+        if _date := call.data.get(GoogleMailServiceArgument.END):
             _dt = datetime.combine(_date, datetime.min.time())
             _settings["endTime"] = (_dt + timedelta(days=1)).timestamp() * 1000
-        if call.data[ATTR_PLAIN_TEXT]:
-            _settings["responseBodyPlainText"] = call.data[ATTR_MESSAGE]
+        if call.data[GoogleMailServiceArgument.PLAIN_TEXT]:
+            _settings["responseBodyPlainText"] = call.data[
+                GoogleMailServiceArgument.MESSAGE
+            ]
         else:
-            _settings["responseBodyHtml"] = call.data[ATTR_MESSAGE]
+            _settings["responseBodyHtml"] = call.data[GoogleMailServiceArgument.MESSAGE]
         settings: HttpRequest = (
             service.users().settings().updateVacation(userId=ATTR_ME, body=_settings)
         )
@@ -94,7 +108,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_SET_VACATION,
+        service=GoogleMailService.SET_VACATION,
         schema=SERVICE_VACATION_SCHEMA,
         service_func=_gmail_service,
     )

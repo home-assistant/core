@@ -1,27 +1,99 @@
 """Tests for Fritz!Tools sensor platform."""
 
+from copy import deepcopy
 from datetime import UTC, datetime
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzhosts import FritzHosts
+from fritzconnection.lib.fritzstatus import FritzStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.fritz.const import (
+    CONF_OLD_DISCOVERY,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
+from .conftest import FritzConnectionMock
+from .const import (
+    ATTR_NEW_SERIAL_NUMBER,
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_HOST_PHONE,
+    MOCK_MESH_DATA,
+    MOCK_USER_DATA,
+    MOCK_WLAN_DEVICE_NODE,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+PHONE_LINK_SENSORS = (
+    "sensor.phone_signal_strength",
+    "sensor.phone_download_link_rate",
+    "sensor.phone_upload_link_rate",
+    "sensor.phone_max_download_link_rate",
+    "sensor.phone_max_upload_link_rate",
+)
+
+
+def _add_wlan_device(fh_class_mock: type[FritzHosts]) -> dict[str, Any]:
+    """Add a WLAN connected device to the mocked hosts and return its node link."""
+    mesh_data = deepcopy(MOCK_MESH_DATA)
+    wlan_device_node = deepcopy(MOCK_WLAN_DEVICE_NODE)
+    mesh_data["nodes"].append(wlan_device_node)
+    fh_class_mock.get_mesh_topology.return_value = mesh_data
+    fh_class_mock.get_hosts_attributes.return_value = [
+        *MOCK_HOST_ATTRIBUTES_DATA,
+        MOCK_HOST_PHONE,
+    ]
+    return wlan_device_node["node_interfaces"][0]["node_links"][0]
+
+
+@pytest.fixture
+def wlan_device_link(fh_class_mock: type[FritzHosts]) -> dict[str, Any]:
+    """Fixture that adds a WLAN connected device to the mocked hosts."""
+    return _add_wlan_device(fh_class_mock)
+
+
+async def _async_setup_two_boxes(
+    hass: HomeAssistant, fc_class_mock: MagicMock
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up two FRITZ!Box entries that report the same mesh topology."""
+    first_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    first_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(first_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_box_services = deepcopy(MOCK_FB_SERVICES)
+    second_box_services["DeviceInfo1"]["GetInfo"][ATTR_NEW_SERIAL_NUMBER] = (
+        "1CED6F123499"
+    )
+    fc_class_mock.return_value = FritzConnectionMock(second_box_services)
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_DATA, CONF_HOST: "second_host"}
+    )
+    second_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return first_entry, second_entry
 
 
 @pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "wlan_device_link")
 async def test_sensor_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -154,3 +226,403 @@ async def test_sensor_cpu_temp_not_supported(
         assert not entity_registry.async_is_registered(
             "sensor.mock_title_cpu_temperature"
         )
+
+
+@pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
+async def test_sensor_cpu_temp_unknown_on_request_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test the CPU temperature sensor turns unknown when reading it raises."""
+    entity_id = "sensor.mock_title_cpu_temperature"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "42"
+
+    with patch.object(
+        FritzStatus, "get_cpu_temperatures", side_effect=RequestException("boom")
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        {
+            **MOCK_FB_SERVICES,
+            "WANCommonIFC1": {
+                **MOCK_FB_SERVICES["WANCommonIFC1"],
+                "GetAddonInfos": FritzConnectionException("Not available Action"),
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_sensor_addon_infos_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test transmission rate and traffic sensors are not created when not supported."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.mock_title_upload_throughput",
+        "sensor.mock_title_download_throughput",
+        "sensor.mock_title_gb_sent",
+        "sensor.mock_title_gb_received",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
+    assert "Error adding entity" not in caplog.text
+
+
+@pytest.mark.usefixtures(
+    "fc_class_mock", "fh_class_mock", "fs_class_mock", "wlan_device_link"
+)
+async def test_link_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test link sensors of connected devices are disabled by default."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (*PHONE_LINK_SENSORS, "sensor.printer_max_download_link_rate"):
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+)
+async def test_link_sensors_wlan_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test signal strength and link rate sensors are not created for LAN devices."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_is_registered("sensor.printer_max_upload_link_rate")
+    for entity_id in (
+        "sensor.printer_signal_strength",
+        "sensor.printer_download_link_rate",
+        "sensor.printer_upload_link_rate",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "fc_class_mock", "fs_class_mock"
+)
+async def test_link_sensors_new_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+) -> None:
+    """Test link sensors are created for a device connecting at runtime."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert hass.states.get(entity_id) is None
+
+    _add_wlan_device(fh_class_mock)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+)
+async def test_link_sensors_disconnected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    wlan_device_link: dict[str, Any],
+) -> None:
+    """Test link sensors become unknown when the device disconnects."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
+
+    wlan_device_link["state"] = "DISCONNECTED"
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+)
+async def test_link_sensor_signal_strength_not_available(
+    hass: HomeAssistant,
+    wlan_device_link: dict[str, Any],
+) -> None:
+    """Test signal strength is unknown when the FRITZ!Box does not report it."""
+    wlan_device_link["rx_rcpi"] = 255
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.phone_signal_strength"))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mesh_support", "options"),
+    [
+        pytest.param(False, {}, id="no_mesh_support"),
+        pytest.param(True, {CONF_OLD_DISCOVERY: True}, id="old_discovery"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_old_discovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mesh_support: bool,
+    options: dict[str, Any],
+) -> None:
+    """Test link sensors are not created when the old discovery method is used."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA, options=options)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch.object(FritzStatus, "device_has_mesh_support", mesh_support),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        *PHONE_LINK_SENSORS,
+        "sensor.printer_max_download_link_rate",
+        "sensor.printer_max_upload_link_rate",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
+
+
+@pytest.mark.parametrize(
+    ("initial_link", "initial_sensors"),
+    [
+        pytest.param({"state": "DISCONNECTED"}, set(), id="offline"),
+        pytest.param(
+            {"node_interface_1_uid": "ni-31"},
+            {
+                "sensor.phone_max_download_link_rate",
+                "sensor.phone_max_upload_link_rate",
+            },
+            id="online",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fh_class_mock",
+    "fs_class_mock",
+)
+async def test_link_sensors_added_when_wlan_link_appears(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    wlan_device_link: dict[str, Any],
+    initial_link: dict[str, Any],
+    initial_sensors: set[str],
+) -> None:
+    """Test missing link sensors are added once a known device connects via WLAN."""
+    wlan_link = dict(wlan_device_link)
+    wlan_device_link.update(initial_link)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert {
+        entity_id
+        for entity_id in PHONE_LINK_SENSORS
+        if entity_registry.async_is_registered(entity_id)
+    } == initial_sensors
+
+    wlan_device_link.update(wlan_link)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert entity_registry.async_is_registered(entity_id)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fc_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_device_forgotten_and_back(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+) -> None:
+    """Test link sensors of a device the FRITZ!Box forgot come back with it."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    fh_class_mock.get_hosts_attributes.return_value = MOCK_HOST_ATTRIBUTES_DATA
+    registry_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    # Two scans, so sensors created again while the device is gone would show up
+    for _ in range(2):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert not entity_registry.async_is_registered(entity_id)
+    assert not [event for event in registry_events if event.data["action"] == "create"]
+
+    fh_class_mock.get_hosts_attributes.return_value = [
+        *MOCK_HOST_ATTRIBUTES_DATA,
+        MOCK_HOST_PHONE,
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert entity_registry.async_is_registered(entity_id)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_multiple_boxes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test only the first FRITZ!Box provides the link sensors of a shared device."""
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        first_entry, _ = await _async_setup_two_boxes(hass, fc_class_mock)
+
+        # The second box checks again on every scan
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "does not generate unique IDs" not in caplog.text
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert entity_entry.config_entry_id == first_entry.entry_id
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fh_class_mock",
+    "fs_class_mock",
+    "wlan_device_link",
+)
+async def test_link_sensors_taken_over_after_unload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test another FRITZ!Box provides the link sensors once the first is unloaded."""
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        first_entry, second_entry = await _async_setup_two_boxes(hass, fc_class_mock)
+
+        assert await hass.config_entries.async_unload(first_entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in PHONE_LINK_SENSORS:
+        assert (entity_entry := entity_registry.async_get(entity_id))
+        assert entity_entry.config_entry_id == second_entry.entry_id
+    assert (state := hass.states.get("sensor.phone_signal_strength"))
+    assert state.state == "-38"

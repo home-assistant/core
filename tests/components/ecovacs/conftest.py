@@ -9,8 +9,9 @@ from deebot_client import const
 from deebot_client.command import DeviceCommandResult
 from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
-from deebot_client.models import Credentials
+from deebot_client.models import AccountCredentials, Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from sucks import EventEmitter
 
 from homeassistant.components.ecovacs import PLATFORMS
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CLOUD_DEVICE_ID, STORED_ENTRY_DATA_CLOUD
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -38,7 +37,7 @@ def mock_device_id() -> Generator[None]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ecovacs.async_setup_entry", return_value=True
+        "homeassistant.components.ecovacs.async_setup_entry", return_value=None
     ) as async_setup_entry:
         yield async_setup_entry
 
@@ -67,8 +66,8 @@ def device_fixture() -> str:
 
 
 @pytest.fixture
-def mock_authenticator(device_fixture: str) -> Generator[Mock]:
-    """Mock the authenticator."""
+def mock_authenticator_class(device_fixture: str) -> Generator[Mock]:
+    """Mock the authenticator class."""
     with (
         patch(
             "homeassistant.components.ecovacs.controller.Authenticator",
@@ -81,6 +80,9 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock]:
     ):
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
+        authenticator.account_credentials = AccountCredentials(
+            "account_token", "account_user_id"
+        )
 
         devices = [
             load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
@@ -102,7 +104,13 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock]:
                     raise ApiError("Path not mocked: {path}")
 
         authenticator.post_authenticated.side_effect = post_authenticated
-        yield authenticator
+        yield mock
+
+
+@pytest.fixture
+def mock_authenticator(mock_authenticator_class: Mock) -> Mock:
+    """Mock the authenticator."""
+    return mock_authenticator_class.return_value
 
 
 @pytest.fixture

@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion
 import jwt
+import probatio
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError, EnvoyTokenAuth
-import voluptuous as vol
+from pyenphase.const import EnvoyOptions
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,6 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACCESS_TOKEN_LOGIN_URL,
     CONF_MANUAL_TOKEN,
+    CONF_NO_SOLAR,
     DOMAIN,
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
@@ -88,11 +90,27 @@ async def validate_input(
     username: str,
     password: str,
     token: str | None,
+    no_solar_mode: bool,
     errors: dict[str, str],
     description_placeholders: dict[str, str],
 ) -> Envoy:
     """Validate the user input allows us to connect."""
-    envoy = Envoy(host, async_get_clientsession(hass, verify_ssl=False))
+    options = EnvoyOptions.V2_ACB_MODE | (
+        EnvoyOptions.NO_SOLAR if no_solar_mode else EnvoyOptions(0)
+    )
+    option_names = [EnvoyOptions.V2_ACB_MODE.name]
+    if no_solar_mode:
+        option_names.append(EnvoyOptions.NO_SOLAR.name)
+
+    _LOGGER.debug(
+        "Validating Envoy with host: %s and options: %s",
+        host,
+        " ".join(option_names),
+    )
+
+    envoy = Envoy(
+        host, async_get_clientsession(hass, verify_ssl=False), envoy_options=options
+    )
     try:
         await envoy.setup()
         await envoy.authenticate(username=username, password=password, token=token)
@@ -120,6 +138,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.username = None
         self.protovers: str | None = None
         self.manual_token: bool = False
+        self.no_solar: bool = False
 
     @staticmethod
     @callback
@@ -131,16 +150,16 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         return EnvoyOptionsFlowHandler()
 
     @callback
-    def _async_generate_schema(self) -> vol.Schema:
+    def _async_generate_schema(self) -> probatio.Schema:
         """Generate schema."""
         schema: VolDictType = {}
 
         if self.ip_address:
-            schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
+            schema[probatio.Required(CONF_HOST, default=self.ip_address)] = probatio.In(
                 [self.ip_address]
             )
         elif self.source != SOURCE_REAUTH:
-            schema[vol.Required(CONF_HOST)] = str
+            schema[probatio.Required(CONF_HOST)] = str
 
         default_username = ""
         if (
@@ -152,18 +171,22 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.manual_token:
             # in manual token entry mode show token input field
-            schema[vol.Optional(CONF_TOKEN, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_TOKEN), default="")] = str
         else:
             # in automatic token mode show username and password inputs
             schema[
-                vol.Optional(CONF_USERNAME, default=self.username or default_username)
+                probatio.Optional(
+                    CONF_USERNAME, default=self.username or default_username
+                )
             ] = str
-            schema[vol.Optional(CONF_PASSWORD, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_PASSWORD), default="")] = str
 
         # option to switch between automatic and manual token entry modes
-        schema[vol.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
+        schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
 
-        return vol.Schema(schema)
+        schema[probatio.Optional(CONF_NO_SOLAR, default=self.no_solar)] = bool
+
+        return probatio.Schema(schema)
 
     @callback
     def _async_current_hosts(self) -> set[str]:
@@ -235,6 +258,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reauth_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reauth_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -253,11 +279,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_USERNAME, ""),
                 user_input.get(CONF_PASSWORD, ""),
                 token := user_input.get(CONF_TOKEN, "") or None,
+                user_input.get(CONF_NO_SOLAR, False),
                 errors,
                 description_placeholders,
             )
             if not errors:
                 # successful authentication, update config
+                # Shares the local string with the unique ID abort in async_step_user
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input
@@ -266,14 +294,15 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         if isinstance(envoy.auth, EnvoyTokenAuth)
                         else {}
                     ),
+                    reason="reauth_successful",
                 )
             if token:
                 token_days_left = token_lifetime(token)
 
         serial = reauth_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reauth_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reauth_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -299,6 +328,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(CONF_NO_SOLAR, False)
 
         if user_input and (token := user_input.get(CONF_TOKEN, "")):
             token_days_left = token_lifetime(token)
@@ -318,6 +348,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input.get(CONF_USERNAME, ""),
                     user_input.get(CONF_PASSWORD, ""),
                     token := user_input.get(CONF_TOKEN, "") or None,
+                    self.no_solar,
                     errors,
                     description_placeholders,
                 )
@@ -342,6 +373,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
                                 CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
                                 CONF_MANUAL_TOKEN: self.manual_token,
+                                CONF_NO_SOLAR: self.no_solar,
                             }
                             | token_update,
                             error="reauth_successful",
@@ -354,8 +386,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.unique_id:
             self.context["title_placeholders"] = {
-                CONF_SERIAL: self.unique_id,
-                CONF_HOST: host,
+                "serial": self.unique_id,
+                "host": host,
             }
         description_placeholders.update(descriptions("", token_days_left))
         return self.async_show_form(
@@ -376,6 +408,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reconfigure_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reconfigure_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -393,6 +428,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 username := user_input.get(CONF_USERNAME, ""),
                 password := user_input.get(CONF_PASSWORD, ""),
                 token := user_input.get(CONF_TOKEN, "") or None,
+                self.no_solar,
                 errors,
                 description_placeholders,
             )
@@ -407,6 +443,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                         CONF_MANUAL_TOKEN: self.manual_token,
+                        CONF_NO_SOLAR: self.no_solar,
                     }
                     | (
                         {CONF_TOKEN: envoy.auth.token}
@@ -419,8 +456,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         serial = reconfigure_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reconfigure_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -449,16 +486,16 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                         default=self.config_entry.options.get(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
                         ),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         OPTION_DISABLE_KEEP_ALIVE,
                         default=self.config_entry.options.get(
                             OPTION_DISABLE_KEEP_ALIVE,
@@ -468,7 +505,7 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data[CONF_HOST],
+                "serial": self.config_entry.unique_id,
+                "host": self.config_entry.data[CONF_HOST],
             },
         )

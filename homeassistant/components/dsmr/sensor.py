@@ -5,11 +5,12 @@ from asyncio import CancelledError
 from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
 from typing import override
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -25,7 +26,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -67,6 +67,7 @@ from .const import (
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
+EVENT_TELEGRAM = "dsmr_telegram_{}"
 
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
@@ -445,6 +446,46 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
+        key="belgium_version_information",
+        translation_key="belgium_version_information",
+        obis_reference="BELGIUM_VERSION_INFORMATION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_equipment_identifier",
+        translation_key="belgium_equipment_identifier",
+        obis_reference="BELGIUM_EQUIPMENT_IDENTIFIER",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_switch_position",
+        translation_key="belgium_switch_position",
+        obis_reference="ACTUAL_SWITCH_POSITION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_text_message",
+        translation_key="belgium_text_message",
+        obis_reference="TEXT_MESSAGE",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_maximum_demand_history",
+        translation_key="belgium_maximum_demand_history",
+        obis_reference="BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
         key="belgium_current_average_demand",
         translation_key="current_average_demand",
         obis_reference="BELGIUM_CURRENT_AVERAGE_DEMAND",
@@ -538,7 +579,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_frequency",
-        translation_key="frequency",
         obis_reference="EON_HU_FREQUENCY",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
@@ -589,6 +629,33 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
     MbusDeviceType.GAS: (
+        DSMRSensorEntityDescription(
+            key="belgium_gas_device_type",
+            translation_key="belgium_gas_device_type",
+            obis_reference="MBUS_DEVICE_TYPE",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_equipment_identifier",
+            translation_key="belgium_gas_equipment_identifier",
+            obis_reference="MBUS_EQUIPMENT_IDENTIFIER",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_valve_position",
+            translation_key="belgium_gas_valve_position",
+            obis_reference="MBUS_VALVE_POSITION",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
         DSMRSensorEntityDescription(
             key="gas_reading",
             translation_key="gas_meter_reading",
@@ -649,7 +716,7 @@ def device_class_and_uom(
 
 
 def rename_old_gas_to_mbus(
-    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+    hass: HomeAssistant, entry: DsmrConfigEntry, mbus_device_id: str
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
@@ -710,7 +777,7 @@ def is_supported_description(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+    hass: HomeAssistant, telegram: Telegram, entry: DsmrConfigEntry, dsmr_version: str
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -744,7 +811,7 @@ def create_mbus_entities(
 
 def get_dsmr_object(
     telegram: Telegram | None, mbus_id: int, obis_reference: str
-) -> DSMRObject | None:
+) -> DSMRObject | list | None:
     """Extract DSMR object from telegram."""
     if not telegram:
         return None
@@ -765,7 +832,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    entities: list[DSMREntity] = []
     initialized: bool = False
     add_entities_handler: Callable[[], None] | None
 
@@ -777,15 +843,20 @@ async def async_setup_entry(
         add_entities_handler()
         add_entities_handler = None
 
+        entities: list[DSMREntity] = []
         entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
 
         entities.extend(
             [
-                DSMREntity(
-                    description,
-                    entry,
-                    telegram,
-                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                (
+                    DSMRBelgiumDemandHistory(description, entry, telegram)
+                    if description.key == "belgium_maximum_demand_history"
+                    else DSMREntity(
+                        description,
+                        entry,
+                        telegram,
+                        *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                    )
                 )
                 for description in SENSORS
                 if is_supported_description(telegram, description, dsmr_version)
@@ -808,9 +879,8 @@ async def async_setup_entry(
     def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
         nonlocal initialized
-        # Make all device entities aware of new telegram
-        for entity in entities:
-            entity.update_data(telegram)
+        # Make all added entities aware of new telegram
+        async_dispatcher_send(hass, EVENT_TELEGRAM.format(entry.entry_id), telegram)
 
         entry.runtime_data.telegram = telegram
 
@@ -980,7 +1050,7 @@ class DSMREntity(SensorEntity):
     def __init__(
         self,
         entity_description: DSMRSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: DsmrConfigEntry,
         telegram: Telegram,
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,
@@ -1023,18 +1093,33 @@ class DSMREntity(SensorEntity):
                 self._attr_unique_id = f"{device_serial}"
             else:
                 self._attr_unique_id = f"{device_serial}_{mbus_id}"
+            if entity_description.key.startswith("belgium_gas_"):
+                self._attr_unique_id += f"_{entity_description.key}"
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to new telegrams."""
+        await super().async_added_to_hass()
+        # Telegrams received since the entity was created were not delivered
+        self.telegram = self._entry.runtime_data.telegram
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, EVENT_TELEGRAM.format(self._entry.entry_id), self.update_data
+            )
+        )
 
     @callback
     def update_data(self, telegram: Telegram | None) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and (
+        if (
             telegram is None
             or get_dsmr_object(
                 telegram, self._mbus_id, self.entity_description.obis_reference
             )
+            is not None
         ):
             self.async_write_ha_state()
 
@@ -1068,7 +1153,17 @@ class DSMREntity(SensorEntity):
         if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
-        with suppress(TypeError):
+        if self.entity_description.key in {
+            "belgium_version_information",
+            "belgium_equipment_identifier",
+            "belgium_gas_equipment_identifier",
+        }:
+            return str(value)
+
+        if self.entity_description.key == "belgium_text_message":
+            return str(value)[:255]
+
+        with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
@@ -1076,6 +1171,19 @@ class DSMREntity(SensorEntity):
             return None
 
         return value
+
+    @property
+    @override
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
+        """Keep long Belgian utility messages without oversized states."""
+        if self.entity_description.key != "belgium_text_message":
+            return None
+        message = self.get_dsmr_object_attr("value")
+        if message is not None and len(str(message)) > 255:
+            return {"full_message": str(message)}
+        return None
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
@@ -1096,3 +1204,73 @@ class DSMREntity(SensorEntity):
             return "low"
 
         return None
+
+
+class DSMRBelgiumDemandHistory(DSMREntity):
+    """Expose the latest completed Belgian monthly demand and its peak history."""
+
+    def __init__(
+        self,
+        entity_description: DSMRSensorEntityDescription,
+        entry: DsmrConfigEntry,
+        telegram: Telegram,
+    ) -> None:
+        """Initialize historical maximum demand sensor."""
+        super().__init__(
+            entity_description, entry, telegram, SensorDeviceClass.POWER, "kW"
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the last valid monthly peak."""
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
+        if not isinstance(peaks, list):
+            return None
+        valid = [peak for peak in peaks if self._valid_peak(peak)]
+        return (
+            float(max(valid, key=lambda peak: peak.datetime).value) if valid else None
+        )
+
+    @staticmethod
+    def _valid_peak(peak: object) -> bool:
+        """Ignore placeholder records with invalid month timestamps."""
+        month = getattr(peak, "datetime", None)
+        return (
+            isinstance(month, datetime)
+            and 2000 <= month.year <= 2100
+            and isinstance(getattr(peak, "occurred", None), datetime)
+            and getattr(peak, "value", None) is not None
+        )
+
+    @property
+    @override
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
+        """Expose all valid demand peaks and their occurrence times."""
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
+        if not isinstance(peaks, list):
+            return {"monthly_peaks": []}
+        return {
+            "monthly_peaks": [
+                {
+                    "month": (
+                        peak.datetime.astimezone(ZoneInfo("Europe/Brussels")).date()
+                        - timedelta(days=1)
+                    ).strftime("%Y-%m"),
+                    "peak": float(peak.value),
+                    "occurred": (
+                        peak.occurred.isoformat()
+                        if isinstance(peak.occurred, datetime)
+                        else None
+                    ),
+                }
+                for peak in peaks
+                if self._valid_peak(peak)
+            ]
+        }

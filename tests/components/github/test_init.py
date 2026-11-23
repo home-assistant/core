@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.github import CONF_REPOSITORY
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -10,8 +12,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er, 
 
 from . import setup_integration
 from .const import MOCK_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry_cleanup(
@@ -112,7 +112,7 @@ async def test_minor_v1_v2_migration(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "test/repository")},
     )
-    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {None}
+    assert device_entry.config_subentry_id is None
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -126,6 +126,4 @@ async def test_minor_v1_v2_migration(
     assert subentry.unique_id == "test/repository"
 
     assert (device_entry := device_registry.async_get(device_entry.id))
-    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {
-        subentry.subentry_id
-    }
+    assert device_entry.config_subentry_id == subentry.subentry_id

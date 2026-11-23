@@ -26,6 +26,11 @@
       }
     }
   },
+  "device": {
+    "moon": {
+      "name": "Moon"
+    }
+  },
   "entity": {
     "sensor": {
       "phase": {

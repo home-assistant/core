@@ -76,6 +76,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self._device_name = key
         self._events = EVENTS[key]
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"point.{device_id}-{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_icon = DEVICES[key].get("icon")
 
@@ -87,6 +88,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor."""

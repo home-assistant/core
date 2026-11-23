@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aiohttp.client_exceptions import ClientError
 from openwebif.error import InvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -13,9 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_FULL, TEST_REQUIRED
-
-from tests.common import MockConfigEntry
+from .conftest import MAC_ADDRESS, TEST_FULL, TEST_REQUIRED
 
 
 @pytest.fixture
@@ -47,6 +46,7 @@ async def test_form_user(hass: HomeAssistant, test_config: dict[str, Any]) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_config[CONF_HOST]
     assert result["data"] == test_config
+    assert result["result"].unique_id == MAC_ADDRESS
 
 
 @pytest.mark.parametrize(

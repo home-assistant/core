@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_fastdotcom_data_update_coordinator(

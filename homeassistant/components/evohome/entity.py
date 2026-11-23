@@ -14,13 +14,12 @@ from evohomeasync2.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
-from evohomeasync2.typedefs import EvoDayOfWeekDhwT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
-from .coordinator import EvoDataUpdateCoordinator
+from .const import NEXT_SP_FROM, THIS_SP_FROM
+from .coordinator import EvoLocationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def unique_zone_id(evo_device: evo.Zone) -> str:
     return evo_device.id
 
 
-class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
+class EvoEntity(CoordinatorEntity[EvoLocationCoordinator]):
     """Base for Evohome's Climate & WaterHeater entities."""
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
@@ -66,7 +65,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: EvoDataUpdateCoordinator,
+        coordinator: EvoLocationCoordinator,
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
         """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
@@ -110,7 +109,7 @@ class EvoChild(EvoEntity):
     _evo_id: str
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater | evo.Zone
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater | evo.Zone
     ) -> None:
         """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(coordinator, evo_device)
@@ -118,16 +117,23 @@ class EvoChild(EvoEntity):
         self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: list[EvoDayOfWeekDhwT] | None = None
         self._setpoints: dict[str, Any] = {}
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass, also listen for high-precision temps."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.account.async_add_listener(self._handle_coordinator_update)
+        )
+
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if (temp := self.coordinator.temps.get(self._evo_id)) is not None:
+        if (temp := self.coordinator.account.data.get(self._evo_id)) is not None:
             # use high-precision temps if available
             return temp
         return self._evo_device.temperature
@@ -139,56 +145,28 @@ class EvoChild(EvoEntity):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
-        if not self._schedule:
+        try:
+            this_sp = self._evo_device.this_switchpoint
+            next_sp = self._evo_device.next_switchpoint
+        except evo.NotFetchedError, evo.InvalidGetScheduleError:
+            return self._setpoints  # the coordinator has yet to fetch a valid schedule
+
+        if this_sp is None or next_sp is None:  # there is no schedule
             return self._setpoints
 
-        this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
-        next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
+        this_sp_dtm, this_sp_val = this_sp
+        next_sp_dtm, next_sp_val = next_sp
 
         key = "temp" if isinstance(self._evo_device, evo.Zone) else "state"
 
         self._setpoints = {
-            "this_sp_from": this_sp_dtm,
+            THIS_SP_FROM: this_sp_dtm,
             f"this_sp_{key}": this_sp_val,
-            "next_sp_from": next_sp_dtm,
+            NEXT_SP_FROM: next_sp_dtm,
             f"next_sp_{key}": next_sp_val,
         }
 
         return self._setpoints
-
-    async def _update_schedule(self, force_refresh: bool = False) -> None:
-        """Get the latest schedule, if any."""
-
-        async def get_schedule() -> None:
-            try:
-                schedule = await self.coordinator.call_client_api(
-                    self._evo_device.get_schedule(),  # type: ignore[arg-type]
-                    request_refresh=False,
-                )
-            except evo.InvalidScheduleError as err:
-                _LOGGER.warning(
-                    "%s: Unable to retrieve a valid schedule: %s",
-                    self._evo_device,
-                    err,
-                )
-                self._schedule = []
-                return
-            else:
-                self._schedule = schedule  # type: ignore[assignment]
-
-            _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
-
-        if (
-            force_refresh
-            or self._schedule is None
-            or (
-                (until := self._setpoints.get("next_sp_from")) is not None
-                and until < dt_util.utcnow()
-            )
-        ):  # must use self._setpoints, not self.setpoints
-            await get_schedule()
-
-        _ = self.setpoints  # update the setpoints attr
 
     @callback
     @override
@@ -201,9 +179,3 @@ class EvoChild(EvoEntity):
         }
 
         super()._handle_coordinator_update()
-
-    @override
-    async def update_attrs(self) -> None:
-        """Update the entity's extra state attrs."""
-        await self._update_schedule()
-        await super().update_attrs()

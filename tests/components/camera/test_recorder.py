@@ -3,6 +3,8 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import camera
 from homeassistant.components.recorder import Recorder
@@ -16,9 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)

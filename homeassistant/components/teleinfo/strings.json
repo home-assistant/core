@@ -26,9 +26,6 @@
   },
   "entity": {
     "sensor": {
-      "apparent_power": {
-        "name": "Apparent power"
-      },
       "base_index": {
         "name": "Index"
       },

@@ -5,29 +5,23 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
-
-from tests.common import MockConfigEntry
 
 ALL_LIGHT_FIXTURES = ["dimmer", "wlightbox_s", "wlightbox"]
 
@@ -53,6 +47,7 @@ def dimmer_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
     type(product).model = PropertyMock(return_value="dimmerBox")
+    type(product).product = PropertyMock(return_value="dimmerBox")
     return (feature, "light.my_dimmer")
 
 
@@ -106,7 +101,7 @@ async def test_dimmer_on(dimmer, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -129,8 +124,8 @@ async def test_dimmer_on_with_brightness(dimmer, hass: HomeAssistant) -> None:
     feature_mock.apply_brightness = apply
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_BRIGHTNESS: 202},
+        LightService.TURN_ON,
+        {"entity_id": entity_id, LightServiceArgument.BRIGHTNESS: 202},
         blocking=True,
     )
 
@@ -146,7 +141,7 @@ async def test_dimmer_off(dimmer, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -175,6 +170,7 @@ def wlightboxs_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
     type(product).model = PropertyMock(return_value="wLightBoxS")
+    type(product).product = PropertyMock(return_value="wLightBoxS")
     return (feature, "light.my_wlightboxs")
 
 
@@ -229,7 +225,7 @@ async def test_wlightbox_s_on(wlightbox_s, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -260,6 +256,7 @@ def wlightbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
     return (feature, "light.my_wlightbox")
 
 
@@ -286,6 +283,7 @@ def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
     return feature, "light.my_wlightbox"
 
 
@@ -313,8 +311,11 @@ async def test_wlightbox_on_color_temp(
     await async_setup_entity(hass, entity_id)
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_COLOR_TEMP_KELVIN: kelvin_requested},
+        LightService.TURN_ON,
+        {
+            "entity_id": entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: kelvin_requested,
+        },
         blocking=True,
     )
 
@@ -374,8 +375,11 @@ async def test_wlightbox_on_rgbw(wlightbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_RGBW_COLOR: (0xC1, 0xD2, 0xF3, 0xC7)},
+        LightService.TURN_ON,
+        {
+            "entity_id": entity_id,
+            LightServiceArgument.RGBW_COLOR: (0xC1, 0xD2, 0xF3, 0xC7),
+        },
         blocking=True,
     )
 
@@ -392,7 +396,7 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass: HomeAssistant) -> Non
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -411,8 +415,8 @@ async def test_wlightbox_turn_on_with_zero_brightness_turns_off(
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_BRIGHTNESS: 0},
+        LightService.TURN_ON,
+        {"entity_id": entity_id, LightServiceArgument.BRIGHTNESS: 0},
         blocking=True,
     )
 
@@ -429,7 +433,7 @@ async def test_wlightbox_off(wlightbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -475,7 +479,7 @@ async def test_turn_on_failure(
     with pytest.raises(HomeAssistantError) as info:
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {"entity_id": entity_id},
             blocking=True,
         )
@@ -493,8 +497,8 @@ async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as info:
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
-            {"entity_id": entity_id, ATTR_EFFECT: "NOT IN LIST"},
+            LightService.TURN_ON,
+            {"entity_id": entity_id, LightServiceArgument.EFFECT: "NOT IN LIST"},
             blocking=True,
         )
 
@@ -503,8 +507,8 @@ async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_EFFECT: "POLICE"},
+        LightService.TURN_ON,
+        {"entity_id": entity_id, LightServiceArgument.EFFECT: "POLICE"},
         blocking=True,
     )
 
@@ -571,6 +575,7 @@ async def test_multichannel_light_name(
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
 
     await async_setup_entity(hass, entity_id)
     state = hass.states.get(entity_id)

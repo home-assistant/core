@@ -5,8 +5,6 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -16,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
-from .utils import get_device_serial, is_supported
+from .utils import is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +52,7 @@ def _build_entities(
     return [
         ViCareButton(
             description,
-            get_device_serial(device.api),
-            device.config,
-            device.api,
+            device,
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
@@ -86,12 +82,10 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     def __init__(
         self,
         description: ViCareButtonEntityDescription,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
     ) -> None:
         """Initialize the button."""
-        super().__init__(description.key, device_serial, device_config, device)
+        super().__init__(description.key, device)
         self.entity_description = description
 
     @override

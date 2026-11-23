@@ -3,11 +3,17 @@
 from enum import StrEnum
 import logging
 
-from tesla_fleet_api.const import Scope
+from tesla_fleet_api.const import SERVERS, Scope
 
 DOMAIN = "tesla_fleet"
 
 CONF_REFRESH_TOKEN = "refresh_token"
+
+# Regions the user can register in; China uses separate infrastructure.
+REGION_SERVERS: dict[str, str] = {
+    region: server for region, server in SERVERS.items() if region != "cn"
+}
+REGIONS = list(REGION_SERVERS)
 
 LOGGER = logging.getLogger(__package__)
 

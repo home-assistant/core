@@ -7,6 +7,7 @@ from construct.core import ChecksumError
 from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.xiaomi_miio import const
@@ -16,8 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
@@ -88,10 +87,10 @@ def xiaomi_miio_connect_fixture():
             return_value=TEST_CLOUD_DEVICES_1,
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=None
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=None
         ),
     ):
         yield
@@ -145,6 +144,13 @@ async def test_config_flow_step_gateway_connect_error(hass: HomeAssistant) -> No
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
     """Test a successful config flow."""
@@ -182,6 +188,7 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
@@ -215,6 +222,7 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -> None:
@@ -261,6 +269,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC2,
     }
+    assert result["result"].unique_id == TEST_MAC2
 
 
 async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None:
@@ -284,6 +293,17 @@ async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_gateway_cloud_login_error(hass: HomeAssistant) -> None:
@@ -328,6 +348,7 @@ async def test_config_flow_gateway_cloud_login_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_login_error"}
 
     with patch(
@@ -372,6 +393,7 @@ async def test_config_flow_gateway_cloud_no_devices(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_no_devices"}
 
     with patch(
@@ -470,6 +492,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
@@ -564,6 +587,13 @@ async def test_config_flow_step_device_connect_error(hass: HomeAssistant) -> Non
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_step_unknown_device(hass: HomeAssistant) -> None:
     """Test config flow, unknown device error."""
@@ -599,6 +629,13 @@ async def test_config_flow_step_unknown_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "unknown_device"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_step_device_manual_model_error(hass: HomeAssistant) -> None:
     """Test config flow, device connection error, model None."""
@@ -630,6 +667,7 @@ async def test_config_flow_step_device_manual_model_error(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -953,6 +991,15 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_CLOUD_SUBDEVICES: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth flow."""
@@ -1013,3 +1060,179 @@ async def test_reauth(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+
+
+def _checksum_error() -> DeviceException:
+    """Return a device exception caused by a wrong token."""
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+    return error
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_CLOUD_USERNAME: None,
+            const.CONF_CLOUD_PASSWORD: None,
+            const.CONF_CLOUD_COUNTRY: None,
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the host and token."""
+    new_token = "abcdefabcdefabcdefabcdefabcdefab"
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: new_token},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+        CONF_HOST: TEST_HOST2,
+        CONF_TOKEN: new_token,
+        CONF_MODEL: TEST_MODEL,
+        CONF_MAC: TEST_MAC,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(DeviceException({}), "cannot_connect", id="cannot_connect"),
+        pytest.param(_checksum_error(), "wrong_token", id="wrong_token"),
+        pytest.param(Exception({}), "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == TEST_HOST2
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the host points to another device."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=get_mock_info(mac_address=TEST_MAC2),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_reconfigure_entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry set up with a manual model keeps its ID."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=None,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: None,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.unique_id is None
+
+
+async def test_reconfigure_entry_without_unique_id_already_configured(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring an entry without unique ID to another entry's device."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=None,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST2,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: None,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.unique_id is None

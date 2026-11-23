@@ -72,7 +72,7 @@ rules:
     comment: |
       This integration does not have any entities that are disabled by default.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:

@@ -1,9 +1,9 @@
 """Tests for derivative diagnostics."""
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from homeassistant.core import HomeAssistant
 
 
 async def test_diagnostics(
@@ -21,4 +21,4 @@ async def test_diagnostics(
     assert isinstance(result, dict)
     assert result["config_entry"]["domain"] == "derivative"
     assert result["config_entry"]["options"]["name"] == "My derivative"
-    assert result["entity"][0]["entity_id"] == "sensor.my_derivative"
+    assert result["entity"][0]["entity_id"] == "sensor.mock_title_my_derivative"

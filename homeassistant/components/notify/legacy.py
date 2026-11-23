@@ -23,14 +23,11 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
-    ATTR_TITLE,
     DOMAIN,
     LOGGER,
     NOTIFY_SERVICE_SCHEMA,
-    SERVICE_NOTIFY,
+    NotifyService,
+    NotifyServiceArgument,
 )
 
 CONF_FIELDS = "fields"
@@ -128,7 +125,7 @@ def async_setup_legacy(
 
             conf_name = p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME)
             target_service_name_prefix = conf_name or integration_name
-            service_name = slugify(conf_name or SERVICE_NOTIFY)
+            service_name = slugify(conf_name or NotifyService.NOTIFY)
 
             await notify_service.async_setup(
                 hass, service_name, target_service_name_prefix
@@ -236,18 +233,24 @@ class BaseNotificationService:
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
-        message: str = service.data[ATTR_MESSAGE]
+        message: str = service.data[NotifyServiceArgument.MESSAGE]
         title: str | None
-        if title := service.data.get(ATTR_TITLE):
-            kwargs[ATTR_TITLE] = title
+        if title := service.data.get(NotifyServiceArgument.TITLE):
+            kwargs[NotifyServiceArgument.TITLE] = title
 
         if self.registered_targets.get(service.service) is not None:
-            kwargs[ATTR_TARGET] = [self.registered_targets[service.service]]
-        elif service.data.get(ATTR_TARGET) is not None:
-            kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
+            kwargs[NotifyServiceArgument.TARGET] = [
+                self.registered_targets[service.service]
+            ]
+        elif service.data.get(NotifyServiceArgument.TARGET) is not None:
+            kwargs[NotifyServiceArgument.TARGET] = service.data.get(
+                NotifyServiceArgument.TARGET
+            )
 
-        kwargs[ATTR_MESSAGE] = message
-        kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+        kwargs[NotifyServiceArgument.MESSAGE] = message
+        kwargs[NotifyServiceArgument.DATA] = service.data.get(
+            NotifyServiceArgument.DATA
+        )
 
         await self.async_send_message(**kwargs)
 
@@ -285,6 +288,8 @@ class BaseNotificationService:
                 ):
                     continue
                 self.registered_targets[target_name] = target
+                # Cannot be moved: actions are registered per legacy platform
+                # pylint: disable-next=home-assistant-action-registered-outside-services-module
                 self.hass.services.async_register(
                     DOMAIN,
                     target_name,
@@ -295,10 +300,12 @@ class BaseNotificationService:
                 service_desc = {
                     CONF_NAME: f"Send a notification via {target_name}",
                     CONF_DESCRIPTION: (
-                        "Sends a notification message using the"
-                        f" {target_name} integration."
+                        "This notification action is provided by a notification "
+                        "integration or notification group. To change where "
+                        "notifications are sent or which options are available, "
+                        "update that integration or group."
                     ),
-                    CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                    CONF_FIELDS: self.services_dict[NotifyService.NOTIFY][CONF_FIELDS],
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
@@ -312,6 +319,7 @@ class BaseNotificationService:
         if self.hass.services.has_service(DOMAIN, self._service_name):
             return
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self.hass.services.async_register(
             DOMAIN,
             self._service_name,
@@ -323,9 +331,11 @@ class BaseNotificationService:
         service_desc = {
             CONF_NAME: f"Send a notification with {self._service_name}",
             CONF_DESCRIPTION: (
-                f"Sends a notification message using the {self._service_name} service."
+                "This notification action is provided by a notification integration "
+                "or notification group. To change where notifications are sent or "
+                "which options are available, update that integration or group."
             ),
-            CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+            CONF_FIELDS: self.services_dict[NotifyService.NOTIFY][CONF_FIELDS],
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
 

@@ -4,14 +4,20 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "The AEMET OpenData API key is no longer valid. AEMET API keys expire periodically, so you need to generate a new one at {api_key_url}"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "name": "Name of the integration"
         },
         "description": "To generate API key go to {api_key_url}"
@@ -23,6 +29,14 @@
       "weather_radar": {
         "name": "Weather radar"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_api_key": {
+      "message": "The AEMET OpenData API key is invalid or has expired"
+    },
+    "town_not_found": {
+      "message": "No AEMET town found for coordinates {latitude}, {longitude}"
     }
   },
   "options": {

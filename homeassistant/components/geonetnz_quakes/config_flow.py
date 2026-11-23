@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -24,12 +24,12 @@ from .const import (
     DOMAIN,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
-            vol.Coerce(int), vol.Range(min=-1, max=8)
+        probatio.Optional(CONF_MMI, default=DEFAULT_MMI): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=-1, max=8)
         ),
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
     }
 )
 

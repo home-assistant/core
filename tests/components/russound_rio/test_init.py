@@ -6,6 +6,7 @@ from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.connection import RussoundSerialConnectionHandler
 from aiorussound.rio.models import CallbackType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.russound_rio.const import CONF_BAUDRATE, DOMAIN, TYPE_TCP
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import mock_state_update, setup_integration
 from .const import HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_not_ready(
@@ -43,8 +42,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
