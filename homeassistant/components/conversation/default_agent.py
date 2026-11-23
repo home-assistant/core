@@ -103,7 +103,7 @@ _DEVICE_REGISTRY_UPDATE_FIELDS = [
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
-# Slot value metadata: the areas a matched name, area or floor covers
+# Keys of the metadata attached to slot values and the satellite area
 _METADATA_AREA_IDS = "area_ids"
 _METADATA_FROM_CONTEXT = "from_context"
 
@@ -641,10 +641,6 @@ class DefaultAgent(ConversationEntity):
             user_input.satellite_id, user_input.device_id
         )
         tool_args = {name: value["value"] for name, value in slots.items()}
-        async_conversation_trace_append(
-            ConversationTraceEventType.TOOL_CALL,
-            {"intent_name": intent_name, "slots": tool_args},
-        )
         tool_input = llm.ToolInput(
             tool_name=intent_name,
             tool_args=tool_args,
@@ -700,8 +696,8 @@ class DefaultAgent(ConversationEntity):
             )
 
         if discard_match_errors and intent_response.error_code in _MATCH_ERROR_CODES:
-            # The caller hands the turn to another agent, which must not see
-            # a tool call it did not make
+            # The caller moves on to another candidate or agent, so this
+            # attempt must leave no tool call behind
             return intent_response
 
         if (
@@ -720,6 +716,10 @@ class DefaultAgent(ConversationEntity):
                 )
                 intent_response.async_set_speech(speech)
 
+        async_conversation_trace_append(
+            ConversationTraceEventType.TOOL_CALL,
+            {"intent_name": intent_name, "slots": tool_args},
+        )
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id=user_input.agent_id,
@@ -1705,10 +1705,10 @@ class DefaultAgent(ConversationEntity):
         results = await self.async_recognize_intents(
             user_input, strict_intents_only=True
         )
-        if not results or (
-            intent_filter is not None
-            and any(intent_filter(result) for result in results)
-        ):
+        if intent_filter is not None:
+            results = [result for result in results if not intent_filter(result)]
+
+        if not results:
             # No error message on failed match
             return None
 
