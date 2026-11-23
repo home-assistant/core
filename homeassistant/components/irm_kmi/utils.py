@@ -2,9 +2,10 @@
 
 from typing import TYPE_CHECKING
 
-from irm_kmi_api import RadarStyle
+from irm_kmi_api import RadarForecast, RadarStyle
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_DARK_MODE, CONF_LANGUAGE_OVERRIDE, CONF_RADAR_STYLE, LANGS
 
@@ -32,3 +33,12 @@ def radar_options(config_entry: IrmKmiConfigEntry) -> tuple[RadarStyle, bool]:
         ),
         config_entry.options.get(CONF_DARK_MODE, False),
     )
+
+def current_radar_frame(radar_forecast: list[RadarForecast]) -> int:
+    """Return the index of the last radar frame at or before now, clamped to 0."""
+    now = dt_util.utcnow()
+    started = sum(
+        dt_util.parse_datetime(forecast["datetime"], raise_on_error=True) <= now
+        for forecast in radar_forecast
+    )
+    return max(started - 1, 0)

@@ -192,3 +192,76 @@ async def test_form_duplicate_during_validation(
     assert flow1_result["reason"] == "already_configured"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauthentication stores the new API credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_user_input(username="old-user", password="old-pass"),
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    username_key = next(
+        key for key in result["data_schema"].schema if key == CONF_USERNAME
+    )
+    assert username_key.description == {"suggested_value": "old-user"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == _user_input(username="new-user", password="new-pass")
+    mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (RainbowMinerAuthError("Unauthorized"), "invalid_auth"),
+        (RainbowMinerConnectionError("Connection refused"), "cannot_connect"),
+    ],
+)
+async def test_reauth_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_rainbowminer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reauthentication shows errors and can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_rainbowminer_client.get_status.side_effect = exception
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    username_key = next(
+        key for key in result["data_schema"].schema if key == CONF_USERNAME
+    )
+    assert username_key.description == {"suggested_value": "new-user"}
+
+    mock_rainbowminer_client.get_status.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == _user_input(
+        username="new-user", password="new-pass"
+    )

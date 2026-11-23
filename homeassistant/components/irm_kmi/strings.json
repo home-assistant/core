@@ -1,6 +1,6 @@
 {
   "common": {
-    "language_override_description": "Override the Home Assistant language for forecast texts and the radar hint."
+    "language_override_description": "Override the Home Assistant language for forecast texts, warnings and the radar hint."
   },
   "config": {
     "abort": {
@@ -23,6 +23,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning",
+        "state_attributes": {
+          "warnings": {
+            "name": "Warnings"
+          }
+        }
+      }
+    },
     "image": {
       "radar": {
         "name": "Radar",
@@ -34,6 +44,93 @@
       }
     },
     "sensor": {
+      "next_warning": {
+        "name": "Next warning"
+      },
+      "pollen_alder": {
+        "name": "Alder pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "Green",
+          "none": "None",
+          "orange": "Orange",
+          "purple": "Purple",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      },
+      "pollen_ash": {
+        "name": "Ash pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
+      "pollen_birch": {
+        "name": "Birch pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
+      "pollen_grasses": {
+        "name": "Grass pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
+      "pollen_hazel": {
+        "name": "Hazel pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
+      "pollen_mugwort": {
+        "name": "Mugwort pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
+      "pollen_oak": {
+        "name": "Oak pollen",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "green": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::green%]",
+          "none": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::none%]",
+          "orange": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::orange%]",
+          "purple": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::purple%]",
+          "red": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::red%]",
+          "yellow": "[%key:component::irm_kmi::entity::sensor::pollen_alder::state::yellow%]"
+        }
+      },
       "uv_index": {
         "name": "UV index"
       },
@@ -48,6 +145,9 @@
     },
     "radar_unavailable": {
       "message": "The rain radar image could not be downloaded."
+    },
+    "no_radar_forecast": {
+      "message": "The rain radar reported no forecast for this location."
     }
   },
   "options": {
@@ -84,6 +184,18 @@
         "standard_style": "Standard",
         "yellow_red_style": "Yellow and red"
       }
+    }
+  },
+  "services": {
+    "get_forecasts_radar": {
+      "description": "Retrieves the available rain radar forecast.",
+      "fields": {
+        "include_past_forecasts": {
+          "description": "Whether to also return past radar frames. The current frame is always returned.",
+          "name": "Include past forecasts"
+        }
+      },
+      "name": "Get radar forecasts"
     }
   },
   "title": "Royal Meteorological Institute of Belgium"

@@ -51,6 +51,11 @@ SERVER_SOFTWARE = (
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
+# c-ares derives per-try timeouts from observed server latency with a 250 ms
+# floor, so fast cached answers leave cache misses little time for upstream
+# recursion. Each extra try doubles the timeout of the previous one.
+DNS_RESOLVER_TRIES = 4
+
 _LOCALHOST = "localhost"
 _TRAILING_LOCAL_HOST = f".{_LOCALHOST}"
 
@@ -514,4 +519,7 @@ def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
 
 @callback
 def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+    return HassAsyncDNSResolver(
+        async_zeroconf=zeroconf.async_get_async_zeroconf(hass),
+        tries=DNS_RESOLVER_TRIES,
+    )

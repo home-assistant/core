@@ -32,11 +32,11 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_VOLUME_SET,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -104,8 +104,8 @@ async def test_select_source(hass: HomeAssistant, mock_client: MagicMock) -> Non
     """Test a source is selected by the hub's index, not its list position."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "hdmi"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "hdmi"},
         blocking=True,
     )
     mock_client.async_select_source.assert_awaited_once_with(6)
@@ -130,8 +130,8 @@ async def test_source_without_key(hass: HomeAssistant, mock_client: MagicMock) -
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "USBDISC"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "USBDISC"},
         blocking=True,
     )
     mock_client.async_select_source.assert_awaited_once_with(6)
@@ -144,8 +144,11 @@ async def test_select_unknown_source(
     with pytest.raises(ServiceValidationError) as raised:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Phono"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "Phono",
+            },
             blocking=True,
         )
     assert raised.value.translation_key == "invalid_source"
@@ -156,8 +159,11 @@ async def test_set_volume(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test the volume is sent in whole percent."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.415},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.415,
+        },
         blocking=True,
     )
     mock_client.async_set_volume.assert_awaited_once_with(42)
@@ -198,8 +204,8 @@ async def test_command_errors(
     with pytest.raises(HomeAssistantError) as raised:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            MediaPlayerService.MEDIA_PAUSE,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     assert raised.value.translation_key == key
