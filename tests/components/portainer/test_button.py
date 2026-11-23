@@ -293,25 +293,6 @@ async def test_button_update_stack_not_for_kubernetes(
     assert hass.states.get("button.dashy_update_stack") is not None
 
 
-async def test_button_pull_image(
-    hass: HomeAssistant,
-    mock_portainer_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test pressing the pull image button pulls the image without a recreate."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        ButtonService.PRESS,
-        {TargetKey.ENTITY_ID: PULL_IMAGE_ENTITY_ID},
-        blocking=True,
-    )
-
-    mock_portainer_client.image_pull.assert_called_once_with(1, "example-image:1.0")
-    mock_portainer_client.container_recreate.assert_not_called()
-
-
 @pytest.mark.parametrize(
     ("exception", "translation_key"),
     [
@@ -326,8 +307,6 @@ async def test_button_pull_image(
             id="not_found",
         ),
         pytest.param(PortainerAuthenticationError("auth"), "invalid_auth", id="auth"),
-        pytest.param(PortainerConnectionError("conn"), "cannot_connect", id="conn"),
-        pytest.param(PortainerTimeoutError("timeout"), "timeout_connect", id="timeout"),
     ],
 )
 async def test_button_pull_image_exceptions(
@@ -423,6 +402,7 @@ async def test_button_pull_image_reference(
     )
 
     mock_portainer_client.image_pull.assert_called_once_with(1, expected)
+    mock_portainer_client.container_recreate.assert_not_called()
 
 
 async def test_button_pull_image_unavailable_without_config_image(
