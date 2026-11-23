@@ -24,13 +24,10 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -103,12 +100,12 @@ async def test_light_state_and_services(
     device.calls.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_entry.entity_id,
-            ATTR_BRIGHTNESS: 200,
-            ATTR_COLOR_TEMP_KELVIN: 5000,
-            ATTR_EFFECT: "cinema",
+            TargetKey.ENTITY_ID: entity_entry.entity_id,
+            LightServiceArgument.BRIGHTNESS: 200,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 5000,
+            LightServiceArgument.EFFECT: "cinema",
         },
         blocking=True,
     )
@@ -121,8 +118,11 @@ async def test_light_state_and_services(
     device.calls.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_entry.entity_id, ATTR_EFFECT: EFFECT_OFF},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_entry.entity_id,
+            LightServiceArgument.EFFECT: EFFECT_OFF,
+        },
         blocking=True,
     )
     assert device.calls == [("set_attribute", "effect", "none")]
@@ -130,8 +130,8 @@ async def test_light_state_and_services(
     device.calls.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_entry.entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_entry.entity_id},
         blocking=True,
     )
     assert device.calls == [("set_attribute", "power", False)]
@@ -173,8 +173,8 @@ async def test_light_turn_on_power_handling(
     device.calls.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_entry.entity_id, **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_entry.entity_id, **service_data},
         blocking=True,
     )
     assert device.calls == expected_calls
@@ -310,7 +310,7 @@ async def test_light_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )

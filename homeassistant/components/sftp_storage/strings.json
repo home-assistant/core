@@ -34,5 +34,25 @@
         "description": "Set up SFTP Storage"
       }
     }
+  },
+  "exceptions": {
+    "backup_location_unavailable": {
+      "message": "Cannot open the backup location {backup_location} on {host}. Make sure the directory exists and the user can access it"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to the SSH server {host}"
+    },
+    "delete_failed": {
+      "message": "Failed to delete backup {backup_id}"
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for {username}@{host}. Check the password or private key"
+    },
+    "list_failed": {
+      "message": "Failed to list backups"
+    },
+    "sftp_session_failed": {
+      "message": "Cannot open an SFTP session on {host}"
+    }
   }
 }

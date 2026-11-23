@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,8 +41,8 @@ async def test_main_services(
     """Test platform services."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
     assert mock_roku.remote.call_count == 1
@@ -50,8 +50,8 @@ async def test_main_services(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID},
         blocking=True,
     )
     assert mock_roku.remote.call_count == 2
@@ -59,8 +59,8 @@ async def test_main_services(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_COMMAND: ["home"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID, RemoteServiceArgument.COMMAND: ["home"]},
         blocking=True,
     )
     assert mock_roku.remote.call_count == 3

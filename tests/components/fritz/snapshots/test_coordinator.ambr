@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_async_trigger_cleanup_removes_tracked_device_entities
+  list([
+    'AA:BB:CC:00:11:22_internet_access',
+    'AA:BB:CC:00:11:22_link_max_download_rate',
+    'AA:BB:CC:00:11:22_link_max_upload_rate',
+    'AA:BB:CC:00:11:22_tracker',
+    'AA:BB:CC:00:11:22_wake_on_lan',
+  ])
+# ---

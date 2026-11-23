@@ -203,18 +203,18 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     @property
     @override
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
-        min_value = DEFAULT_MIN_HUMIDITY
+        min_value: float = DEFAULT_MIN_HUMIDITY
         if self._setpoint and self._setpoint.metadata.min:
             min_value = self._setpoint.metadata.min
         return min_value
 
     @property
     @override
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
-        max_value = DEFAULT_MAX_HUMIDITY
+        max_value: float = DEFAULT_MAX_HUMIDITY
         if self._setpoint and self._setpoint.metadata.max:
             max_value = self._setpoint.metadata.max
         return max_value
