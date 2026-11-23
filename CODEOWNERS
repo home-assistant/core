@@ -562,6 +562,8 @@ AGENTS.md @home-assistant/core
 /tests/components/eq3btsmart/ @eulemitkeule @dbuezas
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
+/homeassistant/components/esi_r2d7/ @davidfi01
+/tests/components/esi_r2d7/ @davidfi01
 /homeassistant/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
 /tests/components/esphome/ @jesserockz @kbx81 @bdraco @arturpragacz
 /homeassistant/components/essent/ @jaapp

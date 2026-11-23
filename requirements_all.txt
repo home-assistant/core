@@ -1019,6 +1019,9 @@ epson-projector==0.6.0
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
 
+# homeassistant.components.esi_r2d7
+esi-r2d7==0.1.0
+
 # homeassistant.components.pvpc_hourly_pricing
 esios_api==4.4.0
 

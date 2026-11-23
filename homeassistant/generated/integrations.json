@@ -4130,6 +4130,18 @@
       ],
       "supported_by": "onewire"
     },
+    "esi_r2d7": {
+      "name": "ESI R2D7",
+      "integration_type": "hub",
+      "categories": [
+        "blinds_curtains"
+      ],
+      "connectivity": [
+        "serial"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "esphome": {
       "name": "ESPHome",
       "integration_type": "device",

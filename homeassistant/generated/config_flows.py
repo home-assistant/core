@@ -238,6 +238,7 @@ FLOWS = {
         "epson",
         "eq3btsmart",
         "escea",
+        "esi_r2d7",
         "esphome",
         "essent",
         "eufylife_ble",
