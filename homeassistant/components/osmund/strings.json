@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_format": "This is not an Osmund key. A key starts with osm_.",
+      "missing_scope": "The key cannot read prices. Create a new key on Min side.",
+      "no_access": "None of your locations has API access.",
+      "unavailable": "The Osmund API is busy right now. Try again in a minute.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The key starts with osm_ and is shown only once on Min side."
+        },
+        "description": "Create a personal key on [Min side]({key_url}) under API-adgang, and paste it here. The key only reads. [About the Osmund API]({docs_url})"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "price_average_today": {
+        "name": "Average electricity price today"
+      },
+      "price_highest_today": {
+        "name": "Highest electricity price today"
+      },
+      "price_highest_today_time": {
+        "name": "Time of highest electricity price today"
+      },
+      "price_lowest_today": {
+        "name": "Lowest electricity price today"
+      },
+      "price_lowest_today_time": {
+        "name": "Time of lowest electricity price today"
+      },
+      "price_next": {
+        "name": "Next electricity price"
+      },
+      "price_now": {
+        "name": "Electricity price now"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "The Osmund API answered with an error: {error}"
+    },
+    "cannot_connect": {
+      "message": "Could not reach the Osmund API."
+    },
+    "invalid_auth": {
+      "message": "The Osmund key is not valid, has expired or has been revoked."
+    },
+    "missing_scope": {
+      "message": "The Osmund key cannot read prices."
+    },
+    "unavailable": {
+      "message": "The Osmund API is busy right now."
+    }
+  }
+}

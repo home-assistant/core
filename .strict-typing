@@ -481,6 +481,7 @@ homeassistant.components.openuv.*
 homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
+homeassistant.components.osmund.*
 homeassistant.components.osram_infrared.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*

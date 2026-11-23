@@ -1918,6 +1918,9 @@ oralb-ble==1.1.3
 # homeassistant.components.orvibo
 orvibo==1.1.2
 
+# homeassistant.components.osmund
+osmund==0.1.0
+
 # homeassistant.components.ouman_eh_800
 ouman-eh-800-api==2.0.0
 

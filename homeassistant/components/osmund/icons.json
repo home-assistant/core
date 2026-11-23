@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "price_average_today": {
+        "default": "mdi:cash-multiple"
+      },
+      "price_highest_today": {
+        "default": "mdi:cash-plus"
+      },
+      "price_highest_today_time": {
+        "default": "mdi:clock-outline"
+      },
+      "price_lowest_today": {
+        "default": "mdi:cash-minus"
+      },
+      "price_lowest_today_time": {
+        "default": "mdi:clock-outline"
+      },
+      "price_next": {
+        "default": "mdi:cash"
+      },
+      "price_now": {
+        "default": "mdi:cash"
+      }
+    }
+  }
+}

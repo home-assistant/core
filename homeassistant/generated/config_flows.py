@@ -622,6 +622,7 @@ FLOWS = {
         "opower",
         "oralb",
         "orvibo",
+        "osmund",
         "osoenergy",
         "osram_infrared",
         "otbr",
