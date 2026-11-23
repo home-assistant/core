@@ -618,53 +618,20 @@ async def test_reproducing_states(
         valid_position_tilt_calls.remove(call.data)
 
 
-@pytest.mark.parametrize(
-    ("features", "target_state", "target_tilt", "expected_service", "expected_data"),
-    [
-        pytest.param(
-            CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT,
-            CoverState.CLOSED,
-            50,
-            SERVICE_OPEN_COVER_TILT,
-            {},
-            id="open_tilt",
-        ),
-        pytest.param(
-            CoverEntityFeature.SET_TILT_POSITION,
-            CoverState.OPEN,
-            None,
-            SERVICE_SET_COVER_TILT_POSITION,
-            {ATTR_TILT_POSITION: 50},
-            id="set_tilt_position",
-        ),
-    ],
-)
-async def test_reproducing_open_tilt_position(
-    hass: HomeAssistant,
-    features: CoverEntityFeature,
-    target_state: CoverState,
-    target_tilt: int | None,
-    expected_service: str,
-    expected_data: dict[str, int],
-) -> None:
+async def test_reproducing_open_tilt_position(hass: HomeAssistant) -> None:
     """Test reproducing open slats uses the open tilt position of the cover."""
     hass.states.async_set(
         "cover.entity",
         CoverState.OPEN,
         {
             ATTR_CURRENT_TILT_POSITION: 0,
-            ATTR_SUPPORTED_FEATURES: features,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
             CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
         },
     )
-    calls = async_mock_service(hass, DOMAIN, expected_service)
-    target_attributes = (
-        {} if target_tilt is None else {ATTR_CURRENT_TILT_POSITION: target_tilt}
-    )
+    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_TILT_POSITION)
 
-    await async_reproduce_state(
-        hass, [State("cover.entity", target_state, target_attributes)]
-    )
+    await async_reproduce_state(hass, [State("cover.entity", CoverState.OPEN)])
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "cover.entity", **expected_data}
+    assert calls[0].data == {"entity_id": "cover.entity", ATTR_TILT_POSITION: 50}

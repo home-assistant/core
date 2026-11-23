@@ -286,6 +286,15 @@ async def test_tilt_capability_attributes(
             "close",
             id="pergola_open_at_100",
         ),
+        pytest.param(
+            {
+                "current_cover_tilt_position": 0,
+                "tilt_start_angle": -75,
+                "tilt_end_angle": 75,
+            },
+            "open",
+            id="closed_at_0_with_slats_that_do_not_close_fully",
+        ),
     ],
 )
 async def test_toggle_tilt(

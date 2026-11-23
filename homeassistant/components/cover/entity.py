@@ -225,11 +225,8 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     def _is_tilt_at_closed_end(self) -> bool:
         """Return if the tilt is at an end of the scale where the slats are closed."""
-        if (tilt := self.current_cover_tilt_position) not in (0, 100):
-            return False
-        if (angles := self._tilt_angles()) is not None:
-            return abs(angles[0 if tilt == 0 else 1]) == 90
-        return tilt != self._resolved_open_tilt_position()
+        tilt = self.current_cover_tilt_position
+        return tilt in (0, 100) and tilt != self._resolved_open_tilt_position()
 
     @property
     @override
