@@ -16,6 +16,7 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 0
 
 EVENT_MOTION = "motion"
+ATTR_ALARM_TIME = "alarm_time"
 
 EVENT_TYPE = EventEntityDescription(
     key="motion",
@@ -50,6 +51,17 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
         # The alarm that is already there at startup is not a new event.
         self._last_alarm_time = self.data.get("last_alarm_time")
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last handled alarm when the camera does not report one yet."""
+        await super().async_added_to_hass()
+        if self._last_alarm_time is None and (
+            last_event := await self.async_get_last_event_data()
+        ):
+            self._last_alarm_time = (last_event.last_event_attributes or {}).get(
+                ATTR_ALARM_TIME
+            )
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -68,6 +80,7 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
             self._trigger_event(
                 EVENT_MOTION,
                 {
+                    ATTR_ALARM_TIME: last_alarm_time,
                     "alarm_type_code": self.data.get("last_alarm_type_code"),
                     "alarm_type_name": self.data.get("last_alarm_type_name"),
                 },

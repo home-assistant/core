@@ -5,11 +5,21 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyezvizapi.exceptions import PyEzvizError
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import setup_integration
@@ -71,6 +81,7 @@ async def test_event_on_new_alarm(
     state = hass.states.get(ENTITY_ID)
     assert state.state == "2026-11-17T12:01:00.000+00:00"
     assert state.attributes[ATTR_EVENT_TYPE] == "motion"
+    assert state.attributes["alarm_time"] == "2026-11-17 12:00:20"
     assert state.attributes["alarm_type_code"] == "10079"
     assert state.attributes["alarm_type_name"] == "Smart Detection Alarm"
 
@@ -153,3 +164,44 @@ async def test_event_kept_while_camera_offline(
         (STATE_UNAVAILABLE, STATE_UNKNOWN),
         (STATE_UNKNOWN, "2026-11-17T12:01:00.000+00:00"),
     ]
+
+
+async def test_handled_alarm_restored_after_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test an alarm handled before a reload does not fire again.
+
+    The first refresh after the reload has no alarm time, then the camera
+    reports the alarm that was already handled.
+    """
+    freezer.move_to("2026-11-17 12:00:00+00:00")
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(ENTITY_ID, "2026-11-17T11:00:00.000+00:00"),
+                {
+                    "last_event_type": "motion",
+                    "last_event_attributes": {
+                        "alarm_time": "2026-11-17 11:00:00",
+                        "alarm_type_code": "10079",
+                        "alarm_type_name": "Smart Detection Alarm",
+                    },
+                },
+            )
+        ],
+    )
+    mock_ezviz_client.load_cameras.return_value = _camera(None)
+
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == "2026-11-17T11:00:00.000+00:00"
+
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 11:00:00")
+    assert hass.states.get(ENTITY_ID).state == "2026-11-17T11:00:00.000+00:00"
+
+    # A new alarm still fires
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:30")
+    assert hass.states.get(ENTITY_ID).state == "2026-11-17T12:01:00.000+00:00"
