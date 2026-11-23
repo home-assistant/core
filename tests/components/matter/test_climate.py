@@ -22,7 +22,6 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     PRESET_NONE,
     ClimateEntityFeature,
-    ClimateService,
     HVACAction,
     HVACMode,
 )
