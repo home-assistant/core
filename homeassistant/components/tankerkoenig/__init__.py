@@ -6,7 +6,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
+from .coordinator import (
+    TankerkoenigConfigEntry,
+    TankerkoenigDataUpdateCoordinator,
+    station_cache,
+)
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -38,3 +42,10 @@ async def async_unload_entry(
 ) -> None:
     """Unload Tankerkoenig config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: TankerkoenigConfigEntry
+) -> None:
+    """Remove the cached station data of a removed config entry."""
+    await station_cache(hass, entry.entry_id).async_remove()
