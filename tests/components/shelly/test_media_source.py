@@ -44,6 +44,23 @@ async def test_root_lists_camera(
     assert child.can_play is False
 
 
+async def test_root_without_camera_entity(
+    hass: HomeAssistant,
+    mock_camera_storage: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the storage folder has no thumbnail when RTSP is disabled."""
+    monkeypatch.setitem(mock_camera_storage.config["camera:0"]["rtsp"], "enable", False)
+    assert await async_setup_component(hass, "media_source", {})
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    result = await media_source.async_browse_media(hass, "media-source://shelly")
+
+    assert result.children is not None
+    assert len(result.children) == 1
+    assert result.children[0].thumbnail is None
+
+
 @pytest.mark.parametrize(
     "status",
     [
