@@ -82,7 +82,10 @@ from .const import (
 from .helpers import FixedSizeQueueLogHandler
 from .models import auto_login_failure_key
 from .prefs import CloudPreferences
-from .repairs import async_manage_legacy_subscription_issue
+from .repairs import (
+    async_manage_client_certificate_issue,
+    async_manage_legacy_subscription_issue,
+)
 from .services import async_setup_services
 from .subscription import async_subscription_info
 
@@ -362,12 +365,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
-    # Client certificates can't be required without a CA to verify them against
-    if (
-        prefs.remote_require_client_certificate
-        and hass.http.ssl_peer_certificate is None
-    ):
-        await prefs.async_update(remote_require_client_certificate=False)
+    async_manage_client_certificate_issue(hass, prefs.remote_require_client_certificate)
 
     # Initialize Cloud
     websession = async_get_clientsession(hass)
@@ -549,6 +547,10 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
         nonlocal cur_remote_enabled
         nonlocal cur_remote_ssl_peer_certificate
         nonlocal cur_cloudhooks
+
+        async_manage_client_certificate_issue(
+            hass, prefs.remote_require_client_certificate
+        )
 
         # Lock protects cur_ state variables from concurrent updates
         async with lock:

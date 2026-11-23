@@ -50,7 +50,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -808,16 +808,20 @@ async def test_assistant_settings_migrated_at_startup(
 
 
 @pytest.mark.parametrize(
-    ("ssl_peer_certificate", "expected"),
-    [(None, False), ("/ssl/client_ca.pem", True)],
+    ("ssl_peer_certificate", "issue_expected"),
+    [
+        pytest.param(None, True, id="no_ca"),
+        pytest.param("/ssl/client_ca.pem", False, id="ca"),
+    ],
 )
-async def test_require_client_certificate_reset_without_ca(
+async def test_require_client_certificate_issue_without_ca(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
     ssl_peer_certificate: str | None,
-    expected: bool,
+    issue_expected: bool,
 ) -> None:
-    """Test requiring client certificates is turned off when no CA is configured."""
+    """Test an issue is raised when client certificates can't be enforced."""
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 4,
@@ -837,7 +841,19 @@ async def test_require_client_certificate_reset_without_ca(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     prefs = hass.data[DATA_CLOUD].client.prefs
-    assert prefs.remote_require_client_certificate is expected
+    # The preference is kept so it applies again once a CA is configured
+    assert prefs.remote_require_client_certificate is True
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "remote_client_certificate_not_enforced"
+    )
+    assert (issue is not None) is issue_expected
+
+    await prefs.async_update(remote_require_client_certificate=False)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "remote_client_certificate_not_enforced"
+    )
 
 
 @pytest.mark.parametrize(
