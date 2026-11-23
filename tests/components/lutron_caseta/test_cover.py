@@ -387,11 +387,28 @@ async def test_open_close_stop_cover_uses_raise_lower(
 
 async def test_tilt_only_blind_open_tilt_position(hass: HomeAssistant) -> None:
     """Test a tilt only blind is open in the middle of its tilt scale."""
-    await async_setup_integration(hass, MockBridgeWithTiltOnlyBlind)
+    instance = MockBridgeWithTiltOnlyBlind()
+    instance.set_tilt = AsyncMock()
 
-    state = hass.states.get("cover.basement_bedroom_basement_bedroom_wood_blind")
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_wood_blind"
+
+    state = hass.states.get(cover_entity_id)
 
     assert state is not None
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
     assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    instance.set_tilt.assert_called_once_with("806", 50)
