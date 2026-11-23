@@ -19,13 +19,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.async_ import create_eager_task
 
-from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .const import X_FORWARDED_PREFIX, X_HASS_SOURCE, X_INGRESS_PATH
 from .handler import SupervisorConnection, get_supervisor_connection
 from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
-
-X_FORWARDED_PREFIX = "X-Forwarded-Prefix"
 
 INIT_HEADERS_FILTER = {
     hdrs.CONTENT_LENGTH,
