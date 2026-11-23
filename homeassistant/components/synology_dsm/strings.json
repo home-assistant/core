@@ -29,7 +29,7 @@
       },
       "backup_share": {
         "data": {
-          "backup_path": "Path",
+          "backup_path": "[%key:common::config_flow::data::path%]",
           "backup_share": "Shared folder"
         },
         "data_description": {
@@ -269,7 +269,7 @@
         "step": {
           "confirm": {
             "data": {
-              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+              "backup_path": "[%key:common::config_flow::data::path%]",
               "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]"
             },
             "data_description": {
@@ -297,7 +297,7 @@
     "step": {
       "init": {
         "data": {
-          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+          "backup_path": "[%key:common::config_flow::data::path%]",
           "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
           "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
         },
