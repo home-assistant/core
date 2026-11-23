@@ -12,10 +12,10 @@
     },
     "error": {
       "linking": "[%key:common::config_flow::error::unknown%]",
-      "register_failed": "The link button was not pressed in time, please try again"
+      "register_failed": "The link button was not pressed within 60 seconds. Please try again."
     },
     "progress": {
-      "wait_for_button": "Press the button on the Hue bridge to register Philips Hue with Home Assistant."
+      "wait_for_button": "Press the link button on the Hue bridge at {host}. Home Assistant continues automatically when you press it."
     },
     "step": {
       "init": {
@@ -29,8 +29,8 @@
         "title": "Pick Hue bridge"
       },
       "link": {
-        "description": "Select **Submit**, then press the button on the Hue bridge to register Philips Hue with Home Assistant.",
-        "title": "Link Hub"
+        "description": "Do you want to set up the Hue bridge at {host}?\n\nAfter you continue, you have 60 seconds to press the link button on the bridge.",
+        "title": "Link Hue bridge"
       },
       "manual": {
         "data": {

@@ -183,8 +183,14 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask the user to start linking with the Hue bridge."""
         if user_input is None:
+            if TYPE_CHECKING:
+                assert self.bridge is not None
             errors = {"base": self.link_error} if self.link_error else None
-            return self.async_show_form(step_id="link", errors=errors)
+            return self.async_show_form(
+                step_id="link",
+                description_placeholders={"host": self.bridge.host},
+                errors=errors,
+            )
 
         self.link_task = None
         self.link_error = None
@@ -222,16 +228,17 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                 eager_start=False,
             )
 
+        bridge = self.bridge
+        if TYPE_CHECKING:
+            assert bridge is not None
+
         if not self.link_task.done():
             return self.async_show_progress(
                 step_id="wait_for_button",
                 progress_action="wait_for_button",
+                description_placeholders={"host": bridge.host},
                 progress_task=self.link_task,
             )
-
-        bridge = self.bridge
-        if TYPE_CHECKING:
-            assert bridge is not None
         try:
             self.app_key = self.link_task.result()
         except TimeoutError:
