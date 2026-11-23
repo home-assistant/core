@@ -21,6 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import CLOSED_ID, LOCATIONS, price_day
 
 PRICE_NOW = "sensor.hjem_electricity_price_now"
+PRICE_NEXT = "sensor.hjem_next_electricity_price"
 DAY = date(2026, 11, 17)
 
 
@@ -178,8 +179,12 @@ async def test_a_meter_that_measures_quarter_hours_gets_quarter_hour_prices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
+    at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
-    """A meter that measures quarter hours is billed by the quarter hour."""
+    """A meter that measures quarter hours is billed by the quarter hour.
+
+    The quarter starting at minute m of hour h costs 1 + h / 100 + m / 10000 kr.
+    """
     mock_client.locations.return_value = [
         replace(LOCATIONS[0], meter_resolution="PT15M"),
         LOCATIONS[1],
@@ -190,6 +195,37 @@ async def test_a_meter_that_measures_quarter_hours_gets_quarter_hour_prices(
     await hass.async_block_till_done()
 
     assert [c.args[2] for c in mock_client.prices.call_args_list] == ["PT15M"]
+    # 10:40 is in the quarter from 10:30; the next one starts 10:45.
+    assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.103)
+    assert float(hass.states.get(PRICE_NEXT).state) == pytest.approx(1.1045)
+
+    await advance(hass, at_twenty_to_eleven, timedelta(minutes=5, seconds=1))
+
+    assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.1045)
+    assert float(hass.states.get(PRICE_NEXT).state) == pytest.approx(1.11)
+    assert mock_client.prices.call_count == 1
+
+
+async def test_a_location_without_access_at_setup_gets_its_prices_later(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    at_twenty_to_eleven: FrozenDateTimeFactory,
+) -> None:
+    """Its sensors exist from the start and keep the updates going until access returns."""
+    priced = mock_client.prices.side_effect
+    mock_client.prices.side_effect = OsmundAccessError("Closed")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PRICE_NOW).state == STATE_UNAVAILABLE
+
+    mock_client.prices.side_effect = priced
+    await advance(hass, at_twenty_to_eleven, timedelta(minutes=30))
+
+    assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.11)
 
 
 async def test_the_days_prices_and_when_they_are_lowest_and_highest(

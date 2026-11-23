@@ -39,14 +39,19 @@ LOCATIONS = [
 ]
 
 
-def price_day(day: date) -> PriceDay:
-    """A whole Danish day of made-up hourly prices: the hour h costs 1 + h / 100 kr."""
+def price_day(day: date, resolution: str = "PT1H") -> PriceDay:
+    """A whole Danish day of made-up prices.
+
+    The hour h costs 1 + h / 100 kr, and its quarter starting at minute m
+    1 + h / 100 + m / 10000 kr.
+    """
+    step = timedelta(minutes=15) if resolution == "PT15M" else timedelta(hours=1)
     intervals = []
     moment = datetime(day.year, day.month, day.day, tzinfo=CPH)
     while moment.date() == day:
         # Step in UTC, so a day with a clock change keeps its 23 or 25 hours.
-        end = (moment.astimezone(UTC) + timedelta(hours=1)).astimezone(CPH)
-        total = round(1 + moment.hour / 100, 2)
+        end = (moment.astimezone(UTC) + step).astimezone(CPH)
+        total = round(1 + moment.hour / 100 + moment.minute / 10000, 4)
         intervals.append(
             PriceInterval(
                 start=moment,
@@ -59,7 +64,7 @@ def price_day(day: date) -> PriceDay:
         moment = end
     return PriceDay(
         day=day,
-        resolution="PT1H",
+        resolution=resolution,
         complete=True,
         reason=None,
         intervals=tuple(intervals),
@@ -101,8 +106,8 @@ def mock_client() -> Generator[AsyncMock]:
             expires_at=None,
         )
         client.locations.return_value = LOCATIONS
-        client.prices.side_effect = lambda _location_id, day, _resolution: price_day(
-            day
+        client.prices.side_effect = lambda _location_id, day, resolution: price_day(
+            day, resolution
         )
         yield client
 

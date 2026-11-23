@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from statistics import fmean
 from typing import override
 
-from osmund import Location, PriceDay, PriceInterval
+from osmund import API_ACCESS_OPEN, Location, PriceDay, PriceInterval
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -138,13 +138,16 @@ async def async_setup_entry(
     entry: OsmundConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the price sensors of every location the key can read."""
+    """Set up the price sensors of every location with API access.
+
+    A location whose prices could not be read yet still gets its sensors: they
+    are unavailable, and they keep the coordinator polling until it can.
+    """
     coordinator = entry.runtime_data
     async_add_entities(
-        OsmundPriceSensor(
-            coordinator, coordinator.data.locations[location_id], description
-        )
-        for location_id in coordinator.data.prices
+        OsmundPriceSensor(coordinator, location, description)
+        for location in coordinator.data.locations.values()
+        if location.api_access == API_ACCESS_OPEN
         for description in SENSORS
     )
 
