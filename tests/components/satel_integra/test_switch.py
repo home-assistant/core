@@ -29,8 +29,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -140,7 +140,7 @@ async def test_switch_change_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+        {TargetKey.ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
 
@@ -155,7 +155,7 @@ async def test_switch_change_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+        {TargetKey.ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
 
@@ -194,7 +194,7 @@ async def test_switch_command_validation_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+            {TargetKey.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
@@ -254,7 +254,7 @@ async def test_switch_command_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+            {TargetKey.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
@@ -312,7 +312,7 @@ async def test_switch_actions_require_code(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+            {TargetKey.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 
@@ -320,7 +320,7 @@ async def test_switch_actions_require_code(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.switchable_output"},
+            {TargetKey.ENTITY_ID: "switch.switchable_output"},
             blocking=True,
         )
 

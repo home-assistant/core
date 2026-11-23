@@ -13,7 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -55,9 +55,7 @@ async def test_pressing_routine_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {
-            CommonServiceArgument.ENTITY_ID: f"button.{slugify(TEST_USERNAME)}_test_routine"
-        },
+        {TargetKey.ENTITY_ID: f"button.{slugify(TEST_USERNAME)}_test_routine"},
         blocking=True,
     )
     mock_amazon_devices_client.call_routine.assert_called_once()
@@ -168,9 +166,7 @@ async def test_restart_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {
-            CommonServiceArgument.ENTITY_ID: f"button.{slugify(TEST_DEVICE_1.account_name)}_restart"
-        },
+        {TargetKey.ENTITY_ID: f"button.{slugify(TEST_DEVICE_1.account_name)}_restart"},
         blocking=True,
     )
     mock_amazon_devices_client.restart_device.assert_called_once()
