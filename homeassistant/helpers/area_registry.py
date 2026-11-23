@@ -440,11 +440,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         ):
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
-        if (
-            validate
-            and "co2_entity_id" in new_values
-            and co2_entity_id is not None
-        ):
+        if validate and "co2_entity_id" in new_values and co2_entity_id is not None:
             _validate_co2_entity(self.hass, new_values["co2_entity_id"])
 
         if name is not Undefined and name != old.name:
