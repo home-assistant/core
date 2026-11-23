@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # Collects what the PR reviewer workflow needs for one pull request and decides
-# what it has to do, in task.json.
+# whether to review it, in task.json.
 #
 # Usage: collect.sh <pr-number> <out-dir> [<head-sha>]
 # Needs GH_TOKEN and GITHUB_REPOSITORY. <head-sha> pins the commit to review;
 # it defaults to the pull request's head.
 #
 # The workflow keeps no state of its own and reads it back from the pull request:
-# its reviews carry gh-aw's hidden marker, its last review's commit is the
-# reviewed head, and the IDs of the comments it handled are in a hidden block in
-# its reviews, which the workflow's `record` job writes after posting.
+# its reviews carry gh-aw's hidden marker, and its last review's commit is the
+# reviewed head.
 
 set -euo pipefail
 
@@ -18,9 +17,8 @@ OUT=$2
 HEAD_SHA=${3:-}
 REPO=${GITHUB_REPOSITORY}
 BOT='github-actions[bot]'
-# Part of the hidden marker gh-aw adds to this workflow's review bodies and comments.
+# Part of the hidden marker gh-aw adds to this workflow's review bodies.
 MARKER='workflow_id: pr-reviewer,'
-HANDLED='<!-- pr-reviewer-handled: (?<ids>[0-9,]*) -->'
 MAX_CHANGED_LINES=5000
 MAX_CHANGED_FILES=100
 
@@ -42,12 +40,11 @@ diff_id() {
   grep -v '^index ' "$1" | sed -E 's/^@@ -[0-9,]+ \+[0-9,]+ @@.*/@@/' | sha256sum | cut -d' ' -f1
 }
 nothing() {
-  jq -n --arg reason "$1" '{review: false, reviewed_head: null, replies: [], reason: $reason}' > "${OUT}/task.json"
+  jq -n --arg reason "$1" '{review: false, reviewed_head: null, reason: $reason}' > "${OUT}/task.json"
   exit 0
 }
 
 mkdir -p "${OUT}"
-COLLECTED_AT=$(date -u +%FT%TZ)
 if ! PR=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" 2> "${OUT}/error.txt"); then
   grep -q 'HTTP 404' "${OUT}/error.txt" || { cat "${OUT}/error.txt" >&2; exit 1; }
   rm -f "${OUT}/error.txt"
@@ -62,7 +59,6 @@ jq -e 'any(.labels[]; .name == "pr-reviewer-muted") | not' <<< "${PR}" > /dev/nu
   || nothing "#${PR_NUMBER} is muted with the pr-reviewer-muted label"
 CURRENT_HEAD=$(jq -r '.head.sha' <<< "${PR}")
 HEAD_SHA=${HEAD_SHA:-${CURRENT_HEAD}}
-AUTHOR=$(jq -r '.user.login' <<< "${PR}")
 BASE=$(jq -r '.base.ref' <<< "${PR}")
 
 jq --arg head "${HEAD_SHA}" '{number, title, body, author: .user.login, head_sha: $head,
@@ -84,8 +80,7 @@ list "repos/${REPO}/pulls/${PR_NUMBER}/comments?per_page=100" \
         id, thread: (.in_reply_to_id // .id), review_id: .pull_request_review_id,
         user: .user.login, user_type: .user.type, path, line, start_line, side,
         original_line, commit_id, original_commit_id, created_at, body, url: .html_url}]
-      | ([.[] | select(.thread == .id and (.review_id | IN($our_reviews[]))) | .id]) as $roots
-      | map(. + {ours: (.user == $bot and (.thread | IN($roots[])))})' \
+      | map(. + {ours: (.user == $bot and (.review_id | IN($our_reviews[])))})' \
   > "${OUT}/review-comments.json"
 
 gh api graphql --paginate -F owner="${REPO%/*}" -F name="${REPO#*/}" -F number="${PR_NUMBER}" \
@@ -103,30 +98,8 @@ gh api graphql --paginate -F owner="${REPO%/*}" -F name="${REPO#*/}" -F number="
   | jq -s . > "${OUT}/threads.json"
 
 list "repos/${REPO}/issues/${PR_NUMBER}/comments?per_page=100" \
-  | jq --arg bot "${BOT}" --arg marker "${MARKER}" '[.[] | {
-      id, user: .user.login, user_type: .user.type, created_at, body, url: .html_url,
-      ours: (.user.login == $bot and ((.body // "") | contains($marker)))}]' \
+  | jq '[.[] | {id, user: .user.login, user_type: .user.type, created_at, body, url: .html_url}]' \
   > "${OUT}/issue-comments.json"
-
-# Comments not handled yet: replies in this workflow's threads, and comments by the
-# author in the conversation since its first review.
-REPLIES=$(jq -n --arg author "${AUTHOR}" --arg handled "${HANDLED}" \
-  --slurpfile reviews "${OUT}/reviews.json" \
-  --slurpfile review_comments "${OUT}/review-comments.json" \
-  --slurpfile issue_comments "${OUT}/issue-comments.json" '
-    ($reviews[0] | map(select(.ours))) as $ours
-    | ([$ours[] | .body | capture($handled)? | .ids | split(",")[] | select(. != "") | tonumber]) as $done
-    | ([$review_comments[0][] | select(.ours and .thread == .id) | .id]) as $roots
-    | ($ours | map(.submitted_at) | min) as $first_review
-    | [$review_comments[0][]
-        | select((.ours | not) and .user_type != "Bot" and (.thread | IN($roots[])) and (.id | IN($done[]) | not))
-        | {id, kind: "thread", thread}]
-      + if $first_review == null then [] else
-          [$issue_comments[0][]
-            | select(.user == $author and .user_type != "Bot" and .created_at > $first_review
-                and (.id | IN($done[]) | not))
-            | {id, kind: "conversation"}]
-        end')
 
 FILES=$(list "repos/${REPO}/pulls/${PR_NUMBER}/files?per_page=100" \
   | jq '[.[] | select(.filename | endswith(".ambr") | not)]')
@@ -141,11 +114,9 @@ fi
 
 REVIEW=true
 if [ "${HEAD_SHA}" != "${CURRENT_HEAD}" ]; then
-  # The newer commit's own run reviews it and answers the replies against it. Reviewing
-  # the older commit after the newer one would make it the reviewed head.
-  echo "::notice title=Nothing to do::#${PR_NUMBER} moved on to ${CURRENT_HEAD}, which its own run handles"
+  # Reviewing the older commit after the newer one would make it the reviewed head.
+  echo "::notice title=No new review::#${PR_NUMBER} moved on to ${CURRENT_HEAD}, which its own run reviews"
   REVIEW=false
-  REPLIES='[]'
 elif [ "${CHANGED_LINES}" -gt "${MAX_CHANGED_LINES}" ] || [ "${CHANGED_FILES}" -gt "${MAX_CHANGED_FILES}" ]; then
   echo "::notice title=No new review::#${PR_NUMBER} changes ${CHANGED_LINES} lines in ${CHANGED_FILES} files, above the limit of ${MAX_CHANGED_LINES} lines and ${MAX_CHANGED_FILES} files"
   REVIEW=false
@@ -153,6 +124,7 @@ elif [ ! -s "${OUT}/pr.diff" ]; then
   echo "::notice title=No new review::No diff for #${PR_NUMBER} outside test snapshots"
   REVIEW=false
 elif [ "${REVIEWED_HEAD}" = "${HEAD_SHA}" ]; then
+  echo "::notice title=No new review::#${PR_NUMBER} was already reviewed at ${HEAD_SHA}"
   REVIEW=false
 elif [ -n "${REVIEWED_HEAD}" ]; then
   # Only dev merged in since the last review: the pull request's diff is unchanged.
@@ -166,8 +138,6 @@ elif [ -n "${REVIEWED_HEAD}" ]; then
   rm -f "${OUT}/reviewed.diff"
 fi
 
-jq -n --argjson review "${REVIEW}" --arg reviewed_head "${REVIEWED_HEAD}" --argjson replies "${REPLIES}" \
-  --arg collected_at "${COLLECTED_AT}" --argjson pr_number "${PR_NUMBER}" \
-  '{review: $review, reviewed_head: (if $reviewed_head == "" then null else $reviewed_head end), replies: $replies,
-    collected_at: $collected_at, pr_number: $pr_number}' \
+jq -n --argjson review "${REVIEW}" --arg reviewed_head "${REVIEWED_HEAD}" \
+  '{review: $review, reviewed_head: (if $reviewed_head == "" then null else $reviewed_head end)}' \
   > "${OUT}/task.json"

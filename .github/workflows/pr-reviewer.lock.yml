@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"ce21287ab754326f7c0a964a75a7addca87da7520a228b04f9021e52499888e7","body_hash":"af1c0436a4cfd1e1012c500e150b2c3f5efd940a449b475923c5d2af7e277024","compiler_version":"v0.88.2","strict":true,"agent_id":"copilot","agent_model":"claude-opus-5.5","engine_versions":{"copilot":"1.0.80"}}
-# gh-aw-manifest: {"version":1,"secrets":["GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"9271a1804551c0dc4fb0085a97979950aa2f8489","version":"v0.88.2"}],"skills":[".claude/skills/ha-integration-knowledge",".claude/skills/ha-pr-comment-audit",".claude/skills/ha-pr-reviewer",".claude/skills/ha-review"],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.12","digest":"sha256:390051be4ed1847f774fd8980b61d3a3523574c0175d00c3fc7cdf2002a88202","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.12@sha256:390051be4ed1847f774fd8980b61d3a3523574c0175d00c3fc7cdf2002a88202"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.12","digest":"sha256:d7d533d87c80d87ff91ac0e21e9299055c3beedff1536262b97ed700fb065a32","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.12@sha256:d7d533d87c80d87ff91ac0e21e9299055c3beedff1536262b97ed700fb065a32"},{"image":"ghcr.io/github/gh-aw-firewall/cli-proxy:0.28.12","digest":"sha256:5250629d48eaedfedf2e948785228e8da29eec2a83cbab58ea0751c14a7b021d","pinned_image":"ghcr.io/github/gh-aw-firewall/cli-proxy:0.28.12@sha256:5250629d48eaedfedf2e948785228e8da29eec2a83cbab58ea0751c14a7b021d"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.12","digest":"sha256:52c34aca98d2a6833c329f1505912a6949c4fda16618c010c979bd59ea99254f","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.12@sha256:52c34aca98d2a6833c329f1505912a6949c4fda16618c010c979bd59ea99254f"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.15","digest":"sha256:60cd97533e93d8e7be36b979c0f08a70846189bda6190f28bbd6d427bc0d9b6e","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.15@sha256:60cd97533e93d8e7be36b979c0f08a70846189bda6190f28bbd6d427bc0d9b6e"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:bac2192f6374d6262116399b34fc5e143d576f82719e90a18261cae7480f4d4e","pinned_image":"ghcr.io/github/gh-aw-node@sha256:bac2192f6374d6262116399b34fc5e143d576f82719e90a18261cae7480f4d4e"},{"image":"ghcr.io/github/github-mcp-server:v1.11.0","digest":"sha256:fbec75de11c255213fa08d80fb166abe73d851fff631c51c0079872967720699","pinned_image":"ghcr.io/github/github-mcp-server:v1.11.0@sha256:fbec75de11c255213fa08d80fb166abe73d851fff631c51c0079872967720699"}],"mcp_servers":[{"name":"safeoutputs","tools":["create_pull_request_review_comment","missing_data","missing_tool","noop","reply_in_conversation","reply_to_pull_request_review_comment","submit_pull_request_review"]}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"2a6ef978e7a2c01f0d62a3570e520e17a96d8c413eb3197d967c4ab3ea37f244","body_hash":"434339ddbc61d01641ebc59df879a689b0d0fb7462746e7ea9676dafe4ff4b47","compiler_version":"v0.88.2","strict":true,"agent_id":"copilot","agent_model":"claude-opus-5.5","engine_versions":{"copilot":"1.0.80"}}
+# gh-aw-manifest: {"version":1,"secrets":["GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"9271a1804551c0dc4fb0085a97979950aa2f8489","version":"v0.88.2"}],"skills":[".claude/skills/ha-integration-knowledge",".claude/skills/ha-pr-comment-audit",".claude/skills/ha-pr-reviewer",".claude/skills/ha-review"],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.12","digest":"sha256:390051be4ed1847f774fd8980b61d3a3523574c0175d00c3fc7cdf2002a88202","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.12@sha256:390051be4ed1847f774fd8980b61d3a3523574c0175d00c3fc7cdf2002a88202"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.12","digest":"sha256:d7d533d87c80d87ff91ac0e21e9299055c3beedff1536262b97ed700fb065a32","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.12@sha256:d7d533d87c80d87ff91ac0e21e9299055c3beedff1536262b97ed700fb065a32"},{"image":"ghcr.io/github/gh-aw-firewall/cli-proxy:0.28.12","digest":"sha256:5250629d48eaedfedf2e948785228e8da29eec2a83cbab58ea0751c14a7b021d","pinned_image":"ghcr.io/github/gh-aw-firewall/cli-proxy:0.28.12@sha256:5250629d48eaedfedf2e948785228e8da29eec2a83cbab58ea0751c14a7b021d"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.12","digest":"sha256:52c34aca98d2a6833c329f1505912a6949c4fda16618c010c979bd59ea99254f","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.12@sha256:52c34aca98d2a6833c329f1505912a6949c4fda16618c010c979bd59ea99254f"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.15","digest":"sha256:60cd97533e93d8e7be36b979c0f08a70846189bda6190f28bbd6d427bc0d9b6e","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.15@sha256:60cd97533e93d8e7be36b979c0f08a70846189bda6190f28bbd6d427bc0d9b6e"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:bac2192f6374d6262116399b34fc5e143d576f82719e90a18261cae7480f4d4e","pinned_image":"ghcr.io/github/gh-aw-node@sha256:bac2192f6374d6262116399b34fc5e143d576f82719e90a18261cae7480f4d4e"},{"image":"ghcr.io/github/github-mcp-server:v1.11.0","digest":"sha256:fbec75de11c255213fa08d80fb166abe73d851fff631c51c0079872967720699","pinned_image":"ghcr.io/github/github-mcp-server:v1.11.0@sha256:fbec75de11c255213fa08d80fb166abe73d851fff631c51c0079872967720699"}],"mcp_servers":[{"name":"safeoutputs","tools":["create_pull_request_review_comment","missing_data","missing_tool","noop","submit_pull_request_review"]}]}
 # This file was automatically generated by gh-aw (v0.88.2). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _
@@ -23,9 +23,9 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Reviews pull requests to `dev` and answers replies to its reviews. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review, and 5 minutes after the last reply to one of its reviews. The `prepare` job resolves the pull request and checks there is something to do. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments, then answers the replies. The `record` job notes the comments it handled in a hidden block of its latest review, so they are not answered again. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed.
+# Reviews pull requests to `dev`. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review. The `prepare` job resolves the pull request and checks there is something to review. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed.
 #
-# Intent: Pull requests get a first code review with inline comments soon after they are opened or updated, and the review's findings are discussed with their author before a human reviews them.
+# Intent: Pull requests get a first code review with inline comments soon after they are opened or updated, before a human reviews them.
 #
 # Secrets used:
 #   - GH_AW_DEFAULT_OTLP_HEADERS
@@ -76,7 +76,7 @@ on:
 permissions: {}
 
 concurrency:
-  cancel-in-progress: false
+  cancel-in-progress: true
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
 
 run-name: "PR reviewer: ${{ github.event.workflow_run.display_title || format('#{0}', inputs.pull_request_number) }}"
@@ -364,7 +364,7 @@ jobs:
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_NEEDS_PREPARE_OUTPUTS_PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
           GH_AW_PROMPT_CONTENT_0000: "<system>\n"
-          GH_AW_PROMPT_CONTENT_0001: "<safe-output-tools>\nTools: create_pull_request_review_comment(max:20), submit_pull_request_review, reply_to_pull_request_review_comment(max:10), missing_tool, missing_data, noop, reply_in_conversation\n"
+          GH_AW_PROMPT_CONTENT_0001: "<safe-output-tools>\nTools: create_pull_request_review_comment(max:20), submit_pull_request_review, missing_tool, missing_data, noop\n"
           GH_AW_PROMPT_CONTENT_0002: "</safe-output-tools>\n"
           GH_AW_PROMPT_CONTENT_0003: "<github-context>\nThe following GitHub context information is available for this workflow:\n{{#if github.actor}}\n- **actor**: __GH_AW_GITHUB_ACTOR__\n{{/if}}\n{{#if github.repository}}\n- **repository**: __GH_AW_GITHUB_REPOSITORY__\n{{/if}}\n{{#if github.workspace}}\n- **workspace**: __GH_AW_GITHUB_WORKSPACE__\n{{/if}}\n{{#if github.event.issue.number || (github.aw.context.item_type == 'issue' && github.aw.context.item_number)}}\n- **issue-number**: #__GH_AW_EXPR_802A9F6A__\n{{/if}}\n{{#if github.event.discussion.number || (github.aw.context.item_type == 'discussion' && github.aw.context.item_number)}}\n- **discussion-number**: #__GH_AW_EXPR_1A3A194A__\n{{/if}}\n{{#if github.event.pull_request.number || (github.aw.context.item_type == 'pull_request' && github.aw.context.item_number)}}\n- **pull-request-number**: #__GH_AW_EXPR_463A214A__\n{{/if}}\n{{#if github.event.comment.id || github.aw.context.comment_id}}\n- **comment-id**: __GH_AW_EXPR_FF1D34CE__\n{{/if}}\n{{#if github.run_id}}\n- **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__\n{{/if}}\n</github-context>\n\n"
           GH_AW_PROMPT_CONTENT_0004: "</system>\n"
@@ -474,6 +474,7 @@ jobs:
       pull-requests: read
     concurrency:
       group: "gh-aw-copilot-pr-reviewer-${{ needs.prepare.outputs.pr_number }}"
+      queue: max
     timeout-minutes: 60
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -564,26 +565,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
         name: Wait for earlier runs to finish posting
-        run: "set -euo pipefail\n# Runs for the same pull request take turns in the agent job, but one whose agent\n# job has finished may still be posting or recording. Wait for it, so this run\n# sees what it posted.\n# An API error counts as busy. At most 12 minutes, so the agent step's own\n# timeout still fits in the job's.\nTITLE=\"PR reviewer: #${PR_NUMBER}\"\nfor _ in $(seq 36); do\n  BUSY=false\n  for STATUS in queued in_progress waiting pending; do\n    RUNS=$(gh api --paginate \"repos/${GITHUB_REPOSITORY}/actions/workflows/pr-reviewer.lock.yml/runs?status=${STATUS}&per_page=100\" \\\n      --jq \".workflow_runs[] | select(.id != ${GITHUB_RUN_ID} and .display_title == \\\"${TITLE}\\\") | .id\") \\\n      || { BUSY=true; continue; }\n    for RUN in ${RUNS}; do\n      POSTING=$(gh api \"repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}/jobs?per_page=100\" \\\n        --jq 'any(.jobs[]; .name == \"agent\" and (.conclusion | IN(\"success\", \"failure\", \"timed_out\")))') \\\n        || POSTING=true\n      [ \"${POSTING}\" = true ] && BUSY=true\n    done\n  done\n  [ \"${BUSY}\" = false ] && exit 0\n  sleep 20\ndone\necho \"::warning::Earlier runs for #${PR_NUMBER} are still posting after 12 minutes\"\n"
+        run: "set -euo pipefail\n# Runs for the same pull request take turns in the agent job, but one whose agent\n# job has finished may still be posting. Wait for it, so this run sees what it\n# posted.\n# An API error counts as busy. At most 12 minutes, so the agent step's own\n# timeout still fits in the job's.\nTITLE=\"PR reviewer: #${PR_NUMBER}\"\nfor _ in $(seq 36); do\n  BUSY=false\n  for STATUS in queued in_progress waiting pending; do\n    RUNS=$(gh api --paginate \"repos/${GITHUB_REPOSITORY}/actions/workflows/pr-reviewer.lock.yml/runs?status=${STATUS}&per_page=100\" \\\n      --jq \".workflow_runs[] | select(.id != ${GITHUB_RUN_ID} and .display_title == \\\"${TITLE}\\\") | .id\") \\\n      || { BUSY=true; continue; }\n    for RUN in ${RUNS}; do\n      POSTING=$(gh api \"repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}/jobs?per_page=100\" \\\n        --jq 'any(.jobs[]; .name == \"agent\" and (.conclusion | IN(\"success\", \"failure\", \"timed_out\")))') \\\n        || POSTING=true\n      [ \"${POSTING}\" = true ] && BUSY=true\n    done\n  done\n  [ \"${BUSY}\" = false ] && exit 0\n  sleep 20\ndone\necho \"::warning::Earlier runs for #${PR_NUMBER} are still posting after 12 minutes\"\n"
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
           PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
         name: Collect the pull request, its reviews and comments
         run: script/pr_reviewer/collect.sh "${PR_NUMBER}" /tmp/gh-aw/agent "${HEAD_SHA}"
-      - name: Upload the task for the record and reply-in-conversation jobs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          if-no-files-found: error
-          name: pr-reviewer-task
-          overwrite: true
-          path: /tmp/gh-aw/agent/task.json
-          retention-days: 7
       - env:
           HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
           PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
         name: Check out the pull request head
-        run: "set -euo pipefail\nBASE_SHA=$(git rev-parse HEAD)\n# The collected diff describes HEAD_SHA. A force-push may have dropped it: the\n# run then only answers replies, which the current head serves.\ngit fetch --depth=1 origin \"${HEAD_SHA}\" || git fetch --depth=1 origin \"refs/pull/${PR_NUMBER}/head\"\ngit checkout --detach FETCH_HEAD\n# Agent configuration must come from the trusted default branch, not from the PR.\n# Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.\ngit diff -z --name-only --no-renames \"${BASE_SHA}\" FETCH_HEAD -- '*.md' \\\n  | while IFS= read -r -d '' path; do\n    rm -rf -- \"${path}\"\n    git checkout \"${BASE_SHA}\" -- \"${path}\" 2>/dev/null || true\n  done\nfor path in .github .agents .claude .codex .gemini .pi; do\n  rm -rf -- \"${path}\"\n  git checkout \"${BASE_SHA}\" -- \"${path}\" 2>/dev/null || true\ndone\nrm -f .mcp.json\n# Only the skills from the frontmatter are in scope for the agent.\nfind .claude/skills -mindepth 1 -maxdepth 1 \\\n  ! -name ha-pr-reviewer ! -name ha-review ! -name ha-pr-comment-audit ! -name ha-integration-knowledge \\\n  -exec rm -rf {} +\n# The base branch's head, for `git show dev:<path>`.\ngit branch -f dev \"${BASE_SHA}\""
+        run: "set -euo pipefail\nBASE_SHA=$(git rev-parse HEAD)\n# The collected diff describes HEAD_SHA. A force-push may have dropped it: collect.sh\n# then finds the head moved, so the run has nothing to review and needs only a workspace.\ngit fetch --depth=1 origin \"${HEAD_SHA}\" || git fetch --depth=1 origin \"refs/pull/${PR_NUMBER}/head\"\ngit checkout --detach FETCH_HEAD\n# Agent configuration must come from the trusted default branch, not from the PR.\n# Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.\ngit diff -z --name-only --no-renames \"${BASE_SHA}\" FETCH_HEAD -- '*.md' \\\n  | while IFS= read -r -d '' path; do\n    rm -rf -- \"${path}\"\n    git checkout \"${BASE_SHA}\" -- \"${path}\" 2>/dev/null || true\n  done\nfor path in .github .agents .claude .codex .gemini .pi; do\n  rm -rf -- \"${path}\"\n  git checkout \"${BASE_SHA}\" -- \"${path}\" 2>/dev/null || true\ndone\nrm -f .mcp.json\n# Only the skills from the frontmatter are in scope for the agent.\nfind .claude/skills -mindepth 1 -maxdepth 1 \\\n  ! -name ha-pr-reviewer ! -name ha-review ! -name ha-pr-comment-audit ! -name ha-integration-knowledge \\\n  -exec rm -rf {} +\n# The base branch's head, for `git show dev:<path>`.\ngit branch -f dev \"${BASE_SHA}\""
 
       - name: Configure Git credentials
         env:
@@ -661,7 +654,7 @@ jobs:
         env:
           GH_AW_FILE_ROOT: "${{ runner.temp }}/gh-aw"
           GH_AW_FILE_CONFIG: "{\"files\":[{\"path\":\"safeoutputs/config.json\",\"content_env\":\"GH_AW_SAFE_OUTPUTS_CONFIG\"}]}"
-          GH_AW_SAFE_OUTPUTS_CONFIG: "{\"create_pull_request_review_comment\":{\"commit_id\":\"\",\"max\":20,\"side\":\"RIGHT\",\"target\":\"\"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"false\"},\"reply-in-conversation\":{\"description\":\"Post one comment in the conversation of the pull request under review.\",\"inputs\":{\"body\":{\"default\":null,\"description\":\"The comment, in Markdown.\",\"required\":true,\"type\":\"string\"}},\"max\":1},\"reply_to_pull_request_review_comment\":{\"footer\":false,\"max\":10,\"target\":\"\"},\"report_incomplete\":{},\"submit_pull_request_review\":{\"allowed_events\":[\"COMMENT\"],\"commit_id\":\"\",\"footer\":\"always\",\"max\":1,\"target\":\"\"}}"
+          GH_AW_SAFE_OUTPUTS_CONFIG: "{\"create_pull_request_review_comment\":{\"commit_id\":\"\",\"max\":20,\"side\":\"RIGHT\",\"target\":\"\"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"false\"},\"report_incomplete\":{},\"submit_pull_request_review\":{\"allowed_events\":[\"COMMENT\"],\"commit_id\":\"\",\"footer\":\"always\",\"max\":1,\"target\":\"\"}}"
         with:
           script: |
             const path = require('path');
@@ -676,29 +669,10 @@ jobs:
             {
               "description_suffixes": {
                 "create_pull_request_review_comment": " CONSTRAINTS: Maximum 20 review comment(s) can be created. Comments will be on the RIGHT side of the diff.",
-                "reply_to_pull_request_review_comment": " CONSTRAINTS: Maximum 10 reply/replies can be created.",
                 "submit_pull_request_review": " CONSTRAINTS: Maximum 1 review(s) can be submitted. Target: ${GH_AW_NEEDS_PREPARE_OUTPUTS_PR_NUMBER}."
               },
               "repo_params": {},
-              "dynamic_tools": [
-                {
-                  "description": "Post one comment in the conversation of the pull request under review.",
-                  "inputSchema": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "body": {
-                        "description": "The comment, in Markdown.",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "body"
-                    ],
-                    "type": "object"
-                  },
-                  "name": "reply_in_conversation"
-                }
-              ],
+              "dynamic_tools": [],
               "property_injections": {
                 "submit_pull_request_review": {
                   "event": {
@@ -807,28 +781,6 @@ jobs:
                     "type": "string",
                     "sanitize": true,
                     "maxLength": 65000
-                  }
-                }
-              },
-              "reply_to_pull_request_review_comment": {
-                "defaultMax": 10,
-                "fields": {
-                  "body": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "comment_id": {
-                    "required": true,
-                    "positiveInteger": true
-                  },
-                  "pull_request_number": {
-                    "optionalPositiveInteger": true
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
                   }
                 }
               },
@@ -1339,8 +1291,6 @@ jobs:
       - agent
       - detection
       - prepare
-      - record
-      - reply_in_conversation
       - safe_outputs
     if: >
       always() && (needs.agent.result != 'skipped' || needs.activation.outputs.lockdown_check_failed == 'true' ||
@@ -1721,7 +1671,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           WORKFLOW_NAME: "PR reviewer"
-          WORKFLOW_DESCRIPTION: "Reviews pull requests to `dev` and answers replies to its reviews. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review, and 5 minutes after the last reply to one of its reviews. The `prepare` job resolves the pull request and checks there is something to do. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments, then answers the replies. The `record` job notes the comments it handled in a hidden block of its latest review, so they are not answered again. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed."
+          WORKFLOW_DESCRIPTION: "Reviews pull requests to `dev`. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review. The `prepare` job resolves the pull request and checks there is something to review. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
           GH_AW_DETECTION_CONTINUE_ON_ERROR: "true"
           GH_AW_DETECTION_SKIP_PROMPT_SUMMARY: "true"
@@ -1785,7 +1735,7 @@ jobs:
           S2STOKENS: true
           TRACEPARENT: ${{ env.GITHUB_AW_OTEL_TRACE_ID != '' && env.GITHUB_AW_OTEL_PARENT_SPAN_ID != '' && format('00-{0}-{1}-01', env.GITHUB_AW_OTEL_TRACE_ID, env.GITHUB_AW_OTEL_PARENT_SPAN_ID) || '' }}
           WORKFLOW_NAME: "PR reviewer"
-          WORKFLOW_DESCRIPTION: "Reviews pull requests to `dev` and answers replies to its reviews. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review, and 5 minutes after the last reply to one of its reviews. The `prepare` job resolves the pull request and checks there is something to do. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments, then answers the replies. The `record` job notes the comments it handled in a hidden block of its latest review, so they are not answered again. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed."
+          WORKFLOW_DESCRIPTION: "Reviews pull requests to `dev`. Triggered by completion of the trigger workflow, which runs when a pull request is opened, updated or marked ready for review. The `prepare` job resolves the pull request and checks there is something to review. The agent job waits for earlier runs on the same pull request to finish posting, then collects the pull request's metadata, its diff, every review and comment, and what changed since this workflow's last review with `script/pr_reviewer/collect.sh`. Follows the repository's `ha-pr-reviewer` skill and posts its findings as one review with inline comments. Drafts, pull requests labeled `pr-reviewer-muted`, pull requests above the size limit, and runs after the workflow's daily AI-credit budget is used up are not reviewed."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
           GH_AW_DETECTION_CONTINUE_ON_ERROR: "true"
         run: |
@@ -1932,49 +1882,36 @@ jobs:
             --jq '[.jobs[] | select(.name == "Trigger the PR review") | .conclusion][0] // ""')
           [ "${TRIGGER}" = "success" ] || skip "The trigger job of run ${RUN_ID} concluded '${TRIGGER}'"
 
-          case "${RUN_EVENT}" in
-            issue_comment)
-              # Runs the default branch's copy of the trigger, so its run name is trusted.
-              [ "${RUN_HEAD_REPO}" = "${GITHUB_REPOSITORY}" ] && [ "${RUN_HEAD_BRANCH}" = "${DEFAULT_BRANCH}" ] \
-                || skip "The issue_comment trigger run didn't run on ${DEFAULT_BRANCH}"
-              ;;
-            pull_request | pull_request_review_comment)
-              # Runs the pull request's own copy of the trigger: its run name must match the run's commit.
-              # A deleted fork leaves both repositories empty.
-              if ! PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" 2> error.txt); then
-                grep -q 'HTTP 404' error.txt || { cat error.txt >&2; exit 1; }
-                skip "#${PR_NUMBER} is not a pull request"
-              fi
-              jq -e --arg sha "${RUN_HEAD_SHA}" --arg repo "${RUN_HEAD_REPO}" \
-                '(.head.sha == $sha and (.head.repo.full_name // "") == $repo) or .merge_commit_sha == $sha' \
-                <<< "${PR}" > /dev/null \
-                || skip "#${PR_NUMBER} doesn't match the trigger run's commit ${RUN_HEAD_REPO}@${RUN_HEAD_SHA}"
-              ;;
-            *)
-              skip "Unexpected trigger event ${RUN_EVENT}"
-              ;;
-          esac
+          [ "${RUN_EVENT}" = "pull_request" ] || skip "Unexpected trigger event ${RUN_EVENT}"
+          # Runs the pull request's own copy of the trigger: its run name must match the run's commit.
+          # A deleted fork leaves both repositories empty.
+          if ! PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" 2> error.txt); then
+            grep -q 'HTTP 404' error.txt || { cat error.txt >&2; exit 1; }
+            skip "#${PR_NUMBER} is not a pull request"
+          fi
+          jq -e --arg sha "${RUN_HEAD_SHA}" --arg repo "${RUN_HEAD_REPO}" \
+            '.head.sha == $sha and (.head.repo.full_name // "") == $repo' \
+            <<< "${PR}" > /dev/null \
+            || skip "#${PR_NUMBER} doesn't match the trigger run's commit ${RUN_HEAD_REPO}@${RUN_HEAD_SHA}"
           echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
         env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
           RUN_EVENT: ${{ github.event.workflow_run.event }}
-          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
           RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_TITLE: ${{ github.event.workflow_run.display_title }}
-      - name: Check there is something to do
+      - name: Check there is something to review
         id: task
         if: steps.pr.outputs.skip != 'true'
         run: |
           set -euo pipefail
           OUT="${RUNNER_TEMP}/pr-reviewer"
           script/pr_reviewer/collect.sh "${PR_NUMBER}" "${OUT}"
-          if ! jq -e '.review or (.replies | length > 0)' "${OUT}/task.json" > /dev/null; then
-            echo "::notice title=PR review skipped::$(jq -r '.reason // "No new diff to review and no new reply to answer"' "${OUT}/task.json")"
+          if ! jq -e '.review' "${OUT}/task.json" > /dev/null; then
+            echo "::notice title=PR review skipped::$(jq -r '.reason // "No new diff to review"' "${OUT}/task.json")"
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
@@ -1985,132 +1922,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
-
-  record:
-    needs:
-      - agent
-      - prepare
-      - reply_in_conversation
-      - safe_outputs
-    if: >
-      always() && needs.agent.result != 'skipped' && (needs.safe_outputs.result == 'success' || needs.safe_outputs.result == 'failure')
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Configure GH_HOST for enterprise compatibility
-        id: ghes-host-config
-        shell: bash
-        run: | # zizmor: ignore[github-env] - GITHUB_SERVER_URL is set by GitHub Actions, not user input.
-          # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
-          # GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.
-          GH_HOST="${GITHUB_SERVER_URL#https://}"
-          GH_HOST="${GH_HOST#http://}"
-          echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Download the task
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: pr-reviewer-task
-          path: task
-      - name: Record the handled comments
-        run: |
-          set -euo pipefail
-          BOT='github-actions[bot]'
-          MARKER='workflow_id: pr-reviewer,'
-          list() {
-            gh api --paginate --slurp "$1" | jq 'add // []'
-          }
-          if [ "${COMPLETE}" = "true" ]; then
-            IDS=$(jq -r '[.replies[].id] | join(",")' task/task.json)
-          else
-            # Partly posted: record only the comments that this run answered, so the rest are tried again.
-            list "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/comments?per_page=100" > review-comments.json
-            list "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100" > issue-comments.json
-            IDS=$(jq -rn --slurpfile task task/task.json --arg bot "${BOT}" --arg marker "${MARKER}" \
-              --slurpfile review_comments review-comments.json --slurpfile issue_comments issue-comments.json '
-                $task[0].collected_at as $since
-                | [$task[0].replies[] | . as $c | select(
-                    if .kind == "thread" then
-                      any($review_comments[0][]; .user.login == $bot and (.in_reply_to_id // .id) == $c.thread
-                        and .created_at >= $since)
-                    else
-                      any($issue_comments[0][]; .user.login == $bot and ((.body // "") | contains($marker))
-                        and .created_at >= $since)
-                    end) | .id] | join(",")')
-          fi
-          [ -n "${IDS}" ] || exit 0
-          REVIEW=$(list "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews?per_page=100" \
-            | jq --arg bot "${BOT}" --arg marker "${MARKER}" \
-              '[.[] | select(.user.login == $bot and ((.body // "") | contains($marker)))] | sort_by(.submitted_at) | last')
-          if [ "${REVIEW}" = "null" ]; then
-            echo "::warning::No review of this workflow on #${PR_NUMBER} to record the handled comments in"
-            exit 0
-          fi
-          jq --arg ids "${IDS}" '
-            (.body // "") as $body
-            | ([$body | capture("<!-- pr-reviewer-handled: (?<ids>[0-9,]*) -->")? | .ids | split(",")[] | select(. != "")]
-                + ($ids | split(",")) | map(tonumber) | unique | map(tostring) | join(",")) as $all
-            | {body: (($body | sub("\\s*<!-- pr-reviewer-handled: [0-9,]* -->"; ""))
-                + "\n\n<!-- pr-reviewer-handled: " + $all + " -->")}' \
-            <<< "${REVIEW}" > body.json
-          gh api -X PUT "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews/$(jq -r '.id' <<< "${REVIEW}")" \
-            --input body.json > /dev/null
-        env:
-          COMPLETE: ${{ needs.agent.result == 'success' && needs.safe_outputs.result == 'success' && (needs.reply_in_conversation.result == 'success' || needs.reply_in_conversation.result == 'skipped') }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
-
-  reply_in_conversation:
-    needs:
-      - agent
-      - detection
-    if: >
-      (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'reply_in_conversation') &&
-      (needs.detection.result == 'success')
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Download agent output artifact
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: "{agent,agent-output-fallback}"
-          merge-multiple: true
-          path: ${{ runner.temp }}/gh-aw/safe-jobs/
-      - name: Download the task
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        env:
-          GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
-        with:
-          name: pr-reviewer-task
-          path: task
-      - name: Post the comment
-        run: |
-          set -euo pipefail
-          PR_NUMBER=$(jq -r '.pr_number' task/task.json)
-          [[ "${PR_NUMBER}" =~ ^[1-9][0-9]*$ ]] || { echo "::error::No pull request number in the task"; exit 1; }
-          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          # gh-aw's hidden marker, which collect.sh and the record job look for.
-          MARKER="<!-- gh-aw-agentic-workflow: ${GITHUB_WORKFLOW}, id: ${GITHUB_RUN_ID}, workflow_id: pr-reviewer, run: ${RUN_URL} -->"
-          CAUTION=""
-          if [ "${DETECTION_CONCLUSION}" = "warning" ]; then
-            # In warn mode the safe_outputs job still posts, with this caution.
-            CAUTION="> [!CAUTION]
-          > Threat detection flagged the output of [this run](${RUN_URL})."
-          fi
-          # gh-aw already sanitized the body (mentions, HTML comments outside code). An HTML
-          # comment left in code could still carry a forged marker: escape every opener.
-          jq -e --arg marker "${MARKER}" --arg caution "${CAUTION}" '
-            [.items[] | select(.type == "reply_in_conversation")]
-            | if length == 1 then .[0] else error("Expected 1 reply_in_conversation item, got \(length)") end
-            | {body: ([$caution, (.body | gsub("<!--"; "&lt;!--")), $marker] | map(select(. != "")) | join("\n\n"))}' \
-            "${GH_AW_AGENT_OUTPUT}" > body.json
-          gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --input body.json > /dev/null
-        env:
-          DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
-          GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   safe_outputs:
     needs:
@@ -2207,8 +2018,7 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,s.symcb.com,s.symcd.com,security.ubuntu.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUT_JOBS: "{\"reply_in_conversation\":\"\"}"
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request_review_comment\":{\"commit_id\":\"${{ needs.prepare.outputs.head_sha }}\",\"max\":20,\"side\":\"RIGHT\",\"target\":\"${{ needs.prepare.outputs.pr_number }}\"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"false\"},\"reply_to_pull_request_review_comment\":{\"footer\":false,\"max\":10,\"target\":\"${{ needs.prepare.outputs.pr_number }}\"},\"report_incomplete\":{},\"submit_pull_request_review\":{\"allowed_events\":[\"COMMENT\"],\"commit_id\":\"${{ needs.prepare.outputs.head_sha }}\",\"footer\":\"always\",\"max\":1,\"target\":\"${{ needs.prepare.outputs.pr_number }}\"}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request_review_comment\":{\"commit_id\":\"${{ needs.prepare.outputs.head_sha }}\",\"max\":20,\"side\":\"RIGHT\",\"target\":\"${{ needs.prepare.outputs.pr_number }}\"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"false\"},\"report_incomplete\":{},\"submit_pull_request_review\":{\"allowed_events\":[\"COMMENT\"],\"commit_id\":\"${{ needs.prepare.outputs.head_sha }}\",\"footer\":\"always\",\"max\":1,\"target\":\"${{ needs.prepare.outputs.pr_number }}\"}}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
