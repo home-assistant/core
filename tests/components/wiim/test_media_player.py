@@ -51,8 +51,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_REPEAT_SET,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_VOLUME_MUTE,
@@ -107,8 +105,8 @@ async def test_geq_setup_retries(
     assert state.attributes.get(ATTR_SOUND_MODE_LIST) is None
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     mock_wiim_device.async_play.assert_awaited_once()
