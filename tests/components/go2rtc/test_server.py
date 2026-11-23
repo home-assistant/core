@@ -497,6 +497,8 @@ async def test_server_restart_error(
                 "?auth=token&channel=0&user=admin&password=hunter2",
                 "10:27:02.624 WRN [streams] url=http://camera.local"
                 "?user=alice@example.com",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826"
+                "?device_id=AA:BB&client_id=1234&client_private=deadbeef",
             ],
             [
                 "10:27:02.622 WRN producer.go:170 >"
@@ -505,6 +507,8 @@ async def test_server_restart_error(
                 "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
                 "?auth=****&channel=0&user=****&password=****",
                 "10:27:02.624 WRN [streams] url=http://camera.local?user=****",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826"
+                "?device_id=AA:BB&client_id=1234&client_private=****",
             ],
         )
     ],

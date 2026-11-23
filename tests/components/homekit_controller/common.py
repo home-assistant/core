@@ -45,6 +45,15 @@ logger = logging.getLogger(__name__)
 HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00:aid:1"
 
 TEST_ACCESSORY_ADDRESS = "AA:BB:CC:DD:EE:FF"
+TEST_IP_PAIRING_DATA = {
+    "Connection": "IP",
+    "AccessoryIP": "192.168.1.50",
+    "AccessoryPort": 51826,
+    "AccessoryLTPK": "aa" * 32,
+    "iOSPairingId": "00000000-0000-0000-0000-000000000000",
+    "iOSDeviceLTSK": "bb" * 32,
+    "iOSDeviceLTPK": "cc" * 32,
+}
 
 
 TEST_DEVICE_SERVICE_INFO = BluetoothServiceInfo(
@@ -233,6 +242,8 @@ async def setup_test_accessories_with_controller(
     if connection == "BLE":
         data["Connection"] = "BLE"
         data["AccessoryAddress"] = TEST_ACCESSORY_ADDRESS
+    elif connection == "IP":
+        data.update(TEST_IP_PAIRING_DATA)
 
     config_entry = MockConfigEntry(
         version=1,

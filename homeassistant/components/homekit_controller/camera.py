@@ -2,14 +2,20 @@
 
 from typing import override
 
-from aiohomekit.model import Accessory
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.services import ServicesTypes
+from yarl import URL
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (
+    Camera,
+    CameraEntityCapabilities,
+    CameraEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice
 from .const import KNOWN_DEVICES
@@ -24,10 +30,51 @@ class HomeKitCamera(AccessoryEntity, Camera):
 
     # content_type = "image/jpeg"
 
+    def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
+        """Initialise the camera."""
+        super().__init__(accessory, devinfo)
+        # go2rtc's homekit:// source streams from IP accessories with aid 1
+        if accessory.pairing.transport is Transport.IP and self._aid == 1:
+            self._attr_supported_features = CameraEntityFeature.STREAM
+            # Cameras with a speaker play audio sent on the stream (talk-back)
+            if accessory.entity_map.aid(self._aid).services.first(
+                service_type=ServicesTypes.SPEAKER
+            ):
+                self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+                    two_way_audio=True
+                )
+
     @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
+
+    @override
+    async def webrtc_source(self) -> str | None:
+        """Return a go2rtc homekit:// source for the camera's live stream.
+
+        FFmpeg can't open it, so the camera has no stream_source. Its WebRTC
+        provider (go2rtc) can, and can restream it for FFmpeg.
+        """
+        if CameraEntityFeature.STREAM not in self.supported_features:
+            return None
+        # Unlike HKDevice.pairing_data, the entry follows address changes
+        data = self._accessory.config_entry.data
+        return str(
+            URL.build(
+                scheme="homekit",
+                host=data["AccessoryIP"],
+                port=data["AccessoryPort"],
+                query={
+                    "device_id": data["AccessoryPairingID"],
+                    "device_public": data["AccessoryLTPK"],
+                    "client_id": data["iOSPairingId"],
+                    # go2rtc expects the 64 byte Ed25519 private key form,
+                    # which is the seed followed by the public key
+                    "client_private": data["iOSDeviceLTSK"] + data["iOSDeviceLTPK"],
+                },
+            )
+        )
 
     @override
     async def async_camera_image(

@@ -2483,7 +2483,7 @@
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
-            'supported_features': 0,
+            'supported_features': <CameraEntityFeature: 2>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1',
             'unit_of_measurement': None,
@@ -2491,7 +2491,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ArloBabyA0',
-              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
             }),
             'entity_id': 'camera.arlobabya0',
             'state': 'idle',
@@ -20587,7 +20587,7 @@
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
-            'supported_features': 0,
+            'supported_features': <CameraEntityFeature: 2>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1',
             'unit_of_measurement': None,
@@ -20595,7 +20595,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netatmo-Doorbell-g738658',
-              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
+              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
             }),
             'entity_id': 'camera.netatmo_doorbell_g738658',
             'state': 'idle',

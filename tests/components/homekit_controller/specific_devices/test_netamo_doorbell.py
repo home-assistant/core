@@ -3,6 +3,7 @@
 https://github.com/home-assistant/core/issues/44596
 """
 
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.core import HomeAssistant
 
 from ..common import (
@@ -39,6 +40,7 @@ async def test_netamo_doorbell_setup(hass: HomeAssistant) -> None:
                     friendly_name="Netatmo-Doorbell-g738658",
                     unique_id="00:00:00:00:00:00_1",
                     state="idle",
+                    supported_features=CameraEntityFeature.STREAM,
                 ),
             ],
             stateless_triggers=[

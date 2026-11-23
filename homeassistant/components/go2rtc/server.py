@@ -67,6 +67,7 @@ _APP_MODULES = (
     "api",
     "exec",  # Execution module for ffmpeg
     "ffmpeg",
+    "homekit",  # homekit:// sources from HomeKit Controller
     "http",
     "mjpeg",
     "onvif",
@@ -117,7 +118,7 @@ _LOG_LEVEL_MAP = {
 # includes it yet (v1.9.14 is the newest). It does not touch query parameters.
 _URL_USERINFO = re.compile(r"://[^/?#\s@]+@")
 _URL_CREDENTIAL_QUERY = re.compile(
-    r"([?&](?:auth|user|password)=)[^&\s]+", re.IGNORECASE
+    r"([?&](?:auth|user|password|client_private)=)[^&\s]+", re.IGNORECASE
 )
 
 
