@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from connectsensor.client import AsyncSensorClient
+from connectsensor.client import APIVersion, AsyncSensorClient
 from connectsensor.exceptions import KingspanAPIError, KingspanErrorCode
 import probatio
 
@@ -171,7 +171,9 @@ class SENSiTFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             httpx_client = get_async_client(self.hass)
             async with AsyncSensorClient(
-                client=httpx_client, timeout=API_TIMEOUT
+                version=APIVersion.CONNECT_V1,
+                client=httpx_client,
+                timeout=API_TIMEOUT,
             ) as client:
                 await client.login(username, password)
         except KingspanAPIError as err:
