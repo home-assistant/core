@@ -36,7 +36,7 @@ VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 _ABSENT_VEHICLE_ID = 999999999999
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -263,7 +263,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_multi_vehicle_entity_isolation(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
