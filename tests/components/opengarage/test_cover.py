@@ -11,10 +11,10 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_TOGGLE,
+    CoverService,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -67,8 +67,8 @@ async def test_cover_position_during_transition(
     # Open the cover - will be in OPENING state before update
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
 
@@ -113,8 +113,8 @@ async def test_toggle_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
 
@@ -148,8 +148,8 @@ async def test_toggle_does_not_reuse_stale_close_direction(
     # Toggle while open should close, recording the close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert mock_opengarage.push_button.call_count == 1
@@ -178,8 +178,8 @@ async def test_toggle_does_not_reuse_stale_close_direction(
     # Toggling now must close again, not reuse the stale close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert mock_opengarage.push_button.call_count == 2

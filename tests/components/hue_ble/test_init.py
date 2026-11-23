@@ -36,7 +36,13 @@ from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             None,
             False,
-            ConnectionError,
+            ConnectionError(
+                generate_ble_device(
+                    TEST_DEVICE_MAC,
+                    TEST_DEVICE_NAME,
+                ),
+                None,
+            ),
             "Device found but unable to connect.",
         ),
         (

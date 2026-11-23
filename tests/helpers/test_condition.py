@@ -3898,7 +3898,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {},
     }
     with pytest.raises(probatio.Invalid):
@@ -3933,7 +3933,7 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "between",
@@ -3974,7 +3974,7 @@ async def _setup_numerical_condition_with_unit(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: condition_options,
     }
 
@@ -4277,7 +4277,7 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: ["test.entity_1"]},
+        CONF_TARGET: {TargetKey.ENTITY_ID: ["test.entity_1"]},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -4320,7 +4320,7 @@ async def test_numerical_condition_with_unit_schema_accepts_valid_units(
     # Valid unit
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -4353,7 +4353,7 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
     # Invalid unit
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -5113,7 +5113,7 @@ async def _setup_attr_state_condition(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: condition_options or {},
     }
 
@@ -5409,7 +5409,7 @@ async def test_state_condition_attr_duration_entity_added_to_target(
     # Create condition targeting the label
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={CONF_FOR: {"seconds": 5}},
     )
@@ -5456,7 +5456,7 @@ async def test_state_condition_attr_duration_entity_removed_from_target(
 
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={
             ATTR_BEHAVIOR: BEHAVIOR_ALL,
@@ -5512,7 +5512,7 @@ async def test_state_condition_attr_duration_entity_added_then_state_changes(
     # Create condition targeting the label
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={CONF_FOR: {"seconds": 5}},
     )
@@ -5873,7 +5873,7 @@ async def test_state_condition_attr_duration_history_loaded_for_added_entity(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5927,7 +5927,7 @@ async def test_state_condition_attr_duration_not_counted_while_history_loads(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5979,7 +5979,7 @@ async def test_state_condition_attr_duration_benign_change_during_load_keeps_his
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -6039,7 +6039,7 @@ async def test_state_condition_attr_duration_invalidation_during_load_discards_h
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -6109,7 +6109,7 @@ async def test_state_condition_attr_duration_overlapping_loads_latest_wins(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -6777,7 +6777,7 @@ async def test_state_condition_state_valid_since_anchors_duration(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {CONF_FOR: {"seconds": 5}},
     }
     config = await async_validate_condition_config(hass, config)
@@ -6947,7 +6947,7 @@ async def test_condition_target_exclude_only_invalid(hass: HomeAssistant) -> Non
             hass,
             {
                 CONF_CONDITION: "test",
-                CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                CONF_TARGET: {CONF_EXCLUDE: {TargetKey.ENTITY_ID: "test.excluded"}},
             },
         )
 
@@ -7178,7 +7178,7 @@ def _make_condition(
             return True
 
     config = ConditionConfig(
-        target={CONF_ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
+        target={TargetKey.ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
     )
     return _SimpleCondition(hass, config)
 
