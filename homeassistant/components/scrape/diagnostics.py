@@ -21,14 +21,17 @@ TO_REDACT = {CONF_PASSWORD, CONF_PAYLOAD, CONF_USERNAME}
 
 
 def _redact_url(resource: str) -> str:
-    """Redact the credentials and the query string of a URL."""
+    """Redact the credentials, the query string and the fragment of a URL."""
     url = URL(resource)
     # A token can be the password without a user, which yarl reports as no user
     if url.user is not None or url.password is not None:
         url = url.with_user(REDACTED).with_password(None)
+    redacted = str(url.with_query(None).with_fragment(None))
     if url.query_string:
-        return f"{url.with_query(None)}?{REDACTED}"
-    return str(url)
+        redacted += f"?{REDACTED}"
+    if url.fragment:
+        redacted += f"#{REDACTED}"
+    return redacted
 
 
 async def async_get_config_entry_diagnostics(

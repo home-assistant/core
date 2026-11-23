@@ -77,7 +77,7 @@
       'auth': dict({
       }),
       'method': 'GET',
-      'resource': 'https://**REDACTED**@www.home-assistant.io/status?**REDACTED**',
+      'resource': 'https://**REDACTED**@www.home-assistant.io/status?**REDACTED**#**REDACTED**',
     }),
     'sensors': list([
       dict({

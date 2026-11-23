@@ -75,7 +75,7 @@ from homeassistant.core import HomeAssistant
             {
                 CONF_RESOURCE: (
                     "https://user:secret-password@www.home-assistant.io/status"
-                    "?api_key=secret-key"
+                    "?api_key=secret-key#access_token=secret-fragment"
                 ),
                 CONF_METHOD: "GET",
                 CONF_AUTH: {},
