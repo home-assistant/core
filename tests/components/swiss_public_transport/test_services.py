@@ -1,5 +1,6 @@
 """Test the swiss_public_transport service."""
 
+import asyncio
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -282,6 +283,45 @@ async def test_service_call_fetch_departures_success(
         "line": "S24",
         "destination": "Zug",
     }
+
+
+async def test_service_call_fetch_departures_not_overlapping(
+    hass: HomeAssistant,
+    mock_stationboard_client: AsyncMock,
+    mock_stationboard_config_entry: MockConfigEntry,
+) -> None:
+    """Test fetches wait for each other, as they share the client."""
+    await setup_integration(hass, mock_stationboard_config_entry)
+
+    running = 0
+    most_running = 0
+
+    async def get_data() -> None:
+        nonlocal running, most_running
+        running += 1
+        most_running = max(most_running, running)
+        await asyncio.sleep(0)
+        running -= 1
+
+    mock_stationboard_client.async_get_data.side_effect = get_data
+    await asyncio.gather(
+        *(
+            hass.services.async_call(
+                domain=DOMAIN,
+                service=SwissPublicTransportService.FETCH_DEPARTURES,
+                service_data={
+                    CommonServiceArgument.CONFIG_ENTRY_ID: (
+                        mock_stationboard_config_entry.entry_id
+                    ),
+                },
+                blocking=True,
+                return_response=True,
+            )
+            for _ in range(3)
+        )
+    )
+
+    assert most_running == 1
 
 
 async def test_service_call_fetch_departures_error(

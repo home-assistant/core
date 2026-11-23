@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import TypedDict, override
@@ -260,6 +261,8 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
         )
         self._opendata = opendata
         self._stops_at: set[str] = set(config_entry.data[CONF_STOPS_AT])
+        # Updates and actions share the client, which collects the journeys
+        self._fetch_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> list[DataDeparture]:
@@ -267,22 +270,23 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
 
     async def fetch_departures(self, limit: int) -> list[DataDeparture]:
         """Fetch departures using the opendata api."""
-        # The limit applies to each station, the merged list is cut below
-        self._opendata.limit = STOPS_AT_DEPARTURES if self._stops_at else limit
+        async with self._fetch_lock:
+            # The limit applies to each station, the merged list is cut below
+            self._opendata.limit = STOPS_AT_DEPARTURES if self._stops_at else limit
 
-        try:
-            await self._opendata.async_get_data()
-        except OpendataTransportConnectionError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_connection_failed",
-            ) from e
-        except OpendataTransportError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-            ) from e
-        journeys = self._opendata.journeys
+            try:
+                await self._opendata.async_get_data()
+            except OpendataTransportConnectionError as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_connection_failed",
+                ) from e
+            except OpendataTransportError as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from e
+            journeys = self._opendata.journeys
         if self._stops_at:
             # The first stop is the station the journey departs from
             journeys = [
