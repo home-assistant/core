@@ -121,5 +121,16 @@
         }
       }
     }
+  },
+  "services": {
+    "capture_device_snapshot": {
+      "service": "mdi:camera"
+    },
+    "start_device_recording": {
+      "service": "mdi:record-rec"
+    },
+    "stop_device_capture": {
+      "service": "mdi:stop"
+    }
   }
 }

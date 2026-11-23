@@ -698,6 +698,7 @@ FLOWS = {
         "rainmachine",
         "rapt_ble",
         "rdw",
+        "recamera_pro",
         "recollect_waste",
         "redgtech",
         "refoss",

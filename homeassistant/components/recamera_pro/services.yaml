@@ -1,37 +1,25 @@
 capture_device_snapshot:
-  name: Take device snapshot
-  description: Capture one JPG directly to device /mnt storage (independent of main/sub RTSP stream state; shares the device's single capture slot).
-  icon: mdi:camera
   target:
     entity:
       integration: recamera_pro
       domain: camera
   fields:
     output:
-      name: Output path
-      description: Optional /mnt directory or .jpg/.jpeg file path. Leave empty to use the active device storage directory.
       required: false
       selector:
         text:
 
 start_device_recording:
-  name: Start device recording
-  description: Record an MP4 clip directly to device /mnt storage (independent of main/sub RTSP stream state; only one capture or recording may run at a time).
-  icon: mdi:record-rec
   target:
     entity:
       integration: recamera_pro
       domain: camera
   fields:
     output:
-      name: Output path
-      description: Optional /mnt directory or .mp4 file path. Leave empty to use the active device storage directory.
       required: false
       selector:
         text:
     duration:
-      name: Duration
-      description: Recording length in seconds (1–3600).
       required: false
       default: 30
       selector:
@@ -41,9 +29,6 @@ start_device_recording:
           unit_of_measurement: s
 
 stop_device_capture:
-  name: Stop device recording
-  description: Stop the active device recording started by this integration and wait until the MP4 file is finalized on /mnt storage.
-  icon: mdi:stop
   target:
     entity:
       integration: recamera_pro

@@ -1,6 +1,9 @@
 {
   "domain": "recamera_pro",
   "name": "reCamera Pro",
+  "categories": [
+    "security_safety"
+  ],
   "codeowners": [
     "@yyling0101-a11y"
   ],
@@ -11,6 +14,7 @@
   "loggers": [
     "recamera_protocol"
   ],
+  "quality_scale": "bronze",
   "requirements": [
     "recamera-pro-ha-protocol==0.1.0"
   ],

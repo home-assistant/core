@@ -7,27 +7,29 @@ rules:
     status: done
     comment: OTA checks run on a bounded six-hour background task and do not gate local camera updates.
   brands:
-    status: todo
-    comment: Production branding artwork and documentation are not yet published.
+    status: done
+    comment: Brand assets PR opened in home-assistant/brands.
   common-modules: done
   config-flow: done
   config-flow-test-coverage:
-    status: todo
-    comment: Core-style config flow tests still need to be added.
+    status: done
+    comment: Config flow, zeroconf, reauth, reconfigure, and options flow tests are in tests/components/recamera_pro/test_config_flow.py.
   dependency-transparency: done
   docs-actions:
-    status: todo
-    comment: Actions are documented in README, but not yet on the Home Assistant documentation site.
+    status: done
+    comment: Actions documented in home-assistant.io PR.
   docs-conditions:
     status: exempt
     comment: This integration does not provide custom conditions.
   docs-high-level-description:
-    status: todo
-    comment: Home Assistant documentation site page is not yet published.
+    status: done
+    comment: Integration documentation PR opened in home-assistant/home-assistant.io.
   docs-installation-instructions:
-    status: todo
+    status: done
+    comment: Installation instructions included in home-assistant.io PR.
   docs-removal-instructions:
-    status: todo
+    status: done
+    comment: Removal instructions included in home-assistant.io PR.
   docs-triggers:
     status: exempt
     comment: This integration uses standard event entities and does not provide custom triggers.
@@ -43,8 +45,10 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
+    comment: Expanded configuration parameter reference planned for follow-up docs update.
   docs-installation-parameters:
     status: todo
+    comment: Expanded installation parameter reference planned for follow-up docs update.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -60,18 +64,25 @@ rules:
   discovery-update-info: done
   docs-data-update:
     status: todo
+    comment: Data update behavior documentation planned for Gold tier.
   docs-examples:
     status: todo
+    comment: Automation examples planned for Gold tier.
   docs-known-limitations:
     status: todo
+    comment: Known limitations section planned for Gold tier.
   docs-supported-devices:
     status: todo
+    comment: Supported hardware matrix planned for Gold tier.
   docs-supported-functions:
     status: todo
+    comment: Supported functions list planned for Gold tier.
   docs-troubleshooting:
     status: todo
+    comment: Troubleshooting guide planned for Gold tier.
   docs-use-cases:
     status: todo
+    comment: Use cases section planned for Gold tier.
   dynamic-devices:
     status: exempt
     comment: Each config entry represents one fixed physical camera.
@@ -95,3 +106,4 @@ rules:
     comment: Optional injected sessions are supported and ownership-tested, but HA-managed sessions still need compatibility validation for this device's cookie flow.
   strict-typing:
     status: todo
+    comment: Full py.typed and strict typing validation planned for Platinum tier.

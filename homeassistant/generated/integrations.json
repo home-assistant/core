@@ -12509,6 +12509,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "recamera_pro": {
+      "name": "reCamera Pro",
+      "integration_type": "device",
+      "categories": [
+        "security_safety"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "recollect_waste": {
       "name": "ReCollect Waste",
       "integration_type": "service",
