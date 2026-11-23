@@ -14,7 +14,14 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import (
+    DOMAIN,
+    PLATFORMS,
+    SIGNAL_DEVICE_ADDED,
+    SIGNAL_RECEIVE_MESSAGE,
+    SIGNAL_SEND_MESSAGE,
+    SUBENTRY_TYPE_DEVICE,
+)
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -67,6 +74,22 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, config_entry: EnOceanConfigEntry
+) -> None:
+    """Tell the platforms about the devices of the entry.
+
+    A device that was added gets its entities without a reload, which would
+    close and open the serial port. The platforms skip the devices they know.
+    """
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+        async_dispatcher_send(hass, SIGNAL_DEVICE_ADDED, subentry)
 
 
 async def async_unload_entry(

@@ -9,14 +9,8 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    CONF_DEVICE_TYPE_ID,
-    DOMAIN,
-    SIGNAL_DEVICE_ADDED,
-    SUBENTRY_TYPE_DEVICE,
-)
+from .const import CONF_DEVICE_TYPE_ID, DOMAIN, SUBENTRY_TYPE_DEVICE
 
 BREAKS_IN_HA_VERSION = "2027.6.0"
 
@@ -86,9 +80,6 @@ def async_import_yaml_device(
             unique_id=address,
         )
         hass.config_entries.async_add_subentry(entry, subentry)
-        # A loaded entry gets the entities of the device without a reload, which
-        # would close and open the serial port once for every imported device.
-        async_dispatcher_send(hass, SIGNAL_DEVICE_ADDED, subentry)
 
     _async_create_issue(
         hass, f"deprecated_yaml_{platform}", "deprecated_yaml", {"platform": platform}

@@ -73,10 +73,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensors of the configured devices."""
+    added_subentry_ids: set[str] = set()
 
     @callback
     def async_add_device(subentry: ConfigSubentry) -> None:
-        """Add the binary sensor of a rocker switch."""
+        """Add the binary sensor of a rocker switch, unless it was added before."""
+        if subentry.subentry_id in added_subentry_ids:
+            return
+        added_subentry_ids.add(subentry.subentry_id)
         if subentry.data[CONF_DEVICE_TYPE_ID] != DEVICE_TYPE_ROCKER_SWITCH:
             return
         device_class = subentry.data.get(CONF_DEVICE_CLASS)
