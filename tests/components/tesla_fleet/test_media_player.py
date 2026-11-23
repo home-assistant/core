@@ -3,28 +3,23 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 async def test_media_player(
@@ -55,8 +50,8 @@ async def test_media_player_volume_step(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_UP,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -124,8 +119,11 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -138,8 +136,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PAUSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -153,8 +151,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PLAY,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -167,8 +165,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_NEXT_TRACK,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -180,8 +178,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)

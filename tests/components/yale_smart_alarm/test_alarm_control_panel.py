@@ -5,22 +5,24 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import YaleSmartAlarmData
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -61,8 +63,11 @@ async def test_alarm_control_panel_service_calls(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_username", ATTR_CODE: "123456"},
+        AlarmControlPanelService.DISARM,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_username",
+            AlarmControlPanelServiceArgument.CODE: "123456",
+        },
         blocking=True,
     )
     client.disarm.assert_called_once()
@@ -70,8 +75,11 @@ async def test_alarm_control_panel_service_calls(
     assert state.state == AlarmControlPanelState.DISARMED
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_username", ATTR_CODE: "123456"},
+        AlarmControlPanelService.ARM_HOME,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_username",
+            AlarmControlPanelServiceArgument.CODE: "123456",
+        },
         blocking=True,
     )
     client.arm_partial.assert_called_once()
@@ -79,8 +87,11 @@ async def test_alarm_control_panel_service_calls(
     assert state.state == AlarmControlPanelState.ARMED_HOME
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_username", ATTR_CODE: "123456"},
+        AlarmControlPanelService.ARM_AWAY,
+        {
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_username",
+            AlarmControlPanelServiceArgument.CODE: "123456",
+        },
         blocking=True,
     )
     client.arm_full.assert_called_once()
@@ -95,8 +106,11 @@ async def test_alarm_control_panel_service_calls(
     ):
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test_username", ATTR_CODE: "123456"},
+            AlarmControlPanelService.DISARM,
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.test_username",
+                AlarmControlPanelServiceArgument.CODE: "123456",
+            },
             blocking=True,
         )
 
@@ -111,8 +125,11 @@ async def test_alarm_control_panel_service_calls(
     ):
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: "alarm_control_panel.test_username", ATTR_CODE: "123456"},
+            AlarmControlPanelService.DISARM,
+            {
+                TargetKey.ENTITY_ID: "alarm_control_panel.test_username",
+                AlarmControlPanelServiceArgument.CODE: "123456",
+            },
             blocking=True,
         )
 

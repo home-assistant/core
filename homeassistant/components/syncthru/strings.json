@@ -12,13 +12,11 @@
     "step": {
       "confirm": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:component::syncthru::config::step::user::data::url%]"
         }
       },
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "url": "Web interface URL"
         }
       }

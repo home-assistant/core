@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Elvia from a config entry."""
     importer = ElviaImporter(
         hass=hass,
@@ -47,5 +47,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             timedelta(minutes=60),
         )
     )
-
-    return True

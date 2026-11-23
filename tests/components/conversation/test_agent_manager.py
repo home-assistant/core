@@ -2,9 +2,17 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.conversation import ConversationResult, async_converse
+from homeassistant.components.conversation import (
+    ConversationInput,
+    ConversationResult,
+    async_converse,
+    async_get_chat_log,
+)
+from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.intent import IntentResponse
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import chat_session
+from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
 
 
 async def test_async_converse(hass: HomeAssistant, init_components) -> None:
@@ -34,3 +42,45 @@ async def test_async_converse(hass: HomeAssistant, init_components) -> None:
     assert conversation_input.agent_id == "conversation.home_assistant"
     assert conversation_input.device_id == "test device id"
     assert conversation_input.extra_system_prompt == "test extra prompt"
+
+
+async def test_async_converse_error_in_open_turn(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test an error of the agent is added to the open turn of the caller."""
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_handle_message",
+            side_effect=HomeAssistantError("Provider is down"),
+        ),
+    ):
+        await async_converse(hass, "Hello", "koala", Context())
+
+    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+        ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+
+
+async def test_async_converse_failed_first_turn(
+    hass: HomeAssistant, init_components: None
+) -> None:
+    """Test a failed first turn returns the ID of the stored conversation."""
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent._async_handle_message",
+        side_effect=HomeAssistantError("Provider is down"),
+    ):
+        result = await async_converse(
+            hass, text="test command", conversation_id=None, context=Context()
+        )
+
+    assert result.response.error_code == IntentResponseErrorCode.UNKNOWN
+    content = hass.data[DATA_CHAT_LOGS][result.conversation_id].content
+    assert [(c.role, c.content) for c in content[1:]] == [
+        ("user", "test command"),
+        ("assistant", "Error: Provider is down"),
+    ]

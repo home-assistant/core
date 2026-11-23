@@ -30,6 +30,7 @@ from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
 
@@ -37,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
+# The version that ran before this start, set only when it differs
+DATA_PREVIOUS_VERSION: HassKey[str] = HassKey("previous_version")
 CONFIG_DIR_NAME = ".homeassistant"
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
@@ -282,22 +285,24 @@ def load_yaml_config_file(
     return conf_dict
 
 
-def process_ha_config_upgrade(hass: HomeAssistant) -> None:
+def process_ha_config_upgrade(hass: HomeAssistant) -> str | None:
     """Upgrade configuration if necessary.
 
+    Returns the version that ran before, if it differs from the running one.
     This method needs to run in an executor.
     """
     version_path = hass.config.path(VERSION_FILE)
+    previous_version: str | None = None
 
     try:
         with open(version_path, encoding="utf8") as inp:
-            conf_version = inp.readline().strip()
+            conf_version = previous_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
         conf_version = "0.7.7"
 
     if conf_version == __version__:
-        return
+        return None
 
     _LOGGER.info(
         "Upgrading configuration directory from %s to %s", conf_version, __version__
@@ -323,6 +328,8 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     with open(version_path, "w", encoding="utf8") as outp:
         outp.write(__version__)
+
+    return previous_version
 
 
 @callback

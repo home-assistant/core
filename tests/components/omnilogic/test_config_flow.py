@@ -5,13 +5,12 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.omnilogic.const import DEFAULT_PH_OFFSET, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}
 
@@ -26,7 +25,7 @@ def _patch_success() -> Iterator[None]:
         ),
         patch(
             "homeassistant.components.omnilogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -48,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.omnilogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -174,7 +173,7 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     assert not entry.options
 
     with patch(
-        "homeassistant.components.omnilogic.async_setup_entry", return_value=True
+        "homeassistant.components.omnilogic.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
 

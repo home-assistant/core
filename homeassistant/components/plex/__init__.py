@@ -108,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> None:
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
@@ -254,17 +254,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> bool
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> None:
     """Unload a config entry."""
     entry.runtime_data.websocket.close()
 
     for unsub in entry.runtime_data.dispatchers:
         unsub()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_options_updated(hass: HomeAssistant, entry: PlexConfigEntry) -> None:

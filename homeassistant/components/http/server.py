@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -21,6 +21,7 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import AbstractResource
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -40,6 +41,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.setup import async_when_setup
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
+from homeassistant.util.ssl import SSLProfile
 
 from .auth import async_setup_auth
 from .ban import setup_bans
@@ -53,7 +55,6 @@ from .const import (
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     ENV_SUPERVISOR,
-    SSL_INTERMEDIATE,
     is_supervisor_unix_socket_request,
 )
 from .cors import setup_cors
@@ -89,6 +90,18 @@ _STATIC_CLASSES = {
 }
 
 
+def _comparable_config(conf: ConfData) -> ConfData:
+    """Return the config without metadata, and without the SSL profile if unused.
+
+    Without a certificate the profile has no effect, so a default config
+    persisted with an earlier default profile is still the default config.
+    """
+    conf = _strip_meta(conf)
+    if CONF_SSL_CERTIFICATE not in conf:
+        conf.pop(CONF_SSL_PROFILE, None)
+    return conf
+
+
 def make_server(
     hass: HomeAssistant,
     conf: ConfData,
@@ -111,11 +124,10 @@ def make_server(
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
         # Only the unconfigured default config on the new Supervisor default
-        # port bridges the previous one; compare without metadata so a default
-        # config reloaded from disk still matches.
+        # port bridges the previous one.
         port_transition=(
             ENV_SUPERVISOR in os.environ
-            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and _comparable_config(conf) == _comparable_config(_DEFAULT_CONFIG)
             and conf[CONF_SERVER_PORT] != SERVER_PORT
         ),
     )
@@ -257,7 +269,7 @@ class HomeAssistantHTTP:
         server_host: list[str] | None,
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
-        ssl_profile: str,
+        ssl_profile: SSLProfile,
         supervisor_unix_socket_path: Path | None = None,
         port_transition: bool = False,
     ) -> None:
@@ -289,6 +301,7 @@ class HomeAssistantHTTP:
         self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
+        self._requires_auth_resources: set[AbstractResource] = set()
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -380,7 +393,22 @@ class HomeAssistantHTTP:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.hass, self.app, self.app.router)
+        routes = view.register(self.hass, self.app, self.app.router)
+        if view.requires_auth and routes:
+            self._requires_auth_resources.update(
+                route.resource for route in routes if route.resource is not None
+            )
+
+    async def async_path_requires_auth(
+        self, request: web.Request, raw_path: str
+    ) -> bool:
+        """Return whether raw_path resolves to a registered view requiring auth."""
+        probe_request = request.clone(rel_url=URL.build(path=raw_path, encoded=True))
+        for resource in self._requires_auth_resources:
+            _, allowed_methods = await resource.resolve(probe_request)
+            if allowed_methods:
+                return True
+        return False
 
     def register_redirect(
         self,
@@ -456,10 +484,7 @@ class HomeAssistantHTTP:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
-            if self.ssl_profile == SSL_INTERMEDIATE:
-                context = ssl_util.server_context_intermediate()
-            else:
-                context = ssl_util.server_context_modern()
+            context = ssl_util.server_context(self.ssl_profile)
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
             if not self.hass.config.recovery_mode:
@@ -511,7 +536,7 @@ class HomeAssistantHTTP:
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext:
         """Create an emergency ssl certificate so we can still startup."""
-        context = ssl_util.server_context_modern()
+        context = ssl_util.server_context(self.ssl_profile)
         host: str
         try:
             host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)
@@ -537,7 +562,7 @@ class HomeAssistantHTTP:
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=30))
+            .not_valid_after(now + dt.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

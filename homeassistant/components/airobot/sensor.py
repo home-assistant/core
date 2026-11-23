@@ -25,8 +25,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from . import AirobotConfigEntry
-from .coordinator import AirobotDataUpdateCoordinator
+from .coordinator import AirobotConfigEntry, AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 0

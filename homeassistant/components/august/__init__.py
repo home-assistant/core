@@ -30,7 +30,7 @@ from .util import async_create_august_clientsession
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
     """Set up August from a config entry."""
     # Check if this is a legacy config entry that needs migration to OAuth
     if "auth_implementation" not in entry.data:
@@ -56,7 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
     ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
@@ -64,9 +63,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> N
     ir.async_delete_issue(hass, DOMAIN, "yale_brand_migration")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_setup_august(

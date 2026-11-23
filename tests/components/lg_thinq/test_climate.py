@@ -3,22 +3,22 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
+    ClimateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -105,7 +105,7 @@ async def test_service_call_connection_error_raises_home_assistant_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.test_air_conditioner", "fan_mode": "low"},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: "climate.test_air_conditioner", "fan_mode": "low"},
             blocking=True,
         )

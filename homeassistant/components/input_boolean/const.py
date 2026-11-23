@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "input_boolean"
 
+CONF_INITIAL = "initial"
+
 DATA_INPUT_BOOLEAN: HassKey[InputBooleanData] = HassKey(DOMAIN)
 
 
@@ -17,3 +19,12 @@ class InputBooleanEntityStateAttribute(StrEnum):
     """State attributes for input boolean entities."""
 
     EDITABLE = "editable"
+
+
+class InputBooleanService(StrEnum):
+    """Store keys for input boolean services."""
+
+    RELOAD = "reload"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

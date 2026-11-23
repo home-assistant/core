@@ -5,11 +5,11 @@ Functions:
         Test a successful setup entry and unload of entry.
 """
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.ekeybionyx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

@@ -7,8 +7,6 @@ import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -49,7 +47,6 @@ from .const import (
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
-from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -280,11 +277,6 @@ RFLINK_PLATFORM = {
     },
 }
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
-
 
 def lookup_unit_for_sensor_type(sensor_type):
     """Get unit for sensor type.
@@ -337,12 +329,9 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-        automatic_add_config(hass, config)
-    else:
-        async_add_entities(devices_from_config(discovery_info))
-        automatic_add_config(hass, discovery_info)
+        return
+    async_add_entities(devices_from_config(discovery_info))
+    automatic_add_config(hass, discovery_info)
 
 
 class RflinkSensor(RflinkDevice, SensorEntity):
@@ -370,17 +359,6 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event["value"]
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @callback
     @override

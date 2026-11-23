@@ -1,5 +1,4 @@
-# pylint: disable=duplicate-code
-"""Creates Number entities for the my-PV Home Assistant integration."""
+"""Creates Number entities for the my-PV integration."""
 
 from typing import Any, Final, override
 
@@ -13,34 +12,40 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyPVConfigEntry
 from .const import DOMAIN
+from .coordinator import MyPVConfigEntry, MyPVCoordinator
 from .entity import MyPVSetupEntity
 
-NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
-    "bsttemp": {
-        "device_class": NumberDeviceClass.TEMPERATURE,
-        "entity_category": EntityCategory.CONFIG,
-        "translation_key": "ww1boost",
-    },
-    "ww1boost": {
-        "device_class": NumberDeviceClass.TEMPERATURE,
-        "entity_category": EntityCategory.CONFIG,
-        "translation_key": "ww1boost",
-    },
-    "ww_boost_h": {
-        "device_class": NumberDeviceClass.TEMPERATURE_DELTA,
-        "entity_category": EntityCategory.CONFIG,
-        "enabled": False,
-        "translation_key": "ww_boost_h",
-    },
-    "ww_targ_h": {
-        "device_class": NumberDeviceClass.TEMPERATURE_DELTA,
-        "entity_category": EntityCategory.CONFIG,
-        "enabled": False,
-        "translation_key": "ww_targ_h",
-    },
-}
+PARALLEL_UPDATES = 0
+
+ENTITY_DESCRIPTIONS: Final[tuple[NumberEntityDescription, ...]] = (
+    NumberEntityDescription(
+        key="bsttemp",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        translation_key="ww1boost",
+    ),
+    NumberEntityDescription(
+        key="ww1boost",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        translation_key="ww1boost",
+    ),
+    NumberEntityDescription(
+        key="ww_boost_h",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        translation_key="ww_boost_h",
+    ),
+    NumberEntityDescription(
+        key="ww_targ_h",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        translation_key="ww_targ_h",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -50,35 +55,37 @@ async def async_setup_entry(
 ) -> None:
     """Set up the my-PV number."""
     coordinator = config_entry.runtime_data
-    entities = []
 
-    for key, config in coordinator.device.get_setup_configurations().items():
-        if config.get("type") == "number" and key in NUMBER_DESCRIPTIONS:
-            number_description: dict = NUMBER_DESCRIPTIONS[key]
-            entity_description = NumberEntityDescription(
-                key=key,
-                device_class=number_description.get("device_class"),
-                entity_category=number_description.get("entity_category"),
-                translation_key=number_description.get("translation_key"),
-                native_unit_of_measurement=config.get("unit"),
-                native_min_value=config.get("min", 0),
-                native_max_value=config.get("max"),
-                native_step=config.get("step"),
-                entity_registry_enabled_default=number_description.get("enabled", True),
-            )
-            entities.append(
-                MyPVNumber(
-                    coordinator,
-                    entity_description,
-                    coordinator.device.serial_number,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        MyPVNumber(coordinator, entity_description, config)
+        for entity_description in ENTITY_DESCRIPTIONS
+        if (
+            config := coordinator.device.get_setup_configuration(entity_description.key)
+        )
+        and config.get("type") == "number"
+    )
 
 
 class MyPVNumber(MyPVSetupEntity, NumberEntity):
     """my-PV number."""
+
+    entity_description: NumberEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MyPVCoordinator,
+        entity_description: NumberEntityDescription,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the number."""
+        super().__init__(coordinator, entity_description)
+
+        self._attr_native_unit_of_measurement = config.get("unit")
+        self._attr_native_min_value = config.get("min", 0)
+        if (max_value := config.get("max")) is not None:
+            self._attr_native_max_value = max_value
+        if (step := config.get("step")) is not None:
+            self._attr_native_step = step
 
     @property
     @override

@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
@@ -16,12 +18,11 @@ from homeassistant.components.telegram_bot.const import (
     CONF_TRUSTED_NETWORKS,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
-    PARSER_MD,
-    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
     SECTION_ADDITIONAL_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+    TelegramBotParseMode,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
@@ -29,15 +30,12 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, pytest
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.telegram_bot.async_setup_entry", return_value=True
+        "homeassistant.components.telegram_bot.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -64,13 +62,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            ATTR_PARSER: PARSER_PLAIN_TEXT,
+            ATTR_PARSER: TelegramBotParseMode.PLAIN_TEXT,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
+    assert result["data"][ATTR_PARSER] == TelegramBotParseMode.PLAIN_TEXT
 
 
 async def test_reconfigure_flow_broadcast(
@@ -804,7 +802,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
         assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
-        assert result["options"][ATTR_PARSER] == PARSER_MD
+        assert result["options"][ATTR_PARSER] == TelegramBotParseMode.MARKDOWN
         assert result["result"].unique_id == "mock api key"
 
         # test: import 2nd entry failed due to duplicate

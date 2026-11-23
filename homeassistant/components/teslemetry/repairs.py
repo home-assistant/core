@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 import probatio
 from tesla_fleet_api.exceptions import PrivateKeyError, TeslaFleetError
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -16,13 +16,14 @@ from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 
-from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
+from . import _async_get_rsa_key_pem
 from .const import ISSUE_GATEWAY_NOT_FOUND, LOGGER, VEHICLE_ISSUE_LEARN_MORE
 from .helpers import (
     PowerwallKeyRejectedError,
     async_verify_local_gateway,
     cloud_energy_site,
 )
+from .models import TeslemetryConfigEntry
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):

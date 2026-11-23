@@ -72,7 +72,7 @@ WEBHOOK_SCHEMA = probatio.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Configure based on config entry."""
     if entry.data[CONF_USE_WEBHOOK]:
         async_setup_webhook(hass, entry)
@@ -84,8 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
     )
-
-    return True
 
 
 @callback
@@ -128,27 +126,28 @@ async def async_setup_coordinator(
             coordinator.platforms.append(platform)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Unload a config entry."""
     if entry.data[CONF_USE_WEBHOOK]:
-        return await async_unload_webhook(hass, entry)
+        await async_unload_webhook(hass, entry)
+        return
 
-    return await async_unload_coordinator(hass, entry)
+    await async_unload_coordinator(hass, entry)
 
 
-async def async_unload_webhook(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_unload_webhook(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_unload_coordinator(
     hass: HomeAssistant, entry: PlaatoConfigEntry
-) -> bool:
+) -> None:
     """Unload auth token based entry."""
     coordinator = entry.runtime_data.coordinator
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, coordinator.platforms if coordinator else PLATFORMS
     )
 

@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 _UUID = str(UUID_SERVICE).lower()
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) -> None:
     """Set up Fjäråskupan from a config entry."""
 
     entry.runtime_data = {}
@@ -107,7 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 @callback
@@ -138,18 +137,15 @@ def async_setup_entry_platform(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: FjaraskupanConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        for device_entry in dr.async_entries_for_config_entry(
-            dr.async_get(hass), entry.entry_id
-        ):
-            for conn in device_entry.connections:
-                if conn[0] == dr.CONNECTION_BLUETOOTH:
-                    async_rediscover_address(hass, conn[1])
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    for device_entry in dr.async_entries_for_config_entry(
+        dr.async_get(hass), entry.entry_id
+    ):
+        for conn in device_entry.connections:
+            if conn[0] == dr.CONNECTION_BLUETOOTH:
+                async_rediscover_address(hass, conn[1])
 
 
 async def async_remove_config_entry_device(

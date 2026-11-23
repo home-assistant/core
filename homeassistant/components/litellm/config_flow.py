@@ -1,5 +1,6 @@
 """Config flow for LiteLLM integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,19 +8,26 @@ from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeni
 import probatio
 from yarl import URL
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LLM_HASS_API,
+    CONF_MODEL,
+    CONF_PROMPT,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -30,7 +38,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_PROMPT,
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
@@ -38,6 +45,7 @@ from .const import (
     PLACEHOLDER_API_KEY,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
+from .coordinator import LiteLLMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,25 +67,52 @@ def _normalize_url(url: str) -> str:
     return str(parsed.with_path(path))
 
 
-async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
+async def _get_models(
+    hass: HomeAssistant,
+    url: str,
+    api_key: str | None,
+    modes: frozenset[str] | None = None,
+) -> list[str]:
     """Fetch the available model names from the LiteLLM proxy.
 
     Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
-    serves with the configured model names.
+    serves with the configured model names. When `modes` is given, the models
+    whose LiteLLM mode is in `modes` or unknown are kept.
     """
     client = AsyncOpenAI(
         base_url=url,
         api_key=api_key or PLACEHOLDER_API_KEY,
         http_client=get_async_client(hass),
-    )
+    ).with_options(timeout=10.0)
     try:
-        return [
-            model.id async for model in client.with_options(timeout=10.0).models.list()
-        ]
+        models = [model.id async for model in client.models.list()]
     except (AuthenticationError, PermissionDeniedError) as err:
         raise InvalidAuth from err
     except OpenAIError as err:
         raise CannotConnect from err
+
+    if modes is None:
+        return models
+
+    # Keys limited to a subset of routes may not reach `/model/info`
+    try:
+        info = await client.get("/model/info", cast_to=dict[str, Any])
+    except OpenAIError as err:
+        _LOGGER.debug("Could not fetch model modes from the proxy: %s", err)
+        return models
+
+    model_modes: dict[str, set[str | None]] = {}
+    for deployment in info["data"]:
+        model_modes.setdefault(deployment["model_name"], set()).add(
+            deployment["model_info"].get("mode")
+        )
+    # Custom backends often have no mode, so they stay selectable
+    allowed = {None, *modes}
+    return [
+        model
+        for model in models
+        if model not in model_modes or not model_modes[model].isdisjoint(allowed)
+    ]
 
 
 class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -89,7 +124,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: LiteLLMConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {
@@ -97,26 +132,30 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             "stt": STTFlowHandler,
         }
 
+    async def _async_validate(self, url: str, api_key: str | None) -> dict[str, str]:
+        """Validate the proxy connection and return any errors."""
+        try:
+            await _get_models(self.hass, url, api_key)
+        except InvalidAuth:
+            return {"base": "invalid_auth"}
+        except CannotConnect:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             url = _normalize_url(user_input[CONF_URL])
             api_key = user_input.get(CONF_API_KEY)
             self._async_abort_entries_match({CONF_URL: url})
-            try:
-                await _get_models(self.hass, url, api_key)
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await self._async_validate(url, api_key)):
                 data = {CONF_URL: url}
                 if api_key:
                     data[CONF_API_KEY] = api_key
@@ -135,24 +174,72 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            if not (
+                errors := await self._async_validate(
+                    reauth_entry.data[CONF_URL], api_key
+                )
+            ):
+                # A loaded entry is reloaded by its update listener when data changes
+                reload = (
+                    reauth_entry.data.get(CONF_API_KEY) == api_key
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry, data_updates={CONF_API_KEY: api_key}
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
+            description_placeholders={"url": reauth_entry.data[CONF_URL]},
+            errors=errors,
+        )
+
 
 class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for LiteLLM."""
+
+    model_modes: frozenset[str]
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         self.models: list[str] = []
 
     async def _fetch_models(self) -> None:
-        """Fetch models from the LiteLLM proxy."""
+        """Fetch the models of this subentry's modes from the LiteLLM proxy."""
         entry = self._get_entry()
         self.models = await _get_models(
-            self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
+            self.hass,
+            entry.data[CONF_URL],
+            entry.data.get(CONF_API_KEY),
+            self.model_modes,
         )
 
 
 class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle conversation subentry flow."""
+
+    model_modes = frozenset({"chat", "responses"})
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -252,7 +339,11 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),
@@ -262,11 +353,12 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
 class STTFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle STT subentry flow."""
 
+    model_modes = frozenset({"audio_transcription"})
+
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         super().__init__()
         self.options: dict[str, Any] = {}
-        self.last_rendered_custom_prompt_keywords = False
 
     @property
     def _is_new(self) -> bool:
@@ -295,28 +387,19 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            custom_prompt_keywords = user_input[CONF_STT_CUSTOM_PROMPT_KEYWORDS]
-            if custom_prompt_keywords == self.last_rendered_custom_prompt_keywords:
-                self.options = user_input.copy()
-                for field in (CONF_STT_PROMPT, CONF_STT_KEYWORDS):
-                    if not custom_prompt_keywords or not self.options.get(field):
-                        self.options.pop(field, None)
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=self.options[CONF_MODEL], data=self.options
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    title=self.options[CONF_MODEL],
-                    data=self.options,
+            self.options = user_input.copy()
+            for field in (CONF_STT_PROMPT, CONF_STT_KEYWORDS):
+                if not self.options.get(field):
+                    self.options.pop(field, None)
+            if self._is_new:
+                return self.async_create_entry(
+                    title=self.options[CONF_MODEL], data=self.options
                 )
-
-            self.options = user_input
-            self.last_rendered_custom_prompt_keywords = custom_prompt_keywords
-        else:
-            self.last_rendered_custom_prompt_keywords = bool(
-                self.options.get(CONF_STT_CUSTOM_PROMPT_KEYWORDS, False)
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                title=self.options[CONF_MODEL],
+                data=self.options,
             )
 
         try:
@@ -329,6 +412,10 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
+        custom_prompt_keywords: FieldCondition = {
+            "field": CONF_STT_CUSTOM_PROMPT_KEYWORDS,
+            "value": True,
+        }
         schema: dict[Any, Any] = {
             probatio.Required(
                 CONF_MODEL, default=self.options.get(CONF_MODEL)
@@ -346,25 +433,19 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
                 CONF_STT_CUSTOM_PROMPT_KEYWORDS,
                 default=self.options.get(CONF_STT_CUSTOM_PROMPT_KEYWORDS, False),
             ): bool,
+            data_entry_flow.Optional(
+                CONF_STT_PROMPT,
+                description={"suggested_value": self.options.get(CONF_STT_PROMPT, "")},
+                visible=custom_prompt_keywords,
+            ): TemplateSelector(),
+            data_entry_flow.Optional(
+                CONF_STT_KEYWORDS,
+                description={
+                    "suggested_value": self.options.get(CONF_STT_KEYWORDS, "")
+                },
+                visible=custom_prompt_keywords,
+            ): TemplateSelector(),
         }
-
-        if self.options.get(CONF_STT_CUSTOM_PROMPT_KEYWORDS):
-            schema.update(
-                {
-                    probatio.Optional(
-                        CONF_STT_PROMPT,
-                        description={
-                            "suggested_value": self.options.get(CONF_STT_PROMPT, "")
-                        },
-                    ): TemplateSelector(),
-                    probatio.Optional(
-                        CONF_STT_KEYWORDS,
-                        description={
-                            "suggested_value": self.options.get(CONF_STT_KEYWORDS, "")
-                        },
-                    ): TemplateSelector(),
-                }
-            )
 
         return self.async_show_form(
             step_id="init",

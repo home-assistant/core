@@ -7,8 +7,10 @@
       "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533"
     }
   ],
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/iron_os",
   "integration_type": "device",

@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from habluetooth import BluetoothServiceInfoBleak
 from HueBLE import ConnectionError, HueBleError, PairingError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import BLEDevice, generate_ble_device
 
 from homeassistant.components.hue_ble.config_flow import Error
 from homeassistant.components.hue_ble.const import (
@@ -25,10 +27,9 @@ from . import (
     TEST_DEVICE_NAME,
 )
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import BLEDevice, generate_ble_device
-
-AUTH_ERROR = ConnectionError()
+AUTH_ERROR = ConnectionError(
+    generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME), None
+)
 AUTH_ERROR.__cause__ = PairingError()
 
 
@@ -72,7 +73,7 @@ async def test_user_form(
     with (
         patch(
             "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
-            return_value=generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.async_scanner_count",
@@ -81,6 +82,11 @@ async def test_user_form(
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
             side_effect=[True],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.supports_on_off",
+            new_callable=PropertyMock,
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
@@ -147,7 +153,7 @@ async def test_user_form_no_device(
             Error.NOT_FOUND,
         ),
         (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             1,
             AUTH_ERROR,
             True,
@@ -155,15 +161,17 @@ async def test_user_form_no_device(
             Error.INVALID_AUTH,
         ),
         (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             1,
-            ConnectionError,
+            ConnectionError(
+                generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME), None
+            ),
             True,
             None,
             Error.CANNOT_CONNECT,
         ),
         (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             1,
             None,
             False,
@@ -171,7 +179,7 @@ async def test_user_form_no_device(
             Error.NOT_SUPPORTED,
         ),
         (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             1,
             None,
             True,
@@ -179,7 +187,7 @@ async def test_user_form_no_device(
             Error.UNKNOWN,
         ),
         (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             1,
             HueBleError,
             None,
@@ -268,7 +276,7 @@ async def test_user_form_exception(
     with (
         patch(
             "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
-            return_value=generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.async_scanner_count",
@@ -277,6 +285,11 @@ async def test_user_form_exception(
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
             side_effect=[True],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.supports_on_off",
+            new_callable=PropertyMock,
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",

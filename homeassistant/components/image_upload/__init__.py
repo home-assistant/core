@@ -40,6 +40,11 @@ UPDATE_FIELDS: VolDictType = {
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+    "ImageStorageCollection",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""

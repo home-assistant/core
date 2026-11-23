@@ -4,10 +4,11 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate, TypeGuard
+from typing import Any, Concatenate
 
 from homematicip.base.enums import FunctionalChannelType
 from homematicip.base.functionalChannels import AccessAuthorizationChannel
+from homematicip.connection.rest_connection import RestResult
 from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
@@ -17,12 +18,15 @@ from .entity import HomematicipGenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_error_response(response: Any) -> TypeGuard[dict[str, Any]]:
-    """Response from async call contains errors or not."""
-    if isinstance(response, dict):
-        return response.get("errorCode") not in ("", None)
-
-    return False
+def get_error_code(response: Any) -> str | None:
+    """Return the error code of a failed async call, None if it succeeded."""
+    if isinstance(response, RestResult):
+        if response.success:
+            return None
+        return response.error_code or response.status_text
+    if isinstance(response, dict) and response.get("errorCode") not in ("", None):
+        return str(response["errorCode"])
+    return None
 
 
 def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
@@ -38,16 +42,19 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
     ) -> None:
         """Handle errors from async call."""
         result = await func(self, *args, **kwargs)
-        if is_error_response(result):
+        if (error_code := get_error_code(result)) is not None:
+            response = (
+                result.text if isinstance(result, RestResult) else json.dumps(result)
+            )
             # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Error while execute function %s: %s",
                 __name__,
-                json.dumps(result),
+                response or error_code,
             )
             raise HomeAssistantError(
                 f"Error while execute function {func.__name__}:"
-                f" {result.get('errorCode')}."
+                f" {error_code}."
                 " See log for more information."
             )
 

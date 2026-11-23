@@ -73,12 +73,7 @@ rules:
     comment: One fixed inverter per config entry; nothing is discovered at runtime.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: >-
-      All three sensors in this initial platform are primary readings that a
-      user adds the integration to get. The follow-up PR adding the full
-      register table is where less popular entities start being disabled.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:

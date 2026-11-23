@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Set up from a config entry."""
 
     # Remove casts to str
@@ -106,13 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # This ensures that the initial WebSocket notifications are dispatched to entities
     await client.connect_notifications(remote_control=True, reconnect=True)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
     entry.runtime_data.client.disconnect_notifications()
     await entry.runtime_data.client.close_api_client()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

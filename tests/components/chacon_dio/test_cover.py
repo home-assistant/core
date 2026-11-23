@@ -3,27 +3,23 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 COVER_ENTITY_ID = "cover.shutter_mock_1"
 
@@ -87,8 +83,8 @@ async def test_cover_actions(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: COVER_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -97,8 +93,8 @@ async def test_cover_actions(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: COVER_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -107,8 +103,8 @@ async def test_cover_actions(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: COVER_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -117,8 +113,8 @@ async def test_cover_actions(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_POSITION: 25, ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        CoverService.SET_POSITION,
+        {CoverServiceArgument.POSITION: 25, TargetKey.ENTITY_ID: COVER_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()

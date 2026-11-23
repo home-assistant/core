@@ -1,26 +1,22 @@
 """The weather tests for the AEMET OpenData platform."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration, mock_api_call
-
-from tests.common import snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +46,7 @@ async def test_all_entities(
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
@@ -127,7 +123,7 @@ async def test_forecast_subscription(
         "homeassistant.components.aemet.AEMET.api_call",
         side_effect=mock_api_call,
     ):
-        freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+        freezer.tick(WEATHER_UPDATE_INTERVAL + dt.timedelta(seconds=1))
         await hass.async_block_till_done()
         msg = await client.receive_json()
 

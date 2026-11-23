@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -25,8 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "68:A3:78:00:00:00"
 
@@ -102,7 +101,13 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
     assert router().open.call_count == 1
 
 
-async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unload_remove(
+    hass: HomeAssistant,
+    router: Mock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
     entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_server_r2_download_speed"
@@ -125,6 +130,10 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     assert entry.state is ConfigEntryState.LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt
+    # The router tracks itself on its own device
+    device_id = entity_registry.async_get(entity_id_dt).device_id
+    assert device_id == entity_registry.async_get(entity_id_sensor).device_id
+    assert device_registry.async_get(device_id).name == "Freebox Server (r2)"
     state_sensor = hass.states.get(entity_id_sensor)
     assert state_sensor
     state_switch = hass.states.get(entity_id_switch)

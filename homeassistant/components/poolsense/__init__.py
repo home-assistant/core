@@ -13,7 +13,7 @@ from .coordinator import PoolSenseConfigEntry, PoolSenseDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) -> None:
     """Set up PoolSense from a config entry."""
 
     poolsense = PoolSense(
@@ -38,9 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

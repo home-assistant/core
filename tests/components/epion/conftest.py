@@ -3,8 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 
 @pytest.fixture

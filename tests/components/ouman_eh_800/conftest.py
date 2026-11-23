@@ -35,12 +35,11 @@ from ouman_eh_800_api import (
     SystemEndpoints,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ouman_eh_800.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "http://192.168.1.100"
 TEST_USERNAME = "test-user"
@@ -55,7 +54,6 @@ _ENDPOINT_VALUES: dict[OumanEndpoint, OumanValues] = {
     SystemEndpoints.OUTSIDE_TEMPERATURE: 0.4,
     SystemEndpoints.AUTUMN_DRYING_OUTDOOR_TEMP_LIMIT: 7.0,
     SystemEndpoints.RELAY_CONFIGURATION_TYPE: "",
-    SystemEndpoints.RELAY_STATUS_TEXT: "Rele ei käytössä",
     SystemEndpoints.L2_INSTALLED_STATUS: "1",
     # L1 base
     L1BaseEndpoints.OPERATION_MODE: OperationMode.AUTOMATIC,
@@ -138,10 +136,15 @@ _ENDPOINT_VALUES: dict[OumanEndpoint, OumanValues] = {
     L2RoomSensor.ROOM_TEMPERATURE_SETPOINT: 21.0,
     # Relay variants (mutually exclusive — at most one per scenario)
     RelayPumpSummerStop.CONTROL: PumpSummerStopControl.AUTO,
+    RelayPumpSummerStop.PUMP_RUNNING: True,
     RelayTemperature.CONTROL: RelayControl.AUTO,
+    RelayTemperature.RELAY_ON: False,
     RelayTempDifference.CONTROL: RelayControl.AUTO,
+    RelayTempDifference.RELAY_ON: False,
     RelayL1ValvePosition.CONTROL: RelayControl.AUTO,
+    RelayL1ValvePosition.RELAY_ON: False,
     RelayTimeProgram.CONTROL: RelayControl.AUTO,
+    RelayTimeProgram.RELAY_ON: False,
     # Optional measurement channels (any combination may be active)
     ReturnWaterSensor.RETURN_WATER_TEMPERATURE: 32.5,
     AccumulatorSensor.ACCUMULATOR_TEMPERATURE: 55.0,
@@ -202,7 +205,7 @@ _DEFAULT_SCENARIO = "room_sensors"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ouman_eh_800.async_setup_entry", return_value=True
+        "homeassistant.components.ouman_eh_800.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

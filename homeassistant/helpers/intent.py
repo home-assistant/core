@@ -14,7 +14,7 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
@@ -1199,23 +1199,27 @@ class DynamicServiceIntentHandler(IntentHandler):
                 self.async_call_service(domain, service, intent_obj, state)
             )
 
-        # Handle service calls in parallel, noting failures as they occur.
+        # Handle service calls in parallel. Results come back in the order of
+        # the states, so each failure is reported for its own entity.
         failed_results: list[IntentResponseTarget] = []
-        for state, service_coro in zip(
-            states, asyncio.as_completed(service_coros), strict=False
-        ):
+        service_results = await asyncio.gather(*service_coros, return_exceptions=True)
+        for state, result in zip(states, service_results, strict=True):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
                 id=state.entity_id,
             )
 
-            try:
-                await service_coro
-                success_results.append(target)
-            except Exception:
+            if isinstance(result, Exception):
                 failed_results.append(target)
-                _LOGGER.exception("Service call failed for %s", state.entity_id)
+                _LOGGER.error(
+                    "Service call failed for %s", state.entity_id, exc_info=result
+                )
+            elif isinstance(result, BaseException):
+                # Cancellation is not a failed call, so it must stop the intent
+                raise result
+            else:
+                success_results.append(target)
 
         if not success_results:
             # If no entities succeeded, raise an error.
@@ -1240,7 +1244,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         """Call service on entity."""
         hass = intent_obj.hass
 
-        service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+        service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
         if self.required_slots:
             for key, slot_info in self.required_slots.items():
                 service_data[slot_info.service_data_name or key] = intent_obj.slots[

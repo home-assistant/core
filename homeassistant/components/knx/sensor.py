@@ -264,7 +264,7 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
 
         self._device = XknxSensor(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address_state=state_and_passive(knx_conf.ga_sensor),
             sync_state=knx_conf.sync_state,
             always_callback=True,

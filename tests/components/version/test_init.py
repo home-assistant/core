@@ -1,12 +1,12 @@
 """Tests for the Version integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.version.const import CONF_BOARD, DEFAULT_CONFIGURATION
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .common import MOCK_VERSION_CONFIG_ENTRY_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_invalid_board(hass: HomeAssistant) -> None:

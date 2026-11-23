@@ -9,8 +9,7 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-
-from .util import get_instance
+from homeassistant.helpers.recorder import get_instance
 
 
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:

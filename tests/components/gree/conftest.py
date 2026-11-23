@@ -12,7 +12,7 @@ from .common import FakeDiscovery, build_device_mock
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.gree.async_setup_entry", return_value=True
+        "homeassistant.components.gree.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -29,7 +29,7 @@ def discovery_fixture():
 def device_fixture():
     """Patch the device search and bind."""
     with patch(
-        "homeassistant.components.gree.coordinator.Device",
+        "homeassistant.components.gree.coordinator.AirConditionerDevice",
         return_value=build_device_mock(),
     ) as mock:
         yield mock

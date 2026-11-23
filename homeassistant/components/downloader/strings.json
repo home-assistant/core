@@ -25,6 +25,9 @@
     "invalid_value": {
       "message": "Invalid filename derived from {url}"
     },
+    "not_loaded": {
+      "message": "Downloader is not loaded."
+    },
     "subdir_invalid": {
       "message": "Invalid subdirectory, got: {subdir}"
     },

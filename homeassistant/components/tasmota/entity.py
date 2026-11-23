@@ -19,11 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .discovery import (
-    TASMOTA_DISCOVERY_ENTITY_UPDATED,
-    clear_discovery_hash,
-    set_discovery_hash,
-)
+from .discovery import TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,17 +36,6 @@ class TasmotaEntity(Entity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
         )
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -103,17 +88,6 @@ class TasmotaOnOffEntity(TasmotaEntity):
         self._on_off_state: bool = False
         super().__init__(**kwds)
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -144,17 +118,6 @@ class TasmotaAvailability(TasmotaEntity):
             self._available = True
         else:
             self._available = False
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -196,24 +159,15 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
     def __init__(self, discovery_hash: DiscoveryHashType, **kwds: Any) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
-        self._removed_from_hass = False
         super().__init__(**kwds)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
+        # Registered here so the hash is also cleared if adding the entity is aborted
+        self.async_on_remove(
+            lambda: clear_discovery_hash(self.hass, self._discovery_hash)
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
-        self._removed_from_hass = False
         await super().async_added_to_hass()
 
         @callback
@@ -239,8 +193,6 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
 
-        # Set in case the entity has been removed and is re-added
-        set_discovery_hash(self.hass, self._discovery_hash)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -248,18 +200,3 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
                 discovery_callback,
             )
         )
-
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        clear_discovery_hash(self.hass, self._discovery_hash)
-        super().add_to_platform_abort()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
-        if not self._removed_from_hass:
-            clear_discovery_hash(self.hass, self._discovery_hash)
-            self._removed_from_hass = True
-        await super().async_will_remove_from_hass()

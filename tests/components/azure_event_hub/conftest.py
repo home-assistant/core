@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.eventhub.aio import EventHubProducerClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.azure_event_hub.const import (
     CONF_FILTER,
@@ -22,8 +23,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, PRODUCER_PATH, SAS_CONFIG_FULL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +136,6 @@ def mock_from_connection_string_fixture() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
-        f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=True
+        f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=None
     ) as setup_entry:
         yield setup_entry

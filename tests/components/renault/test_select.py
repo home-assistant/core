@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture, snapshot_platform
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,14 +12,12 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -126,7 +125,7 @@ async def test_select_charge_mode(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            SELECT_DOMAIN, SERVICE_SELECT_OPTION, service_data=data, blocking=True
+            SELECT_DOMAIN, SelectService.SELECT_OPTION, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ("always",)
