@@ -69,3 +69,30 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors={"base": "connection_failed"},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if mac_address := await _async_read_mac_address(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            ):
+                await self.async_set_unique_id(mac_address)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+            errors["base"] = "connection_failed"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
