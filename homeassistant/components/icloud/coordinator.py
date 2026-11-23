@@ -287,6 +287,8 @@ class IcloudReminderList:
 class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderList]]):
     """Fetch reminder lists and their contents."""
 
+    config_entry: IcloudConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(

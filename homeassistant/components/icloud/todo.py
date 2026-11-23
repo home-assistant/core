@@ -222,7 +222,16 @@ class IcloudTodoListEntity(
             # A batch that failed part of the way through still changed things
             # in iCloud, so refresh either way rather than showing reminders
             # that are already gone until the next poll.
-            await self.coordinator.async_request_refresh()
+            #
+            # The change is already saved in iCloud, so the action does not
+            # wait for the refresh. Listing every list can take tens of seconds
+            # on a large account, and voice assistants hold their reply until
+            # the action returns, so waiting left users repeating themselves.
+            self.coordinator.config_entry.async_create_background_task(
+                self.hass,
+                self.coordinator.async_request_refresh(),
+                name=f"{DOMAIN} reminders refresh after change",
+            )
 
 
 def _as_due(due: date | datetime | None) -> tuple[datetime | None, bool]:

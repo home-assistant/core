@@ -1,5 +1,6 @@
 """Tests for the iCloud to-do platform."""
 
+import asyncio
 from datetime import UTC, date, datetime
 import logging
 from unittest.mock import MagicMock, patch
@@ -376,10 +377,42 @@ async def test_partial_delete_still_refreshes(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
             blocking=True,
         )
-    await hass.async_block_till_done()
+    # The refresh runs as a background task of the config entry.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert reminders.delete.call_count == 2
     assert reminders.list_reminders.call_count > before
+
+
+async def test_change_does_not_wait_for_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a change returns before the list has refreshed.
+
+    Listing every reminder list can take tens of seconds on a large account,
+    and voice assistants hold their reply until the action returns.
+    """
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    release = asyncio.Event()
+    refresh = AsyncMock(side_effect=release.wait)
+
+    with patch.object(coordinator, "async_request_refresh", refresh):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.ADD_ITEM,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs"},
+                blocking=True,
+            )
+
+        reminders.create.assert_called_once()
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    refresh.assert_awaited_once()
 
 
 async def test_api_error_raises(
