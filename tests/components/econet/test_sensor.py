@@ -8,7 +8,12 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.econet.const import DOMAIN
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform, UnitOfEnergy
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfEnergy,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -127,8 +132,12 @@ async def test_existing_id_can_be_regenerated(
 @pytest.mark.parametrize(
     ("energy_usage", "expected"),
     [
-        pytest.param("KBTU", "2.93", id="gas"),
-        pytest.param("KWH", "10", id="electric"),
+        pytest.param(("KBTU", 10), "2.93", id="gas"),
+        pytest.param(("KWH", 10), "10", id="electric"),
+        pytest.param(("KBTU", None), STATE_UNKNOWN, id="gas_missing"),
+        pytest.param(("KWH", None), STATE_UNKNOWN, id="electric_missing"),
+        pytest.param(("KBTU", 0), "0.0", id="gas_zero"),
+        pytest.param(("KWH", 0), "0", id="electric_zero"),
     ],
     indirect=["energy_usage"],
 )
@@ -137,7 +146,7 @@ async def test_energy_conversion(
     setup_integration: Callable[[], Awaitable[None]],
     expected: str,
 ) -> None:
-    """The renamed energy sensor still converts the library's usage into kWh."""
+    """Convert energy usage into kWh while preserving missing and zero values."""
     await setup_integration()
     state = hass.states.get("sensor.gas_water_heater_energy_usage_today")
     assert state.state == expected

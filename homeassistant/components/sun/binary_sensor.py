@@ -77,7 +77,7 @@ class SunBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
         self._attr_device_info = DeviceInfo(
-            name="Sun",
+            translation_key="sun",
             identifiers={(DOMAIN, entry_id)},
             entry_type=DeviceEntryType.SERVICE,
         )

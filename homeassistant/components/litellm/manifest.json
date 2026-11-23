@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@luismalves"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/litellm",
   "integration_type": "service",

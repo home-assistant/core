@@ -3,7 +3,6 @@
 import datetime as dt
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -59,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> No
             device_registry.async_remove_device(dev.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 

@@ -138,6 +138,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery()
 
         await self.async_set_unique_id(format_mac(nam.mac))
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
 
@@ -179,17 +180,15 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await async_get_nam(self.hass, self.host, user_input)
-            except (
-                ApiError,
-                AuthFailedError,
-                ClientConnectorError,
-                TimeoutError,
-            ):
-                return self.async_abort(reason="reauth_unsuccessful")
-
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data={**user_input, CONF_HOST: self.host}
-            )
+            except AuthFailedError:
+                errors["base"] = "invalid_auth"
+            except ApiError, ClientConnectorError, TimeoutError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data={**user_input, CONF_HOST: self.host},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

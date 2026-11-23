@@ -6,16 +6,19 @@ import logging
 from typing import override
 
 from pyvesync.base_devices import VeSyncBaseDevice
+from pyvesync.const import PurifierAutoPreference
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, is_outlet, is_purifier
+from .common import is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import (
+    DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -67,12 +70,26 @@ def _toggle_outlet_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool
     raise HomeAssistantError("Device does not support toggling nightlight.")
 
 
+def _set_purifier_auto_preference(
+    device: VeSyncBaseDevice, preference: str
+) -> Awaitable[bool]:
+    """Set the auto mode preference of a purifier."""
+    if hasattr(device, "set_auto_preference"):
+        # pyvesync sends a default room size unless one is passed
+        if room_size := device.state.auto_room_size:
+            return device.set_auto_preference(preference, room_size)
+        return device.set_auto_preference(preference)
+    raise HomeAssistantError(
+        translation_domain=DOMAIN, translation_key="auto_preference_not_supported"
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSelectEntityDescription(SelectEntityDescription):
     """Class to describe a Vesync select entity."""
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
-    current_option_fn: Callable[[VeSyncBaseDevice], str]
+    current_option_fn: Callable[[VeSyncBaseDevice], str | None]
     select_option_fn: Callable[[VeSyncBaseDevice, str], Awaitable[bool]]
 
 
@@ -82,17 +99,15 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         key="night_light_level",
         translation_key="night_light_level",
         options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
-        icon="mdi:brightness-6",
+        entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_humidifier(device) and device.supports_nightlight,
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
         select_option_fn=lambda device, value: _set_humidifier_nightlight(
             device, HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
         ),
-        # Reporting "off" as the choice for unhandled level.
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.state.nightlight_brightness,
-            HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+            device.state.nightlight_brightness
         ),
     ),
     # night_light for air purifiers
@@ -104,10 +119,30 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
             PURIFIER_NIGHT_LIGHT_LEVEL_ON,
         ],
-        icon="mdi:brightness-6",
+        entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
         select_option_fn=_toggle_purifier_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
+    ),
+    # auto_preference for air purifiers
+    VeSyncSelectEntityDescription(
+        key="auto_preference",
+        translation_key="auto_preference",
+        options=[
+            PurifierAutoPreference.DEFAULT,
+            PurifierAutoPreference.EFFICIENT,
+            PurifierAutoPreference.QUIET,
+        ],
+        entity_category=EntityCategory.CONFIG,
+        exists_fn=(
+            lambda device: (
+                is_purifier(device)
+                and bool(getattr(device, "auto_preferences", None))
+                and rgetattr(device, "state.auto_preference_type") is not None
+            )
+        ),
+        select_option_fn=_set_purifier_auto_preference,
+        current_option_fn=lambda device: device.state.auto_preference_type,
     ),
     # night_light for outlets
     VeSyncSelectEntityDescription(
@@ -118,7 +153,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             OUTLET_NIGHT_LIGHT_LEVEL_ON,
             OUTLET_NIGHT_LIGHT_LEVEL_AUTO,
         ],
-        icon="mdi:brightness-6",
+        entity_category=EntityCategory.CONFIG,
         exists_fn=lambda device: is_outlet(device) and device.supports_nightlight,
         select_option_fn=_toggle_outlet_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
@@ -191,5 +226,7 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Unknown error selecting option, no response.")
         self.async_write_ha_state()

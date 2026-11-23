@@ -98,7 +98,14 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (closed := self.is_closed) is None:
             return None
 
-        return CoverState.CLOSED if closed else CoverState.OPEN
+        if closed:
+            # A closed cover can only open next. Reset the toggle direction,
+            # so a cover then opened outside Home Assistant, without reporting
+            # opening, closes on the next toggle.
+            self._cover_is_last_toggle_direction_open = True
+            return CoverState.CLOSED
+
+        return CoverState.OPEN
 
     @final
     @property

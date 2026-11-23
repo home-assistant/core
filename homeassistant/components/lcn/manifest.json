@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@alengwenus"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/lcn",
   "integration_type": "hub",

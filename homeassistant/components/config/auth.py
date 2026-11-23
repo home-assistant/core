@@ -155,7 +155,11 @@ async def websocket_update(
     msg.pop("type")
     msg_id = msg.pop("id")
 
-    await hass.auth.async_update_user(user, **msg)
+    try:
+        await hass.auth.async_update_user(user, **msg)
+    except ValueError as err:
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
 
     connection.send_message(
         websocket_api.result_message(msg_id, {"user": _user_info(user)})

@@ -16,15 +16,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -66,8 +62,8 @@ async def test_turn_on_default(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -94,10 +90,10 @@ async def test_turn_on_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 153,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 153,
         },
         blocking=True,
     )
@@ -117,10 +113,10 @@ async def test_turn_on_with_rgb_color_when_off(
     """Test turning on light with rgb color when light is off."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
         },
         blocking=True,
     )
@@ -151,10 +147,10 @@ async def test_turn_on_with_rgb_color_when_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
         },
         blocking=True,
     )
@@ -171,11 +167,11 @@ async def test_turn_on_with_rgb_color_and_brightness(
     """Test turning on light with rgb color and brightness."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
-            ATTR_BRIGHTNESS: 102,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
+            LightServiceArgument.BRIGHTNESS: 102,
         },
         blocking=True,
     )
@@ -274,8 +270,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -308,8 +304,8 @@ async def test_turn_on_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -337,8 +333,8 @@ async def test_turn_off_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

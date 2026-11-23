@@ -1,6 +1,6 @@
 """SQLAlchemy util functions."""
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -17,8 +17,8 @@ from awesomeversion import (
 )
 import ciso8601
 import probatio
-from sqlalchemy import inspect, text
-from sqlalchemy.engine import Result, Row
+from sqlalchemy import inspect, make_url, text
+from sqlalchemy.engine import URL, Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
@@ -40,7 +40,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -65,7 +65,6 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
-DEFAULT_YIELD_STATES_ROWS = 32768
 
 
 # Our minimum versions for each database
@@ -207,29 +206,16 @@ def execute(qry: Query) -> list[Row]:
 def execute_stmt_lambda_element(
     session: Session,
     stmt: StatementLambdaElement,
-    start_time: datetime | None = None,
-    end_time: datetime | None = None,
-    yield_per: int = DEFAULT_YIELD_STATES_ROWS,
     orm_rows: bool = True,
     stream: bool = False,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
-
-    If the time window passed is greater than one day
-    the execution method will switch to yield_per to
-    reduce memory pressure.
-
-    It is not recommended to pass a time window
-    when selecting non-ranged rows (ie selecting
-    specific entities) since they are usually faster
-    with .all().
 
     If stream is True the result is returned without building a list of
     rows, so rows can be consumed one at a time and freed right away, which
     avoids promoting large result sets into the oldest garbage collector
     generation. Errors raised while consuming the rows are not retried.
     """
-    use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
             if orm_rows:
@@ -238,9 +224,7 @@ def execute_stmt_lambda_element(
                 executed = session.connection().execute(stmt)
             if stream:
                 return executed
-            if use_all:
-                return executed.all()
-            return executed.yield_per(yield_per)
+            return executed.all()
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
@@ -250,6 +234,33 @@ def execute_stmt_lambda_element(
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
+
+
+def execute_stmt_lambda_element_streamed[_T](
+    session: Session,
+    stmt: StatementLambdaElement,
+    convert: Callable[[Iterable[Row], Iterable[str]], _T],
+) -> _T:
+    """Execute a StatementLambdaElement and convert the rows while they are read.
+
+    The rows and their field names are passed to convert. Rows are not kept in a
+    list, so they are freed as soon as they are converted. Errors raised while
+    reading the rows are not retried by execute_stmt_lambda_element, so all rows
+    are read again at once when reading them fails.
+    """
+    result = cast(
+        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    )
+    fields = result.keys()
+    try:
+        return convert(result, fields)
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error reading rows, retrying: %s", err)
+        _rollback_read_only_session(session)
+        rows = cast(
+            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+        )
+        return convert(rows, fields)
 
 
 def execute_select(
@@ -274,12 +285,32 @@ def execute_select(
     raise RuntimeError  # pragma: no cover
 
 
+def get_engine_db_url(db_url: str) -> URL:
+    """Return the SQLAlchemy URL to create a database engine for db_url.
+
+    A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
+    installations ship, instead of SQLAlchemy's default driver, which is
+    psycopg 3 from SQLAlchemy 2.1.
+    """
+    url = make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    return url
+
+
+def is_file_sqlite_url(url: URL) -> bool:
+    """Return if the URL is for a SQLite database stored in a file."""
+    if url.get_backend_name() != "sqlite" or not url.database:
+        return False
+    return ":memory:" not in url.database
+
+
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
     dbpath = dburl_to_path(dburl)
 
-    if not os.path.exists(dbpath):
-        # Database does not exist yet, this is OK
+    if not os.path.isfile(dbpath):
+        # Database does not exist yet, or the path is not a file, like a directory
         return True
 
     if not validate_sqlite_database(dbpath):
@@ -291,7 +322,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl.removeprefix(SQLITE_URL_PREFIX)
+    return make_url(dburl).database or ""
 
 
 def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:

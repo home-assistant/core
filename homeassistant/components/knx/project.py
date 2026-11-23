@@ -98,14 +98,17 @@ class KNXProject:
             GroupAddress.address_format = self.get_address_format()
             xknx.group_address_dpt.clear()
             xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
+            # Replace rather than extend: addresses of a previous project don't stay.
+            group_addresses: dict[str, GroupAddressInfo] = {}
 
             for ga_model in project["group_addresses"].values():
                 ga_info = _create_group_address_info(ga_model)
-                self.group_addresses[ga_info.address] = ga_info
+                group_addresses[ga_info.address] = ga_info
                 if (dpt_model := ga_model.get("dpt")) is not None:
                     xknx_ga_dict[ga_model["address"]] = dpt_model
 
             xknx.group_address_dpt.set(xknx_ga_dict)
+            self.group_addresses = group_addresses
 
             _LOGGER.debug(
                 "Loaded KNX project data with %s group addresses from storage",

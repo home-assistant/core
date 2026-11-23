@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import aiohttp
 from aioindiallsky import (
     IndiAllSkyAuthError,
     IndiAllSkyClient,
@@ -23,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -40,6 +41,8 @@ from .const import DOMAIN
 from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_MANUAL_ENDPOINT = "manual_endpoint"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -100,6 +103,12 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     if (username and not password) or (password and not username):
         raise MissingCredentials
 
+    session = async_create_clientsession(
+        hass,
+        verify_ssl=data.get(CONF_VERIFY_SSL, True),
+        auto_cleanup=False,
+        cookie_jar=aiohttp.CookieJar(unsafe=True),
+    )
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
         port=int(data[CONF_PORT]),
@@ -109,7 +118,7 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         ),
         username=username or None,
         password=password or None,
-        session=async_get_clientsession(hass),
+        session=session,
     )
 
     try:
@@ -132,6 +141,8 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         raise CannotConnect from err
     except Exception as err:
         raise Unknown from err
+    finally:
+        session.detach()
 
 
 class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -231,12 +242,16 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             current_host = current_entry.data.get(CONF_HOST) if current_entry else None
             if current_entry and current_entry.data.get(CONF_SSL, True) != ssl:
                 return self.async_abort(reason="already_configured")
+            manual_endpoint = bool(
+                current_entry and current_entry.options.get(CONF_MANUAL_ENDPOINT)
+            )
             updates: dict[str, Any] = {
-                CONF_PORT: port,
                 CONF_SSL: ssl,
             }
-            if not (current_host and not is_ip_address(current_host)):
-                updates[CONF_HOST] = host
+            if not manual_endpoint:
+                updates[CONF_PORT] = port
+                if not (current_host and not is_ip_address(current_host)):
+                    updates[CONF_HOST] = host
             self._abort_if_unique_id_configured(updates=updates)
         else:
             for entry in self._async_current_entries(include_ignore=False):
@@ -410,6 +425,70 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 REAUTH_CONFIRM_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
+            user_input[CONF_PORT] = int(user_input[CONF_PORT])
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
+
+            try:
+                await validate_input(self.hass, user_input)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                port = user_input[CONF_PORT]
+                default_port = 443 if user_input.get(CONF_SSL, True) else 80
+                host_str = (
+                    f"{user_input[CONF_HOST]}:{port}"
+                    if port != default_port
+                    else user_input[CONF_HOST]
+                )
+                entry_data = {
+                    k: v
+                    for k, v in user_input.items()
+                    if k not in (CONF_USERNAME, CONF_PASSWORD) or v
+                }
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=f"INDI Allsky ({host_str})",
+                    data=entry_data,
+                    options={
+                        **entry.options,
+                        CONF_MANUAL_ENDPOINT: (
+                            entry.options.get(CONF_MANUAL_ENDPOINT, False)
+                            or user_input[CONF_HOST]
+                            != normalize_host(entry.data[CONF_HOST])
+                            or user_input[CONF_PORT] != entry.data[CONF_PORT]
+                        ),
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
             ),
             errors=errors,
         )

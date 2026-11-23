@@ -112,6 +112,6 @@ class SunsynkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_USERNAME: username},
+            description_placeholders={"username": username},
             errors=errors,
         )

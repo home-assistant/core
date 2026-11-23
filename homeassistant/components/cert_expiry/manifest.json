@@ -4,6 +4,7 @@
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@jjlawren"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/cert_expiry",
   "integration_type": "service",
   "iot_class": "cloud_polling"
