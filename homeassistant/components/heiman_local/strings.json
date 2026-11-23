@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This switch is already configured."
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the switch or read its power state.",
+      "invalid_host": "Enter a valid IPv4 address.",
+      "unsupported_device": "The device does not report a supported Heiman Wi-Fi switch."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "IPv4 address",
+          "port": "HTTP port"
+        },
+        "data_description": {
+          "host": "The IPv4 address of the switch on your local network.",
+          "port": "The HTTP port configured on the switch. The default is 80."
+        },
+        "description": "Enter the local address of your Heiman Wi-Fi switch."
+      }
+    }
+  },
+  "exceptions": {
+    "set_power_failed": {
+      "message": "The requested switch state could not be confirmed."
+    }
+  }
+}

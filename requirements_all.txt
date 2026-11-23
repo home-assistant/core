@@ -1325,6 +1325,9 @@ heatmiserV3==2.0.6
 # homeassistant.components.hegel
 hegel-ip-client==0.1.4
 
+# homeassistant.components.heiman_local
+heiman-local-client==0.1.0
+
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
 

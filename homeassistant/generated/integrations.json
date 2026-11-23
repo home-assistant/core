@@ -6139,6 +6139,20 @@
     },
     "heiman": {
       "name": "Heiman",
+      "integrations": {
+        "heiman_local": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "plugs_switches"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Heiman Local"
+        }
+      },
       "iot_standards": [
         "matter",
         "zigbee"

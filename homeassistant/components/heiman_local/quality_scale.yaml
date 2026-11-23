@@ -1,0 +1,33 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The integration uses the built-in switch actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: todo
+    comment: Publish the LAN client to PyPI from its public source repository.
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide custom conditions.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide custom triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The switch polls the device.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done

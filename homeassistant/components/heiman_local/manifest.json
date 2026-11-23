@@ -1,0 +1,12 @@
+{
+  "domain": "heiman_local",
+  "name": "Heiman Local",
+  "categories": ["plugs_switches"],
+  "codeowners": ["@Leo2442926161"],
+  "config_flow": true,
+  "connectivity": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/heiman_local",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["heiman-local-client==0.1.0"]
+}

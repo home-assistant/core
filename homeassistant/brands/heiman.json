@@ -1,5 +1,6 @@
 {
   "domain": "heiman",
   "name": "Heiman",
+  "integrations": ["heiman_local"],
   "iot_standards": ["matter", "zigbee"]
 }
