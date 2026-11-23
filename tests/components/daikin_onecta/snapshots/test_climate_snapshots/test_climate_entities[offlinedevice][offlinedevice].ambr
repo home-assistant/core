@@ -9,6 +9,7 @@
         'area_id': None,
         'capabilities': dict({
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
@@ -49,6 +50,7 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31,
