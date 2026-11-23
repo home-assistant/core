@@ -1,0 +1,20 @@
+{
+  "domain": "recamera_pro",
+  "name": "reCamera Pro",
+  "codeowners": [
+    "@yyling0101-a11y"
+  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/recamera_pro",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": [
+    "recamera_protocol"
+  ],
+  "requirements": [
+    "recamera-pro-ha-protocol==0.1.0"
+  ],
+  "zeroconf": [
+    "_recamera._tcp.local."
+  ]
+}

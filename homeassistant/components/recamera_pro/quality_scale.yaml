@@ -1,0 +1,97 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: Registered in integration async_setup through the platform entity service API.
+  appropriate-polling:
+    status: done
+    comment: OTA checks run on a bounded six-hour background task and do not gate local camera updates.
+  brands:
+    status: todo
+    comment: Production branding artwork and documentation are not yet published.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Core-style config flow tests still need to be added.
+  dependency-transparency: done
+  docs-actions:
+    status: todo
+    comment: Actions are documented in README, but not yet on the Home Assistant documentation site.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide custom conditions.
+  docs-high-level-description:
+    status: todo
+    comment: Home Assistant documentation site page is not yet published.
+  docs-installation-instructions:
+    status: todo
+  docs-removal-instructions:
+    status: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration uses standard event entities and does not provide custom triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+  docs-installation-parameters:
+    status: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: Device API and coordinator behavior still need HA test coverage.
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: done
+  discovery-update-info: done
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one fixed physical camera.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No unrecoverable condition currently requires a separate repair issue.
+  stale-devices:
+    status: exempt
+    comment: A reCamera Pro config entry represents one physical camera.
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: Optional injected sessions are supported and ownership-tested, but HA-managed sessions still need compatibility validation for this device's cookie flow.
+  strict-typing:
+    status: todo

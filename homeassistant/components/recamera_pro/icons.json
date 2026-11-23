@@ -1,0 +1,125 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "visual_class": {
+        "default": "mdi:target"
+      }
+    },
+    "camera": {
+      "live": {
+        "default": "mdi:video"
+      },
+      "main": {
+        "default": "mdi:video-high-definition"
+      }
+    },
+    "select": {
+      "main_resolution": {
+        "default": "mdi:monitor"
+      },
+      "sub_resolution": {
+        "default": "mdi:monitor"
+      },
+      "main_encoding": {
+        "default": "mdi:code-tags"
+      },
+      "sub_encoding": {
+        "default": "mdi:code-tags"
+      }
+    },
+    "number": {
+      "main_max_bitrate": {
+        "default": "mdi:speedometer"
+      },
+      "sub_max_bitrate": {
+        "default": "mdi:speedometer"
+      },
+      "main_frame_rate": {
+        "default": "mdi:filmstrip"
+      },
+      "sub_frame_rate": {
+        "default": "mdi:filmstrip"
+      },
+      "main_gop": {
+        "default": "mdi:counter"
+      },
+      "sub_gop": {
+        "default": "mdi:counter"
+      },
+      "yolo_confidence": {
+        "default": "mdi:target"
+      },
+      "yolo_hold_seconds": {
+        "default": "mdi:timer-outline"
+      },
+      "yolo_cooldown_seconds": {
+        "default": "mdi:timer-lock-outline"
+      },
+      "sound_confidence": {
+        "default": "mdi:ear-hearing"
+      },
+      "sound_cooldown_seconds": {
+        "default": "mdi:timer-lock-outline"
+      },
+      "motion_sq_diff_threshold": {
+        "default": "mdi:tune-vertical"
+      },
+      "motion_min_changed_ratio": {
+        "default": "mdi:image-filter-center-focus-weak"
+      },
+      "motion_hold_seconds": {
+        "default": "mdi:timer-sand"
+      },
+      "motion_sample_fps": {
+        "default": "mdi:filmstrip"
+      }
+    },
+    "event": {
+      "yolo_event": {
+        "default": "mdi:target"
+      },
+      "audio_event": {
+        "default": "mdi:ear-hearing"
+      },
+      "motion_event": {
+        "default": "mdi:motion-play-outline"
+      }
+    },
+    "sensor": {
+      "last_detection": {
+        "default": "mdi:target"
+      },
+      "confidence": {
+        "default": "mdi:percent"
+      },
+      "last_event": {
+        "default": "mdi:clock-outline"
+      },
+      "visual_source_status": {
+        "default": "mdi:access-point-network"
+      },
+      "firmware_version": {
+        "default": "mdi:package-up"
+      }
+    },
+    "update": {
+      "firmware": {
+        "default": "mdi:cloud-download-outline"
+      }
+    },
+    "switch": {
+      "main_rtsp_stream": {
+        "default": "mdi:video-high-definition",
+        "state": {
+          "off": "mdi:video-off"
+        }
+      },
+      "sub_rtsp_stream": {
+        "default": "mdi:video",
+        "state": {
+          "off": "mdi:video-off"
+        }
+      }
+    }
+  }
+}
