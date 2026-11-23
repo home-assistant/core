@@ -8,18 +8,16 @@ rules:
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
-  dependency-transparency:
-    status: todo
-    comment: Publish the LAN client to PyPI from its public source repository.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration does not provide custom actions.
   docs-conditions:
     status: exempt
     comment: The integration does not provide custom conditions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: The integration does not provide custom triggers.
