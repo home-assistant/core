@@ -70,7 +70,36 @@ from homeassistant.core import HomeAssistant
                 },
             ),
             id="credentials_and_headers",
-        )
+        ),
+        pytest.param(
+            {
+                CONF_RESOURCE: (
+                    "https://user:secret-password@www.home-assistant.io/status"
+                    "?api_key=secret-key"
+                ),
+                CONF_METHOD: "GET",
+                CONF_AUTH: {},
+                CONF_ADDITIONAL: {
+                    CONF_VERIFY_SSL: True,
+                    CONF_TIMEOUT: 10,
+                    CONF_ENCODING: DEFAULT_ENCODING,
+                },
+            },
+            (
+                {
+                    "data": {
+                        CONF_ADDITIONAL: {},
+                        CONF_INDEX: 0,
+                        CONF_SELECT: ".current-version h1",
+                    },
+                    "subentry_id": "01JZN07D8D23994A49YKS649S7",
+                    "subentry_type": "entity",
+                    "title": "Current version",
+                    "unique_id": None,
+                },
+            ),
+            id="secrets_in_url",
+        ),
     ],
 )
 async def test_diagnostics(
@@ -79,7 +108,7 @@ async def test_diagnostics(
     loaded_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test diagnostics redact credentials, header values and the payload."""
+    """Test diagnostics redact credentials, header values, payload and URL secrets."""
     assert loaded_entry.state is ConfigEntryState.LOADED
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, loaded_entry)
