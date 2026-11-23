@@ -132,6 +132,23 @@ async def test_unload_entry(
     assert entry_managed.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_unload_auth_error_does_not_start_reauth(
+    hass: HomeAssistant,
+    entry_managed: MockConfigEntry,
+    mock_managed_streaming: Mock,
+) -> None:
+    """Test an authentication error in the final send on unload starts no reauth."""
+    mock_managed_streaming.side_effect = KustoAuthenticationError("test", Exception)
+    hass.states.async_set("sensor.test_sensor", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry_managed.entry_id)
+    await hass.async_block_till_done()
+
+    mock_managed_streaming.assert_called_once()
+    assert not hass.config_entries.flow.async_progress()
+
+
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
 @pytest.mark.usefixtures("entry_with_one_event")
 async def test_late_event(hass: HomeAssistant, mock_managed_streaming: Mock) -> None:

@@ -185,7 +185,9 @@ class AzureDataExplorer:
                 _LOGGER.error("Could not find database or table: %s", err)
             except KustoAuthenticationError as err:
                 _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
-                self._entry.async_start_reauth(self.hass)
+                # The final send on unload still uses the old credentials.
+                if not self._shutdown:
+                    self._entry.async_start_reauth(self.hass)
 
         self._schedule_next_send()
 
