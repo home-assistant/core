@@ -14,6 +14,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -5256,6 +5257,13 @@ def _validate_certificate_settings(
         )
     ):
         return "upload_and_file_path"
+    # A relative path would resolve against the working directory of the process
+    if not all(os.path.isabs(file_path) for file_path in file_paths.values()):
+        return "file_path_not_absolute"
+    if CONF_CLIENT_KEY_FILE in file_paths and other_settings.get(
+        CONF_CLIENT_KEY_PASSWORD
+    ):
+        return "client_key_password_with_file"
     # The client certificate and key must both be uploaded, or both be files
     if bool(other_settings.get(CONF_CLIENT_CERT)) != bool(
         other_settings.get(CONF_CLIENT_KEY)
@@ -5471,7 +5479,7 @@ def check_certicate_chain(config: dict[str, Any]) -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except TypeError, ValueError:
+        except TypeError, ValueError, UnsupportedAlgorithm:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)

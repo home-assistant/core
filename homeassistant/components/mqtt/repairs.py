@@ -5,7 +5,9 @@ from functools import partial
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from typing import TYPE_CHECKING, Any
 
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.x509 import Certificate
 import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
@@ -25,7 +27,7 @@ from .const import (
     DEFAULT_ENCODING,
     DOMAIN,
 )
-from .util import certificate_expiry, certificate_file_expiry
+from .util import load_certificate, load_certificate_file
 
 URL_MQTT_BROKER_CONFIGURATION = (
     "https://www.home-assistant.io/integrations/mqtt/#broker-configuration"
@@ -112,33 +114,34 @@ async def async_setup_client_certificate_check(
         ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
         return
 
-    loaded_expiry: datetime | None = None
+    loaded_certificate: Certificate | None = None
     if client_cert_file := config.get(CONF_CLIENT_CERT_FILE):
-        loaded_expiry = await hass.async_add_executor_job(
-            certificate_file_expiry, client_cert_file
+        loaded_certificate = await hass.async_add_executor_job(
+            load_certificate_file, client_cert_file
         )
     elif client_cert := config.get(CONF_CLIENT_CERT):
-        loaded_expiry = certificate_expiry(client_cert.encode(DEFAULT_ENCODING))
+        loaded_certificate = load_certificate(client_cert.encode(DEFAULT_ENCODING))
 
-    if loaded_expiry is None:
+    if loaded_certificate is None:
         ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
         return
+    loaded_expiry = loaded_certificate.not_valid_after_utc
 
-    def _check_installed_certificate() -> datetime | tuple[str, dict[str, str]]:
+    def _check_installed_certificate() -> Certificate | tuple[str, dict[str, str]]:
         """Check the installed certificate files.
 
-        Returns the expiry of the installed client certificate,
+        Returns the installed client certificate,
         or the translation key and placeholders of the problem found.
         """
         if TYPE_CHECKING:
             assert client_cert_file is not None
-        if (installed_expiry := certificate_file_expiry(client_cert_file)) is None:
+        if (installed_certificate := load_certificate_file(client_cert_file)) is None:
             return "client_certificate_file_invalid", {}
         client_key_file: str = config[CONF_CLIENT_KEY_FILE]
         try:
             with open(client_key_file, "rb") as file:
                 load_pem_private_key(file.read(), password=None)
-        except OSError, TypeError, ValueError:
+        except OSError, TypeError, ValueError, UnsupportedAlgorithm:
             return "client_key_file_invalid", {"client_key_file": client_key_file}
         context = SSLContext(PROTOCOL_TLS_CLIENT)
         try:
@@ -147,12 +150,15 @@ async def async_setup_client_certificate_check(
             return "client_certificate_key_mismatch", {
                 "client_key_file": client_key_file
             }
+        except OSError:
+            # The files were replaced after they were read
+            return "client_certificate_file_invalid", {}
         if ca_cert_file := config.get(CONF_CERTIFICATE_FILE):
             try:
                 context.load_verify_locations(ca_cert_file)
             except OSError:
                 return "ca_certificate_file_invalid", {"ca_cert_file": ca_cert_file}
-        return installed_expiry
+        return installed_certificate
 
     async def _async_check_client_certificate(now: datetime) -> None:
         """Create or remove the client certificate issue."""
@@ -173,7 +179,10 @@ async def async_setup_client_certificate_check(
             if isinstance(result, tuple):
                 translation_key, problem_placeholders = result
                 placeholders |= problem_placeholders
-            elif result > loaded_expiry:
+            elif (
+                result.not_valid_after_utc > loaded_expiry
+                and result.not_valid_before_utc <= now
+            ):
                 translation_key = "client_certificate_renewed"
                 is_fixable = True
             else:

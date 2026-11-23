@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -327,10 +327,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
-        if await hass.async_add_executor_job(
-            try_connection,
-            {CONF_PORT: DEFAULT_PORT} | new_entry_data,
-        ):
+        try:
+            migrated = await hass.async_add_executor_job(
+                try_connection,
+                {CONF_PORT: DEFAULT_PORT} | new_entry_data,
+            )
+        except OSError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_load_certificates",
+                translation_placeholders={"broker": entry.data[CONF_BROKER]},
+            ) from err
+        if migrated:
             hass.config_entries.async_update_entry(
                 entry,
                 data=new_entry_data,

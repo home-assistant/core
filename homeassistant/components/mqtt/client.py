@@ -38,7 +38,11 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -589,7 +593,16 @@ class MQTT:
             )
 
         mqttc_setup = MqttClientSetup(self.conf)
-        await self.hass.async_add_executor_job(mqttc_setup.setup)
+        try:
+            await self.hass.async_add_executor_job(mqttc_setup.setup)
+        except OSError as err:
+            # Certificate files can be missing or replaced while being renewed
+            self.cleanup()
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_load_certificates",
+                translation_placeholders={"broker": self.conf[CONF_BROKER]},
+            ) from err
         mqttc = mqttc_setup.client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop

@@ -20,6 +20,8 @@
       "cannot_read_client_cert_file": "The client certificate file cannot be read, check the file path",
       "cannot_read_client_key_file": "The private key file cannot be read, check the file path",
       "client_key_error": "Invalid private key file or invalid password supplied",
+      "client_key_password_with_file": "A private key password can only be used with an uploaded private key file. Enter the path of an unencrypted private key file, or upload the private key file instead",
+      "file_path_not_absolute": "Enter an absolute file path, for example `/ssl/mqtt/client.crt`",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_inclusion": "The client certificate and private key must be configured together, both uploaded or both as a file path",
       "upload_and_file_path": "Upload a certificate or private key file, or enter its file path, but not both"
@@ -1101,6 +1103,9 @@
   "exceptions": {
     "addon_start_failed": {
       "message": "Failed to correctly start {addon} app."
+    },
+    "cannot_load_certificates": {
+      "message": "Unable to load the certificates to connect to MQTT broker {broker}. Check that the certificate files exist and are readable, and that the private key matches the client certificate."
     },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."

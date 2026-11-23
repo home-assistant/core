@@ -1,8 +1,9 @@
 """Test config flow."""
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
+from datetime import timedelta
 from pathlib import Path
 from ssl import PROTOCOL_TLS_CLIENT, SSLError
 from typing import Any
@@ -11,6 +12,16 @@ from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import (
+    BestAvailableEncryption,
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+)
+from cryptography.x509.oid import NameOID
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -95,6 +106,7 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.util import dt as dt_util
 
 ADD_ON_DISCOVERY_INFO = {
     "addon": "Mosquitto Mqtt Broker",
@@ -2800,6 +2812,199 @@ async def test_certificate_file_path_validation(
         CONF_CLIENT_CERT_FILE: mock_certificate_files[CONF_CLIENT_CERT_FILE],
         CONF_CLIENT_KEY_FILE: mock_certificate_files[CONF_CLIENT_KEY_FILE],
     }
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("settings", "error"),
+    [
+        pytest.param(
+            {CONF_CLIENT_CERT_FILE: "ssl/client.pem"},
+            "file_path_not_absolute",
+            id="relative_client_cert_file_path",
+        ),
+        pytest.param(
+            {CONF_CERTIFICATE_FILE: "ssl/ca.pem"},
+            "file_path_not_absolute",
+            id="relative_ca_cert_file_path",
+        ),
+        pytest.param(
+            {CONF_CLIENT_KEY_PASSWORD: "secret"},
+            "client_key_password_with_file",
+            id="client_key_password_with_file_path",
+        ),
+    ],
+)
+async def test_certificate_file_path_settings_invalid(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    settings: dict[str, str],
+    error: str,
+) -> None:
+    """Test certificate file path settings that are not supported."""
+    mock_try_connection.return_value = True
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input | {OTHER_SETTINGS: user_input[OTHER_SETTINGS] | settings},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    mock_try_connection.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _generate_certificate_and_key() -> tuple[bytes, bytes, ec.EllipticCurvePrivateKey]:
+    """Generate a self signed PEM encoded certificate and private key."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "mqtt-client")])
+    now = dt_util.utcnow()
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=90))
+        .sign(key, hashes.SHA256())
+    )
+    return (
+        certificate.public_bytes(Encoding.PEM),
+        key.private_bytes(
+            Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()
+        ),
+        key,
+    )
+
+
+def _invalid_client_cert(files: dict[str, Path]) -> None:
+    """Install an invalid client certificate file."""
+    files[CONF_CLIENT_CERT_FILE].write_text("invalid")
+
+
+def _invalid_client_key(files: dict[str, Path]) -> None:
+    """Install an invalid private key file."""
+    files[CONF_CLIENT_KEY_FILE].write_text("invalid")
+
+
+def _encrypted_client_key(files: dict[str, Path]) -> None:
+    """Install an encrypted private key file."""
+    _, _, key = _generate_certificate_and_key()
+    files[CONF_CLIENT_KEY_FILE].write_bytes(
+        key.private_bytes(
+            Encoding.PEM,
+            PrivateFormat.TraditionalOpenSSL,
+            BestAvailableEncryption(b"secret"),
+        )
+    )
+
+
+def _mismatching_client_key(files: dict[str, Path]) -> None:
+    """Install a private key that does not match the client certificate."""
+    _, key, _ = _generate_certificate_and_key()
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+
+
+def _invalid_ca_cert(files: dict[str, Path]) -> None:
+    """Install an invalid CA certificate file."""
+    files[CONF_CERTIFICATE_FILE].write_text(
+        "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("install_invalid_file", "error"),
+    [
+        pytest.param(_invalid_client_cert, "bad_client_cert", id="invalid_client_cert"),
+        pytest.param(_invalid_client_key, "client_key_error", id="invalid_client_key"),
+        pytest.param(
+            _encrypted_client_key, "client_key_error", id="encrypted_client_key"
+        ),
+        pytest.param(
+            _mismatching_client_key, "bad_client_cert_key", id="mismatching_client_key"
+        ),
+        pytest.param(_invalid_ca_cert, "bad_certificate", id="invalid_ca_cert"),
+    ],
+)
+async def test_certificate_file_content_validation(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_try_connection: MagicMock,
+    install_invalid_file: Callable[[dict[str, Path]], None],
+    error: str,
+) -> None:
+    """Test the content of certificate files is validated in the config flow."""
+    mock_try_connection.return_value = True
+    certificate, key, _ = _generate_certificate_and_key()
+    files = {
+        CONF_CERTIFICATE_FILE: tmp_path / "ca.pem",
+        CONF_CLIENT_CERT_FILE: tmp_path / "client.pem",
+        CONF_CLIENT_KEY_FILE: tmp_path / "client_key.pem",
+    }
+    # Use the self signed client certificate as CA certificate
+    files[CONF_CERTIFICATE_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_CERT_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+    install_invalid_file(files)
+    file_paths = {conf: str(file_path) for conf, file_path in files.items()}
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | file_paths,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Install valid files again
+    files[CONF_CERTIFICATE_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_CERT_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"]
+        == {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | file_paths
+    )
 
 
 @pytest.mark.usefixtures(

@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import datetime
 from functools import lru_cache
 import logging
 import os
@@ -10,7 +9,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 import probatio
 
 from homeassistant import config as conf_util
@@ -443,22 +442,22 @@ def get_file_path(option: str, default: str | None = None) -> str | None:
     return str(temp_dir / option)
 
 
-def certificate_expiry(data: bytes) -> datetime | None:
-    """Return the expiry of PEM encoded certificate data."""
+def load_certificate(data: bytes) -> Certificate | None:
+    """Load PEM encoded certificate data."""
     try:
-        return load_pem_x509_certificate(data).not_valid_after_utc
+        return load_pem_x509_certificate(data)
     except ValueError:
         return None
 
 
-def certificate_file_expiry(certificate_file: str) -> datetime | None:
-    """Return the expiry of a PEM encoded certificate file."""
+def load_certificate_file(certificate_file: str) -> Certificate | None:
+    """Load a PEM encoded certificate file."""
     try:
         with open(certificate_file, "rb") as file:
             data = file.read()
     except OSError:
         return None
-    return certificate_expiry(data)
+    return load_certificate(data)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:

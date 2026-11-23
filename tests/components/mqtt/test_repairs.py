@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 
 from cryptography import x509
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import (
@@ -229,18 +230,21 @@ async def test_subentry_reconfigure_export_settings(
     assert device is not None
 
 
-def _generate_certificate(not_valid_after: datetime) -> tuple[bytes, bytes]:
+def _generate_certificate(
+    not_valid_after: datetime, not_valid_before: datetime | None = None
+) -> tuple[bytes, bytes]:
     """Generate a self signed PEM encoded certificate and private key."""
     key = ec.generate_private_key(ec.SECP256R1())
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "mqtt-client")])
+    if not_valid_before is None:
+        not_valid_before = min(dt_util.utcnow(), not_valid_after - timedelta(days=90))
     certificate = (
         x509.CertificateBuilder()
         .subject_name(name)
         .issuer_name(name)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        # Renewed certificates must already be valid when they are installed
-        .not_valid_before(min(dt_util.utcnow(), not_valid_after - timedelta(days=90)))
+        .not_valid_before(not_valid_before)
         .not_valid_after(not_valid_after)
         .sign(key, hashes.SHA256())
     )
@@ -253,10 +257,10 @@ def _generate_certificate(not_valid_after: datetime) -> tuple[bytes, bytes]:
 
 
 def _install_certificate(
-    cert_dir: Path, not_valid_after: datetime
+    cert_dir: Path, not_valid_after: datetime, not_valid_before: datetime | None = None
 ) -> tuple[bytes, bytes]:
     """Install a client certificate and private key file."""
-    certificate, key = _generate_certificate(not_valid_after)
+    certificate, key = _generate_certificate(not_valid_after, not_valid_before)
     (cert_dir / "client.crt").write_bytes(certificate)
     (cert_dir / "client.key").write_bytes(key)
     return certificate, key
@@ -522,6 +526,83 @@ async def test_installed_certificate_files_invalid(
         "expiry": expiry.date().isoformat(),
         "client_cert_file": str(tmp_path / "client.crt"),
     } | {key: str(tmp_path / file) for key, file in file_placeholders.items()}
+
+
+@pytest.mark.parametrize(
+    ("patch_target", "patch_kwargs", "translation_key", "file_placeholders"),
+    [
+        pytest.param(
+            "homeassistant.components.mqtt.repairs.load_pem_private_key",
+            {"side_effect": UnsupportedAlgorithm("Unsupported key algorithm")},
+            "client_key_file_invalid",
+            {"client_key_file": "client.key"},
+            id="unsupported_key_algorithm",
+        ),
+        pytest.param(
+            "homeassistant.components.mqtt.repairs.SSLContext",
+            {
+                "return_value.load_cert_chain.side_effect": FileNotFoundError(
+                    2, "No such file"
+                )
+            },
+            "client_certificate_file_invalid",
+            {},
+            id="file_replaced_while_checking",
+        ),
+    ],
+)
+async def test_installed_certificate_files_check_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    tmp_path: Path,
+    patch_target: str,
+    patch_kwargs: dict[str, Exception],
+    translation_key: str,
+    file_placeholders: dict[str, str],
+) -> None:
+    """Test errors while checking the installed certificate files create an issue."""
+    expiry = dt_util.utcnow() + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    await _async_setup_entry(hass, mqtt_mock_entry, _certificate_file_data(tmp_path))
+
+    with patch(patch_target, **patch_kwargs):
+        await _async_advance_one_day(hass, freezer)
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.translation_key == translation_key
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "expiry": expiry.date().isoformat(),
+        "client_cert_file": str(tmp_path / "client.crt"),
+    } | {key: str(tmp_path / file) for key, file in file_placeholders.items()}
+
+
+async def test_renewed_client_certificate_not_yet_valid(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    tmp_path: Path,
+) -> None:
+    """Test no reload is offered for a renewed certificate that is not valid yet."""
+    start = dt_util.utcnow()
+    expiry = start + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    await _async_setup_entry(hass, mqtt_mock_entry, _certificate_file_data(tmp_path))
+
+    await hass.async_add_executor_job(
+        _install_certificate,
+        tmp_path,
+        expiry + timedelta(days=90),
+        start + timedelta(days=5),
+    )
+    await _async_advance_one_day(hass, freezer)
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.translation_key == "client_certificate_file_expiring"
+    assert issue.is_fixable is False
 
 
 async def test_renewed_client_certificate_reload(

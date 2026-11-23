@@ -1970,6 +1970,61 @@ async def test_setup_uses_certificate_files(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(FileNotFoundError(2, "No such file"), id="missing_file"),
+        pytest.param(PermissionError(13, "Permission denied"), id="unreadable_file"),
+        pytest.param(ssl.SSLError("KEY_VALUES_MISMATCH"), id="mismatching_key"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("protocol", "cleanup_calls"),
+    [
+        pytest.param("5", 1, id="protocol_5"),
+        # Setup first tries to migrate the protocol, before the client is created
+        pytest.param("3.1.1", 0, id="protocol_311_migration"),
+    ],
+)
+async def test_setup_certificates_cannot_be_loaded(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mock_try_connection_protocol_check: MagicMock,
+    error: OSError,
+    protocol: str,
+    cleanup_calls: int,
+) -> None:
+    """Test setup is retried when the certificate files cannot be loaded."""
+    mqtt_client_mock.tls_set.side_effect = error
+    mock_try_connection_protocol_check.side_effect = error
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: protocol,
+            CONF_CERTIFICATE_FILE: "/ssl/mqtt/ca.crt",
+            CONF_CLIENT_CERT_FILE: "/ssl/mqtt/client.crt",
+            CONF_CLIENT_KEY_FILE: "/ssl/mqtt/client.key",
+        },
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        mqtt.MQTT, "cleanup", autospec=True, side_effect=mqtt.MQTT.cleanup
+    ) as mock_cleanup:
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == (
+        "Unable to load the certificates to connect to MQTT broker mock-broker. "
+        "Check that the certificate files exist and are readable, "
+        "and that the private key matches the client certificate"
+    )
+    # The listeners of the client that failed to set up are removed
+    assert mock_cleanup.call_count == cleanup_calls
+
+
+@pytest.mark.parametrize(
     ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
         (
