@@ -14,11 +14,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
-from .const import DOMAIN
+from .const import DOMAIN, WAIT_TIMEOUT
 
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
-WAIT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
 

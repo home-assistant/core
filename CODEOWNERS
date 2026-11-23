@@ -1273,8 +1273,8 @@ AGENTS.md @home-assistant/core
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
 /tests/components/motionblinds_ble/ @LennP @jerrybboy
-/homeassistant/components/motioneye/ @dermotduffy
-/tests/components/motioneye/ @dermotduffy
+/homeassistant/components/motioneye/ @dermotduffy @mkrawcz1
+/tests/components/motioneye/ @dermotduffy @mkrawcz1
 /homeassistant/components/motionmount/ @Wernes-vogels
 /tests/components/motionmount/ @Wernes-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
