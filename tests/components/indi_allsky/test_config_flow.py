@@ -265,6 +265,390 @@ async def test_form_already_configured_ipv6(
     assert result["reason"] == "already_configured"
 
 
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test successful reconfiguration of an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="INDI Allsky (127.0.0.1)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 8443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    }
+    assert entry.title == "INDI Allsky (192.168.1.100:8443)"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        pytest.param(
+            IndiAllSkyConnectionError,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            IndiAllSkyAuthError,
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            Exception,
+            "unknown",
+            id="unknown_error",
+        ),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test reconfiguration error states."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="INDI Allsky (127.0.0.1)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_indi_allsky_client.fetch_image.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover and finish the flow
+    mock_indi_allsky_client.fetch_image.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_duplicate_abort(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test reconfiguring to an existing host/port aborts as already_configured."""
+    entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+        },
+    )
+    entry1.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 443,
+        },
+    )
+    entry2.add_to_hass(hass)
+
+    result = await entry2.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_missing_credentials(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test reconfiguring with only one credential field shows missing_credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="INDI Allsky (127.0.0.1)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_USERNAME: "only-user",
+            CONF_PASSWORD: "",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_credentials"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_USERNAME: "valid-user",
+            CONF_PASSWORD: "valid-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_USERNAME] == "valid-user"
+    assert entry.data[CONF_PASSWORD] == "valid-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_clears_omitted_credentials(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test reconfiguring without credentials clears previously stored credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "old-user",
+            CONF_PASSWORD: "old-password",
+        },
+        title="INDI Allsky (127.0.0.1)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: True,
+    }
+    assert CONF_USERNAME not in entry.data
+    assert CONF_PASSWORD not in entry.data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "reconfigured_host",
+    [
+        pytest.param("proxy.example", id="domain_host"),
+        pytest.param("192.168.1.100", id="ip_host"),
+    ],
+)
+async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    reconfigured_host: str,
+) -> None:
+    """Test Zeroconf rediscovery preserves reconfigured host and port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="INDI Allsky (192.168.1.50)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: reconfigured_host,
+            CONF_PORT: 8443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == reconfigured_host
+    assert entry.data[CONF_PORT] == 8443
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "ssl": "true", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == reconfigured_host
+    assert entry.data[CONF_PORT] == 8443
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_credentials_only_allows_zeroconf_dhcp_update(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test reconfiguring only credentials still allows Zeroconf DHCP IP updates."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+        title="INDI Allsky (192.168.1.50)",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 443,
+            CONF_USERNAME: "updated-user",
+            CONF_PASSWORD: "updated-password",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.60",
+        ip_addresses=["192.168.1.60"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "ssl": "true", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "192.168.1.60"
+    assert entry.data[CONF_PORT] == 443
+
+
 @pytest.mark.parametrize(
     ("input_host", "expected_host"),
     [

@@ -5,7 +5,13 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    MODEL_1PM,
+    MODEL_CAMERA,
+    MODEL_MOTION,
+    MODEL_PLUS_2PM,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,7 +22,6 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    MODEL_TOP_EV_CHARGER_EVE01,
     MOTION_MODELS,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
@@ -1164,7 +1169,7 @@ async def test_rpc_ev_charging_switch(
 
     entity_id = "switch.test_name_charging"
 
-    await init_integration(hass, 3, model=MODEL_TOP_EV_CHARGER_EVE01)
+    await init_integration(hass, 3)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
@@ -1418,3 +1423,109 @@ async def test_rpc_ledstrip_reverse_switch_availability(
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == expected_state
+
+
+async def test_rpc_wall_display_auto_brightness_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC Wall Display auto brightness switch."""
+    entity_id = f"{SWITCH_DOMAIN}.test_name_auto_display_brightness"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2.8.5")
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "ui",
+        {"brightness": {"auto": True, "level": 40, "min_level": 3}},
+    )
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"auto": False}}
+    )
+
+    mock_rpc_device.wall_display_ui_setconfig.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"auto": True}}
+    )
+
+    # The device reports the change with an event, the new config is then fetched
+    def _update_component_config(key: str) -> set[str]:
+        mock_rpc_device.config[key]["brightness"].update(auto=False)
+        return {"brightness"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("model", "firmware", "ui_config"),
+    [
+        pytest.param(
+            MODEL_WALL_DISPLAY,
+            "2.6.1",
+            {"brightness": {"auto": True, "level": 40}},
+            id="old_firmware",
+        ),
+        pytest.param(MODEL_WALL_DISPLAY, "2.8.5", {}, id="no_brightness_config"),
+        pytest.param(
+            MODEL_PLUS_2PM,
+            "2.8.5",
+            {"brightness": {"auto": True, "level": 40}},
+            id="not_wall_display",
+        ),
+    ],
+)
+async def test_rpc_wall_display_auto_brightness_switch_not_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    model: str,
+    firmware: str,
+    ui_config: dict[str, Any],
+) -> None:
+    """Test RPC Wall Display auto brightness switch needs model, firmware and config."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", firmware)
+    monkeypatch.setitem(mock_rpc_device.config, "ui", ui_config)
+    await init_integration(hass, 2, model=model)
+
+    assert hass.states.get(f"{SWITCH_DOMAIN}.test_name_auto_display_brightness") is None

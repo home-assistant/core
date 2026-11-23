@@ -144,3 +144,16 @@ async def test_control_device_fail(
 
         state = hass.states.get(ASSUME_ON_EID)
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_bridge", "mock_api")
+@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
+async def test_unsupported_remote(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test no buttons are created for a remote without IR codes."""
+    monkeypatch.setattr(DEVICE, "remote_id", "TOSHIBA1")
+    await init_integration(hass)
+
+    assert hass.states.get(ASSUME_ON_EID) is None
+    assert hass.states.get(ASSUME_OFF_EID) is None
