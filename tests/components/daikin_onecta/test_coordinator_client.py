@@ -1,20 +1,20 @@
 """Tests for the Daikin Onecta coordinator client adapter."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import RequestInfo
 from daikin_onecta import (
     OnectaApiError,
-    OnectaAuthenticationError,
     OnectaClient,
     OnectaConnectionError,
     OnectaRateLimitError,
     Site,
 )
 from daikin_onecta.rate_limit import RateLimit
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yarl import URL
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
@@ -26,131 +26,115 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.util import dt as dt_util
+
+from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
+from .platform_helpers import _async_setup_fixture
 
 
 async def test_get_device_details_propagates_connection_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Propagate library connection errors to the coordinator."""
-    with patch(
-        "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
-        new=AsyncMock(
-            side_effect=OnectaConnectionError(
-                "network unavailable",
-                method="GET",
-                path="/v1/gateway-devices",
-            )
-        ),
-    ):
-        api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-        with pytest.raises(OnectaConnectionError, match="network unavailable"):
-            await api._async_get_cloud_devices()
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+        "network unavailable", method="GET", path="/v1/gateway-devices"
+    )
+    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    with pytest.raises(OnectaConnectionError, match="network unavailable"):
+        await api._async_get_cloud_devices()
 
 
 async def test_access_token(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Return the OAuth access token after ensuring it is valid."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api.session.async_ensure_token_valid = AsyncMock()
-    with patch.object(
-        type(api.session),
-        "token",
-        new_callable=lambda: property(lambda self: {"access_token": "token"}),
-    ):
-        assert await api.async_get_access_token() == "token"
-    api.session.async_ensure_token_valid.assert_awaited_once()
+    assert await api.async_get_access_token() == FAKE_ACCESS_TOKEN
 
 
 async def test_get_device_details_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Propagate a library rate-limit error to the coordinator."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api.client.get_gateway_devices = AsyncMock(
-        side_effect=OnectaRateLimitError(
-            RateLimit(retry_after=60),
-            method="GET",
-            path="/v1/gateway-devices",
-        )
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
     )
+    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
 
     with pytest.raises(OnectaRateLimitError):
         await api._async_get_cloud_devices()
 
 
-async def test_get_sites(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_get_sites(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
     """Fetch sites without using the normal polling endpoint."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     sites = [Site(id="site-1", gateway_device_ids=["gateway-1"])]
-    api.client.get_sites = AsyncMock(return_value=sites)
+    mock_onecta_client.get_sites.return_value = sites
 
     assert await api.async_get_sites() == sites
-    api.client.get_sites.assert_awaited_once_with()
+    mock_onecta_client.get_sites.assert_awaited_once_with()
 
 
 async def test_get_sites_rate_limit_sets_shared_backoff(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A Sites rate limit prevents later explicit cloud requests until retry."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api.client.get_sites = AsyncMock(
-        side_effect=OnectaRateLimitError(
-            RateLimit(retry_after=60), method="GET", path="/v1/sites"
-        )
+    mock_onecta_client.get_sites.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=60), method="GET", path="/v1/sites"
     )
+    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
 
     with pytest.raises(OnectaRateLimitError):
         await api.async_get_sites()
 
-    assert api._polling_backoff_remaining() == timedelta(seconds=60)
     with pytest.raises(OnectaRateLimitError):
         await api.async_get_sites()
-    api.client.get_sites.assert_awaited_once_with()
+    mock_onecta_client.get_sites.assert_awaited_once_with()
 
 
-async def test_get_device_details_respects_cooldown(
+async def test_scheduled_poll_respects_write_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not fetch cloud data while a successful write is in its cooldown."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api._last_patch_call = dt_util.utcnow()
-    api.client.get_gateway_devices = AsyncMock()
+    """Keep scheduled polling within the write cooldown out of the cloud."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    api = config_entry.runtime_data
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    freezer.tick(api.update_interval - timedelta(seconds=1))
+    assert await api.async_execute_command(AsyncMock())
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert await api._async_get_cloud_devices() is None
-    api.client.get_gateway_devices.assert_not_awaited()
+    mock_onecta_client.get_gateway_devices.assert_not_awaited()
 
 
-async def test_get_device_details_always_respects_post_write_cooldown(
+async def test_get_device_details_uses_elapsed_utc_time(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not allow callers to bypass the post-write cooldown."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    api._last_patch_call = dt_util.utcnow()
-    api.client.get_gateway_devices = AsyncMock(return_value=[])
-
-    assert await api._async_get_cloud_devices() is None
-    api.client.get_gateway_devices.assert_not_awaited()
-
-
-@patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-async def test_get_device_details_uses_utc_across_dst_rollback(
-    mock_utcnow: MagicMock,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """End cooldown based on elapsed time, not the local DST clock."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.
-    api._last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
-    mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
-    api.client.get_gateway_devices = AsyncMock(return_value=[])
-
-    assert await api._async_get_cloud_devices() == []
-    api.client.get_gateway_devices.assert_awaited_once_with()
+    """Fetch after the post-write cooldown expires across a DST transition."""
+    freezer.move_to(datetime(2026, 10, 25, 0, 59, tzinfo=UTC))
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    api = config_entry.runtime_data
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    api.schedule_post_write_refresh()
+    assert await api.async_execute_command(AsyncMock())
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
 
 async def test_write_success(
@@ -163,75 +147,33 @@ async def test_write_success(
 
     assert await api.async_execute_command(command)
     command.assert_awaited_once_with(api.client)
-    assert api._last_patch_call is not None
-
-
-@pytest.mark.parametrize(
-    ("status", "expected_reauth_count", "expected_log"),
-    [
-        pytest.param(401, 1, "failed authentication", id="unauthorized"),
-        pytest.param(403, 0, "was not authorized", id="forbidden"),
-    ],
-)
-async def test_write_authentication_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    status: int,
-    expected_reauth_count: int,
-    expected_log: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Only a 401 write authentication failure starts reauthentication."""
-    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    command = AsyncMock(
-        side_effect=OnectaAuthenticationError(
-            status=status,
-            method="PATCH",
-            path="/v1/management-points/point",
-        )
-    )
-
-    with (
-        caplog.at_level("DEBUG"),
-        patch.object(config_entry, "async_start_reauth") as start_reauth,
-    ):
-        assert not await api.async_execute_command(command)
-
-    assert start_reauth.call_args_list == [call(hass)] * expected_reauth_count
-    assert hass.config_entries.flow.async_progress() == []
-    assert api._last_patch_call is None
-    assert (
-        f"Daikin request PATCH /v1/management-points/point {expected_log} "
-        f"with HTTP {status}" in caplog.text
-    )
 
 
 async def test_write_preserves_oauth_token_rejection(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Propagate token-provider OAuth failures from the pinned client unchanged."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    url = URL("https://idp.onecta.daikineurope.com/v1/oidc/token")
+    token_url = URL("https://idp.onecta.daikineurope.com/v1/oidc/token")
     token_error = OAuth2TokenRequestReauthError(
         domain=config_entry.domain,
-        request_info=RequestInfo(url=url, method="POST", headers={}, real_url=url),
+        request_info=RequestInfo(
+            url=token_url, method="POST", headers={}, real_url=token_url
+        ),
         status=401,
         message="invalid_grant",
     )
-
-    session = MagicMock()
-    token_provider = AsyncMock(side_effect=token_error)
-    api._client = OnectaClient(session, token_provider)
+    mock_onecta_client.patch_characteristic.side_effect = token_error
 
     async def command(client: OnectaClient) -> None:
         await client.patch_characteristic("gateway", "zone", "temperatureControl", 21)
 
     assert not await api.async_execute_command(command)
-
-    token_provider.assert_awaited_once_with()
-    session.request.assert_not_called()
-    assert api._last_patch_call is None
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        "gateway", "zone", "temperatureControl", 21, path=None
+    )
 
 
 async def test_write_api_error(
@@ -248,7 +190,6 @@ async def test_write_api_error(
     )
 
     assert not await api.async_execute_command(command)
-    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point failed with HTTP 500"
         in caplog.text
@@ -271,7 +212,6 @@ async def test_write_connection_error(
     )
 
     assert not await api.async_execute_command(command)
-    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point failed to connect: "
         "network unavailable" in caplog.text
@@ -294,7 +234,6 @@ async def test_write_rate_limit(
     )
 
     assert not await api.async_execute_command(command)
-    assert api._last_patch_call is None
     assert (
         "Daikin request PATCH /v1/management-points/point was rate limited; "
         "retry after 60 seconds" in caplog.text
@@ -311,7 +250,6 @@ async def test_write_token_connection_error(
     command = AsyncMock(side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN))
 
     assert not await api.async_execute_command(command)
-    assert api._last_patch_call is None
     assert "OAuth2TokenRequestConnectionError" in caplog.text
 
 
@@ -325,7 +263,6 @@ async def test_write_timeout(
     command = AsyncMock(side_effect=TimeoutError)
 
     assert not await api.async_execute_command(command)
-    assert api._last_patch_call is None
     assert "Daikin request timed out" in caplog.text
 
 

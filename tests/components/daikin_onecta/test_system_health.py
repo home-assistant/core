@@ -1,11 +1,12 @@
 """Tests for Daikin Onecta system health."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from daikin_onecta.client import ONECTA_API_URL
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.const import DOMAIN, OAUTH2_AUTHORIZE
 from homeassistant.components.daikin_onecta.system_health import (
     _entry_info,
     async_register,
@@ -63,7 +64,9 @@ async def test_system_health_ignores_unloaded_entry(
     assert await system_health_info(hass) == {}
 
 
-async def test_system_health_info(hass: HomeAssistant) -> None:
+async def test_system_health_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Report rate limit and token information for a loaded entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -82,12 +85,9 @@ async def test_system_health_info(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.daikin_onecta.system_health."
-        "system_health.async_check_can_reach_url",
-        new=AsyncMock(return_value="ok"),
-    ) as check_url:
-        info = await system_health_info(hass)
+    aioclient_mock.get(ONECTA_API_URL, status=503)
+    aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)
+    info = await system_health_info(hass)
 
     assert info["max_minute"] == 10
     assert info["max_day"] == 200
@@ -96,11 +96,10 @@ async def test_system_health_info(hass: HomeAssistant) -> None:
     assert info["oauth2_token_valid"] is True
     assert await info["api_status"] == "ok"
     assert await info["oauth2_status"] == "ok"
-    assert check_url.await_args_list[0].args[1] == ONECTA_API_URL
 
 
 async def test_system_health_reports_every_loaded_account(
-    hass: HomeAssistant,
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Include cached health data for every configured Daikin account."""
     entry_ids: list[str] = []
@@ -128,12 +127,9 @@ async def test_system_health_reports_every_loaded_account(
         config_entry.add_to_hass(hass)
         entry_ids.append(config_entry.entry_id)
 
-    with patch(
-        "homeassistant.components.daikin_onecta.system_health."
-        "system_health.async_check_can_reach_url",
-        new=AsyncMock(return_value="ok"),
-    ):
-        info = await system_health_info(hass)
+    aioclient_mock.get(ONECTA_API_URL, status=503)
+    aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)
+    info = await system_health_info(hass)
 
     assert entry_ids[0] in info["remaining_day"]
     assert "199" in info["remaining_day"]

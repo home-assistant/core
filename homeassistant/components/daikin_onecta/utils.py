@@ -1,6 +1,6 @@
 """Shared utilities for the Daikin Onecta integration."""
 
-from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
 import re
 from typing import Literal
 
@@ -93,8 +93,16 @@ def round_temperature_to_step(
     else:
         steps = step_count.to_integral_value(rounding=ROUND_HALF_UP)
         rounded = step_origin + steps * step_decimal
+    rounded_steps = (rounded - step_origin) / step_decimal
     if lower_bound is not None:
-        rounded = max(rounded, Decimal(str(lower_bound)))
+        minimum_steps = (
+            (Decimal(str(lower_bound)) - step_origin) / step_decimal
+        ).to_integral_value(rounding=ROUND_CEILING)
+        rounded_steps = max(rounded_steps, minimum_steps)
     if upper_bound is not None:
-        rounded = min(rounded, Decimal(str(upper_bound)))
+        maximum_steps = (
+            (Decimal(str(upper_bound)) - step_origin) / step_decimal
+        ).to_integral_value(rounding=ROUND_FLOOR)
+        rounded_steps = min(rounded_steps, maximum_steps)
+    rounded = step_origin + rounded_steps * step_decimal
     return float(rounded)

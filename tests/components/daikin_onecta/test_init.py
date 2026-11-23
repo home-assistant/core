@@ -1,6 +1,7 @@
 """Test Daikin Onecta setup."""
 
 from copy import deepcopy
+from datetime import timedelta
 import json
 from pathlib import Path
 from typing import Any
@@ -32,17 +33,23 @@ _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER = (
 async def test_unload_config_entry_cancels_post_write_refresh(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Cancel a pending post-write refresh when unloading the entry."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     coordinator.schedule_post_write_refresh()
+    mock_onecta_client.get_gateway_devices.reset_mock()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert coordinator._unsub_post_write_refresh is not None
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert coordinator._unsub_post_write_refresh is None
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_onecta_client.get_gateway_devices.assert_not_awaited()
 
 
 async def test_setup_with_gateway_missing_management_points(

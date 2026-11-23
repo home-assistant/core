@@ -375,12 +375,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         # the lightweight child-device API is intended for logical zones and does
         # not support a sw_version field.
         for management_point in gateway.management_points:
+            if management_point.management_point_type in {"gateway", "climateControl"}:
+                continue
             device_info = management_point_device_info(
                 device, management_point.embedded_id
             )
-            if isinstance(device_info, DeviceInfo) and (
-                device_info.via_device_id is not None
-            ):
+            if isinstance(device_info, DeviceInfo):
                 registry.async_get_or_create_from_info(
                     config_entry_id=self.config_entry.entry_id,
                     device_info=device_info,

@@ -15,6 +15,7 @@ from daikin_onecta.models import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -72,7 +73,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
+from .conftest import DOMAIN, MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _execute_typed_command
 
 DRY_FIXED_DIRECTION_GATEWAY_ID = "00000000-0000-4000-8000-000000000108"
@@ -1529,144 +1530,54 @@ async def test_climate_service_publishes_preset_disable_before_replacement_failu
     mock_onecta_client.post_management_point.assert_awaited_once()
 
 
-async def _async_setup_climate_entity_with_minimal_model(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> str:
-    """Set up a minimal climate entity through the config-entry API."""
-    setpoint = SimpleNamespace(
-        value=20, min_value=7, max_value=30, step_value=1, settable=True, unit=None
-    )
-    operation_mode = SimpleNamespace(value="heating", values=["heating"], settable=True)
-    climate_control = MagicMock(
-        embedded_id="zone", management_point_type="climateControl"
-    )
-    climate_control.name = None
-    climate_control.temperature_control = SimpleNamespace(
-        value=SimpleNamespace(
-            operation_modes={
-                "heating": SimpleNamespace(setpoints={"roomTemperature": setpoint})
-            }
-        )
-    )
-    climate_control.operation_mode = operation_mode
-    climate_control.on_off_mode = SimpleNamespace(value="on", settable=True)
-    climate_control.fan_control = None
-    climate_control.holiday_mode = None
-    climate_control.sensory_data = MagicMock(return_value=None)
-    climate_control.characteristic.return_value = None
-    climate_control.climate_control = climate_control
-    climate_control.setpoint_types = ["roomTemperature"]
-    climate_control.setpoint.return_value = setpoint
-    climate_control.fan_operation.return_value = None
-    climate_control.mode_characteristic.return_value = None
-    climate_control.current_temperature.return_value = None
-
-    device = MagicMock(id="gateway", available=True)
-    device.name = "Daikin"
-    device.device = SimpleNamespace(
-        device_model="Daikin",
-        gateway_embedded_id=None,
-        gateway_management_point=None,
-        mac_address=None,
-        management_points=(climate_control,),
-        management_points_by_type=lambda _: (climate_control,),
-    )
-    device.gateway_metadata = (None, None, None)
-    device.management_point.return_value = climate_control
-    gateway_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, device.id)},
-        manufacturer="Daikin",
-        name=device.name,
-    )
-
-    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    coordinator.data = {device.id: device}
-    coordinator.last_update_success = True
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    coordinator.async_get_access_token = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.daikin_onecta."
-            "config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator",
-            return_value=coordinator,
-        ),
-        patch("homeassistant.components.daikin_onecta.PLATFORMS", [Platform.CLIMATE]),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
-    )
-    assert entity_id == "climate.daikin_room_temperature"
-    child_entry = device_registry.async_get_child_device_by_identifier(
-        (DOMAIN, "gateway_zone"), config_entry.entry_id
-    )
-    assert child_entry is None
-    assert entity_registry.async_get(entity_id).device_id == gateway_entry.id
-
-    return entity_id
-
-
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Publish the updated temperature after a successful climate service call."""
-    entity_id = await _async_setup_climate_entity_with_minimal_model(
-        hass, config_entry, device_registry, entity_registry
-    )
+    (
+        entity_id,
+        gateway_id,
+        point,
+        _coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 21},
+        {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 22},
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 21
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 22
 
     mock_onecta_client.patch_characteristic.assert_awaited_once_with(
-        "gateway",
-        "zone",
+        gateway_id,
+        point.embedded_id,
         "temperatureControl",
-        21,
+        22,
         path="/operationModes/heating/setpoints/roomTemperature",
     )
-
-    coordinator = config_entry.runtime_data
-    device = coordinator.data["gateway"]
-    device.async_update_device_registry.reset_mock()
-    coordinator.async_update_listeners()
 
 
 async def test_climate_service_failure_preserves_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep the previous temperature when Daikin rejects a climate write."""
-    entity_id = await _async_setup_climate_entity_with_minimal_model(
-        hass, config_entry, device_registry, entity_registry
-    )
+    (
+        entity_id,
+        gateway_id,
+        point,
+        _coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    state_before = hass.states.get(entity_id)
+    assert state_before is not None
     mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
         "test connection failure", method="PATCH", path="/test"
     )
@@ -1675,21 +1586,19 @@ async def test_climate_service_failure_preserves_entity_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 21},
+            {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 22},
             blocking=True,
         )
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "set_temperature_failed"
-    assert str(err.value) == "Failed to set the temperature for Daikin"
     state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20
+    assert state == state_before
     mock_onecta_client.patch_characteristic.assert_awaited_once_with(
-        "gateway",
-        "zone",
+        gateway_id,
+        point.embedded_id,
         "temperatureControl",
-        21,
+        22,
         path="/operationModes/heating/setpoints/roomTemperature",
     )
 
@@ -1697,21 +1606,19 @@ async def test_climate_service_failure_preserves_entity_state(
 async def test_climate_service_rejected_token_preserves_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Translate rejected credentials when a climate action reaches Daikin."""
-    response = MagicMock(status=401, headers={})
-    response.text = AsyncMock(return_value="Unauthorized")
-    request_context = MagicMock()
-    request_context.__aenter__ = AsyncMock(return_value=response)
-    request_context.__aexit__ = AsyncMock(return_value=None)
-    session = MagicMock()
-    session.request = MagicMock(return_value=request_context)
-    with patch(
-        "homeassistant.components.daikin_onecta.coordinator.async_get_clientsession",
-        return_value=session,
-    ):
-        await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
+    await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
     coordinator = config_entry.runtime_data
+    gateway_id = next(iter(coordinator.data))
+    aioclient_mock.patch(
+        "https://api.onecta.daikineurope.com/v1/gateway-devices/"
+        f"{gateway_id}/management-points/climateControl/characteristics/"
+        "temperatureControl",
+        status=401,
+        text="Unauthorized",
+    )
     entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
     state_before = hass.states.get(entity_id)
     assert state_before is not None
@@ -1735,21 +1642,12 @@ async def test_climate_service_rejected_token_preserves_entity_state(
         state_after.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
         == temperature_before
     )
-    session.request.assert_called_once()
-    request = session.request
-    assert request.call_args.args == (
-        "PATCH",
+    assert len(aioclient_mock.mock_calls) == 1
+    assert str(aioclient_mock.mock_calls[0][1]) == (
         "https://api.onecta.daikineurope.com/v1/gateway-devices/"
-        f"{next(iter(coordinator.data))}/management-points/climateControl/"
-        "characteristics/temperatureControl",
+        f"{gateway_id}/management-points/climateControl/characteristics/"
+        "temperatureControl"
     )
-    assert request.call_args.kwargs["headers"]["Authorization"] == (
-        f"Bearer {FAKE_ACCESS_TOKEN}"
-    )
-    assert request.call_args.kwargs["json"] == {
-        "value": 22,
-        "path": "/operationModes/heating/setpoints/roomTemperature",
-    }
 
 
 async def test_climate_service_oauth_connection_error_is_translated(

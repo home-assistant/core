@@ -1,0 +1,78 @@
+# serializer version: 1
+# name: test_platform_entities[altherma_schedule][altherma_schedule_water_heater]
+  dict({
+    'water_heater.domestic_hot_water_tank': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30.0,
+          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+            'off',
+            'heat_pump',
+            'performance',
+          ]),
+          <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+          <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000105_domesticHotWaterTank')]>,
+        'disabled_by': None,
+        'domain': 'water_heater',
+        'entity_category': None,
+        'entity_id': 'water_heater.domestic_hot_water_tank',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': <WaterHeaterEntityFeature: 10>,
+        'translation_key': None,
+        'unique_id': '00000000-0000-4000-8000-000000000105_domesticHotWaterTank',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 51.0,
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Domestic hot water tank',
+          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30.0,
+          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+            'off',
+            'heat_pump',
+            'performance',
+          ]),
+          <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat_pump',
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 10>,
+          <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+          <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+          <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+          <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 45.0,
+          <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+        }),
+        'context': <ANY>,
+        'entity_id': 'water_heater.domestic_hot_water_tank',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'heat_pump',
+      }),
+    }),
+  })
+# ---

@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_platform_entities[mc80z][mc80z_fan]
+  dict({
+    'fan.air_purifier': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'auto_fan',
+            'econo',
+            'anti_pollen',
+            'circulator',
+            'auto',
+            'moist',
+          ]),
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000104')]>,
+        'disabled_by': None,
+        'domain': 'fan',
+        'entity_category': None,
+        'entity_id': 'fan.air_purifier',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': <FanEntityFeature: 57>,
+        'translation_key': 'air_purifier',
+        'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_air_purifier',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier',
+          <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+          <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+          <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'econo',
+          <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'auto_fan',
+            'econo',
+            'anti_pollen',
+            'circulator',
+            'auto',
+            'moist',
+          ]),
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
+        }),
+        'context': <ANY>,
+        'entity_id': 'fan.air_purifier',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'on',
+      }),
+    }),
+  })
+# ---

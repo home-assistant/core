@@ -49,7 +49,6 @@ async def async_setup_entry(
 
     coordinator = OnectaDataUpdateCoordinator(hass, config_entry, implementation)
     config_entry.runtime_data = coordinator
-    config_entry.async_on_unload(coordinator.async_shutdown)
 
     await config_entry.runtime_data.async_config_entry_first_refresh()
     coordinator.async_register_devices()
