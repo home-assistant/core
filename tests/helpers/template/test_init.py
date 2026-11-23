@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import jinja2
 import probatio
 import pytest
 
@@ -514,6 +515,22 @@ def test_render_json_path_matches_environment_finalize(hass: HomeAssistant) -> N
             {"value": "raw", "value_json": {"a": CYCLIC}, "error_value": "fallback"},
             "fallback",
             id="cyclic_value",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {
+                "value": "raw",
+                "value_json": {"a": jinja2.StrictUndefined(name="a")},
+                "error_value": "fallback",
+            },
+            "fallback",
+            id="strict_undefined_value_error_value",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {"value": "raw", "value_json": {"a": jinja2.StrictUndefined(name="a")}},
+            "raw",
+            id="strict_undefined_value",
         ),
         pytest.param(
             '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',

@@ -395,7 +395,8 @@ def _render_json_path(
     try:
         # Same output as jinja while TemplateEnvironment uses this finalize
         return str(_finalize_output(value)).strip()
-    except RecursionError:
+    # Let jinja render it, so its error handling applies
+    except jinja2.TemplateError, RecursionError:
         return None
 
 
