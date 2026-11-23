@@ -60,7 +60,8 @@ class HeimanCoordinator(DataUpdateCoordinator[bool]):
         """Poll the device state."""
         async with self._io_lock:
             try:
-                return await self._client.get_power(self.info)
+                info = await self._get_matching_info()
+                return await self._client.get_power(info)
             except HeimanError as err:
                 raise UpdateFailed(str(err)) from err
 

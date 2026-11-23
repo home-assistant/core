@@ -84,6 +84,29 @@ async def test_switch_lifecycle(
 
 
 @pytest.mark.usefixtures("entry")
+async def test_poll_rejects_reused_address(
+    hass: HomeAssistant, device: WiFiSwitch, freezer: FrozenDateTimeFactory
+) -> None:
+    """Ignore a different switch assigned the configured IP address."""
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    original_mac = device.mac
+    device.mac = "A8:C1:D6:04:05:06"
+    device.flat_state = True
+    device.power = True
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    device.mac = original_mac
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("entry")
 @pytest.mark.parametrize(
     ("attribute", "value", "command_count"),
     [
