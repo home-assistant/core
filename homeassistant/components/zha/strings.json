@@ -166,6 +166,11 @@
       "title": "Global options"
     }
   },
+  "device": {
+    "channel": {
+      "name": "Channel {index}"
+    }
+  },
   "device_automation": {
     "action_type": {
       "issue_all_led_effect": "Issue effect for all LEDs",

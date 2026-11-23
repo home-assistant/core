@@ -159,6 +159,8 @@
   dict({
     'active_coordinator': False,
     'available': True,
+    'child_devices': list([
+    ]),
     'device_type': 'EndDevice',
     'endpoints': dict({
       '1': dict({
@@ -252,6 +254,7 @@
         dict({
           'alarm_state': 'disarmed',
           'available': True,
+          'child_device_id': None,
           'class_name': 'AlarmControlPanel',
           'code_arm_required': False,
           'code_format': 'number',
@@ -280,6 +283,7 @@
         dict({
           'attribute_name': 'zone_status',
           'available': True,
+          'child_device_id': None,
           'class_name': 'IASZone',
           'device_class': None,
           'device_ieee': '**REDACTED**',
