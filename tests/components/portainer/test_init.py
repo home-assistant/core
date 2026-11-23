@@ -595,6 +595,46 @@ async def test_migration_v5_uses_subentry_when_endpoint_ancestor_is_missing(
     assert migrated_entity.device_id == container_device.id
 
 
+async def test_migration_v5_uses_subentry_for_detached_numeric_container(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a detached container's numeric alias does not identify its endpoint."""
+    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    entry = _create_v5_config_entry()
+    entry.add_to_hass(hass)
+
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        config_subentry_id=_subentry_id(entry, "3"),
+        identifiers={
+            (DOMAIN, f"{entry.entry_id}_1"),
+            (DOMAIN, f"{entry.entry_id}_3_1"),
+        },
+        model="Container",
+        name="1",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_1_container",
+        config_entry=entry,
+        config_subentry_id=_subentry_id(entry, "3"),
+        device_id=container_device.id,
+        original_name="Container",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(legacy_entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{entry.entry_id}_3_1_container"
+    assert migrated_entity.device_id == container_device.id
+
+
 @pytest.mark.parametrize(
     "disabled_by",
     [None, er.RegistryEntryDisabler.USER],

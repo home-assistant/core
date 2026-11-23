@@ -317,29 +317,29 @@ def _async_migrate_container_entity_registry(
         if device.model != "Container":
             continue
 
-        endpoint_device: AnyDeviceEntry = device
-        while True:
+        endpoint_device: AnyDeviceEntry | None = device
+        while endpoint_device is not None:
             parent_device_id = (
                 endpoint_device.parent_device_id
                 if isinstance(endpoint_device, ChildDeviceEntry)
                 else endpoint_device.via_device_id
             )
             if parent_device_id is None:
+                if endpoint_device.id == device.id:
+                    endpoint_device = None
                 break
-            parent_device = device_registry.async_get(parent_device_id)
-            if parent_device is None:
-                break
-            endpoint_device = parent_device
+            endpoint_device = device_registry.async_get(parent_device_id)
 
         endpoint_id = None
-        for domain, identifier in endpoint_device.identifiers:
-            if domain != DOMAIN or not identifier.startswith(entry_id_prefix):
-                continue
-            suffix = identifier.removeprefix(entry_id_prefix)
-            suffix = suffix.removeprefix("endpoint_")
-            if suffix.isdigit():
-                endpoint_id = suffix
-                break
+        if endpoint_device is not None:
+            for domain, identifier in endpoint_device.identifiers:
+                if domain != DOMAIN or not identifier.startswith(entry_id_prefix):
+                    continue
+                suffix = identifier.removeprefix(entry_id_prefix)
+                suffix = suffix.removeprefix("endpoint_")
+                if suffix.isdigit():
+                    endpoint_id = suffix
+                    break
         if endpoint_id is None and device.config_subentry_id is not None:
             subentry = entry.subentries.get(device.config_subentry_id)
             if subentry is not None and (
