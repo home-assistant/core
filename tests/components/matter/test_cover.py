@@ -2332,8 +2332,14 @@ async def test_closure_cover_gate_cancel_pending_open_stays_latched(
     "attributes",
     [
         {
-            # Add the Instantaneous feature bit to the fixture's FeatureMap.
-            "1/260/65532": 43 | clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
+            # Instantaneous is incompatible with Speed (PS & !IS).
+            "1/260/65532": (
+                43 & ~clusters.ClosureControl.Bitmaps.Feature.kSpeed
+                | clusters.ClosureControl.Bitmaps.Feature.kInstantaneous
+            ),
+            # Remove the unsupported Speed fields from both state structures.
+            "1/260/3": {0: 0, 1: True, 3: True},
+            "1/260/4": {0: 0, 1: True},
         }
     ],
 )
@@ -3183,10 +3189,13 @@ async def test_closure_cover_set_position_without_panel_raises(
         [{"0": None, "1": NAMESPACE_CLOSURE_PANEL, "2": 99, "3": "Unknown"}],
     )
 
-    with pytest.raises(HomeAssistantError, match="No position panel found"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             "cover",
             "set_cover_position",
             {"entity_id": entity_id, "position": 30},
             blocking=True,
         )
+
+    assert exc.value.translation_domain == "matter"
+    assert exc.value.translation_key == "closure_no_position_panel"
