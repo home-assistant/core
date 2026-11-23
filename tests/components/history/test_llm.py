@@ -471,7 +471,7 @@ async def test_get_external_statistics(
     ("tool_args", "expected_ids"),
     [
         pytest.param(
-            {}, [EXTERNAL_STATISTIC_ID, ENERGY_ENTITY_ID, ENTITY_ID], id="all"
+            {}, [EXTERNAL_STATISTIC_ID, ENTITY_ID, ENERGY_ENTITY_ID], id="all"
         ),
         pytest.param(
             {"unit_class": "energy"},
@@ -509,6 +509,25 @@ async def test_search_statistics(
 
 
 @pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
+async def test_search_statistics_ranking(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that an exact name match comes before a partial name match."""
+    hass.states.async_set(
+        ENERGY_ENTITY_ID, "5", {"friendly_name": "Electricity usage meter"}
+    )
+    tool = SearchStatisticsTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"query": "electricity usage"}), llm_context
+    )
+
+    assert [item["statistic_id"] for item in result.data["statistics"]] == [
+        EXTERNAL_STATISTIC_ID,
+        ENERGY_ENTITY_ID,
+    ]
+
+
+@pytest.mark.usefixtures("recorder_mock", "recorded_statistics")
 async def test_search_statistics_details(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
@@ -532,15 +551,6 @@ async def test_search_statistics_details(
             "has_mean": False,
         },
         {
-            "statistic_id": ENERGY_ENTITY_ID,
-            "name": None,
-            "source": "recorder",
-            "unit": "kWh",
-            "unit_class": "energy",
-            "has_sum": True,
-            "has_mean": False,
-        },
-        {
             "statistic_id": ENTITY_ID,
             "name": "Living room temperature",
             "source": "recorder",
@@ -548,6 +558,15 @@ async def test_search_statistics_details(
             "unit_class": "temperature",
             "has_sum": False,
             "has_mean": True,
+        },
+        {
+            "statistic_id": ENERGY_ENTITY_ID,
+            "name": None,
+            "source": "recorder",
+            "unit": "kWh",
+            "unit_class": "energy",
+            "has_sum": True,
+            "has_mean": False,
         },
     ]
 
@@ -583,6 +602,7 @@ async def test_search_statistics_pagination(
         pytest.param({"unit_class": "dollars"}, id="unit_class"),
         pytest.param({"statistic_type": "max"}, id="statistic_type"),
         pytest.param({"query": ""}, id="empty_query"),
+        pytest.param({"query": "   "}, id="blank_query"),
         pytest.param({"offset": -1}, id="offset"),
     ],
 )

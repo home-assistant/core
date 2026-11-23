@@ -18,9 +18,10 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    rank_name_match,
 )
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 
@@ -319,9 +320,9 @@ class SearchStatisticsTool(Tool):
             probatio.Optional(
                 "query",
                 description=(
-                    "Words to find in the statistic ID or name, case-insensitive."
+                    "Text to find in the statistic name or ID, case-insensitive."
                 ),
-            ): probatio.All(str, probatio.NonEmpty()),
+            ): probatio.All(str, probatio.Strip, probatio.NonEmpty()),
             probatio.Optional(
                 "unit_class",
                 description=(
@@ -350,11 +351,11 @@ class SearchStatisticsTool(Tool):
     ) -> ToolResult:
         """Search the long-term statistics."""
         args = self.parameters(tool_input.tool_args)
-        words = args.get("query", "").casefold().split()
+        query: str | None = args["query"].casefold() if "query" in args else None
         unit_class: str | None = args.get("unit_class")
         offset: int = args["offset"]
 
-        matches: list[JsonObjectType] = []
+        matches: list[tuple[int, str, str, JsonObjectType]] = []
         for item in await statistics.async_list_statistic_ids(
             hass, statistic_type=args.get("statistic_type")
         ):
@@ -365,25 +366,38 @@ class SearchStatisticsTool(Tool):
             name: str | None = item["name"] or (
                 state.name if (state := hass.states.get(statistic_id)) else None
             )
-            if not all(
-                word in f"{statistic_id} {name or ''}".casefold() for word in words
-            ):
+            rank = (
+                0
+                if query is None
+                else rank_name_match(
+                    query, (name,) if name else (), (), (statistic_id,)
+                )
+            )
+            if rank is None:
                 continue
             matches.append(
-                {
-                    "statistic_id": statistic_id,
-                    "name": name,
-                    "source": item["source"],
-                    "unit": item["display_unit_of_measurement"],
-                    "unit_class": item["unit_class"],
-                    "has_sum": item["has_sum"],
-                    "has_mean": item["mean_type"] is not StatisticMeanType.NONE,
-                }
+                (
+                    rank,
+                    (name or statistic_id).casefold(),
+                    statistic_id,
+                    {
+                        "statistic_id": statistic_id,
+                        "name": name,
+                        "source": item["source"],
+                        "unit": item["display_unit_of_measurement"],
+                        "unit_class": item["unit_class"],
+                        "has_sum": item["has_sum"],
+                        "has_mean": item["mean_type"] is not StatisticMeanType.NONE,
+                    },
+                )
             )
-        matches.sort(key=lambda match: str(match["statistic_id"]))
+        # Best matches first, like search__search
+        matches.sort(key=lambda match: match[:3])
 
         result: JsonObjectType = {
-            "statistics": list[JsonValueType](matches[offset : offset + _SEARCH_LIMIT]),
+            "statistics": [
+                match[3] for match in matches[offset : offset + _SEARCH_LIMIT]
+            ],
             "total": len(matches),
         }
         if (next_offset := offset + _SEARCH_LIMIT) < len(matches):

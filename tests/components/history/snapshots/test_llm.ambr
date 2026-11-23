@@ -358,7 +358,8 @@
           'type': 'integer',
         }),
         'query': dict({
-          'description': 'Words to find in the statistic ID or name, case-insensitive.',
+          'description': 'Text to find in the statistic name or ID, case-insensitive.',
+          'format': 'strip',
           'type': 'string',
         }),
         'statistic_type': dict({
