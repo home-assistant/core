@@ -87,8 +87,8 @@ async def test_setup(
     name = "Workday Sensor"
     if config.get("country"):
         name += f" {config['country']}"
-    if config.get("province"):
-        name += f" {config['province']}"
+    if province := config.get("country_settings", {}).get("province"):
+        name += f" {province}"
     slug_name = slugify(name)
 
     state = hass.states.get(f"binary_sensor.{slug_name}")
@@ -448,13 +448,17 @@ async def test_only_repairs_for_current_next_year(
     config = {
         "name": DEFAULT_NAME,
         "country": "DE",
-        "province": "BW",
+        "country_settings": {
+            "province": "BW",
+            "language": "de",
+        },
         "excludes": DEFAULT_EXCLUDES,
         "days_offset": DEFAULT_OFFSET,
         "workdays": DEFAULT_WORKDAYS,
-        "add_holidays": [],
-        "remove_holidays": remove_dates,
-        "language": "de",
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": remove_dates,
+        },
     }
     entry = await init_integration(hass, config)
 
@@ -472,17 +476,21 @@ async def test_missing_language(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": None,
+        "country_settings": {
+            "language": None,
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)
@@ -495,17 +503,21 @@ async def test_incorrect_english_variant(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": "en_UK",  # Incorrect variant
+        "country_settings": {
+            "language": "en_UK",
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)
