@@ -660,7 +660,7 @@ async def test_squeezebox_load_playlist(
         MEDIA_PLAYER_DOMAIN,
         MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             ATTR_MEDIA_CONTENT_ID: json.dumps(
                 {
                     "urls": [
