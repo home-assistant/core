@@ -367,14 +367,7 @@ class DefaultAgent(ConversationEntity):
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]
 
-    async def async_recognize_intent(
-        self, user_input: ConversationInput, strict_intents_only: bool = False
-    ) -> RecognizeResult | None:
-        """Recognize intent from user input."""
-        results = await self._async_recognize_intents(user_input, strict_intents_only)
-        return results[0] if results else None
-
-    async def _async_recognize_intents(
+    async def async_recognize_intents(
         self, user_input: ConversationInput, strict_intents_only: bool = False
     ) -> list[RecognizeResult]:
         """Recognize the intents to try for user input, in order."""
@@ -423,7 +416,13 @@ class DefaultAgent(ConversationEntity):
                 "source": "trigger",
                 "sentence_template": trigger_result.sentence_template or "",
             }
-        elif intent_result := await self.async_recognize_intent(user_input):
+        elif intent_results := await self.async_recognize_intents(user_input):
+            satellite_area, _ = self._get_satellite_area_and_device(
+                user_input.satellite_id, user_input.device_id
+            )
+            intent_result, targets = _get_debug_result(
+                self.hass, intent_results, satellite_area
+            )
             successful_match = not intent_result.unmatched_entities
             result_dict = {
                 # Name of the matching intent (or the closest)
@@ -445,7 +444,7 @@ class DefaultAgent(ConversationEntity):
                     for entity_key, entity in intent_result.entities.items()
                 },
                 # Entities/areas/etc. that would be targeted
-                "targets": {},
+                "targets": targets,
                 # True if match was successful
                 "match": successful_match,
                 # Text of the sentence template that matched (or was closest)
@@ -453,17 +452,6 @@ class DefaultAgent(ConversationEntity):
                 # When match is incomplete, this will contain the best slot guesses
                 "unmatched_slots": _get_unmatched_slots(intent_result),
             }
-
-            if successful_match:
-                satellite_area, _ = self._get_satellite_area_and_device(
-                    user_input.satellite_id, user_input.device_id
-                )
-                result_dict["targets"] = {
-                    state.entity_id: {"matched": is_matched}
-                    for state, is_matched in _get_debug_targets(
-                        self.hass, intent_result, satellite_area
-                    )
-                }
 
             if intent_result.intent_sentence is not None:
                 result_dict["sentence_template"] = intent_result.intent_sentence.text
@@ -507,7 +495,7 @@ class DefaultAgent(ConversationEntity):
 
         if response is None:
             # Match intents
-            intent_results = await self._async_recognize_intents(user_input)
+            intent_results = await self.async_recognize_intents(user_input)
             intent_result = intent_results[0] if intent_results else None
 
             if intent_result is None or intent_result.unmatched_entities:
@@ -1714,7 +1702,7 @@ class DefaultAgent(ConversationEntity):
         Only performs strict matching with exposed entities and exact wording.
         Returns None if no match or a matching error occurred.
         """
-        results = await self._async_recognize_intents(
+        results = await self.async_recognize_intents(
             user_input, strict_intents_only=True
         )
         if not results or (
@@ -2124,6 +2112,25 @@ def _collect_list_references(expression: Expression, list_names: set[str]) -> No
     elif isinstance(expression, ListReference):
         # {list}
         list_names.add(expression.slot_name)
+
+
+def _get_debug_result(
+    hass: HomeAssistant,
+    results: list[RecognizeResult],
+    satellite_area: ar.AreaEntry | None,
+) -> tuple[RecognizeResult, dict[str, dict[str, bool]]]:
+    """Return the result that would be handled and its targets."""
+    for result in results:
+        if result.unmatched_entities:
+            continue
+
+        if targets := {
+            state.entity_id: {"matched": is_matched}
+            for state, is_matched in _get_debug_targets(hass, result, satellite_area)
+        }:
+            return result, targets
+
+    return results[-1], {}
 
 
 def _get_debug_targets(
