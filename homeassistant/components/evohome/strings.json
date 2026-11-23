@@ -3,6 +3,9 @@
     "api_connection_failed": {
       "message": "Unable to connect to the vendor's API"
     },
+    "api_credentials_invalid": {
+      "message": "The vendor's API rejected the username or password"
+    },
     "api_rate_limited": {
       "message": "The vendor's API rate limit has been exceeded; try again later"
     },

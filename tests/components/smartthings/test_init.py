@@ -1,5 +1,6 @@
 """Tests for the SmartThings component init module."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 from typing import Any
@@ -575,6 +576,105 @@ async def test_unloading_subscription_deletion_error(
         "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("stop", ["unload", "shutdown"])
+async def test_stream_stopped_before_current_subscription_deleted(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    stop: str,
+) -> None:
+    """Test the event stream is stopped before its current subscription is deleted."""
+    calls: list[str] = []
+    stream_cancelled = asyncio.Event()
+
+    async def subscribe(*args: Any) -> None:
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            calls.append("stream stopped")
+            stream_cancelled.set()
+            raise
+
+    async def delete_subscription(subscription_id: str) -> None:
+        calls.append(f"delete {subscription_id}")
+
+    devices.subscribe.side_effect = subscribe
+    devices.delete_subscription.side_effect = delete_subscription
+    await setup_integration(hass, mock_config_entry)
+
+    # A reconnect replaced the subscription created during the setup
+    devices.new_subscription_id_callback("after-reconnect")
+    await hass.async_block_till_done()
+
+    if stop == "unload":
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    else:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        async with asyncio.timeout(5):
+            await stream_cancelled.wait()
+        await hass.async_block_till_done()
+
+    assert calls == ["stream stopped", "delete after-reconnect"]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_unloading_after_stream_failed(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading when the event stream already ended with an error."""
+    devices.subscribe.side_effect = SmartThingsAuthenticationFailedError
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+
+async def test_stream_error_logged_when_it_ends(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an event stream error is logged when the stream ends, not on unload."""
+    devices.subscribe.side_effect = SmartThingsConnectionError("stream lost")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "SmartThings event stream ended: stream lost" in caplog.text
+
+
+async def test_stream_cancel_not_logged(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test stopping the event stream on unload is not logged as an error."""
+    stream_cancelled = asyncio.Event()
+
+    async def subscribe(*args: Any) -> None:
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            stream_cancelled.set()
+            raise
+
+    devices.subscribe.side_effect = subscribe
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert stream_cancelled.is_set()
+    assert "SmartThings event stream ended" not in caplog.text
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
