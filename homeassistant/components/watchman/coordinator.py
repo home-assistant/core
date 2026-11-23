@@ -48,6 +48,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
         """Initialize."""
         self._httpx_client = httpx_client
         self.added_tanks: set[str] = set()
+        self._unavailable_tanks: set[str] = set()
         super().__init__(
             hass,
             _LOGGER,
@@ -97,14 +98,22 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                             usage_rate=rate,
                             forecast_empty=forecast,
                         )
+                        if tank_name in self._unavailable_tanks:
+                            _LOGGER.info(
+                                "Tank '%s' data is available again",
+                                tank_name,
+                            )
+                            self._unavailable_tanks.remove(tank_name)
                         results.append(tank_data)
                     except KingspanAPIError as err:
                         if err.code == KingspanErrorCode.NO_DATA:
-                            _LOGGER.warning(
-                                "Skipping tank '%s' (missing data): %s",
-                                tank_name,
-                                err.message,
-                            )
+                            if tank_name not in self._unavailable_tanks:
+                                _LOGGER.warning(
+                                    "Skipping tank '%s' (missing data): %s",
+                                    tank_name,
+                                    err.message,
+                                )
+                                self._unavailable_tanks.add(tank_name)
                             continue
                         raise
 

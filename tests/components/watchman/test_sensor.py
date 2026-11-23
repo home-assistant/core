@@ -1,6 +1,7 @@
 """Test Kingspan Watchman SENSiT sensor states."""
 
 from datetime import UTC, timedelta
+import logging
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
@@ -15,7 +16,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 import homeassistant
-from homeassistant.components.watchman.const import DEFAULT_OIL_ENERGY_DENSITY, DOMAIN
+from homeassistant.components.watchman.const import (
+    DEFAULT_OIL_ENERGY_DENSITY,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.components.watchman.coordinator import TankData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -286,19 +291,24 @@ async def test_dynamic_device_addition(
     indirect=True,
 )
 async def test_skip_tank_with_missing_readings(
-    hass: HomeAssistant, mock_sensor_client, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_sensor_client,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a tank raising NO_DATA is skipped without dropping the whole account."""
+    """Test per-tank NO_DATA logs once on outage and once on recovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
 
-    # Grab the original mocked method so we can allow the second tank to succeed
     original_history = MockAsyncTank.history
+    tank_1_missing = True
 
     async def mock_history(self):
-        if self._tank_num == 1:
+        if self._tank_num == 1 and tank_1_missing:
             raise KingspanNoDataError("no history data for tank 1")
         return await original_history(self)
+
+    caplog.set_level(logging.INFO)
 
     with patch(
         "tests.components.watchman.conftest.MockAsyncTank.history", new=mock_history
@@ -306,13 +316,31 @@ async def test_skip_tank_with_missing_readings(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # The first tank should be skipped, so its sensors won't exist
-    assert hass.states.get("sensor.tanky_mctankface_1_oil_level") is None
-    assert "Skipping tank 'Tanky McTankFace #1' (missing data)" in caplog.text
+        # First tank is skipped; second tank loads
+        assert hass.states.get("sensor.tanky_mctankface_1_oil_level") is None
+        assert hass.states.get("sensor.tanky_mctankface_2_oil_level") is not None
 
-    # The second tank should successfully load
-    assert hass.states.get("sensor.tanky_mctankface_2_oil_level") is not None
-    assert float(hass.states.get("sensor.tanky_mctankface_2_oil_level").state) == float(
+        # Advance time for a second poll while tank 1 is still missing data
+        freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        warnings = [
+            record
+            for record in caplog.records
+            if "Skipping tank 'Tanky McTankFace #1' (missing data)" in record.message
+        ]
+        assert len(warnings) == 1
+
+        # Restore tank 1 data and advance time to verify recovery log and entity creation
+        tank_1_missing = False
+        freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Tank 'Tanky McTankFace #1' data is available again" in caplog.text
+    assert hass.states.get("sensor.tanky_mctankface_1_oil_level") is not None
+    assert float(hass.states.get("sensor.tanky_mctankface_1_oil_level").state) == float(
         MOCK_TANK_CAPACITY
     )
 
