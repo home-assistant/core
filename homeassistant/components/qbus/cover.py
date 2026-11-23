@@ -24,6 +24,8 @@ from .entity import QbusEntity, create_new_entities
 
 PARALLEL_UPDATES = 0
 
+OPEN_TILT_POSITION = 50
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -56,6 +58,7 @@ class QbusCover(QbusEntity, CoverEntity):
     _attr_name = None
     _attr_supported_features: CoverEntityFeature
     _attr_device_class = CoverDeviceClass.BLIND
+    _attr_open_tilt_position = OPEN_TILT_POSITION
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize cover entity."""
@@ -135,7 +138,7 @@ class QbusCover(QbusEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
-        state.write_slat_position(50)
+        state.write_slat_position(OPEN_TILT_POSITION)
         await self._async_publish_output_state(state)
 
     @override
