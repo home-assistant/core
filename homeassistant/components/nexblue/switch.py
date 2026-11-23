@@ -8,16 +8,16 @@ from nexblue_api import NexBlueError
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ACTIVE_CHARGING_STATES, DOMAIN
+from .const import ACTIVE_CHARGING_STATES
 from .coordinator import (
     FINAL_COMMAND_REFRESH_DELAY,
     NexBlueConfigEntry,
     NexBlueDataUpdateCoordinator,
 )
+from .entity import charger_device_info
 
 PARALLEL_UPDATES = 1
 
@@ -54,12 +54,7 @@ class NexBlueChargingSwitch(
         self._assumed_is_on: bool | None = None
         self._assumed_state_confirm_after = 0.0
         self._attr_unique_id = f"{serial_number}_charging"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="NexBlue",
-            name=serial_number,
-            serial_number=serial_number,
-        )
+        self._attr_device_info = charger_device_info(serial_number)
 
     @property
     @override

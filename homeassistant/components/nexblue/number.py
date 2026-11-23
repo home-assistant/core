@@ -13,12 +13,12 @@ from homeassistant.components.number import (
 from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ACTIVE_CHARGING_STATES, DOMAIN
+from .const import ACTIVE_CHARGING_STATES
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
+from .entity import charger_device_info
 
 PARALLEL_UPDATES = 1
 
@@ -63,12 +63,7 @@ class NexBlueDynamicCurrentLimitNumber(
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._attr_unique_id = f"{serial_number}_dynamic_current_limit"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="NexBlue",
-            name=serial_number,
-            serial_number=serial_number,
-        )
+        self._attr_device_info = charger_device_info(serial_number)
 
     @property
     @override
