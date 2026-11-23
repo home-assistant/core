@@ -7,7 +7,7 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.recorder import CONF_DB_URL, Recorder
+from homeassistant.components.recorder import CONF_DB_URL, Recorder, get_instance
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -39,17 +39,16 @@ OPTIONS = {
 }
 
 
+MYSQL_URL = "mysql+pymysql://user:password@192.168.1.2:3306/homeassistant"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
-    "config",
+    ("config", "options"),
     [
-        pytest.param({}, id="recorder_db"),
-        pytest.param(
-            {
-                CONF_DB_URL: "mysql+pymysql://user:password@192.168.1.2:3306/homeassistant"
-            },
-            id="custom_db",
-        ),
+        pytest.param({}, OPTIONS, id="recorder_db"),
+        pytest.param({CONF_DB_URL: MYSQL_URL}, OPTIONS, id="custom_db"),
+        pytest.param({}, {**OPTIONS, CONF_DB_URL: MYSQL_URL}, id="db_url_in_options"),
     ],
 )
 async def test_diagnostics(
@@ -58,8 +57,25 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     config: dict[str, Any],
+    options: dict[str, Any],
 ) -> None:
     """Test generating diagnostics for a config entry."""
-    entry = await init_integration(hass, config=config, options=OPTIONS)
+    entry = await init_integration(hass, config=config, options=options)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_diagnostics_explicit_recorder_db(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an explicit URL of the recorder database counts as the recorder database."""
+    entry = await init_integration(
+        hass, config={CONF_DB_URL: get_instance(hass).db_url}, options=OPTIONS
+    )
+
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert diagnostics["uses_recorder_db"] is True
