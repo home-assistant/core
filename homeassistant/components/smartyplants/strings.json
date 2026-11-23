@@ -19,6 +19,40 @@
         },
         "description": "SmartyPlants rejected the stored API key. Create a new key in the SmartyPlants app, under Settings, and enter it below."
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "The signing secret from the SmartyPlants app. Leave it empty to use polling only."
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. The webhook URL is unchanged, so there is nothing to update in the SmartyPlants app.\n\n`{webhook_url}`\n\nLeave the secret empty to use polling only.",
+        "title": "Reconfigure SmartyPlants"
+      },
+      "reconfigure_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]"
+        },
+        "description": "Update the API key. This integration was set up without a webhook, so there is no signing secret to change and readings arrive by polling.",
+        "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
+      },
+      "reconfigure_secret": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::reconfigure::data_description::webhook_secret%]"
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. Home Assistant currently has no address reachable from the internet, so the webhook URL cannot be shown. The webhook you already added in the SmartyPlants app is unaffected, and its secret can still be changed here, or cleared to use polling only.",
+        "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
