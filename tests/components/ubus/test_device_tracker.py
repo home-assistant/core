@@ -328,6 +328,52 @@ async def test_roam_keeps_tracker_connected_until_new_router_polls(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_single_router_drop_goes_not_home_without_grace(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dropped client is not kept visible by its dropping router.
+
+    The poll that drops the client starts before the departure is
+    recorded, so the dropping router must not count as one which has not
+    polled since the drop.
+    """
+    mock_ubus.return_value.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # The departure is stamped after the poll started, as in real time, so
+    # the dropping router's poll predates the departure it records.
+    def _dropping_clients(interface: str) -> dict:
+        freezer.tick(timedelta(milliseconds=1))
+        return {"clients": {}}
+
+    mock_ubus.return_value.get_hostapd_clients.side_effect = _dropping_clients
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_kept_when_owner_entry_reloaded(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

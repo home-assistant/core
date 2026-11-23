@@ -32,8 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 # A client dropped by its last reporting router is kept visible until every
-# router has polled again, or one further poll cycle has passed, so a roam is
-# not announced as a departure before the new router has polled.
+# other router has polled again, or one further poll cycle has passed, so a
+# roam is not announced as a departure before the new router has polled.
 DEPARTURE_GRACE = UPDATE_INTERVAL
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
@@ -79,9 +79,9 @@ class UbusSharedState:
         """Return the reporting host and latest report of a visible client.
 
         A client which its last router has dropped stays visible, sourced
-        from its last reporter, until every router has polled again or one
-        further poll cycle has passed, so a roam is not announced as a
-        departure before the new router has polled.
+        from its last reporter, until every other router has polled again
+        or one further poll cycle has passed, so a roam is not announced as
+        a departure before the new router has polled.
         """
         seen_by = self.reports.get(mac)
         if seen_by:
@@ -90,8 +90,10 @@ class UbusSharedState:
         if (departed := self.departing.get(mac)) is None:
             return None
         since, source, report = departed
+        # The dropping router polled before the departure was recorded, so
+        # it cannot still be reporting the client.
         if dt_util.utcnow() >= since + DEPARTURE_GRACE or not any(
-            last < since for last in self.last_poll.values()
+            last < since for host, last in self.last_poll.items() if host != source
         ):
             return None
         return source, report
@@ -194,12 +196,14 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 report = seen_by.pop(self.host)
                 if not seen_by:
                     # The last router stopped seeing the client; keep it
-                    # visible until every router has polled again.
+                    # visible until every other router has polled again.
                     del reports[mac]
                     shared.departing[mac] = (now, self.host, report)
-        for mac, (since, _source, _report) in list(shared.departing.items()):
+        for mac, (since, source, _report) in list(shared.departing.items()):
             if now >= since + DEPARTURE_GRACE or not any(
-                last < since for last in shared.last_poll.values()
+                last < since
+                for host, last in shared.last_poll.items()
+                if host != source
             ):
                 del shared.departing[mac]
 
