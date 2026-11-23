@@ -471,13 +471,13 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=MatterNumericSwitchEntityDescription(
+            # Key kept as EveTrvChildLock for backwards compatibility: it is
+            # part of the existing unique_id of entities created before the
+            # vendor ID filter was removed.
             key="EveTrvChildLock",
             entity_category=EntityCategory.CONFIG,
             translation_key="child_lock",
-            device_to_ha={
-                0: False,
-                1: True,
-            }.get,
+            device_to_ha=lambda value: None if value is None else value != 0,
             ha_to_device={
                 False: 0,
                 True: 1,
@@ -487,7 +487,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
-        vendor_id=(4874,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,

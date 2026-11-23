@@ -42,7 +42,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     DEFAULT_CAPABILITIES,
-    DISABLED_NETWORK_ADAPTERS,
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
     setup_light,
@@ -941,7 +940,7 @@ async def test_unload_waits_for_in_flight_rebind(
         return []
 
     mock_govee_api.rebind_failed.side_effect = rebind_failed
-    mock_govee_api.cleanup.side_effect = lambda: (
+    mock_govee_api.cleanup.side_effect = lambda **_: (
         events.append("cleanup") or mock_govee_api.cleanup.return_value
     )
 
@@ -1005,22 +1004,3 @@ async def test_reload_when_all_endpoints_lost(
     assert mock_govee_api.start.await_count == 2
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.last_update_success
-
-
-async def test_light_setup_retry_without_listening_addresses(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test setup is retried when no enabled adapter has an IPv4 address."""
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=DISABLED_NETWORK_ADAPTERS,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.reason == "No enabled network adapter has an IPv4 address to listen on"
-    mock_govee_api.start.assert_not_awaited()

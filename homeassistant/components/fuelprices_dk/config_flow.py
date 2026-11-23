@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 from . import FuelpricesDkConfigEntry
 from .const import (
@@ -71,7 +72,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, api_key: str
     ) -> tuple[Braendstofpriser | None, list[dict[str, Any]], str | None]:
         """Validate the API key and fetch available companies."""
-        api = Braendstofpriser(api_key)
+        api = Braendstofpriser(api_key, user_agent=SERVER_SOFTWARE)
         try:
             companies = await api.list_companies()
         except ClientResponseError as exc:
@@ -219,7 +220,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            api = Braendstofpriser(user_input[CONF_API_KEY])
+            api = Braendstofpriser(user_input[CONF_API_KEY], user_agent=SERVER_SOFTWARE)
             try:
                 await api.list_companies()
             except ClientResponseError as exc:
@@ -300,7 +301,7 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
         """Initialize API client and fetch companies."""
         entry = self._get_entry()
         api_key = entry.data[CONF_API_KEY]
-        self.api = Braendstofpriser(api_key)
+        self.api = Braendstofpriser(api_key, user_agent=SERVER_SOFTWARE)
         try:
             self.companies = await self.api.list_companies()
         except ClientResponseError as exc:

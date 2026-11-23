@@ -79,7 +79,7 @@ async def test_system_reset_button_press(
     hass: HomeAssistant,
     system_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on the system reset button."""
+    """Test ButtonService.PRESS on the system reset button."""
 
     with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
         await hass.services.async_call(
@@ -98,7 +98,7 @@ async def test_zone_reset_button_press(
     hass: HomeAssistant,
     zone_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on a zone reset button."""
+    """Test ButtonService.PRESS on a zone reset button."""
 
     with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
@@ -117,7 +117,7 @@ async def test_dhw_reset_button_press(
     hass: HomeAssistant,
     dhw_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on the DHW reset button."""
+    """Test ButtonService.PRESS on the DHW reset button."""
 
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
@@ -136,7 +136,7 @@ async def test_button_press_api_call_failed(
     hass: HomeAssistant,
     system_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS raises HomeAssistantError if the vendor's API call fails."""
+    """Test ButtonService.PRESS raises HomeAssistantError if the vendor's API call fails."""
 
     with (
         patch(

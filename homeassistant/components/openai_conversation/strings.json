@@ -110,7 +110,7 @@
         "init": {
           "data": {
             "chat_model": "Model",
-            "name": "Name"
+            "name": "[%key:common::config_flow::data::name%]"
           },
           "title": "Configure evaluation"
         }
