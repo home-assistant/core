@@ -892,7 +892,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 continue
             preset = self._preset_characteristic(HA_PRESET_TO_DAIKIN[current_preset])
             if preset is None:
-                continue
+                self._raise_service_validation_error("preset_mode_unavailable")
             if not preset.settable:
                 self._raise_service_validation_error("preset_mode_unavailable")
             presets_to_disable.append(current_preset)

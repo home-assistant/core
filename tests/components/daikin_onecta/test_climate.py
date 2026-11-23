@@ -874,6 +874,50 @@ async def test_climate_service_clears_all_active_presets(
     ]
 
 
+async def test_climate_keeps_requested_active_preset(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep an already-active requested preset while disabling another one."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    assert climate_control.on_off_mode is not None
+    holiday_mode = climate_control.mode_characteristic("holidayMode")
+    powerful_mode = climate_control.mode_characteristic("powerfulMode")
+    assert holiday_mode is not None and powerful_mode is not None
+    climate_control.on_off_mode.value = "on"
+    holiday_mode.value.enabled = True
+    holiday_mode.settable = True
+    powerful_mode.value = "on"
+    powerful_mode.settable = True
+    coordinator.async_update_listeners()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_AWAY},
+        blocking=True,
+    )
+
+    assert holiday_mode.value.enabled
+    assert powerful_mode.value == "off"
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway_id,
+        management_point.embedded_id,
+        "powerfulMode",
+        "off",
+        path=None,
+    )
+
+
 @pytest.mark.parametrize(
     ("target_preset", "initial_value", "expected_state", "expected_value"),
     [
