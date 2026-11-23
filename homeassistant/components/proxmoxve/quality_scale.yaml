@@ -40,7 +40,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: |
-      The integration has no options flow.  
+      The integration has no options flow.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
