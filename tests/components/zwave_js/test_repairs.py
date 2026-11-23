@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
-    entity_registry as er,
     issue_registry as ir,
 )
 
@@ -592,7 +591,6 @@ async def test_unmapped_enum_value_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     client: Client,
     unmapped_motion_sensor: Node,
@@ -650,8 +648,8 @@ async def test_unmapped_enum_value_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     client: Client,
     unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
@@ -689,6 +687,10 @@ async def test_unmapped_enum_value_ignore_step(
     assert data["type"] == "abort"
     assert data["reason"] == "issue_ignored"
 
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.dismissed_version is not None
+
     await hass.async_block_till_done()
 
     assert len(client.async_send_command_no_wait.call_args_list) == 0
@@ -698,8 +700,6 @@ async def test_unmapped_enum_value_abort_confirm(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     client: Client,
     unmapped_motion_sensor: Node,
     integration: MockConfigEntry,

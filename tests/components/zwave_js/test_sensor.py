@@ -1446,7 +1446,7 @@ def _motion_status_value_event(node: Node, new_value: int, prev_value: int) -> E
     )
 
 
-@pytest.mark.usefixtures("client", "lock_id_lock_as_id150")
+@pytest.mark.usefixtures("client")
 async def test_unmapped_config_value_logs_warning(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1620,6 +1620,10 @@ async def test_unmapped_enum_value_kept_until_every_value_mapped(
     await hass.async_block_till_done()
 
     assert _unmapped_issue_ids(issue_registry) == [issue_id]
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.translation_placeholders
+    assert issue.translation_placeholders["raw_value"] == "9"
 
 
 async def test_unmapped_enum_value_ignore_survives_mapped_value(
@@ -1721,7 +1725,7 @@ async def test_unmapped_notification_value_at_startup(
     integration: MockConfigEntry,
 ) -> None:
     """Test a notification value that is already unmapped when the entity is added."""
-    state = hass.states.get("sensor.multisensor_6_motion_sensor_status")
+    state = hass.states.get(MOTION_STATUS_ENTITY)
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_VALUE] == 8
@@ -1736,7 +1740,7 @@ async def test_unmapped_notification_value_at_startup(
     assert issue.translation_key == "unmapped_enum_value"
     assert issue.translation_placeholders == {
         "device_name": "Multisensor 6",
-        "entity_id": "sensor.multisensor_6_motion_sensor_status",
+        "entity_id": MOTION_STATUS_ENTITY,
         "raw_value": "8",
     }
 
@@ -1752,14 +1756,7 @@ async def test_unmapped_notification_value_cleared_by_reinterview(
     """Test a re-interview that maps the value onto a binary sensor clears the repair."""
     node = unmapped_motion_sensor
 
-    def unmapped_issues() -> list[str]:
-        return [
-            iid
-            for (d, iid) in issue_registry.issues
-            if d == DOMAIN and iid.startswith("unmapped_enum_value.")
-        ]
-
-    assert unmapped_issues()
+    assert _unmapped_issue_ids(issue_registry)
 
     node.receive_event(
         Event(
@@ -1787,4 +1784,4 @@ async def test_unmapped_notification_value_cleared_by_reinterview(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.multisensor_6_motion_detection")
-    assert not unmapped_issues()
+    assert not _unmapped_issue_ids(issue_registry)

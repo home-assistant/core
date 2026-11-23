@@ -981,7 +981,7 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_options = list(info.primary_value.metadata.states.values())
         self._logged_unmapped_values: set[str] = set()
         self._unmapped_issue_id: str | None = None
-        self._unmapped_repair_values: set[str] = set()
+        self._unmapped_repair_values: dict[str, None] = {}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -1049,11 +1049,19 @@ class ZWaveListSensor(ZwaveSensor):
         that raised it.
         """
         states = self.info.primary_value.metadata.states
-        if self._unmapped_repair_values and all(
-            raw_value in states for raw_value in self._unmapped_repair_values
-        ):
-            self._unmapped_repair_values.clear()
-            self._async_clear_unmapped_value()
+        if self._unmapped_repair_values:
+            pending = {
+                raw_value: None
+                for raw_value in self._unmapped_repair_values
+                if raw_value not in states
+            }
+            if not pending:
+                self._unmapped_repair_values.clear()
+                self._async_clear_unmapped_value()
+            elif len(pending) != len(self._unmapped_repair_values):
+                # Some values now map; keep the repair text on one that does not.
+                self._unmapped_repair_values = pending
+                self._async_raise_unmapped_issue(next(reversed(pending)))
         if (value := self.info.primary_value.value) is None:
             return
         if self.device_class is SensorDeviceClass.ENUM and str(value) not in states:
@@ -1077,11 +1085,18 @@ class ZWaveListSensor(ZwaveSensor):
                     raw_value,
                 )
             return
+        if self._unmapped_issue_id is None or self._node_device is None:
+            return
+        self._unmapped_repair_values[raw_value] = None
+        self._async_raise_unmapped_issue(raw_value)
+
+    @callback
+    def _async_raise_unmapped_issue(self, raw_value: str) -> None:
+        """Create or refresh the re-interview repair for a raw value."""
         if (device := self._node_device) is None or (
             issue_id := self._unmapped_issue_id
         ) is None:
             return
-        self._unmapped_repair_values.add(raw_value)
         device_name = device.name_by_user or device.name or "Unknown device"
         placeholders = {
             "device_name": device_name,
