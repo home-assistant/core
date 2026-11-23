@@ -11,7 +11,7 @@ from homeassistant.components import select
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.select import SelectEntityCapabilityAttribute
-from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
+from homeassistant.const import EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -46,4 +46,4 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     for entity_states in states.values():
         for state in entity_states:
             assert SelectEntityCapabilityAttribute.OPTIONS not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
