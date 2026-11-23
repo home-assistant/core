@@ -1027,11 +1027,8 @@ async def test_2fa_exception_while_polling_asks_for_a_code(
     Without it the challenge fell through to the transient handling and was
     retried every couple of minutes without ever asking the user.
 
-    The session cannot carry the code while requires_2fa is unset, because that
-    property is what async_step_reauth reads to open code entry. Keeping it
-    would walk the flow past code entry and finish reauthentication with the
-    challenge still outstanding, so it is dropped and the password is asked
-    for: the login that follows re-issues the challenge with requires_2fa set.
+    The forced flag carries the challenge when requires_2fa is unset, so the
+    session can still be used for code entry without asking for the password.
     """
     service, _ = polling_service
     config_entry = MockConfigEntry(
@@ -1059,15 +1056,15 @@ async def test_2fa_exception_while_polling_asks_for_a_code(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
-    # The flow waits on the user rather than completing without the code.
-    assert [flow["step_id"] for flow in flows] == ["reauth_confirm"]
-    assert config_entry.runtime_data.api is None
+    # The flow waits on the user at code entry, on the challenged session.
+    assert [flow["step_id"] for flow in flows] == ["verification_code"]
+    assert config_entry.runtime_data.api is service
+    assert config_entry.runtime_data.requires_verification_code
 
 
 @pytest.mark.parametrize(
     "status",
     [
-        AppleAuthError.TWO_FACTOR_REQUIRED,
         AppleAuthError.LOGIN_TOKEN_EXPIRED,
         AppleAuthError.FIND_MY_REAUTH_REQUIRED,
     ],
@@ -1107,6 +1104,45 @@ async def test_auth_status_while_polling_asks_the_user(
         if flow["context"]["source"] == "reauth"
     ]
     assert config_entry.runtime_data.api is None
+
+
+async def test_2fa_status_while_polling_keeps_the_challenged_session(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a 2FA status keeps its session, even with an unknown route.
+
+    The code may already be on the user's device. Dropping the session and
+    asking for the password would issue a new challenge the user cannot answer
+    without the code they already have.
+    """
+    service, _ = polling_service
+    service.two_factor_delivery_method = "unknown"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Authentication required for Account.", AppleAuthError.TWO_FACTOR_REQUIRED
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert account.api is service
+    assert account.requires_verification_code
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
 
 
 async def test_other_api_error_while_polling_keeps_retrying(

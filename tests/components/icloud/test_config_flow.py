@@ -1300,15 +1300,14 @@ async def test_device_fetch_during_an_outage_keeps_the_session(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
+async def test_device_fetch_challenge_with_no_route_accepts_an_existing_code(
     hass: HomeAssistant,
 ) -> None:
-    """Test that a challenge from the fetch with no route goes to the password.
+    """Test that an unknown delivery route does not discard a live challenge.
 
-    The same dead end the login path avoids: iCloud reports the challenge but
-    nothing can send a code for it, so the code entry form cannot be
-    completed. A fresh login raises the challenge again with a route behind
-    it.
+    The code may already be displayed on a trusted device, so the flow keeps
+    the challenged session and uses pyicloud's existing-code route instead of
+    clearing the stored session and asking for the password again.
     """
     with _service_rejecting_the_device_fetch(
         PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
@@ -1316,15 +1315,21 @@ async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
     ) as service_mock:
         result = await _submit_user_form(hass)
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "send_verification_code"}
+        assert result["step_id"] == "verification_code"
 
+        service = service_mock.return_value
+        service.use_existing_trusted_device_code.assert_called_once()
+        service.session.clear_persistence.assert_not_called()
+
+        _accept_2fa_code(service)
         _recover_device_fetch(service_mock)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+            result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.validate_2fa_code.assert_called_once_with("123456")
 
 
 async def test_device_fetch_unreachable_keeps_the_session(
@@ -1441,3 +1446,111 @@ async def test_switching_to_a_configured_account_after_an_outage_is_refused(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_setup_challenge_with_no_route_accepts_an_existing_code(
+    hass: HomeAssistant, service_2fa: MagicMock
+) -> None:
+    """Test that a code already on a device can be entered with no known route."""
+    service = service_2fa.return_value
+    service.two_factor_delivery_method = "unknown"
+
+    result = await _submit_user_form(hass)
+    assert result["step_id"] == "verification_code"
+    service.use_existing_trusted_device_code.assert_called_once()
+
+    _accept_2fa_code(service)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.validate_2fa_code.assert_called_once_with("123456")
+    service.session.clear_persistence.assert_not_called()
+
+
+async def test_reauth_challenge_with_no_route_keeps_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that background-originated reauth can use an existing device code."""
+    challenged = MagicMock()
+    challenged.requires_2fa = False
+    challenged.requires_2sa = False
+    challenged.two_factor_delivery_method = "unknown"
+    challenged.devices = [MagicMock()]
+    _accept_2fa_code(challenged)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.runtime_data = MagicMock(
+        api=challenged, requires_verification_code=True
+    )
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+    challenged.use_existing_trusted_device_code.assert_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    challenged.validate_2fa_code.assert_called_once_with("123456")
+    challenged.session.clear_persistence.assert_not_called()
+
+
+async def test_failed_new_code_request_keeps_an_existing_code_usable(
+    hass: HomeAssistant, service_2fa_failed_request: MagicMock
+) -> None:
+    """Test that a failed new-code request does not strand an existing challenge."""
+    service = service_2fa_failed_request.return_value
+    service.two_factor_delivery_method = "unknown"
+    _accept_2fa_code(service)
+
+    result = await _submit_user_form(hass)
+    assert result["step_id"] == "verification_code"
+
+    service.request_2fa_code.side_effect = PyiCloudAPIResponseException(
+        reason="PyiCloud error"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_REQUEST_NEW_CODE: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+    assert result["errors"] == {"base": "send_verification_code"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.use_existing_trusted_device_code.assert_called()
+    service.session.clear_persistence.assert_not_called()
+
+
+async def test_sms_challenge_does_not_use_a_trusted_device_code(
+    hass: HomeAssistant, service_2fa: MagicMock
+) -> None:
+    """Test that a known SMS route keeps its own verifier."""
+    service = service_2fa.return_value
+    service.two_factor_delivery_method = "sms"
+
+    result = await _submit_user_form(hass)
+    assert result["step_id"] == "verification_code"
+    service.use_existing_trusted_device_code.assert_not_called()
+
+    _accept_2fa_code(service)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+    service.validate_2fa_code.assert_called_once_with("123456")

@@ -147,15 +147,11 @@ def is_2fa_status(err: PyiCloudAPIResponseException) -> bool:
     return err.code == AppleAuthError.TWO_FACTOR_REQUIRED
 
 
-def code_can_be_delivered(api: PyiCloudService | None) -> bool:
-    """Return whether iCloud has a route to send a verification code.
-
-    The options fetch that sets a route up can be refused on its own, which
-    leaves a challenge nothing can act on: no code is sent, and the reauth
-    flow would strand the user on a form they cannot complete. pyicloud
-    reports "unknown" for exactly that state.
-    """
-    return api is not None and api.two_factor_delivery_method != "unknown"
+def _is_mfa_challenge(err: BaseException) -> bool:
+    """Return True if iCloud says a verification code is outstanding."""
+    return isinstance(err, PyiCloud2FARequiredException) or (
+        isinstance(err, PyiCloudAPIResponseException) and is_2fa_status(err)
+    )
 
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
@@ -316,12 +312,6 @@ class IcloudAccount:
             return
 
         if self.api.requires_2fa:
-            if not code_can_be_delivered(self.api):
-                # Nothing for the user to act on, so retry rather than ask for
-                # a code that cannot be sent.
-                raise ConfigEntryNotReady(
-                    "iCloud asked for a verification code but has no way to send one"
-                )
             self._handle_auth_required(two_factor=True, keep_session=True)
             return
 
@@ -333,10 +323,6 @@ class IcloudAccount:
             # the devices rather than while logging in, and does not set
             # requires_2fa for it, so ask for a code explicitly. The session is
             # kept so the reauth flow can send the code through it.
-            if not code_can_be_delivered(self.api):
-                # Nothing for the user to act on, so retry rather than ask for
-                # a code that cannot be sent.
-                raise ConfigEntryNotReady from err
             self._handle_auth_required(
                 two_factor=True, keep_session=True, start_reauth=False
             )
@@ -374,10 +360,6 @@ class IcloudAccount:
             # rejections do not: the session has just failed to refresh, so a
             # reauth flow sending a code through it would fail as well.
             challenge = is_2fa_status(err)
-            if challenge and not code_can_be_delivered(self.api):
-                # Nothing for the user to act on, so retry rather than ask for
-                # a code that cannot be sent.
-                raise ConfigEntryNotReady from err
             self._handle_auth_required(
                 two_factor=challenge, keep_session=challenge, start_reauth=False
             )
@@ -649,45 +631,18 @@ class IcloudAccount:
     def _ask_to_authenticate(self, err: Exception) -> None:
         """Ask the user to log in again after iCloud rejected the session.
 
-        The session is only kept when the reauth flow can actually use it.
-        That is what api.requires_2fa says: the flow reads exactly that
-        property to decide whether to open code entry. A challenge raised by a
-        request pyicloud does not route through authenticate() never sets it,
-        so keeping that session would send the flow past code entry with a
-        code still outstanding; dropping it asks for the password instead, and
-        the login that follows re-issues the challenge with requires_2fa set.
-
-        An authentication status on an API response is never that case either:
-        it says the session itself has to be established again, and one that
-        has just been rejected cannot carry a code.
+        A verification challenge keeps its session and its forced flag even
+        when pyicloud cannot identify a delivery route: the user may already
+        have a code displayed on a trusted device, and the flow validates it
+        through pyicloud's existing-code route. Only a genuine rejection
+        drops the session and asks for the password.
         """
-        if (
-            not isinstance(err, PyiCloudAPIResponseException)
-            and self.api is not None
-            and self.api.requires_2fa
-        ):
-            # Keep the session: the reauth flow reuses it to validate the code,
-            # and async_step_reauth sends a None api back to the password form
-            # instead of straight to code entry.
-            _LOGGER.warning(
-                (
-                    "2FA authentication required for '%s'; Go to the Integrations "
-                    "menu and click on Configure on the discovered Apple iCloud "
-                    "card to enter your verification code"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
-        else:
-            self.api = None
-            _LOGGER.error(
-                (
-                    "Your iCloud account for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered "
-                    "Apple iCloud card to login again"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
-        self._require_reauth()
+        challenge = _is_mfa_challenge(err) or (
+            self.api is not None and self.api.requires_2fa
+        )
+        self._handle_auth_required(
+            two_factor=challenge, keep_session=challenge, start_reauth=True
+        )
 
     def _require_reauth(self):
         """Require the user to log in again."""

@@ -31,12 +31,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
-from .account import (
-    IcloudConfigEntry,
-    code_can_be_delivered,
-    is_2fa_status,
-    is_auth_error,
-)
+from .account import IcloudConfigEntry, is_2fa_status, is_auth_error
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
@@ -221,32 +216,16 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return api, True
         return api, False
 
-    async def _report_undeliverable_code(self, user_input, step_id):
-        """Send the flow back to the password when no code can be sent.
+    def _use_existing_code_route(self) -> None:
+        """Accept a code already displayed when pyicloud knows no delivery route.
 
-        iCloud can report a challenge whose delivery route was never
-        established, and the code entry form is then a dead end. Dropping the
-        session sends the next attempt through a fresh login, which raises the
-        challenge again with a route behind it.
-
-        The forced challenge is cleared with the session it belonged to.
-        _requires_2fa reads it as well, so leaving it set would send the next
-        attempt back to this same dead end even once the login succeeds.
+        An unknown route says Apple did not tell us how a new code would be
+        sent, not that there is no outstanding challenge. The user can already
+        have a code on a trusted device, so keep the challenged session and use
+        pyicloud's public route for validating such a code.
         """
-        _LOGGER.error(
-            "No way to send an iCloud verification code for %s", self._username
-        )
-        if self.api is not None:
-            # Dropping the service only clears it from memory. The stored
-            # session is what the next login reads back, and it is the one
-            # that produced a challenge nothing can deliver a code for.
-            # Clearing it touches the filesystem, so it goes to the executor.
-            await self.hass.async_add_executor_job(self.api.session.clear_persistence)
-        self.api = None
-        self._forced_2fa = False
-        return self._show_setup_form(
-            user_input, {"base": "send_verification_code"}, step_id
-        )
+        if self.api is not None and self.api.two_factor_delivery_method == "unknown":
+            self.api.use_existing_trusted_device_code()
 
     async def _request_2fa_code(self, errors: dict[str, str]) -> dict[str, str]:
         """Request an Apple 2FA code."""
@@ -373,8 +352,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     return result
 
         if self._requires_2fa:
-            if not code_can_be_delivered(self.api):
-                return await self._report_undeliverable_code(user_input, step_id)
+            self._use_existing_code_route()
             return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
@@ -417,11 +395,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             if isinstance(error, PyiCloud2FARequiredException) or (
                 isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
             ):
-                if not code_can_be_delivered(self.api):
-                    return await self._report_undeliverable_code(user_input, step_id)
                 # The session that was challenged is the one the code has to
                 # go through, so it is kept.
                 self._forced_2fa = True
+                self._use_existing_code_route()
                 return await self.async_step_verification_code()
             _LOGGER.error(
                 "Could not read the devices of the iCloud account for %s: %s",
@@ -527,6 +504,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         # Only meaningful together with the session it was raised on, which is
         # why it is read here rather than before the check above.
         self._forced_2fa = account.requires_verification_code
+        if self._forced_2fa:
+            self._use_existing_code_route()
 
         # If the API is not None, it means the existing entry was successfully authenticated before,
         # so we can proceed to the reauth_confirm step to trigger 2FA challenge.
@@ -625,6 +604,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             assert self.api is not None
 
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
+
+        # A failed request for a new code leaves the route unknown. The code
+        # the user has may already be on a trusted device, so fall back to the
+        # library's existing-code route instead of submitting it to a stale
+        # bridge challenge.
+        self._use_existing_code_route()
 
         try:
             if self._requires_2fa:
