@@ -237,9 +237,9 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.error("The server did not respond in time, %s", ex)
 
         async def upload_file(self, timeout=None):
-            """Upload file to Jabber server and return new URL.
+            """Upload file to XMPP server and return new URL.
 
-            upload a file with Jabber XEP_0363 from a remote URL or a local
+            upload a file with XMPP XEP_0363 from a remote URL or a local
             file path and return a URL of that file.
             """
             if data.get(ATTR_URL_TEMPLATE):
