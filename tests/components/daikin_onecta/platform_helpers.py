@@ -14,8 +14,6 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
 
-from .conftest import FAKE_ACCESS_TOKEN
-
 ALTHERMA_CLIMATE_ENTITY_ID = "climate.altherma_room_temperature"
 ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID = "sensor.altherma_control_mode"
 ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.domestic_hot_water_tank"
@@ -78,10 +76,6 @@ async def _async_setup_fixture(
             "homeassistant.helpers.config_entry_oauth2_flow."
             "async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
         ),
         patch(
             "homeassistant.components.daikin_onecta.coordinator."

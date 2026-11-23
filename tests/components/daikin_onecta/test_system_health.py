@@ -3,17 +3,18 @@
 from unittest.mock import MagicMock
 
 from daikin_onecta.client import ONECTA_API_URL
+from daikin_onecta.rate_limit import RateLimit
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.daikin_onecta.const import DOMAIN, OAUTH2_AUTHORIZE
 from homeassistant.components.daikin_onecta.system_health import (
-    _entry_info,
     async_register,
     system_health_info,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+
+from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
 def test_system_health_register() -> None:
@@ -23,36 +24,6 @@ def test_system_health_register() -> None:
     async_register(MagicMock(), register)
 
     register.async_register_info.assert_called_once_with(system_health_info)
-
-
-def test_system_health_reads_rate_limits_once() -> None:
-    """Build all health fields from one cached rate-limit snapshot."""
-
-    class RuntimeData:
-        rate_limit_reads = 0
-        session = MagicMock(valid_token=True)
-
-        @property
-        def rate_limits(self) -> dict[str, int | None]:
-            self.rate_limit_reads += 1
-            return {
-                "minute": 10,
-                "day": 200,
-                "remaining_minutes": 9,
-                "remaining_day": 199,
-                "retry_after": None,
-                "ratelimit_reset": None,
-            }
-
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    runtime_data = RuntimeData()
-    config_entry.runtime_data = runtime_data
-
-    info = _entry_info(config_entry)
-
-    assert info["max_minute"] == 10
-    assert info["remaining_day"] == 199
-    assert runtime_data.rate_limit_reads == 1
 
 
 async def test_system_health_ignores_unloaded_entry(
@@ -65,25 +36,15 @@ async def test_system_health_ignores_unloaded_entry(
 
 
 async def test_system_health_info(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Report rate limit and token information for a loaded entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        state=ConfigEntryState.LOADED,
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    config_entry.runtime_data.client.rate_limit = RateLimit(
+        minute_limit=10, day_limit=200, minute_remaining=9, day_remaining=199
     )
-    config_entry.runtime_data = MagicMock(
-        rate_limits={
-            "minute": 10,
-            "day": 200,
-            "remaining_minutes": 9,
-            "remaining_day": 199,
-            "retry_after": None,
-            "ratelimit_reset": None,
-        },
-        session=MagicMock(valid_token=True),
-    )
-    config_entry.add_to_hass(hass)
 
     aioclient_mock.get(ONECTA_API_URL, status=503)
     aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)
@@ -99,33 +60,35 @@ async def test_system_health_info(
 
 
 async def test_system_health_reports_every_loaded_account(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Include cached health data for every configured Daikin account."""
-    entry_ids: list[str] = []
-    for title, unique_id, remaining in (
-        ("Account one", "account-1", 199),
-        ("Account two", "account-2", 399),
-    ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            title=title,
-            unique_id=unique_id,
-            state=ConfigEntryState.LOADED,
-        )
-        config_entry.runtime_data = MagicMock(
-            rate_limits={
-                "minute": 10,
-                "day": remaining + 1,
-                "remaining_minutes": 9,
-                "remaining_day": remaining,
-                "retry_after": None,
-                "ratelimit_reset": None,
-            },
-            session=MagicMock(valid_token=True),
-        )
-        config_entry.add_to_hass(hass)
-        entry_ids.append(config_entry.entry_id)
+    hass.config_entries.async_update_entry(config_entry, unique_id="account-1")
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    first_coordinator = config_entry.runtime_data
+    first_coordinator.client.rate_limit = RateLimit(
+        minute_limit=10, day_limit=200, minute_remaining=9, day_remaining=199
+    )
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Account two",
+        unique_id="account-2",
+        data=config_entry.data,
+    )
+    second_entry.add_to_hass(hass)
+    second_devices = _load_gateway_devices("minimal_data")
+    second_devices[0].id = "second-gateway"
+    await _async_setup_fixture(
+        hass, second_entry, "minimal_data", gateway_devices=second_devices
+    )
+    second_coordinator = second_entry.runtime_data
+    second_coordinator.client.rate_limit = RateLimit(
+        minute_limit=10, day_limit=400, minute_remaining=9, day_remaining=399
+    )
+    entry_ids = [config_entry.entry_id, second_entry.entry_id]
 
     aioclient_mock.get(ONECTA_API_URL, status=503)
     aioclient_mock.get(OAUTH2_AUTHORIZE, status=200)

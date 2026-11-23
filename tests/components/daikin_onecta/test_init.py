@@ -5,7 +5,7 @@ from datetime import timedelta
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from daikin_onecta import Site
 from freezegun.api import FrozenDateTimeFactory
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 GATEWAY_DEVICES_URL = "https://api.onecta.daikineurope.com/v1/gateway-devices"
@@ -66,11 +66,6 @@ async def test_setup_with_gateway_missing_management_points(
             "homeassistant.helpers.config_entry_oauth2_flow."
             "async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.coordinator."
-            "OnectaDataUpdateCoordinator.async_get_access_token",
-            new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -150,9 +145,9 @@ async def test_remove_management_point_device_gateway_gone(
     child = _get_domestic_hot_water_tank_child(config_entry, device_registry)
     mock_onecta_client.get_gateway_devices.return_value = []
     await _async_poll(hass, config_entry, freezer)
-    config_entry.runtime_data.async_get_sites = AsyncMock(
-        return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
-    )
+    mock_onecta_client.get_sites.return_value = [
+        Site(id="site", gateway_device_ids=["other-gateway"])
+    ]
 
     response = await _async_remove_device(hass, hass_ws_client, child)
 

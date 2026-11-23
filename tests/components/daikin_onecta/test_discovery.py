@@ -35,7 +35,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
 
 
@@ -615,11 +615,6 @@ async def _async_test_missing_value_does_not_schedule_reload(
             "homeassistant.helpers.config_entry_oauth2_flow."
             "async_get_config_entry_implementation",
             return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator."
-            "async_get_access_token",
-            new=AsyncMock(return_value=FAKE_ACCESS_TOKEN),
         ),
         patch(
             "homeassistant.components.daikin_onecta.coordinator."
