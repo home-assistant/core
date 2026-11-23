@@ -336,6 +336,14 @@ async def set_thermostat_preset(
         )
 
         def build_add(current_presets: list[Any]) -> list[Any]:
+            resolved_name = new_preset.name
+
+            _validate_unique_preset_name(
+                current_presets,
+                preset_scenario,
+                resolved_name,
+            )
+
             return [*current_presets, new_preset]
 
         await _write_presets(matter_client, endpoint, build_add)
@@ -353,6 +361,7 @@ async def set_thermostat_preset(
         resolved_name = _resolve_name(preset_types, preset.presetScenario, name)
         if resolved_name is None:
             resolved_name = _normalize(preset.name)
+
         edited_preset = _PresetStruct(
             presetHandle=preset_handle,
             presetScenario=preset.presetScenario,
@@ -369,12 +378,40 @@ async def set_thermostat_preset(
             ),
             builtIn=_normalize(preset.builtIn) is True,
         )
+
+        _validate_unique_preset_name(
+            current_presets,
+            edited_preset.presetScenario,
+            edited_preset.name,
+            exclude_handle=preset_handle,
+        )
+
         return [
             edited_preset if preset.presetHandle == preset_handle else preset
             for preset in current_presets
         ]
 
     await _write_presets(matter_client, endpoint, build_next)
+
+
+def _validate_unique_preset_name(
+    current_presets: list[Any],
+    scenario: int,
+    name: str | None,
+    exclude_handle: bytes | None = None,
+) -> None:
+    """Ensure preset names are unique within their scenario."""
+    normalized_name = _normalize(name)
+
+    for preset in current_presets:
+        if _normalize(preset.presetScenario) != _normalize(scenario):
+            continue
+
+        if exclude_handle is not None and preset.presetHandle == exclude_handle:
+            continue
+
+        if _normalize(preset.name) == normalized_name:
+            raise InvalidPresetDataError("preset_name_not_unique")
 
 
 async def remove_thermostat_preset(

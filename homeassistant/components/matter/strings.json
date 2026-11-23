@@ -844,6 +844,9 @@
     "preset_limit_reached": {
       "message": "The thermostat already has its maximum of {limit} presets."
     },
+    "preset_name_not_unique": {
+      "message": "Preset names must be unique within the same scenario."
+    },
     "preset_name_required": {
       "message": "A name is required for a user-defined preset."
     },

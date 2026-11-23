@@ -32,6 +32,10 @@ from homeassistant.components.matter.const import (
     ATTR_PRESET_SCENARIO,
     DOMAIN,
 )
+from homeassistant.components.matter.thermostat_helpers import (
+    InvalidPresetDataError,
+    _validate_unique_preset_name,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -124,6 +128,56 @@ def _eve_thermo_presets() -> list[clusters.Thermostat.Structs.PresetStruct]:
             builtIn=False,
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    ("presets", "scenario", "name", "exclude_handle", "raises"),
+    [
+        # Duplicate name in the same scenario.
+        ([(1, "Home")], 1, "Home", None, True),
+        # Same name in a different scenario.
+        ([(2, "Home")], 1, "Home", None, False),
+        # Null names are also unique within a scenario.
+        ([(1, None)], 1, None, None, True),
+        # The preset being edited must be excluded.
+        ([(1, "Home", b"\x01")], 1, "Home", b"\x01", False),
+        # Another preset with the same name must still be detected.
+        (
+            [(1, "Home", b"\x01"), (1, "Away", b"\x02")],
+            1,
+            "Away",
+            b"\x01",
+            True,
+        ),
+    ],
+)
+def test_validate_unique_preset_name(
+    presets: list[tuple],
+    scenario: int,
+    name: str | None,
+    exclude_handle: bytes | None,
+    raises: bool,
+) -> None:
+    """Validate preset name uniqueness within a scenario."""
+    current_presets = [
+        clusters.Thermostat.Structs.PresetStruct(
+            presetHandle=(preset[2] if len(preset) == 3 else bytes([index + 1])),
+            presetScenario=preset[0],
+            name=preset[1],
+            coolingSetpoint=None,
+            heatingSetpoint=2000,
+            builtIn=False,
+        )
+        for index, preset in enumerate(presets)
+    ]
+
+    if raises:
+        with pytest.raises(InvalidPresetDataError):
+            _validate_unique_preset_name(
+                current_presets, scenario, name, exclude_handle
+            )
+    else:
+        _validate_unique_preset_name(current_presets, scenario, name, exclude_handle)
 
 
 def _wire_presets(
@@ -1449,6 +1503,33 @@ async def test_set_thermostat_preset_add(
     assert added.name == "Home 2"
     assert added.heatingSetpoint == 2100
     assert added.builtIn is False
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+@pytest.mark.parametrize("attributes", [{"1/513/72": TWO_OCCUPIED_PRESET_TYPES}])
+async def test_set_thermostat_preset_add_duplicate_name(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Adding a preset with a duplicate name in the same scenario is refused."""
+    _mock_preset_write(matter_client)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_thermostat_preset",
+            {
+                ATTR_ENTITY_ID: EVE_THERMO_ENTITY_ID,
+                ATTR_PRESET_SCENARIO: "occupied",
+                ATTR_PRESET_NAME: "Home",
+                ATTR_HEATING_SETPOINT: 21.0,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "preset_name_not_unique"
+    matter_client.write_atomic_attribute.assert_not_called()
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
