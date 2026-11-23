@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> N
     # Do a fire-and-forget first background refresh of firmware update availability.
     # This is of secondary importance for this integration,
     # and we don't want it to delay the setup even if it happens to take some time.
-    entry.async_create_task(
+    entry.async_create_background_task(
         hass, entry.runtime_data.async_refresh(), name="Tasmota latest release refresh"
     )
 
