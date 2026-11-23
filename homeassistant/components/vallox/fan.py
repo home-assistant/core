@@ -111,10 +111,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         """Return the current speed as a percentage."""
 
         vallox_profile = self.coordinator.data.profile
-        try:
-            return _convert_to_int(self.coordinator.data.get_fan_speed(vallox_profile))
-        except ValloxInvalidInputException:
-            return None
+        return _convert_to_int(self.coordinator.data.get_fan_speed(vallox_profile))
 
     @property
     @override

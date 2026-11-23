@@ -1,6 +1,7 @@
 """Test the actions of the Mijn Farmad Apotheek integration."""
 
 import asyncio
+import logging
 from unittest.mock import MagicMock
 
 from aiofarmad import (
@@ -61,6 +62,8 @@ ORDER_DATA = {
     "quantity": 1,
     "apb": API_APB,
 }
+
+LOGGER_NAME = "homeassistant.components.mijn_farmad_apotheek"
 
 PRODUCTS = (DraftProduct(product_cnk=API_PRODUCT_CNK, quantity=1),)
 
@@ -462,12 +465,14 @@ async def test_order_medication_invalid_product(
 async def test_order_medication_errors(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     method: str,
     side_effect: Exception,
     translation_key: str,
     clear_count: int,
 ) -> None:
     """Test library errors during ordering map to translated Home Assistant errors."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     client = mock_farmad_client.return_value
     getattr(client, method).side_effect = side_effect
@@ -479,12 +484,16 @@ async def test_order_medication_errors(
 
     assert exc_info.value.translation_key == translation_key
     assert client.async_clear_draft_basket.await_count == clear_count
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
 
 
 async def test_order_medication_missing_price(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a product without a catalog price raises a translated error with its CNK."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     client = mock_farmad_client.return_value
     client.async_submit_basket.side_effect = FarmadMissingPriceError("mock")
@@ -499,13 +508,17 @@ async def test_order_medication_missing_price(
         "apb": API_APB,
         "product": API_PRODUCT_CNK,
     }
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
     client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 
 async def test_order_medication_retries_after_a_price_lookup_failure(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed price lookup clears the draft so a retry places the order."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     client = mock_farmad_client.return_value
     client.async_submit_basket.side_effect = [
@@ -526,6 +539,7 @@ async def test_order_medication_retries_after_a_price_lookup_failure(
     )
 
     assert exc_info.value.translation_key == "order_failed"
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
     assert response == {
         ATTR_BASKET_ID: API_BASKET_ID,
         ATTR_DESCRIPTION: API_PRODUCT_DESCRIPTION,
@@ -810,10 +824,12 @@ async def test_search_medication_no_results(
 async def test_search_medication_errors(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     side_effect: Exception,
     translation_key: str,
 ) -> None:
     """Test library errors map to translated Home Assistant errors."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     mock_farmad_client.return_value.async_search_products_in_apb.side_effect = (
         side_effect
@@ -829,6 +845,7 @@ async def test_search_medication_errors(
         )
 
     assert exc_info.value.translation_key == translation_key
+    assert f"Searching pharmacy {API_APB} failed: mock" in caplog.text
 
 
 async def test_search_medication_after_unload(

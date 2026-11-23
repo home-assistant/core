@@ -1,10 +1,12 @@
 """Weather entity."""
 
+from datetime import date, datetime
 from typing import Any, override
 
 from google_weather_api import (
     GoogleWeatherApiError,
     HourlyForecastResponse,
+    Interval,
     PrecipitationSegment,
     QuantitativePrecipitationForecast,
     WeatherCondition,
@@ -58,6 +60,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
@@ -249,6 +252,15 @@ _PRECIPITATION_INTENSITY_MAP: dict[
     PrecipitationSegment.PrecipitationIntensity.HEAVY: "heavy",
     PrecipitationSegment.PrecipitationIntensity.MID_HEAVY: "mid_heavy",
 }
+
+
+def _is_interval_active_or_future(interval: Interval, now: datetime) -> bool:
+    """Return True unless the interval's exclusive end time has already passed."""
+    return (
+        interval.end_time is None
+        or (end_time := dt_util.parse_datetime(interval.end_time)) is None
+        or end_time > now
+    )
 
 
 async def async_setup_entry(
@@ -462,8 +474,20 @@ class GoogleWeatherEntity(
         """Return the daily forecast in native units."""
         self._refresh_supported_features()
         daily_data = self._daily_coordinator.data
+        today = dt_util.now(self._daily_coordinator.time_zone).date()
         forecasts: list[Forecast] = []
         for item in daily_data.forecast_days:
+            # Google's forecast day starts in the morning (e.g., 07:00 local time), so
+            # after midnight the first record still has yesterday's display_date.
+            if (
+                date(
+                    item.display_date.year,
+                    item.display_date.month,
+                    item.display_date.day,
+                )
+                < today
+            ):
+                continue
             parts = [
                 part
                 for part in (
@@ -563,6 +587,7 @@ class GoogleWeatherEntity(
         """Return the twice daily forecast in native units."""
         self._refresh_supported_features()
         daily_data = self._daily_coordinator.data
+        now = dt_util.utcnow()
         forecasts: list[Forecast] = []
         for item in daily_data.forecast_days:
             for is_daytime, part, temp, apparent_temp in (
@@ -579,7 +604,9 @@ class GoogleWeatherEntity(
                     item.feels_like_min_temperature.degrees,
                 ),
             ):
-                if part is None:
+                if part is None or not _is_interval_active_or_future(
+                    part.interval, now
+                ):
                     continue
                 forecasts.append(
                     {

@@ -13,7 +13,7 @@ from homeassistant.components.lock import (
     LockService,
     LockServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -61,7 +61,7 @@ async def test_lock_service_calls(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: "lock.device1"},
+            {TargetKey.ENTITY_ID: "lock.device1"},
             blocking=True,
         )
 
@@ -69,7 +69,7 @@ async def test_lock_service_calls(
         LOCK_DOMAIN,
         LockService.UNLOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.device1",
+            TargetKey.ENTITY_ID: "lock.device1",
             LockServiceArgument.CODE: "123456",
         },
         blocking=True,
@@ -82,7 +82,7 @@ async def test_lock_service_calls(
         LOCK_DOMAIN,
         LockService.LOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.device1",
+            TargetKey.ENTITY_ID: "lock.device1",
             LockServiceArgument.CODE: "123456",
         },
         blocking=True,
@@ -123,7 +123,7 @@ async def test_lock_service_call_fails(
             LOCK_DOMAIN,
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
+                TargetKey.ENTITY_ID: "lock.device1",
                 LockServiceArgument.CODE: "123456",
             },
             blocking=True,
@@ -140,7 +140,7 @@ async def test_lock_service_call_fails(
             LOCK_DOMAIN,
             LockService.LOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
+                TargetKey.ENTITY_ID: "lock.device1",
                 LockServiceArgument.CODE: "123456",
             },
             blocking=True,
@@ -176,7 +176,7 @@ async def test_lock_service_call_fails_with_incorrect_status(
             LOCK_DOMAIN,
             LockService.UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
+                TargetKey.ENTITY_ID: "lock.device1",
                 LockServiceArgument.CODE: "123456",
             },
             blocking=True,
