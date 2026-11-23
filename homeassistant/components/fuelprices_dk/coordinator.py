@@ -11,6 +11,7 @@ from pybraendstofpriser import Braendstofpriser
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailedUnreachable,
@@ -51,7 +52,9 @@ class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[int, FuelPricesDKStatio
             config_entry=config_entry,
         )
 
-        self._api = Braendstofpriser(config_entry.data[CONF_API_KEY])
+        self._api = Braendstofpriser(
+            config_entry.data[CONF_API_KEY], user_agent=SERVER_SOFTWARE
+        )
         self._station_ids = [
             subentry.data[CONF_STATION]["id"]
             for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_STATION)

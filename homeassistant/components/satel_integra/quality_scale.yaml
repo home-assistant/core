@@ -33,7 +33,7 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable: todo
@@ -44,8 +44,8 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: todo
-  diagnostics: todo
+  devices: done
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -62,7 +62,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 
