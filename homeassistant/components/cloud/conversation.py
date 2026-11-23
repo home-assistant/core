@@ -30,7 +30,7 @@ class CloudConversationEntity(
     """Home Assistant Cloud conversation agent."""
 
     _attr_has_entity_name = True
-    _attr_name = "Home Assistant Cloud"
+    _attr_name = "Home Assistant Link"
     _attr_translation_key = "cloud_conversation"
     _attr_unique_id = CONVERSATION_ENTITY_UNIQUE_ID
     _attr_supported_features = conversation.ConversationEntityFeature.CONTROL

@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.assist_pipeline import (
     async_create_default_pipeline,
+    async_get_pipeline,
     async_get_pipelines,
     async_setup_pipeline_store,
     async_update_pipeline,
@@ -58,16 +59,16 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> None:
         hass,
         stt_engine_id=new_stt_engine_id,
         tts_engine_id=new_tts_engine_id,
-        pipeline_name="Home Assistant Cloud",
+        pipeline_name="Home Assistant Link",
     )
 
 
 async def async_migrate_cloud_pipeline_engine(
     hass: HomeAssistant, platform: Platform, engine_id: str
 ) -> None:
-    """Migrate the pipeline engines in the cloud assist pipeline."""
-    # Migrate existing pipelines with cloud stt or tts to use new cloud engine id.
-    # Added in 2024.02.0. Can be removed in 2025.02.0.
+    """Migrate the pipeline engines and name in the cloud assist pipeline."""
+    # Migrate existing pipelines with cloud stt or tts to use new cloud engine id,
+    # added in 2024.02.0, and rename the legacy default name, added in 2026.12.0.
 
     # We need to make sure that both stt and tts are loaded before this migration.
     # Assist pipeline will call default engine when setting up the store.
@@ -88,8 +89,19 @@ async def async_migrate_cloud_pipeline_engine(
     # is an after dependency of cloud
     await async_setup_pipeline_store(hass)
 
-    kwargs: dict[str, Any] = {pipeline_attribute: engine_id}
-    pipelines = async_get_pipelines(hass)
-    for pipeline in pipelines:
-        if getattr(pipeline, pipeline_attribute) == DOMAIN:
+    for pipeline_id in [pipeline.id for pipeline in async_get_pipelines(hass)]:
+        # Re-fetch, the stt and tts migrations run concurrently and an update
+        # from a stale pipeline would revert the other migration's changes.
+        pipeline = async_get_pipeline(hass, pipeline_id)
+        if (pipeline_engine := getattr(pipeline, pipeline_attribute)) not in (
+            DOMAIN,
+            engine_id,
+        ):
+            continue
+        kwargs: dict[str, Any] = {}
+        if pipeline_engine == DOMAIN:
+            kwargs[pipeline_attribute] = engine_id
+        if pipeline.name == "Home Assistant Cloud":
+            kwargs["name"] = "Home Assistant Link"
+        if kwargs:
             await async_update_pipeline(hass, pipeline, **kwargs)

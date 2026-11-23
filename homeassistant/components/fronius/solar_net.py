@@ -34,6 +34,8 @@ from .coordinator import (
 )
 from .modbus import FroniusModbus
 
+type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 
@@ -41,7 +43,7 @@ class FroniusSolarNet:
     """Discover the devices of a SolarNet system and hold their coordinators."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fronius: FroniusSolarApi
+        self, hass: HomeAssistant, entry: FroniusConfigEntry, fronius: FroniusSolarApi
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass

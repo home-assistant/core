@@ -1137,6 +1137,81 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(service_calls) == 1
 
 
+async def test_remove_from_registry_after_late_discovery(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test removal of a trigger an automation used before it was discovered."""
+    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry()
+
+    ws_client = await hass_ws_client(hass)
+
+    # A sensor adds the device, so an automation can use its trigger
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla0/config",
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }',
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/bla1/config",
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }',
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Remove MQTT from the device
+    response = await ws_client.remove_device(device_entry.id)
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
 async def test_attach_remove(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

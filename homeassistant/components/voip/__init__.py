@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: VoipConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -119,7 +119,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
+    hass: HomeAssistant, config_entry: VoipConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
     return True

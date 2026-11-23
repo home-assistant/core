@@ -144,7 +144,7 @@
           "name": "Rotation"
         },
         "tone_compression": {
-          "description": "Dynamic range compression strength. Leave empty for automatic.",
+          "description": "Dynamic range compression strength. Leave empty for no compression.",
           "name": "Tone compression"
         }
       },

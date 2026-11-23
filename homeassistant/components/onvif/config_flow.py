@@ -12,7 +12,7 @@ from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, TransportError, XMLParseError, XMLSyntaxError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
@@ -21,7 +21,6 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -51,7 +50,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device, get_mac_address
+from .device import ONVIFConfigEntry, get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -113,7 +112,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
     ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
@@ -122,6 +121,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the ONVIF config flow."""
         self.device_id: str | None = None
         self.devices: list[dict[str, Any]] = []
+        self.discovered_name: str | None = None
         self.onvif_config: dict[str, Any] = {}
 
     @override
@@ -230,7 +230,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _is_same_device(self, entry: ConfigEntry) -> bool:
+    def _is_same_device(self, entry: ONVIFConfigEntry) -> bool:
         """Return whether the reached device belongs to the config entry."""
         if self.device_id == entry.unique_id:
             return True
@@ -289,8 +289,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             for device in self.devices:
                 if device[CONF_HOST] == user_input[CONF_HOST]:
                     self.device_id = device[CONF_DEVICE_ID]
+                    self.discovered_name = device[CONF_NAME]
                     self.onvif_config = {
-                        CONF_NAME: device[CONF_NAME],
                         CONF_HOST: device[CONF_HOST],
                         CONF_PORT: device[CONF_PORT],
                     }
@@ -334,6 +334,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input:
             self.onvif_config = user_input
+            if self.discovered_name:
+                self.onvif_config[CONF_NAME] = self.discovered_name
             errors, description_placeholders = await self.async_setup_profiles()
             if not errors:
                 title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
@@ -350,9 +352,6 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="configure",
             data_schema=probatio.Schema(
                 {
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Required(CONF_NAME, default=conf(CONF_NAME)): str,
                     probatio.Required(CONF_HOST, default=conf(CONF_HOST)): str,
                     probatio.Required(
                         CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)
@@ -389,6 +388,21 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await device.update_xaddrs()
             device_mgmt = await device.create_devicemgmt_service()
+            device_info = None
+            if CONF_NAME not in self.onvif_config:
+                try:
+                    device_info = await device_mgmt.GetDeviceInformation()
+                except (XMLParseError, XMLSyntaxError, TransportError) as err:
+                    LOGGER.debug(
+                        "%s: Could not get device information: %s",
+                        self.onvif_config[CONF_HOST],
+                        err,
+                    )
+                    self.onvif_config[CONF_NAME] = self.onvif_config[CONF_HOST]
+                else:
+                    self.onvif_config[CONF_NAME] = (
+                        f"{device_info.Manufacturer} {device_info.Model}"
+                    )
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 try:
@@ -399,12 +413,12 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         raise
                     LOGGER.debug(
                         "%s: Could not get network interfaces: %s",
-                        self.onvif_config[CONF_NAME],
+                        self.onvif_config[CONF_HOST],
                         stringify_onvif_error(fault),
                     )
             # If no network interfaces are exposed, fallback to serial number
             if not self.device_id:
-                device_info = await device_mgmt.GetDeviceInformation()
+                device_info = device_info or await device_mgmt.GetDeviceInformation()
                 self.device_id = device_info.SerialNumber
 
             if not self.device_id:
@@ -418,7 +432,6 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                     updates={
                         CONF_HOST: self.onvif_config[CONF_HOST],
                         CONF_PORT: self.onvif_config[CONF_PORT],
-                        CONF_NAME: self.onvif_config[CONF_NAME],
                         CONF_USERNAME: self.onvif_config[CONF_USERNAME],
                         CONF_PASSWORD: self.onvif_config[CONF_PASSWORD],
                     }
@@ -428,8 +441,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             profiles = await media_service.GetProfiles()
         except AttributeError:  # Likely an empty document or 404 from the wrong port
             LOGGER.debug(
-                "%s: No ONVIF service found at %s:%s",
-                self.onvif_config[CONF_NAME],
+                "No ONVIF service found at %s:%s",
                 self.onvif_config[CONF_HOST],
                 self.onvif_config[CONF_PORT],
                 exc_info=True,
@@ -441,13 +453,13 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_auth_error(err):
                 LOGGER.debug(
                     "%s: Could not authenticate with camera: %s",
-                    self.onvif_config[CONF_NAME],
+                    self.onvif_config[CONF_HOST],
                     stringified_error,
                 )
                 return {CONF_PASSWORD: "auth_failed"}, description_placeholders
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
-                self.onvif_config[CONF_NAME],
+                self.onvif_config[CONF_HOST],
                 stringified_error,
                 exc_info=True,
             )
@@ -455,7 +467,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
-                self.onvif_config[CONF_NAME],
+                self.onvif_config[CONF_HOST],
                 stringify_onvif_error(err),
                 exc_info=True,
             )
@@ -475,7 +487,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 class OnvifOptionsFlowHandler(OptionsFlow):
     """Handle ONVIF options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ONVIFConfigEntry) -> None:
         """Initialize ONVIF options flow."""
         self.options = dict(config_entry.options)
 

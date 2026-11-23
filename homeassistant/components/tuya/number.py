@@ -329,6 +329,13 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.SJZ: (
+        TuyaNumberEntityDescription(
+            key=DPCode.HEIGHT,
+            translation_key="height",
+            device_class=NumberDeviceClass.DISTANCE,
+        ),
+    ),
     DeviceCategory.SP: (
         TuyaNumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,

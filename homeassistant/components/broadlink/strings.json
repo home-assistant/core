@@ -131,6 +131,9 @@
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
     },
+    "timing_too_long": {
+      "message": "Broadlink devices cannot transmit an RF timing of {duration} s; the maximum is about 2 s"
+    },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
     },

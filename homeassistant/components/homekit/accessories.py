@@ -863,6 +863,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             (self.entity_id,),
         )
 
+    def diagnostics(self) -> dict[str, Any]:
+        """Return accessory specific diagnostics."""
+        return {}
+
     @ha_callback
     def async_stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
