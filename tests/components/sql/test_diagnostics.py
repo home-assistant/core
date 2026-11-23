@@ -79,3 +79,18 @@ async def test_diagnostics_explicit_recorder_db(
     diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert diagnostics["uses_recorder_db"] is True
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_diagnostics_without_recorder(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a custom database without a loaded recorder is not the recorder database."""
+    entry = await init_integration(
+        hass, config={CONF_DB_URL: MYSQL_URL}, options=OPTIONS
+    )
+
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert diagnostics["uses_recorder_db"] is False
