@@ -27,20 +27,13 @@ from spotifyaio.models import Devices, ProductType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -55,12 +48,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -445,8 +435,11 @@ async def test_repeat_mode(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_REPEAT_SET,
-            {ATTR_ENTITY_ID: "media_player.spotify_spotify_1", ATTR_MEDIA_REPEAT: mode},
+            MediaPlayerService.REPEAT_SET,
+            {
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.REPEAT: mode,
+            },
             blocking=True,
         )
         mock_spotify.return_value.set_repeat.assert_called_once_with(spotify_mode)
@@ -464,10 +457,10 @@ async def test_shuffle(
     for shuffle in (True, False):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SHUFFLE_SET,
+            MediaPlayerService.SHUFFLE_SET,
             {
-                ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-                ATTR_MEDIA_SHUFFLE: shuffle,
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.SHUFFLE: shuffle,
             },
             blocking=True,
         )
@@ -485,10 +478,10 @@ async def test_volume_level(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
+        MediaPlayerService.VOLUME_SET,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -505,10 +498,10 @@ async def test_seek(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
+        MediaPlayerService.MEDIA_SEEK,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_SEEK_POSITION: 100,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
         },
         blocking=True,
     )
@@ -535,12 +528,12 @@ async def test_play_media_in_queue(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
     )
@@ -605,11 +598,11 @@ async def test_play_media(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
@@ -629,12 +622,12 @@ async def test_add_unsupported_media_to_queue(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-                ATTR_MEDIA_CONTENT_TYPE: "spotify://playlist",
-                ATTR_MEDIA_CONTENT_ID: "spotify:playlist:74Yus6IHfa3tWZzXXAYtS2",
-                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "spotify://playlist",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "spotify:playlist:74Yus6IHfa3tWZzXXAYtS2",
+                MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
             },
             blocking=True,
         )
@@ -650,11 +643,11 @@ async def test_play_unsupported_media(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.COMPOSER,
-            ATTR_MEDIA_CONTENT_ID: "spotify:track:3oRoMXsP2NRzm51lldj1RO",
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.COMPOSER,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "spotify:track:3oRoMXsP2NRzm51lldj1RO",
         },
         blocking=True,
     )
@@ -672,10 +665,10 @@ async def test_select_source(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_INPUT_SOURCE: "DESKTOP-BKC5SIK",
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.SOURCE: "DESKTOP-BKC5SIK",
         },
         blocking=True,
     )

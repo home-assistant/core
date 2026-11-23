@@ -26,6 +26,13 @@ def mean_int(*args: Any) -> int:
     return int(sum(args) / len(args))
 
 
+def mean_position(*args: Any) -> int:
+    """Return the truncated mean, which is 0 only if every position is 0."""
+    if (mean := mean_int(*args)) == 0 and max(args) > 0:
+        return 1
+    return mean
+
+
 def mean_tuple(*args: Any) -> tuple[float | Any, ...]:
     """Return the mean values along the columns of the supplied values."""
     return tuple(sum(x) / len(x) for x in zip(*args, strict=False))

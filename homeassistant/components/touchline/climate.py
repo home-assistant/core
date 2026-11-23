@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Any, NamedTuple, override
 
+from pytouchline_extended import TouchlineError
+
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_NONE,
@@ -107,7 +109,7 @@ class Touchline(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_preset"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_preset"
             ) from err
@@ -128,7 +130,7 @@ class Touchline(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_temperature"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_temperature"
             ) from err
