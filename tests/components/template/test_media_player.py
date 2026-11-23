@@ -839,7 +839,8 @@ async def test_optimistic_state(
     await setup_entity(
         hass, TEST_MEDIA_PLAYER, style, 1, {**ON_OFF_ACTIONS, **PLAYBACK_ACTIONS}
     )
-    assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, STATE_UNKNOWN)
+    state = assert_state_and_attributes(hass, TEST_MEDIA_PLAYER, STATE_UNKNOWN)
+    assert "assumed_state" not in state.attributes
 
     await hass.services.async_call(
         media_player.DOMAIN,
