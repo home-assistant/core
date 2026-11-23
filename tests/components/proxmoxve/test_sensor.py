@@ -1,8 +1,13 @@
 """Tests for the Proxmox VE sensor platform."""
 
-from typing import Any
 from unittest.mock import MagicMock, patch
 
+from aioproxmox.model import PVEPermissions
+from aioproxmox.model.pve import (
+    NodeStorageResource,
+    NodeStorageResources,
+    OperationalStatus,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -62,7 +67,9 @@ async def test_storage_missing_used_fraction(
         {key: value for key, value in storage.items() if key != "used_fraction"}
         for storage in storage_data
     ]
-    mock_proxmox_client._node_mock.storage.get.return_value = storage_without_fraction
+    mock_proxmox_client._node_mock.storage.return_value = NodeStorageResources(
+        storages=NodeStorageResource.list_from_api(storage_without_fraction)
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -75,25 +82,25 @@ async def test_storage_missing_used_fraction(
 
 
 @pytest.mark.parametrize(
-    ("cluster_resources", "expected_percentage"),
+    ("excluded_resource_ids", "expected_percentage"),
     [
-        pytest.param(
-            [{"type": "qemu", "vmid": 100, "mem": 536870912}],
-            "25.0",
-            id="guest_memory",
-        ),
-        pytest.param([], "50.0", id="not_in_cluster_resources"),
+        pytest.param(set(), "25.0", id="guest_memory"),
+        pytest.param({"qemu/100"}, "50.0", id="not_in_cluster_resources"),
     ],
 )
 async def test_vm_memory_source(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    cluster_resources: list[dict[str, Any]],
+    excluded_resource_ids: set[str],
     expected_percentage: str,
 ) -> None:
     """Test VM memory comes from cluster resources, falling back to the node list."""
-    mock_proxmox_client.cluster.resources.get.return_value = cluster_resources
+    mock_proxmox_client.cluster_resources.resources = [
+        resource
+        for resource in mock_proxmox_client.cluster_resources
+        if resource.id not in excluded_resource_ids
+    ]
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -112,7 +119,9 @@ async def test_sensors_according_to_permissions(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that sensors are not created when not allowed."""
-    mock_proxmox_client.access.permissions.get.return_value = PVEVMUSER_PERMISSIONS
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(PVEVMUSER_PERMISSIONS)
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -135,7 +144,9 @@ async def test_sensors_for_offline_node(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that node sensors except status are unavailable."""
-    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    mock_proxmox_client.cluster_resources.resources = (
+        mock_proxmox_client._all_cluster_resources.resources
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -159,17 +170,16 @@ async def test_sensors_for_offline_node(
 @pytest.mark.parametrize(
     ("endpoint", "vmid", "entity_id"),
     [
-        pytest.param("qemu", 100, "sensor.vm_web_uptime", id="vm"),
-        pytest.param("lxc", "200", "sensor.ct_nginx_uptime", id="container"),
+        pytest.param("qemu_all", 100, "sensor.vm_web_uptime", id="vm"),
+        pytest.param("lxc_all", 200, "sensor.ct_nginx_uptime", id="container"),
     ],
 )
 @pytest.mark.parametrize(
     ("status", "uptime"),
     [
-        pytest.param("stopped", 0, id="stopped"),
-        pytest.param("stopped", 3600, id="stopped_with_uptime"),
-        pytest.param("running", 0, id="running_without_uptime"),
-        pytest.param("running", None, id="running_uptime_none"),
+        pytest.param(OperationalStatus.STOPPED, 0, id="stopped"),
+        pytest.param(OperationalStatus.STOPPED, 3600, id="stopped_with_uptime"),
+        pytest.param(OperationalStatus.RUNNING, 0, id="running_without_uptime"),
     ],
 )
 async def test_guest_uptime_unknown(
@@ -178,16 +188,16 @@ async def test_guest_uptime_unknown(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     endpoint: str,
-    vmid: int | str,
+    vmid: int,
     entity_id: str,
-    status: str,
-    uptime: int | None,
+    status: OperationalStatus,
+    uptime: int,
 ) -> None:
     """Test the uptime is unknown and stays unchanged for a guest that is not up."""
-    guests = getattr(mock_proxmox_client._node_mock, endpoint).get.return_value
-    guest = next(guest for guest in guests if guest["vmid"] == vmid)
-    guest["status"] = status
-    guest["uptime"] = uptime
+    guests = getattr(mock_proxmox_client._node_mock, endpoint).return_value
+    guest = next(guest for guest in guests if guest.vmid == vmid)
+    guest.status = status
+    guest.uptime = uptime
 
     with patch("homeassistant.components.proxmoxve.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)

@@ -63,8 +63,6 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
         translation_key="pellet_level",
         presence_flag="has_pellet_level",
         client_property="pellet_level",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
 ]
 
