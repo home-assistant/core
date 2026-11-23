@@ -636,6 +636,61 @@
     'message': "Message malformed: Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
   })
 # ---
+# name: test_update_automation_config_with_error[singular_and_plural_trigger_keys_and_singular_blocks-automation_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
+        'path': list([
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'triggers',
+          0,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'condition',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'action',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
+  })
+# ---
 # name: test_update_automation_config_with_error[singular_key_single_action-automation_config0]
   dict({
     'errors': list([

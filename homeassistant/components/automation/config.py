@@ -347,14 +347,18 @@ async def _async_collect_errors(
     reported = {(info.path, info.message) for info in errors}
     key: Literal["triggers", "conditions", "actions"]
     for key in (CONF_TRIGGERS, CONF_CONDITIONS, CONF_ACTIONS):
-        if key not in config:
+        # A key conflict stops the schema before it renames the keys after it
+        submitted_key = key if key in config else _RENAMED_KEYS[key]
+        if submitted_key not in config:
             continue
         try:
-            await script.async_validate_block_collect_errors(hass, key, config[key])
+            await script.async_validate_block_collect_errors(
+                hass, key, config[submitted_key]
+            )
         except ValidationErrors as err:
             errors.extend(
                 info
-                for info in iter_validation_errors(err, [key])
+                for info in iter_validation_errors(err, [submitted_key])
                 if (info.path, info.message) not in reported
             )
     return errors

@@ -270,6 +270,15 @@ _INVALID_CONFIGS = [
         },
         id="singular_trigger_key_and_singular_and_plural_action_keys",
     ),
+    pytest.param(
+        {
+            "trigger": _EVENT_TRIGGER,
+            "triggers": [{"trigger": "state"}],
+            "condition": [_UNKNOWN_ENTITY_CONDITION],
+            "action": [{"delay": "abc"}],
+        },
+        id="singular_and_plural_trigger_keys_and_singular_blocks",
+    ),
 ]
 _INVALID_BLUEPRINT_CONFIGS = [
     pytest.param(
