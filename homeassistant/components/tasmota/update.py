@@ -1,8 +1,7 @@
 """Update entity for Tasmota."""
 
-from collections.abc import Callable
 import re
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -66,8 +65,6 @@ class TasmotaUpdateEntity(
     _attr_title = "Tasmota firmware"
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
-    _unsub_tasmota_device_updates: Callable[[], None] | None = None
-
     def __init__(
         self,
         coordinator: TasmotaLatestReleaseUpdateCoordinator,
@@ -76,61 +73,39 @@ class TasmotaUpdateEntity(
     ) -> None:
         """Initialize the Tasmota update entity."""
         super().__init__(coordinator=coordinator)
-        self._config_entry_id = device_entry.config_entry_id
+        self._device_id = device_entry.id
+        self._attr_installed_version = device_entry.sw_version
         self._attr_device_info = dr.DeviceInfo(connections=device_entry.connections)
-        self._connection = (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
         self._attr_unique_id = dr.format_mac(mac)
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device-registry updates for firmware changes."""
         await super().async_added_to_hass()
-        if self.hass is None:
-            return
-        device = dr.async_get(self.hass).async_get_device_by_connection(
-            self._connection, self._config_entry_id
+        self.async_on_remove(
+            async_track_device_registry_updated_event(
+                self.hass,
+                self._device_id,
+                self._handle_device_registry_update,
+                job_type=HassJobType.Callback,
+            )
         )
-        if device is None:
-            return
-        self._unsub_tasmota_device_updates = async_track_device_registry_updated_event(
-            self.hass,
-            device.id,
-            self._handle_device_registry_update,
-            job_type=HassJobType.Callback,
-        )
-        self.async_on_remove(self._unsubscribe_device_updates)
 
     @callback
     def _handle_device_registry_update(
         self, event: Event[dr.EventDeviceRegistryUpdatedData]
     ) -> None:
         """Refresh state when the device's firmware version changes."""
-        data: dict[str, Any] = event.data  # type: ignore[assignment]
-        if data.get("action") != "update":
-            return
-        changes = data.get("changes", {})
-        if not isinstance(changes, dict) or "sw_version" not in changes:
-            return
-        self.async_write_ha_state()
-
-    @callback
-    def _unsubscribe_device_updates(self) -> None:
-        """Unsubscribe from device-registry updates."""
-        if self._unsub_tasmota_device_updates is not None:
-            self._unsub_tasmota_device_updates()
-            self._unsub_tasmota_device_updates = None
-
-    @property
-    @override
-    def installed_version(self) -> str | None:
-        """Return the installed version."""
-        if self.hass and (
-            device := dr.async_get(self.hass).async_get_device_by_connection(
-                self._connection, self._config_entry_id
-            )
+        if (
+            event.data["action"] != "update"
+            or "sw_version" not in event.data["changes"]
         ):
-            return device.sw_version
-        return None
+            return
+        if device := dr.async_get(self.hass).async_get(
+            self._device_id, include_child_devices=False
+        ):
+            self._attr_installed_version = device.sw_version
+            self.async_write_ha_state()
 
     @property
     @override
