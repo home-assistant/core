@@ -36,6 +36,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import AemetConfigEntry
+from .reminder import async_dismiss_api_key_reminder
 from .util import parse_issue_date
 
 
@@ -48,6 +49,18 @@ class _OptionalDateSelector(DateSelector):
         if data is None or data == "":
             return data
         return super().__call__(data)
+
+
+API_KEY_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        probatio.Optional(CONF_API_KEY_DATE, default=None): probatio.Maybe(
+            _OptionalDateSelector()
+        ),
+    }
+)
 
 
 async def _async_validate_api_key(
@@ -66,6 +79,16 @@ async def _async_validate_api_key(
     except AemetError:
         return "cannot_connect"
     return None
+
+
+@callback
+def _async_cleanup_api_key_reminder(
+    hass: HomeAssistant, entry: AemetConfigEntry
+) -> None:
+    """Cancel the scheduled reminder and dismiss its notification."""
+    if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
+        runtime_data.coordinator.async_cancel_api_key_reminder()
+    async_dismiss_api_key_reminder(hass, entry)
 
 
 class AemetOptionsFlow(OptionsFlow):
@@ -146,9 +169,9 @@ class AemetOptionsFlow(OptionsFlow):
                 update_kwargs: dict[str, Any] = {"options": new_options}
                 if data_updates:
                     update_kwargs["data"] = {**entry.data, **data_updates}
+                _async_cleanup_api_key_reminder(self.hass, entry)
                 self.hass.config_entries.async_update_entry(entry, **update_kwargs)
-                if not entry.update_listeners:
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_create_entry(title="", data=new_options)
 
         schema = probatio.Schema(
@@ -196,7 +219,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             location = user_input[CONF_LOCATION]
@@ -302,31 +325,70 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_API_KEY_DATE] = "invalid_date"
 
                 if not errors:
-                    data = {
-                        **entry.data,
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_API_KEY_DATE: issue_date.isoformat(),
-                    }
-                    reload = not entry.update_listeners or data == entry.data
-                    result = self.async_update_and_abort(entry, data=data)
-                    if reload:
-                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
-                    return result
+                    _async_cleanup_api_key_reminder(self.hass, entry)
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_API_KEY: user_input[CONF_API_KEY],
+                            CONF_API_KEY_DATE: issue_date.isoformat(),
+                        },
+                    )
 
-        schema = probatio.Schema(
-            {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
-                probatio.Optional(CONF_API_KEY_DATE, default=None): probatio.Maybe(
-                    _OptionalDateSelector()
-                ),
-            }
-        )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                schema,
+                API_KEY_SCHEMA,
+                user_input or {CONF_API_KEY_DATE: dt_util.now().date().isoformat()},
+            ),
+            errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user replace the API key and generation date."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            entry = self._get_reconfigure_entry()
+            latitude = entry.data[CONF_LATITUDE]
+            longitude = entry.data[CONF_LONGITUDE]
+
+            await self.async_set_unique_id(f"{latitude}-{longitude}")
+            self._abort_if_unique_id_mismatch()
+
+            error = await _async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                latitude,
+                longitude,
+            )
+            if error is not None:
+                errors["base"] = error
+            else:
+                today = dt_util.now().date()
+                issue_date_input = user_input.get(CONF_API_KEY_DATE)
+                issue_date = parse_issue_date(issue_date_input)
+                if issue_date is None:
+                    issue_date = today
+                elif issue_date > today:
+                    errors[CONF_API_KEY_DATE] = "invalid_date"
+
+                if not errors:
+                    _async_cleanup_api_key_reminder(self.hass, entry)
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_API_KEY: user_input[CONF_API_KEY],
+                            CONF_API_KEY_DATE: issue_date.isoformat(),
+                        },
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                API_KEY_SCHEMA,
                 user_input or {CONF_API_KEY_DATE: dt_util.now().date().isoformat()},
             ),
             errors=errors,

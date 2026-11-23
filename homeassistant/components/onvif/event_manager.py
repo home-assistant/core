@@ -1,8 +1,10 @@
 """ONVIF event abstraction."""
 
 import asyncio
+from collections import Counter
 from collections.abc import Callable
 import datetime as dt
+import secrets
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -22,7 +24,6 @@ from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseErro
 from homeassistant.components import webhook
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
@@ -50,6 +51,7 @@ CREATE_ERRORS = (
     asyncio.TimeoutError,
     XMLParseError,
     ValidationError,
+    TransportError,
 )
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -124,6 +126,7 @@ class EventManager:
 
         self._uid_by_platform: dict[str, set[str]] = {}
         self._events: dict[str, Event] = {}
+        self._pending_triggers: Counter[str] = Counter()
         self._listeners: list[CALLBACK_TYPE] = []
 
     @property
@@ -224,6 +227,15 @@ class EventManager:
                 )
                 continue
 
+            # "Initialized" is resent on every subscribe and renew
+            initialized = (
+                getattr(
+                    msg.Message._value_1,  # noqa: SLF001
+                    "PropertyOperation",
+                    None,
+                )
+                == "Initialized"
+            )
             for event in events:
                 value = event.value
                 if event.device_class == "timestamp" and isinstance(value, str):
@@ -243,6 +255,8 @@ class EventManager:
                 )
                 self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)
                 self._events[ha_event.uid] = ha_event
+                if ha_event.platform == "event" and not initialized:
+                    self._pending_triggers[ha_event.uid] += 1
 
     def get_uid(self, uid: str) -> Event | None:
         """Retrieve event for given id."""
@@ -251,6 +265,11 @@ class EventManager:
     def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""
         return [event for event in self._events.values() if event.platform == platform]
+
+    @callback
+    def async_pop_triggers(self, uid: str) -> int:
+        """Return and reset the number of pending triggers for an event."""
+        return self._pending_triggers.pop(uid, 0)
 
     def get_uids_by_platform(self, platform: str) -> set[str]:
         """Retrieve uids for a given platform."""
@@ -551,15 +570,10 @@ class WebHookManager:
         self._event_manager = event_manager
         self._device = event_manager.device
         self._hass = event_manager.hass
-        config_entry = event_manager.config_entry
 
-        self._old_webhook_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
         # Some cameras have a limit on the length of the webhook URL
-        # so we use a shorter unique ID for the webhook.
-        unique_id = config_entry.unique_id
-        assert unique_id is not None
-        webhook_id = format_mac(unique_id).replace(":", "").lower()
-        self._webhook_unique_id = f"{DOMAIN}{webhook_id}"
+        # so we use a short random ID for the webhook.
+        self._webhook_unique_id = f"{DOMAIN}{secrets.token_hex(6)}"
         self._name = event_manager.name
 
         self._webhook_url: str | None = None
@@ -574,7 +588,17 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
-        if not await self._async_start_webhook():
+        if self._webhook_url is None:
+            self.state = WebHookManagerState.FAILED
+            return False
+        # Unload skips stopping events if no event subscription started.
+        try:
+            started = await self._async_start_webhook()
+        except asyncio.CancelledError:
+            self._async_unregister_webhook()
+            raise
+        if not started:
+            self._async_unregister_webhook()
             self.state = WebHookManagerState.FAILED
             return False
         self.state = WebHookManagerState.STARTED
@@ -639,10 +663,10 @@ class WebHookManager:
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
-            try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                return
+            LOGGER.debug(
+                "%s: No URL available, not using webhook for events", self._name
+            )
+            return
 
         webhook_id = self._webhook_unique_id
         self._async_unregister_webhook()
@@ -659,7 +683,6 @@ class WebHookManager:
         LOGGER.debug(
             "%s: Unregistering webhook %s", self._name, self._webhook_unique_id
         )
-        webhook.async_unregister(self._hass, self._old_webhook_unique_id)
         webhook.async_unregister(self._hass, self._webhook_unique_id)
         self._webhook_url = None
 

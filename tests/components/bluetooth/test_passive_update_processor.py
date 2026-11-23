@@ -20,6 +20,7 @@ from pytest_homeassistant.components.bluetooth import (
     patch_all_discovered_devices,
     patch_bluetooth_time,
 )
+from sensor_state_data import SensorDeviceInfo
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -54,7 +55,9 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2005,6 +2008,101 @@ def test_restore_data_device_info_round_trip() -> None:
     restored = PassiveBluetoothDataUpdate()
     restored.async_set_restore_data(stored, EntityDescription)
     assert restored.devices == devices
+
+
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_plain_device_info_deprecated(hass: HomeAssistant) -> None:
+    """Test a plain device info is converted, and reported once."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    @callback
+    def _mock_update_method(service_info: BluetoothServiceInfo) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(data: dict[str, str]) -> PassiveBluetoothDataUpdate:
+        return PassiveBluetoothDataUpdate(
+            devices={None: {"name": "Plain", "not_a_field": "ignored"}}
+        )
+
+    token = current_entry.set(MockConfigEntry(domain=DOMAIN))
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    current_entry.reset(token)
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_processor.report_usage",
+        wraps=report_usage,
+    ) as mock_report_usage:
+        inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+        inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+
+    assert processor.devices[None] == DeviceInfo(name="Plain")
+    assert isinstance(processor.devices[None], DeviceInfo)
+    # Reported once by the processor, not only deduplicated by the frame helper
+    mock_report_usage.assert_called_once_with(
+        "passes a plain dict as a device info in a PassiveBluetoothDataUpdate"
+        " instead of a DeviceInfo",
+        breaks_in_ha_version="2027.12",
+        core_behavior=ReportBehavior.LOG,
+        exclude_integrations={DOMAIN},
+        integration_domain=DOMAIN,
+    )
+
+    unregister_processor()
+    cancel_coordinator()
+
+
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_shared_device_info_kept_as_is(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a shared device info is stored as is, as it is compared by identity."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    shared_device_info = sensor_device_info_to_hass_device_info(
+        SensorDeviceInfo(
+            name="Shared",
+            manufacturer="Acme",
+            model="S1",
+            sw_version=None,
+            hw_version=None,
+        )
+    )
+
+    @callback
+    def _mock_update_method(service_info: BluetoothServiceInfo) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(data: dict[str, str]) -> PassiveBluetoothDataUpdate:
+        return PassiveBluetoothDataUpdate(devices={None: shared_device_info})
+
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+
+    assert processor.devices[None] is shared_device_info
+    assert "plain dict" not in caplog.text
+
+    unregister_processor()
+    cancel_coordinator()
 
 
 def test_update_stores_equal_device_info() -> None:

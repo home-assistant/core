@@ -62,18 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
     if reminder_unsub := async_schedule_api_key_reminder(hass, entry):
         weather_coordinator.reminder_unsub = reminder_unsub
         entry.async_on_unload(reminder_unsub)
-
-
-async def async_update_options(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
-    """Update options."""
-    entry.runtime_data.coordinator.async_cancel_api_key_reminder()
-    async_dismiss_api_key_reminder(hass, entry)
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:

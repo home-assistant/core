@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unique_id_mismatch": "The location of this entry does not match its identifier. Remove the integration and add it again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,7 +15,14 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_key_date": "API key generation date"
         },
-        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key."
+        "description": "The AEMET API key is no longer valid. Enter a new API key and its generation date. To generate one go to {api_key_url}. The generation date is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key."
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key_date": "API key generation date"
+        },
+        "description": "Enter a new AEMET API key and its generation date. To generate one go to {api_key_url}. The generation date is used to estimate the expiry date and schedule optional reminders. Reauthentication starts when AEMET rejects the key."
       },
       "user": {
         "data": {

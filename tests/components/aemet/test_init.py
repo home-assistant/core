@@ -12,6 +12,7 @@ from homeassistant.components.aemet.const import (
     CONF_API_KEY_DATE,
     CONF_API_KEY_REMINDER,
     CONF_RADAR_UPDATES,
+    CONF_STATION_UPDATES,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -84,20 +85,27 @@ async def test_update_options_reloads_entry(
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_RADAR_UPDATES: True}
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY_REMINDER: False,
+                CONF_RADAR_UPDATES: True,
+                CONF_STATION_UPDATES: True,
+            },
         )
         await hass.async_block_till_done()
 
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.state is ConfigEntryState.LOADED
         assert config_entry.options[CONF_RADAR_UPDATES] is True
 
 
-async def test_update_options_failed_reload_dismisses_reminder(
+async def test_update_options_dismisses_reminder_before_reload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a failed reload after disabling reminders dismisses the reminder."""
+    """Test updating options dismisses the reminder before scheduling a reload."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-03-30 12:00:00+00:00")
     entry = await async_init_integration(
@@ -109,26 +117,29 @@ async def test_update_options_failed_reload_dismisses_reminder(
     assert notification_id in pn._async_get_or_create_notifications(hass)
 
     with patch.object(
-        hass.config_entries, "async_reload", return_value=False
-    ) as async_reload:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_API_KEY_REMINDER: False,
                 CONF_RADAR_UPDATES: True,
+                CONF_STATION_UPDATES: True,
             },
         )
         await hass.async_block_till_done()
 
-    async_reload.assert_awaited_once_with(entry.entry_id)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    async_schedule_reload.assert_called_once_with(entry.entry_id)
     assert notification_id not in pn._async_get_or_create_notifications(hass)
 
 
-async def test_update_options_failed_reload_cancels_pending_reminder(
+async def test_update_options_cancels_pending_reminder(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a failed reload after disabling reminders cancels the timer."""
+    """Test updating options cancels the pending reminder before scheduling a reload."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     entry = await async_init_integration(
@@ -140,18 +151,21 @@ async def test_update_options_failed_reload_cancels_pending_reminder(
     assert notification_id not in pn._async_get_or_create_notifications(hass)
 
     with patch.object(
-        hass.config_entries, "async_reload", return_value=False
-    ) as async_reload:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
                 CONF_API_KEY_REMINDER: False,
                 CONF_RADAR_UPDATES: True,
+                CONF_STATION_UPDATES: True,
             },
         )
         await hass.async_block_till_done()
 
-    async_reload.assert_awaited_once_with(entry.entry_id)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    async_schedule_reload.assert_called_once_with(entry.entry_id)
 
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",
@@ -164,11 +178,11 @@ async def test_update_options_failed_reload_cancels_pending_reminder(
     assert notification_id not in pn._async_get_or_create_notifications(hass)
 
 
-async def test_reauth_clears_reminder_through_update_listener(
+async def test_reauth_clears_reminder(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test reauthentication clears reminders through the update listener."""
+    """Test reauthentication clears reminders before reloading."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-03-30 12:00:00+00:00")
     entry = await async_init_integration(

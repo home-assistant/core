@@ -70,11 +70,14 @@ def request_handler_factory(
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
+            resource_path = (
+                "" if request.rel_url.raw_path == "/" else request.rel_url.raw_path
+            )
             raise HTTPUnauthorized(
                 headers={
                     "WWW-Authenticate": (
                         f'Bearer resource_metadata="{url_prefix}'
-                        '/.well-known/oauth-protected-resource"'
+                        f'/.well-known/oauth-protected-resource{resource_path}"'
                     )
                 }
             )
@@ -189,7 +192,7 @@ class HomeAssistantView:
 
     def register(
         self, hass: HomeAssistant, app: web.Application, router: web.UrlDispatcher
-    ) -> None:
+    ) -> list[AbstractRoute]:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
@@ -212,3 +215,5 @@ class HomeAssistantView:
         if allow_cors:
             for route in routes:
                 allow_cors(route)
+
+        return routes
