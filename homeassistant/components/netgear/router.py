@@ -3,11 +3,10 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pynetgear import Netgear
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -29,6 +28,9 @@ from .const import (
     MODELS_V2,
 )
 from .errors import CannotLoginException
+
+if TYPE_CHECKING:
+    from .coordinator import NetgearConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ def get_api(
 class NetgearRouter:
     """Representation of a Netgear router."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: NetgearConfigEntry) -> None:
         """Initialize a Netgear router."""
         assert entry.unique_id
         self.hass = hass

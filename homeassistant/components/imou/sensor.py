@@ -1,7 +1,7 @@
 """Support for Imou sensor entities."""
 
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from pyimouapi.const import (
     PARAM_STATE,
@@ -180,7 +180,7 @@ class ImouSensor(ImouEntity, SensorEntity):
         """
         value = self.device.sensors[self._entity_type][PARAM_STATE]
         if self.entity_description.device_class == SensorDeviceClass.ENUM:
-            return value
+            return cast(StateType, value)
         if not self._is_numeric_variant:
             return None
-        return value
+        return cast(StateType, value)

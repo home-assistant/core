@@ -14,6 +14,10 @@
     "unit_of_measurement": "Unit of measurement"
   },
   "config": {
+    "error": {
+      "source_list_required": "A source list is required when a source or the select source actions are set.",
+      "volume_up_and_down_required": "Volume up and volume down actions must be set together."
+    },
     "step": {
       "alarm_control_panel": {
         "data": {
@@ -366,6 +370,62 @@
         },
         "title": "Template lock"
       },
+      "media_player": {
+        "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "is_volume_muted": "Muted",
+          "media_next_track": "Actions on next track",
+          "media_pause": "Actions on pause",
+          "media_play": "Actions on play",
+          "media_previous_track": "Actions on previous track",
+          "media_stop": "Actions on stop",
+          "name": "[%key:common::config_flow::data::name%]",
+          "select_source": "Actions on select source",
+          "source": "Source",
+          "source_list": "Source list",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "volume_down": "Actions on volume down",
+          "volume_level": "Volume level",
+          "volume_mute": "Actions on mute",
+          "volume_set": "Actions on set volume",
+          "volume_up": "Actions on volume up"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "is_volume_muted": "Defines a template to get whether the media player is muted.",
+          "media_next_track": "Defines actions to run when the media player is given a 'Next track' command.",
+          "media_pause": "Defines actions to run when the media player is paused.",
+          "media_play": "Defines actions to run when the media player is given a 'Play' command.",
+          "media_previous_track": "Defines actions to run when the media player is given a 'Previous track' command.",
+          "media_stop": "Defines actions to run when the media player is stopped.",
+          "select_source": "Defines actions to run when the media player is given a command to select a source. Receives variable `source`. Requires a source list.",
+          "source": "Defines a template to get the current source of the media player. The source must be in the source list.",
+          "source_list": "Defines a template to get the list of sources supported by the media player.",
+          "state": "Defines a template to get the state of the media player. Valid values are `off`, `on`, `idle`, `playing`, `paused`, and `buffering`. If not set, the state is optimistic and follows the actions.",
+          "turn_off": "Defines actions to run when the media player is turned off.",
+          "turn_on": "Defines actions to run when the media player is turned on.",
+          "volume_down": "Defines actions to run when the media player is given a 'Volume down' command. Requires the volume up actions.",
+          "volume_level": "Defines a template to get the volume level of the media player. Valid values are numbers between `0` and `1`.",
+          "volume_mute": "Defines actions to run when the media player is muted or unmuted. Receives variable `is_volume_muted`.",
+          "volume_set": "Defines actions to run when the media player is given a command to set the volume. Receives variable `volume_level`.",
+          "volume_up": "Defines actions to run when the media player is given a 'Volume up' command. Requires the volume down actions."
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "Template media player"
+      },
       "number": {
         "data": {
           "device_class": "[%key:component::template::common::device_class%]",
@@ -537,12 +597,14 @@
           "image": "[%key:component::image::title%]",
           "light": "[%key:component::light::title%]",
           "lock": "[%key:component::lock::title%]",
+          "media_player": "[%key:component::media_player::title%]",
           "number": "[%key:component::number::title%]",
           "select": "[%key:component::select::title%]",
           "sensor": "[%key:component::sensor::title%]",
           "switch": "[%key:component::switch::title%]",
           "update": "[%key:component::update::title%]",
           "vacuum": "[%key:component::vacuum::title%]",
+          "water_heater": "[%key:component::water_heater::title%]",
           "weather": "[%key:component::weather::title%]"
         },
         "title": "Template helper"
@@ -587,6 +649,53 @@
           }
         },
         "title": "Template vacuum"
+      },
+      "water_heater": {
+        "data": {
+          "current_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "operation_list": "Operation modes",
+          "operation_mode": "[%key:component::water_heater::entity_component::_::state_attributes::operation_mode::name%]",
+          "set_operation_mode": "Actions on set operation mode",
+          "set_temperature": "Actions on set temperature",
+          "target_temperature": "Target temperature",
+          "temperature_unit": "[%key:component::template::common::temperature_unit%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]"
+        },
+        "data_description": {
+          "current_temperature": "Defines a template for the current temperature.",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "operation_list": "Defines a template for a list of available operation modes.",
+          "operation_mode": "Defines a template for the current operation mode.",
+          "set_operation_mode": "Defines actions to run when the water heater is given a `set_operation_mode` command. Receives variable `operation_mode`.",
+          "set_temperature": "Defines actions to run when the water heater is given a `set_temperature` command. Receives variable `temperature` and `operation_mode`.",
+          "target_temperature": "Defines a template for the target temperature.",
+          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]",
+          "turn_off": "Defines actions to run when the water heater is turned off.",
+          "turn_on": "Defines actions to run when the water heater is turned on."
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "away_mode": "[%key:component::water_heater::entity_component::_::state_attributes::away_mode::name%]",
+              "max_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::min_temp::name%]",
+              "turn_away_mode_off": "Actions on turn away mode off",
+              "turn_away_mode_on": "Actions on turn away mode on"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "away_mode": "Defines a template for the away mode state.",
+              "turn_away_mode_off": "Defines actions to run when the water heater is given a `turn_away_mode_off` command.",
+              "turn_away_mode_on": "Defines actions to run when the water heater is given a `turn_away_mode_on` command."
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "Template water heater"
       },
       "weather": {
         "data": {
@@ -662,6 +771,10 @@
     }
   },
   "options": {
+    "error": {
+      "source_list_required": "[%key:component::template::config::error::source_list_required%]",
+      "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
+    },
     "step": {
       "alarm_control_panel": {
         "data": {
@@ -1002,6 +1115,61 @@
         },
         "title": "[%key:component::template::config::step::lock::title%]"
       },
+      "media_player": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "is_volume_muted": "[%key:component::template::config::step::media_player::data::is_volume_muted%]",
+          "media_next_track": "[%key:component::template::config::step::media_player::data::media_next_track%]",
+          "media_pause": "[%key:component::template::config::step::media_player::data::media_pause%]",
+          "media_play": "[%key:component::template::config::step::media_player::data::media_play%]",
+          "media_previous_track": "[%key:component::template::config::step::media_player::data::media_previous_track%]",
+          "media_stop": "[%key:component::template::config::step::media_player::data::media_stop%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "select_source": "[%key:component::template::config::step::media_player::data::select_source%]",
+          "source": "[%key:component::template::config::step::media_player::data::source%]",
+          "source_list": "[%key:component::template::config::step::media_player::data::source_list%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "volume_down": "[%key:component::template::config::step::media_player::data::volume_down%]",
+          "volume_level": "[%key:component::template::config::step::media_player::data::volume_level%]",
+          "volume_mute": "[%key:component::template::config::step::media_player::data::volume_mute%]",
+          "volume_set": "[%key:component::template::config::step::media_player::data::volume_set%]",
+          "volume_up": "[%key:component::template::config::step::media_player::data::volume_up%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "is_volume_muted": "[%key:component::template::config::step::media_player::data_description::is_volume_muted%]",
+          "media_next_track": "[%key:component::template::config::step::media_player::data_description::media_next_track%]",
+          "media_pause": "[%key:component::template::config::step::media_player::data_description::media_pause%]",
+          "media_play": "[%key:component::template::config::step::media_player::data_description::media_play%]",
+          "media_previous_track": "[%key:component::template::config::step::media_player::data_description::media_previous_track%]",
+          "media_stop": "[%key:component::template::config::step::media_player::data_description::media_stop%]",
+          "select_source": "[%key:component::template::config::step::media_player::data_description::select_source%]",
+          "source": "[%key:component::template::config::step::media_player::data_description::source%]",
+          "source_list": "[%key:component::template::config::step::media_player::data_description::source_list%]",
+          "state": "[%key:component::template::config::step::media_player::data_description::state%]",
+          "turn_off": "[%key:component::template::config::step::media_player::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::media_player::data_description::turn_on%]",
+          "volume_down": "[%key:component::template::config::step::media_player::data_description::volume_down%]",
+          "volume_level": "[%key:component::template::config::step::media_player::data_description::volume_level%]",
+          "volume_mute": "[%key:component::template::config::step::media_player::data_description::volume_mute%]",
+          "volume_set": "[%key:component::template::config::step::media_player::data_description::volume_set%]",
+          "volume_up": "[%key:component::template::config::step::media_player::data_description::volume_up%]"
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::media_player::title%]"
+      },
       "number": {
         "data": {
           "device_class": "[%key:component::template::common::device_class%]",
@@ -1196,6 +1364,53 @@
           }
         },
         "title": "[%key:component::template::config::step::vacuum::title%]"
+      },
+      "water_heater": {
+        "data": {
+          "current_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "operation_list": "[%key:component::template::config::step::water_heater::data::operation_list%]",
+          "operation_mode": "[%key:component::water_heater::entity_component::_::state_attributes::operation_mode::name%]",
+          "set_operation_mode": "[%key:component::template::config::step::water_heater::data::set_operation_mode%]",
+          "set_temperature": "[%key:component::template::config::step::water_heater::data::set_temperature%]",
+          "target_temperature": "[%key:component::template::config::step::water_heater::data::target_temperature%]",
+          "temperature_unit": "[%key:component::template::common::temperature_unit%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]"
+        },
+        "data_description": {
+          "current_temperature": "[%key:component::template::config::step::water_heater::data_description::current_temperature%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "operation_list": "[%key:component::template::config::step::water_heater::data_description::operation_list%]",
+          "operation_mode": "[%key:component::template::config::step::water_heater::data_description::operation_mode%]",
+          "set_operation_mode": "[%key:component::template::config::step::water_heater::data_description::set_operation_mode%]",
+          "set_temperature": "[%key:component::template::config::step::water_heater::data_description::set_temperature%]",
+          "target_temperature": "[%key:component::template::config::step::water_heater::data_description::target_temperature%]",
+          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]",
+          "turn_off": "[%key:component::template::config::step::water_heater::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::water_heater::data_description::turn_on%]"
+        },
+        "sections": {
+          "additional_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "away_mode": "[%key:component::water_heater::entity_component::_::state_attributes::away_mode::name%]",
+              "max_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::water_heater::entity_component::_::state_attributes::min_temp::name%]",
+              "turn_away_mode_off": "[%key:component::template::config::step::water_heater::sections::additional_options::data::turn_away_mode_off%]",
+              "turn_away_mode_on": "[%key:component::template::config::step::water_heater::sections::additional_options::data::turn_away_mode_on%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "away_mode": "Defines a template for the away mode state.",
+              "turn_away_mode_off": "[%key:component::template::config::step::water_heater::sections::additional_options::data_description::turn_away_mode_off%]",
+              "turn_away_mode_on": "[%key:component::template::config::step::water_heater::sections::additional_options::data_description::turn_away_mode_on%]"
+            },
+            "name": "[%key:component::template::common::additional_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::water_heater::title%]"
       },
       "weather": {
         "data": {

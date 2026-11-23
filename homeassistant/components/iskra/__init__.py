@@ -64,15 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> Non
     if base_device.is_gateway:
         # Add the gateway device to the device registry
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, base_device.serial)},
-                manufacturer=MANUFACTURER,
-                name=base_device.model,
-                model=base_device.model,
-                sw_version=base_device.fw_version,
-            ),
+            identifiers={(DOMAIN, base_device.serial)},
+            manufacturer=MANUFACTURER,
+            name=base_device.model,
+            model=base_device.model,
+            sw_version=base_device.fw_version,
         )
 
         coordinators = [

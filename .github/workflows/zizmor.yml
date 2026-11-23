@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Check for relevant changes
         id: changes
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        uses: dorny/paths-filter@v4.0.3
         with:
           filters: |
             relevant:
@@ -43,13 +43,13 @@ jobs:
 
       - name: Check out code from GitHub
         if: steps.changes.outputs.relevant == 'true' || github.event.pull_request.changed_files >= 3000
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Run Zizmor
         if: steps.changes.outputs.relevant == 'true' || github.event.pull_request.changed_files >= 3000
-        uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204 # v3.0.1
+        uses: j178/prek-action@v3.1.0
         with:
           extra-args: --all-files zizmor
 
@@ -73,13 +73,13 @@ jobs:
     steps:
       - name: Check out accepted branch commit
         id: checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event_name == 'push' && github.sha || matrix.branch }}
           persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           version-file: requirements.txt
 
@@ -100,7 +100,7 @@ jobs:
           printf '%s\n' "${SCAN_SHA}" > sha.txt
 
       - name: Upload SARIF artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: zizmor-sarif-${{ matrix.branch }}
           path: |
@@ -125,7 +125,7 @@ jobs:
       security-events: write # To upload accepted-code findings
     steps:
       - name: Download SARIF artifact
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        uses: actions/download-artifact@v8.0.2
         with:
           name: zizmor-sarif-${{ matrix.branch }}
 
@@ -134,14 +134,14 @@ jobs:
         run: echo "sha=$(cat sha.txt)" >> "${GITHUB_OUTPUT}"
 
       - name: Check out scanned commit
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ steps.sha.outputs.sha }}
           persist-credentials: false
           path: src
 
       - name: Upload accepted-code SARIF
-        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        uses: github/codeql-action/upload-sarif@v4.39.3
         with:
           sarif_file: zizmor.sarif
           category: zizmor

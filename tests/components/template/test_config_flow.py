@@ -87,6 +87,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "alarm_control_panel",
+            {},
+            "unknown",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {"assumed_state": True},
+        ),
+        (
             "binary_sensor",
             {
                 "state": (
@@ -188,6 +198,34 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "cover",
+            {},
+            "unknown",
+            {"one": "open", "two": "closed"},
+            {},
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {"assumed_state": True},
+        ),
+        (
             "event",
             {"event_type": "{{ states('event.one') }}"},
             "2024-07-09T00:00:00.000+00:00",
@@ -206,6 +244,16 @@ NUMBER_OPTIONS = {
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             {},
+        ),
+        (
+            "fan",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
         ),
         (
             "image",
@@ -228,6 +276,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "light",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
+        ),
+        (
             "lock",
             {"state": "{{ states('lock.one') }}"},
             "locked",
@@ -236,6 +294,16 @@ NUMBER_OPTIONS = {
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
             {},
+        ),
+        (
+            "lock",
+            {},
+            "unknown",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {"assumed_state": True},
         ),
         (
             "number",
@@ -268,6 +336,36 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "number",
+            {},
+            "unknown",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {"assumed_state": True},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             "on",
@@ -276,6 +374,16 @@ NUMBER_OPTIONS = {
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
+        ),
+        (
+            "select",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"assumed_state": True},
         ),
         (
             "switch",
@@ -288,6 +396,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "switch",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {"assumed_state": True},
+        ),
+        (
             "update",
             {"installed_version": "{{ states('update.one') }}"},
             "off",
@@ -298,6 +416,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            "playing",
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             "docked",
@@ -305,6 +433,32 @@ NUMBER_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "vacuum",
+            {},
+            "unknown",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
+            {"assumed_state": True},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            "eco",
+            {"one": "eco", "two": "electric"},
+            {},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
             {},
         ),
         (
@@ -555,10 +709,28 @@ async def test_config_flow_sensor_unit_of_measurement_context(
             {"latest_version": "{{ '2.0' }}"},
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",
@@ -892,6 +1064,17 @@ async def test_config_flow_device(
             None,
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {"state": "{{ states('media_player.two') }}"},
+            ["playing", "paused"],
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            "state",
+            None,
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"state": "{{ states('vacuum.two') }}"},
@@ -900,6 +1083,23 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+            None,
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            {"operation_mode": "{{ states('water_heater.two') }}"},
+            ["eco", "electric"],
+            {"one": "eco", "two": "electric"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            "operation_mode",
             None,
         ),
         (
@@ -1423,6 +1623,10 @@ async def test_config_flow_preview(
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"
+REQUIRED_OPTION_ERROR = (
+    "Required option: '{0}' is missing for option '{1}'. "
+    "Remove '{1}' from your config or add '{0}'."
+)
 
 
 @pytest.mark.parametrize(
@@ -1430,6 +1634,34 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
     [
         ("binary_sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         ("sensor", "{{", {}, {"state": EARLY_END_ERROR}),
+        (
+            "media_player",
+            "",
+            {"source": "{{ 'TV' }}"},
+            {"source": REQUIRED_OPTION_ERROR.format("source_list", "source")},
+        ),
+        (
+            "media_player",
+            "",
+            {"select_source": []},
+            {
+                "select_source": REQUIRED_OPTION_ERROR.format(
+                    "source_list", "select_source"
+                )
+            },
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_up": []},
+            {"volume_up": REQUIRED_OPTION_ERROR.format("volume_down", "volume_up")},
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_down": []},
+            {"volume_down": REQUIRED_OPTION_ERROR.format("volume_up", "volume_down")},
+        ),
         (
             "sensor",
             "",
@@ -1533,6 +1765,70 @@ async def test_config_flow_preview_bad_input(
     assert msg["error"] == {
         "code": "invalid_user_input",
         "message": error,
+    }
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error", "missing_option"),
+    [
+        pytest.param(
+            {"source": "{{ 'TV' }}"},
+            "source_list_required",
+            {"source_list": "{{ ['TV'] }}"},
+            id="source_without_list",
+        ),
+        pytest.param(
+            {"select_source": []},
+            "source_list_required",
+            {"source_list": "{{ ['TV'] }}"},
+            id="select_source_without_list",
+        ),
+        pytest.param(
+            {"volume_up": []},
+            "volume_up_and_down_required",
+            {"volume_down": []},
+            id="volume_up_only",
+        ),
+        pytest.param(
+            {"volume_down": []},
+            "volume_up_and_down_required",
+            {"volume_up": []},
+            id="volume_down_only",
+        ),
+    ],
+)
+async def test_config_flow_media_player_required_options(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    error: str,
+    missing_option: dict[str, Any],
+) -> None:
+    """Test media player options are rejected without the option they require."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "media_player"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input, **missing_option},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "media_player",
+        **user_input,
+        **missing_option,
     }
 
 
@@ -2032,10 +2328,28 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"latest_version": "{{ '2.0' }}"},
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",

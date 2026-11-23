@@ -211,16 +211,14 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                     and device.device_and_unit_id[0] not in new_data.devices
                 )
             ):
-                dr.async_get(self.hass).async_get_or_create_device(
+                dr.async_get(self.hass).async_get_or_create(
                     config_entry_id=self.config_entry.entry_id,
-                    device_info=dr.DeviceInfo(
-                        name=device.name,
-                        identifiers={(DOMAIN, device.device_and_unit_id[0])},
-                        manufacturer=device.manufacturer,
-                        model=device.productname,
-                        sw_version=device.fw_version,
-                        configuration_url=self.configuration_url,
-                    ),
+                    name=device.name,
+                    identifiers={(DOMAIN, device.device_and_unit_id[0])},
+                    manufacturer=device.manufacturer,
+                    model=device.productname,
+                    sw_version=device.fw_version,
+                    configuration_url=self.configuration_url,
                 )
 
         if (

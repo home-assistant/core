@@ -9,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["cronsim==2.7", "securetar==2026.10.0"],
+  "requirements": ["cronsim==2.8", "securetar==2026.10.0"],
   "single_config_entry": true
 }

@@ -8,18 +8,13 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.siren import SirenLevel, WarningMode
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 import zigpy.zcl
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    DOMAIN as SIREN_DOMAIN,
-)
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenServiceArgument
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -52,7 +47,7 @@ def siren_platform_only():
 async def test_siren(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test zha siren platform."""
 
@@ -109,7 +104,7 @@ async def test_siren(
                 warning=50,  # bitmask for default args
                 warning_duration=5,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
 
@@ -143,7 +138,7 @@ async def test_siren(
                 warning=2,  # bitmask for default args
                 warning_duration=5,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
 
@@ -168,9 +163,9 @@ async def test_siren(
             "turn_on",
             {
                 "entity_id": entity_id,
-                ATTR_DURATION: 10,
-                ATTR_TONE: WarningMode.Emergency_Panic,
-                ATTR_VOLUME_LEVEL: SirenLevel.Medium_level_sound,
+                SirenServiceArgument.DURATION: 10,
+                SirenServiceArgument.TONE: WarningMode.Emergency_Panic,
+                SirenServiceArgument.VOLUME_LEVEL: SirenLevel.Medium_level_sound,
             },
             blocking=True,
         )
@@ -185,7 +180,7 @@ async def test_siren(
                 warning=97,  # bitmask for passed args
                 warning_duration=10,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
         # test that the state has changed to on

@@ -3,6 +3,7 @@
   "name": "FleetGO",
   "categories": ["vehicles_transport.cars_evs", "presence_location.trackers"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/fleetgo",
   "iot_class": "cloud_polling",
   "loggers": ["geopy", "ritassist"],

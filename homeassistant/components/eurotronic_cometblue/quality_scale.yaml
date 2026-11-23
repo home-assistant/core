@@ -32,7 +32,12 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: >
+      Flaky BLE connections may prevent active polling from updating the coordinator even while the device
+      is available. The device is marked unavailable only after it is no longer present in the
+      BluetoothManager's history, which is refreshed at the same interval as this integration.
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -49,27 +54,19 @@ rules:
     comment: This integration relies on MAC-based BLE connections.
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
-  entity-device-class:
-    status: exempt
-    comment: This integration does not provide sensors.
-  entity-disabled-by-default:
-    status: exempt
-    comment: This integration only provides one primary entity.
-  entity-translations:
-    status: exempt
-    comment: This integration only provides one primary entity.
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Not required.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

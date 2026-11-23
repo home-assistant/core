@@ -1,10 +1,10 @@
 """The tests for Z-Wave JS device triggers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from probatio import to_field_list
 import pytest
-from pytest_homeassistant.common import async_get_device_automations
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -19,6 +19,7 @@ from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     get_device_id,
+    get_endpoint_device_id,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -1225,6 +1226,476 @@ async def test_get_value_updated_value_triggers(
     assert expected_trigger in triggers
 
 
+async def test_get_triggers_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that only the value_updated trigger is exposed for endpoint child devices.
+
+    Node-based event triggers (notifications, value notifications, node status) always
+    fire with the parent node's device_id, so they would never match a child device and
+    are therefore not listed. The generic value_updated trigger works because it resolves
+    the child device_id back to the node when attaching.
+    """
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
+    )
+    assert child_device
+    expected_zwave_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "zwave_js.value_updated.value",
+        "device_id": child_device.id,
+        "metadata": {},
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, child_device.id
+    )
+    zwave_triggers = [t for t in triggers if t.get("domain") == DOMAIN]
+    # Only the generic value_updated trigger is exposed for child devices; node-level
+    # event triggers (notifications, value notifications, node status) are not.
+    assert zwave_triggers == [expected_zwave_trigger]
+
+
+@pytest.mark.parametrize(
+    "get_device",
+    [
+        pytest.param(
+            lambda reg, driver, node, entry: reg.async_get_device_by_identifier(
+                get_device_id(driver, node), entry
+            ),
+            id="node_device",
+        ),
+        pytest.param(
+            lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
+                get_endpoint_device_id(driver, node, node.endpoints[2]), entry
+            ),
+            id="child_device",
+        ),
+    ],
+)
+async def test_if_value_updated_value_fires_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    get_device: object,
+) -> None:
+    """Test value_updated.value trigger for a value moved to an endpoint child device.
+
+    The air temperature values on endpoints 2-4 collide, so their entities now live on
+    endpoint child devices. Verify the trigger fires whether it references the node
+    device_id (backward compatibility) or the endpoint child device_id, and that it
+    stays scoped to its own endpoint.
+    """
+    node = climate_heatit_z_trm3
+    device = get_device(
+        device_registry, client.driver, climate_heatit_z_trm3, integration.entry_id
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "zwave_js.value_updated.value",
+                        "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                        "property": "Air temperature",
+                        "property_key": None,
+                        "endpoint": 2,
+                        "from": 18.8,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "zwave_js.value_updated.value - "
+                                "{{ trigger.platform }} - "
+                                "{{ trigger.previous_value }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # A value update on the colliding endpoint 3 value must not fire the endpoint 2
+    # trigger.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 3,
+                    "property": "Air temperature",
+                    "newValue": 19.0,
+                    "prevValue": 18.8,
+                    "propertyName": "Air temperature",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "newValue": 19.0,
+                    "prevValue": 18.8,
+                    "propertyName": "Air temperature",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == "zwave_js.value_updated.value - zwave_js.value_updated - 18.8"
+    )
+
+
+async def test_validate_value_updated_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test endpoint scope is enforced in validation for endpoint child devices.
+
+    The capabilities form pins the endpoint to the child device's endpoint(s), but a
+    manually authored trigger must be rejected by backend validation too. Otherwise it
+    could listen to an unrelated endpoint while reporting the child device's id.
+    """
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
+    )
+    assert child_device
+
+    base_config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": child_device.id,
+        "type": "zwave_js.value_updated.value",
+        "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+        "property": "Air temperature",
+        "property_key": None,
+    }
+
+    # The endpoint the child device covers validates.
+    result = await device_trigger.async_validate_trigger_config(
+        hass, {**base_config, "endpoint": 2}
+    )
+    assert result["endpoint"] == 2
+
+    # A value on a different endpoint (3) exists on the node but is not covered by the
+    # endpoint 2 child device, so validation rejects it.
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass, {**base_config, "endpoint": 3}
+        )
+
+
+async def test_if_notification_notification_fires_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a notification trigger keeps reporting the node device id.
+
+    Notification events are always dispatched with the node device_id (not a child
+    device id), even when a value lives on a non-root endpoint, so a notification
+    trigger stored with the node device_id before the child device change still fires.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.notification.notification",
+                        "command_class": CommandClass.NOTIFICATION.value,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.notification.notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type="notification",
+            data={
+                "source": "node",
+                "event": "notification",
+                "nodeId": node.node_id,
+                "endpointIndex": 1,
+                "ccId": 113,
+                "args": {
+                    "type": 6,
+                    "event": 2,
+                    "label": "Power Management",
+                    "eventLabel": "AC mains disconnected",
+                    "parameters": {},
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == f"event.notification.notification - device - {CommandClass.NOTIFICATION}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_extra", "event_type", "event_data"),
+    [
+        pytest.param(
+            {
+                "type": "event.notification.entry_control",
+                "command_class": CommandClass.ENTRY_CONTROL.value,
+                "event_type": 5,
+                "data_type": 2,
+            },
+            "notification",
+            {
+                "endpointIndex": 1,
+                "ccId": 111,
+                "args": {
+                    "eventType": 5,
+                    "eventTypeLabel": "label 1",
+                    "dataType": 2,
+                    "dataTypeLabel": "label 2",
+                    "eventData": "555",
+                },
+            },
+            id="entry_control",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.basic",
+                "command_class": CommandClass.BASIC.value,
+                "property": "event",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Basic",
+                    "commandClass": 32,
+                    "endpoint": 1,
+                    "property": "event",
+                    "propertyName": "event",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "label": "Event value",
+                        "min": 0,
+                        "max": 255,
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="basic",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.central_scene",
+                "command_class": CommandClass.CENTRAL_SCENE.value,
+                "property": "scene",
+                "property_key": "001",
+                "endpoint": 1,
+                "subtype": "Endpoint 1 Scene 001",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Central Scene",
+                    "commandClass": 91,
+                    "endpoint": 1,
+                    "property": "scene",
+                    "propertyName": "scene",
+                    "propertyKey": "001",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "min": 0,
+                        "max": 255,
+                        "label": "Scene 004",
+                        "states": {
+                            "0": "KeyPressed",
+                            "1": "KeyReleased",
+                            "2": "KeyHeldDown",
+                        },
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="central_scene",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.scene_activation",
+                "command_class": CommandClass.SCENE_ACTIVATION.value,
+                "property": "sceneId",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 1,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Scene Activation",
+                    "commandClass": 43,
+                    "endpoint": 1,
+                    "property": "sceneId",
+                    "propertyName": "sceneId",
+                    "value": 1,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": True,
+                        "min": 1,
+                        "max": 255,
+                        "label": "Scene ID",
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="scene_activation",
+        ),
+    ],
+)
+async def test_if_event_device_trigger_fires_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    trigger_extra: dict[str, object],
+    event_type: str,
+    event_data: dict[str, object],
+) -> None:
+    """Test event-based device triggers keep reporting the node device id.
+
+    Notification and value notification events are always dispatched with the node
+    device_id (not a child device id), even when they originate from a value on a
+    non-root endpoint. So event-based triggers stored with the node device_id before
+    the child device change still fire.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        **trigger_extra,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.event.data.command_class }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type=event_type,
+            data={
+                "source": "node",
+                "event": event_type,
+                "nodeId": node.node_id,
+                **event_data,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == trigger_extra["command_class"]
+
+
 async def test_if_value_updated_value_fires(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1448,6 +1919,123 @@ async def test_get_trigger_capabilities_value_updated_value(
         {"name": "from", "optional": True, "required": False, "type": "string"},
         {"name": "to", "optional": True, "required": False, "type": "string"},
     ]
+
+
+async def test_get_trigger_capabilities_value_updated_value_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    climate_heatit_z_trm3,
+    integration,
+) -> None:
+    """Test the endpoint is pinned for a value_updated trigger on a child device."""
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
+    )
+    assert child_device
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+            "property": "Air temperature",
+            "property_key": None,
+            "endpoint": 2,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+    fields = to_field_list(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    )
+    endpoint_field = next(field for field in fields if field["name"] == "endpoint")
+    # The endpoint is required and restricted to the child device's own endpoint.
+    assert endpoint_field["required"] is True
+    assert [option[0] for option in endpoint_field["options"]] == ["2"]
+    # The command classes come from the child's own endpoint (endpoint 2), which carries
+    # Multilevel Sensor (its air temperature value), not just the root endpoint's.
+    command_class_field = next(
+        field for field in fields if field["name"] == "command_class"
+    )
+    assert str(CommandClass.SENSOR_MULTILEVEL.value) in [
+        option[0] for option in command_class_field["options"]
+    ]
+
+
+async def test_get_trigger_capabilities_value_updated_value_group_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    aeotec_zwa046,
+    integration,
+) -> None:
+    """Test the endpoint is pinned to the group's endpoints for a group child device."""
+    node = aeotec_zwa046
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert child_device
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.METER.value,
+            "property": "value",
+            "property_key": 65537,
+            "endpoint": 1,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+    fields = to_field_list(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    )
+    endpoint_field = next(field for field in fields if field["name"] == "endpoint")
+    # The endpoint is restricted to both endpoints of the "Clamp 1" group.
+    assert endpoint_field["required"] is True
+    assert sorted(option[0] for option in endpoint_field["options"]) == ["1", "2"]
+
+
+async def test_get_trigger_capabilities_value_updated_value_stale_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test capabilities for a child device whose endpoint no longer exists don't raise."""
+    node = climate_heatit_z_trm3
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+    # Simulate a stale child device: its endpoint is gone from the node but the child
+    # device is still in the registry (e.g. before a re-interview prunes it).
+    del node.endpoints[2]
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+            "property": "Air temperature",
+            "property_key": None,
+            "endpoint": 2,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
 
 
 async def test_get_value_updated_config_parameter_triggers(

@@ -4,6 +4,7 @@
   "categories": ["energy.backup_power"],
   "codeowners": ["@yuxincs"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
   "integration_type": "device",
   "iot_class": "local_polling",

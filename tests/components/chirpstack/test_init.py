@@ -33,7 +33,10 @@ async def test_setup_and_unload(
     assert await hass.config_entries.async_setup(connection_entry.entry_id)
     mock_connection.async_connect.assert_awaited_once_with()
     mock_registration.assert_awaited_once_with(
-        hass, connection_entry, connection=mock_connection
+        hass,
+        connection_entry,
+        connection=mock_connection,
+        configuration_url="http://server:8080/",
     )
     assert connection_entry.runtime_data.connection is mock_connection
     assert await hass.config_entries.async_unload(connection_entry.entry_id)

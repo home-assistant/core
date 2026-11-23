@@ -1,0 +1,40 @@
+{
+  "poc": "BOB1101",
+  "horizonHours": 168,
+  "coveredHours": 1.5,
+  "from": "2026-08-24T15:00:00Z",
+  "to": "2026-08-24T16:30:00Z",
+  "publishedAt": "2026-08-24T12:03:00Z",
+  "unavailableReason": null,
+  "count": 3,
+  "gstRatePercent": 15.0,
+  "points": [
+    {
+      "startsAt": "2026-08-24T15:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 7,
+      "schedule": "S",
+      "priceDollarsPerMwh": 33.25,
+      "priceCentsPerKwh": 3.325,
+      "priceCentsPerKwhInclGst": 3.8238
+    },
+    {
+      "startsAt": "2026-08-24T15:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 8,
+      "schedule": "S",
+      "priceDollarsPerMwh": 10.96,
+      "priceCentsPerKwh": 1.096,
+      "priceCentsPerKwhInclGst": 1.2604
+    },
+    {
+      "startsAt": "2026-08-24T16:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 9,
+      "schedule": "L",
+      "priceDollarsPerMwh": 1.99,
+      "priceCentsPerKwh": 0.199,
+      "priceCentsPerKwhInclGst": 0.2289
+    }
+  ]
+}

@@ -19,7 +19,7 @@ from homeassistant.components.portainer.services import (
     _async_get_device_and_entry,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -56,7 +56,7 @@ async def test_services(
         DOMAIN,
         PortainerService.PRUNE_IMAGES,
         {
-            ATTR_DEVICE_ID: device.id,
+            CommonServiceArgument.DEVICE_ID: device.id,
             PortainerServiceArgument.UNTIL: timedelta(hours=24),
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_service_prune_images(
     await hass.services.async_call(
         DOMAIN,
         PortainerService.PRUNE_IMAGES,
-        {ATTR_DEVICE_ID: device.id, **call_arguments},
+        {CommonServiceArgument.DEVICE_ID: device.id, **call_arguments},
         blocking=True,
     )
     mock_portainer_client.images_prune.assert_called_once_with(
@@ -156,7 +156,7 @@ async def test_service_prune_build_cache(
     await hass.services.async_call(
         DOMAIN,
         PortainerService.PRUNE_BUILD_CACHE,
-        {ATTR_DEVICE_ID: device.id, **call_arguments},
+        {CommonServiceArgument.DEVICE_ID: device.id, **call_arguments},
         blocking=True,
     )
     mock_portainer_client.prune_build_cache.assert_called_once_with(
@@ -196,7 +196,7 @@ async def test_service_prune_build_cache_portainer_exceptions(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_BUILD_CACHE,
-            {ATTR_DEVICE_ID: device.id},
+            {CommonServiceArgument.DEVICE_ID: device.id},
             blocking=True,
         )
 
@@ -235,7 +235,7 @@ async def test_service_requires_admin(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_DEVICE_ID: device.id},
+            {CommonServiceArgument.DEVICE_ID: device.id},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
@@ -370,7 +370,7 @@ async def test_service_validation_errors(
             DOMAIN,
             PortainerService.PRUNE_IMAGES,
             {
-                ATTR_DEVICE_ID: device.id,
+                CommonServiceArgument.DEVICE_ID: device.id,
                 PortainerServiceArgument.UNTIL: timedelta(seconds=30),
             },
             blocking=True,
@@ -382,7 +382,7 @@ async def test_service_validation_errors(
             DOMAIN,
             PortainerService.PRUNE_BUILD_CACHE,
             {
-                ATTR_DEVICE_ID: device.id,
+                CommonServiceArgument.DEVICE_ID: device.id,
                 PortainerServiceArgument.UNTIL: timedelta(seconds=30),
             },
             blocking=True,
@@ -393,7 +393,7 @@ async def test_service_validation_errors(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_BUILD_CACHE,
-            {ATTR_DEVICE_ID: container.id},
+            {CommonServiceArgument.DEVICE_ID: container.id},
             blocking=True,
         )
     mock_portainer_client.prune_build_cache.assert_not_called()
@@ -402,7 +402,7 @@ async def test_service_validation_errors(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: "invalid_device_id"},
+            {CommonServiceArgument.DEVICE_ID: "invalid_device_id"},
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()
@@ -446,7 +446,7 @@ async def test_service_validation_errors(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: container.id},
+            {CommonServiceArgument.DEVICE_ID: container.id},
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()
@@ -504,7 +504,7 @@ async def test_service_portainer_exceptions(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: device.id},
+            {CommonServiceArgument.DEVICE_ID: device.id},
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_called_once()
@@ -530,7 +530,7 @@ async def test_service_invalid_auth_starts_reauth(
         await hass.services.async_call(
             DOMAIN,
             PortainerService.PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: device.id},
+            {CommonServiceArgument.DEVICE_ID: device.id},
             blocking=True,
         )
     await hass.async_block_till_done()

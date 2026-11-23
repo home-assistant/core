@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import RequestException
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -49,6 +50,36 @@ async def test_sensors_use_own_device_readings(
     assert spa_ph is not None
     assert hass.states.get(pool_ph).state == "7.2"
     assert hass.states.get(spa_ph).state == "7.8"
+
+
+@pytest.mark.parametrize("key", ["acidBase", "cl"])
+async def test_dosing_volume_sensors_are_total_increasing(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_hanna_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    key: str,
+) -> None:
+    """Test dosing volume sensors use a state class valid for volumes."""
+    readings = {
+        "DID": "pool",
+        "messages": {"parameters": [{"name": key, "value": 19.05}]},
+    }
+    mock_hanna_client.get_devices.return_value = [{"DID": "pool", "name": "Pool"}]
+    mock_hanna_client.get_last_device_reading.return_value = readings
+    mock_hanna_client.parameters = readings["messages"]["parameters"]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, "hanna", f"pool_{key}"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state.state == "19.05"
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
 
 @pytest.mark.parametrize(
