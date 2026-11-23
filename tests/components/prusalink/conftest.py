@@ -46,6 +46,7 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "mmu": False,
         "serial": "serial-1337",
         "hostname": "PrusaXL",
+        "name": "My Prusa XL",
         "min_extrusion_temp": 170,
         "location": "Workshop",
         "sd_ready": True,

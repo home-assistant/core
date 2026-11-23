@@ -27,12 +27,12 @@ from homeassistant.components.humidifier.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
     CONF_MODE,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
@@ -424,7 +424,7 @@ async def test_humidifier_mode_changed_trigger_validation(
             [
                 {
                     "platform": trigger,
-                    CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "humidifier.test"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
