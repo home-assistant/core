@@ -4,6 +4,9 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -21,6 +24,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_appliance_id, merge_dict_recursive, setup_integration
@@ -397,316 +401,69 @@ async def test_commands(
     (
         "appliance_fixture",
         "entity_id",
-        "appliance_state",
-        "service",
-        "data",
-        "commands",
     ),
     [
-        # non-model specific error tests
-        # 700series RVC command tests
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "startGlobalClean"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {"state": "paused"},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "resumeClean"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_STOP,
-            {},
-            [{"cleaningCommand": "stopClean"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_PAUSE,
-            {},
-            [{"cleaningCommand": "pauseClean"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_RETURN_TO_BASE,
-            {},
-            [{"cleaningCommand": "startGoToCharger"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "energy_saving"},
-            [{"vacuumMode": "energySaving"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "quiet"},
-            [{"vacuumMode": "quiet"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "standard"},
-            [{"vacuumMode": "standard"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "powerful"},
-            [{"vacuumMode": "powerful"}],
-        ),
-        (
-            "700series_vacuum",
-            "vacuum.700series_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "max_power"},
-            [{"vacuumMode": "maxPower"}],
-        ),
-        # cybele RVC command tests
         (
             "cybele_vacuum",
             "vacuum.cybele_vacuum",
-            {},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "startGlobalClean"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {"state": "paused"},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "resumeClean"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_STOP,
-            {},
-            [{"cleaningCommand": "stopClean"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_PAUSE,
-            {},
-            [{"cleaningCommand": "pauseClean"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_RETURN_TO_BASE,
-            {},
-            [{"cleaningCommand": "startGoToCharger"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "energy_saving"},
-            [{"vacuumMode": "energySaving"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "quiet"},
-            [{"vacuumMode": "quiet"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "standard"},
-            [{"vacuumMode": "standard"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "powerful"},
-            [{"vacuumMode": "powerful"}],
-        ),
-        (
-            "cybele_vacuum",
-            "vacuum.cybele_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "max"},
-            [{"vacuumMode": "max"}],
-        ),
-        # gordias RVC command tests
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "startGlobalClean"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {"state": "paused"},
-            SERVICE_START,
-            {},
-            [{"cleaningCommand": "resumeClean"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_STOP,
-            {},
-            [{"cleaningCommand": "stopClean"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_PAUSE,
-            {},
-            [{"cleaningCommand": "pauseClean"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_RETURN_TO_BASE,
-            {},
-            [{"cleaningCommand": "startGoToCharger"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "energy_saving"},
-            [{"vacuumMode": "energySaving"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "quiet"},
-            [{"vacuumMode": "quiet"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "standard"},
-            [{"vacuumMode": "standard"}],
-        ),
-        (
-            "gordias_vacuum",
-            "vacuum.gordias_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "powerful"},
-            [{"vacuumMode": "powerful"}],
-        ),
-        # pure i9 RVC command tests
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_START,
-            {},
-            [{"CleaningCommand": "play"}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {"robotStatus": 2},
-            SERVICE_START,
-            {},
-            [{"CleaningCommand": "play"}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_STOP,
-            {},
-            [{"CleaningCommand": "stop"}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_PAUSE,
-            {},
-            [{"CleaningCommand": "pause"}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_RETURN_TO_BASE,
-            {},
-            [{"CleaningCommand": "home"}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "silent"},
-            [{"powerMode": 1}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "smart"},
-            [{"powerMode": 2}],
-        ),
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            {},
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "power"},
-            [{"powerMode": 3}],
         ),
     ],
 )
-async def test_command_errors(
+@pytest.mark.parametrize(
+    (
+        "appliance_state",
+        "service",
+        "data",
+        "error",
+        "ha_error_reason",
+    ),
+    [
+        # non-model specific error tests
+        (
+            {},
+            SERVICE_START,
+            {},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+        (
+            {"state": "paused"},
+            SERVICE_START,
+            {},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+        (
+            {},
+            SERVICE_STOP,
+            {},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+        (
+            {},
+            SERVICE_PAUSE,
+            {},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+        (
+            {},
+            SERVICE_RETURN_TO_BASE,
+            {},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+        (
+            {},
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_FAN_SPEED: "energy_saving"},
+            ApplianceClientException(),
+            "generic_error",
+        ),
+    ],
+)
+async def test_command_backend_errors(
     hass: HomeAssistant,
     appliances: AsyncMock,
     appliance_fixture: str,
@@ -715,9 +472,10 @@ async def test_command_errors(
     appliance_state: dict[str, Any],
     service: str,
     data: dict[str, Any],
-    commands: list[dict[str, Any]],
+    error: Exception,
+    ha_error_reason: str,
 ) -> None:
-    """Test vacuum commands."""
+    """Test vacuum command backend errors (being raised from the SDK)."""
 
     appliance_id = get_appliance_id(appliance_fixture)
 
@@ -729,17 +487,18 @@ async def test_command_errors(
     appliances.get_appliance_state.side_effect = None
     appliances.get_appliance_state.return_value = state
 
+    appliances.send_command.side_effect = error
+
     await setup_integration(hass, mock_config_entry)
 
-    await hass.services.async_call(
-        VACUUM_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: entity_id} | data,
-        blocking=True,
-    )
-    assert appliances.send_command.mock_calls == [
-        call(appliance_id, command) for command in commands
-    ]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id} | data,
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == ha_error_reason
 
 
 @pytest.mark.parametrize(

@@ -2,12 +2,12 @@
   {
     "rooms": [
       {
-        "Id": 11,
-        "Name": "Storage"
+        "id": 11,
+        "name": "Storage"
       },
       {
-        "Id": 12,
-        "Name": "Kitchen"
+        "id": 12,
+        "name": "Kitchen"
       }
     ],
     "name": "Map 1",
@@ -17,8 +17,8 @@
   {
     "rooms": [
       {
-        "Id": 11,
-        "Name": "Garage"
+        "id": 11,
+        "name": "Garage"
       }
     ],
     "name": "Map 2",

@@ -48,6 +48,11 @@ VACUUM_ACTIVITY_MAP = {
     "idle": VacuumActivity.IDLE,
     "paused": VacuumActivity.PAUSED,
     "sleeping": VacuumActivity.DOCKED,
+    "vacuuming": VacuumActivity.CLEANING,
+    "mopping": VacuumActivity.CLEANING,
+    "vaccumAndMopping": VacuumActivity.CLEANING,
+    "pitStop": VacuumActivity.DOCKED,
+    "stationAction": VacuumActivity.DOCKED,
 }
 
 ELECTROLUX_TO_HA_FAN_MODES: dict[str | int, str] = {
@@ -64,14 +69,12 @@ ELECTROLUX_TO_HA_FAN_MODES: dict[str | int, str] = {
 
 HA_TO_ELECTROLUX_MODES = {v: k for k, v in ELECTROLUX_TO_HA_FAN_MODES.items()}
 
-CLEAN_ZONES_COMMAND = "clean_zones"
-
 
 @dataclass(frozen=True, kw_only=True)
 class ElectroluxVacuumDescription[T: RVCAppliance](StateVacuumEntityDescription):
-    """Custom sensor description for Electrolux vacuums."""
+    """Entity description for Electrolux vacuums."""
 
-    exists_fn: Callable[[T], bool] = lambda *args: True
+    exists_fn: Callable[[T], bool]
     get_segments_fn: (
         Callable[[ApplianceClient, str], Awaitable[list[Segment]]] | None
     ) = None
@@ -134,8 +137,8 @@ async def _get_memory_maps_segments(
         map_name = memory_map.get("name")
         rooms = memory_map.get("rooms") or []
         for room in rooms:
-            room_id = room.get("Id")
-            room_name = room.get("Name")
+            room_id = room.get("id")
+            room_name = room.get("name")
             segments.append(
                 Segment(id=f"{map_id}_{room_id}", name=f"{map_name}: {room_name}")
             )
@@ -252,7 +255,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.FAN_SPEED
     )
-    _entity_description: ElectroluxVacuumDescription[RVCAppliance]
+    entity_description: ElectroluxVacuumDescription[RVCAppliance]
 
     def __init__(
         self,
@@ -260,11 +263,10 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         coordinator: ElectroluxDataUpdateCoordinator,
         description: ElectroluxVacuumDescription[RVCAppliance],
     ) -> None:
-        """Initialize the climate device."""
+        """Initialize the vacuum entity."""
         super().__init__(appliance_data, coordinator, "rvc")
-        self._entity_description = description
+        self.entity_description = description
         self._attr_name = None
-        self._model = self._appliance_data.appliance.applianceType
 
         if (
             description.clean_segments_command_fn is not None
@@ -279,8 +281,8 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         if (
-            self._entity_description.clean_segments_command_fn is not None
-            and self._entity_description.get_segments_fn is not None
+            self.entity_description.clean_segments_command_fn is not None
+            and self.entity_description.get_segments_fn is not None
         ):
             self.coordinator.add_livestream_opening_callback(
                 self._check_for_segments_update
@@ -289,18 +291,13 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         if (
-            self._entity_description.clean_segments_command_fn is not None
-            and self._entity_description.get_segments_fn is not None
+            self.entity_description.clean_segments_command_fn is not None
+            and self.entity_description.get_segments_fn is not None
         ):
             self.coordinator.remove_livestream_opening_callback(
                 self._check_for_segments_update
             )
         await super().async_will_remove_from_hass()
-
-    async def send_device_command(self, command: dict[str, Any]) -> None:
-        """Send a command to the appliance and refresh."""
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
 
     @override
     def _update_attr_state(self) -> bool:
@@ -357,25 +354,25 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
             command = self._appliance_data.get_resume_command()
         else:
             command = self._appliance_data.get_start_command()
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner, do not return to base."""
         command = self._appliance_data.get_stop_command()
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     @override
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause the cleaning task."""
         command = self._appliance_data.get_pause_command()
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         command = self._appliance_data.get_dock_command()
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
@@ -383,12 +380,12 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         command = self._appliance_data.get_set_mode_command(
             HA_TO_ELECTROLUX_MODES[fan_speed]
         )
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments for the vacuum cleaner."""
-        description = self._entity_description
+        description = self.entity_description
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
         if TYPE_CHECKING:
             assert description.get_segments_fn is not None
@@ -400,7 +397,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
 
-        description = self._entity_description
+        description = self.entity_description
 
         map_id: str | None = None
         if description.get_current_map_fn is not None:
@@ -422,6 +419,9 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
             if segment_id.startswith(f"{map_id}_")
         ]
 
+        if len(zone_ids) == 0:
+            return
+
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
         if TYPE_CHECKING:
             assert description.clean_segments_command_fn is not None
@@ -429,20 +429,21 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
             self._appliance_data, map_id, zone_ids
         )
 
-        await self.send_device_command(command)
+        await self.coordinator.send_command(command)
 
     async def _check_for_segments_update(self) -> None:
         """Check for updates to the segments for the vacuum cleaner."""
-        description = self._entity_description
+
+        if self.last_seen_segments is None:
+            return
+
+        description = self.entity_description
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
         if TYPE_CHECKING:
             assert description.get_segments_fn is not None
         segments = await description.get_segments_fn(
             self.coordinator.client, self._appliance_id
         )
-
-        if self.last_seen_segments is None:
-            return
 
         if not _is_same_segments(segments, self.last_seen_segments):
             self.async_create_segments_issue()

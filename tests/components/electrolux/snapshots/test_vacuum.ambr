@@ -39,7 +39,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12348>,
-    'translation_key': None,
+    'translation_key': 'rvc',
     'unique_id': '900402068224000950000000_rvc',
     'unit_of_measurement': None,
   })
@@ -106,7 +106,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 28732>,
-    'translation_key': None,
+    'translation_key': 'rvc',
     'unique_id': '900402423524000511139298_rvc',
     'unit_of_measurement': None,
   })
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 28732>,
-    'translation_key': None,
+    'translation_key': 'rvc',
     'unique_id': '900402278332000201139298_rvc',
     'unit_of_measurement': None,
   })
@@ -236,7 +236,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 28732>,
-    'translation_key': None,
+    'translation_key': 'rvc',
     'unique_id': '900277470043000491100106_rvc',
     'unit_of_measurement': None,
   })
