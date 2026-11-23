@@ -2203,7 +2203,7 @@ async def test_empty_aliases(
 
     with patch(
         "homeassistant.components.conversation.default_agent.DefaultAgent._recognize",
-        return_value=None,
+        return_value=[],
     ) as mock_recognize_all:
         await conversation.async_converse(
             hass, "turn on kitchen light", None, Context(), None
@@ -3250,6 +3250,130 @@ async def test_name_match_scope(
     assert {call.data["entity_id"][0] for call in turn_on_calls} == expected_entity_ids
 
 
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    ("domain", "name", "area", "attributes", "text", "service"),
+    [
+        pytest.param(
+            "light",
+            "lights",
+            "kitchen",
+            {},
+            "turn on the lights",
+            "turn_on",
+            id="outside",
+        ),
+        pytest.param(
+            "light",
+            "lights",
+            None,
+            {},
+            "turn on the lights",
+            "turn_on",
+            id="unassigned",
+        ),
+        pytest.param(
+            "fan", "fan", "kitchen", {}, "turn on the fan", "turn_on", id="domain_name"
+        ),
+        pytest.param(
+            "cover",
+            "garage door",
+            "garage",
+            {ATTR_DEVICE_CLASS: cover.CoverDeviceClass.GARAGE},
+            "open the garage door",
+            SERVICE_OPEN_COVER,
+            id="device_class_name",
+        ),
+    ],
+)
+async def test_name_match_fallback(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    domain: str,
+    name: str,
+    area: str | None,
+    attributes: dict[str, Any],
+    text: str,
+    service: str,
+) -> None:
+    """Test that a name match wins if nothing else is where the sentence points."""
+    calls = async_mock_service(hass, domain, service)
+
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+    area_ids = {
+        "kitchen": area_registry.async_get_or_create("kitchen").id,
+        "garage": area_registry.async_get_or_create("garage").id,
+        None: None,
+    }
+
+    entry = entity_registry.async_get_or_create(
+        domain, "demo", "named", suggested_object_id="named", original_name=name
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id=area_ids[area])
+    hass.states.async_set(
+        entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: name, **attributes}
+    )
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
+
+    result = await conversation.async_converse(
+        hass, text, None, Context(), None, satellite_id=satellite.entity_id
+    )
+    await hass.async_block_till_done()
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    assert [state.entity_id for state in result.response.matched_states] == [
+        entry.entity_id
+    ]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_name_match_wildcard(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a wildcard covering a name does not replace the name match."""
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+
+    for object_id, name, area_id in (
+        ("kitchen_speaker", "kitchen speaker", area_kitchen.id),
+        ("bedroom_speaker", "bedroom speaker", area_bedroom.id),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "media_player",
+            "demo",
+            object_id,
+            suggested_object_id=object_id,
+            original_name=name,
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=area_id)
+        hass.states.async_set(entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: name})
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
+
+    result = await async_get_agent(hass).async_recognize_intent(
+        ConversationInput(
+            text="play jazz on kitchen speaker",
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            satellite_id=satellite.entity_id,
+            language=hass.config.language,
+            agent_id=None,
+        )
+    )
+
+    assert result is not None
+    assert result.entities["name"].value == "kitchen speaker"
+    assert result.entities["search_query"].value == "jazz"
+
+
 async def test_custom_sentences_priority(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
@@ -3770,8 +3894,8 @@ async def test_handle_intents_filters_results(
 
     with (
         patch(
-            "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
-            return_value=mock_result,
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_recognize_intents",
+            return_value=[mock_result],
         ) as mock_recognize,
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",

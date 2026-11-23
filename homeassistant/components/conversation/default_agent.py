@@ -172,8 +172,8 @@ class IntentCacheKey:
 class IntentCacheValue:
     """Value for IntentCache."""
 
-    result: RecognizeResult | None
-    """Result of intent recognition."""
+    results: list[RecognizeResult]
+    """Results of intent recognition, in the order to try them."""
 
     stage: IntentMatchingStage
     """Stage where result was found."""
@@ -371,20 +371,27 @@ class DefaultAgent(ConversationEntity):
         self, user_input: ConversationInput, strict_intents_only: bool = False
     ) -> RecognizeResult | None:
         """Recognize intent from user input."""
+        results = await self._async_recognize_intents(user_input, strict_intents_only)
+        return results[0] if results else None
+
+    async def _async_recognize_intents(
+        self, user_input: ConversationInput, strict_intents_only: bool = False
+    ) -> list[RecognizeResult]:
+        """Recognize the intents to try for user input, in order."""
         language = user_input.language or self.hass.config.language
         lang_intents = await self.async_get_or_load_intents(language)
 
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
-            return None
+            return []
 
         slot_lists = await self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
 
         start = time.monotonic()
 
-        result = await self.hass.async_add_executor_job(
+        results = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
@@ -399,7 +406,7 @@ class DefaultAgent(ConversationEntity):
             time.monotonic() - start,
         )
 
-        return result
+        return results
 
     async def async_debug_recognize(
         self, user_input: ConversationInput
@@ -500,7 +507,8 @@ class DefaultAgent(ConversationEntity):
 
         if response is None:
             # Match intents
-            intent_result = await self.async_recognize_intent(user_input)
+            intent_results = await self._async_recognize_intents(user_input)
+            intent_result = intent_results[0] if intent_results else None
 
             if intent_result is None or intent_result.unmatched_entities:
                 # Nothing is configured behind this agent, so try the gazetteer
@@ -509,8 +517,8 @@ class DefaultAgent(ConversationEntity):
                 )
 
             if response is None:
-                response = await self._async_process_intent_result(
-                    intent_result, user_input, chat_log
+                response = await self._async_process_intent_results(
+                    intent_results, user_input, chat_log
                 )
 
         speech: str = response.speech.get("plain", {}).get("speech", "")
@@ -523,6 +531,29 @@ class DefaultAgent(ConversationEntity):
 
         return ConversationResult(
             response=response, conversation_id=chat_log.conversation_id
+        )
+
+    async def _async_process_intent_results(
+        self,
+        results: list[RecognizeResult],
+        user_input: ConversationInput,
+        chat_log: ChatLog,
+        *,
+        discard_match_errors: bool = False,
+    ) -> intent.IntentResponse:
+        """Process recognized intents in order, until one finds its targets."""
+        for result in results[:-1]:
+            response = await self._async_process_intent_result(
+                result, user_input, chat_log, discard_match_errors=True
+            )
+            if response.error_code not in _MATCH_ERROR_CODES:
+                return response
+
+        return await self._async_process_intent_result(
+            results[-1] if results else None,
+            user_input,
+            chat_log,
+            discard_match_errors=discard_match_errors,
         )
 
     async def _async_process_intent_result(
@@ -840,8 +871,8 @@ class DefaultAgent(ConversationEntity):
         intent_context: dict[str, Any] | None,
         language: str,
         strict_intents_only: bool,
-    ) -> RecognizeResult | None:
-        """Search intents for a match to user input."""
+    ) -> list[RecognizeResult]:
+        """Search intents for matches to user input, in the order to try them."""
         skip_exposed_match = False
 
         # Try cache first
@@ -853,11 +884,11 @@ class DefaultAgent(ConversationEntity):
         )
         cache_value = self._intent_cache.get(cache_key)
         if cache_value is not None:
-            if (cache_value.result is not None) and (
+            if cache_value.results and (
                 cache_value.stage is IntentMatchingStage.EXPOSED_ENTITIES_ONLY
             ):
                 _LOGGER.debug("Got cached result for exposed entities")
-                return cache_value.result
+                return cache_value.results
 
             # Continue with matching, but we know we won't succeed for exposed
             # entities only.
@@ -865,7 +896,7 @@ class DefaultAgent(ConversationEntity):
 
         if not skip_exposed_match:
             start_time = time.monotonic()
-            strict_result = _recognize_strict(
+            strict_results = _recognize_strict(
                 user_input, lang_intents, slot_lists, intent_context, language
             )
             _LOGGER.debug(
@@ -877,27 +908,27 @@ class DefaultAgent(ConversationEntity):
             self._intent_cache.put(
                 cache_key,
                 IntentCacheValue(
-                    result=strict_result,
+                    results=strict_results,
                     stage=IntentMatchingStage.EXPOSED_ENTITIES_ONLY,
                 ),
             )
 
-            if strict_result is not None:
+            if strict_results:
                 # Successful strict match with exposed entities
-                return strict_result
+                return strict_results
 
         if strict_intents_only:
             # Don't try matching against all entities
-            return None
+            return []
 
         # Try again with all entities (including unexposed)
         skip_unexposed_entities_match = False
         if cache_value is not None:
-            if (cache_value.result is not None) and (
+            if cache_value.results and (
                 cache_value.stage is IntentMatchingStage.UNEXPOSED_ENTITIES
             ):
                 _LOGGER.debug("Got cached result for all entities")
-                return cache_value.result
+                return cache_value.results
 
             # Continue with matching, but we know we won't succeed for all
             # entities.
@@ -910,7 +941,7 @@ class DefaultAgent(ConversationEntity):
             }
 
             start_time = time.monotonic()
-            strict_result = _recognize_strict(
+            strict_results = _recognize_strict(
                 user_input,
                 lang_intents,
                 unexposed_entities_slot_lists,
@@ -926,38 +957,41 @@ class DefaultAgent(ConversationEntity):
             self._intent_cache.put(
                 cache_key,
                 IntentCacheValue(
-                    result=strict_result, stage=IntentMatchingStage.UNEXPOSED_ENTITIES
+                    results=strict_results,
+                    stage=IntentMatchingStage.UNEXPOSED_ENTITIES,
                 ),
             )
 
-            if strict_result is not None:
+            if strict_results:
                 # Not a successful match, but useful for an error message.
                 # This should fail the intent handling phase (async_match_targets).
-                return strict_result
+                return strict_results
 
         # Check unknown names
         skip_unknown_names = False
         if cache_value is not None:
-            if (cache_value.result is not None) and (
+            if cache_value.results and (
                 cache_value.stage is IntentMatchingStage.UNKNOWN_NAMES
             ):
                 _LOGGER.debug("Got cached result for unknown names")
-                return cache_value.result
+                return cache_value.results
 
             skip_unknown_names = True
 
-        maybe_result: RecognizeResult | None = None
+        maybe_results: list[RecognizeResult] = []
         if not skip_unknown_names:
             start_time = time.monotonic()
             maybe_result = self._recognize_unknown_names(
                 lang_intents, user_input, slot_lists, intent_context
             )
+            if maybe_result is not None:
+                maybe_results = [maybe_result]
 
             # Update cache
             self._intent_cache.put(
                 cache_key,
                 IntentCacheValue(
-                    result=maybe_result, stage=IntentMatchingStage.UNKNOWN_NAMES
+                    results=maybe_results, stage=IntentMatchingStage.UNKNOWN_NAMES
                 ),
             )
 
@@ -965,7 +999,7 @@ class DefaultAgent(ConversationEntity):
                 "Did unknown names match in %s second(s)", time.monotonic() - start_time
             )
 
-        return maybe_result
+        return maybe_results
 
     def _recognize_unknown_names(
         self,
@@ -1680,15 +1714,18 @@ class DefaultAgent(ConversationEntity):
         Only performs strict matching with exposed entities and exact wording.
         Returns None if no match or a matching error occurred.
         """
-        result = await self.async_recognize_intent(user_input, strict_intents_only=True)
-        if not isinstance(result, RecognizeResult) or (
-            intent_filter is not None and intent_filter(result)
+        results = await self._async_recognize_intents(
+            user_input, strict_intents_only=True
+        )
+        if not results or (
+            intent_filter is not None
+            and any(intent_filter(result) for result in results)
         ):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(
-            result, user_input, chat_log, discard_match_errors=True
+        response = await self._async_process_intent_results(
+            results, user_input, chat_log, discard_match_errors=True
         )
         if response.error_code in _MATCH_ERROR_CODES:
             # We ignore no matching errors
@@ -1706,8 +1743,8 @@ def _recognize_strict(
     slot_lists: dict[str, SlotList],
     intent_context: dict[str, Any] | None,
     language: str,
-) -> RecognizeResult | None:
-    """Search intents for the best strict match to user input."""
+) -> list[RecognizeResult]:
+    """Search intents for strict matches to user input, in the order to try them."""
     results = list(
         recognize_all(
             user_input.text,
@@ -1726,17 +1763,29 @@ def _recognize_strict(
     ]:
         results = custom_results
 
-    # A matched name normally beats a domain or area match. Drop names that are
-    # not where the sentence points, so such an alternative wins instead.
-    if nameless_results := [
-        result for result in results if _get_matched_name(result) is None
-    ]:
-        context_area = _get_context_area(nameless_results)
-        results = [
-            result for result in results if _is_name_in_scope(result, context_area)
-        ]
+    if not results:
+        return []
 
-    return min(results, key=_result_sort_key, default=None)
+    results.sort(key=_result_sort_key)
+    top_result = results[0]
+
+    # A matched name normally beats a domain or area match. Try such an
+    # alternative first if the name is not where the sentence points, and keep
+    # the name as a fallback. A wildcard may hold the name, so it does not count.
+    nameless_results = [
+        result
+        for result in results
+        if _get_matched_name(result) is None
+        and not any(entity.is_wildcard for entity in result.entities_list)
+    ]
+    context_area = _get_context_area(nameless_results)
+    if not nameless_results or _is_name_in_scope(top_result, context_area):
+        return [top_result]
+
+    in_scope_result = next(
+        result for result in results if _is_name_in_scope(result, context_area)
+    )
+    return [in_scope_result, top_result]
 
 
 def _get_matched_name(result: RecognizeResult) -> MatchEntity | None:
@@ -1788,7 +1837,9 @@ def _get_area_ids(entity: MatchEntity | None) -> set[str] | None:
     return entity.metadata.get(_METADATA_AREA_IDS)
 
 
-def _result_sort_key(result: RecognizeResult) -> tuple[int, int, int, int, str]:
+def _result_sort_key(
+    result: RecognizeResult,
+) -> tuple[bool, int, int, int, int, str]:
     """Prefer a longer name, fewer wildcards, more literal text, less wildcard text."""
     name = _get_matched_name(result)
     num_wildcards = 0
@@ -1799,6 +1850,7 @@ def _result_sort_key(result: RecognizeResult) -> tuple[int, int, int, int, str]:
             wildcard_text_len += len(entity.text or "")
 
     return (
+        name is None,
         -len(name.text) if name is not None else 0,
         num_wildcards,
         -result.text_chunks_matched,
