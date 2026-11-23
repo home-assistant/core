@@ -697,7 +697,11 @@ async def test_coordinator_listener_ignores_none_telegrams(
     async def _assert_state() -> None:
         assert receive_calls >= 2
 
-    await _run_dispatch_test(hass, entry, transceiver, _assert_state)
+    with patch(
+        "homeassistant.components.easywave.coordinator.asyncio.sleep",
+        new=AsyncMock(),
+    ):
+        await _run_dispatch_test(hass, entry, transceiver, _assert_state)
 
 
 async def test_coordinator_listener_recovers_from_receive_errors(
