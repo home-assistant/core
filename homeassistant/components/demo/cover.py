@@ -250,7 +250,11 @@ class DemoCover(CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         open_position = self._open_tilt_position
-        if self._tilt_position is None or self._tilt_position == open_position:
+        if self._tilt_position is None:
+            return
+        if self._tilt_position == open_position:
+            self._stop_tilt()
+            self.async_write_ha_state()
             return
 
         self._set_tilt_position = open_position
