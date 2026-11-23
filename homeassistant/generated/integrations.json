@@ -4039,7 +4039,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -11748,6 +11748,17 @@
     },
     "poolstar_neopool": {
       "name": "Poolstar",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
+    "poolwatch_neopool": {
+      "name": "Poolwatch",
       "integration_type": "virtual",
       "categories": [
         "water.pools_spas"
