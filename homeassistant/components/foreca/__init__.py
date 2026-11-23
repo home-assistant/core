@@ -9,7 +9,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SUBENTRY_TYPE_LOCATION
-from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
+from .coordinator import (
+    ForecaConfigEntry,
+    ForecaLocationCoordinators,
+    ForecaObservationCoordinator,
+    ForecaUpdateCoordinator,
+)
 from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
@@ -29,11 +34,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> No
         entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
     )
 
-    coordinators: dict[str, ForecaUpdateCoordinator] = {}
+    coordinators: dict[str, ForecaLocationCoordinators] = {}
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
-        coordinator = ForecaUpdateCoordinator(hass, entry, subentry, client)
-        await coordinator.async_config_entry_first_refresh()
-        coordinators[subentry.subentry_id] = coordinator
+        weather = ForecaUpdateCoordinator(hass, entry, subentry, client)
+        await weather.async_config_entry_first_refresh()
+        # Station observations are optional: a failed request leaves only the
+        # observation sensors unavailable instead of failing the setup.
+        observation = ForecaObservationCoordinator(hass, entry, subentry, client)
+        await observation.async_refresh()
+        coordinators[subentry.subentry_id] = ForecaLocationCoordinators(
+            weather=weather, observation=observation
+        )
 
     entry.runtime_data = coordinators
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))

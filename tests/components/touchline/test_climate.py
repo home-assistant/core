@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytouchline_extended import TouchlineConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ClimateService, ClimateServiceArgument
@@ -51,7 +52,7 @@ async def test_set_temperature(
         pytest.param(False, None, id="returns-false"),
         pytest.param(
             None,
-            ConnectionError("Unexpected backend explosion"),
+            TouchlineConnectionError("Unexpected backend explosion"),
             id="connection-error",
         ),
     ],
@@ -109,7 +110,7 @@ async def test_set_preset_mode(
         pytest.param(
             None,
             None,
-            ConnectionError("Unexpected backend explosion"),
+            TouchlineConnectionError("Unexpected backend explosion"),
             id="connection-error",
         ),
     ],
