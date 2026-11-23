@@ -235,17 +235,18 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     @override
     def min_temp(self) -> float:
-        """Return the minimum temperature based on the current HVAC mode."""
+        """Return the minimum temperature based on the operation mode."""
         capabilities = self.unit.capabilities
         if capabilities is not None:
-            hvac_mode = self.hvac_mode
-            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+            # The unit keeps its operation mode while off, so the range still applies
+            operation_mode = self.unit.operation_mode
+            if operation_mode in (ATAOperationMode.COOL, ATAOperationMode.DRY):
                 if capabilities.min_temp_cool is not None:
                     return capabilities.min_temp_cool
-            elif hvac_mode == HVACMode.AUTO:
+            elif operation_mode == ATAOperationMode.AUTOMATIC:
                 if capabilities.min_temp_auto is not None:
                     return capabilities.min_temp_auto
-            elif hvac_mode == HVACMode.HEAT:
+            elif operation_mode == ATAOperationMode.HEAT:
                 if capabilities.min_temp_heat is not None:
                     return capabilities.min_temp_heat
         return super().min_temp
@@ -253,17 +254,18 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     @override
     def max_temp(self) -> float:
-        """Return the maximum temperature based on the current HVAC mode."""
+        """Return the maximum temperature based on the operation mode."""
         capabilities = self.unit.capabilities
         if capabilities is not None:
-            hvac_mode = self.hvac_mode
-            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+            # The unit keeps its operation mode while off, so the range still applies
+            operation_mode = self.unit.operation_mode
+            if operation_mode in (ATAOperationMode.COOL, ATAOperationMode.DRY):
                 if capabilities.max_temp_cool is not None:
                     return capabilities.max_temp_cool
-            elif hvac_mode == HVACMode.AUTO:
+            elif operation_mode == ATAOperationMode.AUTOMATIC:
                 if capabilities.max_temp_auto is not None:
                     return capabilities.max_temp_auto
-            elif hvac_mode == HVACMode.HEAT:
+            elif operation_mode == ATAOperationMode.HEAT:
                 if capabilities.max_temp_heat is not None:
                     return capabilities.max_temp_heat
         return super().max_temp
