@@ -112,7 +112,7 @@ SNAPSHOT_CASES = tuple(
 EMPTY_PLATFORM_CASES = tuple(
     pytest.param(fixture, platform, id=f"{fixture}-{platform}-empty")
     for fixture, platforms in EMPTY_PLATFORMS.items()
-    for platform in platforms
+    for platform in sorted(platforms)
 )
 
 
