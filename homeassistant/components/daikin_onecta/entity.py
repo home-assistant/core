@@ -21,21 +21,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
-from .device import DaikinOnectaDevice
+from .device import DaikinOnectaDevice, management_point_device_info
 from .discovery import scalar_platform_for_point
 from .utils import account_device_identifier, account_identifier
 
 EntityIdChecker = Callable[[Platform, str], bool]
-
-MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
-    "climateControl": "climate_zone",
-    "domesticHotWaterFlowThrough": "domestic_hot_water_flow_through",
-    "domesticHotWaterTank": "domestic_hot_water_tank",
-    "indoorUnit": "indoor_unit",
-    "indoorUnitHydro": "indoor_hydro_unit",
-    "outdoorUnit": "outdoor_unit",
-    "userInterface": "user_interface",
-}
 
 
 class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
@@ -116,53 +106,9 @@ def iter_management_points(
             yield device, management_point
 
 
-def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
-    """Return the Home Assistant device info for a gateway."""
-    return DeviceInfo(identifiers={(DOMAIN, device.id)})
-
-
 def management_point_unique_id(gateway_id: str, embedded_id: str, *suffix: str) -> str:
     """Return a stable unique ID for a management-point entity."""
     return "_".join((gateway_id, embedded_id, *suffix))
-
-
-def management_point_device_info(
-    device: DaikinOnectaDevice, embedded_id: str
-) -> DeviceInfo | ChildDeviceInfo:
-    """Return consistent device info for a Daikin management point."""
-    gateway = device.device
-    management_point = device.management_point(embedded_id)
-    if management_point is None:
-        return _gateway_device_info(device)
-
-    management_point_type = management_point.management_point_type
-    if management_point_type == "gateway":
-        return _gateway_device_info(device)
-
-    if management_point_type == "climateControl":
-        if len(gateway.management_points_by_type("climateControl")) <= 1:
-            return _gateway_device_info(device)
-        name = (
-            management_point.name.value if management_point.name is not None else None
-        )
-        translation_key = None if name else "climate_zone"
-    else:
-        translation_key = MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS.get(
-            management_point_type, "management_point"
-        )
-        name = None
-
-    if device.ha_device_id is None:
-        raise RuntimeError(
-            f"Gateway {device.id} is not registered before creating management "
-            f"point {embedded_id}"
-        )
-    return ChildDeviceInfo(
-        identifiers={(DOMAIN, management_point_unique_id(device.id, embedded_id))},
-        parent_device_id=device.ha_device_id,
-        translation_key=translation_key,
-        name=name,
-    )
 
 
 class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
@@ -244,16 +190,23 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         """Return the management-point child name when it has one."""
         if self._device.ha_device_id is None:
             return self._device.name
-        child_device = dr.async_get(self.hass).async_get_child_device_by_identifier(
-            (
-                DOMAIN,
-                management_point_unique_id(self._device_id, self._embedded_id),
-            ),
-            self.coordinator.config_entry.entry_id,
+        registry = dr.async_get(self.hass)
+        identifier = (
+            DOMAIN,
+            management_point_unique_id(self._device_id, self._embedded_id),
         )
-        if child_device is None:
+        management_point_device = registry.async_get_device_by_identifier(
+            identifier, self.coordinator.config_entry.entry_id
+        ) or registry.async_get_child_device_by_identifier(
+            identifier, self.coordinator.config_entry.entry_id
+        )
+        if management_point_device is None:
             return self._device.name
-        return child_device.name_by_user or child_device.name or self._device.name
+        return (
+            management_point_device.name_by_user
+            or management_point_device.name
+            or self._device.name
+        )
 
     @property
     @override

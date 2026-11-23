@@ -17,7 +17,7 @@ from daikin_onecta import (
     OnectaResponseError,
 )
 from daikin_onecta.exceptions import OnectaRequestError
-from daikin_onecta.models import Characteristic, GatewayDevice
+from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -72,6 +72,7 @@ def test_device_update_detects_registry_metadata_changes() -> None:
             device_model=None,
             gateway_embedded_id=None,
             gateway_management_point=None,
+            management_points=[],
         )
     )
 
@@ -84,6 +85,7 @@ def test_device_update_detects_registry_metadata_changes() -> None:
             device_model=None,
             gateway_embedded_id=None,
             gateway_management_point=None,
+            management_points=[],
         )
     )
 
@@ -101,6 +103,7 @@ def test_device_update_ignores_unchanged_registry_metadata() -> None:
             device_model="Model",
             gateway_embedded_id=None,
             gateway_management_point=None,
+            management_points=[],
         )
     )
 
@@ -113,6 +116,7 @@ def test_device_update_ignores_unchanged_registry_metadata() -> None:
             device_model="Model",
             gateway_embedded_id=None,
             gateway_management_point=None,
+            management_points=[],
         )
     )
 
@@ -180,7 +184,7 @@ async def test_device_registry_updates_changed_mac_address(
     )
 
 
-async def test_management_point_hardware_is_registered_as_subdevice(
+async def test_management_point_hardware_is_registered_with_software_version(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -194,46 +198,53 @@ async def test_management_point_hardware_is_registered_as_subdevice(
     )
     assert gateway_entry is not None
     point = device.device.management_points_by_type("userInterface")[0]
-    point_entry = device_registry.async_get_child_device_by_identifier(
+    point_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
     )
     assert point_entry is not None
     assert point_entry.name == "User interface"
-    assert point_entry.parent_device_id == gateway_entry.id
+    assert point_entry.via_device_id == gateway_entry.id
+    assert point_entry.sw_version == point.version
 
 
-def test_device_update_ignores_management_point_metadata_changes() -> None:
-    """Only metadata written to the gateway registry triggers an update."""
+def test_device_update_tracks_management_point_versions() -> None:
+    """Update device metadata when a physical point's software version changes."""
     device = DaikinOnectaDevice(_load_gateway_devices("altherma_firmwareupdate")[0])
     replacement = deepcopy(device.device)
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
     point.software_version = Characteristic(value="new-firmware")
 
-    assert not device.set_device_data(replacement)
+    assert device.set_device_data(replacement)
 
 
-async def test_polling_child_firmware_change_does_not_update_gateway_registry(
+async def test_polling_child_firmware_change_updates_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A child firmware change does not rewrite gateway-only registry metadata."""
+    """Refresh the physical point's software version in the device registry."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
     coordinator = config_entry.runtime_data
     device = next(iter(coordinator.data.values()))
     replacement = deepcopy(device.device)
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
+    original_version = point.version
     point.software_version = Characteristic(value="new-firmware")
     coordinator.client.get_gateway_devices = AsyncMock(return_value=[replacement])
-    registry = device_registry
+    point_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
+    )
+    assert point_entry is not None
+    assert point_entry.sw_version == original_version
 
-    with patch.object(
-        registry, "async_get_or_create", wraps=registry.async_get_or_create
-    ) as async_get_or_create:
-        await _async_fire_coordinator_update(hass, coordinator, freezer)
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    async_get_or_create.assert_not_called()
+    point_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
+    )
+    assert point_entry is not None
+    assert point_entry.sw_version == "new-firmware"
 
 
 async def test_poll_refreshes_changed_metadata_once(
@@ -893,34 +904,6 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
-
-    async def test_overlapping_manual_refreshes_make_one_cloud_call(
-        self,
-        hass: HomeAssistant,
-        config_entry: MockConfigEntry,
-        mock_onecta_client: MockOnectaClient,
-    ) -> None:
-        """Coalesce manual refreshes that overlap while waiting for the cloud lock."""
-        await _async_setup_fixture(hass, config_entry, "minimal_data")
-        coordinator = config_entry.runtime_data
-        request_started = asyncio.Event()
-        release_response = asyncio.Event()
-
-        async def delayed_get_gateway_devices() -> list[GatewayDevice]:
-            request_started.set()
-            await release_response.wait()
-            return _load_gateway_devices("minimal_data")
-
-        mock_onecta_client.get_gateway_devices.side_effect = delayed_get_gateway_devices
-        first_refresh = hass.async_create_task(coordinator.async_manual_refresh())
-        await request_started.wait()
-        second_refresh = hass.async_create_task(coordinator.async_manual_refresh())
-        await asyncio.sleep(0)
-        release_response.set()
-
-        await asyncio.gather(first_refresh, second_refresh)
-
-        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_scheduled_update_respects_write_polling_backoff(
         self,

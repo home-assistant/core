@@ -6,11 +6,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
-from homeassistant.components.daikin_onecta.entity import (
+from homeassistant.components.daikin_onecta.device import (
+    DaikinOnectaDevice,
     _gateway_device_info,
-    management_point_device_info,
 )
+from homeassistant.components.daikin_onecta.entity import management_point_device_info
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -55,14 +55,16 @@ async def test_gateway_device_registry_uses_cloud_metadata(
         entry.device_id == gateway_entry.id for entry in climate_control_entities
     )
 
-    indoor_unit = device_registry.async_get_child_device_by_identifier(
+    indoor_unit = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{gateway_id}_indoorUnit"), config_entry.entry_id
     )
-    outdoor_unit = device_registry.async_get_child_device_by_identifier(
+    outdoor_unit = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{gateway_id}_outdoorUnit"), config_entry.entry_id
     )
     assert indoor_unit is not None
     assert indoor_unit.name == "Indoor unit"
+    indoor_unit_point = device.device.management_points_by_type("indoorUnit")[0]
+    assert indoor_unit.sw_version == indoor_unit_point.version
     assert outdoor_unit is not None
     assert outdoor_unit.name == "Outdoor unit"
 

@@ -10,9 +10,6 @@
       "ispowerfulmodeactive": { "default": "mdi:information-outline" },
       "ledenabled": { "default": "mdi:information-outline" }
     },
-    "button": {
-      "refresh": { "default": "mdi:refresh" }
-    },
     "select": {
       "schedule": { "default": "mdi:calendar-clock" }
     },

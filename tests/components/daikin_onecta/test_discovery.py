@@ -579,12 +579,13 @@ async def test_missing_firmware_version_does_not_change_entity_topology(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Keep firmware entities registered when their current version is omitted."""
-    cloud_devices = _load_gateway_devices("altherma")
+    cloud_devices = _load_gateway_devices("dx4_firmwareavailable")
     initial_devices = deepcopy(cloud_devices)
     device = initial_devices[0]
-    point = device.management_points_by_type("indoorUnitHydro")[0]
-    assert point.software_version is not None
-    point.software_version.value = None
+    point = device.gateway_management_point
+    assert point is not None
+    point.firmware_version = None
+    point.software_version = None
 
     await _async_test_missing_value_does_not_schedule_reload(
         hass,
@@ -707,14 +708,6 @@ def _add_schedule(devices: list[GatewayDevice]) -> tuple[str, str]:
     return "select", f"{gateway.id}_{point.embedded_id}_schedule"
 
 
-def _add_firmware(devices: list[GatewayDevice]) -> tuple[str, str]:
-    """Expose installed firmware on an existing management point."""
-    gateway = devices[0]
-    point = gateway.management_points_by_type("climateControl")[0]
-    point.software_version = Characteristic(value="1.0")
-    return "update", f"{gateway.id}_{point.embedded_id}_firmware"
-
-
 @pytest.mark.parametrize(
     ("add_capability", "disabled_by_default"),
     [
@@ -725,7 +718,6 @@ def _add_firmware(devices: list[GatewayDevice]) -> tuple[str, str]:
         (_add_scalar, True),
         (_add_sensory, False),
         (_add_schedule, False),
-        (_add_firmware, False),
     ],
 )
 async def test_poll_discovers_new_entities_without_reload(

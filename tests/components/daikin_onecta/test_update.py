@@ -1,10 +1,13 @@
 """Tests for Daikin Onecta firmware update entities."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from daikin_onecta import OnectaConnectionError
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import Characteristic, GatewayDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -25,6 +28,7 @@ from homeassistant.components.update import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOnectaClient
 from .platform_helpers import (
@@ -35,6 +39,23 @@ from .platform_helpers import (
 )
 
 LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID = "update.living_room_firmware_update"
+
+
+async def test_software_versions_only_update_device_metadata(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Do not create update entities for points that only report versions."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+
+    assert not [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    ]
 
 
 async def test_firmware_install_executes_command(
@@ -89,7 +110,11 @@ async def test_firmware_install_executes_command(
     # Three fresh polls without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
     mock_onecta_client.get_gateway_devices.return_value = gateways
-    await _async_fire_coordinator_update(hass, coordinator, freezer)
+    gateway_point = gateways[0].management_point(gateways[0].gateway_embedded_id)
+    assert gateway_point is not None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert (
         hass.states.get(state.entity_id).attributes[
             UpdateEntityStateAttribute.IN_PROGRESS
@@ -111,7 +136,6 @@ async def test_firmware_install_executes_command(
         is False
     )
 
-    gateway_point = gateways[0].management_point(gateways[0].gateway_embedded_id)
     gateway_point.firmware_update_status = Characteristic(value="in-progress")
     await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert (
@@ -221,10 +245,20 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     assert isinstance(entity, DaikinFirmwareUpdateEntity)
     requested_sequence = coordinator.cloud_update_sequence
     installed_version = entity.installed_version
-    gateways = _load_gateway_devices("dx4_firmwareavailable")
-    point = gateways[0].management_point(gateways[0].gateway_embedded_id)
-    assert point is not None
-    point.firmware_update_status = Characteristic(value="idle")
+    missing_version_gateways = _load_gateway_devices("dx4_firmwareavailable")
+    missing_version_point = missing_version_gateways[0].management_point(
+        missing_version_gateways[0].gateway_embedded_id
+    )
+    assert missing_version_point is not None
+    missing_version_point.firmware_update_status = Characteristic(value="idle")
+    missing_version_point.firmware_version = None
+    missing_version_point.software_version = None
+    original_gateways = _load_gateway_devices("dx4_firmwareavailable")
+    original_point = original_gateways[0].management_point(
+        original_gateways[0].gateway_embedded_id
+    )
+    assert original_point is not None
+    original_point.firmware_update_status = Characteristic(value="idle")
     poll_started = asyncio.Event()
     finish_poll = asyncio.Event()
     install_started = asyncio.Event()
@@ -239,11 +273,17 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         install_started.set()
         await finish_install.wait()
 
+    read_count = 0
+
     async def read_gateways() -> list[GatewayDevice]:
+        nonlocal read_count
+        read_count += 1
         pending_at_poll.append(entity._pending_install)
         poll_started.set()
         await finish_poll.wait()
-        return gateways
+        if read_count == 1:
+            return missing_version_gateways
+        return original_gateways
 
     with (
         patch.object(coordinator.client, "put_management_point", side_effect=install),
@@ -310,7 +350,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     )
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
 
-    point.firmware_update_status = Characteristic(value="in-progress")
+    original_point.firmware_update_status = Characteristic(value="in-progress")
     with patch.object(
         coordinator.client, "get_gateway_devices", side_effect=read_gateways
     ):
@@ -356,6 +396,51 @@ async def test_firmware_pending_install_survives_failed_refresh(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
+
+
+async def test_firmware_pending_install_keeps_baseline_when_version_is_missing(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep the pre-install version when a poll omits it during the request."""
+    original_devices = _load_gateway_devices("dx4_firmwareavailable")
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    entity = hass.data[UPDATE_DOMAIN].get_entity(LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+    installed_version = entity.installed_version
+
+    missing_version_devices = deepcopy(original_devices)
+    gateway = missing_version_devices[0].gateway_management_point
+    assert gateway is not None
+    gateway.firmware_version = None
+    mock_onecta_client.get_gateway_devices.return_value = missing_version_devices
+
+    async def poll_during_install(
+        _command: Callable[[OnectaClient], Awaitable[None]],
+    ) -> bool:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        return True
+
+    coordinator.async_execute_command = AsyncMock(side_effect=poll_during_install)
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entity.installed_version is None
+    assert entity._pending_install is not None
+    assert entity._pending_install[1] == installed_version
+
+    mock_onecta_client.get_gateway_devices.return_value = original_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity.installed_version == installed_version
+    assert entity._pending_install is not None
 
 
 @pytest.mark.usefixtures("mock_onecta_client")

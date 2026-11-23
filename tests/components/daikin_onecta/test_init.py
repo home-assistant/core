@@ -80,10 +80,12 @@ def _get_domestic_hot_water_tank_child(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> dr.AnyDeviceEntry:
-    """Return the registered domestic-hot-water child device."""
-    child = device_registry.async_get_child_device_by_identifier(
-        _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER,
-        config_entry.entry_id,
+    """Return the registered domestic-hot-water management-point device."""
+    identifier = _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER
+    child = device_registry.async_get_device_by_identifier(
+        identifier, config_entry.entry_id
+    ) or device_registry.async_get_child_device_by_identifier(
+        identifier, config_entry.entry_id
     )
     assert child is not None
     return child
@@ -204,7 +206,9 @@ async def test_removed_management_point_entities_are_added_again(
         if point.management_point_type == "domesticHotWaterTank"
     )
     embedded_id = point.embedded_id
-    child = device_registry.async_get_child_device_by_identifier(
+    child = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{embedded_id}"), config_entry.entry_id
+    ) or device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{gateway_id}_{embedded_id}"), config_entry.entry_id
     )
     assert child is not None

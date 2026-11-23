@@ -107,11 +107,6 @@
         "name": "LED enabled"
       }
     },
-    "button": {
-      "refresh": {
-        "name": "Refresh"
-      }
-    },
     "climate": {
       "calculated_leaving_water_temperature": {
         "name": "Calculated leaving water temperature",
@@ -564,9 +559,6 @@
     "invalid_response": {
       "message": "Daikin API returned an invalid response"
     },
-    "manual_refresh_deferred": {
-      "message": "Refresh is deferred; retry in {seconds} seconds"
-    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
@@ -578,9 +570,6 @@
     },
     "refresh_deferred": {
       "message": "Refresh delayed while waiting to retry the Daikin API"
-    },
-    "refresh_failed": {
-      "message": "Failed to refresh Daikin devices"
     },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"

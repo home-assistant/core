@@ -8,11 +8,9 @@ from daikin_onecta.client import OnectaClient
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.daikin_onecta.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
 )
-from homeassistant.components.daikin_onecta.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.select import SELECT_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
@@ -36,7 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .platform_helpers import (
-    ACCOUNT_REFRESH_BUTTON_ENTITY_ID,
     AIR_PURIFIER_ENTITY_ID,
     ALTHERMA_WATER_HEATER_ENTITY_ID,
     _async_setup_fixture,
@@ -54,8 +51,7 @@ async def test_platform_entities_become_unavailable_after_failed_update(
     coordinator = config_entry.runtime_data
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     entity_ids = sorted(
-        {entry.entity_id for entry in entries}
-        & set(hass.states.async_entity_ids()) - {ACCOUNT_REFRESH_BUTTON_ENTITY_ID}
+        {entry.entity_id for entry in entries} & set(hass.states.async_entity_ids())
     )
     assert entity_ids
 
@@ -74,25 +70,24 @@ async def test_account_entities_are_not_duplicated_for_multiple_gateways(
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Create one account refresh and rate-limit entity for all gateways."""
+    """Create one account rate-limit entity for all gateways without a button."""
     hass.config_entries.async_update_entry(config_entry, unique_id="account-id")
 
     await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
 
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     entries_by_unique_id = {entry.unique_id: entry for entry in entries}
-    assert entries_by_unique_id["account-id_refresh"].domain == BUTTON_DOMAIN
     assert (
         entries_by_unique_id["account-id_rate_limit_remaining_day"].domain
         == SENSOR_DOMAIN
     )
+    assert all(entry.domain != "button" for entry in entries)
 
 
 @pytest.mark.parametrize(
     "descriptions",
     [
         BINARY_SENSOR_DESCRIPTIONS,
-        BUTTON_DESCRIPTIONS,
         SELECT_DESCRIPTIONS,
         SENSOR_DESCRIPTIONS,
         SWITCH_DESCRIPTIONS,
@@ -170,4 +165,6 @@ async def test_command_cache_survives_model_replacement(
         blocking=True,
     )
 
-    assert hass.states.get(entity_id).attributes[attribute] == expected
+    state = hass.states.get(entity_id)
+    assert state is not None, hass.states.async_entity_ids(domain)
+    assert state.attributes[attribute] == expected

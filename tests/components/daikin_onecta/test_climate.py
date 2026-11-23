@@ -1571,6 +1571,7 @@ async def _async_setup_climate_entity_with_minimal_model(
         gateway_embedded_id=None,
         gateway_management_point=None,
         mac_address=None,
+        management_points=(climate_control,),
         management_points_by_type=lambda _: (climate_control,),
     )
     device.gateway_metadata = (None, None, None)

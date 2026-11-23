@@ -71,6 +71,14 @@ def _create_firmware_entities(
         )
         for device, management_point in iter_management_points(coordinator)
         if management_point.firmware is not None
+        and (
+            (
+                management_point.is_firmware_update_supported is not None
+                and management_point.is_firmware_update_supported.value is True
+            )
+            or management_point.firmware_update is not None
+            or management_point.firmware_update_status is not None
+        )
         and not is_known(
             Platform.UPDATE,
             management_point_unique_id(
@@ -136,9 +144,14 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
 
     def _set_pending_install(self, requested_sequence: int) -> None:
         """Keep the requested update pending until cloud state confirms it."""
+        installed_version = (
+            self._pending_install[1]
+            if self._pending_install is not None
+            else self._attr_installed_version
+        )
         self._pending_install = (
             requested_sequence,
-            self._attr_installed_version,
+            installed_version,
             requested_sequence + _INSTALL_CONFIRMATION_POLLS,
         )
 

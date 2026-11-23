@@ -7,7 +7,7 @@ from datetime import datetime, time, timedelta, tzinfo
 import logging
 from math import ceil
 import random
-from typing import Never, cast, override
+from typing import cast, override
 
 from daikin_onecta import Site
 from daikin_onecta.client import OnectaClient
@@ -27,13 +27,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    HomeAssistantError,
     OAuth2TokenRequestBaseError,
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -43,7 +42,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .device import DaikinOnectaDevice
+from .device import DaikinOnectaDevice, management_point_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +106,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._polling_backoff_until: datetime | None = None
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
-        self._manual_refresh_previous_sequences: list[int] = []
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
         self._sites_cache: tuple[datetime, list[Site]] | None = None
 
@@ -142,48 +140,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         await self.session.async_ensure_token_valid()
         return cast("str", self.session.token["access_token"])
 
-    async def async_manual_refresh(self) -> bool:
-        """Refresh immediately unless Daikin has asked us to wait.
-
-        Return whether a fresh cloud response was received.
-        """
-        if remaining := (
-            self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
-        ):
-            self._raise_manual_refresh_deferred(remaining)
-        # The same backoff check used by scheduled and entity refreshes runs
-        # again after acquiring the cloud lock.
-        previous_sequence = self._cloud_update_sequence
-        self._manual_refresh_previous_sequences.append(previous_sequence)
-        try:
-            await self.async_refresh()
-        finally:
-            self._manual_refresh_previous_sequences.remove(previous_sequence)
-        if self._cloud_update_sequence == previous_sequence and (
-            remaining := (
-                self._polling_backoff_remaining()
-                or self._post_write_cooldown_remaining()
-            )
-        ):
-            self._raise_manual_refresh_deferred(remaining)
-        return self._cloud_update_sequence > previous_sequence
-
-    @staticmethod
-    def _raise_manual_refresh_deferred(remaining: timedelta) -> Never:
-        """Raise the translated error when a manual refresh is deferred."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="manual_refresh_deferred",
-            translation_placeholders={"seconds": str(ceil(remaining.total_seconds()))},
-        )
-
-    def _manual_refresh_satisfied(self) -> bool:
-        """Return whether another poll satisfied a pending manual refresh."""
-        return any(
-            self._cloud_update_sequence > previous_sequence
-            for previous_sequence in self._manual_refresh_previous_sequences
-        )
-
     def _post_write_cooldown_remaining(self) -> timedelta | None:
         """Return the remaining post-write cooldown, if any."""
         if self._last_patch_call is None:
@@ -197,8 +153,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             if self._polling_backoff_remaining() is not None:
                 return None
             if self._post_write_cooldown_remaining() is not None:
-                return None
-            if self._manual_refresh_satisfied():
                 return None
             try:
                 devices = await self._client.get_gateway_devices()
@@ -417,6 +371,21 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         )
         device.ha_device_id = gateway_entry.id
 
+        # Physical management points can have independent software versions, but
+        # the lightweight child-device API is intended for logical zones and does
+        # not support a sw_version field.
+        for management_point in gateway.management_points:
+            device_info = management_point_device_info(
+                device, management_point.embedded_id
+            )
+            if isinstance(device_info, DeviceInfo) and (
+                device_info.via_device_id is not None
+            ):
+                registry.async_get_or_create_from_info(
+                    config_entry_id=self.config_entry.entry_id,
+                    device_info=device_info,
+                )
+
     @property
     def cloud_update_sequence(self) -> int:
         """Identify fresh cloud responses separately from local write notifications."""
@@ -498,12 +467,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 ) from err
 
             if cloud_devices is None:
-                if self._manual_refresh_satisfied():
-                    # A scheduled fetch completed while the manual refresh
-                    # waited for the cloud lock; keep its current data and
-                    # regular polling cadence.
-                    self.update_interval = self._determine_update_interval()
-                    return devices
                 retry_after = self._polling_backoff_remaining() or _POST_WRITE_COOLDOWN
                 self.update_interval = retry_after
                 if not self.last_update_success:

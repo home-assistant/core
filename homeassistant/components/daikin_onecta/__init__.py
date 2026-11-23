@@ -21,7 +21,6 @@ from .utils import account_device_identifier, account_identifier
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.FAN,
     Platform.SELECT,
@@ -91,9 +90,14 @@ async def async_remove_config_entry_device(
         return False
 
     coordinator = config_entry.runtime_data
-    if isinstance(device_entry, ChildDeviceEntry):
+    parent_device_id = (
+        device_entry.parent_device_id
+        if isinstance(device_entry, ChildDeviceEntry)
+        else device_entry.via_device_id
+    )
+    if parent_device_id is not None:
         parent_device = dr.async_get(hass).async_get(
-            device_entry.parent_device_id, include_child_devices=False
+            parent_device_id, include_child_devices=False
         )
         if parent_device is None:
             return False

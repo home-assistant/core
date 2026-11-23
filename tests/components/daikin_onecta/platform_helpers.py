@@ -18,9 +18,8 @@ from .conftest import FAKE_ACCESS_TOKEN
 
 ALTHERMA_CLIMATE_ENTITY_ID = "climate.altherma_room_temperature"
 ALTHERMA_CONTROL_MODE_SENSOR_ENTITY_ID = "sensor.altherma_control_mode"
-ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.altherma_domestic_hot_water_tank"
+ALTHERMA_WATER_HEATER_ENTITY_ID = "water_heater.domestic_hot_water_tank"
 AIR_PURIFIER_ENTITY_ID = "fan.air_purifier"
-ACCOUNT_REFRESH_BUTTON_ENTITY_ID = "button.daikin_onecta_account_refresh"
 
 _FIXTURE_PATH = Path(__file__).parent / "fixtures"
 

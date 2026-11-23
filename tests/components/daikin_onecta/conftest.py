@@ -3,7 +3,8 @@
 import time
 from unittest.mock import AsyncMock
 
-from daikin_onecta import get_account_id
+from daikin_onecta import Site, get_account_id
+from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import GatewayDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -19,6 +20,7 @@ class MockOnectaClient:
         """Initialize the mock client and its recorded calls."""
         self.patch_characteristic = AsyncMock()
         self.get_gateway_devices = AsyncMock()
+        self.get_sites = AsyncMock()
         self.post_management_point = AsyncMock()
 
 
@@ -47,6 +49,9 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
     async def mock_get_gateway_devices(_client: object) -> list[GatewayDevice]:
         return await mock_client.get_gateway_devices()
 
+    async def mock_get_sites(_client: object) -> list[Site]:
+        return await mock_client.get_sites()
+
     async def mock_post_management_point(
         _client: object,
         gateway_id: str,
@@ -66,6 +71,7 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
         mock_get_gateway_devices,
     )
+    monkeypatch.setattr(OnectaClient, "get_sites", mock_get_sites)
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.post_management_point",
         mock_post_management_point,
