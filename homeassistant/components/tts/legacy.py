@@ -17,10 +17,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config import config_per_platform
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
+    CommonServiceArgument,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -35,10 +35,6 @@ from homeassistant.setup import (
 from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
-    ATTR_CACHE,
-    ATTR_LANGUAGE,
-    ATTR_MESSAGE,
-    ATTR_OPTIONS,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
@@ -48,6 +44,7 @@ from .const import (
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
+    TextToSpeechServiceArgument,
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
@@ -85,11 +82,11 @@ SERVICE_SAY = "say"
 
 SCHEMA_SERVICE_SAY = probatio.Schema(
     {
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Optional(ATTR_CACHE): cv.boolean,
-        probatio.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        probatio.Optional(ATTR_LANGUAGE): cv.string,
-        probatio.Optional(ATTR_OPTIONS): dict,
+        probatio.Required(TextToSpeechServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(TextToSpeechServiceArgument.CACHE): cv.boolean,
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.comp_entity_ids,
+        probatio.Optional(TextToSpeechServiceArgument.LANGUAGE): cv.string,
+        probatio.Optional(TextToSpeechServiceArgument.OPTIONS): dict,
     }
 )
 
@@ -147,7 +144,7 @@ async def async_setup_legacy(
 
         async def async_say_handle(service: ServiceCall) -> None:
             """Service handle for say."""
-            entity_ids = service.data[ATTR_ENTITY_ID]
+            entity_ids = service.data[CommonServiceArgument.ENTITY_ID]
 
             await hass.services.async_call(
                 MP_DOMAIN,
@@ -157,10 +154,10 @@ async def async_setup_legacy(
                     MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                         hass,
                         engine=p_type,
-                        message=service.data[ATTR_MESSAGE],
-                        language=service.data.get(ATTR_LANGUAGE),
-                        options=service.data.get(ATTR_OPTIONS),
-                        cache=service.data.get(ATTR_CACHE),
+                        message=service.data[TextToSpeechServiceArgument.MESSAGE],
+                        language=service.data.get(TextToSpeechServiceArgument.LANGUAGE),
+                        options=service.data.get(TextToSpeechServiceArgument.OPTIONS),
+                        cache=service.data.get(TextToSpeechServiceArgument.CACHE),
                     ),
                     MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                     MediaPlayerServiceArgument.ANNOUNCE: True,
