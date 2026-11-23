@@ -116,6 +116,10 @@ class OsmundCoordinator(DataUpdateCoordinator[OsmundData]):
             locations = await self.client.locations()
         except OsmundError as err:
             raise _update_error(err) from err
+        if not any(location.api_access == API_ACCESS_OPEN for location in locations):
+            # Nothing to show: at setup, Home Assistant tries again later; after
+            # it, the sensors are unavailable until a location has access again.
+            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_access")
         prices: dict[str, dict[date, PriceDay]] = {}
         for location in locations:
             if location.api_access != API_ACCESS_OPEN:

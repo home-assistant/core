@@ -62,6 +62,9 @@
     "missing_scope": {
       "message": "The Osmund key cannot read prices."
     },
+    "no_access": {
+      "message": "None of your locations has API access."
+    },
     "unavailable": {
       "message": "The Osmund API is busy right now."
     }

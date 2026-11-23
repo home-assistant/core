@@ -1,5 +1,6 @@
 """Test the Osmund setup."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -17,6 +18,8 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+
+from .conftest import LOCATIONS
 
 PRICE_NOW = "sensor.hjem_electricity_price_now"
 
@@ -127,3 +130,56 @@ async def test_an_update_that_fails(
     await hass.async_block_till_done()
 
     assert hass.states.get(PRICE_NOW).state == STATE_UNAVAILABLE
+
+
+async def test_setup_waits_for_a_location_with_api_access(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With every location closed there is nothing to show yet: setup is tried again."""
+    mock_client.locations.return_value = [
+        replace(LOCATIONS[0], api_access="closed"),
+        LOCATIONS[1],
+    ]
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_client.locations.return_value = LOCATIONS
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    # The retried setup runs as a background task.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(PRICE_NOW).state != STATE_UNAVAILABLE
+
+
+async def test_prices_are_unavailable_while_no_location_has_access(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """After setup, the sensors stay and are unavailable until access returns."""
+    mock_client.locations.return_value = [
+        replace(LOCATIONS[0], api_access="closed"),
+        LOCATIONS[1],
+    ]
+    freezer.tick(timedelta(minutes=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PRICE_NOW).state == STATE_UNAVAILABLE
+
+    mock_client.locations.return_value = LOCATIONS
+    freezer.tick(timedelta(minutes=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PRICE_NOW).state != STATE_UNAVAILABLE
