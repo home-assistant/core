@@ -177,7 +177,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         """Async step to set up the stationboard."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            stations: list[str] = user_input[CONF_STATIONS]
+            stations: list[str] = list(dict.fromkeys(user_input[CONF_STATIONS]))
             if len(stations) > MAX_STATIONS:
                 errors["base"] = "too_many_stations"
             elif err := await self.fetch_departures(stations):
@@ -325,4 +325,4 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             if not opendata.locations:
                 return [], "bad_config"
             names.append(opendata.locations[0]["name"])
-        return names, None
+        return list(dict.fromkeys(names)), None

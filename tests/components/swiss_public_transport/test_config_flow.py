@@ -325,22 +325,31 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 
 
 @pytest.mark.parametrize(
-    ("user_input", "stops_at", "config_title"),
+    ("user_input", "data", "config_title", "unique_id"),
     [
         pytest.param(
-            {CONF_STATIONS: ["Zürich HB"]}, [], "Zürich HB", id="single_station"
+            {CONF_STATIONS: ["Zürich HB"]},
+            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: []},
+            "Zürich HB",
+            "stationboard Zürich HB",
+            id="single_station",
         ),
         pytest.param(
             {CONF_STATIONS: ["Kriens, Mattenhof", "Kriens Mattenhof"]},
-            [],
+            {
+                CONF_STATIONS: ["Kriens, Mattenhof", "Kriens Mattenhof"],
+                CONF_STOPS_AT: [],
+            },
             "Kriens, Mattenhof, Kriens Mattenhof",
+            "stationboard Kriens Mattenhof, Kriens, Mattenhof",
             id="multiple_stations",
         ),
         pytest.param(
-            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["zug"]},
-            ["Zug"],
+            {CONF_STATIONS: ["Zürich HB", "Zürich HB"], CONF_STOPS_AT: ["zug", "Zug"]},
+            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug"]},
             "Zürich HB stops at Zug",
-            id="stops_at",
+            "stationboard Zürich HB stops at Zug",
+            id="stops_at_and_duplicates",
         ),
     ],
 )
@@ -348,8 +357,9 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
 async def test_flow_stationboard_success(
     hass: HomeAssistant,
     user_input: dict[str, list[str]],
-    stops_at: list[str],
+    data: dict[str, list[str]],
     config_title: str,
+    unique_id: str,
 ) -> None:
     """Test setting up a stationboard."""
     result = await hass.config_entries.flow.async_init(
@@ -369,8 +379,8 @@ async def test_flow_stationboard_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == config_title
-    assert result["data"] == {**user_input, CONF_STOPS_AT: stops_at}
-    assert result["result"].unique_id == f"stationboard {config_title}"
+    assert result["data"] == data
+    assert result["result"].unique_id == unique_id
 
 
 @pytest.mark.parametrize(
@@ -392,7 +402,7 @@ async def test_flow_stationboard_success(
         pytest.param(
             None,
             [{"departure": "2024-01-06T18:03:00+0100"}],
-            ["Zürich HB"] * (MAX_STATIONS + 1),
+            [f"Station {i}" for i in range(MAX_STATIONS + 1)],
             "too_many_stations",
             id="too_many_stations",
         ),
@@ -485,12 +495,27 @@ async def test_flow_stationboard_stops_at_error_and_recover(
     assert result["data"] == user_input
 
 
+@pytest.mark.parametrize(
+    "stations",
+    [
+        pytest.param(["Kriens Mattenhof", "Kriens, Mattenhof"], id="same_order"),
+        pytest.param(["Kriens, Mattenhof", "Kriens Mattenhof"], id="reordered"),
+    ],
+)
 @pytest.mark.usefixtures("mock_stationboard_client")
 async def test_flow_stationboard_already_configured(
-    hass: HomeAssistant, mock_stationboard_config_entry: MockConfigEntry
+    hass: HomeAssistant, stations: list[str]
 ) -> None:
     """Test we abort when the stationboard is already configured."""
-    mock_stationboard_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_STATIONS: ["Kriens Mattenhof", "Kriens, Mattenhof"],
+            CONF_STOPS_AT: [],
+        },
+        unique_id="stationboard Kriens Mattenhof, Kriens, Mattenhof",
+        version=3,
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -500,7 +525,7 @@ async def test_flow_stationboard_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=mock_stationboard_config_entry.data,
+        user_input={CONF_STATIONS: stations},
     )
 
     assert result["type"] is FlowResultType.ABORT
