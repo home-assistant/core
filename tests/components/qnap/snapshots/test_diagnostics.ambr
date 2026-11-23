@@ -1,0 +1,109 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'bandwidth': dict({
+        'eth0': dict({
+          'is_default': True,
+          'name': 'Adapter 1',
+          'rx': 100,
+          'tx': 200,
+        }),
+      }),
+      'smart_drive_health': dict({
+        '1': dict({
+          'capacity': '3.64 TB',
+          'drive_number': '1',
+          'health': 'OK',
+          'model': 'WD40EFRX',
+          'serial': '**REDACTED**',
+          'temp_c': 35,
+          'temp_f': 95,
+          'type': 'hdd',
+        }),
+      }),
+      'system_health': 'good',
+      'system_stats': dict({
+        'cpu': dict({
+          'model': 'Intel Celeron',
+          'temp_c': 45,
+          'temp_f': 113,
+          'usage_percent': 5.2,
+        }),
+        'dns': list([
+          '1.1.1.1',
+        ]),
+        'firmware': dict({
+          'build': '20240813',
+          'build_time': '2024/08/13',
+          'patch': '0',
+          'version': '5.2.0',
+        }),
+        'memory': dict({
+          'free': 3910.0,
+          'total': 7820.0,
+        }),
+        'nics': dict({
+          'eth0': dict({
+            'err_packets': 0,
+            'ip': '1.2.3.4',
+            'link_status': 'Up',
+            'mac': '**REDACTED**',
+            'mask': '255.255.255.0',
+            'max_speed': 2500,
+            'rx_packets': 1000,
+            'tx_packets': 2000,
+            'usage': '1',
+          }),
+        }),
+        'sysfans': dict({
+          'sysfan0': dict({
+            'speed': 800,
+            'status': 'ok',
+          }),
+        }),
+        'system': dict({
+          'model': 'TS-453D',
+          'name': 'Test NAS name',
+          'serial_number': '**REDACTED**',
+          'temp_c': 40,
+          'temp_f': 104,
+          'timezone': 'Europe/Stockholm',
+        }),
+        'uptime': dict({
+          'days': 1,
+          'hours': 2,
+          'minutes': 3,
+          'seconds': 4,
+        }),
+      }),
+      'volumes': dict({
+        'DataVol1': dict({
+          'folders': list([
+            dict({
+              'sharename': '**REDACTED**',
+              'used_size': 1000,
+            }),
+          ]),
+          'free_size': 1000000000,
+          'id': '1',
+          'label': 'DataVol1',
+          'total_size': 4000000000,
+        }),
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '1.2.3.4',
+        'password': '**REDACTED**',
+        'port': 8080,
+        'ssl': False,
+        'username': '**REDACTED**',
+        'verify_ssl': True,
+      }),
+      'options': dict({
+      }),
+    }),
+    'last_update_success': True,
+  })
+# ---
