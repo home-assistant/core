@@ -2,7 +2,45 @@
 # name: test_platform_entities[holidaymode][holidaymode_select]
   dict({
     'select.ndj_schedule': dict({
-      'disabled_by': None,
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'Automatic 1',
+          ]),
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
+        'disabled_by': None,
+        'domain': 'select',
+        'entity_category': None,
+        'entity_id': 'select.ndj_schedule',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Schedule',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Schedule',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'schedule',
+        'unique_id': '00000000-0000-4000-8000-000000000101_1_schedule',
+        'unit_of_measurement': None,
+      }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Schedule',
@@ -17,7 +55,6 @@
         'last_updated': <ANY>,
         'state': 'Automatic 1',
       }),
-      'unique_id': '00000000-0000-4000-8000-000000000101_1_schedule',
     }),
   })
 # ---

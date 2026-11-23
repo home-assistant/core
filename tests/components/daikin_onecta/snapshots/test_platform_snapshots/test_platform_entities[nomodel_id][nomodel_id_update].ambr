@@ -2,7 +2,41 @@
 # name: test_platform_entities[nomodel_id][nomodel_id_update]
   dict({
     'update.altherma_firmware_update': dict({
-      'disabled_by': None,
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000113')]>,
+        'disabled_by': None,
+        'domain': 'update',
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+        'entity_id': 'update.altherma_firmware_update',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Firmware update',
+        'options': dict({
+        }),
+        'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+        'original_icon': None,
+        'original_name': 'Firmware update',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'firmwareupdate',
+        'unique_id': '00000000-0000-4000-8000-000000000113_gateway_firmware',
+        'unit_of_measurement': None,
+      }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
@@ -27,7 +61,6 @@
         'last_updated': <ANY>,
         'state': 'off',
       }),
-      'unique_id': '00000000-0000-4000-8000-000000000113_gateway_firmware',
     }),
   })
 # ---

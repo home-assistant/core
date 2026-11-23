@@ -2,7 +2,50 @@
 # name: test_platform_entities[minimal_data][minimal_data_climate]
   dict({
     'climate.altherma_leaving_water_temperature': dict({
-      'disabled_by': None,
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.HEAT: 'heat'>,
+            <HVACMode.COOL: 'cool'>,
+            <HVACMode.HEAT_COOL: 'heat_cool'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+          <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000117')]>,
+        'disabled_by': None,
+        'domain': 'climate',
+        'entity_category': None,
+        'entity_id': 'climate.altherma_leaving_water_temperature',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Leaving water temperature',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Leaving water temperature',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'leaving_water_temperature',
+        'unique_id': '00000000-0000-4000-8000-000000000117_climateControlMainZone_leavingWaterTemperature',
+        'unit_of_measurement': None,
+      }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
@@ -24,10 +67,53 @@
         'last_updated': <ANY>,
         'state': 'heat_cool',
       }),
-      'unique_id': '00000000-0000-4000-8000-000000000117_climateControlMainZone_leavingWaterTemperature',
     }),
     'climate.altherma_room_temperature': dict({
-      'disabled_by': None,
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+            <HVACMode.HEAT: 'heat'>,
+            <HVACMode.COOL: 'cool'>,
+            <HVACMode.HEAT_COOL: 'heat_cool'>,
+          ]),
+          <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+          <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 12.0,
+          <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+          <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000117')]>,
+        'disabled_by': None,
+        'domain': 'climate',
+        'entity_category': None,
+        'entity_id': 'climate.altherma_room_temperature',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Room temperature',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Room temperature',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': <ClimateEntityFeature: 1>,
+        'translation_key': 'room_temperature',
+        'unique_id': '00000000-0000-4000-8000-000000000117_climateControlMainZone_roomTemperature',
+        'unit_of_measurement': None,
+      }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.2,
@@ -51,7 +137,6 @@
         'last_updated': <ANY>,
         'state': 'heat_cool',
       }),
-      'unique_id': '00000000-0000-4000-8000-000000000117_climateControlMainZone_roomTemperature',
     }),
   })
 # ---
