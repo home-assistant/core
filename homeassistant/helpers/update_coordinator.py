@@ -72,7 +72,8 @@ def _setup_retry_translation_key(cause: BaseException | None) -> str | None:
     """Return the translation key for a setup retry caused by a generic error."""
     # Timeouts first: some timeouts are also client or request errors
     if isinstance(cause, (TimeoutError, requests.exceptions.Timeout)) or (
-        isinstance(cause, urllib.error.URLError) and cause.reason == "timed out"
+        isinstance(cause, urllib.error.URLError)
+        and (isinstance(cause.reason, TimeoutError) or cause.reason == "timed out")
     ):
         return "update_failed_timeout"
     if isinstance(

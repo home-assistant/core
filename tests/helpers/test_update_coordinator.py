@@ -931,6 +931,13 @@ async def test_async_config_entry_first_refresh_not_ready(
             id="urllib_timeout",
         ),
         pytest.param(
+            urllib.error.URLError(TimeoutError("timed out")),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="urllib_wrapped_timeout",
+        ),
+        pytest.param(
             aiohttp.ServerTimeoutError(),
             "homeassistant",
             "update_failed_timeout",
