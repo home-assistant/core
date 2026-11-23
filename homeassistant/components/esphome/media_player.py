@@ -18,14 +18,12 @@ from aioesphomeapi import (
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -145,7 +143,7 @@ class EsphomeMediaPlayer(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play command with media url to the media player."""
-        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        enqueue = kwargs.get(MediaPlayerServiceArgument.ENQUEUE)
         # The device can only append to its playlist or replace it
         if enqueue in (MediaPlayerEnqueue.NEXT, MediaPlayerEnqueue.PLAY):
             raise ServiceValidationError(
@@ -160,8 +158,10 @@ class EsphomeMediaPlayer(
             media_id = sourced_media.url
 
         media_id = async_process_play_media_url(self.hass, media_id)
-        announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
-        bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
+        announcement = kwargs.get(MediaPlayerServiceArgument.ANNOUNCE)
+        bypass_proxy = kwargs.get(MediaPlayerServiceArgument.EXTRA, {}).get(
+            ATTR_BYPASS_PROXY
+        )
         supported_formats = self._entry_data.media_player_formats.get(self)
 
         if (

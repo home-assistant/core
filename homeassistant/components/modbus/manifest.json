@@ -9,7 +9,7 @@
   "loggers": ["pymodbus"],
   "requirements": [
     "pymodbus==3.13.1",
-    "modbus-connection[tmodbus]==4.12.7",
+    "modbus-connection[tmodbus]==4.12.8",
     "tmodbus==1.1.0"
   ]
 }

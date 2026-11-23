@@ -96,6 +96,11 @@
       }
     }
   },
+  "device": {
+    "sun": {
+      "name": "Sun"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "solar_rising": {
