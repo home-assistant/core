@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from lunatone_rest_api_client.models import ScanState, StartScanData
+from lunatone_rest_api_client.models import (
+    ScanLineData,
+    ScanLineState,
+    ScanState,
+    StartScanData,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -186,6 +191,220 @@ async def test_pressing_button_handles_connection_error(
         "entity": "button.test_dali_scan_start_system_extension"
     }
     assert isinstance(err.value.__cause__, aiohttp.ClientConnectionError)
+
+
+async def test_cancel_scan_uses_refreshed_scan_state(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test canceling a scan uses the latest scan state."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    async def fake_update() -> None:
+        mock_lunatone_scan.data = mock_lunatone_scan.data.model_copy(
+            update={"status": ScanState.IN_PROGRESS}
+        )
+
+    mock_lunatone_scan.async_update.side_effect = fake_update
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.test_dali_scan_cancel"},
+        blocking=True,
+    )
+
+    mock_lunatone_scan.async_cancel.assert_awaited_once()
+
+
+async def test_cancel_scan_aborts_when_refresh_fails(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test canceling a scan aborts if its state cannot be refreshed."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    mock_lunatone_scan.async_update.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_dali_scan_cancel"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "cannot_retrieve_scan_data"
+    mock_lunatone_scan.async_cancel.assert_not_awaited()
+
+
+@pytest.mark.parametrize("line_id", [0, 1])
+@pytest.mark.parametrize(
+    ("entity_suffix", "new_installation", "no_addressing"),
+    [
+        ("start_system_extension", False, False),
+        ("start_new_installation", True, False),
+        ("read_current_devices", False, True),
+    ],
+)
+async def test_pressing_line_scan_button(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    line_id: int,
+    entity_suffix: str,
+    new_installation: bool,
+    no_addressing: bool,
+) -> None:
+    """Test pressing line-specific scan buttons selects the line."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    scan_update_count = mock_lunatone_scan.async_update.await_count
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_dali_scan_{entity_suffix}")},
+        blocking=True,
+    )
+
+    mock_lunatone_scan.async_start.assert_awaited_once_with(
+        StartScanData(
+            newInstallation=new_installation,
+            noAddressing=no_addressing,
+            useLines=[line_id],
+        )
+    )
+    assert mock_lunatone_scan.async_update.await_count == scan_update_count + 1
+
+
+@pytest.mark.parametrize("line_id", [0, 1])
+async def test_line_scan_button_busy_target(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    line_id: int,
+) -> None:
+    """Test a line-specific scan button rejects a busy target line."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    mock_lunatone_scan.data = mock_lunatone_scan.data.model_copy(
+        update={
+            "lines": [
+                ScanLineData(
+                    line=line,
+                    scanState=(
+                        ScanLineState.SCANNING
+                        if line == line_id
+                        else ScanLineState.IDLE
+                    ),
+                )
+                for line in (0, 1)
+            ]
+        }
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Cannot start a new DALI scan if it is already running",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: (
+                    f"button.dali_line_{line_id}_dali_scan_start_system_extension"
+                )
+            },
+            blocking=True,
+        )
+
+    mock_lunatone_scan.async_start.assert_not_awaited()
+
+
+@pytest.mark.parametrize("line_id", [0, 1])
+async def test_line_scan_button_idle_target_when_another_line_busy(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    line_id: int,
+) -> None:
+    """Test an idle target line can scan while another line is busy."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    busy_line = 1 - line_id
+    mock_lunatone_scan.data = mock_lunatone_scan.data.model_copy(
+        update={
+            "lines": [
+                ScanLineData(
+                    line=line,
+                    scanState=(
+                        ScanLineState.SCANNING
+                        if line == busy_line
+                        else ScanLineState.IDLE
+                    ),
+                )
+                for line in (0, 1)
+            ]
+        }
+    )
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {
+            ATTR_ENTITY_ID: (
+                f"button.dali_line_{line_id}_dali_scan_start_system_extension"
+            )
+        },
+        blocking=True,
+    )
+
+    mock_lunatone_scan.async_start.assert_awaited_once_with(
+        StartScanData(
+            newInstallation=False,
+            noAddressing=False,
+            useLines=[line_id],
+        )
+    )
 
 
 async def test_line_buttons_added_and_removed(

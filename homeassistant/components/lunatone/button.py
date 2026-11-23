@@ -223,7 +223,17 @@ class DALIScanButtonEntity(
         async with self.coordinator.scan_lock:
             client = self.coordinator.dali_scan_api
             description = self.entity_description
-            if not description.press_allowed_fn(client, self._line_id):
+            press_allowed = description.press_allowed_fn(client, self._line_id)
+            if not press_allowed:
+                await self.coordinator.async_refresh()
+                if not self.coordinator.last_update_success:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="cannot_retrieve_scan_data",
+                    )
+                press_allowed = description.press_allowed_fn(client, self._line_id)
+
+            if not press_allowed:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key=description.press_not_allowed_error_key,
