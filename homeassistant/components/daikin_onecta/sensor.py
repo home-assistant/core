@@ -1,10 +1,10 @@
 """Support for Daikin AC sensors."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from typing import cast, override
 
-from daikin_onecta.models import Characteristic, ManagementPoint
+from daikin_onecta.models import Characteristic, ManagementPoint, Setpoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,7 +24,11 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import energy_description_key, scalar_characteristics_for_platform
+from .discovery import (
+    energy_description_key,
+    has_settable_climate_setpoint,
+    scalar_characteristics_for_platform,
+)
 from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
@@ -211,7 +215,54 @@ def add_management_point_sensors(
     """Add all sensors exposed by a management point."""
     add_simple_sensors(coordinator, device, management_point, sensors, is_known)
     add_sensory_sensors(coordinator, device, management_point, sensors, is_known)
+    add_read_only_setpoint_sensors(
+        device, coordinator, management_point, sensors, is_known
+    )
     add_energy_sensors(coordinator, device, management_point, sensors, is_known)
+
+
+def add_read_only_setpoint_sensors(
+    device: DaikinOnectaDevice,
+    coordinator: OnectaDataUpdateCoordinator,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
+    is_known: EntityIdChecker,
+) -> None:
+    """Expose temperature targets that Daikin never allows users to change."""
+    climate_control = management_point.climate_control
+    if not device.gateway_online or climate_control is None:
+        return
+
+    for setpoint_type in climate_control.setpoint_types:
+        if setpoint_type not in SENSOR_DESCRIPTIONS or has_settable_climate_setpoint(
+            management_point, setpoint_type
+        ):
+            continue
+        if climate_control.setpoint(setpoint_type) is None:
+            continue
+        unique_id = _value_sensor_unique_id(
+            device.id, management_point.embedded_id, "setpoint", setpoint_type
+        )
+        if is_known(Platform.SENSOR, unique_id):
+            continue
+        description = SENSOR_DESCRIPTIONS[setpoint_type]
+        sensors.append(
+            DaikinValueSensor(
+                device,
+                coordinator,
+                replace(
+                    description,
+                    key=f"{description.key}_setpoint",
+                    state_class=None,
+                    translation_key=f"{description.translation_key}_setpoint",
+                ),
+                ValueSensorDetails(
+                    management_point.embedded_id,
+                    "setpoint",
+                    setpoint_type,
+                ),
+            )
+        )
 
 
 def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> str:
@@ -232,6 +283,8 @@ def _value_sensor_unique_id(
     """Return a stable unique ID for a scalar or sensory-data value."""
     if sub_type == "sensoryData":
         return management_point_unique_id(device_id, embedded_id, "sensory_data", value)
+    if sub_type == "setpoint":
+        return management_point_unique_id(device_id, embedded_id, "setpoint", value)
     return management_point_unique_id(device_id, embedded_id, value)
 
 
@@ -386,11 +439,18 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             self.entity_description,
         )
 
-    def _get_current_characteristic(self) -> Characteristic | None:
+    def _get_current_characteristic(self) -> Characteristic | Setpoint | None:
         """Return the current characteristic from its management point."""
         point = self._management_point
         if point is None:
             return None
+        if self._sub_type == "setpoint":
+            climate_control = point.climate_control
+            return (
+                climate_control.setpoint(self._value)
+                if climate_control is not None
+                else None
+            )
         return (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
@@ -398,7 +458,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         )
 
     def _sensor_value(
-        self, characteristic: Characteristic | None
+        self, characteristic: Characteristic | Setpoint | None
     ) -> str | int | float | None:
         """Convert a characteristic value for Home Assistant."""
         result: object = characteristic.value if characteristic is not None else None

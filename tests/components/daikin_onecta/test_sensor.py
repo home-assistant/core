@@ -29,7 +29,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -38,6 +38,46 @@ from .platform_helpers import (
     _async_setup_fixture,
     _load_gateway_devices,
 )
+
+
+async def test_read_only_climate_setpoints_are_temperature_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose fixed temperature targets as sensors instead of climate controls."""
+    await _async_setup_fixture(hass, config_entry, "gas")
+    gateway = _load_gateway_devices("gas")[0]
+
+    calculated_setpoint_sensor = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_1_setpoint_calculatedLeavingWaterTemperature",
+    )
+    leaving_water_setpoint_sensor = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_1_setpoint_leavingWaterTemperature",
+    )
+    calculated_climate_entity = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_1_calculatedLeavingWaterTemperature",
+    )
+    leaving_water_climate_entity = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_1_leavingWaterTemperature",
+    )
+
+    assert calculated_setpoint_sensor is not None
+    assert leaving_water_setpoint_sensor is not None
+    calculated_state = hass.states.get(calculated_setpoint_sensor)
+    leaving_water_state = hass.states.get(leaving_water_setpoint_sensor)
+    assert calculated_state is not None and calculated_state.state == "50"
+    assert leaving_water_state is not None and leaving_water_state.state == "21"
+    assert calculated_climate_entity is None
+    assert leaving_water_climate_entity is None
 
 
 @pytest.mark.parametrize(

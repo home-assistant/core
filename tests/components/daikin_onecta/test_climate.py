@@ -2067,6 +2067,10 @@ async def test_climate_platform_services_and_management_points(
     )
     assert living_room_device is not None
     assert bedroom_device is not None
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gateway"), config_entry.entry_id
+    )
+    assert gateway_device is not None
     assert living_room_device.name == "Living Room"
     assert bedroom_device.name == "Climate zone"
     for embedded_id, zone_device in (
@@ -2236,6 +2240,21 @@ async def test_climate_platform_services_and_management_points(
         value="cooling", values=["heating", "cooling"], settable=True
     )
     setpoint.settable = True
+
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: bedroom_entity_id, "temperature": 22},
+            blocking=True,
+        )
+    assert err.value.translation_placeholders == {
+        "device": f"{gateway_device.name} Climate zone"
+    }
+
     device_registry.async_update_child_device(
         living_room_device.id, name_by_user="Renamed living room"
     )

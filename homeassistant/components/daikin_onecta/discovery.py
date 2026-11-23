@@ -46,6 +46,20 @@ def has_climate_entity(point: ManagementPoint) -> bool:
     )
 
 
+def has_settable_climate_setpoint(point: ManagementPoint, setpoint_type: str) -> bool:
+    """Return whether any advertised operation mode can set a temperature target."""
+    climate_control = point.climate_control
+    return bool(
+        climate_control is not None
+        and any(
+            (setpoint := climate_control.setpoint(setpoint_type, operation_mode))
+            is not None
+            and setpoint.settable
+            for operation_mode in climate_control.operation_modes
+        )
+    )
+
+
 def scalar_platform(name: str) -> Platform | None:
     """Return the stable platform assigned to a scalar characteristic key."""
     # Platform ownership comes from the characteristic's integration metadata,

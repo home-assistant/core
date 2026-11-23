@@ -15,7 +15,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
+from homeassistant.components.daikin_onecta import (
+    OnectaDataUpdateCoordinator,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.daikin_onecta.const import (
     BINARY_SENSOR_KEYS,
     DOMAIN,
@@ -489,7 +492,7 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
         DOMAIN,
         f"{device.id}_{point.embedded_id}_roomTemperature",
     )
-    assert climate_entity_id is not None
+    assert climate_entity_id is None
 
     online_devices = deepcopy(offline_devices)
     online_device = online_devices[0]
@@ -500,6 +503,11 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
     powerful_mode = online_point.characteristic("powerfulMode")
     assert powerful_mode is not None
     powerful_mode.settable = True
+    climate_control = online_point.climate_control
+    assert climate_control is not None
+    room_temperature = climate_control.setpoint("roomTemperature")
+    assert room_temperature is not None
+    room_temperature.settable = True
 
     mock_onecta_client.get_gateway_devices.return_value = online_devices
     await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -509,6 +517,12 @@ async def test_offline_gateway_reconnect_does_not_create_owned_scalar_entities(
             entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
             is None
         )
+    climate_entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{device.id}_{point.embedded_id}_roomTemperature",
+    )
+    assert climate_entity_id is not None
     climate_state = hass.states.get(climate_entity_id)
     assert climate_state is not None
     assert climate_state.state != STATE_UNAVAILABLE
@@ -847,6 +861,68 @@ async def test_discovering_second_climate_zone_moves_existing_entities_to_child(
     new_climate_entry = entity_registry.async_get(new_climate_entity)
     assert new_climate_entry is not None
     assert new_climate_entry.device_id == second_child.id
+
+
+async def test_discovering_single_climate_zone_moves_entities_back_to_gateway(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Move a zone back to the gateway and allow removing its empty child."""
+    gateway = _load_gateway_devices("dry")[0]
+    first_zone = gateway.management_points_by_type("climateControl")[0]
+    second_zone = deepcopy(first_zone)
+    second_zone.embedded_id = "new-zone"
+    second_zone.name = Characteristic(value="Second zone")
+    gateway.management_points.append(second_zone)
+
+    await _async_setup_fixture(hass, config_entry, "dry", gateway_devices=[gateway])
+    coordinator = config_entry.runtime_data
+    gateway_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway.id), config_entry.entry_id
+    )
+    first_zone_child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway.id}_{first_zone.embedded_id}"), config_entry.entry_id
+    )
+    assert gateway_entry is not None
+    assert first_zone_child is not None
+
+    first_zone_prefix = f"{gateway.id}_{first_zone.embedded_id}_"
+    first_zone_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.unique_id.startswith(first_zone_prefix)
+    ]
+    assert first_zone_entities
+    assert all(entry.device_id == first_zone_child.id for entry in first_zone_entities)
+
+    single_zone_gateway = deepcopy(gateway)
+    single_zone_gateway.management_points = [
+        point
+        for point in single_zone_gateway.management_points
+        if point.embedded_id != second_zone.embedded_id
+    ]
+    mock_onecta_client.get_gateway_devices.return_value = [single_zone_gateway]
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    moved_entities = [
+        entity_registry.async_get(entry.entity_id) for entry in first_zone_entities
+    ]
+    assert all(entry is not None for entry in moved_entities)
+    assert all(
+        entry.device_id == gateway_entry.id
+        for entry in moved_entities
+        if entry is not None
+    )
+    assert not er.async_entries_for_device(
+        entity_registry, first_zone_child.id, include_disabled_entities=True
+    )
+    assert await async_remove_config_entry_device(hass, config_entry, first_zone_child)
 
 
 async def test_disabled_discovered_entity_is_recreated_after_registry_removal(

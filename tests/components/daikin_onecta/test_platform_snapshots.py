@@ -44,7 +44,12 @@ EMPTY_PLATFORMS = {
     "altherma": {Platform.FAN, Platform.UPDATE},
     "altherma3m": {Platform.FAN, Platform.SWITCH},
     "altherma_boost": {Platform.FAN, Platform.SWITCH},
-    "altherma_firmwareupdate": {Platform.FAN, Platform.SELECT, Platform.SWITCH},
+    "altherma_firmwareupdate": {
+        Platform.CLIMATE,
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SWITCH,
+    },
     "altherma_schedule": {Platform.FAN, Platform.SWITCH},
     "climate_fixedfanmode": {
         Platform.FAN,
@@ -65,7 +70,7 @@ EMPTY_PLATFORMS = {
     },
     "fanmode": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
     "gas": {Platform.FAN, Platform.SWITCH},
-    "holidaymode": {Platform.FAN, Platform.SWITCH},
+    "holidaymode": {Platform.CLIMATE, Platform.FAN, Platform.SWITCH},
     "homehub": {
         Platform.BINARY_SENSOR,
         Platform.CLIMATE,
@@ -83,7 +88,12 @@ EMPTY_PLATFORMS = {
         Platform.UPDATE,
     },
     "nomodel_id": {Platform.FAN, Platform.SWITCH},
-    "offlinedevice": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
+    "offlinedevice": {
+        Platform.CLIMATE,
+        Platform.FAN,
+        Platform.SWITCH,
+        Platform.WATER_HEATER,
+    },
     "skyair": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
     "schedule": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},
     "ururu": {Platform.FAN, Platform.SWITCH, Platform.WATER_HEATER},

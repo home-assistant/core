@@ -3,10 +3,12 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, call
 
+from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.water_heater import (
     DEFAULT_MAX_TEMP,
@@ -26,6 +28,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -40,6 +43,53 @@ from .platform_helpers import (
     _execute_typed_command,
     _load_gateway_devices,
 )
+
+
+@pytest.mark.parametrize(
+    ("gateway_name_by_user", "expected_gateway_name"),
+    [
+        pytest.param(None, "Altherma", id="default-gateway-name"),
+        pytest.param("Renamed Altherma", "Renamed Altherma", id="renamed-gateway"),
+    ],
+)
+async def test_water_heater_error_uses_gateway_and_point_names(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_onecta_client: MockOnectaClient,
+    gateway_name_by_user: str | None,
+    expected_gateway_name: str,
+) -> None:
+    """Include the gateway name when reporting an unnamed physical point."""
+    gateway = _load_gateway_devices("altherma")[0]
+    await _async_setup_fixture(
+        hass, config_entry, "altherma", gateway_devices=[gateway]
+    )
+    gateway_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway.id), config_entry.entry_id
+    )
+    assert gateway_entry is not None
+    device_registry.async_update_device(
+        gateway_entry.id, name_by_user=gateway_name_by_user
+    )
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_placeholders == {
+        "device": f"{expected_gateway_name} Domestic hot water tank"
+    }
 
 
 async def _async_setup_water_tank(

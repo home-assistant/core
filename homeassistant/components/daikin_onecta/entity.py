@@ -187,7 +187,7 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
     @property
     @override
     def _error_device_name(self) -> str:
-        """Return the management-point child name when it has one."""
+        """Return the gateway and management-point name for error messages."""
         if self._device.ha_device_id is None:
             return self._device.name
         registry = dr.async_get(self.hass)
@@ -202,11 +202,24 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         )
         if management_point_device is None:
             return self._device.name
-        return (
-            management_point_device.name_by_user
-            or management_point_device.name
-            or self._device.name
+        if management_point_device.name_by_user is not None:
+            return management_point_device.name_by_user
+
+        gateway_device = registry.async_get_device_by_identifier(
+            (DOMAIN, self._device_id), self.coordinator.config_entry.entry_id
         )
+        gateway_name = (
+            gateway_device.name_by_user or gateway_device.name
+            if gateway_device is not None
+            else self._device.name
+        )
+        point = self._management_point
+        point_name = (
+            point.name.value
+            if point is not None and point.name is not None and point.name.value
+            else management_point_device.name
+        )
+        return f"{gateway_name} {point_name}"
 
     @property
     @override
