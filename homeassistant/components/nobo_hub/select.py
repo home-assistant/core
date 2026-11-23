@@ -141,13 +141,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         self._profiles: dict[str, str] = {}
         self._attr_options: list[str] = []
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:profile"
-        zone_name = hub.zones[zone_id]["name"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=zone_name,
-            via_device_id=self._hub_device_id,
-            suggested_area=zone_name,
-        )
+        self._attr_device_info = self._zone_device_info(zone_id)
 
     @override
     async def async_select_option(self, option: str) -> None:

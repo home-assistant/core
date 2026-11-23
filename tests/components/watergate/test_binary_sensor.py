@@ -13,6 +13,7 @@ from pytest_homeassistant.common import (
     patch,
     snapshot_platform,
 )
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
 
@@ -28,11 +29,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .const import DEFAULT_DEVICE_STATE_V2, DEFAULT_NETWORKING_STATE
+from .const import DEFAULT_DEVICE_STATE_V2, DEFAULT_NETWORKING_STATE, MOCK_WEBHOOK_ID
 
 WATER_FLOWING = "binary_sensor.sonic_water_flowing"
 MQTT_CONNECTED = "binary_sensor.sonic_mqtt_connected"
 WIFI_CONNECTED = "binary_sensor.sonic_wi_fi_connected"
+EXTERNAL_POWER = "binary_sensor.sonic_external_power"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -65,6 +67,7 @@ async def test_enabled_by_default(
         await init_integration(hass, mock_entry)
 
     assert hass.states.get(WATER_FLOWING) is not None
+    assert hass.states.get(EXTERNAL_POWER) is not None
     for entity_id in (MQTT_CONNECTED, WIFI_CONNECTED):
         entry = entity_registry.async_get(entity_id)
         assert entry
@@ -122,3 +125,58 @@ async def test_unavailable_when_source_data_is_missing(
     await hass.async_block_till_done()
 
     assert hass.states.get(WATER_FLOWING).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("power_supply", "expected"),
+    [
+        ("battery", STATE_OFF),
+        ("external", STATE_ON),
+        ("external+battery", STATE_ON),
+    ],
+)
+async def test_external_power(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    power_supply: str,
+    expected: str,
+) -> None:
+    """Test external power is on whenever the device reports external supply."""
+    state = copy.copy(DEFAULT_DEVICE_STATE_V2)
+    state.power_supply = power_supply
+    mock_watergate_client.async_get_device_state_v2.return_value = state
+
+    with patch(
+        "homeassistant.components.watergate.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await init_integration(hass, mock_entry)
+
+    assert hass.states.get(EXTERNAL_POWER).state == expected
+    entry = entity_registry.async_get(EXTERNAL_POWER)
+    assert entry.original_device_class is BinarySensorDeviceClass.PLUG
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_external_power_follows_the_power_supply_webhook(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test plugging the device in is reflected after the power supply webhook."""
+    with patch(
+        "homeassistant.components.watergate.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await init_integration(hass, mock_entry)
+    assert hass.states.get(EXTERNAL_POWER).state == STATE_OFF
+
+    client = await hass_client_no_auth()
+    await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "power-supply-changed", "data": {"supply": "external+battery"}},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(EXTERNAL_POWER).state == STATE_ON

@@ -1,5 +1,6 @@
 """Config flow for the Solyx Energy integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -30,6 +31,13 @@ from .const import (
 STEP_USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NYMO_CLIENT_ID): TextSelector(),
+        probatio.Required(CONF_NYMO_CLIENT_SECRET): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD),
+        ),
+    },
+)
+STEP_REAUTH_SCHEMA = probatio.Schema(
+    {
         probatio.Required(CONF_NYMO_CLIENT_SECRET): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD),
         ),
@@ -68,6 +76,40 @@ class SolyxEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a rejected client secret."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new client secret."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await self._validate_input({**reauth_entry.data, **user_input})
+            except SolyxEnergyAuthError:
+                errors["base"] = "invalid_auth"
+            except SolyxEnergyTokenError, SolyxEnergyDataError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_SCHEMA,
+            description_placeholders={
+                "client_id": reauth_entry.data[CONF_NYMO_CLIENT_ID]
+            },
             errors=errors,
         )
 

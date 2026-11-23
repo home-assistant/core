@@ -1,9 +1,17 @@
 """Test the System Bridge integration."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    BadRequestException,
+    ConnectionErrorException,
+)
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
@@ -15,8 +23,29 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from . import FIXTURE_USER_INPUT
+
+
+def _signed_url(base: str, path: str) -> str:
+    """Return a URL as System Bridge signs one for a file."""
+    return (
+        f"http://127.0.0.1:9170/api/media/file/data?base={base}&path={path}"
+        "&expires=1794771735&sig=signed"
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_media_file_url() -> Generator[AsyncMock]:
+    """Have System Bridge sign media file URLs."""
+    with patch(
+        "homeassistant.components.system_bridge.media_source.HTTPClient.media_file_url",
+        AsyncMock(side_effect=_signed_url),
+    ) as mock_media_file_url:
+        yield mock_media_file_url
 
 
 @pytest.fixture(autouse=True)
@@ -138,6 +167,44 @@ async def test_file(
     assert resolve_media_file == snapshot(
         name=f"{DOMAIN}_media_source_file_image",
     )
+
+
+async def test_file_url_signed_by_system_bridge(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_media_file_url: AsyncMock,
+) -> None:
+    """Test a file's URL is the one System Bridge signs, without the key."""
+    resolved = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/my file.txt~~text/plain",
+        None,
+    )
+
+    mock_media_file_url.assert_awaited_once_with("documents", "my file.txt")
+    assert resolved.url == _signed_url("documents", "my file.txt")
+    assert FIXTURE_USER_INPUT[CONF_TOKEN] not in resolved.url
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [AuthenticationException, BadRequestException, ConnectionErrorException],
+)
+async def test_file_url_failed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_media_file_url: AsyncMock,
+    side_effect: type[Exception],
+) -> None:
+    """Test a file System Bridge won't sign a URL for can't be resolved."""
+    mock_media_file_url.side_effect = side_effect
+
+    with pytest.raises(Unresolvable):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/my file.txt~~text/plain",
+            None,
+        )
 
 
 @pytest.mark.parametrize(

@@ -25,18 +25,14 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    selector,
-)
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.service import (
     async_get_device_and_config_entry,
     async_register_admin_service,
 )
 from homeassistant.util.dt import now
 
-from .const import DOMAIN, ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER, SupervisorEntityModel
+from .const import DOMAIN, SupervisorEntityModel
 from .handler import get_supervisor_client
 
 
@@ -80,41 +76,11 @@ class HassioServiceArgument(StrEnum):
 
 VALID_ADDON_SLUG = probatio.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
-# Legacy alias used by the Supervisor API for the homeassistant flag, kept
-# for backwards compatibility with existing automations.
-LEGACY_FOLDER_HOMEASSISTANT = "homeassistant"
 
-
-def _normalize_partial_options_data(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, Any]:
+def _normalize_partial_options_data(data: dict[str, Any]) -> dict[str, Any]:
     """Map legacy aliases used by both partial backup and partial restore handlers."""
     if HassioServiceArgument.APPS in data:
         data[HassioServiceArgument.ADDONS] = data.pop(HassioServiceArgument.APPS)
-    if HassioServiceArgument.FOLDERS in data:
-        folders: set[Any] = set(data[HassioServiceArgument.FOLDERS])
-        if LEGACY_FOLDER_HOMEASSISTANT in folders:
-            folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
-            if data.get(HassioServiceArgument.HOMEASSISTANT) is False:
-                raise ServiceValidationError(
-                    f"{HassioServiceArgument.HOMEASSISTANT}=False conflicts with the legacy "
-                    f"{LEGACY_FOLDER_HOMEASSISTANT!r} entry in {HassioServiceArgument.FOLDERS}"
-                )
-            data[HassioServiceArgument.HOMEASSISTANT] = True
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
-                breaks_in_ha_version="2026.12.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
-            )
-        if folders:
-            data[HassioServiceArgument.FOLDERS] = folders
-        else:
-            data.pop(HassioServiceArgument.FOLDERS)
     return data
 
 
@@ -158,7 +124,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
         probatio.Optional(HassioServiceArgument.HOMEASSISTANT): cv.boolean,
         probatio.Optional(HassioServiceArgument.FOLDERS): probatio.All(
             probatio.EnsureList(),
-            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            [probatio.Coerce(Folder)],
             probatio.Unique(),
             probatio.Coerce(set),
         ),
@@ -192,7 +158,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
         probatio.Optional(HassioServiceArgument.HOMEASSISTANT): cv.boolean,
         probatio.Optional(HassioServiceArgument.FOLDERS): probatio.All(
             probatio.EnsureList(),
-            [probatio.Any(LEGACY_FOLDER_HOMEASSISTANT, probatio.Coerce(Folder))],
+            [probatio.Coerce(Folder)],
             probatio.Unique(),
             probatio.Coerce(set),
         ),
@@ -412,7 +378,7 @@ def async_register_backup_restore_services(
         service: ServiceCall,
     ) -> ServiceResponse:
         """Handler for create partial backup service. Returns the new backup's ID."""
-        data = _normalize_partial_options_data(hass, service.data.copy())
+        data = _normalize_partial_options_data(service.data.copy())
         options = PartialBackupOptions(**data)
 
         try:
@@ -461,7 +427,7 @@ def async_register_backup_restore_services(
         """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(HassioServiceArgument.SLUG)
-        data = _normalize_partial_options_data(hass, data)
+        data = _normalize_partial_options_data(data)
         options = PartialRestoreOptions(**data)
 
         try:

@@ -159,6 +159,9 @@
       "ph_acid_pump": {
         "name": "pH acid pump"
       },
+      "ph_base_pump": {
+        "name": "pH base pump"
+      },
       "ph_control_module": {
         "name": "pH regulation active"
       },

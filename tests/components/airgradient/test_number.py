@@ -14,11 +14,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,18 +50,18 @@ async def test_setting_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
+        target={TargetKey.ENTITY_ID: "number.airgradient_display_brightness"},
         blocking=True,
     )
     mock_airgradient_client.set_display_brightness.assert_called_once()
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.airgradient_led_bar_brightness"},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50},
+        target={TargetKey.ENTITY_ID: "number.airgradient_led_bar_brightness"},
         blocking=True,
     )
     mock_airgradient_client.set_led_bar_brightness.assert_called_once()
@@ -94,9 +94,9 @@ async def test_v1_number_writes(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: value},
-        target={ATTR_ENTITY_ID: entity_id},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: value},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -183,8 +183,8 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 50},
-            target={ATTR_ENTITY_ID: "number.airgradient_display_brightness"},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 50},
+            target={TargetKey.ENTITY_ID: "number.airgradient_display_brightness"},
             blocking=True,
         )
