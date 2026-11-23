@@ -39,8 +39,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
+    EntityStateAttribute,
     Platform,
     TargetKey,
     UnitOfTemperature,
@@ -512,7 +512,7 @@ async def test_temperature_conversion(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(initial_state_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
     assert state.attributes[NumberEntityCapabilityAttribute.MAX] == state_max_value
     assert state.attributes[NumberEntityCapabilityAttribute.MIN] == state_min_value
     assert state.attributes[NumberEntityCapabilityAttribute.STEP] == state_step
@@ -761,7 +761,7 @@ async def test_custom_unit(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
 
 
 @pytest.mark.parametrize(
@@ -832,7 +832,7 @@ async def test_custom_unit_change(
     # Default unit conversion according to unit system
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == default_unit
 
     entity_registry.async_update_entity_options(
         "number.test", "number", {"unit_of_measurement": custom_unit}
@@ -842,7 +842,9 @@ async def test_custom_unit_change(
     # Unit conversion to the custom unit
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == used_custom_unit
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == used_custom_unit
+    )
 
     entity_registry.async_update_entity_options(
         "number.test", "number", {"unit_of_measurement": native_unit}
@@ -852,7 +854,7 @@ async def test_custom_unit_change(
     # Unit conversion to another custom unit
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit
 
     entity_registry.async_update_entity_options("number.test", "number", None)
     await hass.async_block_till_done()
@@ -860,7 +862,7 @@ async def test_custom_unit_change(
     # Default unit conversion according to unit system
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == default_unit
 
 
 async def test_translated_unit(
@@ -893,7 +895,7 @@ async def test_translated_unit(
 
         entity_id = entity0.entity_id
         state = hass.states.get(entity_id)
-        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+        assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "Tests"
 
 
 async def test_translated_unit_with_native_unit_raises(
@@ -952,7 +954,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     # Check compatible unit is applied
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == normalized_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == normalized_unit
 
 
 def test_device_classes_aligned() -> None:
