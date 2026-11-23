@@ -86,3 +86,30 @@ async def test_scheduled_import_auth_failed(hass: HomeAssistant) -> None:
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test the entry unloads and stops the scheduled import."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={CONF_API_TOKEN: "token", CONF_METERING_POINT_ID: "1234"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.elvia.importer.ElviaImporter.import_meter_values",
+    ) as mock_import:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.NOT_LOADED
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=61))
+        await hass.async_block_till_done()
+
+    assert mock_import.call_count == 1
