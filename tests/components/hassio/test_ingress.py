@@ -44,7 +44,10 @@ async def test_ingress_request_overrides_forwarded_prefix(
     """Test a client supplied X-Forwarded-Prefix is replaced by the ingress path."""
     resp = await hassio_unix_socket_client.get(
         "/api/hassio_ingress/a3_vl/test/beer/ping",
-        headers={"X-Forwarded-Prefix": "/spoofed"},
+        headers=[
+            ("X-Forwarded-Prefix", "/spoofed"),
+            ("X-Forwarded-Prefix", "/spoofed2"),
+        ],
     )
 
     assert resp.status == HTTPStatus.OK
