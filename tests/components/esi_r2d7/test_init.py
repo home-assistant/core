@@ -15,8 +15,11 @@ from homeassistant.components.esi_r2d7.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .conftest import MockConnection
+
+SECRET_PORT = "esphome://proxy.local:6053/?port_name=RS232&key=SECRET"
 
 
 async def test_setup_and_unload(
@@ -37,7 +40,12 @@ async def test_setup_and_unload(
 
 @pytest.mark.parametrize(
     "exception",
-    [OSError("No such device"), TimeoutError, SerialException("Proxy unavailable")],
+    [
+        OSError(f"No such device {SECRET_PORT}"),
+        TimeoutError,
+        SerialException(f"Cannot open {SECRET_PORT}"),
+        ConfigEntryNotReady(f"Proxy not ready {SECRET_PORT}"),
+    ],
 )
 async def test_setup_retry_hides_api_key(
     hass: HomeAssistant,
@@ -49,7 +57,7 @@ async def test_setup_retry_hides_api_key(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_DEVICE: "esphome://proxy.local:6053/?port_name=RS232&key=SECRET",
+            CONF_DEVICE: SECRET_PORT,
             CONF_SYSTEM: 1,
             CONF_FIRST_CHANNEL: 1,
             CONF_LAST_CHANNEL: 3,
@@ -78,6 +86,30 @@ async def test_link_loss_reloads_entry(
         mock_connection.mock_link(False)
 
     reload.assert_called_once_with(init_integration.entry_id)
+
+
+async def test_link_loss_during_setup_reloads_entry(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a link lost while the platforms set up reloads once the entry loads."""
+
+    async def _lose_link(*args: object) -> None:
+        mock_connection.mock_link(False)
+
+    with (
+        patch(
+            "homeassistant.components.esi_r2d7.cover.async_setup_entry",
+            side_effect=_lose_link,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as reload,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_remove_entry_while_loaded(

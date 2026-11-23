@@ -106,12 +106,15 @@ async def test_stop_marks_recently_moved_blinds_unknown(
 
 
 @pytest.mark.parametrize(
-    ("service", "method"),
+    ("service", "method", "first_service", "expected_state"),
     [
-        (SERVICE_OPEN_COVER, "open_blind"),
-        (SERVICE_CLOSE_COVER, "close_blind"),
-        (SERVICE_STOP_COVER, "stop_system"),
+        (SERVICE_OPEN_COVER, "open_blind", SERVICE_CLOSE_COVER, CoverState.CLOSED),
+        (SERVICE_CLOSE_COVER, "close_blind", SERVICE_OPEN_COVER, CoverState.OPEN),
+        (SERVICE_STOP_COVER, "stop_system", SERVICE_CLOSE_COVER, CoverState.CLOSED),
     ],
+)
+@pytest.mark.parametrize(
+    "exception", [OSError("link gone"), HomeAssistantError("proxy not ready")]
 )
 async def test_command_error(
     hass: HomeAssistant,
@@ -119,15 +122,19 @@ async def test_command_error(
     init_integration: MockConfigEntry,
     service: str,
     method: str,
+    first_service: str,
+    expected_state: str,
+    exception: Exception,
 ) -> None:
-    """Test a failed write raises and leaves the state unchanged."""
-    getattr(mock_connection, method).side_effect = OSError("link gone")
+    """Test a failed write raises and keeps the previous state."""
+    await _call(hass, first_service, CHANNEL_1)
+    getattr(mock_connection, method).side_effect = exception
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await _call(hass, service, CHANNEL_1)
 
     assert exc_info.value.translation_key == "command_failed"
-    assert hass.states.get(CHANNEL_1).state == STATE_UNKNOWN
+    assert hass.states.get(CHANNEL_1).state == expected_state
 
 
 async def test_unavailable_when_link_drops(

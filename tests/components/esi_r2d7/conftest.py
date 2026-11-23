@@ -52,7 +52,8 @@ class MockConnection:
         self.connected = True
 
     async def _mock_disconnect(self) -> None:
-        self.mock_link(False)
+        # Like the library: a deliberate close does not notify listeners.
+        self.connected = False
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@
 from collections.abc import Awaitable
 from typing import Any, override
 
-from esi_r2d7 import CONNECT_ERRORS, R2D7Connection
+from esi_r2d7 import R2D7Connection
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -24,6 +24,7 @@ from .const import (
     CONF_LAST_CHANNEL,
     CONF_SYSTEM,
     DOMAIN,
+    LINK_ERRORS,
     RECENT_MOVE_SECONDS,
     R2D7ConfigEntry,
 )
@@ -108,7 +109,7 @@ class R2D7Blind(CoverEntity):
         """Send a command, translating link errors."""
         try:
             await command
-        except CONNECT_ERRORS as err:
+        except LINK_ERRORS as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
             ) from err

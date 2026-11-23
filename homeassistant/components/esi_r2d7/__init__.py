@@ -1,13 +1,20 @@
 """The ESI R2D7 integration."""
 
-from esi_r2d7 import CONNECT_ERRORS, R2D7Connection
+from esi_r2d7 import R2D7Connection
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SYSTEM, DOMAIN, LOGGER, R2D7ConfigEntry, redact_port
+from .const import (
+    CONF_SYSTEM,
+    DOMAIN,
+    LINK_ERRORS,
+    LOGGER,
+    R2D7ConfigEntry,
+    redact_port,
+)
 
 PLATFORMS = [Platform.COVER]
 
@@ -19,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None
 
     try:
         await connection.connect()
-    except CONNECT_ERRORS as err:
+    except LINK_ERRORS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -29,14 +36,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None
     entry.runtime_data = connection
 
     @callback
-    def _on_link_change() -> None:
-        # Only reload if the entry is still loaded. During entry removal,
-        # disconnect() fires this callback but the entry is already gone.
+    def _check_link() -> None:
+        # Runs on link changes and entry state changes, so a link lost while
+        # the platforms were still being set up reloads once the entry loads.
         if not connection.connected and entry.state is ConfigEntryState.LOADED:
             LOGGER.warning("ESI R2D7 serial link lost, reloading config entry")
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
-    entry.async_on_unload(connection.add_listener(_on_link_change))
+    entry.async_on_unload(connection.add_listener(_check_link))
+    entry.async_on_unload(entry.async_on_state_change(_check_link))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

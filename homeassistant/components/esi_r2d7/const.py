@@ -2,9 +2,10 @@
 
 import logging
 
-from esi_r2d7 import R2D7Connection
+from esi_r2d7 import CONNECT_ERRORS, R2D7Connection
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import HomeAssistantError
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "esi_r2d7"
@@ -17,6 +18,9 @@ CONF_LAST_CHANNEL = "last_channel"
 # unknown the blind it was pressed on plus every blind sent Open or Close
 # within this many seconds.
 RECENT_MOVE_SECONDS = 120
+
+# HomeAssistantError: the ESPHome serial proxy raises it while it is not ready.
+LINK_ERRORS = (*CONNECT_ERRORS, HomeAssistantError)
 
 type R2D7ConfigEntry = ConfigEntry[R2D7Connection]
 

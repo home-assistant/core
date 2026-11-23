@@ -42,7 +42,9 @@ rules:
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
-    comment: The R2D7 serial link has no authentication.
+    comment: >-
+      The R2D7 serial protocol has no authentication. An ESPHome proxy key is
+      part of the serial port the user selects.
   test-coverage: todo
 
   # Gold

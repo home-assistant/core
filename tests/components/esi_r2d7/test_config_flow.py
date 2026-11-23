@@ -22,6 +22,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from . import MOCK_DEVICE
 from .conftest import MockConnection
 
+SECRET_PORT = "esphome://proxy.local:6053/?port_name=RS232&key=SECRET"
+
 USER_INPUT = {
     CONF_DEVICE: MOCK_DEVICE,
     CONF_SYSTEM: 2.0,
@@ -71,22 +73,23 @@ async def test_user_form_creates_entry(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (ValueError("Invalid port"), "cannot_connect"),
+        (ValueError(f"Invalid port {SECRET_PORT}"), "cannot_connect"),
         (OSError("No such device"), "cannot_connect"),
         (TimeoutError, "cannot_connect"),
-        (SerialException("Proxy unavailable"), "cannot_connect"),
+        (SerialException(f"Cannot open {SECRET_PORT}"), "cannot_connect"),
         (ConfigEntryNotReady("ESPHome not ready"), "cannot_connect"),
-        (RuntimeError("boom"), "unknown"),
+        (RuntimeError(f"Failed opening {SECRET_PORT}"), "unknown"),
     ],
 )
 async def test_user_form_error(
     hass: HomeAssistant,
     mock_connection: MockConnection,
     mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
     error: str,
 ) -> None:
-    """Test the user step reports errors and can recover."""
+    """Test the user step reports errors without the API key, and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -98,6 +101,7 @@ async def test_user_form_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    assert "SECRET" not in caplog.text
 
     mock_connection.connect.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -150,3 +154,29 @@ async def test_user_duplicate_port_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_connection.connect.assert_not_awaited()
+
+
+async def test_user_port_added_during_check_aborts(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we abort if another flow adds the port while this one checks it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    async def _add_entry_then_connect() -> None:
+        MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: MOCK_DEVICE}).add_to_hass(
+            hass
+        )
+        mock_connection.connected = True
+
+    mock_connection.connect.side_effect = _add_entry_then_connect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_setup_entry.assert_not_awaited()

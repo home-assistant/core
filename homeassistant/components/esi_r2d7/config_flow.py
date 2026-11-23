@@ -2,19 +2,11 @@
 
 from typing import Any, override
 
-from esi_r2d7 import (
-    CONNECT_ERRORS,
-    MAX_CHANNEL,
-    MAX_SYSTEM,
-    MIN_CHANNEL,
-    MIN_SYSTEM,
-    R2D7Connection,
-)
+from esi_r2d7 import MAX_CHANNEL, MAX_SYSTEM, MIN_CHANNEL, MIN_SYSTEM, R2D7Connection
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -22,7 +14,14 @@ from homeassistant.helpers.selector import (
     SerialPortSelector,
 )
 
-from .const import CONF_FIRST_CHANNEL, CONF_LAST_CHANNEL, CONF_SYSTEM, DOMAIN, LOGGER
+from .const import (
+    CONF_FIRST_CHANNEL,
+    CONF_LAST_CHANNEL,
+    CONF_SYSTEM,
+    DOMAIN,
+    LINK_ERRORS,
+    LOGGER,
+)
 
 
 def _number(minimum: int, maximum: int) -> NumberSelector:
@@ -44,11 +43,11 @@ async def _async_attempt_connect(port: str, system: int) -> str | None:
 
     try:
         await connection.connect()
-    except (*CONNECT_ERRORS, HomeAssistantError):
-        # HomeAssistantError: an ESPHome proxy port is not ready yet
+    except LINK_ERRORS:
         return "cannot_connect"
-    except Exception:  # noqa: BLE001
-        LOGGER.exception("Unexpected exception")
+    except Exception as err:  # noqa: BLE001
+        # Only the type: the message can carry the port URL and its API key.
+        LOGGER.error("Unexpected exception: %s", type(err).__name__)
         return "unknown"
     else:
         await connection.disconnect()
@@ -82,6 +81,8 @@ class EsiR2D7ConfigFlow(ConfigFlow, domain=DOMAIN):
                     data[CONF_DEVICE], data[CONF_SYSTEM]
                 )
             ):
+                # Check again: another flow may have added the port meanwhile.
+                self._async_abort_entries_match({CONF_DEVICE: data[CONF_DEVICE]})
                 return self.async_create_entry(
                     title=f"ESI R2D7 system {data[CONF_SYSTEM]}", data=data
                 )
