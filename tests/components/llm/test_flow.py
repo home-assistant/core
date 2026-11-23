@@ -24,9 +24,9 @@ def test_format_result_merges_extra_placeholders() -> None:
         result,
         translations,
         "component.test.fix_flow",
-        flow_id="test:1234",
         extra_placeholders={"prefix": "Fix", "name": "Original"},
     )
+    assert formatted["flow_id"] == "flow1234"
     assert formatted["title"] == "Fix: Override"
 
 

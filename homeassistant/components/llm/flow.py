@@ -72,7 +72,7 @@ def format_result(
     translations: Mapping[str, str],
     base_prefix: str,
     *,
-    flow_id: str,
+    flow_id: str | None = None,
     fallback_title: str | None = None,
     extra_placeholders: Mapping[str, Any] | None = None,
     fallback_abort_description: str | None = None,
@@ -85,9 +85,10 @@ def format_result(
     concerns such as `EXTERNAL_STEP` rejection or attaching extra result fields
     (like `entry_id`) to the returned dictionary.
 
-    `extra_placeholders`, when provided, are merged beneath the step's own
-    `description_placeholders`. `fallback_title` and `fallback_abort_description`
-    are used when the corresponding keys are absent from `translations`.
+    `flow_id` defaults to ``result["flow_id"]`` when omitted. `extra_placeholders`,
+    when provided, are merged beneath the step's own `description_placeholders`.
+    `fallback_title` and `fallback_abort_description` are used when the
+    corresponding keys are absent from `translations`.
     """
     flow_type = result["type"]
     step_placeholders: Mapping[str, Any] | None = result.get("description_placeholders")
@@ -100,7 +101,7 @@ def format_result(
         placeholders = step_placeholders or extra_placeholders
 
     formatted: JsonObjectType = {
-        "flow_id": flow_id,
+        "flow_id": flow_id or result["flow_id"],
         "type": str(flow_type),
     }
 
