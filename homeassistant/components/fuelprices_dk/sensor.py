@@ -20,6 +20,8 @@ from .coordinator import FuelPricesDKCoordinator
 if TYPE_CHECKING:
     from . import FuelpricesDkConfigEntry
 
+PARALLEL_UPDATES = 0
+
 SENSORS = [
     SensorEntityDescription(
         key="price",

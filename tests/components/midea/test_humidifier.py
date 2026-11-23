@@ -21,9 +21,10 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    HumidifierService,
 )
 from homeassistant.components.midea.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -249,7 +250,7 @@ async def test_humidifier_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            HumidifierService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )
