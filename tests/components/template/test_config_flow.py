@@ -12,7 +12,7 @@ from pytest_unordered import unordered
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -544,6 +544,7 @@ async def test_config_flow(
     assert state.state == template_state
     for key, value in extra_attrs.items():
         assert state.attributes[key] == value
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
 
 async def test_config_flow_sensor_unit_of_measurement_context(
