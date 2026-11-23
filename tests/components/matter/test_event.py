@@ -352,36 +352,58 @@ async def test_action_switch_node(
 
 
 @pytest.mark.parametrize("node_fixture", ["ikea_scroll_wheel"])
-@pytest.mark.parametrize(
-    ("presses_counted", "press_count"),
-    [(11, 11), (18, 18)],
-    ids=["11_presses", "max_presses"],
-)
-async def test_scroll_wheel_press_count(
+async def test_scroll_wheel_rotary_endpoints(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
-    presses_counted: int,
-    press_count: int,
 ) -> None:
-    """Test the press count is passed through uncapped for a scroll wheel."""
-    state = hass.states.get("event.bilresa_scroll_wheel_button_1")
-    assert state
-    # check event_types from featuremap 22 (0b10110)
+    """Test the rotary endpoints of a scroll wheel keep only the legacy entity."""
+    entries = {
+        entry.unique_id.split("-MatterNodeDevice-", 1)[1]: entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry,
+            hass.config_entries.async_entries("matter")[0].entry_id,
+        )
+        if entry.domain == "event"
+    }
+    # the rotary endpoints (Switches.Custom "rotary" tag) have no standard button
+    # entity, and their legacy entity stays enabled and is not renamed
+    for endpoint_id in (1, 2, 4, 5, 7, 8):
+        assert f"{endpoint_id}-GenericSwitchButton-59-1" not in entries
+        legacy = entries[f"{endpoint_id}-GenericSwitch-59-1"]
+        assert legacy.disabled_by is None
+        assert legacy.translation_key == "button"
+    # the push button endpoints get the standard button entity
+    # and the deprecated legacy entity
+    for endpoint_id in (3, 6, 9):
+        assert entries[f"{endpoint_id}-GenericSwitchButton-59-1"].disabled_by is None
+        legacy = entries[f"{endpoint_id}-GenericSwitch-59-1"]
+        assert legacy.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert legacy.translation_key == "button_deprecated"
+
+    # the legacy entity on a rotary endpoint works as before
+    entity_id = entries["1-GenericSwitch-59-1"].entity_id
+    state = hass.states.get(entity_id)
     assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
-        "press_start",
-        "press_end",
-        "single_press",
-        "multi_press",
+        f"multi_press_{presses}" for presses in range(1, 9)
     ]
-    # trigger firing a MultiPressComplete event from the device
+    await trigger_switch_event(
+        hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 5}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_5"
+
+    # the push button endpoint maps multi-presses to the standard types
+    entity_id = entries["3-GenericSwitchButton-59-1"].entity_id
     await trigger_switch_event(
         hass,
         matter_client,
         matter_node,
         6,
-        {"totalNumberOfPressesCounted": presses_counted},
+        {"totalNumberOfPressesCounted": 3},
+        endpoint_id=3,
     )
-    state = hass.states.get("event.bilresa_scroll_wheel_button_1")
+    state = hass.states.get(entity_id)
     assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press"
-    assert state.attributes[ATTR_PRESS_COUNT] == press_count
+    assert state.attributes[ATTR_PRESS_COUNT] == 3

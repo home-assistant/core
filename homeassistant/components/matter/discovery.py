@@ -87,7 +87,7 @@ def _matches_cluster_revision(
 
 
 @callback
-def async_discover_entities(
+def async_discover_entities(  # noqa: C901
     endpoint: MatterEndpoint, server_schema: int
 ) -> Generator[MatterEntityInfo]:
     """Run discovery on MatterEndpoint and return matching MatterEntityInfo(s)."""
@@ -162,6 +162,13 @@ def async_discover_entities(
         if schema.absent_clusters is not None and any(
             endpoint.node.has_cluster(val_schema)
             for val_schema in schema.absent_clusters
+        ):
+            continue
+
+        # check for semantic tags that may not be present on the endpoint
+        if schema.absent_semantic_tags is not None and any(
+            semantic_tag.on_endpoint(endpoint)
+            for semantic_tag in schema.absent_semantic_tags
         ):
             continue
 

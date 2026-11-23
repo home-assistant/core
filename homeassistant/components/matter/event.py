@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
-from .models import MatterDiscoverySchema
+from .models import MatterDiscoverySchema, SemanticTag
 
 SwitchFeature = clusters.Switch.Bitmaps.Feature
 
@@ -35,6 +35,19 @@ EVENT_TYPES_MAP = {
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
+
+SemanticTagNamespace = clusters.Globals.Enums.namespace
+
+# IKEA uses a Switches.Custom semantic tag labeled "rotary" for the Generic
+# Switch endpoints that report the rotation of a scroll wheel (one endpoint
+# per direction) as multi-press counts. These are no buttons, so they don't get
+# the standard button event entity and keep the legacy event entity until
+# a dedicated rotary event entity replaces it.
+ROTARY_SWITCH_TAG = SemanticTag(
+    namespace_id=SemanticTagNamespace.kSwitches,
+    tag=0x08,  # Custom
+    label="rotary",
+)
 
 # Matter-specific event types of the standard button event entity
 EVENT_TYPE_INITIAL_PRESS = "initial_press"
@@ -184,11 +197,16 @@ class MatterEventEntity(MatterEventEntityBase):
     """Legacy Matter Event entity, replaced by MatterButtonEventEntity.
 
     Deprecated and disabled by default in HA 2026.8, remove in 2027.2.
+    Rotary endpoints don't get the replacement, so it stays enabled
+    there until a dedicated rotary event entity replaces it.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
+        if ROTARY_SWITCH_TAG.on_endpoint(self._endpoint):
+            self._attr_translation_key = "button"
+            self._attr_entity_registry_enabled_default = True
         # fill the event types based on the features the switch supports
         event_types: list[str] = []
         feature_map = int(
@@ -267,6 +285,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Switch.Attributes.FeatureMap,
         ),
         device_type=(device_types.GenericSwitch,),
+        absent_semantic_tags=(ROTARY_SWITCH_TAG,),
         optional_attributes=(
             clusters.Switch.Attributes.NumberOfPositions,
             clusters.FixedLabel.Attributes.LabelList,
@@ -279,7 +298,8 @@ DISCOVERY_SCHEMAS = [
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button_deprecated",
-            # Deprecated and disabled by default in HA 2026.8, remove in 2027.2
+            # Deprecated and disabled by default in HA 2026.8, remove in 2027.2,
+            # except on rotary endpoints (see MatterEventEntity)
             entity_registry_enabled_default=False,
         ),
         entity_class=MatterEventEntity,

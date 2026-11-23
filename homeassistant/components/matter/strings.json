@@ -184,17 +184,6 @@
           "event_type": {
             "state": {
               "initial_press": "Pressed",
-              "switch_latched": "Switch latched"
-            }
-          }
-        }
-      },
-      "button_deprecated": {
-        "name": "Button (deprecated)",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
               "long_press": "Held down",
               "long_release": "Released after being held down",
               "multi_press_1": "Pressed once",
@@ -206,6 +195,28 @@
               "multi_press_7": "Pressed 7 times",
               "multi_press_8": "Pressed 8 times",
               "short_release": "Released after being pressed",
+              "switch_latched": "Switch latched"
+            }
+          }
+        }
+      },
+      "button_deprecated": {
+        "name": "Button (deprecated)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
               "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
             }
           }
