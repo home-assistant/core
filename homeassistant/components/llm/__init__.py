@@ -25,7 +25,6 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import flow
 from .const import DOMAIN
-from .flow import substitute_translation_placeholders
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,6 @@ __all__ = [
     "DOMAIN",
     "LLMTools",
     "flow",
-    "substitute_translation_placeholders",
 ]
 
 

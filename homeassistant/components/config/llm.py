@@ -846,11 +846,6 @@ class ConfigureFlowTool(Tool):
         next_step_id: str | None = args.get("next_step_id")
         abort: bool = args["abort"]
 
-        if (
-            input_error := llm_flow.validate_step_input(user_input, next_step_id)
-        ) is not None:
-            return input_error
-
         try:
             flow_handler = _resolve_short_flow_id(hass, short_flow_id)
         except HomeAssistantError as err:
@@ -875,8 +870,8 @@ class ConfigureFlowTool(Tool):
         try:
             step_result = await llm_flow.async_configure_step(
                 flow_mgr,
-                flow_handler,
-                short_flow_id,
+                flow_handler.flow_id,
+                display_flow_id=short_flow_id,
                 user_input=user_input,
                 next_step_id=next_step_id,
                 abort=abort,

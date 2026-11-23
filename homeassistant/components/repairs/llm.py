@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 import probatio
 
-from homeassistant.components.llm import LLMTools, substitute_translation_placeholders
+from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -18,6 +18,7 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    substitute_translation_placeholders,
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 

@@ -4,51 +4,28 @@ Integrations exposing DataEntryFlow-based workflows (such as config, options,
 or repair fix flows) as LLM tools can compose these helpers to handle common
 flow interaction mechanics consistently:
 
-1. Call `validate_step_input` before resolving a flow to reject mutually
-   exclusive `user_input` and `next_step_id` arguments early.
-2. Call `async_configure_step` to inspect, advance, poll progress on, or
-   abort an in-progress flow step. It returns either an error/abort `ToolResult`
-   or the next `FlowResult`.
-3. Call `format_result` to serialize the resulting `FlowResult` (`form`,
+1. Call `async_configure_step` to validate inputs, inspect, advance, poll
+   progress on, or abort an in-progress flow step. It returns either an
+   error/abort `ToolResult` or the next `FlowResult`.
+2. Call `format_result` to serialize the resulting `FlowResult` (`form`,
    `menu`, `progress`, `create_entry`, or `abort`) with translated titles,
    descriptions, schema fields, and errors.
 """
 
 from collections.abc import Mapping
-import re
 from typing import TYPE_CHECKING, Any
 
 import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.llm import ToolResult
+from homeassistant.helpers.llm import ToolResult, substitute_translation_placeholders
 from homeassistant.util.json import JsonObjectType, JsonValueType
-
-_PLACEHOLDER_RE = re.compile(r"{([^{}]+)}")
 
 
 def _error_result(error: str) -> ToolResult:
     """Return an error ToolResult."""
     return ToolResult(data={"error": error}, error=True)
-
-
-def substitute_translation_placeholders(
-    text: str | None, placeholders: Mapping[str, Any] | None
-) -> str | None:
-    """Replace {key} placeholders in a translated string using a single pass.
-
-    Leaves unknown placeholders intact and avoids re-expanding placeholder
-    syntax contained inside replacement values.
-    """
-    if not text or not placeholders:
-        return text
-    return _PLACEHOLDER_RE.sub(
-        lambda match: (
-            str(val) if (val := placeholders.get(match[1])) is not None else match[0]
-        ),
-        text,
-    )
 
 
 def _enrich_schema_fields(
@@ -209,15 +186,27 @@ def format_result(
     return formatted
 
 
-def validate_step_input(
-    user_input: dict[str, Any] | None,
-    next_step_id: str | None,
-) -> ToolResult | None:
-    """Validate mutually exclusive flow step input arguments.
+async def async_configure_step[
+    _FlowContextT: data_entry_flow.FlowContext,
+    _FlowResultT: data_entry_flow.FlowResult[Any, Any],
+    _HandlerT,
+](
+    flow_mgr: data_entry_flow.FlowManager[_FlowContextT, _FlowResultT, _HandlerT],
+    flow_id: str,
+    *,
+    display_flow_id: str | None = None,
+    user_input: dict[str, Any] | None = None,
+    next_step_id: str | None = None,
+    abort: bool = False,
+) -> _FlowResultT | ToolResult:
+    """Validate inputs and inspect, advance, poll, or abort an in-progress flow step.
 
-    Returns an error `ToolResult` when both `user_input` and `next_step_id`
-    are supplied, or when `next_step_id` is passed inside `user_input`;
-    otherwise returns `None`.
+    Returns a `ToolResult` directly when input arguments are invalid, when the
+    flow is not found, when `abort` is true, when input does not match the
+    current step type, or when `async_configure` raises `InvalidData` or
+    `UnknownFlow`. Otherwise returns the next `FlowResult` (or the current
+    `SHOW_PROGRESS` step while its progress task is still running) for the
+    caller to format with `format_result`.
     """
     if user_input is not None and next_step_id is not None:
         return _error_result("Cannot specify both 'user_input' and 'next_step_id'.")
@@ -226,31 +215,11 @@ def validate_step_input(
             "Use the 'next_step_id' parameter instead of 'user_input' "
             "to select a menu option."
         )
-    return None
 
+    shown_id = display_flow_id or flow_id
+    if (flow_handler := flow_mgr._progress.get(flow_id)) is None:  # noqa: SLF001
+        return _error_result(f"Flow '{shown_id}' not found.")
 
-async def async_configure_step[
-    _FlowContextT: data_entry_flow.FlowContext,
-    _FlowResultT: data_entry_flow.FlowResult[Any, Any],
-    _HandlerT,
-](
-    flow_mgr: data_entry_flow.FlowManager[_FlowContextT, _FlowResultT, _HandlerT],
-    flow_handler: data_entry_flow.FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
-    display_flow_id: str,
-    *,
-    user_input: dict[str, Any] | None,
-    next_step_id: str | None,
-    abort: bool,
-) -> _FlowResultT | ToolResult:
-    """Inspect, advance, poll progress on, or abort an in-progress flow step.
-
-    Returns a `ToolResult` directly when `abort` is true, when input does not
-    match the current step type, or when `async_configure` raises `InvalidData`
-    or `UnknownFlow`. Otherwise returns the next `FlowResult` (or the current
-    `SHOW_PROGRESS` step while its progress task is still running) for the
-    caller to format with `format_result`.
-    """
-    flow_id = flow_handler.flow_id
     cur_step = flow_handler.cur_step
     if TYPE_CHECKING:
         assert cur_step is not None
@@ -260,7 +229,7 @@ async def async_configure_step[
         return ToolResult(
             data={
                 "result": {
-                    "flow_id": display_flow_id,
+                    "flow_id": shown_id,
                     "type": "abort",
                     "reason": "aborted",
                 }
@@ -301,4 +270,4 @@ async def async_configure_step[
     except data_entry_flow.InvalidData as err:
         return _error_result(f"Invalid input: {err.schema_errors}")
     except data_entry_flow.UnknownFlow:
-        return _error_result(f"Flow '{display_flow_id}' not found.")
+        return _error_result(f"Flow '{shown_id}' not found.")
