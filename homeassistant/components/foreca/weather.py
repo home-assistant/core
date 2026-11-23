@@ -53,9 +53,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foreca weather entity for every configured location."""
-    for subentry_id, coordinator in entry.runtime_data.items():
+    for subentry_id, coordinators in entry.runtime_data.items():
         async_add_entities(
-            [ForecaWeather(coordinator, subentry_id)],
+            [ForecaWeather(coordinators.weather, subentry_id)],
             config_subentry_id=subentry_id,
         )
 
@@ -139,7 +139,8 @@ async def _fetch_air_quality[T](request: Awaitable[T]) -> T:
 
 
 class ForecaWeather(
-    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator], ForecaEntity
+    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator],
+    ForecaEntity[ForecaUpdateCoordinator],
 ):
     """Define a Foreca weather entity."""
 
@@ -385,6 +386,41 @@ class ForecaWeather(
                 value, UnitOfPrecipitationDepth.CENTIMETERS, self._precipitation_unit
             ),
             _ROUNDING_PRECISION,
+        )
+
+    async def async_get_minute_forecast(self) -> ServiceResponse:
+        """Return the precipitation rate for each minute of the next hour."""
+        try:
+            minutes = await self.coordinator.client.forecast_minutely(
+                self.coordinator.location
+            )
+        except ForecaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="minute_forecast_error",
+            ) from err
+        return {
+            "resolution": minutes.resolution,
+            "forecast": [
+                {
+                    "datetime": timestamp.isoformat(),
+                    "precipitation": self._convert_precipitation(minute.precip_rate),
+                }
+                for minute in minutes
+                if (timestamp := dt_util.parse_datetime(minute.time or "")) is not None
+            ],
+        }
+
+    def _convert_precipitation(self, rate: float | None) -> float | None:
+        """Convert a rate in mm/h to the entity's precipitation unit per hour.
+
+        Not rounded like the other forecast values: at two decimals in inches,
+        light rain below about 0.13 mm/h would read as 0.
+        """
+        if rate is None:
+            return None
+        return UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+            rate, UnitOfPrecipitationDepth.MILLIMETERS, self._precipitation_unit
         )
 
     async def async_get_air_quality_forecast(self, type: str) -> ServiceResponse:

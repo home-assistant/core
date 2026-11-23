@@ -9,6 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::foreca::config::step::user::data_description::api_key%]"
+        },
+        "description": "The Foreca API rejected the API key. Enter a new key from the My API page.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -48,6 +58,54 @@
   },
   "entity": {
     "sensor": {
+      "observation_station": {
+        "name": "Observation station"
+      },
+      "observation_time": {
+        "name": "Observation time"
+      },
+      "observed_apparent_temperature": {
+        "name": "Observed apparent temperature"
+      },
+      "observed_condition": {
+        "name": "Observed condition",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "lightning-rainy": "[%key:component::weather::entity_component::_::state::lightning-rainy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]"
+        }
+      },
+      "observed_humidity": {
+        "name": "Observed humidity"
+      },
+      "observed_pressure": {
+        "name": "Observed pressure"
+      },
+      "observed_snow_depth": {
+        "name": "Observed snow depth"
+      },
+      "observed_temperature": {
+        "name": "Observed temperature"
+      },
+      "observed_visibility": {
+        "name": "Observed visibility"
+      },
+      "observed_wind_direction": {
+        "name": "Observed wind direction"
+      },
+      "observed_wind_gust_speed": {
+        "name": "Observed wind gust speed"
+      },
+      "observed_wind_speed": {
+        "name": "Observed wind speed"
+      },
       "precipitation_probability": {
         "name": "Precipitation probability"
       },
@@ -62,6 +120,9 @@
     },
     "air_quality_not_on_plan": {
       "message": "The plan of this API key does not include air quality."
+    },
+    "minute_forecast_error": {
+      "message": "Error fetching the minute forecast."
     },
     "three_hour_forecast_error": {
       "message": "Error fetching the 3-hour forecast."
@@ -99,6 +160,10 @@
         }
       },
       "name": "Get extra forecast values"
+    },
+    "get_minute_forecast": {
+      "description": "Retrieves the precipitation rate for each minute of the next hour, in the weather entity's precipitation unit per hour. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get minute forecast"
     }
   }
 }

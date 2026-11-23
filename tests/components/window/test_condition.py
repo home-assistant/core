@@ -19,7 +19,7 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
 from homeassistant.components.window.condition import CONDITIONS
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -359,7 +359,7 @@ async def test_window_condition_excludes_non_window_device_class(
     condition_any = await create_target_condition(
         hass,
         condition=condition_key,
-        target={CONF_ENTITY_ID: all_entities},
+        target={TargetKey.ENTITY_ID: all_entities},
         behavior="any",
     )
 
