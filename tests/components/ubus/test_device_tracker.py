@@ -816,6 +816,45 @@ async def test_tracker_rediscovered_by_other_router_after_entity_removal(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_removed_tracker_recreated_with_same_entity_id(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a removed tracker is recreated with its original entity ID."""
+    _mock, ubus = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # The tracker is removed while the client is still connected, so it is
+    # recreated and must reuse its entity ID.
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE)
+        == entity_id
+    )
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_unavailable_while_reporting_router_unreachable(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

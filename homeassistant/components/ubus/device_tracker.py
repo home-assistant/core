@@ -278,7 +278,9 @@ async def async_setup_entry(
         _async_release_removed_claim(
             entity_registry, event.data["entity_id"], tracked, shared
         )
-        _async_update_devices()
+        # Defer rediscovery until the old entity's removal has released its
+        # entity ID; otherwise the recreated tracker gets a suffixed one.
+        hass.loop.call_soon(_async_update_devices)
 
     # Recreate the trackers this entry owns so it keeps reporting clients
     # connected to another router.
