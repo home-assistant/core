@@ -127,22 +127,20 @@ def get_webhook_handler(
         elif isinstance(data, ValveEventData):
             coordinator_data.state.valve_state = data.state
         elif isinstance(data, TelemetryEventData):
-            errors = data.errors or []
-            coordinator_data.telemetry.flow = (
-                data.flow if "flow" not in errors else None
-            )
-            coordinator_data.telemetry.pressure = (
-                data.pressure if "pressure" not in errors else None
-            )
-            coordinator_data.telemetry.water_temperature = (
-                data.temperature if "temperature" not in errors else None
-            )
+            if (telemetry := coordinator_data.telemetry) is not None:
+                errors = data.errors or []
+                telemetry.flow = data.flow if "flow" not in errors else None
+                telemetry.pressure = data.pressure if "pressure" not in errors else None
+                telemetry.water_temperature = (
+                    data.temperature if "temperature" not in errors else None
+                )
         elif isinstance(data, WifiChangedEventData):
-            coordinator_data.networking.ip = data.ip
-            coordinator_data.networking.gateway = data.gateway
-            coordinator_data.networking.subnet = data.subnet
-            coordinator_data.networking.ssid = data.ssid
-            coordinator_data.networking.rssi = data.rssi
+            if (networking := coordinator_data.networking) is not None:
+                networking.ip = data.ip
+                networking.gateway = data.gateway
+                networking.subnet = data.subnet
+                networking.ssid = data.ssid
+                networking.rssi = data.rssi
         elif isinstance(data, PowerSupplyChangedEventData):
             coordinator_data.state.power_supply = data.supply
         elif isinstance(data, AutoShutOffReportData):

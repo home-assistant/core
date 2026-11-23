@@ -52,9 +52,9 @@ class WatergateAgregatedRequests:
     """Class to hold aggregated requests."""
 
     state: DeviceStateV2
-    telemetry: TelemetryData
-    networking: NetworkingData
-    auto_shut_off: AutoShutOffState
+    telemetry: TelemetryData | None
+    networking: NetworkingData | None
+    auto_shut_off: AutoShutOffState | None
     power: PowerSupply | None = None
 
 
@@ -99,12 +99,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
                 translation_key="device_unavailable",
             ) from exc
         # The client returns None when the device answers with an empty response
-        if (
-            state is None
-            or telemetry is None
-            or networking is None
-            or auto_shut_off is None
-        ):
+        if state is None:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="empty_response",
