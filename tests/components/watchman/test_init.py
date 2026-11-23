@@ -58,22 +58,24 @@ async def test_setup_unload_and_reload_entry(
 async def test_options_update_triggers_reload(
     hass: HomeAssistant, mock_sensor_client
 ) -> None:
-    """Test that changing integration options reloads the entry."""
+    """Test that changing integration options via options flow reloads the entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Patch the underlying reload call to verify the listener fired it
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as mock_async_reload:
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_USAGE_WINDOW: 30}
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USAGE_WINDOW: 30},
         )
         await hass.async_block_till_done()
 
+        assert config_entry.options[CONF_USAGE_WINDOW] == 30
         mock_async_reload.assert_called_once_with(config_entry.entry_id)
 
 

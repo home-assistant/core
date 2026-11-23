@@ -75,7 +75,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     _async_delete_repair_issue(hass, config_entry)
-    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
 
 async def async_unload_entry(
@@ -84,13 +83,6 @@ async def async_unload_entry(
     """Handle removal of an entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
     _async_delete_repair_issue(hass, config_entry)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, config_entry: SENSiTConfigEntry
-) -> None:
-    """Reload config entry."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_remove_config_entry_device(
