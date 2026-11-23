@@ -134,8 +134,14 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return whether the purifier still exposes writable power control."""
-        return super().available and self._power_control_is_available()
+        """Return whether this point is still owned by the purifier fan."""
+        management_point = self._management_point
+        return (
+            super().available
+            and self._power_control_is_available()
+            and management_point is not None
+            and not has_climate_entity(management_point)
+        )
 
     @override
     def update_state(self) -> None:

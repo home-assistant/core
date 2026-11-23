@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import ManagementPoint
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
+from homeassistant.components.daikin_onecta.const import DOMAIN, FANMODE_FIXED
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -22,15 +23,18 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
     FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOnectaClient
 from .platform_helpers import (
     AIR_PURIFIER_ENTITY_ID,
+    _async_fire_coordinator_update,
     _async_setup_fixture,
     _execute_typed_command,
+    _load_gateway_devices,
 )
 
 
@@ -40,6 +44,40 @@ def _air_purification(config_entry: MockConfigEntry):
     point = device.device.management_points_by_type("climateControl")[0]
     assert point.air_purification is not None
     return point.air_purification
+
+
+async def test_air_purifier_becomes_unavailable_when_climate_control_appears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Stop exposing purifier power when a point gains climate ownership."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    gateway = deepcopy(next(iter(coordinator.data.values())).device)
+    point = gateway.management_points_by_type("climateControl")[0]
+    dry_point = _load_gateway_devices("dry")[0].management_points_by_type(
+        "climateControl"
+    )[0]
+    assert dry_point.temperature_control is not None
+    point.temperature_control = deepcopy(dry_point.temperature_control)
+    mock_onecta_client.get_gateway_devices.return_value = [gateway]
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    climate_entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_{point.embedded_id}_roomTemperature",
+    )
+    assert climate_entity_id is not None
+    climate_state = hass.states.get(climate_entity_id)
+    assert climate_state is not None
+    fan_state = hass.states.get(AIR_PURIFIER_ENTITY_ID)
+    assert fan_state is not None
+    assert fan_state.state == "unavailable"
 
 
 async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
