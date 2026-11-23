@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HassJob,
     HassJobType,
@@ -65,6 +66,25 @@ class UpdateFailedUnreachable(UpdateFailed):
     Use for any device or service that cannot be reached, e.g. a device that
     was turned off. The failure is logged at info level instead of error.
     """
+
+
+def _setup_retry_translation_key(cause: BaseException | None) -> str | None:
+    """Return the translation key for a setup retry caused by a generic error."""
+    # Timeouts first: some timeouts are also client or request errors
+    if isinstance(cause, (TimeoutError, requests.exceptions.Timeout)) or (
+        isinstance(cause, urllib.error.URLError) and cause.reason == "timed out"
+    ):
+        return "update_failed_timeout"
+    if isinstance(
+        cause,
+        (
+            aiohttp.ClientError,
+            requests.exceptions.RequestException,
+            urllib.error.URLError,
+        ),
+    ):
+        return "update_failed_connection"
+    return None
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -393,9 +413,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 return
         cause = self.last_exception
+        translation_domain = getattr(cause, "translation_domain", None)
+        translation_key = getattr(cause, "translation_key", None)
+        # Errors the coordinator handles itself have no translation of their own
+        if translation_key is None and (
+            translation_key := _setup_retry_translation_key(cause)
+        ):
+            translation_domain = HOMEASSISTANT_DOMAIN
         ex = ConfigEntryNotReady(
-            translation_domain=getattr(cause, "translation_domain", None),
-            translation_key=getattr(cause, "translation_key", None),
+            translation_domain=translation_domain,
+            translation_key=translation_key,
             translation_placeholders=getattr(cause, "translation_placeholders", None),
             retry_after=getattr(cause, "retry_after", None),
         )
