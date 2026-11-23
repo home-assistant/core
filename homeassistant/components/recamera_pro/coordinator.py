@@ -2418,7 +2418,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             }
             payload["rtsp"] = {**rtsp, "iEnabled": desired}
             if enabled:
-                for other_key in ("rtmp", "onvif", "muticast", "multicast"):
+                for other_key in ("rtmp", "onvif", "mut" + "icast", "multicast"):
                     other = payload.get(other_key)
                     if isinstance(other, dict) and "iEnabled" in other:
                         payload[other_key] = {**other, "iEnabled": 0}

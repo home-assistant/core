@@ -33,4 +33,3 @@ stop_device_capture:
     entity:
       integration: recamera_pro
       domain: camera
-

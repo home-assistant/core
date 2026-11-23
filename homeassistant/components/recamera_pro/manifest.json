@@ -1,24 +1,14 @@
 {
   "domain": "recamera_pro",
   "name": "reCamera Pro",
-  "categories": [
-    "security_safety"
-  ],
-  "codeowners": [
-    "@yyling0101-a11y"
-  ],
+  "categories": ["security_safety"],
+  "codeowners": ["@yyling0101-a11y"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recamera_pro",
   "integration_type": "device",
   "iot_class": "local_push",
-  "loggers": [
-    "recamera_protocol"
-  ],
+  "loggers": ["recamera_protocol"],
   "quality_scale": "bronze",
-  "requirements": [
-    "recamera-pro-ha-protocol==0.1.0"
-  ],
-  "zeroconf": [
-    "_recamera._tcp.local."
-  ]
+  "requirements": ["recamera-pro-ha-protocol==0.1.0"],
+  "zeroconf": ["_recamera._tcp.local."]
 }

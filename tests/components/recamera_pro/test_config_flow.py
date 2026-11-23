@@ -65,10 +65,10 @@ def _make_flow() -> RecameraProConfigFlow:
         ),
     )
     flow.context = {}
-    flow._async_current_entries = list  # noqa: SLF001
+    flow._async_current_entries = list
     flow.async_set_unique_id = AsyncMock()
-    flow._abort_if_unique_id_configured = Mock()  # noqa: SLF001
-    flow._async_abort_entries_match = Mock()  # noqa: SLF001
+    flow._abort_if_unique_id_configured = Mock()
+    flow._async_abort_entries_match = Mock()
     flow.async_create_entry = Mock(
         side_effect=lambda **kw: {"type": FlowResultType.CREATE_ENTRY, **kw}
     )
@@ -133,8 +133,8 @@ async def test_zeroconf_filters_bridge_and_other_entry_hosts() -> None:
         unique_id="4a:f8:34:07:ab:3d",
         data={CONF_HOST: "192.168.10.22", CONF_DEVICE_ID: "4a:f8:34:07:ab:3d"},
     )
-    flow._async_current_entries = lambda: [other_entry]  # noqa: SLF001
-    flow._start_discovery_refresh = Mock()  # noqa: SLF001
+    flow._async_current_entries = lambda: [other_entry]
+    flow._start_discovery_refresh = Mock()
 
     discovery_info = SimpleNamespace(
         type="_recamera._tcp.local.",
@@ -149,7 +149,7 @@ async def test_zeroconf_filters_bridge_and_other_entry_hosts() -> None:
     ):
         res = await flow.async_step_zeroconf(discovery_info)
     assert res["type"] == FlowResultType.FORM
-    assert flow._discovery_host == "192.168.7.214"  # noqa: SLF001
+    assert flow._discovery_host == "192.168.7.214"
 
 
 @pytest.mark.asyncio
@@ -157,11 +157,11 @@ async def test_zeroconf_confirm_does_not_trust_unverified_mdns_serial() -> None:
     """Test mDNS serial is not written to entry data unless verified by HTTP probe."""
     flow = _make_flow()
     flow.hass.config_entries.async_schedule_reload = Mock()
-    flow._discovery_mac = "fe:47:bc:57:26:0a"  # noqa: SLF001
-    flow._discovery_serial = "UNVERIFIED_MDNS_SERIAL"  # noqa: SLF001
-    flow._discovery_host = "192.168.7.214"  # noqa: SLF001
-    flow._discovery_hosts = ["192.168.7.214"]  # noqa: SLF001
-    flow._cancel_discovery_refresh = Mock()  # noqa: SLF001
+    flow._discovery_mac = "fe:47:bc:57:26:0a"
+    flow._discovery_serial = "UNVERIFIED_MDNS_SERIAL"
+    flow._discovery_host = "192.168.7.214"
+    flow._discovery_hosts = ["192.168.7.214"]
+    flow._cancel_discovery_refresh = Mock()
 
     probe_no_serial = _probe(mac="fe:47:bc:57:26:0a", serial=None)
     with patch(
@@ -197,7 +197,7 @@ async def test_reconfigure_and_reauth_flows() -> None:
     )
     flow = _make_flow()
     flow.hass.config_entries.async_schedule_reload = Mock()
-    flow._get_reconfigure_entry = lambda: entry  # noqa: SLF001
+    flow._get_reconfigure_entry = lambda: entry
     flow.async_update_reload_and_abort = Mock(
         return_value={"type": FlowResultType.ABORT, "reason": "reconfigure_successful"}
     )
@@ -213,7 +213,7 @@ async def test_reconfigure_and_reauth_flows() -> None:
     assert probe_mock.await_args.args[3] == "old_password"
 
     flow2 = _make_flow()
-    flow2._get_reauth_entry = lambda: entry  # noqa: SLF001
+    flow2._get_reauth_entry = lambda: entry
     flow2.async_update_reload_and_abort = Mock(
         return_value={"type": FlowResultType.ABORT, "reason": "reauth_successful"}
     )
@@ -354,7 +354,7 @@ async def test_manual_and_reconfigure_error_paths() -> None:
             CONF_SERIAL_NUMBER: "SN123456",
         },
     )
-    flow._get_reconfigure_entry = lambda: entry  # noqa: SLF001
+    flow._get_reconfigure_entry = lambda: entry
     reconf_form = await flow.async_step_reconfigure()
     assert reconf_form["type"] == FlowResultType.FORM
     with patch(
@@ -428,11 +428,11 @@ async def test_zeroconf_confirm_error_paths_and_existing_entry_update() -> None:
     """Test zeroconf confirm error handling and existing entry host update."""
     flow = _make_flow()
     flow.hass.config_entries.async_schedule_reload = Mock()
-    flow._discovery_mac = "4a:f8:34:07:ab:3d"  # noqa: SLF001
-    flow._discovery_serial = "SN123456"  # noqa: SLF001
-    flow._discovery_host = "192.168.42.1"  # noqa: SLF001
-    flow._discovery_hosts = ["192.168.42.1"]  # noqa: SLF001
-    flow._cancel_discovery_refresh = Mock()  # noqa: SLF001
+    flow._discovery_mac = "4a:f8:34:07:ab:3d"
+    flow._discovery_serial = "SN123456"
+    flow._discovery_host = "192.168.42.1"
+    flow._discovery_hosts = ["192.168.42.1"]
+    flow._cancel_discovery_refresh = Mock()
 
     form = await flow.async_step_zeroconf_confirm()
     assert form["type"] == FlowResultType.FORM
@@ -483,7 +483,7 @@ async def test_zeroconf_existing_entry_update() -> None:
             CONF_DEVICE_ID: "4a:f8:34:07:ab:3d",
         },
     )
-    flow._async_current_entries = lambda: [existing]  # noqa: SLF001
+    flow._async_current_entries = lambda: [existing]
     discovery_info = SimpleNamespace(
         name="reCamera Pro (4A:F8:34:07:AB:3D)._recamera._tcp.local.",
         type="_recamera._tcp.local.",
@@ -520,11 +520,11 @@ async def test_probe_hosts_and_pending_discovery_helpers() -> None:
         "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
         new=AsyncMock(side_effect=RecameraAuthenticationError("bad")),
     ):
-        _, _, err = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+        _, _, err = await flow._async_probe_existing_discovery_hosts(
             entry, ["192.168.42.1"]
         )
         assert err == "invalid_auth"
-        _, _, err_new = await flow._async_probe_new_discovery_hosts(  # noqa: SLF001
+        _, _, err_new = await flow._async_probe_new_discovery_hosts(
             ["192.168.42.1"], "admin", "bad"
         )
         assert err_new == "invalid_auth"
@@ -533,7 +533,7 @@ async def test_probe_hosts_and_pending_discovery_helpers() -> None:
         "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
         new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
     ):
-        _, _, err_id = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+        _, _, err_id = await flow._async_probe_existing_discovery_hosts(
             entry, ["192.168.42.1"]
         )
         assert err_id == "identity_mismatch"
@@ -542,7 +542,7 @@ async def test_probe_hosts_and_pending_discovery_helpers() -> None:
         "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
         new=AsyncMock(side_effect=RecameraConnectionError("down")),
     ):
-        _, _, err_conn = await flow._async_probe_existing_discovery_hosts(  # noqa: SLF001
+        _, _, err_conn = await flow._async_probe_existing_discovery_hosts(
             entry, ["192.168.42.1"]
         )
         assert err_conn == "cannot_connect"
@@ -550,8 +550,8 @@ async def test_probe_hosts_and_pending_discovery_helpers() -> None:
     flow.hass.config_entries.flow.async_progress_by_handler = lambda _d: [
         {"context": {"source": "zeroconf", "unique_id": "4a:f8:34:07:ab:3d"}}
     ]
-    assert flow._pending_discovery_flow("4a:f8:34:07:ab:3d") is not None  # noqa: SLF001
-    assert flow._pending_discovery_flow("other") is None  # noqa: SLF001
+    assert flow._pending_discovery_flow("4a:f8:34:07:ab:3d") is not None
+    assert flow._pending_discovery_flow("other") is None
 
 
 @pytest.mark.asyncio
@@ -594,4 +594,4 @@ async def test_resolve_zeroconf_and_refresh_exit() -> None:
     flow.hass.config_entries.flow.async_get = Mock(
         side_effect=data_entry_flow.UnknownFlow
     )
-    await flow._async_refresh_discovery("_recamera._tcp.local.", "svc")  # noqa: SLF001
+    await flow._async_refresh_discovery("_recamera._tcp.local.", "svc")

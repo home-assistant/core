@@ -131,7 +131,7 @@ async def test_capture_controller_error_classification_and_shutdown() -> None:
         ),
         pytest.raises(RecameraProtocolError),
     ):
-        await controller._async_run_snapshot(op, "/mnt/test.jpg")  # noqa: SLF001
+        await controller._async_run_snapshot(op, "/mnt/test.jpg")
     assert op.state == CaptureState.UNKNOWN
 
     op2 = CaptureOperation(kind="snapshot", request_id="r2", fingerprint="fp2")
@@ -143,10 +143,10 @@ async def test_capture_controller_error_classification_and_shutdown() -> None:
         ),
         pytest.raises(CaptureTerminalFailureError),
     ):
-        await controller._async_run_snapshot(op2, "/mnt/test.jpg")  # noqa: SLF001
+        await controller._async_run_snapshot(op2, "/mnt/test.jpg")
     assert op2.state == CaptureState.FAILED
 
-    controller._operation = op2  # noqa: SLF001
+    controller._operation = op2
     await controller.async_shutdown()
     assert op2.completion_event.is_set()
 
