@@ -9,7 +9,12 @@ import pytest
 from pytest_homeassistant.common import ANY, async_capture_events, flush_store
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, EntityStateAttribute, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityStateAttribute,
+    UnitOfRatio,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -21,8 +26,8 @@ from homeassistant.util.dt import utcnow
 
 
 @pytest.fixture
-async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
-    """Mock temperature and humidity sensors."""
+async def mock_temperature_humidity_co2_entity(hass: HomeAssistant) -> None:
+    """Mock temperature, humidity and CO2 sensors."""
     hass.states.async_set(
         "sensor.mock_temperature",
         "20",
@@ -44,7 +49,7 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
         "500",
         {
             EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.CO2,
-            EntityStateAttribute.UNIT_OF_MEASUREMENT: "ppm",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
 
@@ -62,7 +67,7 @@ async def test_create_area(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     area_registry: ar.AreaRegistry,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
 ) -> None:
     """Make sure that we can create an area."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
@@ -82,6 +87,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id=None,
         humidity_entity_id=None,
+        co2_entity_id=None,
     )
     assert len(area_registry.areas) == 1
 
@@ -204,7 +210,7 @@ async def test_update_area(
     floor_registry: fr.FloorRegistry,
     label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
 ) -> None:
     """Make sure that we can read areas."""
     created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
@@ -365,14 +371,19 @@ async def test_update_area_with_normalized_name_already_in_use(
 async def test_update_area_entity_validation(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
     create_kwargs: dict[str, Any],
     error_message: str,
 ) -> None:
     """Make sure that we can't update an area with an invalid entity."""
-    area = area_registry.async_create("mock")
     hass.states.async_set("light.kitchen", "on", {})
     hass.states.async_set("sensor.random", "3", {})
+
+    with pytest.raises(ValueError) as e_info:
+        area_registry.async_create("invalid", **create_kwargs)
+    assert str(e_info.value) == error_message
+
+    area = area_registry.async_create("mock")
 
     with pytest.raises(ValueError) as e_info:
         area_registry.async_update(area.id, **create_kwargs)
@@ -381,12 +392,22 @@ async def test_update_area_entity_validation(
     assert area.temperature_entity_id is None
     assert area.humidity_entity_id is None
     assert area.co2_entity_id is None
+    assert area_registry.async_get_area(area.id) == area
 
 
-async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+async def test_load_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    mock_temperature_humidity_co2_entity: None,
+) -> None:
     """Make sure that we can load/save data correctly."""
     area1 = area_registry.async_create("mock1")
-    area2 = area_registry.async_create("mock2")
+    area2 = area_registry.async_create(
+        "mock2",
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
+        co2_entity_id="sensor.mock_co2",
+    )
 
     assert len(area_registry.areas) == 2
 
@@ -400,6 +421,9 @@ async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) ->
     assert area1_registry2.id == area1.id
     area2_registry2 = registry2.async_get_or_create("mock2")
     assert area2_registry2.id == area2.id
+    assert area2_registry2.temperature_entity_id == "sensor.mock_temperature"
+    assert area2_registry2.humidity_entity_id == "sensor.mock_humidity"
+    assert area2_registry2.co2_entity_id == "sensor.mock_co2"
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -490,6 +514,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            co2_entity_id=None,
         ),
         ar.AreaEntry(
             name="bbb",
@@ -503,6 +528,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            co2_entity_id=None,
         ),
         ar.AreaEntry(
             name="CCC",
@@ -516,6 +542,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            co2_entity_id=None,
         ),
     ]
 
@@ -572,6 +599,46 @@ async def test_migration_from_1_1(
             ]
         },
     }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_9(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.9 preserves sensor assignments."""
+    hass_storage[ar.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 9,
+        "data": {
+            "areas": [
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "floor",
+                    "humidity_entity_id": "sensor.mock_humidity",
+                    "icon": "mdi:test",
+                    "id": "12345A",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AAA",
+                    "picture": None,
+                    "temperature_entity_id": "sensor.mock_temperature",
+                }
+            ]
+        },
+    }
+
+    await ar.async_load(hass)
+    registry = ar.async_get(hass)
+    area = registry.async_get_area("12345A")
+
+    assert area is not None
+    assert area.temperature_entity_id == "sensor.mock_temperature"
+    assert area.humidity_entity_id == "sensor.mock_humidity"
+    assert area.co2_entity_id is None
+
+    await flush_store(registry._store)
+    assert hass_storage[ar.STORAGE_KEY]["data"]["areas"][0]["co2_entity_id"] is None
 
 
 async def test_async_get_or_create(area_registry: ar.AreaRegistry) -> None:

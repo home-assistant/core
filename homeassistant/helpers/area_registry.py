@@ -76,6 +76,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
     aliases: set[str]
+    co2_entity_id: str | None
     floor_id: str | None
     humidity_entity_id: str | None
     icon: str | None
@@ -83,7 +84,6 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     labels: set[str] = field(default_factory=set)
     picture: str | None
     temperature_entity_id: str | None
-    co2_entity_id: str | None = None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property

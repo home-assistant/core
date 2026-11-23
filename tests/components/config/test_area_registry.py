@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -32,8 +33,8 @@ async def client_fixture(
 
 
 @pytest.fixture
-async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
-    """Mock temperature and humidity sensors."""
+async def mock_temperature_humidity_co2_entity(hass: HomeAssistant) -> None:
+    """Mock temperature, humidity and CO2 sensors."""
     hass.states.async_set(
         "sensor.mock_temperature",
         "20",
@@ -55,7 +56,7 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
         "500",
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CO2,
-            ATTR_UNIT_OF_MEASUREMENT: "ppm",
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
 
@@ -64,7 +65,7 @@ async def test_list_areas(
     client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
 ) -> None:
     """Test list entries."""
     created_area1 = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
@@ -125,7 +126,7 @@ async def test_create_area(
     area_registry: ar.AreaRegistry,
     label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
 ) -> None:
     """Test create entry."""
     label_registry.async_create("label_1")
@@ -281,7 +282,7 @@ async def test_update_area(
     area_registry: ar.AreaRegistry,
     label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_temperature_humidity_entity: None,
+    mock_temperature_humidity_co2_entity: None,
 ) -> None:
     """Test update entry."""
     label_registry.async_create("label_1")
