@@ -43,7 +43,7 @@ class ValidationErrorInfo:
     path: tuple[Any, ...]
 
     def __post_init__(self) -> None:
-        """Validate the exception and make the path a tuple."""
+        """Validate the exception."""
         if isinstance(self.exception, ValidationErrors) or (
             isinstance(self.exception, probatio.MultipleInvalid)
             and self.exception.errors
@@ -52,7 +52,6 @@ class ValidationErrorInfo:
                 f"A record can't hold a {type(self.exception).__name__} with "
                 "errors, use iter_validation_errors to get a record for each"
             )
-        object.__setattr__(self, "path", tuple(self.path))
 
     @property
     def message(self) -> str:
@@ -157,7 +156,8 @@ def iter_validation_errors(
 
     The traceback of err, and of every exception it holds or is chained to,
     is cleared when this is called, to not keep the frames which raised them
-    alive.
+    alive. That includes an exception which was being handled when err was
+    raised, so don't validate inside an except block.
     """
     _clear_tracebacks(err)
     return _iter_located(err, tuple(path))
@@ -263,5 +263,8 @@ def validation_errors_as_dicts(
 
     Must be called in the event loop when err may hold a translated
     HomeAssistantError.
+
+    Clears the traceback of err and of every exception it holds or is chained
+    to, so don't validate inside an except block.
     """
     return [validation_error_as_dict(info) for info in iter_validation_errors(err)]

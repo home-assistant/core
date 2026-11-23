@@ -309,6 +309,10 @@ def test_records_of_error(
         zip(messages, paths, strict=True)
     )
     assert [str(record) for record in records] == texts
+    # The records hold the errors themselves, and making them changes no error
+    held = _held_exceptions(err)
+    assert all(any(record.exception is exc for exc in held) for record in records)
+    assert list(iter_validation_errors(err, [0, "k"])) == records
     assert str(carrier) == texts[0]
     assert [(item["message"], item["path"]) for item in dicts] == [
         (message, list(path)) for message, path in zip(messages, paths, strict=True)
@@ -357,28 +361,6 @@ def test_record_of_several_errors(
         ValidationErrorInfo(make_error(), (0, "a"))
 
 
-def test_record_of_multiple_invalid_which_gets_errors() -> None:
-    """Test the message has no path when errors are added after the record is made."""
-    err = probatio.MultipleInvalid()
-    record = ValidationErrorInfo(err, (0,))
-
-    err.add(probatio.Invalid("late", ["a"]))
-
-    assert record.message == "late"
-    assert str(record) == "late at '[0]'"
-
-
-def test_record_path_is_a_tuple() -> None:
-    """Test the path of a record made by hand is made a tuple."""
-    err = probatio.Invalid("bad")
-
-    record = ValidationErrorInfo(err, ["a", 0])  # type: ignore[arg-type]
-
-    assert record.path == ("a", 0)
-    assert record == ValidationErrorInfo(err, ("a", 0))
-    assert hash(record) == hash(ValidationErrorInfo(err, ("a", 0)))
-
-
 def test_record_repr() -> None:
     """Test the representation of a record does not have a secret value."""
     assert (
@@ -389,51 +371,6 @@ def test_record_repr() -> None:
         repr(ValidationErrorInfo(_secret_invalid(), ("password",)))
         == "ValidationErrorInfo(exception=<secret Invalid>, path=('password',))"
     )
-
-
-def test_iter_validation_errors_invalid() -> None:
-    """Test a probatio.Invalid gives one record, below the path."""
-    err = _raised(probatio.RequiredFieldInvalid("required key not provided", ["a", 1]))
-
-    records = list(iter_validation_errors(err, ["actions", 0]))
-
-    assert records == [ValidationErrorInfo(err, ("actions", 0, "a", 1))]
-    assert records[0].exception is err
-    assert records[0].message == "required key not provided"
-    assert str(records[0]) == "required key not provided at 'actions[0].a[1]'"
-    # The error is not changed, apart from its traceback
-    assert err.path == ["a", 1]
-    assert err.__traceback__ is None
-
-
-def test_iter_validation_errors_clears_chained_tracebacks() -> None:
-    """Test the tracebacks of chained exceptions are cleared, also in a loop."""
-    cause = _raised(ValueError("cause"))
-    context = _raised(TypeError("context"))
-    err = _raised(probatio.Invalid("bad"))
-    err.__cause__ = cause
-    err.__context__ = context
-    cause.__context__ = err
-    context.__cause__ = cause
-
-    assert list(iter_validation_errors(err)) == [ValidationErrorInfo(err, ())]
-    assert err.__traceback__ is None
-    assert cause.__traceback__ is None
-    assert context.__traceback__ is None
-
-
-def test_iter_validation_errors_multiple_invalid() -> None:
-    """Test a MultipleInvalid is flattened, also when nested."""
-    first = probatio.Invalid("first", ["a"])
-    second = probatio.ExtraKeysInvalid("second", ["b", "c"])
-    third = probatio.Invalid("third")
-    err = probatio.MultipleInvalid([first, probatio.MultipleInvalid([second, third])])
-
-    assert list(iter_validation_errors(err, [2])) == [
-        ValidationErrorInfo(first, (2, "a")),
-        ValidationErrorInfo(second, (2, "b", "c")),
-        ValidationErrorInfo(third, (2,)),
-    ]
 
 
 def test_iter_validation_errors_empty_multiple_invalid() -> None:
@@ -456,44 +393,6 @@ def test_iter_validation_errors_empty_multiple_invalid() -> None:
             "translation_placeholders": {},
         }
     ]
-
-
-def test_iter_validation_errors_homeassistant_error() -> None:
-    """Test a HomeAssistantError gives one record, at the path."""
-    err = _raised(HomeAssistantError("Unknown device 'abc'"))
-
-    records = list(iter_validation_errors(err, [1, "then", 0]))
-
-    assert records == [ValidationErrorInfo(err, (1, "then", 0))]
-    assert records[0].message == "Unknown device 'abc'"
-    assert str(records[0]) == "Unknown device 'abc' at '[1].then[0]'"
-    assert err.__traceback__ is None
-    assert str(next(iter_validation_errors(err))) == "Unknown device 'abc'"
-
-
-def test_iter_validation_errors_validation_errors() -> None:
-    """Test the errors of a ValidationErrors get new records below the path."""
-    invalid = probatio.Invalid("first", ["entity_id"])
-    error = HomeAssistantError("second")
-    inner = ValidationErrors(
-        [
-            ValidationErrorInfo(invalid, (0, "entity_id")),
-            ValidationErrorInfo(error, (2,)),
-        ]
-    )
-
-    outer = ValidationErrors(list(iter_validation_errors(inner, ["then"])))
-
-    assert list(iter_validation_errors(outer, [1])) == [
-        ValidationErrorInfo(invalid, (1, "then", 0, "entity_id")),
-        ValidationErrorInfo(error, (1, "then", 2)),
-    ]
-    # Nothing is changed
-    assert inner.errors == (
-        ValidationErrorInfo(invalid, (0, "entity_id")),
-        ValidationErrorInfo(error, (2,)),
-    )
-    assert invalid.path == ["entity_id"]
 
 
 def test_validation_errors() -> None:
