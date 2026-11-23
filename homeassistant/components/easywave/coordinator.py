@@ -42,6 +42,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Library receive() turns serial errors into None. Retrying at once would spin.
+_RECEIVE_RETRY_INTERVAL = 5.0
+
 
 def _serial_hex_matches(device_serial: bytes, configured_serial: str) -> bool:
     """Return True when a telegram serial matches configured device data."""
@@ -465,13 +468,14 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         if not self.transceiver.is_connected:
                             self._handle_disconnect()
                             break
+                        await asyncio.sleep(_RECEIVE_RETRY_INTERVAL)
                         continue
                     self._dispatch_telegram(telegram)
                 except asyncio.CancelledError:
                     break
                 except (OSError, TimeoutError) as err:
                     _LOGGER.debug("Telegram listener error: %s", err)
-                    await asyncio.sleep(5.0)
+                    await asyncio.sleep(_RECEIVE_RETRY_INTERVAL)
                 except Exception:
                     _LOGGER.exception("Unexpected error in telegram listener")
                     await asyncio.sleep(1.0)

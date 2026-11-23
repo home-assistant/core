@@ -23,7 +23,7 @@ from homeassistant.components.easywave.entity import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo, Undefined
 
 from .conftest import (
     MOCK_TRANSMITTER_DEVICE_ID,
@@ -125,7 +125,7 @@ async def test_link_device_to_gateway_skips_when_gateway_missing(
     entity._link_device_to_gateway()
 
     assert entity.device_info is not None
-    assert "via_device_id" not in entity.device_info
+    assert entity.device_info.via_device_id is Undefined
 
 
 async def test_transmitter_entity_exposes_device_id(

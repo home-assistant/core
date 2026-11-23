@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 import logging
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 from easywave_home_control.codec import (
     ButtonFunction,
@@ -675,6 +675,37 @@ async def test_start_telegram_listener_noops_without_entities(
     coordinator._start_telegram_listener()
 
     assert coordinator._listener_task is None
+
+
+async def test_telegram_listener_backs_off_when_receive_returns_none(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """A None receive while the stick stays connected waits before the next try."""
+    attempts = 0
+
+    async def receive_telegram(timeout: float | None = None) -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts > 1:
+            mock_transceiver.is_connected = False
+
+    mock_transceiver.is_connected = True
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_telegram)
+
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.register_sensor_entities([MagicMock()])
+    with patch(
+        "homeassistant.components.easywave.coordinator.asyncio.sleep",
+        new_callable=AsyncMock,
+    ) as sleep:
+        coordinator.enable_telegram_reception()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert sleep.await_args_list.count(call(5.0)) == 1
+    assert mock_transceiver.receive_telegram.await_count == 2
+    await coordinator.async_shutdown()
 
 
 async def test_telegram_listener_loop_exits_when_disconnected_receive_returns_none(

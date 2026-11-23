@@ -9,9 +9,6 @@ from homeassistant.config_entries import ConfigEntry, SubentryFlowResult
 from homeassistant.const import CONF_DEVICES
 from homeassistant.helpers import translation
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
 from .const import (
     BUCKET_SUBENTRY_TITLES,
     CONF_DEVICE_TITLE,
@@ -26,6 +23,9 @@ from .const import (
     bucket_subentry_unique_id,
 )
 from .devices import get_device_data, get_devices
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class EasywaveDeviceFlowMixin:
