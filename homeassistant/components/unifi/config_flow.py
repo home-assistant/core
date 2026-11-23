@@ -192,6 +192,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False):
                 if (
                     entry.data.get(CONF_HOST) == self.config[CONF_HOST]
+                    and entry.data.get(CONF_PORT) == self.config[CONF_PORT]
                     and entry.data.get(CONF_SITE_ID) == site.name
                     and entry.unique_id is not None
                     and site_ids_moved(entry.unique_id, unique_id)
@@ -235,7 +236,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = {**reauth_entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
             with _catch_unifi_api_flow_errors(errors):
-                await get_unifi_api(self.hass, MappingProxyType(data))
+                # The info endpoint can accept a key the sites endpoint rejects
+                await self._async_update_sites(data)
                 return self._async_store_entry(reauth_entry, data)
 
         return self.async_show_form(
@@ -390,8 +392,11 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         config_data: dict[str, Any],
         sites: dict[str, SiteChoice],
     ) -> str | None:
-        """Find the site the other API keys differently, only on the same host."""
-        if config_data[CONF_HOST] != config_entry.data[CONF_HOST]:
+        """Find the site the other API keys differently, only on the same console."""
+        if (
+            config_data[CONF_HOST] != config_entry.data[CONF_HOST]
+            or config_data[CONF_PORT] != config_entry.data[CONF_PORT]
+        ):
             return None
         unique_id = next(
             (

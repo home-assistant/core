@@ -97,11 +97,15 @@ class NetworkPorts(_DerivedHandler[NetworkPort]):
         super().__init__(api)
         self._ports: dict[str, list[DevicePort]] = {}
 
+    def _forget_removed_devices(self) -> None:
+        """Drop the cached ports of devices that are no longer listed."""
+        for mac in [mac for mac in self._ports if mac not in self.devices]:
+            del self._ports[mac]
+
     @override
     async def update(self) -> None:
         """Fetch the ports of devices seen for the first time."""
-        for mac in [mac for mac in self._ports if mac not in self.devices]:
-            del self._ports[mac]
+        self._forget_removed_devices()
         new = [
             mac
             for mac, device in self.devices.items()
@@ -116,6 +120,8 @@ class NetworkPorts(_DerivedHandler[NetworkPort]):
             details = {}
         for mac, device in details.items():
             self._ports[mac] = [port for port in device.ports if "poe" in port]
+        # Devices can be removed while the details are fetched
+        self._forget_removed_devices()
         self.reconcile(
             [
                 {**port, OBJ_ID: f"{mac}_{port['idx']}"}

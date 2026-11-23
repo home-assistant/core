@@ -1339,10 +1339,15 @@ async def test_api_key_flow_fails_and_recovers(
 
 
 @pytest.mark.parametrize(
-    ("unique_id", "expected_type"),
+    ("unique_id", "port", "expected_type"),
     [
-        pytest.param(SITE_OBJECT_ID, FlowResultType.ABORT, id="same_site"),
-        pytest.param("1", FlowResultType.CREATE_ENTRY, id="other_site"),
+        pytest.param(
+            SITE_OBJECT_ID, DEFAULT_PORT, FlowResultType.ABORT, id="same_site"
+        ),
+        pytest.param("1", DEFAULT_PORT, FlowResultType.CREATE_ENTRY, id="other_site"),
+        pytest.param(
+            SITE_OBJECT_ID, 8443, FlowResultType.CREATE_ENTRY, id="other_port"
+        ),
     ],
 )
 async def test_api_key_flow_site_of_local_user_entry(
@@ -1350,6 +1355,7 @@ async def test_api_key_flow_site_of_local_user_entry(
     config_entry: MockConfigEntry,
     mock_network_requests: Callable[[], None],
     unique_id: str,
+    port: int,
     expected_type: FlowResultType,
 ) -> None:
     """Test only a local user entry keying the same site by ObjectId aborts.
@@ -1357,7 +1363,9 @@ async def test_api_key_flow_site_of_local_user_entry(
     An entry of another console at the same address can have a site of the
     same name.
     """
-    hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+    hass.config_entries.async_update_entry(
+        config_entry, unique_id=unique_id, data={**config_entry.data, CONF_PORT: port}
+    )
     mock_network_requests()
     result = await _start_user_flow(hass, "api_key")
 
@@ -1385,6 +1393,17 @@ async def test_reauth_api_key(
     aioclient_mock.get(f"{NETWORK_URL}/info", status=401)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: "wrong_key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "faulty_credentials"}
+
+    # The info endpoint can accept a key the sites endpoint rejects
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{NETWORK_URL}/sites", status=401)
+    mock_network_requests()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "limited_key"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1484,18 +1503,31 @@ async def test_reconfigure_to_local_user(
 
 
 @pytest.mark.parametrize("site_payload", [OBJECT_ID_SITE_PAYLOAD])
+@pytest.mark.parametrize(
+    ("host", "entry_port"),
+    [
+        pytest.param("5.6.7.8", DEFAULT_PORT, id="other_host"),
+        pytest.param(DEFAULT_HOST, 8443, id="other_port"),
+    ],
+)
 async def test_reconfigure_mode_on_other_console(
     hass: HomeAssistant,
     network_config_entry_setup: MockConfigEntry,
     mock_requests: Callable[[str, str], None],
+    host: str,
+    entry_port: int,
 ) -> None:
     """Test a site of the same name on another console is not taken over."""
-    mock_requests("5.6.7.8", DEFAULT_SITE)
+    hass.config_entries.async_update_entry(
+        network_config_entry_setup,
+        data={**network_config_entry_setup.data, CONF_PORT: entry_port},
+    )
+    mock_requests(host, DEFAULT_SITE)
     result = await network_config_entry_setup.start_reconfigure_flow(hass)
     result = await _select_menu(hass, result, "reconfigure_full")
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={**LOCAL_USER_INPUT, CONF_HOST: "5.6.7.8"}
+        result["flow_id"], user_input={**LOCAL_USER_INPUT, CONF_HOST: host}
     )
 
     assert result["type"] is FlowResultType.ABORT

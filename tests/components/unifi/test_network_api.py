@@ -294,6 +294,28 @@ async def test_prunes_disabled_tracker_of_unlisted_client(
     assert device_registry.async_get(device.id) is None
 
 
+async def test_keeps_disabled_tracker_when_client_list_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    network_config_entry: MockConfigEntry,
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """A failed client list does not remove disabled trackers."""
+    entry = entity_registry.async_get_or_create(
+        Platform.DEVICE_TRACKER,
+        DOMAIN,
+        f"{DEFAULT_SITE}-00:00:00:00:00:03",
+        config_entry=network_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    aioclient_mock.get(f"{SITE_URL}/clients", status=503)
+
+    await network_config_entry_factory()
+
+    assert entity_registry.async_get(entry.entity_id) is not None
+
+
 @pytest.mark.parametrize(
     ("entity_id", "path", "data"),
     [
@@ -373,10 +395,11 @@ async def test_poll_failure_and_recovery(
     ("status", "state", "reauth"),
     [
         (401, ConfigEntryState.SETUP_ERROR, True),
+        (403, ConfigEntryState.SETUP_ERROR, True),
         (404, ConfigEntryState.SETUP_RETRY, False),
         (503, ConfigEntryState.SETUP_RETRY, False),
     ],
-    ids=["rejected_key", "no_integration_api", "unavailable"],
+    ids=["rejected_key", "forbidden_key", "no_integration_api", "unavailable"],
 )
 async def test_setup_errors(
     hass: HomeAssistant,
@@ -397,6 +420,42 @@ async def test_setup_errors(
         any(network_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         is reauth
     )
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_rejected_site_request_starts_reauth(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    network_config_entry_factory: ConfigEntryFactoryType,
+    status: int,
+) -> None:
+    """A key the site list rejects asks for a new key."""
+    aioclient_mock.get(f"{NETWORK_URL}/sites", status=status)
+
+    config_entry = await network_config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_first_client_found_by_the_next_poll(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_factory: ConfigEntryFactoryType,
+    network_client_payload: list[dict[str, Any]],
+) -> None:
+    """Clients keep being polled while none is connected."""
+    network_client_payload.clear()
+    await network_config_entry_factory()
+    assert hass.states.get(WIRELESS_TRACKER) is None
+
+    mock_clients(aioclient_mock, mock_network_requests, [WIRELESS_CLIENT])
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WIRELESS_TRACKER).state == STATE_HOME
 
 
 @pytest.mark.parametrize("network_site_payload", [[]])
@@ -785,6 +844,48 @@ async def test_device_removed_while_statistics_are_fetched(
 
     assert SWITCH_MAC not in network_config_entry_setup.runtime_data.network_statistics
     assert hass.states.get("sensor.switch_cpu_utilization") is None
+    assert "Unexpected error" not in caplog.text
+
+
+async def test_device_removed_while_ports_are_fetched(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_network_requests: Callable[[], None],
+    network_config_entry_setup: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Ports of a device removed while another's are fetched are not kept."""
+    devices = network_config_entry_setup.runtime_data.api.network.devices
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{SITE_URL}/devices", json=network_page([SWITCH, ACCESS_POINT]))
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{ACCESS_POINT_ID}/statistics/latest", json={}
+    )
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    async def remove_switch(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        devices.reconcile([ACCESS_POINT])
+        return AiohttpClientMockResponse(method, url, json=ACCESS_POINT)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{SITE_URL}/devices", json=network_page([SWITCH, ACCESS_POINT]))
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{ACCESS_POINT_ID}", side_effect=remove_switch
+    )
+    aioclient_mock.get(
+        f"{SITE_URL}/devices/{ACCESS_POINT_ID}/statistics/latest", json={}
+    )
+    mock_network_requests()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        f"{SWITCH_MAC}_1" not in network_config_entry_setup.runtime_data.network_ports
+    )
     assert "Unexpected error" not in caplog.text
 
 

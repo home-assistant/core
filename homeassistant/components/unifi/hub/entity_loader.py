@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import (
+    POLL_INTERVAL,
     UPDATE_TIMEOUT,
     UnifiApiHandler,
     UnifiDataUpdateCoordinator,
@@ -138,8 +139,11 @@ class UnifiEntityLoader:
         """Create the coordinators of the Integration API handlers."""
         hub = self.hub
         network = hub.api.network
+        # Without a websocket an idle interval would delay the first arrivals
         return {
-            id(handler): UnifiDataUpdateCoordinator(hub, handler)
+            id(handler): UnifiDataUpdateCoordinator(
+                hub, handler, update_interval=POLL_INTERVAL
+            )
             for handler in (network.clients, network.devices)
         } | {
             id(handler): UnifiDataUpdateCoordinator(
@@ -155,10 +159,18 @@ class UnifiEntityLoader:
             if self.hub.config.api_key_only
             else self.hub.api.sites
         )
+        account_errors: tuple[type[Exception], ...] = ACCOUNT_ERRORS
+        if self.hub.config.api_key_only:
+            # The info probe accepted the key, so a rejection is about the key
+            account_errors = (
+                *account_errors,
+                aiounifi.Forbidden,
+                aiounifi.Unauthorized,
+            )
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await sites.update()
-        except ACCOUNT_ERRORS as err:
+        except account_errors as err:
             raise ConfigEntryAuthFailed from err
         except (
             TimeoutError,
@@ -229,6 +241,8 @@ class UnifiEntityLoader:
         a disabled tracker is created again once its client connects.
         """
         clients = self.hub.api.network.clients
+        # A failed client list says nothing about which clients are gone
+        listed = self.get_data_update_coordinator(clients).last_update_success
         entity_registry = er.async_get(self.hub.hass)
         device_registry = dr.async_get(self.hub.hass)
         for entity_id, mac in self._client_trackers():
@@ -239,6 +253,8 @@ class UnifiEntityLoader:
             )
             entry = entity_registry.async_get(entity_id)
             if entry is not None and entry.disabled:
+                if not listed:
+                    continue
                 entity_registry.async_remove(entity_id)
                 if device is not None and not er.async_entries_for_device(
                     entity_registry, device.id, include_disabled_entities=True

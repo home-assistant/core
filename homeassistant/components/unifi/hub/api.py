@@ -80,6 +80,13 @@ async def get_unifi_api(
                         err,
                     )
                     raise NetworkApiUnavailable from err
+                except aiounifi.Forbidden as err:
+                    LOGGER.warning(
+                        "UniFi Network at %s rejected the API key: %s",
+                        config[CONF_HOST],
+                        err,
+                    )
+                    raise AuthenticationRequired from err
 
     except aiounifi.TwoFaTokenRequired as err:
         LOGGER.warning(
