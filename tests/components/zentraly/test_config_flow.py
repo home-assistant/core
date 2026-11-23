@@ -329,20 +329,74 @@ async def test_user_setup_with_pending_discovery(hass: HomeAssistant) -> None:
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+@pytest.mark.parametrize(
+    ("device_id", "validation_count"),
+    [
+        pytest.param(DEVICE_ID, 0, id="device-id"),
+        pytest.param("ZTTIN0100000632", 1, id="mac-with-different-device-id"),
+    ],
+)
 async def test_user_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_id: str,
+    validation_count: int,
 ) -> None:
     """Manual setup cannot duplicate or change the endpoint of an existing device."""
+    original_data = dict(mock_config_entry.data)
     result = await _start_manual_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_HOST: NEW_HOST,
-            CONF_DEVICE_ID: DEVICE_ID,
+            CONF_DEVICE_ID: device_id,
             CONF_PASSWORD: PASSWORD,
         },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == HOST
-    mock_api.async_validate_password.assert_not_awaited()
+    assert mock_config_entry.data == original_data
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_api.async_validate_password.await_count == validation_count
+
+
+async def test_zeroconf_already_configured_mac(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Discovery cannot create another entry for a MAC already installed."""
+    original_data = dict(mock_config_entry.data)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zeroconf_info(device_id="ZTTIN0100000632"),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: PASSWORD}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == original_data
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_user_add_another_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """A different device ID and MAC can be installed alongside an existing device."""
+    original_data = dict(mock_config_entry.data)
+    mock_api.async_validate_password.return_value = "001122334455"
+    result = await _start_manual_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: NEW_HOST,
+            CONF_DEVICE_ID: "ZTTIN0100000632",
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "ZTTIN0100000632"
+    assert mock_config_entry.data == original_data
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2

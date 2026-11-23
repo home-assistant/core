@@ -165,6 +165,7 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         else:
+            self._async_abort_entries_match({CONF_MAC: mac})
             self.data[CONF_PASSWORD] = password
             self.data[CONF_MAC] = mac
 
