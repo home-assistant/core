@@ -2741,6 +2741,44 @@ async def test_node_status_trigger_hidden_sensor(
     assert service_calls[0].data["entity_id"] == entity_id
 
 
+async def test_node_status_trigger_child_device(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test an endpoint child device watches its node's status.
+
+    The node status sensor sits on the node device, and target expansion of a
+    device includes its children, not its parent. A child device is mapped to its
+    node device, like the node status condition treats it.
+    """
+    node = climate_heatit_z_trm3
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, node_device.id, entity_registry, device_registry
+    )
+    assert entity_id
+    await _setup_node_status_automation(hass, child_device.id, {"to": ["dead"]})
+
+    _node_event(node, "dead")
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["entity_id"] == entity_id
+
+
 @pytest.mark.usefixtures("integration")
 async def test_node_status_trigger_description(hass: HomeAssistant) -> None:
     """Test the described node status fields pick nodes and statuses."""

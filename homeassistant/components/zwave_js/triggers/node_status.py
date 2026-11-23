@@ -8,7 +8,11 @@ import probatio
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID, CONF_FOR, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
@@ -63,6 +67,22 @@ def _validate_status_filter(options: dict[str, Any]) -> dict[str, Any]:
     return options
 
 
+def _node_device_ids(hass: HomeAssistant, device_ids: list[str]) -> list[str]:
+    """Map endpoint child devices to the node device they belong to.
+
+    The node status sensor sits on the node device, and target expansion of a
+    device includes its children but not its parent, so a child device would
+    otherwise watch nothing.
+    """
+    dev_reg = dr.async_get(hass)
+    return [
+        device.parent_device_id
+        if isinstance(device := dev_reg.async_get(device_id), dr.ChildDeviceEntry)
+        else device_id
+        for device_id in device_ids
+    ]
+
+
 _TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OPTIONS, default={}): probatio.All(
@@ -113,9 +133,8 @@ class NodeStatusTrigger(EntityTriggerBase):
         options = config.options or {}
         # A node is picked as a device; the base class tracks the node status
         # sensor each one expands to.
-        super().__init__(
-            hass, replace(config, target={ATTR_DEVICE_ID: options[ATTR_DEVICE_ID]})
-        )
+        device_ids = _node_device_ids(hass, options[ATTR_DEVICE_ID])
+        super().__init__(hass, replace(config, target={ATTR_DEVICE_ID: device_ids}))
         self._from_states = set(self._options.get(CONF_FROM, []))
         self._to_states = set(self._options.get(CONF_TO, []))
         self._is_group = self._options[ATTR_BEHAVIOR] != BEHAVIOR_EACH
