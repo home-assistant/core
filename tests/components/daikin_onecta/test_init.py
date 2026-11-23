@@ -13,12 +13,26 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
 from .platform_helpers import _async_setup_fixture, _load_gateway_devices
+
+
+async def test_unload_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Unload all platforms and shut down the coordinator."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
 
 GATEWAY_DEVICES_URL = "https://api.onecta.daikineurope.com/v1/gateway-devices"
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "issue_841_gateway_devices.json"

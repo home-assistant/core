@@ -113,11 +113,13 @@ def test_offline_climate_controls_are_owned_by_climate(name: str) -> None:
             "onOffMode", False, False, Platform.SWITCH, id="read-only-power-offline"
         ),
         pytest.param(
-            "powerfulMode", False, False, Platform.SENSOR, id="read-only-boost-offline"
+            "powerfulMode", False, False, Platform.SWITCH, id="read-only-boost-offline"
         ),
         pytest.param("onOffMode", True, True, Platform.SWITCH, id="writable-power"),
-        pytest.param("powerfulMode", False, True, Platform.SENSOR, id="boost"),
-        pytest.param("powerfulMode", True, False, Platform.SENSOR, id="writable-boost"),
+        pytest.param("powerfulMode", False, True, Platform.SWITCH, id="boost"),
+        pytest.param(
+            "powerfulMode", True, False, Platform.SWITCH, id="writable-boost-offline"
+        ),
     ],
 )
 def test_climate_control_without_supported_setpoint_is_exposed(

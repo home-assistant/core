@@ -1431,6 +1431,11 @@ async def test_climate_does_not_disable_read_only_active_preset(
     coordinator.async_update_listeners()
     coordinator.async_execute_command = _execute_typed_command(config_entry)
 
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert entity is not None
+    assert entity.preset_mode == PRESET_AWAY
+    assert entity.preset_mode in entity.preset_modes
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,

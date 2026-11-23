@@ -212,6 +212,33 @@ async def test_boolean_value_is_not_exposed_as_numeric_sensor(
     assert state is not None and state.state == "unknown"
 
 
+async def test_empty_error_code_is_unknown(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Represent an empty Daikin error code as an unknown sensor state."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.scalar_characteristic("errorCode") is not None
+    )
+    characteristic = point.scalar_characteristic("errorCode")
+    assert characteristic is not None
+    characteristic.value = ""
+    unique_id = f"{device.id}_{point.embedded_id}_errorCode"
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == "unknown"
+
+
 @pytest.mark.parametrize(
     "key",
     [

@@ -1019,7 +1019,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_climate_control_domestic_hot_water_tank_heat_up_mode': dict({
@@ -1543,7 +1543,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_climate_control_heating_daily_electrical_consumption': dict({

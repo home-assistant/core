@@ -6417,7 +6417,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_bedroom_1_heating_daily_electrical_consumption': dict({
@@ -7385,7 +7385,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_bedroom_2_heating_daily_electrical_consumption': dict({
@@ -8353,7 +8353,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_living_room_heating_daily_electrical_consumption': dict({
@@ -9321,7 +9321,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_office_heating_daily_electrical_consumption': dict({

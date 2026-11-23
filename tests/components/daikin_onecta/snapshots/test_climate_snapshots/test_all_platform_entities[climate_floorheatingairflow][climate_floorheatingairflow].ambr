@@ -2182,7 +2182,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_room_a_heating_daily_electrical_consumption': dict({
@@ -3150,7 +3150,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': '',
+        'state': 'unknown',
       }),
     }),
     'sensor.test_room_b_heating_daily_electrical_consumption': dict({

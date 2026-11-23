@@ -2,21 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cannot_connect": "Unable to connect to the Daikin API.",
       "invalid_auth": "The Daikin API rejected the authentication token.",
       "invalid_token": "Invalid or expired token; please restart OAuth setup.",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "Failed due to an unexpected error.",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "rate_limited": "The Daikin API is temporarily rate limited. Try again later.",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
@@ -451,9 +440,6 @@
       "pm25concentration": {
         "name": "PM2.5 concentration"
       },
-      "powerfulmode": {
-        "name": "Powerful mode"
-      },
       "ratelimitremainingday": {
         "name": "Rate limit remaining day"
       },
@@ -503,6 +489,9 @@
       },
       "onoffmode": {
         "name": "Power"
+      },
+      "powerfulmode": {
+        "name": "Powerful mode"
       },
       "streamermode": {
         "name": "Streamer mode"

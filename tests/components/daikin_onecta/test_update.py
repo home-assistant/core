@@ -24,7 +24,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MockOnectaClient
 from .platform_helpers import (
@@ -464,8 +464,8 @@ async def test_failed_firmware_install_preserves_reported_progress(
         ),
         pytest.param(
             True,
-            ServiceValidationError,
-            "firmware_install_unavailable",
+            HomeAssistantError,
+            "service_not_supported",
             id="missing-firmware-id",
         ),
     ],
@@ -491,6 +491,9 @@ async def test_firmware_install_rejects_unavailable_firmware(
     point.firmware_update.value.pop("id")
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
+    entity = hass.data[UPDATE_DOMAIN].get_entity(LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID)
+    assert entity is not None
+    assert not entity.supported_features & UpdateEntityFeature.INSTALL
 
     with pytest.raises(expected_error) as err:
         await hass.services.async_call(

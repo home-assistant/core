@@ -124,7 +124,11 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     @override
     def available(self) -> bool:
         """Return whether the management point still exposes a schedule."""
-        return super().available and self.selection() is not None
+        return (
+            super().available
+            and self.selection() is not None
+            and bool(self._cached_schedule_options)
+        )
 
     def get_current_option(self) -> str | None:
         """Return the selected schedule name."""

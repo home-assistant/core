@@ -8,6 +8,7 @@ from daikin_onecta import (
     OnectaAccessTokenError,
     OnectaAuthenticationError,
     OnectaClient,
+    OnectaRateLimitError,
     OnectaRequestError,
     get_account_id,
 )
@@ -93,6 +94,8 @@ class FlowHandler(
             await client.get_gateway_devices()
         except OnectaAuthenticationError:
             return "invalid_auth"
+        except OnectaRateLimitError:
+            return "rate_limited"
         except OnectaRequestError:
             return "cannot_connect"
         return None

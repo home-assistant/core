@@ -33,6 +33,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -118,42 +119,26 @@ def test_device_update_ignores_unchanged_registry_metadata() -> None:
 
 async def test_device_registry_refreshes_without_climate_entity(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Refresh a gateway registry entry even when it has no climate entity."""
-    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    gateway = DaikinOnectaDevice(
-        SimpleNamespace(
-            id="gateway",
-            display_name="Old name",
-            available=True,
-            mac_address=None,
-            device_model="Old model",
-            gateway_embedded_id=None,
-            gateway_management_point=None,
-        )
-    )
-    coordinator._async_register_device(gateway)
-    gateway.set_device_data(
-        SimpleNamespace(
-            id="gateway",
-            display_name="New name",
-            available=True,
-            mac_address=None,
-            device_model="New model",
-            gateway_embedded_id=None,
-            gateway_management_point=None,
-        )
-    )
-    coordinator._async_register_device(gateway)
+    await _async_setup_fixture(hass, config_entry, "issue_841_gateway_devices")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
+    replacement = deepcopy(gateway.device)
+    replacement.device_model = "New name"
+    mock_onecta_client.get_gateway_devices.return_value = [replacement]
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "gateway"), config_entry.entry_id
+        (DOMAIN, gateway.id), config_entry.entry_id
     )
     assert entry is not None
     assert entry.name == "New name"
-    assert entry.model_id == "New model"
+    assert entry.model_id == "New name"
     assert gateway.ha_device_id == entry.id
 
 
@@ -168,27 +153,31 @@ async def test_device_registry_updates_changed_mac_address(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
     mac_address: str | None,
     expected_connections: set[tuple[str, str]],
 ) -> None:
-    """Detect MAC-only changes and replace, rather than retain, stale connections."""
-    coordinator = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
-    gateway = DaikinOnectaDevice(_load_gateway_devices("ururu")[0])
-    coordinator._async_register_device(gateway)
+    """Refresh changed MAC-only metadata through a scheduled cloud poll."""
+    await _async_setup_fixture(hass, config_entry, "ururu")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
     replacement = deepcopy(gateway.device)
     replacement.gateway_management_point.characteristics["macAddress"] = Characteristic(
         value=mac_address
     )
-
-    assert gateway.set_device_data(replacement)
-    coordinator._async_register_device(gateway)
+    mock_onecta_client.get_gateway_devices.return_value = [replacement]
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, gateway.id), config_entry.entry_id
     )
     assert entry is not None
     assert entry.connections == expected_connections
-    assert not gateway.set_device_data(deepcopy(replacement))
+    assert (
+        gateway.device.gateway_management_point.characteristics["macAddress"].value
+        == mac_address
+    )
 
 
 async def test_management_point_hardware_is_registered_as_subdevice(
@@ -227,6 +216,7 @@ async def test_polling_child_firmware_change_does_not_update_gateway_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A child firmware change does not rewrite gateway-only registry metadata."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
@@ -235,13 +225,13 @@ async def test_polling_child_firmware_change_does_not_update_gateway_registry(
     replacement = deepcopy(device.device)
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
     point.software_version = Characteristic(value="new-firmware")
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=[replacement])
+    coordinator.client.get_gateway_devices = AsyncMock(return_value=[replacement])
     registry = device_registry
 
     with patch.object(
         registry, "async_get_or_create", wraps=registry.async_get_or_create
     ) as async_get_or_create:
-        await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     async_get_or_create.assert_not_called()
 
@@ -251,6 +241,7 @@ async def test_poll_refreshes_changed_metadata_once(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Refresh renamed gateways and firmware only after changed cloud metadata."""
     await _async_setup_fixture(hass, config_entry, "ururu")
@@ -265,26 +256,15 @@ async def test_poll_refreshes_changed_metadata_once(
     assert gateway is not None
     gateway.firmware_version = Characteristic(value="new-firmware")
 
-    with (
-        patch.object(
-            coordinator,
-            "_async_register_device",
-            wraps=coordinator._async_register_device,
-        ) as update_registry,
-        patch.object(
-            coordinator, "_async_get_cloud_devices", return_value=[replacement]
-        ),
-    ):
-        assert coordinator.update_interval is not None
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        update_registry.assert_called_once_with(device)
-        coordinator.async_update_listeners()
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        update_registry.assert_called_once_with(device)
+    mock_onecta_client.get_gateway_devices.return_value = [replacement]
+    async_get_or_create = device_registry.async_get_or_create
+    with patch.object(
+        device_registry, "async_get_or_create", wraps=async_get_or_create
+    ) as register_device:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        assert register_device.call_count == 1
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        assert register_device.call_count == 1
 
     entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, device.id), config_entry.entry_id
@@ -356,30 +336,23 @@ async def test_poll_failure_is_logged_only_once(
 
 
 async def test_rate_limited_first_refresh_does_not_load_empty_cache(
-    coordinator: OnectaDataUpdateCoordinator,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not treat the coordinator's initial success flag as cached data."""
-    assert coordinator.last_update_success
-    assert coordinator.data_or_none is None
-    coordinator.client.get_gateway_devices = AsyncMock(
-        side_effect=OnectaRateLimitError(
-            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
-        )
+    """Keep the entry in setup retry when its initial cloud request is limited."""
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
     )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        return_value=MagicMock(),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
-    with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data()
-
-    assert err.value.translation_key == "rate_limit_exceeded"
-    assert coordinator.data_or_none is None
-    assert coordinator.client.get_gateway_devices.await_count == 1
-
-    with pytest.raises(UpdateFailed) as err:
-        await coordinator._async_update_data()
-
-    assert err.value.translation_key == "rate_limit_exceeded"
-    assert coordinator.data_or_none is None
-    assert coordinator.client.get_gateway_devices.await_count == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.runtime_data.data_or_none is None
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
 
 def _patch_polling_schedule(
@@ -399,33 +372,32 @@ def _patch_polling_schedule(
     )
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="daikin_onecta",
-        unique_id="12345",
-        options={},
-    )
+def _move_to_local_time(freezer: FrozenDateTimeFactory, value: datetime) -> None:
+    """Move the freezer to a wall time in Home Assistant's configured zone."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=coordinator_module.dt_util.DEFAULT_TIME_ZONE)
+    freezer.move_to(value)
 
 
 @pytest.fixture
 async def coordinator(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
 ) -> OnectaDataUpdateCoordinator:
-    """Return a coordinator."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_schedule_reload = MagicMock()
-    coordinator = OnectaDataUpdateCoordinator(hass, mock_config_entry, MagicMock())
-    coordinator._async_register_device = MagicMock()
+    """Return the coordinator from a fully set up config entry."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    coordinator.client.get_gateway_devices = mock_onecta_client.get_gateway_devices
+    coordinator.client.patch_characteristic = mock_onecta_client.patch_characteristic
+    coordinator.client.post_management_point = mock_onecta_client.post_management_point
     return coordinator
 
 
 class TestOnectaDataUpdateCoordinator:
     """Test OnectaDataUpdateCoordinator class."""
 
-    def test_in_between_normal_range(
+    async def test_in_between_normal_range(
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Time within a simple range not crossing midnight."""
@@ -437,7 +409,7 @@ class TestOnectaDataUpdateCoordinator:
         assert not coordinator._in_between(time(10, 0, 0), start, end)
         assert not coordinator._in_between(time(11, 0, 0), start, end)
 
-    def test_in_between_overnight_range(
+    async def test_in_between_overnight_range(
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Time within a range that crosses midnight."""
@@ -449,34 +421,31 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator._in_between(time(22, 0, 0), start, end)
         assert coordinator._in_between(time(23, 0, 0), start, end)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_high_scan_interval(
+    async def test_high_scan_interval(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """High scan interval should apply during high-frequency window."""
-        mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
+        _move_to_local_time(freezer, datetime(2023, 1, 1, 10, 0, 0))
 
         expected = timedelta(seconds=594)
         result = coordinator._determine_update_interval()
         assert result == expected
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_low_scan_interval(
+    async def test_low_scan_interval(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Low scan interval should apply outside transition windows."""
-        mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
+        _move_to_local_time(freezer, datetime(2023, 1, 1, 23, 0, 0))
 
-        with patch.object(coordinator, "_in_between", side_effect=[False, False]):
-            expected = timedelta(seconds=1782)
-            result = coordinator._determine_update_interval()
-            assert result == expected
+        expected = timedelta(seconds=1782)
+        result = coordinator._determine_update_interval()
+        assert result == expected
 
-    def test_polling_intervals_use_default_daily_limit(
+    async def test_polling_intervals_use_default_daily_limit(
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Use no more than 55% of the conservative default daily limit."""
@@ -499,8 +468,15 @@ class TestOnectaDataUpdateCoordinator:
             message="server error",
         )
 
-        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
-        assert coordinator._last_patch_call is None
+        coordinator.client.patch_characteristic.side_effect = error
+        assert not await coordinator.async_execute_command(
+            lambda client: client.patch_characteristic(
+                "gateway", "point", "power", "on"
+            )
+        )
+        coordinator.client.patch_characteristic.assert_awaited_once_with(
+            "gateway", "point", "power", "on"
+        )
 
     async def test_unexpected_request_error_has_request_log_message(
         self,
@@ -515,7 +491,12 @@ class TestOnectaDataUpdateCoordinator:
         )
         caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
 
-        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+        coordinator.client.patch_characteristic.side_effect = error
+        assert not await coordinator.async_execute_command(
+            lambda client: client.patch_characteristic(
+                "gateway", "point", "power", "on"
+            )
+        )
 
         assert "Daikin request PATCH" in caplog.text
         assert "OAuth token request failed" not in caplog.text
@@ -525,13 +506,17 @@ class TestOnectaDataUpdateCoordinator:
     ) -> None:
         """Map OAuth transport failures to the platform's translated command error."""
         error = OAuth2TokenRequestConnectionError(domain=DOMAIN)
-        coordinator.config_entry.async_start_reauth = MagicMock()
         caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
 
-        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+        coordinator.client.patch_characteristic.side_effect = error
+        assert not await coordinator.async_execute_command(
+            lambda client: client.patch_characteristic(
+                "gateway", "point", "power", "on"
+            )
+        )
 
-        coordinator.config_entry.async_start_reauth.assert_not_called()
-        assert coordinator._last_patch_call is None
+        assert coordinator.hass.config_entries.flow.async_progress() == []
+        coordinator.client.patch_characteristic.assert_awaited_once()
         assert "OAuth2TokenRequestConnectionError" in caplog.text
 
     @pytest.mark.parametrize(
@@ -554,17 +539,22 @@ class TestOnectaDataUpdateCoordinator:
             method="PATCH",
             path="/v1/management-points/point/characteristics/temperatureControl",
         )
+        coordinator.client.patch_characteristic.side_effect = error
 
-        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+        assert not await coordinator.async_execute_command(
+            lambda client: client.patch_characteristic(
+                "gateway", "point", "power", "on"
+            )
+        )
 
         assert (
             coordinator.config_entry.async_start_reauth.call_count
             == expected_reauth_calls
         )
         assert coordinator.hass.config_entries.flow.async_progress() == []
-        assert coordinator._last_patch_call is None
+        coordinator.client.patch_characteristic.assert_awaited_once()
 
-    def test_polling_intervals_use_reported_daily_limit(
+    async def test_polling_intervals_use_reported_daily_limit(
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Adapt the polling budget when Daikin reports a different limit."""
@@ -575,7 +565,7 @@ class TestOnectaDataUpdateCoordinator:
             timedelta(seconds=888),
         )
 
-    def test_polling_intervals_cap_a_1000_daily_limit(
+    async def test_polling_intervals_cap_a_1000_daily_limit(
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Keep a 1000-call daily limit at the three-minute polling floor."""
@@ -586,19 +576,19 @@ class TestOnectaDataUpdateCoordinator:
             timedelta(minutes=9),
         )
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     async def test_cloud_response_updates_polling_interval_from_daily_limit(
         self,
-        mock_now: MagicMock,
+        hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Apply Daikin's reported daily limit after a cloud refresh."""
-        mock_now.return_value = datetime(2023, 1, 1, 10, 0)
+        _move_to_local_time(freezer, datetime(2023, 1, 1, 10, 0))
         coordinator._last_patch_call = None
         coordinator.client.rate_limit = RateLimit(day_limit=400)
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
+        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
 
-        await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
         assert coordinator.update_interval == timedelta(seconds=296)
 
@@ -619,27 +609,25 @@ class TestOnectaDataUpdateCoordinator:
             ),
         ],
     )
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_is_capped_at_window_boundary(
+    async def test_scan_interval_is_capped_at_window_boundary(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
         now: datetime,
         expected: timedelta,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Use at least the high-frequency interval near a window boundary."""
-        mock_now.return_value = now
+        _move_to_local_time(freezer, now)
         assert coordinator._determine_update_interval() == expected
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_uses_utc_delay_across_dst_start(
+    async def test_scan_interval_uses_utc_delay_across_dst_start(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Use the next boundary's UTC offset when daylight saving time starts."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
-        mock_now.return_value = datetime(2026, 3, 28, 23, 30, tzinfo=amsterdam)
+        freezer.move_to(datetime(2026, 3, 28, 23, 30, tzinfo=amsterdam))
         with (
             _patch_polling_schedule(high_start=time(3), low_start=time(22)),
             patch(
@@ -649,15 +637,14 @@ class TestOnectaDataUpdateCoordinator:
         ):
             assert coordinator._determine_update_interval() == timedelta(minutes=150)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_uses_clock_transition_for_nonexistent_boundary(
+    async def test_scan_interval_uses_clock_transition_for_nonexistent_boundary(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Poll at the DST jump when it begins the high-frequency window."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
-        mock_now.return_value = datetime(2026, 3, 29, 1, 59, tzinfo=amsterdam)
+        freezer.move_to(datetime(2026, 3, 29, 1, 59, tzinfo=amsterdam))
         with (
             _patch_polling_schedule(high_start=time(2, 30), low_start=time(3, 15)),
             patch(
@@ -667,15 +654,14 @@ class TestOnectaDataUpdateCoordinator:
         ):
             assert coordinator._determine_update_interval() == timedelta(minutes=3)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_preserves_dst_fold_at_window_boundary(
+    async def test_scan_interval_preserves_dst_fold_at_window_boundary(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Use the second occurrence of a boundary during daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
-        mock_now.return_value = datetime(2026, 10, 25, 2, 15, tzinfo=amsterdam, fold=1)
+        freezer.move_to(datetime(2026, 10, 25, 2, 15, tzinfo=amsterdam, fold=1))
         with (
             _patch_polling_schedule(high_start=time(2, 30), low_start=time(3)),
             patch(
@@ -685,15 +671,14 @@ class TestOnectaDataUpdateCoordinator:
         ):
             assert coordinator._determine_update_interval() == timedelta(minutes=15)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
-    def test_scan_interval_uses_repeated_dst_boundary_before_rollback(
+    async def test_scan_interval_uses_repeated_dst_boundary_before_rollback(
         self,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Use today's repeated boundary before daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
-        mock_now.return_value = datetime(2026, 10, 25, 2, 35, tzinfo=amsterdam)
+        freezer.move_to(datetime(2026, 10, 25, 2, 35, tzinfo=amsterdam))
         with (
             _patch_polling_schedule(high_start=time(2), low_start=time(2, 30)),
             patch(
@@ -703,23 +688,21 @@ class TestOnectaDataUpdateCoordinator:
         ):
             assert coordinator._determine_update_interval() == timedelta(minutes=25)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
-    def test_transition_period_randomization(
+    async def test_transition_period_randomization(
         self,
         mock_random: MagicMock,
-        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """During transition, randomize within the calculated poll intervals."""
-        mock_now.return_value = datetime(2023, 1, 1, 22, 5, 0)
+        _move_to_local_time(freezer, datetime(2023, 1, 1, 22, 5, 0))
         mock_random.randint.return_value = 594
 
-        with patch.object(coordinator, "_in_between", side_effect=[False, True]):
-            expected = timedelta(seconds=594)
-            result = coordinator._determine_update_interval()
-            assert result == expected
-            mock_random.randint.assert_called_once_with(594, 1782)
+        expected = timedelta(seconds=594)
+        result = coordinator._determine_update_interval()
+        assert result == expected
+        mock_random.randint.assert_called_once_with(594, 1782)
 
     async def test_rate_limit_uses_update_failed_retry_after(
         self,
@@ -757,53 +740,50 @@ class TestOnectaDataUpdateCoordinator:
             seconds=EXPECTED_RATE_LIMIT_RETRY_AFTER
         )
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    def test_polling_backoff_logs_start_and_end(
+    async def test_polling_backoff_logs_start_and_end(
         self,
-        mock_utcnow: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
         caplog: pytest.LogCaptureFixture,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Log once when the polling backoff starts and ends."""
         caplog.set_level(logging.INFO)
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
+        _move_to_local_time(freezer, now)
 
         coordinator._set_polling_backoff(60)
-        mock_utcnow.return_value = now + timedelta(seconds=60)
+        freezer.tick(timedelta(seconds=60))
         assert coordinator._polling_backoff_remaining() is None
 
         assert caplog.text.count("Daikin rate-limited cloud requests") == 1
         assert caplog.text.count("Daikin polling rate-limit backoff ended") == 1
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    def test_restarting_polling_backoff_does_not_log_it_ended(
+    async def test_restarting_polling_backoff_does_not_log_it_ended(
         self,
-        mock_utcnow: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
         caplog: pytest.LogCaptureFixture,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """A new rate limit replaces an expired deadline without an end log."""
         caplog.set_level(logging.INFO)
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
+        _move_to_local_time(freezer, now)
 
         coordinator._set_polling_backoff(60)
-        mock_utcnow.return_value = now + timedelta(seconds=61)
+        freezer.tick(timedelta(seconds=61))
         coordinator._set_polling_backoff(60)
 
         assert caplog.text.count("Daikin rate-limited cloud requests") == 2
         assert "Daikin polling rate-limit backoff ended" not in caplog.text
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    def test_polling_backoff_remaining_rounds_up_fractional_seconds(
+    async def test_polling_backoff_remaining_rounds_up_fractional_seconds(
         self,
-        mock_utcnow: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Round up remaining backoff so scheduled refreshes aren't early."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
+        _move_to_local_time(freezer, now)
         coordinator._polling_backoff_until = now + timedelta(milliseconds=500)
 
         assert coordinator._polling_backoff_remaining() == timedelta(seconds=1)
@@ -1076,15 +1056,14 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator.last_update_success
         assert hass.states.get(entity_id) == state_before
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_successful_write_clears_polling_backoff(
         self,
-        mock_utcnow: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Allow commands through during polling backoff and clear it on success."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
+        _move_to_local_time(freezer, now)
         rate_limited_command = AsyncMock(
             side_effect=OnectaRateLimitError(
                 RateLimit(retry_after=60),
@@ -1136,314 +1115,165 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_api_error_uses_update_failed_with_http_status(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Turn a Daikin HTTP error into a translatable polling failure."""
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(
-            side_effect=OnectaApiError(
-                500,
-                "Internal Server Error",
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        """Translate an HTTP response failure during a loaded-entry poll."""
+        coordinator.client.get_gateway_devices.side_effect = OnectaApiError(
+            500,
+            "Internal Server Error",
+            method="GET",
+            path="/v1/gateway-devices",
         )
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value.translation_key == "api_error"
-        assert exc_info.value.translation_placeholders == {"status": "500"}
+        assert isinstance(coordinator.last_exception, UpdateFailed)
+        assert coordinator.last_exception.translation_key == "api_error"
+        assert coordinator.last_exception.translation_placeholders == {"status": "500"}
 
     async def test_response_error_uses_invalid_response_message(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Explain malformed successful API responses without an HTTP error status."""
-        coordinator._last_patch_call = None
+        """Explain a malformed successful API response during polling."""
         response_error = OnectaResponseError(
             200,
             "Invalid JSON",
             method="GET",
             path="/v1/gateway-devices",
         )
-        coordinator._async_get_cloud_devices = AsyncMock(side_effect=response_error)
+        coordinator.client.get_gateway_devices.side_effect = response_error
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value.translation_key == "invalid_response"
-        assert exc_info.value.__cause__ is response_error
+        assert isinstance(coordinator.last_exception, UpdateFailed)
+        assert coordinator.last_exception.translation_key == "invalid_response"
+        assert coordinator.last_exception.__cause__ is response_error
 
-    @pytest.mark.parametrize("status", [401, 403])
+    @pytest.mark.parametrize("status", [401, 403], ids=["unauthorized", "forbidden"])
     async def test_unauthorized_api_error_requires_authentication(
-        self, coordinator: OnectaDataUpdateCoordinator, status: int
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
+        status: int,
     ) -> None:
-        """A rejected cloud token must not become a polling retry."""
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(
-            side_effect=OnectaAuthenticationError(
-                status=status,
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        """Mark a loaded entry as authentication-failed after rejected API access."""
+        coordinator.client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+            status=status,
+            method="GET",
+            path="/v1/gateway-devices",
         )
 
-        with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value.translation_key == "authentication_failed"
+        assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+        assert coordinator.last_exception.translation_key == "authentication_failed"
 
     async def test_token_refresh_reauth_error_requires_authentication(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Translate OAuth refresh rejection into an authentication failure."""
-        coordinator._last_patch_call = None
+        """Translate refresh-token rejection while polling a loaded entry."""
         token_error = OAuth2TokenRequestReauthError(
             domain=DOMAIN,
             request_info=MagicMock(),
             status=401,
             message="invalid_grant",
         )
-        coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
+        coordinator.client.get_gateway_devices.side_effect = token_error
 
-        with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value.translation_key == "authentication_failed"
-        assert exc_info.value.__cause__ is token_error
+        assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+        assert coordinator.last_exception.translation_key == "authentication_failed"
+        assert coordinator.last_exception.__cause__ is token_error
 
     async def test_transient_token_refresh_error_is_retried(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Preserve transient OAuth token errors so the coordinator retries."""
-        coordinator._last_patch_call = None
+        """Leave transient OAuth failures eligible for retry."""
         token_error = OAuth2TokenRequestError(
             domain=DOMAIN,
             request_info=MagicMock(),
             status=500,
             message="server error",
         )
-        coordinator._async_get_cloud_devices = AsyncMock(side_effect=token_error)
+        coordinator.client.get_gateway_devices.side_effect = token_error
 
-        with pytest.raises(OAuth2TokenRequestError) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value is token_error
+        assert coordinator.last_exception is token_error
 
-    async def test_post_write_cooldown_is_checked_under_cloud_lock(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Keep cached data when a write completes while polling waits for the lock."""
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=None)
-
-        assert await coordinator._async_update_data() == {}
-        coordinator._async_get_cloud_devices.assert_awaited_once_with()
-        assert coordinator.update_interval == timedelta(seconds=30)
-
-    @pytest.mark.parametrize(
-        ("elapsed", "expected_interval"),
-        [
-            pytest.param(1, timedelta(seconds=29), id="near-start"),
-            pytest.param(29, timedelta(seconds=1), id="near-expiry"),
-        ],
-    )
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    async def test_recent_write_skips_cloud_polling(
+    async def test_connection_error_marks_entities_unavailable(
         self,
-        mock_utcnow: MagicMock,
+        hass: HomeAssistant,
         coordinator: OnectaDataUpdateCoordinator,
-        elapsed: int,
-        expected_interval: timedelta,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Schedule the next poll for the remaining post-write cooldown."""
-        mock_utcnow.return_value = datetime(2023, 1, 1, 12, 0)
-        coordinator._last_patch_call = mock_utcnow.return_value - timedelta(
-            seconds=elapsed
-        )
-        coordinator._async_get_cloud_devices = AsyncMock()
-
-        assert await coordinator._async_update_data() == {}
-        assert coordinator.update_interval == expected_interval
-        coordinator._async_get_cloud_devices.assert_not_awaited()
-
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    async def test_post_write_cooldown_uses_utc_across_dst_rollback(
-        self,
-        mock_utcnow: MagicMock,
-        coordinator: OnectaDataUpdateCoordinator,
-    ) -> None:
-        """Do not extend cooldown when local time moves backward."""
-        # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.
-        coordinator._last_patch_call = datetime(2026, 10, 25, 0, 59, tzinfo=UTC)
-        mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
-
-        assert await coordinator._async_update_data() == {}
-        coordinator._async_get_cloud_devices.assert_awaited_once_with()
-
-    async def test_connection_error_uses_update_failed(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """A connection error should mark the coordinator update as failed."""
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(
-            side_effect=OnectaConnectionError(
-                EXPECTED_CONNECTION_ERROR,
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        """Mark loaded entities unavailable after a connection failure."""
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        coordinator.client.get_gateway_devices.side_effect = OnectaConnectionError(
+            EXPECTED_CONNECTION_ERROR,
+            method="GET",
+            path="/v1/gateway-devices",
         )
 
-        with pytest.raises(UpdateFailedUnreachable) as exc_info:
-            await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
-        assert exc_info.value.translation_key == "connection_failed"
-
-    async def test_cooldown_fetch_failure_restores_regular_interval(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Do not retain the cooldown polling interval after a failed fetch."""
-        coordinator._last_patch_call = None
-        coordinator.update_interval = timedelta(seconds=30)
-        expected_interval = coordinator._determine_update_interval()
-        coordinator._async_get_cloud_devices = AsyncMock(
-            side_effect=OnectaConnectionError(
-                EXPECTED_CONNECTION_ERROR,
-                method="GET",
-                path="/v1/gateway-devices",
-            )
-        )
-
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()
-
-        assert coordinator.update_interval == expected_interval
+        assert isinstance(coordinator.last_exception, UpdateFailedUnreachable)
+        assert coordinator.last_exception.translation_key == "connection_failed"
+        state = hass.states.get(entity_id)
+        assert state is not None and state.state == "unavailable"
 
     async def test_missing_cloud_device_is_marked_unavailable(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
         """Mark cached gateways unavailable when the cloud no longer returns them."""
-        missing_device = MagicMock()
-        missing_device.device = MagicMock(id="missing", management_points=[])
-        coordinator.data = {"missing": missing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        gateway = next(iter(coordinator.data.values()))
+        coordinator.client.get_gateway_devices.return_value = []
 
-        await coordinator._async_update_data()
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        missing_device.mark_unavailable.assert_called_once_with()
-        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
+        assert not gateway.present_in_cloud
+        state = hass.states.get(entity_id)
+        assert state is not None and state.state == "unavailable"
 
-    async def test_new_cloud_gateway_does_not_reload_entry(
-        self, coordinator: OnectaDataUpdateCoordinator
+    async def test_cloud_update_replaces_cached_gateway_and_refreshes_registry(
+        self,
+        hass: HomeAssistant,
+        coordinator: OnectaDataUpdateCoordinator,
+        device_registry: dr.DeviceRegistry,
+        freezer: FrozenDateTimeFactory,
     ) -> None:
-        """Platform listeners handle newly reported gateways without a reload."""
-        existing_device = MagicMock()
-        existing_device.device = MagicMock(id="existing", management_points=[])
-        existing_device.set_device_data.return_value = False
-        new_device = MagicMock(
-            id="new",
-            display_name="New device",
-            available=True,
-            device_model="BRP069",
-            gateway_embedded_id=None,
-            mac_address=None,
-            management_points=[],
+        """Replace gateway models and update registry metadata from cloud data."""
+        gateway = next(iter(coordinator.data.values()))
+        replacement = deepcopy(gateway.device)
+        replacement.device_model = "Renamed Daikin"
+        coordinator.client.get_gateway_devices.return_value = [replacement]
+
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+        assert gateway.device is replacement
+        registry_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, gateway.id), coordinator.config_entry.entry_id
         )
-        coordinator.data = {"existing": existing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(
-            return_value=[existing_device.device, new_device]
-        )
-
-        await coordinator._async_update_data()
-
-        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
-
-    async def test_new_management_point_does_not_reload_entry(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Platform listeners handle new points without a config-entry reload."""
-        existing_device = MagicMock()
-        existing_device.device = MagicMock(
-            id="gateway",
-            management_points=[
-                MagicMock(
-                    embedded_id="climate",
-                    management_point_type="climateControl",
-                )
-            ],
-        )
-        existing_device.set_device_data.return_value = False
-        updated_device = MagicMock(
-            id="gateway",
-            management_points=[
-                MagicMock(
-                    embedded_id="climate",
-                    management_point_type="climateControl",
-                ),
-                MagicMock(
-                    embedded_id="hot_water",
-                    management_point_type="domesticHotWaterTank",
-                ),
-            ],
-        )
-        coordinator.data = {"gateway": existing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[updated_device])
-
-        await coordinator._async_update_data()
-
-        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
-
-    async def test_cloud_state_update_does_not_reload_entry(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Do not reload platforms for ordinary state updates."""
-        existing_device = MagicMock()
-        cloud_device = MagicMock(id="gateway", management_points=[])
-        existing_device.device = cloud_device
-        existing_device.set_device_data.return_value = False
-        coordinator.data = {"gateway": existing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
-
-        await coordinator._async_update_data()
-
-        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
-
-    async def test_updated_cloud_device_replaces_cached_model(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Replace the cached gateway model with cloud data."""
-        existing_device = MagicMock()
-        existing_device.set_device_data.return_value = False
-        cloud_device = MagicMock(id="gateway")
-        coordinator.data = {"gateway": existing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
-
-        await coordinator._async_update_data()
-
-        existing_device.set_device_data.assert_called_once_with(cloud_device)
-        coordinator._async_register_device.assert_not_called()
-
-    async def test_changed_gateway_metadata_refreshes_device_registry(
-        self, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Refresh the registry only when a cloud replacement changes metadata."""
-        existing_device = MagicMock()
-        existing_device.set_device_data.return_value = True
-        cloud_device = MagicMock(id="gateway")
-        coordinator.data = {"gateway": existing_device}
-        coordinator._last_patch_call = None
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[cloud_device])
-
-        await coordinator._async_update_data()
-
-        coordinator._async_register_device.assert_called_once_with(existing_device)
+        assert registry_entry is not None
+        assert registry_entry.name == "Renamed Daikin"
 
 
 async def test_device_registered_before_platform_setup(

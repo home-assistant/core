@@ -894,12 +894,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_preset_modes(self) -> list[str]:
         """Return supported preset modes."""
+        active_modes = self._get_active_preset_modes()
         return [
             PRESET_NONE,
             *sorted(
                 mode
                 for mode in PRESET_MODES
-                if (
+                if mode in active_modes
+                or (
                     (preset := self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode]))
                     is not None
                     and preset.settable

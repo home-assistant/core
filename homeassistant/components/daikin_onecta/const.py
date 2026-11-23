@@ -770,7 +770,9 @@ BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
         "drykeepsetting",
     }
 )
-SWITCH_TRANSLATION_KEYS = frozenset({"economode", "onoffmode", "streamermode"})
+SWITCH_TRANSLATION_KEYS = frozenset(
+    {"economode", "onoffmode", "powerfulmode", "streamermode"}
+)
 
 BINARY_SENSOR_KEYS = frozenset(
     metadata.key

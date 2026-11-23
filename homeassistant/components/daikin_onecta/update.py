@@ -176,7 +176,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         self._firmware_id = None
         self._attr_supported_features = (
             UpdateEntityFeature.INSTALL
-            if self._is_update_supported
+            if self._is_update_supported and firmware.firmware_id is not None
             else UpdateEntityFeature(0)
         )
         self._attr_extra_state_attributes = {}

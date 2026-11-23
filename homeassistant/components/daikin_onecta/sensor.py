@@ -402,6 +402,8 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     ) -> str | int | float | None:
         """Convert a characteristic value for Home Assistant."""
         result: object = characteristic.value if characteristic is not None else None
+        if self._value == "errorCode" and result == "":
+            return None
         if (
             isinstance(result, str)
             and self.entity_description.device_class is SensorDeviceClass.ENUM
