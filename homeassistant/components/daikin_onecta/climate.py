@@ -403,7 +403,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Return the list of available HVAC modes."""
         modes: list[HVACMode] = []
         cc = self._climate_control()
-        if cc is not None and cc.on_off_mode is not None and cc.on_off_mode.settable:
+        if (
+            cc is not None
+            and cc.on_off_mode is not None
+            and (cc.on_off_mode.settable or cc.on_off_mode.value == "off")
+        ):
             modes.append(HVACMode.OFF)
         operationmode = self._operation_mode()
         if operationmode is not None:

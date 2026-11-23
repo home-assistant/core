@@ -664,7 +664,9 @@ def test_hvac_modes_exclude_off_without_writable_power(
     """Do not offer an unsupported off mode without writable power control."""
     entity = object.__new__(DaikinClimate)
     on_off_mode = (
-        SimpleNamespace(settable=power_settable) if power_settable is not None else None
+        SimpleNamespace(value="on", settable=power_settable)
+        if power_settable is not None
+        else None
     )
     entity._climate_control = MagicMock(
         return_value=SimpleNamespace(
@@ -678,8 +680,8 @@ def test_hvac_modes_exclude_off_without_writable_power(
     assert entity._get_hvac_modes() == [HVACMode.HEAT]
 
 
-def test_observed_off_state_is_not_advertised_without_writable_power() -> None:
-    """Report the observed off state even when power control is read-only."""
+def test_observed_off_state_is_advertised_without_writable_power() -> None:
+    """Advertise the observed off state even when power control is read-only."""
     entity = object.__new__(DaikinClimate)
     entity._climate_control = MagicMock(
         return_value=SimpleNamespace(
@@ -691,7 +693,7 @@ def test_observed_off_state_is_not_advertised_without_writable_power() -> None:
     )
 
     assert entity._get_hvac_mode() is HVACMode.OFF
-    assert entity._get_hvac_modes() == [HVACMode.HEAT]
+    assert entity._get_hvac_modes() == [HVACMode.OFF, HVACMode.HEAT]
 
 
 async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
