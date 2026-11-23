@@ -92,7 +92,7 @@ def _preset_handle(
 def _preset_names(
     presets: list[clusters.Thermostat.Structs.PresetStruct],
 ) -> list[str]:
-    """Return a unique name for each preset that does not depend on list order.
+    """Return unique preset names, keeping scenario names stable by preset handle.
 
     The plain scenario name goes to the scenario's built-in preset, or to its
     lowest handle when none is built in. Other presets of that scenario get
