@@ -20,9 +20,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -53,7 +53,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -74,7 +74,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -104,9 +104,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -137,7 +137,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -158,7 +158,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -167,7 +167,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on]
+# name: test_switch_entities[HWE-SKT-11-switch.device-system-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
@@ -181,7 +181,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].1
+# name: test_switch_entities[HWE-SKT-11-switch.device-system-power_on].1
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,9 +189,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -218,11 +218,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].2
+# name: test_switch_entities[HWE-SKT-11-switch.device-system-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -243,7 +243,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -273,9 +273,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -306,7 +306,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -327,7 +327,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -336,7 +336,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock]
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-system-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Switch lock',
@@ -349,7 +349,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].1
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-system-switch_lock].1
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -357,9 +357,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -386,11 +386,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].2
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-system-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -411,7 +411,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -420,7 +420,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on]
+# name: test_switch_entities[HWE-SKT-21-switch.device-system-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
@@ -434,7 +434,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].1
+# name: test_switch_entities[HWE-SKT-21-switch.device-system-power_on].1
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -442,9 +442,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -471,11 +471,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].2
+# name: test_switch_entities[HWE-SKT-21-switch.device-system-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -496,7 +496,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -526,9 +526,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -559,7 +559,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -580,7 +580,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -589,7 +589,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock]
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-system-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Switch lock',
@@ -602,7 +602,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].1
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-system-switch_lock].1
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -610,9 +610,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -639,11 +639,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].2
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-system-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -664,7 +664,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -694,9 +694,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -727,7 +727,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -748,7 +748,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -778,9 +778,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -811,7 +811,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -832,7 +832,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -862,9 +862,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -895,7 +895,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -916,12 +916,163 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
+  })
+# ---
+# name: test_switch_entities_v2[switch.device-power_on-HWE-SKT]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities_v2[switch.device-power_on-HWE-SKT].1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'HWE-BAT_5c2fafabcdef_power_on',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_v2[switch.device_cloud_connection-cloud_enabled-HWE-SKT]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Cloud connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_cloud_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities_v2[switch.device_cloud_connection-cloud_enabled-HWE-SKT].1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cloud connection',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': 'HWE-BAT_5c2fafabcdef_cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_v2[switch.device_switch_lock-switch_lock-HWE-SKT]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Switch lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_switch_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_v2[switch.device_switch_lock-switch_lock-HWE-SKT].1
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homewizard', '5c2fafabcdef')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.device_switch_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch lock',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_lock',
+    'unique_id': 'HWE-BAT_5c2fafabcdef_switch_lock',
+    'unit_of_measurement': None,
   })
 # ---

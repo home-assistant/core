@@ -1,8 +1,9 @@
 """Services for the Google Assistant SDK integration."""
 
 import dataclasses
+from enum import StrEnum
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -16,24 +17,37 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 from .helpers import async_send_text_commands
 
-SERVICE_SEND_TEXT_COMMAND = "send_text_command"
-SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
-SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
-SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
+
+class GoogleAssistantSdkService(StrEnum):
+    """Store keys for Google Assistant SDK services."""
+
+    SEND_TEXT_COMMAND = "send_text_command"
+
+
+class GoogleAssistantSdkServiceArgument(StrEnum):
+    """Store keys for Google Assistant SDK service arguments."""
+
+    COMMAND = "command"
+    MEDIA_PLAYER = "media_player"
+
+
+SERVICE_SEND_TEXT_COMMAND_SCHEMA = probatio.All(
     {
-        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
-            cv.ensure_list, [vol.All(str, vol.Length(min=1))]
+        probatio.Required(GoogleAssistantSdkServiceArgument.COMMAND): probatio.All(
+            probatio.EnsureList(), [probatio.All(str, probatio.NonEmpty())]
         ),
-        vol.Optional(SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER): cv.comp_entity_ids,
+        probatio.Optional(
+            GoogleAssistantSdkServiceArgument.MEDIA_PLAYER
+        ): cv.comp_entity_ids,
     },
 )
 
 
 async def _send_text_command(call: ServiceCall) -> ServiceResponse:
     """Send a text command to Google Assistant SDK."""
-    commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
+    commands: list[str] = call.data[GoogleAssistantSdkServiceArgument.COMMAND]
     media_players: list[str] | None = call.data.get(
-        SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
+        GoogleAssistantSdkServiceArgument.MEDIA_PLAYER
     )
     command_response_list = await async_send_text_commands(
         call.hass, commands, media_players
@@ -54,7 +68,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_TEXT_COMMAND,
+        GoogleAssistantSdkService.SEND_TEXT_COMMAND,
         _send_text_command,
         schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,

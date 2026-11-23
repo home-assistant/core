@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator': dict({
+      'available': True,
+      'last_poll_successful': True,
+      'last_update_success': True,
+    }),
+    'parsed_advertisement': dict({
+      'binary_sensors': dict({
+        'brushing': True,
+      }),
+      'devices': list([
+        dict({
+          'hw_version': None,
+          'manufacturer': 'Oral-B',
+          'model': 'IO Series 4',
+          'sw_version': None,
+        }),
+      ]),
+      'sensors': dict({
+        'mode': 'gum care',
+        'number_of_sectors': 4,
+        'pressure': 'power button pressed',
+        'sector': 'sector 1',
+        'sector_timer': 0,
+        'signal_strength': -63,
+        'time': 0,
+        'toothbrush_state': 'running',
+      }),
+    }),
+    'service_info': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+        '220': '07340c0338000002010004',
+      }),
+      'rssi': -63,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics_no_advertisement
+  dict({
+    'coordinator': dict({
+      'available': False,
+      'last_poll_successful': True,
+      'last_update_success': True,
+    }),
+    'parsed_advertisement': None,
+    'service_info': None,
+  })
+# ---

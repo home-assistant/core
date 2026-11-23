@@ -4,11 +4,13 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IRM_KMI_NAME
-from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator, IrmKmiPollenCoordinator
 from .utils import preferred_language
 
 
-class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
+class IrmKmiBaseEntity[_CoordinatorT: IrmKmiCoordinator | IrmKmiPollenCoordinator](
+    CoordinatorEntity[_CoordinatorT]
+):
     """Base methods for IRM KMI entities."""
 
     _attr_attribution = (
@@ -16,13 +18,13 @@ class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
     )
     _attr_has_entity_name = True
 
-    def __init__(self, entry: IrmKmiConfigEntry) -> None:
+    def __init__(self, entry: IrmKmiConfigEntry, coordinator: _CoordinatorT) -> None:
         """Init base properties for IRM KMI entities."""
-        coordinator = entry.runtime_data
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=IRM_KMI_NAME.get(preferred_language(self.hass, entry)),
+            # self.hass is not set before the entity is added
+            manufacturer=IRM_KMI_NAME.get(preferred_language(coordinator.hass, entry)),
         )

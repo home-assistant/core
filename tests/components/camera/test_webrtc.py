@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
@@ -27,8 +28,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
-
-from tests.typing import WebSocketGenerator
 
 WEBRTC_OFFER = "v=0\r\n"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
@@ -405,7 +404,10 @@ async def test_websocket_webrtc_offer_invalid_entity(
     assert not response["success"]
     assert response["error"] == {
         "code": "home_assistant_error",
-        "message": "Camera not found",
+        "message": "Camera camera.does_not_exist not found",
+        "translation_key": "camera_not_found",
+        "translation_domain": "camera",
+        "translation_placeholders": {"entity_id": "camera.does_not_exist"},
     }
 
 
@@ -516,8 +518,8 @@ async def test_ws_webrtc_candidate(
             {"sdpMLineIndex": 0},
             (
                 'Field "candidate" of type str is missing in'
-                " RTCIceCandidateInit instance for dictionary"
-                " value @ data['candidate']."
+                " RTCIceCandidateInit instance"
+                " at 'candidate'."
                 " Got {'sdpMLineIndex': 0}"
             ),
         ),
@@ -525,8 +527,8 @@ async def test_ws_webrtc_candidate(
             {"candidate": "candidate", "sdpMLineIndex": -1},
             (
                 "sdpMLineIndex must be greater than or equal"
-                " to 0 for dictionary value @"
-                " data['candidate']. Got {'candidate':"
+                " to 0 at 'candidate'."
+                " Got {'candidate':"
                 " 'candidate', 'sdpMLineIndex': -1}"
             ),
         ),
@@ -636,7 +638,10 @@ async def test_ws_webrtc_candidate_invalid_entity(
     assert not response["success"]
     assert response["error"] == {
         "code": "home_assistant_error",
-        "message": "Camera not found",
+        "message": "Camera camera.does_not_exist not found",
+        "translation_key": "camera_not_found",
+        "translation_domain": "camera",
+        "translation_placeholders": {"entity_id": "camera.does_not_exist"},
     }
 
 
@@ -721,13 +726,38 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
         ) -> None:
             """Handle the WebRTC candidate."""
 
+    camera = Mock()
     provider = OnlyRequiredInterfaceProvider()
     # Call all interface methods
     assert provider.async_is_supported("stream_source") is True
     await provider.async_handle_async_webrtc_offer(
-        Mock(), "offer_sdp", "session_id", Mock()
+        camera, "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
         "session_id", RTCIceCandidateInit("candidate")
     )
     provider.async_close_session("session_id")
+    # Call optional methods to verify they do not raise exceptions
+    await provider.async_register_camera(camera)
+    await provider.async_unregister_camera(camera)
+    await provider.async_on_camera_prefs_update(camera)
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_camera_unregisters_from_webrtc_provider_on_removal(
+    hass: HomeAssistant,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test camera unregisters from WebRTC provider when removed from hass."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+
+    # Verify the provider is registered
+    assert camera.webrtc_provider is not None
+    assert camera.webrtc_provider == register_test_provider
+
+    with patch.object(
+        register_test_provider, "async_unregister_camera", autospec=True
+    ) as mock_unregister:
+        await camera.async_remove()
+        mock_unregister.assert_called_once_with(camera)
+        assert camera.webrtc_provider is None

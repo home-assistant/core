@@ -247,7 +247,7 @@
           "mode": "MAIN_AREA",
           "activity": "PARKED_IN_CS",
           "inactiveReason": "NONE",
-          "state": "RESTRICTED",
+          "state": "IN_OPERATION",
           "errorCode": 0,
           "errorCodeTimestamp": 0
         },
@@ -271,7 +271,7 @@
           "override": {
             "action": "NOT_ACTIVE"
           },
-          "restrictedReason": "WEEK_SCHEDULE"
+          "restrictedReason": "NONE"
         },
         "metadata": {
           "connected": true,

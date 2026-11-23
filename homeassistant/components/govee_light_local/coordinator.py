@@ -2,20 +2,22 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 import logging
 from typing import override
 
 from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_DISCOVERY_INTERVAL_DEFAULT,
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    DOMAIN,
     SCAN_INTERVAL,
 )
 
@@ -24,14 +26,35 @@ _LOGGER = logging.getLogger(__name__)
 type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
+def log_bound_addresses(controller: GoveeController) -> None:
+    """Log the addresses and networks the controller is bound to."""
+
+    _LOGGER.debug(
+        "Listening on port %d: %s",
+        CONF_LISTENING_PORT_DEFAULT,
+        ", ".join(
+            f"{address} ({network})" if network else f"{address} (no network mask)"
+            for address, network in zip(
+                controller.listening_addresses, controller.networks, strict=True
+            )
+        ),
+    )
+
+    # The library already warns per failed bind; keep this at debug for the full picture.
+    for address, error in controller.bind_failures:
+        _LOGGER.debug("Not listening on %s: %s", address, error.strerror or error)
+
+
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
+
+    config_entry: GoveeLocalConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: GoveeLocalConfigEntry,
-        source_ips: set[str],
+        listening_addresses: list[str],
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -42,40 +65,40 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self._controllers: list[GoveeController] = [
-            GoveeController(
-                loop=hass.loop,
-                logger=_LOGGER,
-                listening_address=source_ip,
-                broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-                broadcast_port=CONF_TARGET_PORT_DEFAULT,
-                listening_port=CONF_LISTENING_PORT_DEFAULT,
-                discovery_enabled=True,
-                discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
-                update_enabled=False,
-            )
-            for source_ip in source_ips
-        ]
+        self._controller = GoveeController(
+            loop=hass.loop,
+            logger=_LOGGER,
+            listening_addresses=listening_addresses,
+            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+            broadcast_port=CONF_TARGET_PORT_DEFAULT,
+            listening_port=CONF_LISTENING_PORT_DEFAULT,
+            discovery_enabled=True,
+            discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
+            update_enabled=False,
+        )
+        self._rebind_lock = asyncio.Lock()
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
 
-        for controller in self._controllers:
-            await controller.start()
-            controller.send_update_message()
+        # Home Assistant enumerates adapters once at startup, so an address can
+        # be stale by the time we bind it. Keep the adapters that do bind.
+        await self._controller.start(require_all=False)
+        self._controller.send_update_message()
+        log_bound_addresses(self._controller)
 
-    async def set_discovery_callback(
-        self, callback: Callable[[GoveeDevice, bool], bool]
+    @callback
+    def set_discovery_callback(
+        self, discovery_callback: Callable[[GoveeDevice, bool], bool]
     ) -> None:
         """Set discovery callback for automatic Govee light discovery."""
 
-        for controller in self._controllers:
-            controller.set_device_discovered_callback(callback)
+        self._controller.set_device_discovered_callback(discovery_callback)
 
-    def cleanup(self) -> list[asyncio.Event]:
+    def cleanup(self) -> asyncio.Event:
         """Stop and cleanup the coordinator."""
 
-        return [controller.cleanup() for controller in self._controllers]
+        return self._controller.cleanup()
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""
@@ -107,13 +130,29 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""
 
-        devices: list[GoveeDevice] = []
-        for controller in self._controllers:
-            devices = devices + controller.devices
-        return devices
+        return self._controller.devices
+
+    async def async_rebind_failed_addresses(self, _now: datetime) -> None:
+        """Retry the addresses that did not bind."""
+        async with self._rebind_lock:
+            # Losing every endpoint is handled by the update, which reloads the entry.
+            if not self._controller.bind_failures or not self._controller.protocols:
+                return
+            if await self._controller.rebind_failed():
+                log_bound_addresses(self._controller)
+
+    async def async_wait_rebind(self) -> None:
+        """Wait for an in-flight rebind to finish."""
+        async with self._rebind_lock:
+            pass
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:
-        for controller in self._controllers:
-            controller.send_update_message()
+        # A controller that lost every endpoint stays inoperative until restarted.
+        if not self._controller.protocols:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="no_live_endpoints"
+            )
+        self._controller.send_update_message()
         return self.devices

@@ -1,0 +1,51 @@
+{
+  "album": "",
+  "artist": [],
+  "episode": -1,
+  "file": "/media/movies/Movie (2026)/Movie.2026.2160p.mkv",
+  "id": 1,
+  "label": "Movie title",
+  "season": -1,
+  "showtitle": "",
+  "streamdetails": {
+    "audio": [
+      {
+        "channels": 6,
+        "codec": "ac3",
+        "language": "hun"
+      },
+      {
+        "channels": 6,
+        "codec": "dtshd_ma",
+        "language": "eng"
+      }
+    ],
+    "subtitle": [
+      {
+        "language": "hun"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    "video": [
+      {
+        "aspect": 1.7777780294418335,
+        "codec": "hevc",
+        "duration": 5868,
+        "hdrtype": "dolbyvision",
+        "height": 2160,
+        "language": "eng",
+        "stereomode": "",
+        "width": 3840
+      }
+    ]
+  },
+  "thumbnail": "",
+  "title": "Movie title",
+  "type": "movie",
+  "uniqueid": {
+    "imdb": "tt0000001",
+    "tmdb": "1000001"
+  }
+}

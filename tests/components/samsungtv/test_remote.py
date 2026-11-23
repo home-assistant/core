@@ -1,25 +1,24 @@
 """The tests for the SamsungTV remote platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from samsungtvws.encrypted.remote import SamsungTVEncryptedCommand
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.components.samsungtv.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, ENTRYDATA_LEGACY, ENTRYDATA_WEBSOCKET
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 
@@ -55,8 +54,8 @@ async def test_main_services(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -73,8 +72,8 @@ async def test_main_services(
     remote_encrypted_websocket.send_commands.reset_mock()
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["dash"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["dash"]},
         blocking=True,
     )
     assert "TV is powering off, not sending keys: ['dash']" in caplog.text
@@ -90,8 +89,8 @@ async def test_send_command_service(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["dash"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["dash"]},
         blocking=True,
     )
 
@@ -103,8 +102,8 @@ async def test_send_command_service(
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
-    """Test turn on."""
+async def test_turn_on_without_turnon_with_mac(hass: HomeAssistant) -> None:
+    """Test turn on fails even when a MAC address is configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRYDATA_WEBSOCKET,
@@ -113,14 +112,12 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.samsungtv.entity.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            REMOTE_DOMAIN, RemoteService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}, True
         )
-        await hass.async_block_till_done()
-    assert mock_send_magic_packet.called
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "service_unsupported"
 
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:
@@ -128,7 +125,7 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) 
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            REMOTE_DOMAIN, RemoteService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}, True
         )
     # nothing called as not supported feature
     assert remote_legacy.control.call_count == 0

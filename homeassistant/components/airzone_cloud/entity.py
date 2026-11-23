@@ -73,7 +73,11 @@ class AirzoneAidooEntity(AirzoneEntity):
             manufacturer=MANUFACTURER,
             model=aidoo_data[AZD_MODEL],
             name=aidoo_data[AZD_NAME],
-            via_device=(DOMAIN, aidoo_data[AZD_WEBSERVER]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, aidoo_data[AZD_WEBSERVER]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @override
@@ -164,7 +168,11 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             manufacturer=MANUFACTURER,
             model="Hot Water",
             name=dhw_data[AZD_NAME],
-            via_device=(DOMAIN, dhw_data[AZD_WEBSERVER]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, dhw_data[AZD_WEBSERVER]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @override
@@ -257,7 +265,11 @@ class AirzoneSystemEntity(AirzoneEntity):
             model=system_data.get(AZD_MODEL),
             manufacturer=MANUFACTURER,
             name=system_data[AZD_NAME],
-            via_device=(DOMAIN, system_data[AZD_WEBSERVER]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, system_data[AZD_WEBSERVER]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             sw_version=system_data.get(AZD_FIRMWARE),
         )
 
@@ -322,7 +334,11 @@ class AirzoneZoneEntity(AirzoneEntity):
             model=zone_data.get(AZD_THERMOSTAT_MODEL),
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],
-            via_device=(DOMAIN, self.system_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.system_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             sw_version=zone_data.get(AZD_THERMOSTAT_FW),
         )
 

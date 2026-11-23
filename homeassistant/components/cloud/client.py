@@ -10,6 +10,7 @@ from typing import Any, Literal, override
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
+from hass_nabucasa.const import DISPATCH_REMOTE_BACKEND_UP
 from webrtc_models import RTCIceServer
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
@@ -32,7 +33,12 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN, PREF_ENABLE_CLOUD_ICE_SERVERS
+from .const import (
+    DISPATCHER_REMOTE_UPDATE,
+    DOMAIN,
+    EVENT_CLOUD_EVENT,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
+)
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -299,6 +305,10 @@ class CloudClient(Interface):
             self._cloud_ice_servers_listener()
             self._cloud_ice_servers_listener = None
 
+        # Sent from here so logouts started by hass_nabucasa are included, and
+        # listeners see the user as logged out because the tokens are cleared.
+        async_dispatcher_send(self._hass, EVENT_CLOUD_EVENT, {"type": "logout"})
+
     @callback
     @override
     def user_message(self, identifier: str, title: str, message: str) -> None:
@@ -309,6 +319,14 @@ class CloudClient(Interface):
     @override
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
         """Match cloud notification to dispatcher."""
+        if (
+            identifier == DISPATCH_REMOTE_BACKEND_UP
+            and (remote_domain := self.cloud.remote.instance_domain)
+            != self._prefs.remote_domain
+        ):
+            self._hass.async_create_task(
+                self._prefs.async_update(remote_domain=remote_domain)
+            )
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 

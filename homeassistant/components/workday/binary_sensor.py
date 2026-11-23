@@ -1,25 +1,17 @@
 """Sensor to indicate whether the current day is a workday."""
 
 from datetime import datetime
-from typing import Final, override
+from typing import override
 
 from holidays import HolidayBase
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant, SupportsResponse
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
-
-SERVICE_CHECK_DATE: Final = "check_date"
-CHECK_DATE: Final = "check_date"
 
 
 async def async_setup_entry(
@@ -32,15 +24,6 @@ async def async_setup_entry(
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     obj_holidays = entry.runtime_data
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CHECK_DATE,
-        {vol.Required(CHECK_DATE): cv.date},
-        "check_date",
-        None,
-        SupportsResponse.ONLY,
-    )
 
     async_add_entities(
         [

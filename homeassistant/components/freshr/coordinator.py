@@ -88,10 +88,7 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
                     if device := device_registry.async_get_device_by_identifier(
                         (DOMAIN, device_id), self.config_entry.entry_id
                     ):
-                        device_registry.async_update_device(
-                            device.id,
-                            remove_config_entry_id=self.config_entry.entry_id,
-                        )
+                        device_registry.async_remove_device(device.id)
 
         return current
 

@@ -34,5 +34,18 @@
       "capabilities": ["INSIDE_TEMPERATURE_MEASUREMENT", "IDENTIFY"]
     },
     "childLockEnabled": false
+  },
+  {
+    "deviceType": "IB01",
+    "currentFwVersion": "62.7",
+    "characteristics": {
+      "capabilities": []
+    },
+    "serialNo": "IB1234",
+    "shortSerialNo": "IB1234",
+    "connectionState": {
+      "value": true,
+      "timestamp": "2020-03-23T18:30:07.377Z"
+    }
   }
 ]

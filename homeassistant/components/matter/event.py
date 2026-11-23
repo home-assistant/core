@@ -18,6 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -75,7 +76,7 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
         await super().async_added_to_hass()
 
         # subscribe to NodeEvent events
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_node_event,
                 event_filter=EventType.NODE_EVENT,
@@ -83,6 +84,7 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
             )
         )
 
+    @callback
     @override
     def _update_from_device(self) -> None:
         """Call when Node attribute(s) changed."""
@@ -233,12 +235,19 @@ class MatterEventEntity(MatterEventEntityBase):
     @callback
     def _handle_switch_event(self, data: MatterNodeEvent) -> None:
         """Handle a Switch cluster event."""
+        event_type: str | None = EVENT_TYPES_MAP.get(data.event_id)
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
             presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
             event_type = f"multi_press_{presses}"
-        else:
-            event_type = EVENT_TYPES_MAP[data.event_id]
+
+        if event_type is None:
+            LOGGER.debug(
+                "Ignoring unknown switch event id %s for %s",
+                data.event_id,
+                self.entity_id,
+            )
+            return
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things

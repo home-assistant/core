@@ -5,15 +5,14 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from homeassistant.components.ondilo_ico.const import DOMAIN
-from homeassistant.util.json import JsonArrayType
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.ondilo_ico.const import DOMAIN
+from homeassistant.util.json import JsonArrayType
 
 
 @pytest.fixture(name="config_entry")

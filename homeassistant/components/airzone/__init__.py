@@ -1,27 +1,36 @@
 """The Airzone integration."""
 
+import json
+from json import JSONDecodeError
 import logging
 from typing import Any
 
 from aioairzone.const import (
     AZD_FIRMWARE,
     AZD_FULL_NAME,
+    AZD_HOT_WATER,
+    AZD_ID,
     AZD_MAC,
     AZD_MODEL,
+    AZD_NAME,
+    AZD_SYSTEMS,
     AZD_WEBSERVER,
     DEFAULT_SYSTEM_ID,
 )
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
+from aioairzone.mqtt import AirzoneMqttUpdate
 
+from homeassistant.components import mqtt
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
     entity_registry as er,
 )
 
-from .const import DOMAIN, MANUFACTURER
+from .const import CONF_MQTT_TOPIC, DOMAIN, MANUFACTURER
 from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -76,11 +85,10 @@ async def _async_migrate_unique_ids(
         await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
+        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_ID],
     )
 
@@ -91,33 +99,120 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     entry.runtime_data = coordinator
 
+    # Subscribe to MQTT updates when MQTT is configured.
+    mqtt_topic = entry.options.get(CONF_MQTT_TOPIC, "")
+    if len(mqtt_topic) > 0:
+
+        async def _async_mqtt_message(
+            message: mqtt.ReceiveMessage,
+        ) -> None:
+            """Handle Airzone MQTT messages."""
+            try:
+                update_data = json.loads(message.payload)
+                update_topic = message.topic.removeprefix(f"{mqtt_topic}/")
+                update = AirzoneMqttUpdate(
+                    topic=update_topic,
+                    data=update_data,
+                )
+            except IndexError, JSONDecodeError, TypeError, ValueError:
+                _LOGGER.warning(
+                    "Invalid Airzone MQTT message: topic=%s payload=%s",
+                    message.topic,
+                    message.payload,
+                )
+                return
+
+            await coordinator.async_mqtt_update(update)
+
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            raise ConfigEntryNotReady("MQTT client is not available")
+
+        try:
+            entry.async_on_unload(
+                await mqtt.async_subscribe(
+                    hass,
+                    f"{mqtt_topic}/#",
+                    _async_mqtt_message,
+                    encoding=None,
+                )
+            )
+            await airzone.mqtt.await_event_online()
+
+            cmd_topic, cmd_data = airzone.mqtt.cmd_get_status(mqtt_topic)
+            await mqtt.async_publish(
+                hass,
+                cmd_topic,
+                json.dumps(cmd_data),
+                qos=2,
+            )
+            await airzone.mqtt.await_event_status()
+        except (HomeAssistantError, TimeoutError) as err:
+            raise ConfigEntryNotReady("Failed to initialize Airzone MQTT") from err
+
     device_registry = dr.async_get(hass)
 
-    ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
-    if ws_data is not None:
-        mac = ws_data.get(AZD_MAC, "")
+    @callback
+    def _async_register_devices() -> None:
+        """Register the WebServer, System, and DHW via_device parents.
 
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
-            manufacturer=MANUFACTURER,
-            model=ws_data.get(AZD_MODEL),
-            name=ws_data.get(AZD_FULL_NAME),
-            sw_version=ws_data.get(AZD_FIRMWARE),
-        )
+        The WebServer, Systems, and DHW can appear on later coordinator
+        updates, so this runs on every update (before the platform
+        listeners) to keep the via_device parents registered before their
+        child entities are added.
+        """
+        ws_device_id: str | None = None
+        ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
+        if ws_data is not None:
+            mac = ws_data.get(AZD_MAC, "")
+
+            ws_device = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+                manufacturer=MANUFACTURER,
+                model=ws_data.get(AZD_MODEL),
+                name=ws_data.get(AZD_FULL_NAME),
+                sw_version=ws_data.get(AZD_FIRMWARE),
+            )
+            ws_device_id = ws_device.id
+
+        for system_data in coordinator.data.get(AZD_SYSTEMS, {}).values():
+            system_id = system_data[AZD_ID]
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
+                manufacturer=MANUFACTURER,
+                model=system_data.get(AZD_MODEL),
+                name=f"System {system_id}",
+                sw_version=system_data.get(AZD_FIRMWARE),
+                via_device_id=ws_device_id,
+            )
+
+        dhw_data: dict[str, Any] | None = coordinator.data.get(AZD_HOT_WATER)
+        if dhw_data is not None:
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
+                manufacturer=MANUFACTURER,
+                model="DHW",
+                name=dhw_data.get(AZD_NAME),
+                via_device_id=ws_device_id,
+            )
+
+    # Register the parents before forwarding platforms, and keep them registered
+    # as new devices appear so child entities can resolve their via_device_id.
+    _async_register_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_register_devices))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Migrate an old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # Add missing CONF_ID
@@ -135,5 +230,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) ->
         entry.version,
         entry.minor_version,
     )
-
-    return True

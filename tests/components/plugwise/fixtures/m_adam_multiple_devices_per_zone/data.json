@@ -22,20 +22,44 @@
   },
   "08963fec7c53423ca5680aa4cb502c63": {
     "active_preset": "away",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 17.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
+      "off",
       "CV Roan",
       "Bios Schema met Film Avond",
       "GF7  Woonkamer",
       "Badkamer Schema",
-      "CV Jessie",
-      "off"
+      "CV Jessie"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 14.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "auto",
     "control_state": "idle",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 21.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Badkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 10.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": ["asleep", "no_frost", "away", "home", "vacation"],
     "select_schedule": "Badkamer Schema",
     "sensors": {
       "temperature": 18.9
@@ -53,24 +77,54 @@
       ],
       "secondary": []
     },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
+    },
     "vendor": "Plugwise"
   },
   "12493538af164a409c6a1c79e38afe1c": {
     "active_preset": "away",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
+      "off",
       "CV Roan",
       "Bios Schema met Film Avond",
       "GF7  Woonkamer",
       "Badkamer Schema",
-      "CV Jessie",
-      "off"
+      "CV Jessie"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 20.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Bios",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 8.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": ["home", "away", "vacation", "no_frost", "asleep"],
     "select_schedule": "off",
     "sensors": {
       "electricity_consumed": 0.0,
@@ -86,6 +140,12 @@
     "thermostats": {
       "primary": ["df4a4a8169904cdb9c03d61a21f42140"],
       "secondary": ["a2c3583e0a6349358998b760cea82d2a"]
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise"
   },
@@ -112,14 +172,38 @@
   },
   "446ac08dd04d4eff8ac57489757b7314": {
     "active_preset": "no_frost",
-    "available_schedules": [],
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 17.0,
+      "upper_bound": 30.0
+    },
+    "available_schedules": ["off"],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "heat",
     "control_state": "idle",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 20.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Garage",
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 10.0,
+      "upper_bound": 30.0
+    },
     "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-    "select_schedule": null,
+    "select_schedule": "off",
     "sensors": {
       "temperature": 15.6
     },
@@ -132,6 +216,12 @@
     "thermostats": {
       "primary": ["e7693eb9582644e5b865dba8d4447cf1"],
       "secondary": []
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise"
   },
@@ -194,7 +284,7 @@
       "setpoint": 14.0,
       "temperature": 19.1,
       "temperature_difference": -0.4,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -253,20 +343,44 @@
   },
   "82fa13f017d240daa0d0ea1775420f24": {
     "active_preset": "asleep",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 16.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
+      "off",
       "CV Roan",
       "Bios Schema met Film Avond",
       "GF7  Woonkamer",
       "Badkamer Schema",
-      "CV Jessie",
-      "off"
+      "CV Jessie"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "auto",
     "control_state": "idle",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 20.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Jessie",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 10.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": ["home", "no_frost", "away", "vacation", "asleep"],
     "select_schedule": "CV Jessie",
     "sensors": {
       "temperature": 17.2
@@ -280,6 +394,12 @@
     "thermostats": {
       "primary": ["6a3bf693d05e48e0b460c815a4fdd09d"],
       "secondary": ["d3da73bde12a47d5a6b8f9dad971f2ec"]
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 11.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise"
   },
@@ -335,7 +455,7 @@
       "setpoint": 13.0,
       "temperature": 17.2,
       "temperature_difference": -0.2,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -398,20 +518,44 @@
   },
   "c50f167537524366a5af7aa3942feb1e": {
     "active_preset": "home",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 18.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
+      "off",
       "CV Roan",
       "Bios Schema met Film Avond",
       "GF7  Woonkamer",
       "Badkamer Schema",
-      "CV Jessie",
-      "off"
+      "CV Jessie"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 17.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "auto",
     "control_state": "heating",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 21.5,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Woonkamer",
-    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": ["vacation", "asleep", "no_frost", "away", "home"],
     "select_schedule": "GF7  Woonkamer",
     "sensors": {
       "electricity_consumed": 35.6,
@@ -427,6 +571,12 @@
     "thermostats": {
       "primary": ["b59bcebaf94b499ea7d46e4a66fb62d8"],
       "secondary": ["b310b72a0e354bfab43089919b9a88bf"]
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise"
   },
@@ -468,7 +618,7 @@
       "setpoint": 15.0,
       "temperature": 17.1,
       "temperature_difference": 0.1,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -536,7 +686,7 @@
       "setpoint": 5.5,
       "temperature": 15.6,
       "temperature_difference": 0.0,
-      "valve_position": 0.0
+      "valve_position": 0
     },
     "temperature_offset": {
       "lower_bound": -2.0,

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from pycasperglow import GlowState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.casper_glow.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from . import CASPER_GLOW_DISCOVERY_INFO, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

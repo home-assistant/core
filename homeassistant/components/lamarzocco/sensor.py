@@ -86,7 +86,8 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
         available_fn=(
             lambda coordinator: (
-                cast(
+                WidgetType.CM_STEAM_BOILER_LEVEL in coordinator.device.dashboard.config
+                and cast(
                     SteamBoilerLevel,
                     coordinator.device.dashboard.config[
                         WidgetType.CM_STEAM_BOILER_LEVEL
@@ -111,7 +112,10 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         available_fn=(
             lambda coordinator: (
-                not coordinator.websocket_terminated
+                (
+                    not coordinator.websocket_terminated
+                    or coordinator.device.bluetooth_shot_counter_active
+                )
                 and cast(
                     MachineStatus,
                     coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
@@ -119,6 +123,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
                 is MachineState.BREWING
             )
         ),
+        bt_shot_timer=True,
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",

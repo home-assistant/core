@@ -1,5 +1,7 @@
 """The tests for notify_events."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -11,8 +13,6 @@ from homeassistant.components.notify_events.notify import (
     ATTR_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_mock_service
 
 
 async def test_send_msg(hass: HomeAssistant) -> None:

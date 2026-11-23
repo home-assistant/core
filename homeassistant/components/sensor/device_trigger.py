@@ -1,6 +1,6 @@
 """Provides device triggers for sensors."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -9,6 +9,9 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
+)
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
 )
 from homeassistant.const import (
     CONF_ABOVE,
@@ -28,7 +31,8 @@ from homeassistant.helpers.entity import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
+from . import SensorDeviceClass, SensorEntityCapabilityAttribute
+from .const import DOMAIN
 
 DEVICE_CLASS_NONE = "none"
 
@@ -161,11 +165,11 @@ ENTITY_TRIGGERS = {
 }
 
 
-TRIGGER_SCHEMA = vol.All(
+TRIGGER_SCHEMA = probatio.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(
                 [
                     CONF_ABSOLUTE_HUMIDITY,
                     CONF_APPARENT_POWER,
@@ -226,12 +230,12 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_VALUE,
                 ]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            probatio.Optional(CONF_BELOW): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_ABOVE): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 
@@ -242,16 +246,16 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    numeric_state_config = {
-        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    numeric_state_config: ConfigType = {
+        NumericStateTriggerArgument.PLATFORM: "numeric_state",
+        NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[numeric_state_trigger.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[NumericStateTriggerArgument.ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[numeric_state_trigger.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[NumericStateTriggerArgument.BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
-        numeric_state_config[CONF_FOR] = config[CONF_FOR]
+        numeric_state_config[NumericStateTriggerArgument.FOR] = config[CONF_FOR]
 
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config
@@ -304,7 +308,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
 
     try:
@@ -319,15 +323,15 @@ async def async_get_trigger_capabilities(
         )
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                ): probatio.Coerce(float),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

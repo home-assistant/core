@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from py_aosmith import AOSmithInvalidCredentialsException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.aosmith.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import FIXTURE_USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -44,6 +43,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result2["data"] == FIXTURE_USER_INPUT
+    assert result2["result"].unique_id == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -134,7 +134,7 @@ async def test_reauth_flow(
             "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
             return_value=[],
         ),
-        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
@@ -188,7 +188,7 @@ async def test_reauth_flow_retry(
             "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
             return_value=[],
         ),
-        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=None),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],

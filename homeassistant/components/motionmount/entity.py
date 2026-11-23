@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 import motionmount
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_PIN
+from homeassistant.const import CONF_PIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
@@ -49,11 +49,9 @@ class MotionMountEntity(Entity):
         )
 
         if mac == EMPTY_MAC:
-            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, config_entry.entry_id)}
+            self._attr_device_info.identifiers = {(DOMAIN, config_entry.entry_id)}
         else:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, mac)
-            }
+            self._attr_device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
     @property
     @override

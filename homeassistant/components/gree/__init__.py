@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None:
     """Set up Gree Climate from a config entry."""
     gree_discovery = DiscoveryService(hass, entry)
     entry.runtime_data = GreeRuntimeData(
@@ -38,9 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

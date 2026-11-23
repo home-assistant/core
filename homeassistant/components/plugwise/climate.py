@@ -4,15 +4,13 @@ from dataclasses import asdict, dataclass
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,9 +25,10 @@ ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
 
 
-def _check_for_schedule(active: bool, last_active: str | None) -> None:
+def _check_for_schedule(active: bool, last_active: str) -> None:
     """Raise a HAError when no thermostat schedule has been set."""
-    if not active and last_active is None:
+    # last_active can be stored as None from before the plugwise v1.14.3 bump
+    if not active and last_active == STATE_OFF:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=ERROR_NO_SCHEDULE,
@@ -92,7 +91,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     """Representation of a Plugwise thermostat."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -102,12 +101,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{device_id}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
-        self._last_active_schedule: str | None = None
+        self._last_active_schedule = STATE_OFF
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
@@ -143,7 +143,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-            self._last_active_schedule = plugwise_extra_data.last_active_schedule
+            self._last_active_schedule = (
+                plugwise_extra_data.last_active_schedule or STATE_OFF
+            )
             self._previous_action_mode = (
                 plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
             )
@@ -159,13 +161,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device["sensors"].get("temperature")
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach.
 
         Connected to the HVACMode combination of AUTO-HEAT.
@@ -175,7 +177,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the temperature we try to reach in case of cooling.
 
         Connected to the HVACMode combination of AUTO-HEAT_COOL.
@@ -184,7 +186,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the heating temperature we try to reach in case of heating.
 
         Connected to the HVACMode combination AUTO-HEAT_COOL.
@@ -209,7 +211,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if self.device.get("available_schedules"):
+        if self.device["available_schedules"] != [STATE_OFF]:
             hvac_modes.append(HVACMode.AUTO)
 
         if self._api.cooling_present:
@@ -255,14 +257,14 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         data: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["setpoint_high"] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
+            data["setpoint"] = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+            data["setpoint_high"] = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
+        if ClimateServiceArgument.TARGET_TEMP_LOW in kwargs:
+            data["setpoint_low"] = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
 
-        if mode := kwargs.get(ATTR_HVAC_MODE):
+        if mode := kwargs.get(ClimateServiceArgument.HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
         await self._api.set_temperature(self._location, data)
@@ -291,8 +293,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             await self._api.set_regulation_mode(hvac_mode.value)
             return
 
-        current_schedule = self.device.get("select_schedule")
-        schedule_is_active = current_schedule not in (None, "off")
+        current_schedule = self.device["select_schedule"]
+        schedule_is_active = current_schedule != STATE_OFF
         desired_schedule = (
             current_schedule if schedule_is_active else self._last_active_schedule
         )

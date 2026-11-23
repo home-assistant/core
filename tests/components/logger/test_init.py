@@ -1,22 +1,27 @@
 """The tests for the Logger component."""
 
 from collections import defaultdict
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import logger
 from homeassistant.components.logger import DOMAIN, LOGSEVERITY
+from homeassistant.components.logger.const import LoggerService, LoggerServiceArgument
 from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_call_logger_set_level, async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -140,7 +145,10 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     # Test set default level
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
-            DOMAIN, "set_default_level", {"level": "fatal"}, blocking=True
+            DOMAIN,
+            LoggerService.SET_DEFAULT_LEVEL,
+            {LoggerServiceArgument.LEVEL: "fatal"},
+            blocking=True,
         )
     assert len(mocks[""].orig_setLevel.mock_calls) == 2
     assert mocks[""].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["FATAL"]
@@ -149,7 +157,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
             DOMAIN,
-            "set_level",
+            LoggerService.SET_LEVEL,
             {"test.child": "info", "new_logger": "notset"},
             blocking=True,
         )
@@ -280,7 +288,10 @@ async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(f"{ZONE_NS}.any").isEnabledFor(logging.DEBUG) is True
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}, blocking=True
+        logger.DOMAIN,
+        LoggerService.SET_LEVEL,
+        {f"{UNCONFIG_NS}.any": "debug"},
+        blocking=True,
     )
 
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
@@ -288,7 +299,10 @@ async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_default_level", {"level": "debug"}, blocking=True
+        logger.DOMAIN,
+        LoggerService.SET_DEFAULT_LEVEL,
+        {LoggerServiceArgument.LEVEL: "debug"},
+        blocking=True,
     )
 
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.DEBUG) is True
@@ -426,7 +440,7 @@ async def test_log_once_removed_from_store(
     assert hass_storage["core.logger"]["data"] == store_contents["data"]
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + datetime.timedelta(seconds=SAVE_DELAY_LONG)
+        hass, dt_util.utcnow() + dt.timedelta(seconds=SAVE_DELAY_LONG)
     )
     await hass.async_block_till_done()
 
@@ -448,3 +462,65 @@ async def test_services_require_admin(
             context=Context(user_id=hass_read_only_user.id),
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("logger_config", "expected_loggers"),
+    [
+        pytest.param(
+            {"logs": {"httpx": "debug"}},
+            "- `httpx` → `httpx2`",
+            id="logs",
+        ),
+        pytest.param(
+            {"filters": {"httpcore.http11": ["ignore me"]}},
+            "- `httpcore.http11` → `httpcore2.http11`",
+            id="filters_submodule",
+        ),
+        pytest.param(
+            {
+                "logs": {"httpx": "debug", "httpcore": "info", "other": "info"},
+                "filters": {"httpx": ["ignore me"]},
+            },
+            "- `httpcore` → `httpcore2`\n- `httpx` → `httpx2`",
+            id="logs_and_filters",
+        ),
+    ],
+)
+async def test_renamed_loggers_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    logger_config: dict[str, Any],
+    expected_loggers: str,
+) -> None:
+    """Test a repair issue is created for renamed httpx logger names."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: logger_config})
+
+    issue = issue_registry.async_get_issue(DOMAIN, "renamed_loggers")
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"loggers": expected_loggers}
+
+
+@pytest.mark.parametrize(
+    "logger_config",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param(
+            {
+                "logs": {"httpx2": "debug", "httpxyz": "info"},
+                "filters": {"httpcore2.http11": ["ignore me"]},
+            },
+            id="new_names",
+        ),
+    ],
+)
+async def test_no_renamed_loggers_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    logger_config: dict[str, Any],
+) -> None:
+    """Test no repair issue is created without renamed logger names."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: logger_config})
+
+    assert issue_registry.async_get_issue(DOMAIN, "renamed_loggers") is None

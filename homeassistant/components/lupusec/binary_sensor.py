@@ -37,7 +37,7 @@ async def async_setup_entry(
     devices = await hass.async_add_executor_job(partial_func)
 
     async_add_entities(
-        LupusecBinarySensor(device, config_entry.entry_id) for device in devices
+        LupusecBinarySensor(hass, device, config_entry.entry_id) for device in devices
     )
 
 

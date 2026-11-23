@@ -7,15 +7,12 @@ import pytest
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    CameraService,
     CameraState,
     async_get_image,
 )
 from homeassistant.components.demo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -61,14 +58,20 @@ async def test_turn_on_state_back_to_streaming(hass: HomeAssistant) -> None:
     assert state.state == CameraState.STREAMING
 
     await hass.services.async_call(
-        CAMERA_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_CAMERA}, blocking=True
+        CAMERA_DOMAIN,
+        CameraService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_CAMERA},
+        blocking=True,
     )
 
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == CameraState.IDLE
 
     await hass.services.async_call(
-        CAMERA_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_CAMERA}, blocking=True
+        CAMERA_DOMAIN,
+        CameraService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_CAMERA},
+        blocking=True,
     )
 
     state = hass.states.get(ENTITY_CAMERA)
@@ -78,12 +81,15 @@ async def test_turn_on_state_back_to_streaming(hass: HomeAssistant) -> None:
 async def test_turn_off_image(hass: HomeAssistant) -> None:
     """After turn off, Demo camera raise error."""
     await hass.services.async_call(
-        CAMERA_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_CAMERA}, blocking=True
+        CAMERA_DOMAIN,
+        CameraService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_CAMERA},
+        blocking=True,
     )
 
     with pytest.raises(HomeAssistantError) as error:
         await async_get_image(hass, ENTITY_CAMERA)
-    assert error.value.args[0] == "Camera is off"
+    assert error.value.translation_key == "camera_off"
 
 
 async def test_turn_off_invalid_camera(hass: HomeAssistant) -> None:
@@ -93,8 +99,8 @@ async def test_turn_off_invalid_camera(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "camera.invalid_camera"},
+        CameraService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "camera.invalid_camera"},
         blocking=True,
     )
 
@@ -112,8 +118,8 @@ async def test_motion_detection(hass: HomeAssistant) -> None:
     # Call service to turn on motion detection
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_ENABLE_MOTION,
-        {ATTR_ENTITY_ID: ENTITY_CAMERA},
+        CameraService.ENABLE_MOTION_DETECTION,
+        {TargetKey.ENTITY_ID: ENTITY_CAMERA},
         blocking=True,
     )
 
@@ -124,8 +130,8 @@ async def test_motion_detection(hass: HomeAssistant) -> None:
     # Call service to turn off motion detection
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_DISABLE_MOTION,
-        {ATTR_ENTITY_ID: ENTITY_CAMERA},
+        CameraService.DISABLE_MOTION_DETECTION,
+        {TargetKey.ENTITY_ID: ENTITY_CAMERA},
         blocking=True,
     )
 

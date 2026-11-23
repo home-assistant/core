@@ -71,7 +71,7 @@ rules:
   entity-disabled-by-default: todo
   discovery: todo
   exception-translations: todo
-  devices: todo
+  devices: done
   docs-supported-devices: todo
   icon-translations: todo
   docs-known-limitations: todo
@@ -82,7 +82,7 @@ rules:
   entity-category: todo
   dynamic-devices: todo
   docs-troubleshooting: todo
-  diagnostics: todo
+  diagnostics: done
   docs-use-cases: todo
 
   # Platinum

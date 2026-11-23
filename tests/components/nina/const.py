@@ -55,3 +55,12 @@ DUMMY_CONFIG_ENTRY_AREA_FILTERS: dict[str, Any] = {
         CONF_AREA_FILTER: ".*nagold.*",
     },
 }
+
+DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS: dict[str, Any] = {
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt", "010590000000": "Test, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*nagold.*",
+    },
+}

@@ -5,30 +5,29 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientResponseError
 from pymiele import MieleDevices
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN, PROCESS_ACTION, PROGRAM_ID
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_PAUSE,
-    SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_actions_callback, get_data_callback
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "vacuum.robot_vacuum_cleaner"
 
@@ -118,8 +117,8 @@ async def test_vacuum_fan_speed(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: fan_speed},
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once_with(

@@ -1,12 +1,14 @@
 """Test the Wolf SmartSet Service."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 import attr
 from freezegun.api import FrozenDateTimeFactory
-from httpx import RequestError
+from httpx2 import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError
@@ -18,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LEGACY_CONFIG = {
     "device_name": "test-device",
@@ -81,7 +81,7 @@ async def test_migration_v1_to_v2(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device = attr.evolve(device, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device.id] = device
+    device_registry._devices[device.id] = device
     entity = entity_registry.async_get_or_create(
         domain="sensor",
         platform=DOMAIN,
@@ -108,7 +108,7 @@ async def test_migration_v1_to_v2(
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {(DOMAIN, "1234")}
-    assert migrated_device.config_entries == {config_entry.entry_id}
+    assert migrated_device.config_entry_id == config_entry.entry_id
     assert migrated_device.disabled_by is dr.DeviceEntryDisabler.USER
 
     migrated_entity = entity_registry.async_get(entity.entity_id)
@@ -252,7 +252,7 @@ async def test_migration_merges_duplicate_v1_entries(
     # The pre-existing device for 5678 was reattached to the surviving entry.
     device = device_registry.async_get(device_5678.id)
     assert device is not None
-    assert device.config_entries == {surviving.entry_id}
+    assert device.config_entry_id == surviving.entry_id
 
 
 async def test_migration_merge_into_disabled_hub(
@@ -303,7 +303,7 @@ async def test_migration_merge_into_disabled_hub(
     # state now reflects the new owning entry's disabled state.
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
-    assert migrated_device.config_entries == {hub_entry.entry_id}
+    assert migrated_device.config_entry_id == hub_entry.entry_id
     assert migrated_device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
 
 
@@ -393,8 +393,12 @@ async def test_setup_multiple_devices(
     await setup_integration(hass, mock_config_entry)
 
     # Both devices must appear in the device registry.
-    first = device_registry.async_get_device({(DOMAIN, "1234")})
-    second = device_registry.async_get_device({(DOMAIN, "9999")})
+    first = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), mock_config_entry.entry_id
+    )
+    second = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "9999"), mock_config_entry.entry_id
+    )
     assert first is not None
     assert second is not None
     assert first.name == "first-device"
@@ -494,23 +498,28 @@ async def test_update_skipped_when_device_offline(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("online", "side_effect", "level"),
     [
-        RequestError("boom"),
-        FetchFailed("boom"),
-        InvalidAuth,
+        pytest.param(False, None, logging.INFO, id="offline"),
+        pytest.param(True, RequestError("boom"), logging.ERROR, id="request_error"),
+        pytest.param(True, FetchFailed("boom"), logging.ERROR, id="fetch_failed"),
+        pytest.param(True, InvalidAuth, logging.ERROR, id="invalid_auth"),
     ],
 )
 async def test_update_failure_modes(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_wolflink: MagicMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    online: bool,
+    side_effect: Exception | type[Exception] | None,
+    level: int,
 ) -> None:
-    """Test recoverable update errors mark entities as unavailable."""
+    """Test update errors mark entities as unavailable and log at the right level."""
     await setup_integration(hass, mock_config_entry)
 
+    mock_wolflink.fetch_system_state_list.return_value = online
     mock_wolflink.fetch_value.side_effect = side_effect
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
@@ -520,6 +529,12 @@ async def test_update_failure_modes(
         hass.states.get("sensor.test_device_energy_parameter").state
         == STATE_UNAVAILABLE
     )
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.wolflink.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
 
 async def test_parameter_read_error_triggers_refetch(

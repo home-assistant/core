@@ -4,8 +4,12 @@ from typing import override
 
 from pynobo import nobo
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+
+from .const import ATTR_SERIAL, DOMAIN
 
 
 class NoboBaseEntity(Entity):
@@ -14,10 +18,22 @@ class NoboBaseEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, hub: nobo) -> None:
+    def __init__(self, hass: HomeAssistant, hub: nobo, entry_id: str) -> None:
         """Initialize the entity."""
         self._nobo = hub
         self._attr_available = hub.connected
+        self._hub_device_id = dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, hub.hub_info[ATTR_SERIAL]), config_entry_id=entry_id
+        )
+
+    def _zone_device_info(self, zone_id: str) -> DeviceInfo:
+        """Return device info for a zone, placed in an area named after the zone."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._nobo.hub_serial}:{zone_id}")},
+            translation_key="zone",
+            via_device_id=self._hub_device_id,
+            suggested_area=self._nobo.zones[zone_id]["name"],
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

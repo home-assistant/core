@@ -1,5 +1,6 @@
 """Config flow for Nibe Heat Pump integration."""
 
+from datetime import timedelta
 from typing import Any, override
 
 from nibe.connection.modbus import Modbus
@@ -13,12 +14,18 @@ from nibe.exceptions import (
     WriteException,
 )
 from nibe.heatpump import HeatPump, Model
-import voluptuous as vol
+import probatio
 import yarl
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.http import auth as http_auth
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -34,38 +41,40 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import NibeHeatpumpConfigEntry
+from .http import LOG_SET_URL, supports_log_set
 
-PORT_SELECTOR = vol.All(
+PORT_SELECTOR = probatio.All(
     selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=1, step=1, max=65535, mode=selector.NumberSelectorMode.BOX
         )
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 
-STEP_NIBEGW_DATA_SCHEMA = vol.Schema(
+STEP_NIBEGW_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
-        vol.Required(CONF_IP_ADDRESS): selector.TextSelector(),
-        vol.Required(CONF_LISTENING_PORT, default=9999): PORT_SELECTOR,
-        vol.Required(CONF_REMOTE_READ_PORT, default=9999): PORT_SELECTOR,
-        vol.Required(CONF_REMOTE_WRITE_PORT, default=10000): PORT_SELECTOR,
+        probatio.Required(CONF_MODEL): probatio.In(list(Model.__members__)),
+        probatio.Required(CONF_IP_ADDRESS): selector.TextSelector(),
+        probatio.Required(CONF_LISTENING_PORT, default=9999): PORT_SELECTOR,
+        probatio.Required(CONF_REMOTE_READ_PORT, default=9999): PORT_SELECTOR,
+        probatio.Required(CONF_REMOTE_WRITE_PORT, default=10000): PORT_SELECTOR,
     }
 )
 
 
-STEP_MODBUS_DATA_SCHEMA = vol.Schema(
+STEP_MODBUS_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
-        vol.Required(CONF_MODBUS_URL): selector.TextSelector(),
-        vol.Required(CONF_MODBUS_UNIT, default=0): vol.All(
+        probatio.Required(CONF_MODEL): probatio.In(list(Model.__members__)),
+        probatio.Required(CONF_MODBUS_URL): selector.TextSelector(),
+        probatio.Required(CONF_MODBUS_UNIT, default=0): probatio.All(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, step=1, mode=selector.NumberSelectorMode.BOX
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
@@ -241,3 +250,62 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="nibegw", data_schema=STEP_NIBEGW_DATA_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: NibeHeatpumpConfigEntry,
+    ) -> NibeHeatPumpOptionsFlow:
+        """Get the options flow for this handler."""
+        return NibeHeatPumpOptionsFlow()
+
+    @classmethod
+    @callback
+    @override
+    def async_supports_options_flow(cls, config_entry: NibeHeatpumpConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return supports_log_set(config_entry)
+
+
+class NibeHeatPumpOptionsFlow(OptionsFlow):
+    """Offer a LOG.SET for the coils in use."""
+
+    config_entry: NibeHeatpumpConfigEntry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the LOG.SET download, or why it is unavailable."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return await self.async_step_log_set_unavailable()
+        return await self.async_step_log_set()
+
+    async def async_step_log_set(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show a link to download the LOG.SET."""
+        if user_input is not None:
+            return self.async_create_entry(data=dict(self.config_entry.options))
+
+        url = http_auth.async_sign_path(
+            self.hass,
+            LOG_SET_URL.format(entry_id=self.config_entry.entry_id),
+            timedelta(minutes=5),
+        )
+        return self.async_show_form(
+            step_id="log_set",
+            description_placeholders={
+                # A target keeps the frontend from treating the link as navigation,
+                # which closes the flow.
+                "link": f'<a href="{url}" target="_blank">LOG.SET</a>',
+            },
+        )
+
+    async def async_step_log_set_unavailable(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show that the LOG.SET is unavailable."""
+        if user_input is not None:
+            return self.async_create_entry(data=dict(self.config_entry.options))
+        return self.async_show_form(step_id="log_set_unavailable")

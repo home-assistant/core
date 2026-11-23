@@ -1,12 +1,13 @@
 """Support for getting the disk temperature of a host."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 import socket
 from typing import Any, override
 
+import probatio
 from telnetlib import Telnet  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -28,8 +28,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE = "device"
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634
 DEFAULT_NAME = "HD Temperature"
@@ -37,12 +35,22 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
+
+class HddtempEntityStateAttribute(StrEnum):
+    """State attributes for hddtemp entities."""
+
+    DEVICE = "device"
+    MODEL = "model"
+
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DISKS, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -85,7 +93,10 @@ class HddTempSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:
-            return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
+            return {
+                HddtempEntityStateAttribute.DEVICE: self._details[0],
+                HddtempEntityStateAttribute.MODEL: self._details[1],
+            }
         return None
 
     def update(self) -> None:

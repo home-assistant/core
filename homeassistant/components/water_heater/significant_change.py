@@ -13,7 +13,7 @@ from .const import WaterHeaterStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
-    WaterHeaterStateAttribute.TEMPERATURE,
+    WaterHeaterStateAttribute.TARGET_TEMPERATURE,
     WaterHeaterStateAttribute.TARGET_TEMP_HIGH,
     WaterHeaterStateAttribute.TARGET_TEMP_LOW,
     WaterHeaterStateAttribute.OPERATION_MODE,

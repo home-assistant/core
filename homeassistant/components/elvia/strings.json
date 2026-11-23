@@ -21,5 +21,10 @@
         "description": "Enter your meter value API token from Elvia"
       }
     }
+  },
+  "exceptions": {
+    "import_failed": {
+      "message": "Failed to import meter values from Elvia"
+    }
   }
 }

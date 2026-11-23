@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN, MEDIA_SOURCE_STREAM_PATH
 from .helper import get_engine_instance
@@ -41,7 +41,10 @@ def generate_media_source_id(
     from . import async_resolve_engine  # noqa: PLC0415
 
     if (engine := async_resolve_engine(hass, engine)) is None:
-        raise HomeAssistantError("Invalid TTS provider selected")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_provider",
+        )
 
     engine_instance = get_engine_instance(hass, engine)
     # We raise above if the engine is not resolved, so engine_instance can't be None

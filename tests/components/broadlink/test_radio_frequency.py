@@ -3,8 +3,9 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components import radio_frequency
@@ -23,8 +24,6 @@ from homeassistant.util import dt as dt_util
 
 from . import get_device
 
-from tests.common import async_fire_time_changed
-
 _FREQ_433 = 433_920_000
 _FREQ_315 = 315_000_000
 
@@ -35,8 +34,8 @@ async def _setup_rf_device(hass: HomeAssistant) -> tuple[MagicMock, str]:
     mock_setup = await device.setup_entry(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     rf_entity = next(e for e in entries if e.domain == Platform.RADIO_FREQUENCY)
@@ -61,22 +60,56 @@ async def test_radio_frequency_setup(
     """RF entity is created only for RF-capable devices."""
     device = get_device(device_name)
     mock_setup = await device.setup_entry(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     rf_entities = [e for e in entries if e.domain == Platform.RADIO_FREQUENCY]
     assert len(rf_entities) == (1 if has_rf else 0)
 
 
-def test_encode_rf_packet() -> None:
+@pytest.mark.parametrize(
+    ("timings", "repeat_count", "expected"),
+    [
+        pytest.param(
+            [round(12 * _TICK_US), round(300 * _TICK_US), round(12 * _TICK_US)],
+            3,
+            bytes([0xB2, 0x03, 0x05, 0x00, 0x0C, 0x00, 0x01, 0x2C, 0x0C]),
+            id="inline_and_escaped",
+        ),
+        pytest.param(
+            [400, -10, 400],
+            0,
+            bytes([0xB2, 0x00, 0x03, 0x00, 0x0D, 0x01, 0x0D]),
+            id="under_half_a_tick",
+        ),
+        pytest.param(
+            [round(0xFFFF * _TICK_US)],
+            0,
+            bytes([0xB2, 0x00, 0x03, 0x00, 0x00, 0xFF, 0xFF]),
+            id="max_ticks",
+        ),
+    ],
+)
+def test_encode_rf_packet(
+    timings: list[int], repeat_count: int, expected: bytes
+) -> None:
     """Pulses are encoded inline below 256 ticks, escape-prefixed above."""
-    timings = [round(12 * _TICK_US), round(300 * _TICK_US), round(12 * _TICK_US)]
     packet = encode_rf_packet(
-        type_byte=_RF_433_TYPE_BYTE, repeat_count=3, timings_us=timings
+        type_byte=_RF_433_TYPE_BYTE, repeat_count=repeat_count, timings_us=timings
     )
-    # type byte, repeat count, payload length (le16), 12, escape (00 01 2c), 12
-    assert packet == bytes([0xB2, 0x03, 0x05, 0x00, 0x0C, 0x00, 0x01, 0x2C, 0x0C])
+    assert packet == expected
+
+
+async def test_send_command_rejects_too_long_timing(hass: HomeAssistant) -> None:
+    """A timing too long to encode is rejected before send."""
+    api, entity_id = await _setup_rf_device(hass)
+
+    command = OOKCommand(frequency=_FREQ_433, timings=[400, -3_000_000])
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await radio_frequency.async_send_command(hass, entity_id, command)
+    assert exc_info.value.translation_key == "timing_too_long"
+    api.send_data.assert_not_called()
 
 
 async def test_send_command(hass: HomeAssistant) -> None:

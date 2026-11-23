@@ -3,59 +3,38 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_JOIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     RepeatMode,
     is_on,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY_ID = "media_player.walkman"
 
@@ -91,11 +70,11 @@ async def test_source_select(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "dvd"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: None},
+            MediaPlayerService.SELECT_SOURCE,
+            {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.SOURCE: None},
             blocking=True,
         )
     state = hass.states.get(entity_id)
@@ -103,8 +82,8 @@ async def test_source_select(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "xbox"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.SOURCE: "xbox"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -125,8 +104,11 @@ async def test_repeat_set(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -146,8 +128,8 @@ async def test_clear_playlist(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.CLEAR_PLAYLIST,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -165,11 +147,14 @@ async def test_volume_services(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 1.0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: None},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: TEST_ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: None,
+            },
             blocking=True,
         )
 
@@ -178,8 +163,11 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -188,8 +176,8 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -198,8 +186,8 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -208,11 +196,14 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_VOLUME_MUTE,
-            {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: None},
+            MediaPlayerService.VOLUME_MUTE,
+            {
+                TargetKey.ENTITY_ID: TEST_ENTITY_ID,
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: None,
+            },
             blocking=True,
         )
 
@@ -221,8 +212,11 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: TEST_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -243,8 +237,8 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -254,8 +248,8 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -265,8 +259,8 @@ async def test_turning_off_and_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.TOGGLE,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -287,8 +281,8 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -297,8 +291,8 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -307,8 +301,8 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -317,8 +311,8 @@ async def test_playing_pausing(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -338,8 +332,8 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -348,8 +342,8 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -358,8 +352,8 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -377,8 +371,8 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: ent_id},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: ent_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -387,8 +381,8 @@ async def test_prev_next_track(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: ent_id},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: ent_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -412,11 +406,14 @@ async def test_play_media(hass: HomeAssistant) -> None:
     )
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {ATTR_ENTITY_ID: ent_id, ATTR_MEDIA_CONTENT_ID: "some_id"},
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: ent_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "some_id",
+            },
             blocking=True,
         )
     state = hass.states.get(ent_id)
@@ -429,11 +426,11 @@ async def test_play_media(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ent_id,
-            ATTR_MEDIA_CONTENT_TYPE: "youtube",
-            ATTR_MEDIA_CONTENT_ID: "some_id",
+            TargetKey.ENTITY_ID: ent_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "youtube",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "some_id",
         },
         blocking=True,
     )
@@ -459,13 +456,13 @@ async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_MEDIA_SEEK,
+            MediaPlayerService.MEDIA_SEEK,
             {
-                ATTR_ENTITY_ID: ent_id,
-                ATTR_MEDIA_SEEK_POSITION: None,
+                TargetKey.ENTITY_ID: ent_id,
+                MediaPlayerServiceArgument.SEEK_POSITION: None,
             },
             blocking=True,
         )
@@ -473,10 +470,10 @@ async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_SEEK,
+        MediaPlayerService.MEDIA_SEEK,
         {
-            ATTR_ENTITY_ID: ent_id,
-            ATTR_MEDIA_SEEK_POSITION: 100,
+            TargetKey.ENTITY_ID: ent_id,
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
         },
         blocking=True,
     )
@@ -495,8 +492,8 @@ async def test_stop(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -564,10 +561,10 @@ async def test_grouping(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: walkman,
-            ATTR_GROUP_MEMBERS: [
+            TargetKey.ENTITY_ID: walkman,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
                 kitchen,
             ],
         },
@@ -579,8 +576,8 @@ async def test_grouping(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: walkman},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: walkman},
         blocking=True,
     )
     await hass.async_block_till_done()

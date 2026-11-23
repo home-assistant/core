@@ -30,6 +30,18 @@
         }
       }
     },
+    "cover": {
+      "living_room_window": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "fast": "[%key:component::cover::entity_component::_::state_attributes::speed::state::fast%]",
+              "slow": "[%key:component::cover::entity_component::_::state_attributes::speed::state::slow%]"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "push": {
         "state_attributes": {

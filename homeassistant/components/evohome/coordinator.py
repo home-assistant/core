@@ -1,10 +1,9 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
 from collections.abc import Awaitable
-from datetime import timedelta
-from http import HTTPStatus
+from datetime import datetime, timedelta
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -20,19 +19,82 @@ from evohomeasync2.const import (
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
 )
-from evohomeasync2.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
+from evohomeasync2.typedefs import (
+    EvoDhwScheduleDayOfWeekT,
+    EvoLocStatusT,
+    EvoTcsConfigResponseT,
+    EvoZonScheduleDayOfWeekT,
+)
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
+from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN, SCHEDULE_MAX_AGE
+
+# any other reason gets "api_request_failed"
+_API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
+    ec2.ApiCallErrorReason.CONNECTION_FAILED: "api_connection_failed",
+    ec2.ApiCallErrorReason.CREDENTIALS_INVALID: "api_credentials_invalid",
+    ec2.ApiCallErrorReason.RATE_LIMITED: "api_rate_limited",
+    ec2.ApiCallErrorReason.REQUEST_REJECTED: "api_request_rejected",
+    ec2.ApiCallErrorReason.SERVER_ERROR: "api_server_error",
+}
 
 
-class EvoDataUpdateCoordinator(DataUpdateCoordinator):
-    """Coordinator for evohome integration/client."""
+def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
+    """Return the translation key of a failed API call, by its reason."""
+    return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
 
-    # These will not be None after _async_setup())
-    loc: ec2.Location
-    tcs: ec2.ControlSystem
+
+def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
+    """Log (as debug) what the translated error of a failed API call leaves out."""
+    logger.debug(
+        "The request to the vendor's API failed: %s (reason=%s, status=%s, errors=%s)",
+        err,
+        err.reason,
+        err.status,
+        list(err.errors),
+    )
+
+
+type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
+type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
+
+_ERR_SCHEDULE_UPDATE: Final = (
+    "%s: Failed to update the schedule (keeping any previous one): %s"
+)
+
+
+class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base for the evohome coordinators (the integration has no config entry)."""
+
+    # our version of async_config_entry_first_refresh()...
+    async def async_first_refresh(self) -> None:
+        """Refresh data for the first time when integration is setup.
+
+        This integration does not have config flow, so it is inappropriate to
+        invoke `async_config_entry_first_refresh()`.
+        """
+
+        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
+        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
+            return
+
+        await self._async_refresh(log_failures=False)
+
+
+class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
+    """Coordinator for an evohome account (the user's config, high-precision temps).
+
+    Its data is the latest high-precision temperatures, by DHW/zone id. They are
+    polled, but are not refreshed on demand (unlike a location).
+    """
 
     def __init__(
         self,
@@ -42,7 +104,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         update_interval: timedelta,
-        location_idx: int,
         client_v1: ec1.EvohomeClient | None = None,
     ) -> None:
         """Class to manage fetching data."""
@@ -58,28 +119,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = client_v2
         self.client_v1 = client_v1
 
-        self.loc_idx = location_idx
-
-        self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
-        self.temps: dict[str, float | None] = {}
-
-        self._first_refresh_done = False  # get schedules only after first refresh
-
-    # our version of async_config_entry_first_refresh()...
-    async def async_first_refresh(self) -> None:
-        """Refresh data for the first time when integration is setup.
-
-        This integration does not have config flow, so it is inappropriate to
-        invoke `async_config_entry_first_refresh()`.
-        """
-
-        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
-        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
-            return
-
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
+        self.data = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -89,9 +129,98 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         try:
-            await self.client.update(dont_update_status=True)  # only config for now
+            await self.client.setup()  # only config for now
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
+
+    @override
+    async def _async_update_data(self) -> _HighPrecisionTemps:
+        """Get the latest high-precision temperatures of the account's locations.
+
+        Never raises UpdateFailed, as the temperatures are optional.
+        """
+
+        if self.client_v1 is None:
+            return self.data
+
+        try:
+            await self.client_v1.get_status()
+
+        except ec1.BadUserCredentialsError as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain high-precision temperatures. "
+                    "The feature will be disabled until next restart: %r"
+                ),
+                err,
+            )
+            self.client_v1 = None
+            return self.data
+
+        except (ec1.EvohomeError, TimeoutError) as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain the latest high-precision temperatures. "
+                    "They will be ignored this refresh cycle: %r"
+                ),
+                err,
+            )
+            temps: _HighPrecisionTemps = {}  # now considered stale
+
+        else:
+            temps = {}
+            for loc in self.client_v1.location_by_id.values():
+                if loc.tcs:
+                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
+
+        self.logger.debug("Status (high-res temps) = %s", temps)
+        return temps
+
+
+class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
+    """Coordinator for an evohome location (its status and schedules)."""
+
+    # These will not be None after _async_setup())
+    loc: ec2.Location
+    tcs: ec2.ControlSystem
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        account: EvoAccountCoordinator,
+        *,
+        name: str,
+        update_interval: timedelta,
+        location_idx: int,
+    ) -> None:
+        """Class to manage fetching data."""
+
+        super().__init__(
+            hass,
+            logger,
+            config_entry=None,
+            name=name,
+            update_interval=update_interval,
+        )
+
+        self.account = account
+        self.client = account.client
+
+        self.loc_idx = location_idx
+
+        self.data: EvoLocStatusT = None  # type: ignore[assignment]
+
+        self._first_refresh_done = False  # get schedules only after first refresh
+        self._schedules_fetched: dict[str, datetime] = {}  # by DHW/zone id
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Select the location from the account's configuration (fetched by the account
+        coordinator).
+        """
 
         try:
             self.loc = self.client.locations[self.loc_idx]
@@ -104,7 +233,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        self.tcs = self.loc.gateways[0].systems[0]
+        if (tcs := self.loc.tcs) is None:
+            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
+        self.tcs = tcs
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -114,8 +245,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
-            tcs_info: EvoTcsConfigResponseT = self.tcs.config  # type: ignore[assignment]
-            tcs_info[SZ_ZONES] = [zone.config for zone in self.tcs.zones]
+            tcs_info: EvoTcsConfigResponseT = {
+                **self.tcs.config,
+                SZ_ZONES: [zone.config for zone in self.tcs.zones],
+            }
             if self.tcs.hotwater:
                 tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
@@ -128,78 +261,52 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             }
             self.logger.debug("Config = %s", [config])
 
-    async def call_client_api(
+    async def call_client_api[_T](
         self,
-        client_api: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[_T],
+        *,
         request_refresh: bool = True,
-    ) -> dict[str, Any] | None:
-        """Call a client API and update the Coordinator state if required."""
+    ) -> _T:
+        """Call a client API and update the Coordinator state if required.
+
+        If the call fails, raise HomeAssistantError. The client's error is chained to
+        it, and logged only as debug, as HA reports the error.
+        """
 
         try:
             result = await client_api
 
-        except ec2.InvalidSystemModeError:
-            raise
-
-        except ec2.ApiRequestFailedError as err:
-            self.logger.error(err)
-            return None
+        except ec2.ApiCallFailedError as err:  # incl. AuthenticationFailedError
+            _log_api_call_failure(self.logger, err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+            ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
 
         return result
 
-    async def _update_v1_api_temps(self) -> None:
-        """Get the latest high-precision temperatures of the default Location."""
-
-        assert self.client_v1 is not None  # mypy check
-
-        try:
-            await self.client_v1.update()
-
-        except ec1.BadUserCredentialsError as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "The feature will be disabled until next restart: %r"
-                ),
-                err,
-            )
-            self.client_v1 = None
-
-        except ec1.EvohomeError as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
-            self.temps = {}  # high-precision temps now considered stale
-
-        else:
-            self.temps = await self.client_v1.location_by_id[
-                self.loc.id
-            ].get_temperatures(dont_update_status=True)
-
-        self.logger.debug("Status (high-res temps) = %s", self.temps)
-
     async def _update_v2_api_state(self, *args: Any) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         try:
-            status = await self.loc.update()
+            status = await self.loc.get_status()
 
-        except ec2.ApiRequestFailedError as err:
-            if err.status != HTTPStatus.TOO_MANY_REQUESTS:
-                raise UpdateFailed(err) from err
+        except ec2.ApiConnectionFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+            ) from err
 
+        except ec2.ApiCallFailedError as err:
+            _log_api_call_failure(self.logger, err)
             raise UpdateFailed(
-                f"""
-                    The vendor's API rate limit has been exceeded.
-                    Consider increasing the {CONF_SCAN_INTERVAL}
-                """
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
             ) from err
 
         except ec2.EvohomeError as err:
@@ -207,23 +314,61 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.logger.debug("Status = %s", status)
 
-    async def _update_v2_schedules(self) -> None:
-        for zone in self.tcs.zones:
-            try:
-                await zone.get_schedule()
-            except ec2.InvalidScheduleError as err:
-                self.logger.warning(
-                    "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
-                )
+    def _schedule_is_stale(self, child: ec2.HotWater | ec2.Zone) -> bool:
+        """Return True if the schedule has not been fetched within SCHEDULE_MAX_AGE."""
+        fetched = self._schedules_fetched.get(child.id)
+        return fetched is None or dt_util.utcnow() - fetched >= SCHEDULE_MAX_AGE
 
-        if dhw := self.tcs.hotwater:
-            try:
-                await dhw.get_schedule()
-            except ec2.InvalidScheduleError as err:
-                self.logger.warning("DHW has an invalid/missing schedule: %r", err)
+    async def _update_v2_schedules(self) -> None:
+        """Fetch any stale schedules, logging (rather than raising) any failures."""
+
+        children: list[ec2.HotWater | ec2.Zone] = list(self.tcs.zones)
+        if self.tcs.hotwater:
+            children.append(self.tcs.hotwater)
+
+        for child in children:
+            if self._schedule_is_stale(child):
+                await self.async_get_schedule(child, raise_on_error=False)
+
+    async def async_ensure_schedule(self, child: ec2.HotWater | ec2.Zone) -> None:
+        """Fetch the schedule of a DHW/zone if it is stale, for an action that needs it.
+
+        Raise HomeAssistantError if the GET fails, as the action would.
+        """
+
+        if self._schedule_is_stale(child):
+            await self.async_get_schedule(child)
+
+    async def async_get_schedule(
+        self, child: ec2.HotWater | ec2.Zone, *, raise_on_error: bool = True
+    ) -> None:
+        """Fetch the schedule of a DHW/zone, recording when it was fetched.
+
+        This is the only place a schedule is fetched. If the GET fails, raise
+        HomeAssistantError unless raise_on_error is False, in which case log it and
+        don't record the fetch time (so it will be retried). An invalid schedule is
+        logged, and is not retried until it is stale. Either way, any previous schedule
+        is kept.
+        """
+
+        # annotated, as mypy can't infer a type from the HotWater | Zone union
+        client_api: Awaitable[_Schedule] = child.get_schedule()
+        try:
+            schedule = await self.call_client_api(client_api, request_refresh=False)
+        except HomeAssistantError as err:
+            if raise_on_error:
+                raise
+            self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
+            return  # the GET failed, so retry it at the next poll
+        except ec2.InvalidGetScheduleError as err:
+            self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
+        else:
+            self.logger.debug("%s: Schedule = %s", child, schedule)
+
+        self._schedules_fetched[child.id] = dt_util.utcnow()
 
     @override
-    async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
+    async def _async_update_data(self) -> EvoLocStatusT:
         """Fetch the latest state of an entire TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
@@ -232,8 +377,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         await self._update_v2_api_state()  # may raise UpdateFailed
-        if self.client_v1:
-            await self._update_v1_api_temps()  # will never raise UpdateFailed
 
         # to speed up HA startup, don't update entity schedules during initial
         # async_first_refresh(), only during subsequent async_refresh()...

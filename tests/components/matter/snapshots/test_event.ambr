@@ -1,4 +1,476 @@
 # serializer version: 1
+# name: test_events[aqara_light_switch_h2_us_4099][event.aqara_smart_wall_switch_button_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (4)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-4-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4099][event.aqara_smart_wall_switch_button_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (4)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4099][event.aqara_smart_wall_switch_button_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (5)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-5-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4099][event.aqara_smart_wall_switch_button_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (5)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4100][event.aqara_smart_wall_switch_button_4_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (4)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-4-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4100][event.aqara_smart_wall_switch_button_4_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (4)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4100][event.aqara_smart_wall_switch_button_5_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (5)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-5-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4100][event.aqara_smart_wall_switch_button_5_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (5)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_4_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (4)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-4-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_4_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (4)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_4_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_5_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (5)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-5-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_5_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (5)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_5_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (6)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-6-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (6)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_7-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_wall_switch_button_7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (7)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (7)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-7-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_light_switch_h2_us_4101][event.aqara_smart_wall_switch_button_7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Button (7)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_wall_switch_button_7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -16,9 +488,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004B-MatterNodeDevice'), ('matter', 'serial_serial_75')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -85,9 +557,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004B-MatterNodeDevice'), ('matter', 'serial_serial_75')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -154,9 +626,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004B-MatterNodeDevice'), ('matter', 'serial_serial_75')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -206,6 +678,262 @@
     'state': 'unknown',
   })
 # ---
+# name: test_events[aqara_shutter_switch_h2][event.aqara_shutter_switch_h2_eu_button_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C1-MatterNodeDevice'), ('matter', 'serial_serial_193')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_shutter_switch_h2_eu_button_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (2)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-2-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_shutter_switch_h2][event.aqara_shutter_switch_h2_eu_button_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Button (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_shutter_switch_h2_eu_button_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[aqara_shutter_switch_h2][event.aqara_shutter_switch_h2_eu_button_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C1-MatterNodeDevice'), ('matter', 'serial_serial_193')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_shutter_switch_h2_eu_button_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (3)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C1-MatterNodeDevice-3-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_shutter_switch_h2][event.aqara_shutter_switch_h2_eu_button_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_END: 'press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Button (3)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_shutter_switch_h2_eu_button_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[cync_keypad_dimmer][event.cync_keypad_dimmer_button_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000041B-MatterNodeDevice'), ('matter', 'serial_serial_1051')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.cync_keypad_dimmer_button_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (2)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-000000000000041B-MatterNodeDevice-2-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[cync_keypad_dimmer][event.cync_keypad_dimmer_button_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Button (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.cync_keypad_dimmer_button_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[cync_keypad_dimmer][event.cync_keypad_dimmer_button_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000041B-MatterNodeDevice'), ('matter', 'serial_serial_1051')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.cync_keypad_dimmer_button_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (3)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-000000000000041B-MatterNodeDevice-3-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[cync_keypad_dimmer][event.cync_keypad_dimmer_button_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Button (3)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.cync_keypad_dimmer_button_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_events[haojai_switch][event.hjmt_6b_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -223,9 +951,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -292,9 +1020,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -361,9 +1089,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -430,9 +1158,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -499,9 +1227,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -568,9 +1296,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000003-MatterNodeDevice'), ('matter', 'serial_serial_3')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -637,9 +1365,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000089-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -706,9 +1434,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000089-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -773,9 +1501,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -838,9 +1566,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -905,9 +1633,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -972,9 +1700,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1037,9 +1765,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1104,9 +1832,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1171,9 +1899,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1236,9 +1964,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1303,9 +2031,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1372,9 +2100,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1441,9 +2169,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1510,9 +2238,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1579,9 +2307,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1648,9 +2376,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1717,9 +2445,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1769,6 +2497,558 @@
     'state': 'unknown',
   })
 # ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_31-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_switch_button_31',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (31)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (31)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-31-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_31-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Button (31)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_switch_button_31',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_32-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_switch_button_32',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (32)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (32)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-32-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_32-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Button (32)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_switch_button_32',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_33-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_switch_button_33',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (33)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (33)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-33-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_33-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Button (33)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_switch_button_33',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_34-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_switch_button_34',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (34)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (34)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-34-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_115][event.kitchen_switch_button_34-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Button (34)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_switch_button_34',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_31-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000448-MatterNodeDevice'), ('matter', 'serial_serial_1096')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_button_31',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (31)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (31)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000448-MatterNodeDevice-31-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_31-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Button (31)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_button_31',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_32-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000448-MatterNodeDevice'), ('matter', 'serial_serial_1096')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_button_32',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (32)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (32)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000448-MatterNodeDevice-32-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_32-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Button (32)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_button_32',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_33-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000448-MatterNodeDevice'), ('matter', 'serial_serial_1096')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_button_33',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (33)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (33)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000448-MatterNodeDevice-33-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_33-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Button (33)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_button_33',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_34-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000448-MatterNodeDevice'), ('matter', 'serial_serial_1096')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.kitchen_button_34',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (34)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (34)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000448-MatterNodeDevice-34-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[lifx_switch_89][event.kitchen_button_34-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Button (34)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.kitchen_button_34',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_events[mock_action_switch][event.mock_action_switch_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1784,9 +3064,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000016F-MatterNodeDevice'), ('matter', 'serial_serial_367')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1809,7 +3089,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000016D-MatterNodeDevice-1-GenericSwitchButton-59-1',
+    'unique_id': '00000000000004D2-000000000000016F-MatterNodeDevice-1-GenericSwitchButton-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1849,9 +3129,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000013-MatterNodeDevice'), ('matter', 'serial_serial_19')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1916,9 +3196,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000012-MatterNodeDevice'), ('matter', 'serial_serial_18')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -1985,9 +3265,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000012-MatterNodeDevice'), ('matter', 'serial_serial_18')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -2049,9 +3329,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000016E-MatterNodeDevice'), ('matter', 'serial_serial_366')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -2109,9 +3389,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008E-MatterNodeDevice'), ('matter', 'serial_serial_142')]>,
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
@@ -2151,6 +3431,213 @@
     }),
     'context': <ANY>,
     'entity_id': 'event.light_switch_example_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[wago_home_blind_control][event.home_blind_wi_fi_button_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.home_blind_wi_fi_button_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (2)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-2-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[wago_home_blind_control][event.home_blind_wi_fi_button_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Button (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.home_blind_wi_fi_button_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[wago_home_blind_control][event.home_blind_wi_fi_button_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.home_blind_wi_fi_button_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button (3)',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-3-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[wago_home_blind_control][event.home_blind_wi_fi_button_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Button (3)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.home_blind_wi_fi_button_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[wago_home_relay_16a][event.home_relay_16a_thread_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000106-MatterNodeDevice'), ('matter', 'serial_serial_262')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.home_relay_16a_thread_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Button',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-2-GenericSwitchButton-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[wago_home_relay_16a][event.home_relay_16a_thread_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <ButtonEventType.PRESS_START: 'press_start'>,
+        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
+        <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
+        <ButtonEventType.MULTI_PRESS_ONGOING: 'multi_press_ongoing'>,
+        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.home_relay_16a_thread_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

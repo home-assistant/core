@@ -3,6 +3,7 @@
 from sense_energy import ASyncSenseable
 from sense_energy.sense_api import SenseDevice
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,7 +20,6 @@ class SenseEntity(CoordinatorEntity[SenseCoordinator]):
     """Base implementation of a Sense sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -46,7 +46,6 @@ class SenseDeviceEntity(CoordinatorEntity[SenseCoordinator]):
     """Base implementation of a Sense sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -67,5 +66,9 @@ class SenseDeviceEntity(CoordinatorEntity[SenseCoordinator]):
             model="Sense",
             manufacturer="Sense Labs, Inc.",
             configuration_url="https://home.sense.com",
-            via_device=(DOMAIN, sense_monitor_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, sense_monitor_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )

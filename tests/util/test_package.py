@@ -182,49 +182,6 @@ def test_install_upgrade(mock_popen, mock_env_copy, mock_sys) -> None:
 
 
 @pytest.mark.parametrize(
-    "is_venv",
-    [
-        True,
-        False,
-    ],
-)
-def test_install_target(
-    mock_sys: MagicMock,
-    mock_popen: MagicMock,
-    mock_env_copy: MagicMock,
-    mock_venv: MagicMock,
-    is_venv: bool,
-) -> None:
-    """Test an install with a target."""
-    target = "target_folder"
-    env = mock_env_copy()
-    abs_target = os.path.abspath(target)
-    env["PYTHONUSERBASE"] = abs_target
-    mock_venv.return_value = is_venv
-    mock_sys.platform = "linux"
-    args = [
-        mock_sys.executable,
-        "-m",
-        "uv",
-        "pip",
-        "install",
-        "--quiet",
-        TEST_NEW_REQ,
-        "--index-strategy",
-        "unsafe-first-match",
-        "--target",
-        abs_target,
-    ]
-
-    assert package.install_package(TEST_NEW_REQ, False, target=target)
-    assert mock_popen.call_count == 2
-    assert mock_popen.mock_calls[0] == call(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env, close_fds=False
-    )
-    assert mock_popen.return_value.communicate.call_count == 1
-
-
-@pytest.mark.parametrize(
     ("in_venv", "additional_env_vars"),
     [
         (True, {}),
@@ -445,29 +402,6 @@ def test_install_constraint(mock_popen, mock_env_copy, mock_sys) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-async def test_async_get_user_site(mock_env_copy) -> None:
-    """Test async get user site directory."""
-    deps_dir = "/deps_dir"
-    env = mock_env_copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
-    args = [sys.executable, "-m", "site", "--user-site"]
-    with patch(
-        "homeassistant.util.package.asyncio.create_subprocess_exec",
-        return_value=mock_async_subprocess(),
-    ) as popen_mock:
-        ret = await package.async_get_user_site(deps_dir)
-    assert popen_mock.call_count == 1
-    assert popen_mock.call_args == call(
-        *args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=env,
-        close_fds=False,
-    )
-    assert ret == os.path.join(deps_dir, "lib_dir")
-
-
 async def test_async_get_installed_packages() -> None:
     """Test async get installed packages."""
     mock_output = (
@@ -552,13 +486,12 @@ def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_check_package_fragment(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package with a fragment."""
+    url = "git+https://github.com/home-assistant/core"
+
     assert not package.is_installed(TEST_ZIP_REQ)
-    assert package.is_installed("git+https://github.com/pypa/pip#pip>=1")
-    assert not package.is_installed("git+https://github.com/pypa/pip#-1 invalid")
-    assert (
-        "Invalid requirement 'git+https://github.com/pypa/pip#-1 invalid'"
-        in caplog.text
-    )
+    assert package.is_installed(f"{url}#homeassistant>=1")
+    assert not package.is_installed(f"{url}#-1 invalid")
+    assert f"Invalid requirement '{url}#-1 invalid'" in caplog.text
 
 
 def test_get_is_installed() -> None:

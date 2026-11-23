@@ -1,6 +1,7 @@
 """Test Modem Caller ID integration."""
 
 from phone_modem import exceptions
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.modem_callerid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +9,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 
 from . import com_port, patch_init_modem
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:

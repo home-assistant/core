@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from lojack_api import ApiError, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

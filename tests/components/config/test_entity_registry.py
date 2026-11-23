@@ -5,21 +5,7 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_unordered import unordered
-
-from homeassistant.components.config import entity_registry
-from homeassistant.const import ATTR_ICON, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryDisabler
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_registry import (
-    RegistryEntryDisabler,
-    RegistryEntryHider,
-)
-from homeassistant.util.dt import utcnow
-
-from tests.common import (
+from pytest_homeassistant.common import (
     ANY,
     MockConfigEntry,
     MockEntity,
@@ -28,7 +14,25 @@ from tests.common import (
     RegistryEntryWithDefaults,
     mock_registry,
 )
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
+from pytest_unordered import unordered
+
+from homeassistant.components.config import entity_registry
+from homeassistant.const import ATTR_ICON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    RegistryEntryHider,
+)
+from homeassistant.util.dt import utcnow
 
 
 @pytest.fixture
@@ -85,13 +89,13 @@ async def test_list_entities(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.name",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": utcnow().timestamp(),
             "name": "Hello World",
+            "next_name_part": None,
             "options": {},
             "original_name": None,
             "platform": "test_platform",
@@ -108,13 +112,13 @@ async def test_list_entities(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.no_name",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": utcnow().timestamp(),
             "name": None,
+            "next_name_part": None,
             "options": {},
             "original_name": None,
             "platform": "test_platform",
@@ -131,13 +135,13 @@ async def test_list_entities(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.unprefixed",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": utcnow().timestamp(),
             "name": None,
+            "next_name_part": "device",
             "options": {},
             "original_name": "Sensor",
             "platform": "test_platform",
@@ -181,13 +185,13 @@ async def test_list_entities(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.name",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": utcnow().timestamp(),
             "name": "Hello World",
+            "next_name_part": None,
             "options": {},
             "original_name": None,
             "platform": "test_platform",
@@ -298,11 +302,11 @@ async def test_list_entities_for_display(
         "entities": [
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ec": 1,
                 "ei": "test_domain.test",
                 "en": "Hello World",
-                "hn": True,
                 "ic": "mdi:icon",
                 "lb": [],
                 "pl": "test_platform",
@@ -310,32 +314,32 @@ async def test_list_entities_for_display(
             },
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ei": "test_domain.nameless",
-                "hn": True,
                 "lb": [],
                 "pl": "test_platform",
             },
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ei": "test_domain.empty_name",
-                "en": "",
-                "hn": True,
                 "lb": [],
                 "pl": "test_platform",
             },
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ei": "test_domain.renamed",
                 "en": "User name",
-                "hn": True,
                 "lb": [],
                 "pl": "test_platform",
             },
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ei": "test_domain.unprefixed",
                 "en": "Sensor",
@@ -401,9 +405,9 @@ async def test_list_entities_for_display(
         "entities": [
             {
                 "ai": "area52",
+                "np": "area",
                 "di": "device123",
                 "ei": "test_domain.test",
-                "hn": True,
                 "lb": [],
                 "en": "Hello World",
                 "pl": "test_platform",
@@ -455,13 +459,13 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "disabled_by": None,
         "entity_category": None,
         "entity_id": "test_domain.name",
-        "has_entity_name": False,
         "hidden_by": None,
         "icon": None,
         "id": ANY,
         "labels": [],
         "modified_at": name_created_at.timestamp(),
         "name": "Hello World",
+        "next_name_part": None,
         "options": {},
         "original_device_class": None,
         "original_icon": None,
@@ -492,13 +496,13 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "disabled_by": None,
         "entity_category": None,
         "entity_id": "test_domain.no_name",
-        "has_entity_name": False,
         "hidden_by": None,
         "icon": None,
         "id": ANY,
         "labels": [],
         "modified_at": no_name_created_at.timestamp(),
         "name": None,
+        "next_name_part": None,
         "options": {},
         "original_device_class": None,
         "original_icon": None,
@@ -560,13 +564,13 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.name",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": name_created_at.timestamp(),
             "name": "Hello World",
+            "next_name_part": None,
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -588,13 +592,13 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.no_name",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": no_name_created_at.timestamp(),
             "name": None,
+            "next_name_part": None,
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -608,9 +612,14 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
 
 
 async def test_update_entity(
-    hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test updating entity."""
+    label_registry.async_create("label1")
+    label_registry.async_create("label2")
     created = datetime.fromisoformat("2024-02-14T12:00:00.900075+00:00")
     freezer.move_to(created)
     registry = mock_registry(
@@ -670,13 +679,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -754,13 +763,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -801,13 +810,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
             "original_icon": None,
@@ -847,13 +856,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
             "original_icon": None,
@@ -893,13 +902,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
             "original_icon": None,
@@ -939,13 +948,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
             "original_icon": None,
@@ -982,13 +991,13 @@ async def test_update_entity(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
             "labels": unordered(["label1", "label2"]),
             "modified_at": modified.timestamp(),
             "name": "after update",
+            "next_name_part": "area",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
             "original_icon": None,
@@ -1000,8 +1009,100 @@ async def test_update_entity(
     }
 
 
+async def test_update_entity_own_area_without_own_name(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setting an area on a device's main entity is rejected."""
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "test_domain",
+        "test_platform",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": entry.entity_id,
+            "area_id": "kitchen",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == (
+        "An entity without a name of its own cannot have an area of its own, "
+        "set the area on its device instead"
+    )
+    assert entity_registry.async_get(entry.entity_id).area_id is None
+
+
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
+    ],
+)
+async def test_update_entity_strips_unknown_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the entity is cleaned up when the entity
+    is next saved, even if the client sends it back.
+    """
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntryWithDefaults(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                platform="test_platform",
+                labels={"stale_label"},  # not in the label registry
+            )
+        },
+    )
+    label_registry.async_create("label1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert set(msg["result"]["entity_entry"]["labels"]) == expected_labels
+    assert registry.entities["test_domain.world"].labels == expected_labels
+
+
 async def test_update_entity_require_restart(
-    hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test updating entity."""
     created = datetime.fromisoformat("2024-02-14T12:00:00+00:00")
@@ -1009,13 +1110,20 @@ async def test_update_entity_require_restart(
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "test_domain",
+        "test_platform",
+        "1234",
+        config_entry=config_entry,
+        disabled_by=RegistryEntryDisabler.USER,
+    )
     platform = MockEntityPlatform(hass)
     platform.config_entry = config_entry
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
 
     state = hass.states.get(entity_id)
-    assert state is not None
+    assert state is None
 
     modified = datetime.fromisoformat("2024-07-20T13:30:00+00:00")
     freezer.move_to(modified)
@@ -1045,13 +1153,13 @@ async def test_update_entity_require_restart(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": entity_id,
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
-            "modified_at": created.timestamp(),
+            "modified_at": modified.timestamp(),
             "name": None,
+            "next_name_part": None,
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -1101,18 +1209,28 @@ async def test_enable_entity_disabled_device(
     assert entity_entry.device_id == device.id
     assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
 
+    entity_entry = entity_registry.async_update_entity(
+        entity_id, disabled_by=RegistryEntryDisabler.USER
+    )
+
     # UPDATE DISABLED_BY TO NONE
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
+            "name": "Renamed",
         }
     )
 
     msg = await client.receive_json()
 
-    assert not msg["success"]
+    # The user disable is lifted, but the entity still follows the disabled device
+    assert msg["success"]
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
+    assert entity_entry.name == "Renamed"
+    assert msg["result"] == {"entity_entry": entity_entry.extended_dict}
 
 
 async def test_update_entity_no_changes(
@@ -1168,13 +1286,13 @@ async def test_update_entity_no_changes(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.world",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": created.timestamp(),
             "name": "name of entity",
+            "next_name_part": None,
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -1266,13 +1384,13 @@ async def test_update_entity_id(
             "disabled_by": None,
             "entity_category": None,
             "entity_id": "test_domain.planet",
-            "has_entity_name": False,
             "hidden_by": None,
             "icon": None,
             "id": ANY,
             "labels": [],
             "modified_at": modified.timestamp(),
             "name": None,
+            "next_name_part": None,
             "options": {},
             "original_device_class": None,
             "original_icon": None,
@@ -1577,6 +1695,113 @@ async def test_get_automatic_entity_ids(
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("stored", "overrides", "expected_entity_id"),
+    [
+        pytest.param({}, {}, "sensor.living_room_lamp_power", id="no_overrides"),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {},
+            "sensor.kitchen_stored",
+            id="stored_without_overrides",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"name": "Energy"}},
+            "sensor.living_room_lamp_energy",
+            id="name",
+        ),
+        pytest.param(
+            {"name": "Stored"},
+            {"sensor.lamp": {"name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen"}},
+            "sensor.kitchen_power",
+            id="area",
+        ),
+        pytest.param(
+            {"area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None}},
+            "sensor.living_room_lamp_power",
+            id="area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen", "name": "Energy"}},
+            "sensor.kitchen_energy",
+            id="name_and_area",
+        ),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None, "name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_and_area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.other": {"name": "Energy"}},
+            "sensor.living_room_lamp_power",
+            id="other_entity",
+        ),
+    ],
+)
+async def test_get_automatic_entity_ids_overrides(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    stored: dict[str, str],
+    overrides: dict[str, dict[str, str | None]],
+    expected_entity_id: str,
+) -> None:
+    """Test get_automatic_entity_ids uses unsaved name and area changes."""
+    living_room = area_registry.async_create("Living room")
+    area_registry.async_create("Kitchen")
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test_platform", "lamp")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device.id, area_id=living_room.id)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test_platform",
+        "power",
+        config_entry=config_entry,
+        device_id=device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="sensor.lamp", **stored
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_automatic_entity_ids",
+            "entity_ids": ["sensor.lamp"],
+            "overrides": overrides,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"sensor.lamp": expected_entity_id}
+    # overrides are not stored
+    entry = entity_registry.async_get("sensor.lamp")
+    assert entry is not None
+    assert entry.name == stored.get("name")
+    assert entry.area_id == stored.get("area_id")
 
 
 async def test_get_settings(client: MockHAClientWebSocket) -> None:
