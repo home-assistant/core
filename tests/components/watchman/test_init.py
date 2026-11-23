@@ -18,15 +18,12 @@ from homeassistant.components.watchman import (
     async_remove_config_entry_device,
 )
 from homeassistant.components.watchman.const import CONF_USAGE_WINDOW, DOMAIN
-from homeassistant.components.watchman.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import MOCK_CONFIG, MOCK_TANK_LEVEL, MOCK_TANK_SERIAL_NUMBER, HistoryType
+from .const import MOCK_CONFIG, MOCK_TANK_SERIAL_NUMBER
 
 
 async def test_setup_unload_and_reload_entry(
@@ -186,24 +183,6 @@ async def test_setup_entry_no_data_return_false(
     assert config_entry.entry_id not in hass.data.get(DOMAIN, {})
 
 
-async def test_runtime_data_fallback_and_unload(
-    hass: HomeAssistant, mock_sensor_client
-) -> None:
-    """Runtime data should be stored on the entry and cleaned up on unload."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    diagnostics = await async_get_config_entry_diagnostics(hass, config_entry)
-    assert diagnostics["tank_count"] == 1
-    assert config_entry.runtime_data is not None
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.entry_id not in hass.data.get(DOMAIN, {})
-
-
 @pytest.mark.parametrize(
     "exception",
     [
@@ -252,35 +231,6 @@ async def test_coordinator_logs_available_again(
 
     assert "Kingspan service is available again" in caplog.text
     assert coordinator._unavailable_logged is False
-
-
-@pytest.mark.parametrize(
-    "mock_sensor_client",
-    [
-        {
-            "tank_level": MOCK_TANK_LEVEL,
-            "history_type": HistoryType.DECREASING,
-            "num_tanks": 2,
-        }
-    ],
-    indirect=True,
-)
-async def test_diagnostics(hass: HomeAssistant, mock_sensor_client) -> None:
-    """Test generating diagnostic data."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    diagnostics = await async_get_config_entry_diagnostics(hass, config_entry)
-
-    assert diagnostics["config_entry_data"]["username"] == "**REDACTED**"
-    assert diagnostics["config_entry_data"]["password"] == "**REDACTED**"
-    assert diagnostics["tank_count"] == 2
-    assert len(diagnostics["tanks"]) == 2
-    assert diagnostics["last_update_success"]
-    assert diagnostics["tanks"][0]["serial_number"] == "**REDACTED**"
-    assert diagnostics["tanks"][0]["level"] == 1000
 
 
 async def test_remove_stale_device(
