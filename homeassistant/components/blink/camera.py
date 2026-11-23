@@ -117,7 +117,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     @override
     def motion_detection_enabled(self) -> bool:
         """Return the state of the camera."""
-        return self._camera.arm
+        return self._camera.arm or False
 
     @property
     @override
@@ -205,6 +205,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
 
     _attr_supported_features = CameraEntityFeature.STREAM
 
+    @override
     async def async_create_stream(self) -> Stream | None:
         """Create a stream with custom ffmpeg options."""
         stream = await super().async_create_stream()
@@ -216,6 +217,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         stream.pyav_options["err_detect"] = "ignore_err"
         return stream
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if not self.is_streaming:
@@ -278,6 +280,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             )
 
     @property
+    @override
     def is_streaming(self) -> bool:
         """Return True if the camera is streaming."""
         if self._livestream and self._livestream.is_serving:
