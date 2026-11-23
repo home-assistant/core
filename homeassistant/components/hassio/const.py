@@ -68,7 +68,7 @@ ATTR_WS_EVENT = "event"
 
 X_AUTH_TOKEN = "X-Supervisor-Token"
 X_FORWARDED_PREFIX = "X-Forwarded-Prefix"
-# Deprecated in favor of X-Forwarded-Prefix, will be removed in Home Assistant 2028.1
+# Deprecated in favor of X-Forwarded-Prefix, will be removed in Home Assistant 2027.12
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_SOURCE = "X-Hass-Source"
 
