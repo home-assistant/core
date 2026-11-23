@@ -614,3 +614,71 @@ async def test_set_dhw_override_advance(
         mock_fcn.assert_awaited_once_with(until=expected_until)
 
     assert dhw_entity.setpoints["next_sp_from"] == expected_until
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("entity_fixture", "client_api", "service", "service_data", "reason", "key"),
+    [
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="zone_not_in_future",
+        ),
+        pytest.param(
+            "dhw_id",
+            "evohomeasync2.hotwater.HotWater.set_on",
+            EvoService.SET_DHW_OVERRIDE,
+            {EvoServiceArgument.STATE: True},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="dhw_not_in_future",
+        ),
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            None,
+            "override_request_invalid",
+            id="zone_other_reason",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_override_rejected_by_client(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_fixture: str,
+    client_api: str,
+    service: EvoService,
+    service_data: dict[str, Any],
+    reason: evo_exc.RequestErrorReason | None,
+    key: str,
+) -> None:
+    """Test a zone/DHW override rejected by the client raises a translated error."""
+
+    entity_id: str = request.getfixturevalue(entity_fixture)
+
+    with (
+        patch(
+            client_api,
+            side_effect=evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=reason, mode="temporary_override"
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**service_data, EvoServiceArgument.DURATION: {"hours": 1}},
+            target={TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == key
