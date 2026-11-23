@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests import RequestException
+from requests import HTTPError, RequestException, Response
 
 from homeassistant.components.meteo_france.const import (
     CONF_CITY,
@@ -116,13 +116,18 @@ async def test_unload_closes_the_session(
     patch_requests.session.close.assert_called_once()
 
 
-async def test_setup_retry_when_forecast_fails(
+@pytest.mark.parametrize(
+    "method",
+    ["get_forecast", "get_rain", "get_warning_current_phenomenons"],
+)
+async def test_setup_retry_when_a_request_fails(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_requests: MagicMock,
+    method: str,
 ) -> None:
-    """Test setup is retried when the forecast cannot be fetched."""
-    patch_requests.get_forecast.side_effect = RequestException
+    """Test setup is retried when Météo-France cannot be reached."""
+    getattr(patch_requests, method).side_effect = RequestException
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -135,8 +140,10 @@ async def test_setup_without_rain_forecast(
     config_entry: MockConfigEntry,
     patch_requests: MagicMock,
 ) -> None:
-    """Test setup succeeds without the rain coordinator when rain is unavailable."""
-    patch_requests.get_rain.side_effect = RequestException
+    """Test setup succeeds without the rain coordinator for a place without rain."""
+    response = Response()
+    response.status_code = 400
+    patch_requests.get_rain.side_effect = HTTPError(response=response)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -145,16 +152,16 @@ async def test_setup_without_rain_forecast(
     assert config_entry.runtime_data.rain_coordinator is None
 
 
-async def test_setup_without_weather_alerts(
+async def test_failed_alert_request_does_not_claim_the_department(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_requests: MagicMock,
 ) -> None:
-    """Test setup succeeds without the alert coordinator when alerts are unavailable."""
+    """Test the department stays free when the alerts cannot be fetched."""
     patch_requests.get_warning_current_phenomenons.side_effect = RequestException
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.runtime_data.alert_coordinator is None
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.data[METEO_FRANCE_DATA]

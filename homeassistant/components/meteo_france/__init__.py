@@ -6,6 +6,7 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import METEO_FRANCE_DATA, PLATFORMS
 from .coordinator import (
@@ -14,9 +15,24 @@ from .coordinator import (
     MeteoFranceData,
     MeteoFranceForecastUpdateCoordinator,
     MeteoFranceRainUpdateCoordinator,
+    RainForecastNotAvailable,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _async_get_rain_coordinator(
+    hass: HomeAssistant, entry: MeteoFranceConfigEntry, client: MeteoFranceClient
+) -> MeteoFranceRainUpdateCoordinator | None:
+    """Return the rain coordinator, None if the place has no rain forecast."""
+    coordinator = MeteoFranceRainUpdateCoordinator(hass, entry, client)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        if not isinstance(coordinator.last_exception, RainForecastNotAvailable):
+            raise
+        return None
+    return coordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> None:
@@ -31,14 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
     entry.async_on_unload(_async_close_session)
 
     coordinator_forecast = MeteoFranceForecastUpdateCoordinator(hass, entry, client)
-    coordinator_rain = None
     coordinator_alert = None
 
     await coordinator_forecast.async_config_entry_first_refresh()
 
-    # Check rain forecast.
-    coordinator_rain = MeteoFranceRainUpdateCoordinator(hass, entry, client)
-    await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
+    coordinator_rain = await _async_get_rain_coordinator(hass, entry, client)
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
@@ -55,10 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
                 department,
             )
 
-            await coordinator_alert.async_refresh()
-
-            if coordinator_alert.last_update_success:
-                departments_with_alert.add(department)
+            await coordinator_alert.async_config_entry_first_refresh()
+            departments_with_alert.add(department)
         else:
             _LOGGER.warning(
                 (
@@ -77,10 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
             entry.title,
         )
 
-    if not coordinator_rain.last_update_success:
-        coordinator_rain = None
-    if coordinator_alert and not coordinator_alert.last_update_success:
-        coordinator_alert = None
     entry.runtime_data = MeteoFranceData(
         forecast_coordinator=coordinator_forecast,
         rain_coordinator=coordinator_rain,

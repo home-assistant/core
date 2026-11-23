@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import override
 
@@ -32,6 +33,10 @@ class MeteoFranceData:
 
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
 SCAN_INTERVAL = timedelta(minutes=15)
+
+
+class RainForecastNotAvailable(UpdateFailed):
+    """Error raised when Météo-France has no rain forecast for the place."""
 
 
 class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
@@ -101,7 +106,14 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
                 self._client.get_rain, self._latitude, self._longitude
             )
         except RequestException as err:
-            raise UpdateFailed(
+            # Météo-France answers 400 for a place it has no rain forecast for
+            error = (
+                RainForecastNotAvailable
+                if err.response is not None
+                and err.response.status_code == HTTPStatus.BAD_REQUEST
+                else UpdateFailed
+            )
+            raise error(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
 
