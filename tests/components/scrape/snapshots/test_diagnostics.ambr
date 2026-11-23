@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_diagnostics[credentials_and_headers]
+  dict({
+    'data_fetched': True,
+    'last_update_success': True,
+    'options': dict({
+      'additional': dict({
+        'encoding': 'UTF-8',
+        'headers': dict({
+          'Authorization': '**REDACTED**',
+        }),
+        'timeout': 10,
+        'verify_ssl': False,
+      }),
+      'auth': dict({
+        'authentication': 'basic',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'method': 'POST',
+      'payload': '**REDACTED**',
+      'resource': 'https://www.home-assistant.io',
+    }),
+    'sensors': list([
+      dict({
+        'data': dict({
+          'additional': dict({
+            'device_class': 'timestamp',
+            'value_template': '{{ value | trim }}',
+          }),
+          'index': 0,
+          'select': '.utc-time',
+        }),
+        'title': 'Current time',
+      }),
+    ]),
+  })
+# ---
