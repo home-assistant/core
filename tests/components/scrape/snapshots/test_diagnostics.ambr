@@ -36,6 +36,34 @@
     ]),
   })
 # ---
+# name: test_diagnostics[password_only_in_url]
+  dict({
+    'data_fetched': True,
+    'last_update_success': True,
+    'options': dict({
+      'additional': dict({
+        'encoding': 'UTF-8',
+        'timeout': 10,
+        'verify_ssl': True,
+      }),
+      'auth': dict({
+      }),
+      'method': 'GET',
+      'resource': 'https://**REDACTED**@www.home-assistant.io/status',
+    }),
+    'sensors': list([
+      dict({
+        'data': dict({
+          'additional': dict({
+          }),
+          'index': 0,
+          'select': '.current-version h1',
+        }),
+        'title': 'Current version',
+      }),
+    ]),
+  })
+# ---
 # name: test_diagnostics[secrets_in_url]
   dict({
     'data_fetched': True,

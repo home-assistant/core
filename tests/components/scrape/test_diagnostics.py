@@ -100,6 +100,32 @@ from homeassistant.core import HomeAssistant
             ),
             id="secrets_in_url",
         ),
+        pytest.param(
+            {
+                CONF_RESOURCE: "https://:secret-token@www.home-assistant.io/status",
+                CONF_METHOD: "GET",
+                CONF_AUTH: {},
+                CONF_ADDITIONAL: {
+                    CONF_VERIFY_SSL: True,
+                    CONF_TIMEOUT: 10,
+                    CONF_ENCODING: DEFAULT_ENCODING,
+                },
+            },
+            (
+                {
+                    "data": {
+                        CONF_ADDITIONAL: {},
+                        CONF_INDEX: 0,
+                        CONF_SELECT: ".current-version h1",
+                    },
+                    "subentry_id": "01JZN07D8D23994A49YKS649S7",
+                    "subentry_type": "entity",
+                    "title": "Current version",
+                    "unique_id": None,
+                },
+            ),
+            id="password_only_in_url",
+        ),
     ],
 )
 async def test_diagnostics(
