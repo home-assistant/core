@@ -519,15 +519,28 @@ async def test_refresh_started_before_change_does_not_undo_it(
     reminders: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a poll overlapping a write keeps the written reminder."""
+    """Test that a poll overlapping a write keeps it and fetches again.
+
+    The refresh the write requests is mocked out, as the debouncer drops it
+    when its timer ends while the poll still holds the lock.
+    """
     await _setup(hass, config_entry)
     coordinator = config_entry.runtime_data.reminders_coordinator
 
     started = threading.Event()
     release = threading.Event()
     stale = MagicMock(reminders=[_reminder("r1", "Milk")])
+    fresh = MagicMock(
+        reminders=[
+            _reminder("r1", "Milk"),
+            _reminder("r3", "Eggs"),
+            _reminder("r4", "Tea"),
+        ]
+    )
 
     def _slow_list_reminders(**kwargs: object) -> MagicMock:
+        if started.is_set():
+            return fresh
         started.set()
         release.wait(5)
         return stale
@@ -545,10 +558,10 @@ async def test_refresh_started_before_change_does_not_undo_it(
             blocking=True,
         )
         release.set()
-        # The scheduled refresh runs as a background task of the config entry.
+        # The poll and the follow-up fetch run as background tasks.
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert "Eggs" in await _summaries(hass)
+        assert await _summaries(hass) == ["Milk", "Eggs", "Tea"]
 
 
 async def test_api_error_raises(

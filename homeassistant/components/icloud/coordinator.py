@@ -399,8 +399,14 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self._warn_if_undecoded()
         if change_count != self._change_count and self.data is not None:
             # A write was confirmed while this fetch ran, so the snapshot may
-            # predate it. Keep the cache; the refresh that write requested
-            # fetches again.
+            # predate it. Keep the cache and fetch again. The refresh that write
+            # requested is dropped if its debounce timer ends while this fetch
+            # still holds the lock, so start one that waits for the lock.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_refresh(),
+                f"{DOMAIN} reminders refresh after change",
+            )
             return self.data
         return data
 
