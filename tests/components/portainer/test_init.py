@@ -602,7 +602,9 @@ async def test_migration_v5_uses_subentry_for_detached_numeric_container(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a detached container's numeric alias does not identify its endpoint."""
-    await _mock_duplicate_container_names(hass, mock_portainer_client)
+    await _mock_duplicate_container_names(
+        hass, mock_portainer_client, container_names=("1", "frost-eventlog")
+    )
     entry = _create_v5_config_entry()
     entry.add_to_hass(hass)
 
