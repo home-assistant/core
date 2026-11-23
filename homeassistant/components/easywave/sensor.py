@@ -42,6 +42,7 @@ from .const import (
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
     EasywaveGatewayFeature,
+    EasywaveTransmitterFeature,
     transmitter_button_letters,
     transmitter_trigger_features,
 )
@@ -337,6 +338,7 @@ class EasywaveTransmitterBatterySensor(EasywaveTransmitterEntity, RestoreSensor)
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_supported_features = EasywaveTransmitterFeature.BATTERY
     _attr_translation_key = "battery_warning"
     _attr_options = _BATTERY_OPTIONS
 

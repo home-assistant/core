@@ -67,3 +67,23 @@ gateway_disconnected:
         device_class: enum
         supported_features:
           - easywave.EasywaveGatewayFeature.GATEWAY_STATUS
+
+battery_low:
+  target:
+    primary_entities_only: false
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BATTERY
+
+battery_normal:
+  target:
+    primary_entities_only: false
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BATTERY

@@ -218,6 +218,8 @@ class EasywaveTransmitterFeature(IntFlag):
     BUTTON_C = 4
     BUTTON_D = 8
     BUTTON_RELEASE = 16
+    # Distinct from EasywaveGatewayFeature.GATEWAY_STATUS, which is also 32.
+    BATTERY = 64
 
 
 _BUTTON_FEATURE_BY_INDEX: Final = (

@@ -24,6 +24,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_LOW,
+    EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
@@ -147,6 +149,23 @@ class EasywaveGatewayDisconnectedTrigger(EasywaveEventTrigger):
     _primary_entities_only = False
 
 
+class EasywaveBatteryLowTrigger(EasywaveEventTrigger):
+    """Listen for transmitter battery-low events."""
+
+    _event_type = EVENT_TYPE_BATTERY_LOW
+    _subtype = "low"
+    # The battery sensor is diagnostic, so area targets must include it.
+    _primary_entities_only = False
+
+
+class EasywaveBatteryNormalTrigger(EasywaveEventTrigger):
+    """Listen for transmitter battery-ok events."""
+
+    _event_type = EVENT_TYPE_BATTERY_NORMAL
+    _subtype = "ok"
+    _primary_entities_only = False
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "button_press_a": _make_button_press_trigger("a"),
     "button_press_b": _make_button_press_trigger("b"),
@@ -155,6 +174,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "button_release": EasywaveButtonReleaseTrigger,
     "gateway_connected": EasywaveGatewayConnectedTrigger,
     "gateway_disconnected": EasywaveGatewayDisconnectedTrigger,
+    "battery_low": EasywaveBatteryLowTrigger,
+    "battery_normal": EasywaveBatteryNormalTrigger,
 }
 
 

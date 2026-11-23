@@ -1,5 +1,11 @@
 {
   "triggers": {
+    "battery_low": {
+      "trigger": "mdi:battery-alert"
+    },
+    "battery_normal": {
+      "trigger": "mdi:battery"
+    },
     "button_press_a": {
       "trigger": "mdi:alpha-a-circle"
     },

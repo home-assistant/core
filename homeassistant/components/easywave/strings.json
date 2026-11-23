@@ -143,27 +143,6 @@
       }
     }
   },
-  "device_automation": {
-    "trigger_subtype": {
-      "a": "Button A",
-      "b": "Button B",
-      "c": "Button C",
-      "connected": "Connected",
-      "d": "Button D",
-      "disconnected": "Disconnected",
-      "low": "Low",
-      "ok": "OK",
-      "released": "Not pressed"
-    },
-    "trigger_type": {
-      "battery_low": "Battery low",
-      "battery_normal": "Battery OK",
-      "button_press": "Button pressed ({subtype})",
-      "button_release": "Button released",
-      "gateway_connected": "Gateway connected",
-      "gateway_disconnected": "Gateway disconnected"
-    }
-  },
   "entity": {
     "sensor": {
       "battery_warning": {
@@ -218,6 +197,14 @@
     }
   },
   "triggers": {
+    "battery_low": {
+      "description": "Triggers when the transmitter reports a low battery.",
+      "name": "Battery low"
+    },
+    "battery_normal": {
+      "description": "Triggers when the transmitter battery is OK again.",
+      "name": "Battery OK"
+    },
     "button_press_a": {
       "description": "Triggers when button A is pressed.",
       "name": "Button A pressed"

@@ -9,6 +9,7 @@ from homeassistant.components import group
 from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_LOW,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
@@ -552,7 +553,8 @@ async def test_get_triggers_for_target_transmitter(
     assert "easywave.button_press_c" not in msg["result"]
     assert "easywave.button_press_d" not in msg["result"]
     assert "easywave.gateway_connected" not in msg["result"]
-    assert "easywave.battery_low" not in msg["result"]
+    assert "easywave.battery_low" in msg["result"]
+    assert "easywave.battery_normal" in msg["result"]
 
 
 async def test_get_triggers_for_target_gateway(
@@ -585,6 +587,47 @@ async def test_get_triggers_for_target_gateway(
     assert "easywave.gateway_disconnected" in msg["result"]
     assert "easywave.button_press_a" not in msg["result"]
     assert "easywave.button_release" not in msg["result"]
+    assert "easywave.battery_low" not in msg["result"]
+
+
+async def test_easywave_battery_low_trigger_fires(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """A transmitter battery-low event runs the matching target trigger."""
+    await _async_setup_entry(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
+    )
+    assert device is not None
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.battery_low",
+                    "target": {"device_id": device.id},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_BATTERY_LOW,
+            "subtype": "low",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
 
 
 async def test_trigger_rejects_empty_target(hass: HomeAssistant) -> None:
