@@ -279,6 +279,10 @@ _INVALID_CONFIGS = [
         },
         id="singular_and_plural_trigger_keys_and_singular_blocks",
     ),
+    pytest.param(
+        {"trigger": [], "triggers": [], "actions": [], "mode": "bogus"},
+        id="singular_and_plural_trigger_keys_and_invalid_mode",
+    ),
 ]
 _INVALID_BLUEPRINT_CONFIGS = [
     pytest.param(

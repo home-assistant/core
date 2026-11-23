@@ -561,18 +561,6 @@
         'translation_placeholders': dict({
         }),
       }),
-      dict({
-        'code': None,
-        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
-        'path': list([
-          'actions',
-          0,
-        ]),
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': dict({
-        }),
-      }),
     ]),
     'message': "Message malformed: Cannot specify both 'action' and 'actions'. Please use 'actions' only.",
   })
@@ -584,18 +572,6 @@
         'code': None,
         'message': "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only.",
         'path': list([
-        ]),
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': None,
-        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
-        'path': list([
-          'conditions',
-          0,
         ]),
         'translation_domain': None,
         'translation_key': None,
@@ -619,16 +595,20 @@
         'translation_placeholders': dict({
         }),
       }),
+    ]),
+    'message': "Message malformed: Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
+  })
+# ---
+# name: test_update_automation_config_with_error[singular_and_plural_trigger_keys_and_invalid_mode-automation_config0]
+  dict({
+    'errors': list([
       dict({
-        'code': 'required',
-        'message': 'required key not provided',
+        'code': None,
+        'message': "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
         'path': list([
-          'triggers',
-          0,
-          'entity_id',
         ]),
         'translation_domain': None,
-        'translation_key': 'required',
+        'translation_key': None,
         'translation_placeholders': dict({
         }),
       }),
@@ -643,44 +623,6 @@
         'code': None,
         'message': "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
         'path': list([
-        ]),
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': 'required',
-        'message': 'required key not provided',
-        'path': list([
-          'triggers',
-          0,
-          'entity_id',
-        ]),
-        'translation_domain': None,
-        'translation_key': 'required',
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': None,
-        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
-        'path': list([
-          'condition',
-          0,
-        ]),
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': None,
-        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
-        'path': list([
-          'action',
-          0,
-          'delay',
         ]),
         'translation_domain': None,
         'translation_key': None,
@@ -840,30 +782,6 @@
         'code': None,
         'message': "Cannot specify both 'action' and 'actions'. Please use 'actions' only.",
         'path': list([
-        ]),
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': 'required',
-        'message': 'required key not provided',
-        'path': list([
-          'trigger',
-          'entity_id',
-        ]),
-        'translation_domain': None,
-        'translation_key': 'required',
-        'translation_placeholders': dict({
-        }),
-      }),
-      dict({
-        'code': None,
-        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
-        'path': list([
-          'actions',
-          0,
         ]),
         'translation_domain': None,
         'translation_key': None,

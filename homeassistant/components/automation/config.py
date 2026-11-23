@@ -347,18 +347,14 @@ async def _async_collect_errors(
     reported = {(info.path, info.message) for info in errors}
     key: Literal["triggers", "conditions", "actions"]
     for key in (CONF_TRIGGERS, CONF_CONDITIONS, CONF_ACTIONS):
-        # A key conflict stops the schema before it renames the keys after it
-        submitted_key = key if key in config else _RENAMED_KEYS[key]
-        if submitted_key not in config:
+        if key not in config:
             continue
         try:
-            await script.async_validate_block_collect_errors(
-                hass, key, config[submitted_key]
-            )
+            await script.async_validate_block_collect_errors(hass, key, config[key])
         except ValidationErrors as err:
             errors.extend(
                 info
-                for info in iter_validation_errors(err, [submitted_key])
+                for info in iter_validation_errors(err, [key])
                 if (info.path, info.message) not in reported
             )
     return errors
@@ -374,20 +370,22 @@ async def async_validate_config_item(
     Raises ValidationErrors if the config is not valid, with all errors which
     were found. The path of each error is its path in config as it was passed.
     The errors of a blueprint automation which are not about a key of config
-    are located at use_blueprint.
+    are located at use_blueprint. When config has both a key and the key it is
+    renamed to, such as trigger and triggers, the schema stops there, and only
+    that error is raised.
     """
     # The schema renames keys of config in place
     submitted_keys = set(config) if isinstance(config, dict) else set()
-    # A key is not renamed when the key it is renamed to was submitted too
-    renamed_keys = {
-        new_key: old_key
-        for new_key, old_key in _RENAMED_KEYS.items()
-        if old_key in submitted_keys and new_key not in submitted_keys
-    }
     try:
         return await _async_validate_config_item(hass, config, True, False)
     except (probatio.Invalid, HomeAssistantError) as err:
         fail_fast_error = err
+
+    if any(
+        old_key in submitted_keys and new_key in submitted_keys
+        for new_key, old_key in _RENAMED_KEYS.items()
+    ):
+        raise ValidationErrors(iter_validation_errors(fail_fast_error))
 
     # Not done in the except block: each error would be chained to the one above
     uses_blueprint = blueprint.is_blueprint_instance_config(config)
@@ -408,8 +406,8 @@ async def async_validate_config_item(
     located: list[ValidationErrorInfo] = []
     for info in errors:
         path = info.path
-        if path and path[0] in renamed_keys:
-            path = (renamed_keys[path[0]], *path[1:])
+        if path and _RENAMED_KEYS.get(path[0]) in submitted_keys:
+            path = (_RENAMED_KEYS[path[0]], *path[1:])
         if uses_blueprint and not (path and path[0] in submitted_keys):
             path = (blueprint.CONF_USE_BLUEPRINT,)
         located.append(ValidationErrorInfo(info.exception, path))
