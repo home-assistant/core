@@ -13,7 +13,6 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.components.stream import OUTPUT_STARTUP_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -38,8 +37,10 @@ PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 # An established pull keeps the cloud ticket valid. About 10s after the last
 # viewer, drop the cached Stream so the next open fetches a new URL.
 STREAM_IDLE_CHECK = timedelta(seconds=10)
+# Matches homeassistant.components.stream.const.OUTPUT_STARTUP_TIMEOUT (60).
+_STREAM_OUTPUT_STARTUP_TIMEOUT = 60
 STREAM_IDLE_MAX_RESCHEDULES = max(
-    1, OUTPUT_STARTUP_TIMEOUT // int(STREAM_IDLE_CHECK.total_seconds())
+    1, _STREAM_OUTPUT_STARTUP_TIMEOUT // int(STREAM_IDLE_CHECK.total_seconds())
 )
 
 
