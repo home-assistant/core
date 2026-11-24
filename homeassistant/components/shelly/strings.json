@@ -872,7 +872,7 @@
         "name": "LoRa add-on firmware"
       },
       "release_notes_messages": {
-        "do_not_unplug": "Do not unplug or power off the device during the update."
+        "multi_step_update": "This update reorganizes the device memory and can run in two steps. The device installs the update and restarts, and may come back still reporting the previous firmware version. About a minute and a half later, it downloads the update again and restarts once more on the new version. Do not restart, remove power from, or otherwise interrupt the device until it reports the new firmware version. If the device comes back on the previous version and the second step does not start within a few minutes, start the update again."
       }
     },
     "valve": {
