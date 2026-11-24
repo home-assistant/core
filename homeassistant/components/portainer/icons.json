@@ -41,6 +41,9 @@
       "container_disk_usage_total_size": {
         "default": "mdi:harddisk"
       },
+      "container_exit_code": {
+        "default": "mdi:exit-run"
+      },
       "container_health_state": {
         "default": "mdi:heart-pulse"
       },
