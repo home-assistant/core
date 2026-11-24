@@ -83,38 +83,37 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
 
-    def add_device_notification(self, name, plc_datatype, callback):
-        """Add a notification to the ADS devices."""
+    def add_device_notification(self, name, plc_datatype, callback) -> bool:
+        """Add a notification to the ADS devices, returning whether it was added."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
             if self._closed:
                 _LOGGER.debug("Not subscribing to %s, the hub is shut down", name)
-                return
+                return False
             try:
                 handles = self._client.add_device_notification(
                     name, attr, self._device_notification_callback
                 )
             except pyads.ADSError as err:
                 _LOGGER.error("Error subscribing to %s: %s", name, err)
-            else:
-                if handles is None:
-                    # pyads returns None instead of raising when the port is not
-                    # open. Shutdown is caught above, so this is unexpected.
-                    _LOGGER.error(
-                        "Error subscribing to %s: the connection is not open", name
-                    )
-                    return
-                hnotify, huser = handles
-                hnotify = int(hnotify)
-                self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype, callback
+                return False
+            if handles is None:
+                # pyads returns None instead of raising when the port is not
+                # open. Shutdown is caught above, so this is unexpected.
+                _LOGGER.error(
+                    "Error subscribing to %s: the connection is not open", name
                 )
+                return False
+            hnotify, huser = handles
+            hnotify = int(hnotify)
+            self._notification_items[hnotify] = NotificationItem(
+                hnotify, huser, name, plc_datatype, callback
+            )
 
-                _LOGGER.debug(
-                    "Added device notification %d for variable %s", hnotify, name
-                )
+            _LOGGER.debug("Added device notification %d for variable %s", hnotify, name)
+            return True
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""

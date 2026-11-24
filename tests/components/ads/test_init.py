@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Tar
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import ADS_CONFIG, MockAdsDevice, async_run_past_first_update, setup_ads_platform
+from . import ADS_CONFIG, MockAdsDevice, setup_ads_platform
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
 
 
@@ -188,12 +188,9 @@ async def test_subscription_on_a_closed_port(
     # pyads returns None instead of raising when the port is not open.
     client.add_device_notification.side_effect = None
     client.add_device_notification.return_value = None
-    assert await async_run_past_first_update(
-        hass,
-        mock_ads_device,
-        setup_ads_platform(
-            hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
-        ),
+    # No first update to wait for, so setup does not need the clock moved on.
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
     )
 
     assert hass.states.get("switch.pump").state == STATE_UNAVAILABLE
@@ -242,12 +239,9 @@ async def test_no_subscription_after_shutdown(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert await async_run_past_first_update(
-        hass,
-        mock_ads_device,
-        setup_ads_platform(
-            hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
-        ),
+    # No first update to wait for, so setup does not need the clock moved on.
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
     )
 
     mock_pyads_connection.return_value.add_device_notification.assert_not_called()
