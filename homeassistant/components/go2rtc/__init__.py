@@ -1,6 +1,7 @@
 """The go2rtc component."""
 
 import asyncio
+from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
@@ -133,8 +134,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
-# Seconds before each retry of restoring the restreams, the last repeating
-_RESTORE_RETRY_DELAYS = (5, 15, 30, 60, 300)
+# Seconds before each retry of the stream updates, the last repeating
+_UPDATE_RETRY_DELAYS = (5, 15, 30, 60, 300)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
 
@@ -337,9 +338,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes: set[str] = set()
         self._added_stream_sources: dict[str, str] = {}
         self._restreamed_cameras: dict[str, Camera] = {}
-        self._restore_attempt = 0
-        self._restore_task: asyncio.Task[None] | None = None
-        self._cancel_restore_retry: CALLBACK_TYPE | None = None
+        self._stream_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        # Cameras whose go2rtc stream must be updated, and the retry state
+        self._pending_updates: dict[str, Camera] = {}
+        self._update_attempt = 0
+        self._update_task: asyncio.Task[None] | None = None
+        self._cancel_update_retry: CALLBACK_TYPE | None = None
 
     @property
     @override
@@ -473,72 +477,97 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     @callback
     def async_restore_restreams(self) -> None:
-        """Restore the restreams after the managed server restarted."""
-        self._restore_attempt = 0
-        self._start_restore()
+        """Add the restreams again to the managed server, which restarted."""
+        self._pending_updates.update(self._restreamed_cameras)
+        self._start_updates()
 
     @callback
-    def _async_retry_restore(self, _now: datetime) -> None:
-        """Retry restoring the restreams."""
-        self._cancel_restore_retry = None
-        self._start_restore()
+    @override
+    def async_refresh_stream_source(self, camera: Camera) -> None:
+        """Update the camera's stream in go2rtc to its changed source."""
+        self._pending_updates[get_camera_identifier(camera)] = camera
+        self._start_updates()
 
     @callback
-    def _start_restore(self) -> None:
-        """Start restoring the restreams, in place of any earlier attempt."""
-        self._stop_restore()
-        self._restore_task = self._hass.async_create_task(
-            self._async_restore_restreams(), "go2rtc restore restreams"
+    def _async_retry_updates(self, _now: datetime) -> None:
+        """Retry the pending stream updates."""
+        self._cancel_update_retry = None
+        self._start_updates(retry=True)
+
+    @callback
+    def _start_updates(self, *, retry: bool = False) -> None:
+        """Start the pending stream updates, in place of any earlier attempt.
+
+        Each attempt reads the cameras' current sources, so the latest wins.
+        """
+        self._stop_updates()
+        if not retry:
+            self._update_attempt = 0
+        self._update_task = self._hass.async_create_task(
+            self._async_update_pending(), "go2rtc stream updates"
         )
 
     @callback
-    def _stop_restore(self) -> None:
-        """Cancel a running or pending attempt to restore the restreams."""
-        if self._cancel_restore_retry:
-            self._cancel_restore_retry()
-            self._cancel_restore_retry = None
-        if self._restore_task:
-            self._restore_task.cancel()
-            self._restore_task = None
+    def _stop_updates(self) -> None:
+        """Cancel a running or pending attempt of the stream updates."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        if self._update_task:
+            self._update_task.cancel()
+            self._update_task = None
 
-    async def _async_restore_restreams(self) -> None:
-        """Add the restreamed cameras' streams again to a restarted server.
+    async def _async_update_pending(self) -> None:
+        """Update the pending cameras' streams, retrying until done.
 
-        HLS and recording keep reading the restreams without asking for them
-        again, so a failure is retried until it succeeds.
+        HLS and recording keep reading a restream without asking for it again,
+        so a failure is retried until it succeeds.
         """
         failed: list[str] = []
-        for identifier, camera in list(self._restreamed_cameras.items()):
-            if identifier not in self._restreamed_cameras:
-                # Unregistered while an earlier camera was restored
+        for identifier, camera in list(self._pending_updates.items()):
+            if identifier not in self._pending_updates:
+                # Unregistered while an earlier camera was updated
                 continue
             try:
-                await self._update_stream_source(camera)
+                async with self._stream_locks[identifier]:
+                    # Only a stream go2rtc has; others get the current source
+                    # when they are next used
+                    if (
+                        identifier in self._restreamed_cameras
+                        or identifier in self._added_stream_sources
+                    ):
+                        await self._update_stream_source_locked(camera)
             except Go2RtcClientError, HomeAssistantError:
                 # Not logged, as the error can carry the source's credentials
                 failed.append(camera.entity_id)
+                continue
+            self._pending_updates.pop(identifier, None)
+        self._update_task = None
         if not failed:
-            self._restore_task = None
-            if self._restore_attempt:
-                _LOGGER.info("Restored the restreams in go2rtc")
-            self._restore_attempt = 0
+            if self._update_attempt:
+                _LOGGER.info("Updated the streams in go2rtc")
+            self._update_attempt = 0
             return
-        if not self._restore_attempt:
+        if not self._update_attempt:
             _LOGGER.warning(
-                "Unable to restore the restreams of %s in go2rtc, retrying",
+                "Unable to update the streams of %s in go2rtc, retrying",
                 ", ".join(failed),
             )
-        delay = _RESTORE_RETRY_DELAYS[
-            min(self._restore_attempt, len(_RESTORE_RETRY_DELAYS) - 1)
+        delay = _UPDATE_RETRY_DELAYS[
+            min(self._update_attempt, len(_UPDATE_RETRY_DELAYS) - 1)
         ]
-        self._restore_attempt += 1
-        self._restore_task = None
-        self._cancel_restore_retry = async_call_later(
-            self._hass, delay, self._async_retry_restore
+        self._update_attempt += 1
+        self._cancel_update_retry = async_call_later(
+            self._hass, delay, self._async_retry_updates
         )
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
+        async with self._stream_locks[get_camera_identifier(camera)]:
+            await self._update_stream_source_locked(camera)
+
+    async def _update_stream_source_locked(self, camera: Camera) -> None:
+        """Update the stream source, holding the camera's stream lock."""
         # Resolve each source once, as stream_source can be slow (e.g. it asks
         # the camera for its URLs) and is the default webrtc_source
         ffmpeg_source = await camera.stream_source()
@@ -657,8 +686,8 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def teardown(self) -> None:
         """Tear down the provider."""
-        task = self._restore_task
-        self._stop_restore()
+        task = self._update_task
+        self._stop_updates()
         if task:
             with suppress(asyncio.CancelledError):
                 await task
@@ -684,6 +713,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         identifier = get_camera_identifier(camera)
         self._added_stream_sources.pop(identifier, None)
         self._restreamed_cameras.pop(identifier, None)
+        self._pending_updates.pop(identifier, None)
+        self._stream_locks.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 

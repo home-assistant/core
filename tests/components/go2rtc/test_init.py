@@ -1947,7 +1947,7 @@ async def test_restreams_restore_retried(
         async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
         await hass.async_block_till_done()
         assert rest_client.streams.add.call_count == 2
-        assert f"Unable to restore the restreams of {camera.entity_id}" in caplog.text
+        assert f"Unable to update the streams of {camera.entity_id}" in caplog.text
         assert "secret" not in caplog.text
 
         # Retried after 5 s, then 15 s
@@ -1956,14 +1956,14 @@ async def test_restreams_restore_retried(
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
         assert rest_client.streams.add.call_count == 4
-        assert caplog.text.count("Unable to restore") == 1
+        assert caplog.text.count("Unable to update") == 1
 
         rest_client.streams.add.side_effect = None
         freezer.tick(30)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert rest_client.streams.add.call_count == 5
-        assert "Restored the restreams in go2rtc" in caplog.text
+        assert "Updated the streams in go2rtc" in caplog.text
 
         # No further retries once restored
         freezer.tick(300)
@@ -2095,3 +2095,104 @@ async def test_restreams_restore_cancelled_on_unload(
 
     # The cancelled restore scheduled no retry
     assert rest_client.streams.add.call_count == 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_refresh_stream_source(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a changed source reaches a restreamed camera's go2rtc stream.
+
+    A failure shares the retries of the other stream updates.
+    """
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    camera.set_stream_source(None)
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        server_streams[name] = Stream([Producer(source) for source in sources])
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://old"):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+    assert server_streams[identifier].producers[0].url == "rtsp://old"
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://new"):
+        rest_client.streams.add.side_effect = Go2RtcClientError
+        camera.async_webrtc_source_changed()
+        await hass.async_block_till_done()
+        assert server_streams[identifier].producers[0].url == "rtsp://old"
+
+        rest_client.streams.add.side_effect = add_stream
+        freezer.tick(5)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert server_streams[identifier].producers[0].url == "rtsp://new"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_refresh_stream_source_unknown_camera(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a changed source of a camera go2rtc has no stream for adds none.
+
+    It gets the current source when it's next used.
+    """
+    camera = init_test_integration
+
+    camera.async_webrtc_source_changed()
+    await hass.async_block_till_done()
+
+    rest_client.streams.add.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_refresh_stream_source_waits_for_stream_update(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a source change during a stream update ends with the new source."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    camera.set_stream_source(None)
+    server_streams: dict[str, Stream] = {}
+    adding = asyncio.Event()
+    release = asyncio.Event()
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        adding.set()
+        await release.wait()
+        server_streams[name] = Stream([Producer(source) for source in sources])
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+    source = "rtsp://old"
+
+    async def webrtc_source() -> str:
+        return source
+
+    with patch.object(camera, "webrtc_source", side_effect=webrtc_source):
+        restream = hass.async_create_task(
+            camera.webrtc_provider.async_get_stream_source(camera)
+        )
+        await adding.wait()
+        # The restream is being set up with the old source
+        source = "rtsp://new"
+        camera.async_webrtc_source_changed()
+        release.set()
+        await restream
+        await hass.async_block_till_done()
+
+    assert server_streams[identifier].producers[0].url == "rtsp://new"
