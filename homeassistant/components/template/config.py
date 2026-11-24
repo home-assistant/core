@@ -82,9 +82,9 @@ from . import (
 )
 from .const import (
     CONF_TRIGGER_VARIABLES,
+    DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     PLATFORMS,
-    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
     TemplateConfig,
     TemplateConfigSections,
 )
@@ -430,7 +430,8 @@ async def _async_validate_triggers_and_conditions(
 
 # Deprecated options per platform whose file and line are kept for repairs
 DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
-    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+    deprecation.platform: deprecation.options
+    for deprecation in DEPRECATED_TEMPLATE_OPTIONS
 }
 
 
@@ -474,7 +475,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
-        light_platform.async_update_deprecated_mireds_options_issues(hass, [])
         return config
 
     config_sections = TemplateConfigSections()
@@ -499,15 +499,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
         template_config.option_locations = _get_option_locations(template_config)
         config_sections.append(template_config)
-
-    light_platform.async_update_deprecated_mireds_options_issues(
-        hass,
-        [
-            light_config
-            for section in config_sections
-            for light_config in section.get(LIGHT_DOMAIN, [])
-        ],
-    )
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.

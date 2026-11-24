@@ -769,8 +769,12 @@
       "title": "Incomplete template configuration"
     },
     "deprecated_light_mireds_options": {
-      "description": "The template light with `{identifier}` uses options in mireds. These options are deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nUpdate your YAML configuration by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
-      "title": "Template light uses deprecated options in mireds ({identifier})"
+      "description": "The template light entity with `{identifier}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light entity uses deprecated options in mireds ({identifier})"
+    },
+    "deprecated_light_mireds_options_blueprint": {
+      "description": "The template light blueprint `{blueprint}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light blueprint uses deprecated options in mireds ({blueprint})"
     },
     "deprecated_light_temperature": {
       "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin.",

@@ -32,10 +32,15 @@ from homeassistant.components.light import (
     LightEntityFeature,
     LightEntityStateAttribute,
 )
-from homeassistant.components.template.const import TemplateService
+from homeassistant.components.template.config import async_validate_config
+from homeassistant.components.template.const import (
+    LIGHT_DEPRECATED_OPTIONS,
+    WEATHER_DEPRECATED_OPTIONS,
+    DeprecatedTemplateOptions,
+    TemplateService,
+)
 from homeassistant.components.template.light import (
     DEFAULT_NAME,
-    DEPRECATED_MIREDS_OPTIONS_ISSUE_ID,
     DEPRECATED_TEMPERATURE_ISSUE_ID,
 )
 from homeassistant.const import (
@@ -65,6 +70,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -957,12 +963,9 @@ def get_deprecated_mireds_options_issues(
     issue_registry: ir.IssueRegistry,
 ) -> list[ir.IssueEntry]:
     """Return the deprecated light mireds options issues."""
-    return [
-        issue
-        for (domain, issue_id), issue in issue_registry.issues.items()
-        if domain == template.DOMAIN
-        and issue_id.startswith(f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_")
-    ]
+    return get_issues_with_prefix(
+        issue_registry, LIGHT_DEPRECATED_OPTIONS.translation_key
+    )
 
 
 @pytest.mark.parametrize("count", [1])
@@ -1004,10 +1007,14 @@ async def test_deprecated_mireds_options_issue(
     issues = get_deprecated_mireds_options_issues(issue_registry)
     assert len(issues) == 1
     assert issues[0].breaks_in_ha_version == "2027.6.0"
-    assert issues[0].translation_key == DEPRECATED_MIREDS_OPTIONS_ISSUE_ID
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#light"
+    )
+    assert issues[0].translation_key == LIGHT_DEPRECATED_OPTIONS.translation_key
     assert issues[0].translation_placeholders == {
         "identifier": f"name: {TEST_LIGHT.object_id}",
-        "breaks_in_ha_version": "2027.6.0",
         "options": options,
     }
 
@@ -1062,6 +1069,32 @@ template:
         min_kelvin: "{{ 2000 }}"
 """
 
+WEATHER_LEGACY_YAML = """\
+  - weather:
+      - name: Weather
+        condition_template: sunny
+        temperature_template: "{{ 20 }}"
+        humidity_template: "{{ 25 }}"
+"""
+
+
+async def _async_setup_yaml(hass: HomeAssistant, yaml_path: Path, yaml: str) -> None:
+    """Write configuration.yaml and set up the template integration from it."""
+    await hass.async_add_executor_job(yaml_path.write_text, yaml)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, template.DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def _async_reload_yaml(hass: HomeAssistant, yaml_path: Path, yaml: str) -> None:
+    """Write configuration.yaml and reload the template entities from it."""
+    await hass.async_add_executor_job(yaml_path.write_text, yaml)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(
+            template.DOMAIN, TemplateService.RELOAD, blocking=True
+        )
+    await hass.async_block_till_done()
+
 
 async def test_deprecated_mireds_options_issue_file_and_line(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
@@ -1069,30 +1102,109 @@ async def test_deprecated_mireds_options_issue_file_and_line(
     """Test the repair lists file and line, and is removed after a fix."""
     hass.config.config_dir = str(tmp_path)
     yaml_path = tmp_path / "configuration.yaml"
-    await hass.async_add_executor_job(yaml_path.write_text, MIREDS_YAML)
-    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
-    assert await async_setup_component(hass, template.DOMAIN, config)
-    await hass.async_block_till_done()
+    await _async_setup_yaml(hass, yaml_path, MIREDS_YAML)
 
     issues = get_deprecated_mireds_options_issues(issue_registry)
     assert len(issues) == 1
     assert issues[0].translation_placeholders == {
         "identifier": "name: Test",
-        "breaks_in_ha_version": "2027.6.0",
         "options": (
             "- `configuration.yaml:7`: `temperature` → `temperature_kelvin`\n"
             "- `configuration.yaml:8`: `max_mireds` → `min_kelvin`"
         ),
     }
 
-    await hass.async_add_executor_job(yaml_path.write_text, KELVIN_YAML)
-    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
-        await hass.services.async_call(
-            template.DOMAIN, TemplateService.RELOAD, blocking=True
-        )
-    await hass.async_block_till_done()
+    await _async_reload_yaml(hass, yaml_path, KELVIN_YAML)
 
     assert get_deprecated_mireds_options_issues(issue_registry) == []
+
+
+async def test_deprecated_mireds_options_issue_not_changed_by_config_check(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test validating the configuration alone does not create or remove repairs."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+    await _async_setup_yaml(hass, yaml_path, MIREDS_YAML)
+    issues = get_deprecated_mireds_options_issues(issue_registry)
+    assert len(issues) == 1
+
+    await hass.async_add_executor_job(yaml_path.write_text, KELVIN_YAML)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    await async_validate_config(hass, config)
+
+    assert get_deprecated_mireds_options_issues(issue_registry) == issues
+
+
+async def test_deprecated_options_issues_per_platform(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test fixing the light options keeps the weather repair, and the reverse."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+
+    def issue_ids(deprecation: DeprecatedTemplateOptions) -> list[str]:
+        return [
+            issue.issue_id
+            for issue in get_issues_with_prefix(
+                issue_registry, deprecation.translation_key
+            )
+        ]
+
+    await _async_setup_yaml(hass, yaml_path, MIREDS_YAML + WEATHER_LEGACY_YAML)
+    light_issue_ids = issue_ids(LIGHT_DEPRECATED_OPTIONS)
+    weather_issue_ids = issue_ids(WEATHER_DEPRECATED_OPTIONS)
+    assert len(light_issue_ids) == 1
+    assert len(weather_issue_ids) == 1
+
+    await _async_reload_yaml(hass, yaml_path, KELVIN_YAML + WEATHER_LEGACY_YAML)
+    assert issue_ids(LIGHT_DEPRECATED_OPTIONS) == []
+    assert issue_ids(WEATHER_DEPRECATED_OPTIONS) == weather_issue_ids
+
+    await _async_reload_yaml(hass, yaml_path, MIREDS_YAML)
+    assert issue_ids(LIGHT_DEPRECATED_OPTIONS) == light_issue_ids
+    assert issue_ids(WEATHER_DEPRECATED_OPTIONS) == []
+
+
+async def test_deprecated_mireds_options_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a light blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            template.DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_light_with_mireds.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_deprecated_mireds_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key == LIGHT_DEPRECATED_OPTIONS.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_light_with_mireds.yaml",
+        "options": (
+            "- `blueprints/template/test_light_with_mireds.yaml:19`: "
+            "`temperature` → `temperature_kelvin`\n"
+            "- `blueprints/template/test_light_with_mireds.yaml:20`: "
+            "`max_mireds` → `min_kelvin`"
+        ),
+    }
 
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])

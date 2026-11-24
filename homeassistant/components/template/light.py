@@ -4,9 +4,7 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 from functools import partial
-import hashlib
 import logging
-import os
 from typing import TYPE_CHECKING, Any, Self, override
 
 import probatio
@@ -54,7 +52,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoTyp
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
-from .const import DEFAULT_NAMES, DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN, LIGHT_DEPRECATED_OPTIONS
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -97,15 +95,7 @@ CONF_TEMPERATURE = "temperature"
 CONF_TEMPERATURE_KELVIN = "temperature_kelvin"
 CONF_XY_ACTION = "set_xy"
 
-# Deprecated options in mireds, mapped to the option in kelvin that replaces them
-DEPRECATED_MIREDS_OPTIONS = {
-    CONF_TEMPERATURE: CONF_TEMPERATURE_KELVIN,
-    CONF_MAX_MIREDS: CONF_MIN_KELVIN,
-    CONF_MIN_MIREDS: CONF_MAX_KELVIN,
-}
-DEPRECATED_MIREDS_OPTIONS_ISSUE_ID = "deprecated_light_mireds_options"
 DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
-DEPRECATED_MIREDS_BREAKS_IN = "2027.6.0"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
@@ -224,14 +214,14 @@ async def async_setup_entry(
             hass,
             DOMAIN,
             issue_id,
-            breaks_in_ha_version=DEPRECATED_MIREDS_BREAKS_IN,
+            breaks_in_ha_version=LIGHT_DEPRECATED_OPTIONS.breaks_in_ha_version,
             config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key=DEPRECATED_TEMPERATURE_ISSUE_ID,
             translation_placeholders={
                 "name": config_entry.title,
-                "breaks_in_ha_version": DEPRECATED_MIREDS_BREAKS_IN,
+                "breaks_in_ha_version": LIGHT_DEPRECATED_OPTIONS.breaks_in_ha_version,
             },
         )
     else:
@@ -261,69 +251,6 @@ def async_create_preview_light(
         LIGHT_CONFIG_ENTRY_SCHEMA,
         True,
     )
-
-
-@callback
-def async_update_deprecated_mireds_options_issues(
-    hass: HomeAssistant, light_configs: list[ConfigType]
-) -> None:
-    """Create an issue per light entity using options in mireds."""
-    issue_ids: set[str] = set()
-    for light_config in light_configs:
-        deprecated = [key for key in light_config if key in DEPRECATED_MIREDS_OPTIONS]
-        if not deprecated:
-            continue
-
-        identifier = tcv.entity_config_identifier(Platform.LIGHT, light_config)
-        # The id only changes with the configuration, so a dismissed issue stays
-        # dismissed until the configuration changes
-        fingerprint = "\n".join(
-            [
-                identifier,
-                *(
-                    f"{key}={getattr(light_config[key], 'template', light_config[key])}"
-                    for key in sorted(deprecated)
-                ),
-            ]
-        )
-        issue_id = (
-            f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_"
-            f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
-        )
-        issue_ids.add(issue_id)
-
-        changes: list[str] = []
-        for key in deprecated:
-            change = f"`{key}` → `{DEPRECATED_MIREDS_OPTIONS[key]}`"
-            # Keys loaded from YAML carry the file and line they were defined on
-            if (config_file := getattr(key, "__config_file__", None)) is not None:
-                path = os.path.relpath(config_file, hass.config.config_dir)
-                change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
-            changes.append(f"- {change}")
-
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version=DEPRECATED_MIREDS_BREAKS_IN,
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=DEPRECATED_MIREDS_OPTIONS_ISSUE_ID,
-            translation_placeholders={
-                "identifier": identifier,
-                "breaks_in_ha_version": DEPRECATED_MIREDS_BREAKS_IN,
-                "options": "\n".join(changes),
-            },
-            learn_more_url="https://www.home-assistant.io/integrations/template/#light",
-        )
-
-    for domain, issue_id in list(ir.async_get(hass).issues):
-        if (
-            domain == DOMAIN
-            and issue_id.startswith(f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_")
-            and issue_id not in issue_ids
-        ):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 def _string_to_list(result: str) -> list[float]:
