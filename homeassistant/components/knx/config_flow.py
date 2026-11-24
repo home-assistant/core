@@ -209,6 +209,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
+        self._configured_gateway_described = False
         self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
@@ -725,6 +726,37 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._stored_keyring = StoredKeyring(keyring, filename, password)
         return self._stored_keyring
 
+    async def _async_describe_configured_gateway(self) -> None:
+        """Request the description of the configured tunneling gateway.
+
+        `_selected_tunnel` stays None if the gateway doesn't respond, so the
+        keyring is used unfiltered.
+        """
+        if self._configured_gateway_described or self._selected_tunnel is not None:
+            return
+        self._configured_gateway_described = True
+        if (
+            self.initial_data[CONF_KNX_CONNECTION_TYPE]
+            not in CONF_KNX_TUNNELING_TYPE_LABELS
+            or CONF_HOST not in self.initial_data
+        ):
+            return
+        try:
+            gateway_ip = await xknx_validate_ip(self.initial_data[CONF_HOST])
+            local_ip = (
+                await xknx_validate_ip(_local)
+                if (_local := self.initial_data.get(CONF_KNX_LOCAL_IP))
+                else None
+            )
+            self._selected_tunnel = await request_description(
+                gateway_ip=gateway_ip,
+                gateway_port=self.initial_data[CONF_PORT],
+                local_ip=local_ip,
+                route_back=self.initial_data.get(CONF_KNX_ROUTE_BACK, False),
+            )
+        except XKNXException:
+            return
+
     def _validate_keyring(
         self, keyring: Keyring
     ) -> tuple[dict[str, str], dict[str, str]]:
@@ -756,6 +788,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             sync_latency_tolerance=None,
         )
         if self.connection_type in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE):
+            return self.finish_flow()
+        if self.connection_type == CONF_KNX_TUNNELING:
+            # UDP tunnels ignore the tunnel endpoint address
             return self.finish_flow()
 
         # Tunneling / Automatic
@@ -997,6 +1032,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
+            await self._async_describe_configured_gateway()
             if (
                 result := await self._async_handle_keyring_source(
                     KEY_SOURCE_KNXKEYS_UPLOAD,
