@@ -119,8 +119,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-        # A fork's trigger run can name any pull request: collect.py skips unless it is at the run's commit.
-        run: script/pr_reviewer/collect.py --set-outputs "${PR_NUMBER}" "${RUNNER_TEMP}/pr-reviewer" "${RUN_HEAD_SHA}"
+        # A fork's trigger run can name any pull request in its run name. Passing the run's head commit
+        # makes collect.py skip unless that pull request's head is this commit.
+        run: script/pr_reviewer/collect.py --write-github-output "${PR_NUMBER}" "${RUNNER_TEMP}/pr-reviewer" "${RUN_HEAD_SHA}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
@@ -213,10 +214,10 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
 - Each finding on a line inside a hunk of `pr.diff` goes only in an inline comment: `create_pull_request_review_comment` with `path`, `line`, optional `start_line`, and `side: RIGHT`. No severity tag; start nits with `nit: `. Add a `suggestion` block when the fix is a small, exact replacement of those lines. At most 20 inline comments: put findings on other lines, and any beyond 20, in the body.
 - Then `submit_pull_request_review` with event `COMMENT`. Every review ends with it, also one without findings. This body:
   - With critical or problem findings:
-    - 2–4 line summary of the PR and the assessment, without restating the inline comments.
+    - short summary of the assessment, without restating the inline comments.
     - Numbered list of the requested changes not in an inline comment, each starting with `[CRITICAL]` or `[PROBLEM]`, with file and line. None: no list.
     - On a re-review: the numbered list holds the earlier requested changes still open and the new findings not in an inline comment; the fixed ones go in a separate list, without `[CRITICAL]` or `[PROBLEM]`.
-  - Without: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
+  - Without problem findings: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
   - Nits not in an inline comment go last, in a list, each starting with `nit: `, with file and line.
   - Close it with this block, without the code fence, with `<model>` replaced by the ID of the model you run on. It marks the review as finished:
 

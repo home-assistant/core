@@ -3,10 +3,10 @@
 
 Decides whether to review it, in task.json.
 
-Usage: script/pr_reviewer/collect.py [--set-outputs] <pr-number> <out-dir> [<head-sha>]
+Usage: script/pr_reviewer/collect.py [--write-github-output] <pr-number> <out-dir> [<head-sha>]
 
 Needs GH_TOKEN and GITHUB_REPOSITORY. <head-sha> pins the commit to review;
-it defaults to the pull request's head. --set-outputs also writes `head_sha`
+it defaults to the pull request's head. --write-github-output also writes `head_sha`
 to GITHUB_OUTPUT, or `skip=true` when there is nothing to review.
 
 The workflow keeps no state of its own and reads it back from the pull request:
@@ -298,7 +298,7 @@ def main() -> None:
         description="Collect what the PR reviewer workflow needs for one pull request."
     )
     parser.add_argument(
-        "--set-outputs",
+        "--write-github-output",
         action="store_true",
         help="write head_sha, or skip=true, to GITHUB_OUTPUT",
     )
@@ -322,7 +322,7 @@ def main() -> None:
         task = {"review": True, "reviewed_head": reviewed_head}
         output = f"head_sha={head_sha}"
     write_json(args.out_dir / "task.json", task)
-    if args.set_outputs:
+    if args.write_github_output:
         with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as file:
             file.write(f"{output}\n")
 

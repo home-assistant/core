@@ -214,7 +214,9 @@ class Collector:
     github_output: Path
 
     def run(
-        self, head_sha: str = HEAD, options: tuple[str, ...] = ("--set-outputs",)
+        self,
+        head_sha: str = HEAD,
+        options: tuple[str, ...] = ("--write-github-output",),
     ) -> None:
         """Run the script."""
         self.monkeypatch.setattr(
@@ -855,8 +857,8 @@ def test_pr_diff_fails(gh: FakeGh, collector: Collector) -> None:
     assert not (collector.out_dir / "task.json").exists()
 
 
-def test_without_set_outputs(collector: Collector) -> None:
-    """Test GITHUB_OUTPUT is left untouched without --set-outputs."""
+def test_without_write_github_output(collector: Collector) -> None:
+    """Test GITHUB_OUTPUT is left untouched without --write-github-output."""
     collector.run(options=())
 
     assert not collector.github_output.exists()
