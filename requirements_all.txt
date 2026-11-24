@@ -1146,7 +1146,7 @@ gatus-api==1.2.0
 gazetteer-matcher==1.1.0
 
 # homeassistant.components.google
-gcal-sync==9.2.0
+gcal-sync==9.2.2
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11
