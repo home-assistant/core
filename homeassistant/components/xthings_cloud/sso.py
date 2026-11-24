@@ -1,15 +1,16 @@
 """Xthings Cloud browser SSO callback."""
 
-from collections.abc import Mapping
-from datetime import timedelta
+from __future__ import annotations
+
 import json
 import time
+from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from aiohttp import web
 from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError
-
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.config_entries import ConfigEntry
@@ -39,18 +40,13 @@ def _bridge_html(tokens: Mapping[str, Any]) -> str:
 class XthingsSsoManager:
     """Exchange Cloud SSO codes and create short-lived HA sessions."""
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: XthingsCloudApiClient
-    ) -> None:
-        """Initialize the SSO manager."""
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: XthingsCloudApiClient) -> None:
         self.hass = hass
         self.entry = entry
         self.client = client
         self._session_user_id: str | None = None
 
-    async def async_create_bridge(
-        self, request: web.Request, code: str
-    ) -> web.Response:
+    async def async_create_bridge(self, request: web.Request, code: str) -> web.Response:
         """Exchange a one-time Cloud code and create a browser session."""
         if not code:
             return self._error(web.HTTPUnauthorized, "Invalid SSO code")
@@ -58,7 +54,7 @@ class XthingsSsoManager:
         instance_id = await async_get_instance_id(self.hass)
         try:
             exchange = await self.client.async_exchange_sso_code(code, instance_id)
-        except XthingsCloudApiError, TimeoutError:
+        except (XthingsCloudApiError, TimeoutError):
             LOGGER.warning("Xthings SSO code exchange failed")
             return self._error(web.HTTPUnauthorized, "Invalid SSO code")
         if (
@@ -114,9 +110,7 @@ class XthingsSsoManager:
             return urlunsplit(
                 (parsed.scheme, parsed.netloc, parsed.path, "", "")
             ).rstrip("/")
-        forwarded_proto = (
-            request.headers.get("X-Forwarded-Proto", "").split(",", 1)[0].strip()
-        )
+        forwarded_proto = request.headers.get("X-Forwarded-Proto", "").split(",", 1)[0].strip()
         scheme = forwarded_proto or request.scheme
         return f"{scheme}://{request.host}"
 
@@ -152,20 +146,7 @@ class XthingsSsoView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Handle a browser callback from Xthings Cloud."""
         hass = request.app[KEY_HASS]
-        manager: XthingsSsoManager | None = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.runtime_data and entry.runtime_data.sso_manager:
-                manager = entry.runtime_data.sso_manager
-                break
+        manager: XthingsSsoManager | None = hass.data.get(DOMAIN, {}).get("sso")
         if manager is None:
-            return error_response(web.HTTPServiceUnavailable, "SSO unavailable")
+            return XthingsSsoManager._error(web.HTTPServiceUnavailable, "SSO unavailable")
         return await manager.async_create_bridge(request, request.query.get("code", ""))
-
-
-def error_response(error_type: type[web.HTTPException], message: str) -> web.Response:
-    """Return a non-cacheable error response."""
-    return web.Response(
-        status=error_type.status_code,
-        text=message,
-        headers={"Cache-Control": "no-store"},
-    )

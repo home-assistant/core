@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Xthings Cloud."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
@@ -19,9 +19,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from .sso import XthingsSsoManager
-
 type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
 
 
@@ -29,7 +26,6 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Xthings Cloud data update coordinator."""
 
     config_entry: XthingsCloudConfigEntry
-    sso_manager: XthingsSsoManager | None
 
     def __init__(
         self,
@@ -47,7 +43,6 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.websocket: XthingsCloudWebSocket | None = None
-        self.sso_manager = None
 
     async def _async_ensure_token_valid(self) -> None:
         """Ensure the token is valid, refresh if expired.

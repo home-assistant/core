@@ -2,13 +2,12 @@
 
 from typing import Any, override
 
+import probatio
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
     XthingsCloudApiError,
     XthingsCloudAuthError,
 )
-import probatio
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -16,11 +15,15 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import CONF_REFRESH_TOKEN, CONF_REMOTE_ACCESS, DOMAIN, LOGGER
+from .const import (
+    CONF_REFRESH_TOKEN,
+    CONF_REMOTE_ACCESS,
+    DOMAIN,
+    LOGGER,
+)
 
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",
@@ -50,7 +53,6 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @staticmethod
-    @callback
     @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow."""
@@ -114,9 +116,9 @@ class XthingsCloudOptionsFlow(OptionsFlow):
     """Handle Xthings Cloud integration options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
         self._config_entry = config_entry
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

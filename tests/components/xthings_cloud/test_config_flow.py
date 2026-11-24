@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.xthings_cloud.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -19,6 +18,8 @@ from .const import (
     MOCK_TOKEN,
     MOCK_USER_ID,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
@@ -85,13 +86,13 @@ async def test_user_flow_error_and_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_single_config_entry(
+async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test user flow aborts when the integration is already configured."""
+    """Test user flow aborts if same account already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -101,4 +102,4 @@ async def test_user_flow_single_config_entry(
         {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"

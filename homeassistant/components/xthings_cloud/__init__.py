@@ -3,39 +3,37 @@
 from typing import Any
 
 from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_REMOTE_ACCESS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 from .remote_access import async_disable_remote_access, async_enable_remote_access
 from .sso import XthingsSsoManager, XthingsSsoView
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Xthings Cloud integration."""
     hass.http.register_view(XthingsSsoView)
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: XthingsCloudConfigEntry
-) -> None:
+) -> bool:
     """Set up config entry."""
     session = async_get_clientsession(hass)
     client = XthingsCloudApiClient(session, token=entry.data[CONF_TOKEN])
+    hass.data.setdefault(DOMAIN, {})
     sso_manager = XthingsSsoManager(hass, entry, client)
+    hass.data[DOMAIN]["sso"] = sso_manager
     coordinator = XthingsCloudCoordinator(hass, client, entry)
-    coordinator.sso_manager = sso_manager
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -54,17 +52,13 @@ async def async_setup_entry(
             return
         unbind_requested = True
         instance_id = await async_get_instance_id(hass)
-        LOGGER.info(
-            "Unbinding Home Assistant instance %s from Xthings Cloud", instance_id
-        )
+        LOGGER.info("Unbinding Home Assistant instance %s from Xthings Cloud", instance_id)
         try:
             await client.async_unbind(instance_id)
-        except XthingsCloudApiError, TimeoutError:
+        except (XthingsCloudApiError, TimeoutError):
             LOGGER.exception("Failed to unbind Home Assistant device")
         else:
-            LOGGER.info(
-                "Home Assistant instance %s unbound from Xthings Cloud", instance_id
-            )
+            LOGGER.info("Home Assistant instance %s unbound from Xthings Cloud", instance_id)
 
     async def _async_device_registry_updated(event: Any) -> None:
         data = event.data
@@ -99,11 +93,12 @@ async def async_setup_entry(
         await _async_options_updated(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
+    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: XthingsCloudConfigEntry
-) -> None:
+) -> bool:
     """Unload config entry."""
     coordinator = entry.runtime_data
     await async_disable_remote_access(hass)
@@ -112,13 +107,14 @@ async def async_unload_entry(
     instance_id = await async_get_instance_id(hass)
     try:
         await client.async_unbind(instance_id)
-    except XthingsCloudApiError, TimeoutError:
+    except (XthingsCloudApiError, TimeoutError):
         LOGGER.exception("Failed to unbind Home Assistant during unload")
-    if sso_manager := coordinator.sso_manager:
+    sso_manager = hass.data.get(DOMAIN, {}).pop("sso", None)
+    if isinstance(sso_manager, XthingsSsoManager):
         await sso_manager.async_revoke_sessions()
-        coordinator.sso_manager = None
-    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await coordinator.async_stop_websocket()
+    return unload_ok
 
 
 async def async_remove_config_entry_device(
@@ -134,7 +130,7 @@ async def async_remove_config_entry_device(
     instance_id = await async_get_instance_id(hass)
     try:
         await client.async_unbind(instance_id)
-    except XthingsCloudApiError, TimeoutError:
+    except (XthingsCloudApiError, TimeoutError):
         LOGGER.exception("Failed to unbind Home Assistant before device removal")
     return True
 
@@ -150,7 +146,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> Non
         instance_id = await async_get_instance_id(hass)
         try:
             await client.async_unbind(instance_id)
-        except XthingsCloudApiError, TimeoutError:
+        except (XthingsCloudApiError, TimeoutError):
             LOGGER.exception("FRP stopped, but failed to unbind Home Assistant")
 
 
@@ -167,7 +163,7 @@ async def _async_bind_and_enable_remote_access(
             instance_id,
             sso_ha_user_id=owner.id,
         )
-    except XthingsCloudApiError, TimeoutError:
+    except (XthingsCloudApiError, TimeoutError):
         await async_disable_remote_access(hass)
         LOGGER.exception("Failed to bind Home Assistant; remote access is stopped")
         return
