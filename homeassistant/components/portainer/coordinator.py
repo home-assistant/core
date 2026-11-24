@@ -48,7 +48,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOMAIN
+from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOCKER_ENDPOINT_TYPES, DOMAIN
 from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -301,6 +301,7 @@ class PortainerCoordinator(
             endpoint
             for endpoint in endpoints
             if str(endpoint.id) in subentry_endpoint_ids
+            and endpoint.type in DOCKER_ENDPOINT_TYPES
         ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
