@@ -1,7 +1,5 @@
 """Xthings Cloud browser SSO callback."""
 
-from __future__ import annotations
-
 import json
 import time
 from collections.abc import Mapping
@@ -37,40 +35,54 @@ def _bridge_html(tokens: Mapping[str, Any]) -> str:
     )
 
 
+def _error(error_type: type[web.HTTPException], message: str) -> web.Response:
+    """Return a non-cacheable error response."""
+    return web.Response(
+        status=error_type.status_code,
+        text=message,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 class XthingsSsoManager:
     """Exchange Cloud SSO codes and create short-lived HA sessions."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: XthingsCloudApiClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: XthingsCloudApiClient
+    ) -> None:
+        """Initialize the SSO manager."""
         self.hass = hass
         self.entry = entry
         self.client = client
         self._session_user_id: str | None = None
 
-    async def async_create_bridge(self, request: web.Request, code: str) -> web.Response:
+    async def async_create_bridge(
+        self, request: web.Request, code: str
+    ) -> web.Response:
         """Exchange a one-time Cloud code and create a browser session."""
         if not code:
-            return self._error(web.HTTPUnauthorized, "Invalid SSO code")
+            return _error(web.HTTPUnauthorized, "Invalid SSO code")
 
         instance_id = await async_get_instance_id(self.hass)
         try:
             exchange = await self.client.async_exchange_sso_code(code, instance_id)
         except (XthingsCloudApiError, TimeoutError):
             LOGGER.warning("Xthings SSO code exchange failed")
-            return self._error(web.HTTPUnauthorized, "Invalid SSO code")
+            return _error(web.HTTPUnauthorized, "Invalid SSO code")
         if (
             exchange.get("instance_id") != instance_id
             or exchange.get("user_uuid") != self.entry.unique_id
             or not isinstance(exchange.get("sso_ha_user_id"), str)
         ):
-            return self._error(web.HTTPUnauthorized, "Invalid SSO code")
+            return _error(web.HTTPUnauthorized, "Invalid SSO code")
 
         user_id = exchange["sso_ha_user_id"]
         self._session_user_id = user_id
         user = await self.hass.auth.async_get_user(user_id)
         if user is None or not user.is_active:
-            return self._error(web.HTTPForbidden, "HA user is unavailable")
+            return _error(web.HTTPForbidden, "HA user is unavailable")
         if error := async_user_not_allowed_do_auth(self.hass, user, request):
-            return self._error(web.HTTPForbidden, error)
+            return _error(web.HTTPForbidden, error)
 
         origin = self._origin(request)
         client_id = f"{origin}/"
@@ -110,7 +122,9 @@ class XthingsSsoManager:
             return urlunsplit(
                 (parsed.scheme, parsed.netloc, parsed.path, "", "")
             ).rstrip("/")
-        forwarded_proto = request.headers.get("X-Forwarded-Proto", "").split(",", 1)[0].strip()
+        forwarded_proto = (
+            request.headers.get("X-Forwarded-Proto", "").split(",", 1)[0].strip()
+        )
         scheme = forwarded_proto or request.scheme
         return f"{scheme}://{request.host}"
 
@@ -124,15 +138,6 @@ class XthingsSsoManager:
         for refresh_token in list(user.refresh_tokens.values()):
             if refresh_token.client_name == SSO_CLIENT_NAME:
                 self.hass.auth.async_remove_refresh_token(refresh_token)
-
-    @staticmethod
-    def _error(error_type: type[web.HTTPException], message: str) -> web.Response:
-        """Return a non-cacheable error response."""
-        return web.Response(
-            status=error_type.status_code,
-            text=message,
-            headers={"Cache-Control": "no-store"},
-        )
 
 
 class XthingsSsoView(HomeAssistantView):
@@ -148,5 +153,5 @@ class XthingsSsoView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         manager: XthingsSsoManager | None = hass.data.get(DOMAIN, {}).get("sso")
         if manager is None:
-            return XthingsSsoManager._error(web.HTTPServiceUnavailable, "SSO unavailable")
+            return _error(web.HTTPServiceUnavailable, "SSO unavailable")
         return await manager.async_create_bridge(request, request.query.get("code", ""))

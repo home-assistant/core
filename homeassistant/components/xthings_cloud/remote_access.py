@@ -1,7 +1,5 @@
 """Remote access management via FRP."""
 
-from __future__ import annotations
-
 import asyncio
 from pathlib import Path
 
@@ -80,7 +78,9 @@ def _ensure_http_proxy_config(hass: HomeAssistant) -> None:
     else:
         config["http"] = http_config
         config_path.write_text(
-            yaml.safe_dump(config, default_flow_style=False, allow_unicode=True, sort_keys=False),
+            yaml.safe_dump(
+                config, default_flow_style=False, allow_unicode=True, sort_keys=False
+            ),
             encoding="utf-8",
         )
 

@@ -1286,7 +1286,7 @@ ha-philipsjs==3.3.0
 ha-silabs-firmware-client==0.4.0
 
 # homeassistant.components.xthings_cloud
-ha-xthings-cloud==1.0.6
+ha-xthings-cloud==1.0.7
 
 # homeassistant.components.habitica
 habiticalib==0.4.8
