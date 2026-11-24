@@ -213,6 +213,10 @@ class Light(HomeAccessory):
     @callback
     def async_set_adaptive_color_temperature(self, mireds: int) -> None:
         """Apply a colour temperature computed from the transition curve."""
+        # Bulbs on the RGBWW/RGB paths do not report color_temp_kelvin, so the
+        # state update would leave the advertised characteristic stale.
+        self.char_color_temp.set_value(mireds)
+        self.char_color_temp.notify()
         self._set_chars({CHAR_COLOR_TEMPERATURE: mireds})
 
     def _set_chars(self, char_values: dict[str, Any]) -> None:

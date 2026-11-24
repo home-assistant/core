@@ -512,6 +512,8 @@ class AdaptiveLightingController:
         self.char_active_count.set_value(0)
         self.char_control = service.get_characteristic(CHAR_TRANSITION_CONTROL)
         self.char_control.setter_callback = self._handle_transition_control_write
+        # Reads rebuild the status so the elapsed time is not frozen at arm.
+        self.char_control.getter_callback = self._build_control_response
         self.char_control.set_value("")
 
     def _schedule(self, coro: Any) -> None:

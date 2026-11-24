@@ -29,6 +29,8 @@ from homeassistant.components.homekit.adaptive_lighting import (
     TAG_PARAM_START_TIME,
     TAG_PARAM_TRANSITION_ID,
     TAG_READ_CURRENT_TRANSITION,
+    TAG_RESPONSE_STATUS,
+    TAG_STATUS_TIME_SINCE_START,
     TAG_UPDATE_TRANSITION,
     _get_store,
     _transition_as_dict,
@@ -36,6 +38,7 @@ from homeassistant.components.homekit.adaptive_lighting import (
     interpolate,
     interpolate_point,
     parse_transition_control,
+    read_variable_uint_le,
     supported_transition_configuration,
     tlv_decode,
     tlv_encode,
@@ -210,6 +213,13 @@ async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
         hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
     )
     await hass.async_block_till_done()
+
+
+def _control_elapsed(value: str) -> int:
+    """Extract the elapsed-time field from a control characteristic read."""
+    response = tlv_decode(base64.b64decode(value))
+    status = dict(tlv_decode(response[0][1]))
+    return read_variable_uint_le(status[TAG_STATUS_TIME_SINCE_START])
 
 
 async def test_the_accessory_advertises_adaptive_lighting(
@@ -388,6 +398,40 @@ async def test_a_read_request_for_an_unknown_iid_is_ignored(
 
     assert controller.transition is not None
     assert response is None
+
+
+async def test_an_update_write_is_acknowledged(hass: HomeAssistant, hk_driver) -> None:
+    """A schedule write answers with the running transition's status."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    controller = acc.adaptive_lighting
+    assert controller is not None
+    response = controller.char_control.client_update_value(TRANSITION_CONTROL_WRITE)
+    await hass.async_block_till_done()
+
+    assert response is not None
+    answer = tlv_decode(base64.b64decode(response))
+    assert [tag for tag, _ in answer] == [TAG_UPDATE_TRANSITION]
+    status = tlv_decode(answer[0][1])
+    assert [tag for tag, _ in status] == [TAG_RESPONSE_STATUS]
+
+
+async def test_a_control_read_reports_fresh_elapsed_time(
+    hass: HomeAssistant, hk_driver, freezer: FrozenDateTimeFactory
+) -> None:
+    """Each read rebuilds the status instead of reporting the arm time."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    controller = acc.adaptive_lighting
+    assert controller is not None
+    first = _control_elapsed(controller.char_control.get_value())
+    freezer.tick(timedelta(seconds=30))
+    second = _control_elapsed(controller.char_control.get_value())
+
+    assert second - first == 30_000
 
 
 async def test_an_unparsable_write_is_ignored(
