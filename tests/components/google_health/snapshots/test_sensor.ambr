@@ -376,6 +376,63 @@
     'state': '18.5',
   })
 # ---
+# name: test_all_entities[sensor.google_health_body_mass_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_body_mass_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Body mass index',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Body mass index',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'body_mass_index',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_body_mass_index',
+    'unit_of_measurement': 'kg/m²',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_body_mass_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Body mass index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kg/m²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_body_mass_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.69',
+  })
+# ---
 # name: test_all_entities[sensor.google_health_calories_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -890,6 +947,122 @@
     'state': '5',
   })
 # ---
+# name: test_all_entities[sensor.google_health_heart_rate_variability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_heart_rate_variability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heart rate variability',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Heart rate variability',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heart_rate_variability',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_heart_rate_variability',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_heart_rate_variability-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Heart rate variability',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_heart_rate_variability',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.5',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_height-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_height',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Height',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Height',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'height',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_height',
+    'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
+  })
+# ---
+# name: test_all_entities[sensor.google_health_height-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Height',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.CENTIMETERS: 'cm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_height',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180.0',
+  })
+# ---
 # name: test_all_entities[sensor.google_health_light_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1067,6 +1240,63 @@
     'state': '30',
   })
 # ---
+# name: test_all_entities[sensor.google_health_oxygen_saturation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_oxygen_saturation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Oxygen saturation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Oxygen saturation',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oxygen_saturation',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_oxygen_saturation',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_oxygen_saturation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Oxygen saturation',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_oxygen_saturation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97.2',
+  })
+# ---
 # name: test_all_entities[sensor.google_health_peak_active_zone_minutes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1237,6 +1467,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.5',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_respiratory_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_respiratory_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Respiratory rate',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Respiratory rate',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'respiratory_rate',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_respiratory_rate',
+    'unit_of_measurement': 'br/min',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_respiratory_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health Respiratory rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'br/min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_respiratory_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.8',
   })
 # ---
 # name: test_all_entities[sensor.google_health_resting_heart_rate-entry]
@@ -2158,6 +2445,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_vo2_max-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('google_health', '01J0BC4QM2YBRP6H5G933CETT7')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.google_health_vo2_max',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VO2 max',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VO2 max',
+    'platform': 'google_health',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vo2_max',
+    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_vo2_max',
+    'unit_of_measurement': 'ml/min/kg',
+  })
+# ---
+# name: test_all_entities[sensor.google_health_vo2_max-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Google Health VO2 max',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ml/min/kg',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_health_vo2_max',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45.3',
   })
 # ---
 # name: test_all_entities[sensor.google_health_water_intake-entry]
