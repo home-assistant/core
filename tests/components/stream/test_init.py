@@ -1,8 +1,11 @@
 """Test stream init."""
 
+import asyncio
+import io
 import logging
+import threading
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import av
 import pytest
@@ -15,13 +18,16 @@ from homeassistant.components.stream import (
     async_check_stream_client_error,
     create_stream,
 )
-from homeassistant.components.stream.const import ATTR_PREFER_TCP, DOMAIN
+from homeassistant.components.stream.const import ATTR_PREFER_TCP, DOMAIN, HLS_PROVIDER
 from homeassistant.const import CONF_VERIFY_SSL, EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import dynamic_stream_settings
+
+TIMEOUT = 15
+STREAM_SOURCE = "rtsp://foobar"
 
 
 async def test_stream_not_setup(hass: HomeAssistant, h264_video) -> None:
@@ -235,3 +241,227 @@ async def test_verify_ssl_option(
     open_mock.assert_called_once_with(
         source, options={"tls_verify": tls_verify}, timeout=SOURCE_TIMEOUT
     )
+
+
+async def test_stop_during_pending_source_update(
+    hass: HomeAssistant, h264_video: io.BytesIO
+) -> None:
+    """Test that stop() is not lost when an update_source() restart is pending."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    worker_open = threading.Event()
+    worker_wake = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            worker_open.set()
+            worker_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+
+    with patch("av.open", new=blocking_open):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+
+            stream.update_source(f"{STREAM_SOURCE}-updated")
+            stop_task = hass.async_create_task(stream.stop())
+            await asyncio.sleep(0)
+            worker_wake.set()
+            await stop_task
+
+            assert opened_sources == [STREAM_SOURCE]
+        finally:
+            worker_wake.set()
+            await stream.stop()
+
+
+async def test_update_source_while_stopping(
+    hass: HomeAssistant, h264_video: io.BytesIO
+) -> None:
+    """Test that update_source() does not undo a stop() in progress."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    worker_open = threading.Event()
+    worker_wake = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            worker_open.set()
+            worker_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+
+    with patch("av.open", new=blocking_open):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+
+            stop_task = hass.async_create_task(stream.stop())
+            await asyncio.sleep(0)
+            stream.update_source(f"{STREAM_SOURCE}-updated")
+            worker_wake.set()
+            await stop_task
+
+            assert opened_sources == [STREAM_SOURCE]
+        finally:
+            worker_wake.set()
+            await stream.stop()
+
+
+async def test_update_source_during_retry_backoff(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test that update_source() wakes the worker during retry backoff."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    worker_open = threading.Event()
+    worker_wake = threading.Event()
+    in_backoff = asyncio.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            if len(opened_sources) == 1:
+                raise av.FFmpegError(1, "Simulated open failure")
+            worker_open.set()
+            worker_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+    stream.set_update_callback(lambda: None if stream.available else in_backoff.set())
+
+    with (
+        patch("av.open", new=blocking_open),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 3600),
+    ):
+        try:
+            await stream.start()
+            await asyncio.wait_for(in_backoff.wait(), TIMEOUT)
+            assert not stream.available
+
+            updated_source = f"{STREAM_SOURCE}-updated"
+            stream.update_source(updated_source)
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+            assert opened_sources == [STREAM_SOURCE, updated_source]
+        finally:
+            worker_wake.set()
+            await stream.stop()
+
+
+async def test_output_added_while_stopping_is_kept(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test that an output added while the stream stops survives the restart."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    worker_open = threading.Event()
+    worker_wake = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            worker_open.set()
+            worker_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    output = stream.add_provider(HLS_PROVIDER)
+
+    with patch("av.open", new=blocking_open):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+
+            # Last viewer leaves: stream stops while its worker is still busy
+            stop_task = hass.async_create_task(stream.remove_provider(output))
+            await asyncio.sleep(0)
+
+            # New viewer arrives before the old worker exits
+            worker_open.clear()
+            new_output = stream.add_provider(HLS_PROVIDER)
+            start_task = hass.async_create_task(stream.start())
+            worker_wake.set()
+            await stop_task
+            await start_task
+            await hass.async_block_till_done()
+
+            assert stream.outputs() == {HLS_PROVIDER: new_output}
+            assert stream.endpoint_url(HLS_PROVIDER).startswith("/api/hls/")
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+            assert opened_sources == [STREAM_SOURCE, STREAM_SOURCE]
+        finally:
+            worker_wake.set()
+            await stream.stop()
+
+
+async def test_start_after_cancelled_stop_waits_for_worker(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test that start() waits for a stopping worker after a cancelled stop()."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    worker_open = threading.Event()
+    first_wake = threading.Event()
+    second_wake = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            worker_open.set()
+            if len(opened_sources) == 1:
+                first_wake.wait()
+            else:
+                second_wake.wait()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+
+    with patch("av.open", new=blocking_open):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+
+            stop_task = hass.async_create_task(stream.stop())
+            await asyncio.sleep(0)
+            stop_task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await stop_task
+
+            # start() must not launch a second worker until the first exits
+            worker_open.clear()
+            stream.add_provider(HLS_PROVIDER)
+            start_task = hass.async_create_task(stream.start())
+            await asyncio.sleep(0)
+            assert not start_task.done()
+            assert opened_sources == [STREAM_SOURCE]
+
+            first_wake.set()
+            await start_task
+            assert await hass.async_add_executor_job(worker_open.wait, TIMEOUT)
+            assert opened_sources == [STREAM_SOURCE, STREAM_SOURCE]
+        finally:
+            first_wake.set()
+            second_wake.set()
+            await stream.stop()

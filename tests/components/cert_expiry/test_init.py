@@ -5,6 +5,7 @@ import socket
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -20,8 +21,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_unique_id(hass: HomeAssistant) -> None:

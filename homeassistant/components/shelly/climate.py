@@ -270,14 +270,15 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         )
 
 
-RPC_LINKEDGO_THERMOSTAT: dict[str, RpcClimateDescription] = {
-    "linkedgo_thermostat_climate": RpcClimateDescription(
-        key="number",
+RPC_LINKEDGO_THERMOSTAT: tuple[RpcClimateDescription, ...] = (
+    RpcClimateDescription(
+        key="linkedgo_thermostat_climate",
+        components=("number",),
         sub_key="value",
         role="target_temperature",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -675,6 +676,7 @@ class BlockSleepingClimate(CoordinatorEntity[ShellyBlockCoordinator], RestoreCli
                     "device_name": self.coordinator.name,
                     "ip_address": self.coordinator.device.ip_address,
                 },
+                config_entry_id=self.coordinator.config_entry.entry_id,
             )
         else:
             ir.async_delete_issue(
@@ -856,3 +858,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         await self.coordinator.device.blu_trv_set_target_temperature(
             self._id, kwargs[ATTR_TEMPERATURE]
         )
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Accept heat, the only HVAC mode supported by BLU TRV."""

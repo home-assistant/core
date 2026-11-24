@@ -5,7 +5,7 @@ import logging
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
-from pydaikin.exceptions import DaikinException
+from pydaikin.exceptions import DaikinException, DaikinUnsupportedError
 from pydaikin.factory import DaikinFactory
 
 from homeassistant.const import (
@@ -16,19 +16,32 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT_SEC
+from .const import DOMAIN, KEY_MAC, TIMEOUT_SEC
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Daikin integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
@@ -57,11 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> No
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
+    except DaikinUnsupportedError as err:
+        _LOGGER.debug("Unsupported Daikin device at %s: %s", host, err)
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device",
+        ) from err
     except DaikinException as err:
-        # pydaikin has no subclass hierarchy for transient vs permanent errors.
         # DaikinException during factory/init almost always means the device is not
         # yet ready (e.g. "Empty values." when the unit hasn't finished booting),
-        # so treat all factory-time DaikinExceptions as transient.
+        # so treat remaining factory-time DaikinExceptions as transient.
         _LOGGER.debug("DaikinException from %s: %s", host, err)
         raise ConfigEntryNotReady from err
 

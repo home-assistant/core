@@ -15,21 +15,24 @@ from psnawp_api.models import User
 from psnawp_api.models.group.group import Group
 from psnawp_api.models.trophies import TrophySet, TrophySummary
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -89,10 +92,10 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "henlo fren",
+            TargetKey.ENTITY_ID: entity_id,
+            NotifyServiceArgument.MESSAGE: "henlo fren",
         },
         blocking=True,
     )
@@ -135,10 +138,10 @@ async def test_send_message_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.testuser_group_publicuniversalfriend",
-                ATTR_MESSAGE: "henlo fren",
+                TargetKey.ENTITY_ID: "notify.testuser_group_publicuniversalfriend",
+                NotifyServiceArgument.MESSAGE: "henlo fren",
             },
             blocking=True,
         )
@@ -167,7 +170,15 @@ async def test_notify_skip_forbidden(
     state = hass.states.get("notify.testuser_group_publicuniversalfriend")
     assert state is None
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
+    )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"group_chat_forbidden_{config_entry.entry_id}"
     )
 

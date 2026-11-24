@@ -1,5 +1,4 @@
 """Utils for sql."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date
 from decimal import Decimal
@@ -15,17 +14,26 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
 
-from homeassistant.components.recorder import SupportedDialect, get_instance
+from homeassistant.components.recorder import (
+    SupportedDialect,
+    get_engine_db_url,
+    get_instance,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DB_URL_RE, DOMAIN
 from .models import SQLData
 
 _LOGGER = logging.getLogger(__name__)
+
+# One SQLData holds the shared session makers and the shutdown listener for
+# every config entry, so it is shared rather than owned by any one entry.
+DOMAIN_DATA: HassKey[SQLData] = HassKey(DOMAIN)
 
 _SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
 
@@ -48,7 +56,6 @@ def resolve_db_url(hass: HomeAssistant, db_url: str | None) -> str:
 def validate_sql_select(value: Template) -> Template:
     """Validate that value is a SQL SELECT query."""
     try:
-        assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
         raise probatio.Invalid(str(err)) from err
@@ -115,6 +122,7 @@ def validate_query(
     query_template: str | Template,
     uses_recorder_db: bool,
     unique_id: str | None = None,
+    config_entry_id: str | None = None,
 ) -> None:
     """Validate the query against common performance issues.
 
@@ -124,6 +132,7 @@ def validate_query(
         uses_recorder_db: A boolean indicating if the query is
             against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
+        config_entry_id: The config entry the issue belongs to, if any.
 
     Raises:
         ValueError: If the query uses `entity_id` without referencing `states_meta`.
@@ -157,6 +166,7 @@ def validate_query(
             hass,
             DOMAIN,
             f"entity_id_query_does_full_table_scan_{issue_key}",
+            config_entry_id=config_entry_id,
             translation_key="entity_id_query_does_full_table_scan",
             translation_placeholders={"query": redacted_query},
             is_fixable=False,
@@ -172,8 +182,7 @@ def validate_query(
 @callback
 def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     """Get or initialize domain data."""
-    if DOMAIN in hass.data:
-        sql_data: SQLData = hass.data[DOMAIN]
+    if (sql_data := hass.data.get(DOMAIN_DATA)) is not None:
         return sql_data
 
     session_makers_by_db_url: dict[str, scoped_session] = {}
@@ -194,8 +203,9 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
         EVENT_HOMEASSISTANT_STOP, _shutdown_db_engines
     )
 
-    sql_data = SQLData(cancel_shutdown, session_makers_by_db_url)
-    hass.data[DOMAIN] = sql_data
+    sql_data = hass.data[DOMAIN_DATA] = SQLData(
+        cancel_shutdown, session_makers_by_db_url
+    )
     return sql_data
 
 
@@ -206,7 +216,7 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
     """
     sess: Session | None = None
     try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
+        engine = sqlalchemy.create_engine(get_engine_db_url(db_url), future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         # Run a dummy query just to test the db_url
         sess = sessmaker()

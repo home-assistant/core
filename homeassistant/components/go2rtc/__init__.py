@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+import re
 from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
@@ -76,6 +77,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _FFMPEG = "ffmpeg"
 _AUTH = "auth"
+# Mirrors go2rtc 1.9.15+, which masks the userinfo of URLs in its API responses
+_USERINFO = re.compile(r"://[A-Za-z0-9\-._~!$&'()*+,;=%:]+@")
 
 
 def _validate_auth(config: dict) -> dict:
@@ -225,6 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> No
                 hass,
                 DOMAIN,
                 "recommended_version",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -249,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> No
             hass,
             DOMAIN,
             "unsupported_version",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -307,6 +312,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._rest_client = rest_client
         self._sessions: dict[str, _SessionInfo] = {}
         self._supported_schemes: set[str] = set()
+        self._added_stream_sources: dict[str, str] = {}
 
     @property
     @override
@@ -337,6 +343,16 @@ class WebRTCProvider(CameraWebRTCProvider):
             await self._update_stream_source(camera)
         except HomeAssistantError as err:
             send_message(WebRTCError("go2rtc_webrtc_offer_failed", str(err)))
+            return
+        except Go2RtcClientError:
+            # Not logged, as the client error can contain the stream source
+            # with its credentials
+            send_message(
+                WebRTCError(
+                    "go2rtc_webrtc_offer_failed",
+                    "Unable to update the stream in go2rtc",
+                )
+            )
             return
 
         ws_client = Go2RtcWsClient(
@@ -391,10 +407,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
-        return await self._rest_client.get_jpeg_snapshot(
-            get_camera_identifier(camera), width, height
-        )
+        try:
+            await self._update_stream_source(camera)
+            return await self._rest_client.get_jpeg_snapshot(
+                get_camera_identifier(camera), width, height
+            )
+        except Go2RtcClientError as err:
+            raise HomeAssistantError("Unable to get image from go2rtc") from err
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
@@ -442,7 +461,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         identifier = get_camera_identifier(camera)
 
         if (stream := streams.get(identifier)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
+            self._is_added_stream_source(identifier, stream_source, producer.url)
+            for producer in stream.producers
         ):
             await self._rest_client.streams.add(
                 identifier,
@@ -455,6 +475,20 @@ class WebRTCProvider(CameraWebRTCProvider):
                     f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
                 ],
             )
+            self._added_stream_sources[identifier] = stream_source
+
+    def _is_added_stream_source(
+        self, identifier: str, stream_source: str, producer_url: str
+    ) -> bool:
+        if producer_url == stream_source:
+            return True
+
+        # A masked URL hides credential changes, so it only counts when it
+        # belongs to the source we added last
+        if self._added_stream_sources.get(identifier) != stream_source:
+            return False
+
+        return producer_url == _USERINFO.sub("://***@", stream_source)
 
     async def _update_preload_stream(self, camera: Camera) -> None:
         identifier = get_camera_identifier(camera)
@@ -504,6 +538,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Will be called when the provider is unregistered for a camera."""
         await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
+        self._added_stream_sources.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 

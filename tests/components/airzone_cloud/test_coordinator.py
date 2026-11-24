@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aioairzone_cloud.exceptions import AirzoneCloudError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.components.airzone_cloud.coordinator import SCAN_INTERVAL
@@ -18,8 +19,6 @@ from .util import (
     mock_get_device_status,
     mock_get_webserver,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:

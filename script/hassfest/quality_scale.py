@@ -1,7 +1,9 @@
 """Validate integration quality scale files."""
 
 from dataclasses import dataclass
+import re
 
+from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
 from probatio.humanize import humanize_error
 
@@ -9,7 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
     config_flow,
@@ -103,13 +104,12 @@ VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
 
 RULE_URL = (
     "Please check the documentation at "
-    "https://developers.home-assistant.io/docs/core/"
-    "integration-quality-scale/rules/{rule_name}/"
+    "https://contributors.home-assistant.io/core/"
+    "quality-scale/{rule_name}/"
 )
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -190,14 +190,12 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
@@ -337,6 +335,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -399,13 +398,11 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_sheets",
     "google_translate",
     "google_travel_time",
-    "google_wifi",
     "govee_ble",
     "govee_light_local",
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -425,7 +422,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -472,7 +468,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "joaoapps_join",
     "juicenet",
@@ -492,7 +487,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kitchen_sink",
     "kiwi",
     "kmtronic",
-    "kodi",
     "konnected",
     "kostal_plenticore",
     "kraken",
@@ -564,7 +558,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",
@@ -601,7 +594,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
@@ -734,7 +726,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "recswitch",
     "reddit",
     "refoss",
-    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
@@ -796,7 +787,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "simulated",
     "sinch",
     "sisyphus",
-    "sky_hub",
     "sky_remote",
     "skybeacon",
     "skybell",
@@ -808,7 +798,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smappee",
     "smart_meter_texas",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -852,7 +841,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "synology_chat",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
@@ -890,17 +878,13 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tomorrowio",
     "toon",
     "torque",
-    "touchline",
     "touchline_sl",
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -926,7 +910,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "utility_meter",
     "uvc",
     "v2c",
-    "vallox",
     "vasttrafik",
     "venstar",
     "vera",
@@ -1005,7 +988,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -1091,14 +1073,12 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
@@ -1241,10 +1221,10 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "file",
     "filesize",
     "filter",
-    "fitbit",
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -1316,7 +1296,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -1337,7 +1316,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -1389,7 +1367,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "jewish_calendar",
     "joaoapps_join",
@@ -1484,7 +1461,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",
@@ -1501,7 +1477,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "moon",
     "mopeka",
@@ -1522,7 +1497,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
@@ -1572,7 +1546,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "oncue",
     "ondilo_ico",
     "onvif",
-    "open_meteo",
     "openalpr_cloud",
     "openerz",
     "openexchangerates",
@@ -1598,7 +1571,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "p1_monitor",
     "panasonic_bluray",
     "panasonic_viera",
-    "palazzetti",
     "panel_iframe",
     "peco",
     "pencom",
@@ -1663,7 +1635,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "recswitch",
     "reddit",
     "refoss",
-    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
@@ -1740,7 +1711,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "smart_meter_texas",
     "smarttub",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -1790,7 +1760,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "synology_dsm",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
@@ -1830,17 +1799,13 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "toon",
     "totalconnect",
     "torque",
-    "touchline",
     "touchline_sl",
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -1958,6 +1923,7 @@ NO_QUALITY_SCALE = [
     "config",
     "configurator",
     "counter",
+    "debug_console",
     "default_config",
     "device_automation",
     "device_tracker",
@@ -2021,12 +1987,24 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "vibration",
+    "voice_support",
     "web_rtc",
     "webhook",
     "websocket_api",
     "window",
     "zone",
 ]
+
+# Matches references to a specific pull request, like a GitHub pull request URL,
+# "owner/repo#123", "PR #123", "PR 123" or "#12345". A comment that points to a
+# pull request goes stale as soon as that pull request merges.
+PULL_REQUEST_REFERENCE = re.compile(
+    r"github\.com/[\w.-]+/[\w.-]+/pull/\d+"
+    r"|[\w.-]+/[\w.-]+#\d+"
+    r"|\bPR\s*#?\d+"
+    r"|(?<![\w&/])#\d{3,}\b",
+    re.IGNORECASE,
+)
 
 SCHEMA = probatio.Schema(
     {
@@ -2158,6 +2136,18 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
+        if (
+            isinstance(rule_value, dict)
+            and isinstance(comment := rule_value.get("comment"), str)
+            and (match := PULL_REQUEST_REFERENCE.search(comment))
+        ):
+            integration.add_error(
+                "quality_scale",
+                f"[{rule_name}] The comment refers to a pull request"
+                f" ({match.group(0)}). Describe what is missing or why"
+                " the rule is exempt instead, and update the status in"
+                " the pull request that completes the rule.",
+            )
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue

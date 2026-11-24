@@ -3,22 +3,16 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import camera
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +39,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     for entity_states in states.values():
         for state in entity_states:
             assert "access_token" not in state.attributes
-            assert ATTR_ENTITY_PICTURE not in state.attributes
-            assert ATTR_ATTRIBUTION not in state.attributes
-            assert ATTR_SUPPORTED_FEATURES not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+            assert EntityStateAttribute.ENTITY_PICTURE not in state.attributes
+            assert EntityStateAttribute.ATTRIBUTION not in state.attributes
+            assert EntityStateAttribute.SUPPORTED_FEATURES not in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes

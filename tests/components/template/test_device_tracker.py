@@ -5,6 +5,8 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_setup_component
+from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker, template, zone
@@ -36,9 +38,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry, async_setup_component
-from tests.conftest import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_LATITUDE_ENTITY_ID = "sensor.test_latitude"
@@ -633,6 +632,36 @@ async def test_flow_preview(
     assert state["state"] == STATE_NOT_HOME
     assert state["attributes"]["latitude"] == 10.0
     assert state["attributes"]["longitude"] == 40.0
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(
+            {
+                "latitude": "{{ state_attr('zone.home', 'latitude') }}",
+                "longitude": "{{ state_attr('zone.home', 'longitude') }}",
+            },
+            id="coordinates",
+        ),
+        pytest.param({"in_zones": "{{ ['zone.home'] }}"}, id="in_zones"),
+    ],
+)
+async def test_flow_preview_home_zone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config: ConfigType,
+) -> None:
+    """Preview calculates the home zone from coordinates or explicit zones."""
+    assert await async_setup_component(hass, "zone", {})
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        device_tracker.DOMAIN,
+        {"name": "My template", **config},
+    )
+    assert state["state"] == STATE_HOME
+    assert state["attributes"]["in_zones"] == ["zone.home"]
 
 
 @pytest.mark.parametrize(

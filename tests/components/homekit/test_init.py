@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -22,7 +23,6 @@ from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 

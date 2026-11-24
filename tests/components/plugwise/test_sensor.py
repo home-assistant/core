@@ -1,14 +1,13 @@
 """Tests for the Plugwise Sensor integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 @pytest.mark.usefixtures("mock_smile_adam_heat_cool")
@@ -24,6 +23,32 @@ async def test_adam_sensor_snapshot(
 ) -> None:
     """Test Adam sensor snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.usefixtures("mock_smile_adam_jip")
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_jip_heater_sensor_snapshot(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam Jip OpenTherm heater sensor snapshot."""
+    # Only the heater: zones and thermostats share names, so their entity_ids
+    # depend on the order in which the devices are added.
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "e4684553153b44afbef2200885f379dc"), setup_platform.entry_id
+    )
+    assert device
+    entries = er.async_entries_for_device(entity_registry, device.id)
+    assert entries
+    for entry in sorted(entries, key=lambda entry: entry.entity_id):
+        assert entry == snapshot(name=f"{entry.entity_id}-entry")
+        assert hass.states.get(entry.entity_id) == snapshot(
+            name=f"{entry.entity_id}-state"
+        )
 
 
 @pytest.mark.usefixtures("mock_smile_adam_jip")
@@ -93,6 +118,35 @@ async def test_anna_sensor_snapshot(
 ) -> None:
     """Test Anna sensor snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.usefixtures("mock_smile_anna")
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.parametrize(
+    "key",
+    [
+        "dhw_flow",
+        "oem_fault_code",
+        "fault_flags",
+    ],
+)
+async def test_heater_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    key: str,
+) -> None:
+    """Test the optional heater sensors are created but disabled by default."""
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"1cbf783bb11e4a7c8a6843dee3a86927-{key}"
+    )
+    assert entity_id
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.usefixtures("mock_smile_anna_p1")

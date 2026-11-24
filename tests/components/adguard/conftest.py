@@ -23,6 +23,7 @@ from adguardhome.toggle import Toggle
 from adguardhome.update import AdGuardHomeUpdate
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.adguard import DOMAIN, PLATFORMS
 from homeassistant.const import (
@@ -35,8 +36,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

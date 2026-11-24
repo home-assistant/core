@@ -5,6 +5,14 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_integration,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -31,9 +39,6 @@ from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
-
-from tests.common import MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
@@ -150,6 +155,24 @@ async def test_custom_agent(
     conversation.async_unset_agent(
         hass, hass.config_entries.async_get_entry(mock_conversation_agent.agent_id)
     )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_set_agent_not_entity_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an agent that is not an entity is deprecated."""
+    mock_integration(hass, MockModule("legacy_agent"))
+    entry = MockConfigEntry(domain="legacy_agent")
+    entry.add_to_hass(hass)
+
+    conversation.async_set_agent(hass, entry, MockAgent(entry.entry_id, ["en"]))
+
+    assert (
+        "Detected that integration 'legacy_agent' sets a conversation agent that "
+        "is not a conversation entity. Convert the conversation platform to use "
+        "ConversationEntity. This will stop working in Home Assistant 2027.6.0"
+    ) in caplog.text
 
 
 @pytest.mark.usefixtures("init_components")
@@ -307,7 +330,7 @@ async def test_async_handle_sentence_triggers(
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         actual_response = await async_handle_sentence_triggers(
@@ -349,7 +372,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         result = await async_handle_intents(hass, user_input, chat_log)
@@ -369,7 +392,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input2) as chat_log,
     ):
         result = await async_handle_intents(hass, user_input2, chat_log)

@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.registers import MAX_RELAY_GPIO
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.neopool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -17,8 +18,6 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA, MOCK_SERIAL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
@@ -149,13 +148,14 @@ async def test_corrupt_gpio_creates_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A GPIO register outside 0..MAX_RELAY_GPIO opens a corrupted_gpio issue."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     bad_data = dict(MOCK_POOL_DATA)
     bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
 
     await setup_integration(hass, mock_config_entry)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.ERROR
 
@@ -167,8 +167,9 @@ async def test_clean_gpio_does_not_create_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A clean read does not open a corrupted_gpio issue."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     await setup_integration(hass, mock_config_entry)
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
@@ -178,20 +179,21 @@ async def test_corrupt_gpio_clears_stale_issue_from_previous_session(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A stale issue from a previous session clears on the first clean poll."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "corrupted_gpio",
+        issue_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="corrupted_gpio",
         translation_placeholders={"details": "- stale"},
     )
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await setup_integration(hass, mock_config_entry)
 
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_corrupt_gpio_logs_error_only_on_state_change(
@@ -203,6 +205,7 @@ async def test_corrupt_gpio_logs_error_only_on_state_change(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """The ERROR log fires on entering corruption and clears on healing."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     bad_data = dict(MOCK_POOL_DATA)
     bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
@@ -220,7 +223,7 @@ async def test_corrupt_gpio_logs_error_only_on_state_change(
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_corrupt_gpio_updates_issue_on_value_change(
@@ -231,12 +234,13 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The repair issue details refresh when a corrupted register value changes."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     first = dict(MOCK_POOL_DATA)
     first["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=first)
 
     await setup_integration(hass, mock_config_entry)
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert str(MAX_RELAY_GPIO + 1) in issue.translation_placeholders["details"]
@@ -248,7 +252,7 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert str(MAX_RELAY_GPIO + 2) in issue.translation_placeholders["details"]

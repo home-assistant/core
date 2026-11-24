@@ -8,12 +8,11 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import register_auth_provider
 
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.core import HomeAssistant
 from homeassistant.scripts import auth as script_auth
-
-from tests.common import register_auth_provider
 
 
 @pytest.fixture(autouse=True)

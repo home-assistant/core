@@ -7,26 +7,23 @@ from nrgkick_api import (
     NRGkickAuthenticationError,
     NRGkickCommandRejectedError,
     NRGkickConnectionError,
+    NRGkickHTTPError,
     NRGkickInvalidResponseError,
+    NRGkickTimeoutError,
+    NRGkickUnreachableError,
 )
 from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -64,8 +61,8 @@ async def test_charge_switch_service_calls_update_state(
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -78,8 +75,8 @@ async def test_charge_switch_service_calls_update_state(
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -109,8 +106,8 @@ async def test_charge_switch_rejected_by_device(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -130,16 +127,14 @@ async def test_charge_switch_rejected_by_device(
         (NRGkickAuthenticationError("Unauthorized"), "authentication_error", None),
         (NRGkickAPIDisabledError("API disabled"), "json_api_disabled", None),
         (NRGkickInvalidResponseError("Bad payload"), "invalid_response", None),
+        (NRGkickTimeoutError("Timed out"), "timeout", None),
+        (NRGkickUnreachableError("Connection refused"), "unreachable", None),
         (
-            NRGkickConnectionError("Connection refused"),
-            "communication_error",
-            {"error": "Connection refused"},
+            NRGkickHTTPError("Internal Server Error", status=500),
+            "http_error",
+            {"status": "500"},
         ),
-        (
-            TimeoutError("Request timed out"),
-            "communication_error",
-            {"error": "Request timed out"},
-        ),
+        (NRGkickConnectionError("Server disconnected"), "communication_error", None),
     ],
 )
 async def test_charge_switch_api_errors(
@@ -158,8 +153,8 @@ async def test_charge_switch_api_errors(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.nrgkick_test_charging_enabled"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.nrgkick_test_charging_enabled"},
             blocking=True,
         )
 

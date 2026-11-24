@@ -9,12 +9,18 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_LANGUAGE,
+    CONF_NAME,
+    CommonServiceArgument,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_LANGUAGE, ATTR_MEDIA_PLAYER_ENTITY_ID, ATTR_MESSAGE, DOMAIN
+from .const import DOMAIN, TextToSpeechService, TextToSpeechServiceArgument
 
 CONF_MEDIA_PLAYER = "media_player"
 CONF_TTS_SERVICE = "tts_service"
@@ -34,7 +40,7 @@ PLATFORM_SCHEMA = probatio.All(
                 CONF_ENTITY_ID, ENTITY_LEGACY_PROVIDER_GROUP
             ): cv.entities_domain(DOMAIN),
             probatio.Required(CONF_MEDIA_PLAYER): cv.entity_id,
-            probatio.Optional(ATTR_LANGUAGE): cv.string,
+            probatio.Optional(CONF_LANGUAGE): cv.string,
         }
     ),
 )
@@ -62,27 +68,29 @@ class TTSNotificationService(BaseNotificationService):
         else:
             _, self._tts_service = split_entity_id(config[CONF_TTS_SERVICE])
         self._media_player = config[CONF_MEDIA_PLAYER]
-        self._language = config.get(ATTR_LANGUAGE)
+        self._language = config.get(CONF_LANGUAGE)
 
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call TTS service to speak the notification."""
         _LOGGER.debug("%s '%s' on %s", self._tts_service, message, self._media_player)
 
-        data = {
-            ATTR_MESSAGE: message,
+        data: dict[str, Any] = {
+            TextToSpeechServiceArgument.MESSAGE: message,
         }
         service_name = ""
 
         if self._tts_service:
-            data[ATTR_ENTITY_ID] = self._media_player
+            data[CommonServiceArgument.ENTITY_ID] = self._media_player
             service_name = self._tts_service
         elif self._target:
-            data[ATTR_ENTITY_ID] = self._target
-            data[ATTR_MEDIA_PLAYER_ENTITY_ID] = self._media_player
-            service_name = "speak"
+            data[TargetKey.ENTITY_ID] = self._target
+            data[TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID] = (
+                self._media_player
+            )
+            service_name = TextToSpeechService.SPEAK
         if self._language:
-            data[ATTR_LANGUAGE] = self._language
+            data[TextToSpeechServiceArgument.LANGUAGE] = self._language
 
         await self.hass.services.async_call(
             DOMAIN,

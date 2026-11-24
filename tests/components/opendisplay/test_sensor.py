@@ -11,6 +11,16 @@ from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 from opendisplay import voltage_to_percent
 from opendisplay.models.enums import CapacityEstimator, PowerMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
@@ -20,13 +30,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import DEVICE_CONFIG, TEST_ADDRESS, VALID_SERVICE_INFO, make_service_info
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -83,7 +86,7 @@ async def test_sensor_entities_battery_device(
         power_mode=PowerMode.BATTERY,
         capacity_estimator=1,  # LI_ION
     )
-    mock_opendisplay_device.config = device_config
+    mock_opendisplay_device.config.cached = device_config
 
     await setup_entry()
 
@@ -115,7 +118,7 @@ async def test_no_sensors_for_non_flex_devices(
     setup_entry: Callable[[], Awaitable[None]],
 ) -> None:
     """Test that no sensor entities are created for non-Flex devices."""
-    mock_opendisplay_device.is_flex = False
+    mock_opendisplay_device.legacy.is_flex = False
     await setup_entry()
 
     assert entity_registry.async_get("sensor.opendisplay_1234_temperature") is None
@@ -193,7 +196,7 @@ async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
         power_mode=PowerMode.BATTERY,
         capacity_estimator=0,  # not configured — defaults to LI_ION in sensor.py
     )
-    mock_opendisplay_device.config = device_config
+    mock_opendisplay_device.config.cached = device_config
 
     await setup_entry()
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)

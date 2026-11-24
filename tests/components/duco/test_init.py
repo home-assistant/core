@@ -26,6 +26,7 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -40,8 +41,6 @@ from .conftest import (
     UNSUPPORTED_BOARD_INFOS,
     node_configs_from_nodes,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _get_duco_node_device(

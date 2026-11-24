@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
-from tests.components.bluetooth import generate_ble_device
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 BLUECHARM_BLE_DEVICE = generate_ble_device(
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",

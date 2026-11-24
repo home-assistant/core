@@ -87,7 +87,7 @@
     "step": {
       "advanced": {
         "data": {
-          "api_key": "API token",
+          "api_key": "[%key:common::config_flow::data::api_token%]",
           "api_user": "User ID",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -118,7 +118,7 @@
         "sections": {
           "reauth_api_key": {
             "data": {
-              "api_key": "[%key:component::habitica::config::step::advanced::data::api_key%]"
+              "api_key": "[%key:common::config_flow::data::api_token%]"
             },
             "data_description": {
               "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
@@ -143,7 +143,7 @@
       },
       "reconfigure": {
         "data": {
-          "api_key": "[%key:component::habitica::config::step::advanced::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"

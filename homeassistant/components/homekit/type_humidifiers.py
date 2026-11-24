@@ -7,20 +7,18 @@ from pyhap.const import CATEGORY_HUMIDIFIER
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
-    SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     EntityStateAttribute,
 )
@@ -254,7 +252,9 @@ class HumidifierDehumidifier(HomeAccessory):
         if CHAR_ACTIVE in char_values:
             self.async_call_service(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
+                HumidifierService.TURN_ON
+                if char_values[CHAR_ACTIVE]
+                else HumidifierService.TURN_OFF,
                 {ATTR_ENTITY_ID: self.entity_id},
                 f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
             )
@@ -274,8 +274,11 @@ class HumidifierDehumidifier(HomeAccessory):
 
             self.async_call_service(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_SET_HUMIDITY,
-                {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
+                HumidifierService.SET_HUMIDITY,
+                {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    HumidifierServiceArgument.HUMIDITY: humidity,
+                },
                 (
                     f"{self._target_humidity_char_name} to "
                     f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}"

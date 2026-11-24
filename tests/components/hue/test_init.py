@@ -4,6 +4,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohue.v2 as aiohue_v2
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_persistent_notifications,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import hue
@@ -15,8 +19,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
-
-from tests.common import MockConfigEntry, async_get_persistent_notifications
 
 # The `Wall switch with 2 controls` device and its zigbee mac
 WALL_SWITCH_ID = "3ff06175-29e8-44a8-8fe7-af591b0025da"

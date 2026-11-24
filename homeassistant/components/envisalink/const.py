@@ -40,7 +40,3 @@ SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
 SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
 SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
 SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
-
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
-ATTR_PARTITION = "partition"

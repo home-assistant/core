@@ -45,7 +45,7 @@ def xiaomi_aqara_fixture():
             return_value=mock_gateway_discovery.gateways[TEST_HOST],
         ),
         patch(
-            "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
+            "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=None
         ),
     ):
         yield

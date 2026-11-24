@@ -5,6 +5,12 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from renault_api.exceptions import NotAuthenticatedException
 
 from homeassistant.components.renault.const import DOMAIN, RenaultConfigurationKeys
@@ -20,10 +26,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import FORBIDDEN_EXCEPTION, MOCK_ACCOUNT_ID, MOCK_CONFIG, OTHER_ACCOUNT_ID
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 ISSUE_ID = "account_not_found_123456"
 

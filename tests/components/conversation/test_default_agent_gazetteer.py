@@ -9,6 +9,11 @@ from unittest.mock import patch
 
 from gazetteer_matcher import GazetteerMatcher, TargetReference
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent, gazetteer
@@ -39,8 +44,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import expose_entity
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"
@@ -211,7 +214,7 @@ async def test_not_used_when_prefer_local_intents(hass: HomeAssistant) -> None:
         agent_id=conversation.HOME_ASSISTANT_AGENT,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         assert await agent.async_handle_intents(user_input, chat_log) is None

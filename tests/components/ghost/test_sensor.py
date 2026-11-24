@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 from aioghost.exceptions import GhostError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -14,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import NEWSLETTERS_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

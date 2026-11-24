@@ -9,7 +9,6 @@ import probatio
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -20,6 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
+from . import NessAlarmConfigEntry
 from .const import (
     CONF_INFER_ARMING_STATE,
     CONF_SHOW_HOME_MODE,
@@ -70,7 +70,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NessAlarmConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -81,7 +81,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NessAlarmConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return NessAlarmOptionsFlowHandler()
@@ -224,6 +224,6 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 subconfig_entry.data,
             ),
             description_placeholders={
-                CONF_ZONE_NUMBER: str(subconfig_entry.data[CONF_ZONE_NUMBER])
+                "zone_number": str(subconfig_entry.data[CONF_ZONE_NUMBER])
             },
         )

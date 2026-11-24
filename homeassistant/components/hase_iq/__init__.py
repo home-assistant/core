@@ -8,7 +8,7 @@ from .coordinator import HaseIQConfigEntry, HaseIQCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HaseIQConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HaseIQConfigEntry) -> None:
     """Set up Hase iQ from a config entry."""
     coordinator = HaseIQCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -17,9 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HaseIQConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HaseIQConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HaseIQConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

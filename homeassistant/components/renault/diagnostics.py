@@ -11,6 +11,7 @@ from .const import RenaultConfigurationKeys
 from .renault_vehicle import RenaultVehicleProxy
 
 TO_REDACT = {
+    RenaultConfigurationKeys.DEVICE_IDS,
     RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID,
     RenaultConfigurationKeys.LOGIN_TOKEN,
     RenaultConfigurationKeys.PASSWORD,

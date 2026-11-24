@@ -14,7 +14,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MarantzRS232ConfigEntry
-) -> bool:
+) -> None:
     """Set up Marantz RS-232 from a config entry."""
     port = entry.data[CONF_DEVICE]
     receiver = MarantzV2007Receiver(port)
@@ -56,11 +56,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MarantzRS232ConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

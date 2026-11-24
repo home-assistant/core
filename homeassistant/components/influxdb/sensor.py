@@ -1,6 +1,6 @@
 """InfluxDB component which allows you to get data from an Influx database."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Final, override
 
@@ -66,7 +66,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
+SCAN_INTERVAL: Final = dt.timedelta(seconds=60)
 
 
 def _merge_connection_config_into_query(conf, query):
@@ -304,13 +304,15 @@ class InfluxFluxSensorData:
             self.value = None
             return
 
-        if not tables:
+        # A query can return tables without any records, so count the records
+        records = [record for table in tables or () for record in table.records]
+        if not records:
             _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.full_query)
             self.value = None
         else:
-            if len(tables) > 1 or len(tables[0].records) > 1:
+            if len(records) > 1:
                 _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.full_query)
-            self.value = tables[0].records[0].values[INFLUX_CONF_VALUE_V2]
+            self.value = records[0].values[INFLUX_CONF_VALUE_V2]
 
 
 class InfluxQLSensorData:

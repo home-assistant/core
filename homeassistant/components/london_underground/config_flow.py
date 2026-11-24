@@ -8,7 +8,6 @@ from london_tube_status import TubeData
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -16,9 +15,9 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
+from .coordinator import LondonUndergroundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        _: ConfigEntry,
+        _: LondonUndergroundConfigEntry,
     ) -> LondonUndergroundOptionsFlow:
         """Get the options flow for this handler."""
         return LondonUndergroundOptionsFlow()
@@ -80,40 +79,6 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        session = async_get_clientsession(self.hass)
-        data = TubeData(session)
-        try:
-            async with asyncio.timeout(10):
-                await data.update()
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error trying to connect"
-                " before importing config,"
-                " aborting import "
-            )
-            return self.async_abort(reason="cannot_connect")
-
-        _LOGGER.warning(
-            "Importing London Underground config from configuration.yaml: %s",
-            import_data,
-        )
-        # Extract lines from the sensor platform config
-        lines = import_data.get(CONF_LINE, DEFAULT_LINES)
-        if "London Overground" in lines:
-            _LOGGER.warning(
-                "London Overground was removed from the"
-                " configuration as the line has been"
-                " divided and renamed"
-            )
-            lines.remove("London Overground")
-        return self.async_create_entry(
-            title="London Underground",
-            data={},
-            options={CONF_LINE: import_data.get(CONF_LINE, DEFAULT_LINES)},
         )
 
 

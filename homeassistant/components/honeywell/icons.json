@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_hold_until": {
+      "service": "mdi:clock-end"
+    }
+  }
+}

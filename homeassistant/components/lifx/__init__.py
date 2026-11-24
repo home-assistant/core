@@ -89,6 +89,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> No
             hass,
             DOMAIN,
             invalid_serial_issue_id(entry.entry_id),
+            config_entry_id=entry.entry_id,
             data={"entry_id": entry.entry_id},
             is_fixable=True,
             severity=ir.IssueSeverity.ERROR,
@@ -158,8 +159,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> Non
         # is the usual reason an entry is being unloaded in the first place
         LOGGER.debug("Could not stop the effects running on %s: %s", entry.title, err)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
-    """Remove the repair issue raised for an entry that could not be migrated."""
-    ir.async_delete_issue(hass, DOMAIN, invalid_serial_issue_id(entry.entry_id))

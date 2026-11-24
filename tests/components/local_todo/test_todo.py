@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.local_todo.store import LocalTodoListStore
@@ -22,15 +24,12 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import STORAGE_KEY, TEST_ENTITY, TODO_NAME
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
 type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
@@ -113,7 +112,7 @@ async def test_add_item_write_error(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "replace batteries"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -163,7 +162,7 @@ async def test_add_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "replace batteries", **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -203,7 +202,7 @@ async def test_remove_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "replace batteries", **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -223,7 +222,7 @@ async def test_remove_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: [items[0]["uid"]]},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -246,7 +245,7 @@ async def test_bulk_remove(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: f"soda #{i}"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -262,7 +261,7 @@ async def test_bulk_remove(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: uids},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -324,7 +323,7 @@ async def test_update_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -347,7 +346,7 @@ async def test_update_item(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: item["uid"], **item_data},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -454,7 +453,7 @@ async def test_update_existing_field(
             ATTR_DESCRIPTION: "Additional detail",
             ATTR_DUE_DATE: "2024-01-01",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -473,7 +472,7 @@ async def test_update_existing_field(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: item["uid"], **item_data},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -499,7 +498,7 @@ async def test_rename(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -519,7 +518,7 @@ async def test_rename(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: item["uid"], ATTR_RENAME: "water"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -576,7 +575,7 @@ async def test_move_item(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: f"item {i}"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -607,7 +606,7 @@ async def test_move_item_unknown(
     resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 async def test_move_item_previous_unknown(
@@ -622,7 +621,7 @@ async def test_move_item_previous_unknown(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "item 1"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     items = await ws_get_items()
@@ -631,7 +630,7 @@ async def test_move_item_previous_unknown(
     resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 @pytest.mark.parametrize(
@@ -785,7 +784,7 @@ async def test_susbcribe(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -818,7 +817,7 @@ async def test_susbcribe(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: uid, ATTR_RENAME: "milk"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -846,7 +845,7 @@ async def test_reset_item_via_update(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -870,7 +869,7 @@ async def test_reset_item_via_update(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: item_uid, ATTR_STATUS: "completed"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -898,7 +897,7 @@ async def test_reset_item_via_update(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: item_uid, ATTR_STATUS: "needs_action"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -1076,7 +1075,7 @@ async def test_description_newlines_preserved(
             ATTR_ITEM: "Item 1",
             ATTR_DESCRIPTION: description,
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -1091,7 +1090,7 @@ async def test_description_newlines_preserved(
             ATTR_ITEM: items[0]["uid"],
             ATTR_DESCRIPTION: f"Updated\n{description}",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -1122,7 +1121,7 @@ async def test_crlf_description_preserved_on_reload(
             ATTR_ITEM: "Item CRLF",
             ATTR_DESCRIPTION: "Line 1\r\nLine 2\r\n\r\nLine 3",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

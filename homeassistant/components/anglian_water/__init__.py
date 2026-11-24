@@ -49,7 +49,7 @@ async def async_setup_entry(
     try:
         await auth.send_refresh_request()
     except ConsentRequiredError as err:
-        async_create_consent_required_issue(hass, entry.data[CONF_ACCOUNT_NUMBER])
+        async_create_consent_required_issue(hass, entry)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="consent_required",

@@ -4,6 +4,7 @@ import copy
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -17,7 +18,6 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -26,27 +26,27 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    CommonServiceArgument,
     Platform,
+    TargetKey,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
@@ -56,8 +56,6 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -107,8 +105,8 @@ async def test_thermostat_v2(
     # Check that turning the device on is a no-op because it is already on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -119,10 +117,10 @@ async def test_thermostat_v2(
     # Test setting hvac mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -143,11 +141,11 @@ async def test_thermostat_v2(
     # Test setting temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.COOL,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            ClimateServiceArgument.TEMPERATURE: 25,
         },
         blocking=True,
     )
@@ -232,11 +230,11 @@ async def test_thermostat_v2(
     # Test setting temperature with heat_cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 25,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 25,
         },
         blocking=True,
     )
@@ -270,10 +268,10 @@ async def test_thermostat_v2(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_HVAC_MODE: HVACMode.DRY,
+                TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -283,10 +281,10 @@ async def test_thermostat_v2(
     # Test setting fan mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_FAN_MODE: "Low",
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.FAN_MODE: "Low",
         },
         blocking=True,
     )
@@ -307,8 +305,8 @@ async def test_thermostat_v2(
     # Test turning device off then on to see if the previous state is retained
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -348,8 +346,8 @@ async def test_thermostat_v2(
     # Test turning device on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -370,10 +368,10 @@ async def test_thermostat_v2(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_FAN_MODE: "fake value",
+                TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ClimateServiceArgument.FAN_MODE: "fake value",
             },
             blocking=True,
         )
@@ -383,14 +381,200 @@ async def test_thermostat_v2(
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
     assert "Error while refreshing value" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("requested_temperature", "sent_temperature"),
+    [
+        pytest.param(23.3, 74.0, id="whole_fahrenheit_below"),
+        pytest.param(21.1, 70.0, id="whole_fahrenheit_above"),
+        pytest.param(23.9, 75.0, id="long_float"),
+        pytest.param(25, 77.0, id="exact"),
+    ],
+)
+async def test_setpoint_thermostat_fahrenheit_rounding(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+    requested_temperature: float,
+    sent_temperature: float,
+) -> None:
+    """Test setpoints are rounded to a resolution the Fahrenheit device can encode.
+
+    An unrounded unit conversion (e.g. 23.3 C -> 73.94 F) produces a Z-Wave
+    payload some nodes mis-parse, so it must be rounded to the nearest half
+    degree before being sent.
+    """
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: requested_temperature,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == sent_temperature
+
+
+async def test_setpoint_thermostat_fahrenheit_range_rounding(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test dual setpoints are rounded to a resolution the device can encode."""
+    node = climate_radio_thermostat_ct100_plus
+
+    # Switch the device into heat_cool mode so both setpoints are writable.
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 13,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 1,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 3,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 23.3,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 25.9,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == 74.0
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 2,
+    }
+    assert args["value"] == 78.5
+
+
+@pytest.mark.parametrize(
+    ("setpoint_limit", "requested_temperature"),
+    [
+        pytest.param({"min": 60.2}, 60.2, id="min"),
+        pytest.param({"max": 85.3}, 85.3, id="max"),
+    ],
+)
+async def test_setpoint_thermostat_fahrenheit_rounding_clamped(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+    setpoint_limit: dict[str, float],
+    requested_temperature: float,
+) -> None:
+    """Test a rounded setpoint is clamped to the device's setpoint range."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    # A limit off the half-degree grid makes rounding push a valid request out of range.
+    climate_radio_thermostat_ct100_plus.values[
+        "13-67-1-setpoint-1"
+    ].metadata.data.update(setpoint_limit)
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: requested_temperature,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == requested_temperature
+
+
+async def test_setpoint_thermostat_celsius_not_rounded(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setpoints on a Celsius device are sent without rounding.
+
+    Rounding Celsius values to the precision the device supports is left to
+    Z-Wave JS.
+    """
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: 70,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"]["commandClass"] == 67
+    assert args["value"] == TemperatureConverter.convert(
+        70, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+    )
 
 
 async def test_thermostat_v2_turn_on_after_off(
@@ -425,8 +609,8 @@ async def test_thermostat_v2_turn_on_after_off(
     # Test turning device on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -469,8 +653,8 @@ async def test_thermostat_turn_on_after_off_no_heat_cool_auto(
     # Test turning device on sets it to first available mode (Energy heat)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -515,8 +699,8 @@ async def test_thermostat_turn_on_after_off_with_resume(
     # Test turning device on sends resume command
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -568,10 +752,10 @@ async def test_setpoint_thermostat(
     # Test setting temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_TEMPERATURE: 21.5,
+            TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: 21.5,
         },
         blocking=True,
     )
@@ -580,10 +764,10 @@ async def test_setpoint_thermostat(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-                ATTR_HVAC_MODE: HVACMode.COOL,
+                TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
         )
@@ -592,10 +776,10 @@ async def test_setpoint_thermostat(
     # raise an error
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -900,10 +1084,10 @@ async def test_preset_and_no_setpoint(
     # Test setting preset mode Full power
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-            ATTR_PRESET_MODE: "Full power",
+            TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: "Full power",
         },
         blocking=True,
     )
@@ -950,10 +1134,10 @@ async def test_preset_and_no_setpoint(
         # Test setting invalid preset mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-                ATTR_PRESET_MODE: "invalid_preset",
+                TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+                ClimateServiceArgument.PRESET_MODE: "invalid_preset",
             },
             blocking=True,
         )
@@ -965,10 +1149,10 @@ async def test_preset_and_no_setpoint(
     # Restore hvac mode by setting preset None
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1048,10 +1232,10 @@ async def test_set_preset_mode_manufacturer_specific(
     # Test setting preset mode to "Manufacturer specific"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: "Manufacturer specific",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: "Manufacturer specific",
         },
         blocking=True,
     )
@@ -1098,10 +1282,10 @@ async def test_set_preset_mode_manufacturer_specific(
     # Test restoring hvac mode by setting preset to none.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1184,10 +1368,10 @@ async def test_set_preset_mode_mapped_preset(
     # Set preset mode to "Energy heat"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: "Energy heat",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: "Energy heat",
         },
         blocking=True,
     )
@@ -1229,10 +1413,10 @@ async def test_set_preset_mode_mapped_preset(
     # Clear preset - should restore to heat (the mapped mode).
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1263,10 +1447,10 @@ async def test_set_preset_mode_none_while_in_hvac_mode(
     # the current hvac mode.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1330,10 +1514,10 @@ async def test_set_preset_mode_none_unmapped_preset(
     # stored previous HVAC mode.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )

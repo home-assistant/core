@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import NonCallableMagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant import config_entries
@@ -11,8 +12,6 @@ from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 INPUT_DATA = {
     "username": "test-username",
@@ -30,7 +29,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.surepetcare.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -47,7 +46,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -179,7 +178,7 @@ async def test_flow_entry_already_exists(
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

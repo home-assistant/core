@@ -3,13 +3,13 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.zwave_me.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.14"),
@@ -32,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
@@ -68,7 +68,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
@@ -133,7 +133,7 @@ async def test_handle_error_user(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",

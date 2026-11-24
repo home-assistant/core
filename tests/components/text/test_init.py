@@ -3,31 +3,27 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.text import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_MODE,
-    ATTR_PATTERN,
-    ATTR_VALUE,
     DOMAIN,
-    SERVICE_SET_VALUE,
+    TextEntityCapabilityAttribute,
     TextMode,
+    TextService,
+    TextServiceArgument,
 )
 from homeassistant.components.text.services import _async_set_value
-from homeassistant.const import ATTR_ENTITY_ID, MAX_LENGTH_STATE_STATE
+from homeassistant.const import MAX_LENGTH_STATE_STATE, TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
 from .common import MockRestoreText, MockTextEntity
-
-from tests.common import (
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 
 async def test_text_default(hass: HomeAssistant) -> None:
@@ -36,10 +32,10 @@ async def test_text_default(hass: HomeAssistant) -> None:
     text.hass = hass
 
     assert text.capability_attributes == {
-        ATTR_MIN: 0,
-        ATTR_MAX: MAX_LENGTH_STATE_STATE,
-        ATTR_MODE: TextMode.TEXT,
-        ATTR_PATTERN: None,
+        TextEntityCapabilityAttribute.MIN: 0,
+        TextEntityCapabilityAttribute.MAX: MAX_LENGTH_STATE_STATE,
+        TextEntityCapabilityAttribute.MODE: TextMode.TEXT,
+        TextEntityCapabilityAttribute.PATTERN: None,
     }
     assert text.pattern is None
     assert text.state == "test"
@@ -51,10 +47,10 @@ async def test_text_new_min_max_pattern(hass: HomeAssistant) -> None:
     text.hass = hass
 
     assert text.capability_attributes == {
-        ATTR_MIN: 0,
-        ATTR_MAX: MAX_LENGTH_STATE_STATE,
-        ATTR_MODE: TextMode.TEXT,
-        ATTR_PATTERN: r"[a-z]",
+        TextEntityCapabilityAttribute.MIN: 0,
+        TextEntityCapabilityAttribute.MAX: MAX_LENGTH_STATE_STATE,
+        TextEntityCapabilityAttribute.MODE: TextMode.TEXT,
+        TextEntityCapabilityAttribute.PATTERN: r"[a-z]",
     }
 
 
@@ -64,7 +60,10 @@ async def test_text_set_value(hass: HomeAssistant) -> None:
     text.hass = hass
 
     await _async_set_value(
-        text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
+        text,
+        ServiceCall(
+            hass, DOMAIN, TextService.SET_VALUE, {TextServiceArgument.VALUE: "test2"}
+        ),
     )
 
     assert text.state == "test2"
@@ -106,8 +105,8 @@ async def test_text_set_value_invalid(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "text.test", ATTR_VALUE: value},
+            TextService.SET_VALUE,
+            {TargetKey.ENTITY_ID: "text.test", TextServiceArgument.VALUE: value},
             blocking=True,
         )
 

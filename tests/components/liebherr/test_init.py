@@ -27,6 +27,7 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -35,8 +36,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 # Test errors during initial get_devices() call in async_setup_entry

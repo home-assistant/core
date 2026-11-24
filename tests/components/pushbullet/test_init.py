@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pushbullet import InvalidKeyError, PushbulletError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_success(

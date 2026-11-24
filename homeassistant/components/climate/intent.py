@@ -4,24 +4,24 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, intent, translation
 
-from . import (
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
-    ATTR_TEMPERATURE,
+from .const import (
+    DOMAIN,
     INTENT_SET_FAN_MODE,
     INTENT_SET_TEMPERATURE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
 )
-from .const import DOMAIN
 
 FAN_MODE_TRANSLATION_PREFIX = (
-    f"component.{DOMAIN}.entity_component._.state_attributes.{ATTR_FAN_MODE}.state."
+    f"component.{DOMAIN}.entity_component._.state_attributes."
+    f"{ClimateEntityStateAttribute.FAN_MODE}.state."
 )
 
 
@@ -92,9 +92,9 @@ class SetTemperatureIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            service_data={ATTR_TEMPERATURE: temperature},
-            target={ATTR_ENTITY_ID: climate_state.entity_id},
+            ClimateService.SET_TEMPERATURE,
+            service_data={ClimateServiceArgument.TEMPERATURE: temperature},
+            target={TargetKey.ENTITY_ID: climate_state.entity_id},
             blocking=True,
         )
 
@@ -182,9 +182,9 @@ class SetFanModeIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            service_data={ATTR_FAN_MODE: fan_mode},
-            target={ATTR_ENTITY_ID: climate_state.entity_id},
+            ClimateService.SET_FAN_MODE,
+            service_data={ClimateServiceArgument.FAN_MODE: fan_mode},
+            target={TargetKey.ENTITY_ID: climate_state.entity_id},
             blocking=True,
             context=intent_obj.context,
         )
@@ -207,7 +207,9 @@ async def _async_resolve_fan_mode(
     hass: HomeAssistant, language: str, climate_state: State, requested: str
 ) -> str | None:
     """Return a matching fan mode using translations if necessary."""
-    available: list[str] = climate_state.attributes.get(ATTR_FAN_MODES) or []
+    available: list[str] = (
+        climate_state.attributes.get(ClimateEntityCapabilityAttribute.FAN_MODES) or []
+    )
     if requested in available:
         return requested
 

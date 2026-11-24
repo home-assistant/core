@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.supla import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "switch.living_room_light"
 CHANNELS = [

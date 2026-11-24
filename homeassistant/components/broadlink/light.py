@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

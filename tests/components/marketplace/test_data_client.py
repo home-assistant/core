@@ -6,6 +6,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marketplace.base import MarketplaceManager
@@ -27,9 +32,6 @@ from . import (
 )
 from .conftest import MarketplaceResponses
 from .const import PROXY_HEADERS, REPOSITORY_PLUGIN_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 GOOD_COMMON_DATA = {
     "description": "abc",

@@ -8,13 +8,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from arcam.fmj.client import Client, ResponsePacket
 from arcam.fmj.state import State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000

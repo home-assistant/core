@@ -6,7 +6,7 @@ from typing import override
 from lorawan_connection import Device, DeviceCollection, DeviceDescriptor
 
 from homeassistant.components.lorawan import LoRaWANEntity, device_identifier
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -62,9 +62,9 @@ class ExampleSensor(LoRaWANEntity[ExampleDevice], SensorEntity):
 
     def __init__(self, coordinator: ExampleCoordinator, key: str) -> None:
         """Bind a synthetic measurement to the coordinator."""
-        super().__init__(coordinator)
-        self._attr_name = key.capitalize()
-        self._attr_unique_id = f"{coordinator.data.descriptor.network_id}:{coordinator.data.descriptor.dev_eui}:{key}"
+        super().__init__(
+            coordinator, SensorEntityDescription(key=key, name=key.capitalize())
+        )
         self._attr_device_info = {
             "identifiers": {device_identifier("test_vendor", coordinator.data)},
             "name": coordinator.data.descriptor.name,

@@ -5,6 +5,7 @@ import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.wallbox.const import (
@@ -25,8 +26,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import WALLBOX_AUTHORISATION_RESPONSE, WALLBOX_STATUS_RESPONSE
-
-from tests.common import MockConfigEntry
 
 http_403_error = requests.exceptions.HTTPError()
 http_403_error.response = requests.Response()
