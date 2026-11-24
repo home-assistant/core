@@ -77,7 +77,7 @@ def round_temperature_to_step(
     default_step: float = 0.5,
     fallback_minimum: float | None = None,
     fallback_maximum: float | None = None,
-) -> float:
+) -> int | float:
     """Round from the native minimum (or zero) and clamp to available bounds.
 
     Halfway values round away from zero, matching the conventional behavior
@@ -110,4 +110,9 @@ def round_temperature_to_step(
         ).to_integral_value(rounding=ROUND_FLOOR)
         rounded_steps = min(rounded_steps, maximum_steps)
     rounded = step_origin + rounded_steps * step_decimal
+    if (
+        step_decimal == step_decimal.to_integral_value()
+        and rounded == rounded.to_integral_value()
+    ):
+        return int(rounded)
     return float(rounded)

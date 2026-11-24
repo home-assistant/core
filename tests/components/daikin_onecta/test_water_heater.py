@@ -798,15 +798,21 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
 
 
 @pytest.mark.parametrize(
-    ("unit_system", "service_temperature", "step_value", "expected_temperature"),
+    (
+        "unit_system",
+        "service_temperature",
+        "step_value",
+        "expected_temperature",
+        "expected_type",
+    ),
     [
-        (METRIC_SYSTEM, 48.6, 1, 49),
-        (US_CUSTOMARY_SYSTEM, 120, 1, 49),
-        (METRIC_SYSTEM, 48.6, 0.5, 48.5),
-        (METRIC_SYSTEM, 49.2, 2, 50),
-        (METRIC_SYSTEM, 45.3, 0.1, 45.3),
-        (METRIC_SYSTEM, 48.6, None, 49),
-        (METRIC_SYSTEM, 44.25, None, 44),
+        (METRIC_SYSTEM, 48.6, 1, 49, int),
+        (US_CUSTOMARY_SYSTEM, 120, 1, 49, int),
+        (METRIC_SYSTEM, 48.6, 0.5, 48.5, float),
+        (METRIC_SYSTEM, 49.2, 2, 50, int),
+        (METRIC_SYSTEM, 45.3, 0.1, 45.3, float),
+        (METRIC_SYSTEM, 48.6, None, 49, int),
+        (METRIC_SYSTEM, 44.25, None, 44, int),
     ],
 )
 async def test_water_heater_temperature_rounds_to_native_step(
@@ -816,6 +822,7 @@ async def test_water_heater_temperature_rounds_to_native_step(
     service_temperature: float,
     step_value: float | None,
     expected_temperature: float,
+    expected_type: type[int | float],
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Round requested temperatures to the nearest supported native step."""
@@ -847,6 +854,10 @@ async def test_water_heater_temperature_rounds_to_native_step(
         "temperatureControl",
         expected_temperature,
         path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
+    assert (
+        type(mock_onecta_client.patch_characteristic.await_args.args[3])
+        is expected_type
     )
 
 

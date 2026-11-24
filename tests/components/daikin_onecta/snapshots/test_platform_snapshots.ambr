@@ -43765,7 +43765,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_entities[gas-sensor][sensor.daikin_onecta_account_rate_limit_remaining_day-entry]

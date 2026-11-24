@@ -71,4 +71,6 @@ def test_round_temperature_to_step_aligns_fallback_minimum() -> None:
 
 def test_round_temperature_to_step_uses_caller_default() -> None:
     """Allow water heaters to default to whole-degree temperature steps."""
-    assert round_temperature_to_step(48.6, default_step=1) == 49
+    rounded = round_temperature_to_step(48.6, default_step=1)
+    assert rounded == 49
+    assert isinstance(rounded, int)

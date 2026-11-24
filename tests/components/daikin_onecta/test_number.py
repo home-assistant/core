@@ -176,6 +176,7 @@ async def test_leaving_water_offset_number_rounds_and_clamps(
     await entity.async_set_native_value(requested_value)
 
     assert mock_onecta_client.patch_characteristic.await_args.args[3] == expected_value
+    assert isinstance(mock_onecta_client.patch_characteristic.await_args.args[3], int)
 
 
 async def test_leaving_water_offset_number_skips_unchanged_write(
