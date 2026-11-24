@@ -72,9 +72,11 @@ def _async_migrate_interface_identifiers(
     }
 
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     # the stale-device cleanup used to remove the devices of interfaces without
-    # a MAC address, taking their entities along; restore them so they keep
-    # their customisations when migrated below
+    # a MAC address, taking their entities along; restore both under their
+    # legacy identifiers so they keep their IDs and customisations when
+    # migrated below
     for (domain, platform, unique_id), deleted_entry in list(
         entity_registry.deleted_entities.items()
     ):
@@ -84,8 +86,18 @@ def _async_migrate_interface_identifiers(
             and (new_unique_id := migrated.get(unique_id))
             and not entity_registry.async_get_entity_id(domain, DOMAIN, new_unique_id)
         ):
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, new_unique_id), config_entry_id=config_entry.entry_id
+            ) or device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, unique_id)},
+            )
             entity_registry.async_get_or_create(
-                domain, DOMAIN, unique_id, config_entry=config_entry
+                domain,
+                DOMAIN,
+                unique_id,
+                config_entry=config_entry,
+                device_id=device_entry.id,
             )
 
     for entity_entry in er.async_entries_for_config_entry(
@@ -100,7 +112,6 @@ def _async_migrate_interface_identifiers(
                 entity_entry.entity_id, new_unique_id=new_unique_id
             )
 
-    device_registry = dr.async_get(hass)
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     ):

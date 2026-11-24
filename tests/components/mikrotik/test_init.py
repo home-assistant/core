@@ -639,6 +639,9 @@ async def test_removed_interface_entities_are_restored_and_migrated(
     entity_registry.async_update_entity(
         entity.entity_id, new_entity_id="binary_sensor.vpn", name="VPN"
     )
+    device_registry.async_update_device(
+        device.id, name_by_user="Office VPN", labels={"vpn"}
+    )
     device_registry.async_remove_device(device.id)
     await hass.async_block_till_done()
     assert entity_registry.async_get("binary_sensor.vpn") is None
@@ -660,7 +663,13 @@ async def test_removed_interface_entities_are_restored_and_migrated(
     assert restored_entity.id == entity.id
     assert restored_entity.unique_id == f"{TEST_SERIAL_NUMBER}_wireguard1"
     assert restored_entity.name == "VPN"
-    assert restored_entity.device_id is not None
+    assert restored_entity.device_id == device.id
+
+    restored_device = device_registry.async_get(device.id)
+    assert restored_device is not None
+    assert restored_device.identifiers == {(DOMAIN, f"{TEST_SERIAL_NUMBER}_wireguard1")}
+    assert restored_device.name_by_user == "Office VPN"
+    assert restored_device.labels == {"vpn"}
 
 
 # Upper-case hex digits, as reported by the hub, check the MAC normalization
