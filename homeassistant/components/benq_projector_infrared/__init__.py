@@ -1,5 +1,6 @@
 """BenQ Projector Infrared integration for Home Assistant."""
 
+import asyncio
 from datetime import datetime, timedelta
 
 from homeassistant.components.infrared import async_get_emitters, async_get_receivers
@@ -40,6 +41,9 @@ class BenQProjectorIrRuntimeData:
         self._busy_until: datetime | None = None
         self._busy_reason = BenQProjectorBusyReason.WARMING_UP
         self._power_off_requested_at: datetime | None = None
+        # Serializes commands from all entities, so nothing can be sent between the
+        # two off commands of a power-off.
+        self.command_lock = asyncio.Lock()
 
     def start_warm_up(self) -> None:
         """Start the warm-up after the projector is turned on."""

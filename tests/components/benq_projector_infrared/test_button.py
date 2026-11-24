@@ -1,5 +1,8 @@
 """Tests for the BenQ Projector Infrared button platform."""
 
+import asyncio
+from unittest.mock import patch
+
 from infrared_protocols.codes.benq.projector import BenQProjectorCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
@@ -197,3 +200,48 @@ async def test_button_press_dismisses_remote_power_off(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
     assert state.state == MediaPlayerState.ON
+
+
+@pytest.mark.parametrize("platforms", [PLATFORMS])
+@pytest.mark.usefixtures("init_integration")
+async def test_button_press_waits_for_power_off(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """A button press cannot be sent between the two off commands.
+
+    A key in between would dismiss the projector's confirmation, leaving it on.
+    """
+    with patch(
+        "homeassistant.components.benq_projector_infrared.media_player."
+        "POWER_OFF_CONFIRM_DELAY",
+        0.05,
+    ):
+        turn_off = hass.async_create_task(
+            hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN,
+                MediaPlayerService.TURN_OFF,
+                {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+                blocking=True,
+            )
+        )
+        for _ in range(100):
+            if mock_infrared_emitter_entity.send_command_calls:
+                break
+            await asyncio.sleep(0)
+        assert mock_infrared_emitter_entity.send_command_calls == [
+            BenQProjectorCode.POWER_OFF
+        ]
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await _press(hass, "button.benq_projector_menu")
+        await turn_off
+
+    assert exc_info.value.translation_key == "cooling_down"
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_OFF,
+        BenQProjectorCode.POWER_OFF,
+    ]
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
