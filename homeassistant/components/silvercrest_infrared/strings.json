@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This device has already been configured with this infrared entity.",
-      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+      "no_infrared_entities": "[%key:component::infrared::common::no_infrared_entities%]"
     },
     "error": {
       "missing_infrared_entity": "Select an infrared emitter or receiver."
@@ -10,11 +10,11 @@
     "step": {
       "reconfigure": {
         "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
           "infrared_receiver_entity_id": "[%key:component::silvercrest_infrared::config::step::user::data_description::infrared_receiver_entity_id%]"
         },
         "title": "Reconfigure SilverCrest Infrared device"
@@ -22,12 +22,12 @@
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of device to control.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
           "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
         "description": "Select the device type and an infrared emitter.",

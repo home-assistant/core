@@ -6,6 +6,8 @@ import datetime as dt
 from http import HTTPStatus
 import logging
 import math
+import threading
+import time
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
@@ -2098,3 +2100,24 @@ async def test_precision(
     assert write_api.call_count == 1
     assert write_api.call_args == get_mock_call(body, precision)
     write_api.reset_mock()
+
+
+async def test_waiters_released_after_unexpected_write_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test waiters in a batch are released when the write raises an unexpected error."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    influx = MagicMock()
+    influx.write.side_effect = RuntimeError("unexpected")
+    influx_thread = influxdb.InfluxThread(
+        hass, entry, influx, lambda event: {"measurement": "test"}, 0
+    )
+    done = threading.Event()
+    influx_thread.queue.put((time.monotonic(), MagicMock()))
+    influx_thread.queue.put(done)
+    influx_thread.queue.put(None)
+
+    with pytest.raises(RuntimeError):
+        influx_thread.run()
+
+    assert done.is_set()

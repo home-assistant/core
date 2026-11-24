@@ -49,10 +49,13 @@ def sensor_device_info_to_hass_device_info(
 
     The same device info is returned for the same values, so it cannot be modified.
     """
+    # SensorPro and ThermoBeacon set the model to an int. Remove the conversion
+    # once their parsers are fixed upstream.
+    model = sensor_device_info.model
     return _device_info(
         sensor_device_info.name,
         sensor_device_info.manufacturer,
-        sensor_device_info.model,
+        None if model is None else str(model),
     )
 
 
