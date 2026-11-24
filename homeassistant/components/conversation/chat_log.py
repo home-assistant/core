@@ -113,16 +113,22 @@ def async_get_chat_log(
         chat_log = ChatLog(hass, session.conversation_id)
         is_new_log = True
         all_chat_logs[session.conversation_id] = chat_log
+
+    chat_log.turn_start = len(chat_log.content)
+    if user_input is not None:
+        user_content = UserContent(content=user_input.text)
+        if is_new_log:
+            chat_log.content.append(user_content)
+        else:
+            chat_log.async_add_user_content(user_content)
+
+    if is_new_log:
         _async_notify_subscribers(
             hass,
             session.conversation_id,
             ChatLogEventType.CREATED,
             {"chat_log": chat_log.as_dict()},
         )
-
-    chat_log.turn_start = len(chat_log.content)
-    if user_input is not None:
-        chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
@@ -181,7 +187,7 @@ def async_get_chat_log(
 class ConverseError(HomeAssistantError):
     """Error during initialization of conversation.
 
-    Will not be stored in the history.
+    The chat log stores the underlying error.
     """
 
     def __init__(
@@ -430,6 +436,9 @@ class ChatLog:
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
+        # The chat log adds the cause before it raises ConverseError.
+        if isinstance(error, ConverseError):
+            return
         error_text = str(error) or type(error).__name__
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
@@ -740,6 +749,7 @@ class ChatLog:
                 intent.IntentResponseErrorCode.UNKNOWN,
                 "Sorry, I had a problem with my template",
             )
+            self.async_add_error(llm_context.agent_id or DOMAIN, err)
             raise ConverseError(
                 "Error rendering prompt",
                 conversation_id=self.conversation_id,
@@ -830,6 +840,7 @@ class ChatLog:
                     intent.IntentResponseErrorCode.UNKNOWN,
                     "Error preparing LLM API",
                 )
+                self.async_add_error(llm_context.agent_id or DOMAIN, err)
                 raise ConverseError(
                     f"Error getting LLM API {user_llm_hass_api}",
                     conversation_id=self.conversation_id,

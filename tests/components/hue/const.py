@@ -63,6 +63,20 @@ FAKE_LIGHT = {
     "type": "light",
 }
 
+FAKE_GRADIENT_LIGHT = {
+    **FAKE_LIGHT,
+    "color": {"gamut_type": "C", "xy": {"x": 0.3127, "y": 0.329}},
+    "dimming": {"brightness": 50.0, "min_dim_level": 0.2},
+    "on": {"on": True},
+    "gradient": {
+        "points": [
+            {"color": {"xy": {"x": 0.1, "y": 0.2}}},
+            {"color": {"xy": {"x": 0.3, "y": 0.4}}},
+        ],
+        "points_capable": 3,
+    },
+}
+
 FAKE_ZIGBEE_CONNECTIVITY = {
     "id": "fake_zigbee_connectivity_id_1",
     "id_v1": "/lights/29",

@@ -308,6 +308,12 @@ def plextv_resources_two_servers_fixture():
     return load_fixture("plex/plextv_resources_two_servers.xml")
 
 
+@pytest.fixture(name="plextv_resources_other_server", scope="package")
+def plextv_resources_other_server_fixture():
+    """Load payload for plex.tv resources without the default server and return it."""
+    return load_fixture("plex/plextv_resources_other_server.xml")
+
+
 @pytest.fixture(name="plextv_shared_users", scope="package")
 def plextv_shared_users_fixture():
     """Load payload for plex.tv shared users and return it."""

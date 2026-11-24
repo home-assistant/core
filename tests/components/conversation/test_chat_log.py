@@ -271,9 +271,9 @@ async def test_unknown_llm_api(
 ) -> None:
     """Test when we reference an LLM API that does not exists."""
     with (
+        pytest.raises(ConverseError) as exc_info,
         chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-        pytest.raises(ConverseError) as exc_info,
     ):
         await chat_log.async_provide_llm_data(
             mock_conversation_input.as_llm_context("test"),
@@ -283,6 +283,10 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+        ("user", mock_conversation_input.text),
+        ("assistant", "Error: API unknown-api not found"),
+    ]
 
 
 async def test_concurrent_turn_busy(
@@ -741,9 +745,9 @@ async def test_template_error(
 ) -> None:
     """Test that template error handling works."""
     with (
+        pytest.raises(ConverseError) as exc_info,
         chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-        pytest.raises(ConverseError) as exc_info,
     ):
         await chat_log.async_provide_llm_data(
             mock_conversation_input.as_llm_context("test"),
@@ -753,6 +757,10 @@ async def test_template_error(
 
     assert str(exc_info.value) == "Error rendering prompt"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+        ("user", mock_conversation_input.text),
+        ("assistant", f"Error: {exc_info.value.__cause__}"),
+    ]
 
 
 async def test_template_variables(
@@ -1552,16 +1560,13 @@ async def test_chat_log_subscription(
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
     # Verify we received the expected events
-    # Should have: 1 CREATED event + 7 CONTENT_ADDED events
-    assert len(received_events) == 8
+    # Should have: 1 CREATED event + 6 CONTENT_ADDED events
+    assert len(received_events) == 7
 
-    # Check the first event is CREATED
+    # Check the first event is CREATED, with the message of the first turn
     assert received_events[0][1] == ChatLogEventType.CREATED
     assert received_events[0][2]["chat_log"]["conversation_id"] == conversation_id
-
-    # Check the second event is CONTENT_ADDED (from mock_conversation_input)
-    assert received_events[1][1] == ChatLogEventType.CONTENT_ADDED
-    assert received_events[1][0] == conversation_id
+    assert received_events[0][2]["chat_log"]["content"][-1]["content"] == "Hello"
 
     # Test cleanup functionality
     assert conversation_id in hass.data[chat_session.DATA_CHAT_SESSION]

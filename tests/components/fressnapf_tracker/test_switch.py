@@ -18,8 +18,9 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -90,8 +91,8 @@ async def test_turn_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -112,8 +113,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

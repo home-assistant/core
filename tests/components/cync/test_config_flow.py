@@ -20,6 +20,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import TextSelector
 
 from .const import MOCKED_EMAIL, MOCKED_USER, SECOND_MOCKED_USER
 
@@ -46,6 +47,11 @@ async def test_form_auth_success(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
+
+    password_selector = result["data_schema"].schema[CONF_PASSWORD]
+    assert isinstance(password_selector, TextSelector)
+    assert password_selector.config["type"] == "password"
+    assert password_selector.config["autocomplete"] == "current-password"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -121,6 +127,11 @@ async def test_form_reauth_success(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
+
+    password_selector = result["data_schema"].schema[CONF_PASSWORD]
+    assert isinstance(password_selector, TextSelector)
+    assert password_selector.config["type"] == "password"
+    assert password_selector.config["autocomplete"] == "current-password"
 
     auth_client.login.side_effect = TwoFactorRequiredError
     result = await hass.config_entries.flow.async_configure(

@@ -1,6 +1,7 @@
 """Services for the Forecast.Solar integration."""
 
 from datetime import datetime
+from enum import StrEnum
 
 import probatio
 
@@ -20,26 +21,35 @@ from homeassistant.util.json import JsonValueType
 from .const import DOMAIN
 from .coordinator import ForecastSolarConfigEntry, energy_by_period_start
 
-ATTR_CONFIG_ENTRY = "config_entry"
-ATTR_START = "start"
-ATTR_END = "end"
-ATTR_RESOLUTION = "resolution"
-
 RESOLUTION_RAW = "raw"
 RESOLUTION_HOURLY = "hourly"
 
-SERVICE_GET_FORECAST = "get_forecast"
+
+class ForecastSolarService(StrEnum):
+    """Store keys for Forecast.Solar services."""
+
+    GET_FORECAST = "get_forecast"
+
+
+class ForecastSolarServiceArgument(StrEnum):
+    """Store keys for Forecast.Solar service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    START = "start"
+    END = "end"
+    RESOLUTION = "resolution"
+
 
 GET_FORECAST_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
-            {"integration": DOMAIN}
-        ),
-        probatio.Optional(ATTR_START): cv.datetime,
-        probatio.Optional(ATTR_END): cv.datetime,
-        probatio.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): probatio.In(
-            (RESOLUTION_RAW, RESOLUTION_HOURLY)
-        ),
+        probatio.Required(
+            ForecastSolarServiceArgument.CONFIG_ENTRY
+        ): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Optional(ForecastSolarServiceArgument.START): cv.datetime,
+        probatio.Optional(ForecastSolarServiceArgument.END): cv.datetime,
+        probatio.Optional(
+            ForecastSolarServiceArgument.RESOLUTION, default=RESOLUTION_RAW
+        ): probatio.In((RESOLUTION_RAW, RESOLUTION_HOURLY)),
     }
 )
 
@@ -87,20 +97,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ``+10:00``), not UTC.
         """
         entry: ForecastSolarConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+            hass, DOMAIN, call.data[ForecastSolarServiceArgument.CONFIG_ENTRY]
         )
         estimate = entry.runtime_data.data
 
         wh_period = energy_by_period_start(estimate.wh_period)
         watts: dict[datetime, float]
 
-        if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:
+        if call.data[ForecastSolarServiceArgument.RESOLUTION] == RESOLUTION_HOURLY:
             watts, wh_period = _aggregate_hourly(dict(estimate.watts), wh_period)
         else:
             watts = dict(estimate.watts)
 
-        start: datetime | None = call.data.get(ATTR_START)
-        end: datetime | None = call.data.get(ATTR_END)
+        start: datetime | None = call.data.get(ForecastSolarServiceArgument.START)
+        end: datetime | None = call.data.get(ForecastSolarServiceArgument.END)
 
         # Interpret naive inputs in the forecast's zone; use the async
         # helper to avoid blocking tz-data I/O on first use.
@@ -137,7 +147,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        ForecastSolarService.GET_FORECAST,
         async_get_forecast,
         schema=GET_FORECAST_SCHEMA,
         supports_response=SupportsResponse.ONLY,

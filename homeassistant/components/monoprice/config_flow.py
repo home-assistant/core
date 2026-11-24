@@ -7,18 +7,14 @@ import probatio
 from pymonoprice import get_monoprice
 from serialx import SerialException
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
+from . import MonopriceConfigEntry
 from .const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -92,13 +88,13 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -108,7 +104,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MonopriceConfigEntry,
     ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler()

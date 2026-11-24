@@ -12,7 +12,7 @@ from .data import RestData
 
 _LOGGER = logging.getLogger(__name__)
 
-RestConfigEntry = ConfigEntry["RestCoordinator"]
+type RestConfigEntry = ConfigEntry[RestCoordinator]
 
 
 class RestCoordinator(DataUpdateCoordinator[None]):

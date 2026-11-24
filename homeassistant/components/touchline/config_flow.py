@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 import probatio
-from pytouchline_extended import PyTouchline
+from pytouchline_extended import PyTouchline, TouchlineError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -29,7 +29,9 @@ def fetch_unique_id(host: str) -> str:
     client = PyTouchline(url=host)
     client.get_number_of_devices()
     client.update()
-    return str(client.get_controller_id())
+    if (controller_id := client.get_controller_id()) is None:
+        raise CannotConnect
+    return str(controller_id)
 
 
 async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
@@ -38,7 +40,7 @@ async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> st
 
     try:
         return await hass.async_add_executor_job(fetch_unique_id, host)
-    except (OSError, ConnectionError, TimeoutError) as err:
+    except TouchlineError as err:
         _LOGGER.debug(
             "Error while connecting to Touchline controller at %s", host, exc_info=True
         )

@@ -11,9 +11,6 @@
       }
     },
     "number": {
-      "current_set": {
-        "default": "mdi:current-ac"
-      },
       "energy_limit": {
         "default": "mdi:battery-charging-100"
       },
@@ -22,23 +19,14 @@
       }
     },
     "sensor": {
+      "cellular_mode": {
+        "default": "mdi:signal"
+      },
+      "cellular_operator": {
+        "default": "mdi:sim"
+      },
       "charge_count": {
         "default": "mdi:counter"
-      },
-      "charged_energy": {
-        "default": "mdi:lightning-bolt"
-      },
-      "charging_current": {
-        "default": "mdi:current-ac"
-      },
-      "charging_rate": {
-        "default": "mdi:speedometer"
-      },
-      "charging_voltage": {
-        "default": "mdi:flash"
-      },
-      "connector_max_current": {
-        "default": "mdi:current-ac"
       },
       "connector_phase_count": {
         "default": "mdi:sine-wave"
@@ -52,47 +40,14 @@
       "error_code": {
         "default": "mdi:alert-circle"
       },
-      "grid_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "grid_voltage": {
-        "default": "mdi:flash"
-      },
-      "network_rssi": {
-        "default": "mdi:wifi-strength-3"
-      },
       "network_ssid": {
         "default": "mdi:wifi"
-      },
-      "peak_power": {
-        "default": "mdi:flash"
-      },
-      "powerflow_grid_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "rated_current": {
-        "default": "mdi:current-ac"
       },
       "rcd_trigger": {
         "default": "mdi:flash-alert"
       },
       "status": {
         "default": "mdi:ev-station"
-      },
-      "total_active_power": {
-        "default": "mdi:flash"
-      },
-      "total_apparent_power": {
-        "default": "mdi:flash-outline"
-      },
-      "total_charged_energy": {
-        "default": "mdi:lightning-bolt"
-      },
-      "total_power_factor": {
-        "default": "mdi:percent"
-      },
-      "total_reactive_power": {
-        "default": "mdi:flash-outline"
       },
       "vehicle_charging_time": {
         "default": "mdi:timer"
@@ -102,6 +57,14 @@
       },
       "warning_code": {
         "default": "mdi:alert"
+      }
+    },
+    "switch": {
+      "charging_enabled": {
+        "default": "mdi:play-circle",
+        "state": {
+          "off": "mdi:pause-circle"
+        }
       }
     }
   }

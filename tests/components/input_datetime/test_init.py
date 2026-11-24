@@ -26,11 +26,11 @@ from homeassistant.components.input_datetime.const import (
     InputDatetimeServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     FORMAT_DATE,
     FORMAT_DATETIME,
     FORMAT_TIME,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
@@ -85,7 +85,7 @@ async def async_set_date_and_time(
         DOMAIN,
         InputDatetimeService.SET,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             InputDatetimeServiceArgument.DATE: dt_value.date(),
             InputDatetimeServiceArgument.TIME: dt_value.time(),
         },
@@ -100,7 +100,10 @@ async def async_set_datetime(
     await hass.services.async_call(
         DOMAIN,
         InputDatetimeService.SET,
-        {ATTR_ENTITY_ID: entity_id, InputDatetimeServiceArgument.DATETIME: dt_value},
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            InputDatetimeServiceArgument.DATETIME: dt_value,
+        },
         blocking=True,
     )
 
@@ -112,7 +115,10 @@ async def async_set_timestamp(
     await hass.services.async_call(
         DOMAIN,
         InputDatetimeService.SET,
-        {ATTR_ENTITY_ID: entity_id, InputDatetimeServiceArgument.TIMESTAMP: timestamp},
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            InputDatetimeServiceArgument.TIMESTAMP: timestamp,
+        },
         blocking=True,
     )
 
@@ -820,7 +826,7 @@ async def test_timestamp(hass: HomeAssistant) -> None:
         DOMAIN,
         InputDatetimeService.SET,
         {
-            ATTR_ENTITY_ID: "input_datetime.test_datetime_initial_with_tz",
+            TargetKey.ENTITY_ID: "input_datetime.test_datetime_initial_with_tz",
             InputDatetimeServiceArgument.TIMESTAMP: state_without_tz.attributes[
                 InputDatetimeEntityStateAttribute.TIMESTAMP
             ],

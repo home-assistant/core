@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[binary_sensor.freeze_protection-entry]
+# name: test_setup[binary_sensor.pool_freeze_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -9,11 +9,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('iaqualink', 'SN00001_freeze_protection')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('iaqualink', 'SN00001_freeze_protection')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.freeze_protection',
+    'entity_id': 'binary_sensor.pool_freeze_protection',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.freeze_protection-state]
+# name: test_setup[binary_sensor.pool_freeze_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'cold',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freeze Protection',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.freeze_protection',
+    'entity_id': 'binary_sensor.pool_freeze_protection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,9 +1,12 @@
 """Tests for HomematicIP Cloud light."""
 
 import json
+from unittest.mock import patch
 
 from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
 from homematicip.device import BaseDevice, Dimmer
+from pytest_homeassistant.common import snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -15,7 +18,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -373,6 +376,33 @@ async def test_hmip_light_measuring(
     await async_manipulate_test_data(hass, hmip_device, "on", False)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+
+
+async def test_hmip_universal_dimmer(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the dimmer light of the HmIP-UDI-PB2 universal dimming channel."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS", [Platform.LIGHT]
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Dimmer Decke"], test_groups=[]
+        )
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = "light.dimmer_decke"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_BRIGHTNESS] == 127
 
 
 async def test_hmip_wired_multi_dimmer(
@@ -960,6 +990,7 @@ async def test_hmip_light_unique_ids(
         "light.rgbw_controller_channel3": "3014F71100000000000RGBW2_3_color_light",
         "light.rgbw_controller_channel4": "3014F71100000000000RGBW2_4_color_light",
         "light.schlafzimmerlicht": "3014F711AAAA000000000005_1_dimmer",
+        "light.dimmer_decke": "3014F7110000000000000UDI_1_dimmer",
         "light.treppe_alarm_status": "3014F711BSL0000000000050_2_notification_light",
         "light.treppe_bottom": "3014F711BSL0000000000050_3_notification_light",
         "light.treppe_ch": "3014F711BSL0000000000050_1_light",

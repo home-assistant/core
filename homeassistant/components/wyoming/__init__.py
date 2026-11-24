@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import ATTR_SPEAKER, DOMAIN, WyomingTextToSpeechOption
 from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
 from .devices import SatelliteDevice
@@ -30,6 +30,7 @@ SATELLITE_PLATFORMS = [
 __all__ = [
     "ATTR_SPEAKER",
     "DOMAIN",
+    "WyomingTextToSpeechOption",
 ]
 
 
