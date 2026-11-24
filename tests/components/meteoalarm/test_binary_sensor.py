@@ -1,5 +1,6 @@
 """Tests for the MeteoAlarm binary sensor platform."""
 
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -169,6 +170,7 @@ async def test_unavailable_when_update_fails(
     mock_config_entry: MockConfigEntry,
     mock_meteoalert: MagicMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
 ) -> None:
     """Test the sensor becomes unavailable when MeteoAlarm can't be reached."""
@@ -176,12 +178,26 @@ async def test_unavailable_when_update_fails(
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
+    caplog.set_level(logging.INFO)
     mock_meteoalert.return_value.get_alert.side_effect = exception
+    for _ in range(2):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Two failed updates log one error, without a traceback.
+    assert caplog.text.count("Error fetching meteoalarm data") == 1
+    assert "Traceback" not in caplog.text
+
+    mock_meteoalert.return_value.get_alert.side_effect = None
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert caplog.text.count("Fetching meteoalarm data recovered") == 1
 
 
 async def test_yaml_import(
