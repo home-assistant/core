@@ -11,6 +11,7 @@ import time
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
+from influxdb_client.client.write_api import SYNCHRONOUS
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -1674,6 +1675,30 @@ async def test_event_listener_scheduled_write(
         await async_wait_for_queue_to_process(hass)
         assert not mock_sleep.called
     assert write_api.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client"),
+    [({"influxdb": {}}, influxdb.API_VERSION_2)],
+    indirect=["mock_client"],
+)
+async def test_v2_write_api_is_synchronous(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test the V2 write API is synchronous so write errors reach the retry logic."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=BASE_V2_CONFIG)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("entity.entity_id", 1)
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    mock_client.return_value.write_api.assert_called_once_with(
+        write_options=SYNCHRONOUS
+    )
 
 
 @pytest.mark.parametrize(

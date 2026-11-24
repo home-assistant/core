@@ -28,6 +28,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -309,6 +310,42 @@ async def test_update_new_measurement_creates_new_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_fat_mass")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "entity_id", ["sensor.henk_weight", "sensor.henk_fat_mass_in_torso"]
+)
+async def test_measurement_sensors_created_when_existed(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+) -> None:
+    """Test measurement sensors are added if they existed before."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    withings.get_measurement_in_period.return_value = []
+
+    await hass.config_entries.async_reload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(EntityStateAttribute.RESTORED)
+
+    withings.get_measurement_in_period.return_value = load_measurements_fixture()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+    assert "Platform withings does not generate unique IDs" not in caplog.text
 
 
 async def test_update_new_goals_creates_new_sensor(
