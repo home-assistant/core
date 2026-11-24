@@ -4,7 +4,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import SHCMotionDetector2, SHCOutdoorSiren, SHCSmokeDetector
+from boschshcpy import (
+    SHCMotionDetector2,
+    SHCOutdoorSiren,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
+    SHCSmokeDetector,
+)
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -44,6 +50,15 @@ SIREN_TEST_ALARM_DESCRIPTION = SHCButtonEntityDescription[SHCOutdoorSiren](
     translation_key="siren_test_alarm",
     entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.trigger_test_alarm(),
+)
+
+RESET_ENERGY_DESCRIPTION = SHCButtonEntityDescription[
+    SHCSmartPlug | SHCSmartPlugCompact
+](
+    key="reset_energy_summation",
+    translation_key="reset_energy_summation",
+    entity_category=EntityCategory.CONFIG,
+    press_fn=lambda device: device.reset_energy_summation(),
 )
 
 
@@ -89,6 +104,19 @@ async def async_setup_entry(
             description=SIREN_TEST_ALARM_DESCRIPTION,
         )
         for device in session.device_helper.outdoor_sirens
+    )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=RESET_ENERGY_DESCRIPTION,
+        )
+        for plug in (
+            *session.device_helper.smart_plugs,
+            *session.device_helper.smart_plugs_compact,
+        )
     )
     async_add_entities(entities)
 

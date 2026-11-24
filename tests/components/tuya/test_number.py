@@ -264,7 +264,7 @@ async def test_temp_unit_convert_number_invalid(
     state = hass.states.get("number.inverter_pool_heat_pump_temperature")
     assert state is not None
     assert state.attributes.get("device_class") is None
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 @pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
