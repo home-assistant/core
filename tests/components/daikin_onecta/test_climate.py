@@ -1405,7 +1405,7 @@ async def test_climate_turn_on_and_off_use_operation_mode_without_power_control(
         gateway_id,
         management_point.embedded_id,
         "operationMode",
-        "cooling",
+        "heating",
     )
 
 

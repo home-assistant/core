@@ -172,6 +172,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(device, coordinator, embedded_id)
         self._setpoint = setpoint
+        self._last_active_operation_mode: str | None = None
         self._attr_unique_id = management_point_unique_id(
             self._device_id, self._embedded_id, self._setpoint
         )
@@ -182,6 +183,13 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     def update_state(self) -> None:
         """Refresh all state attributes from the device."""
         climate_control = self._climate_control()
+        operation_mode = self._operation_mode(climate_control)
+        if (
+            operation_mode is not None
+            and operation_mode.value is not None
+            and DAIKIN_HVAC_TO_HA.get(operation_mode.value) != HVACMode.OFF
+        ):
+            self._last_active_operation_mode = operation_mode.value
         active_presets = self._get_active_preset_modes(climate_control)
         # Successful writes update the typed model optimistically so Home
         # Assistant reflects the new state without waiting for the next poll.
@@ -559,12 +567,22 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return modes
 
     def _native_hvac_mode(
-        self, hvac_mode: HVACMode, climate_control: ClimateControl | None
+        self,
+        hvac_mode: HVACMode,
+        climate_control: ClimateControl | None,
+        preferred_native_mode: str | None = None,
     ) -> str | None:
         """Return an advertised native mode for a requested HVAC mode."""
         operation_mode = self._operation_mode(climate_control)
         if operation_mode is None:
             return None
+
+        if (
+            preferred_native_mode is not None
+            and preferred_native_mode in (operation_mode.values or [])
+            and DAIKIN_HVAC_TO_HA.get(preferred_native_mode) == hvac_mode
+        ):
+            return preferred_native_mode
 
         if DAIKIN_HVAC_TO_HA.get(operation_mode.value) == hvac_mode:
             return operation_mode.value
@@ -584,6 +602,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
+        await self._async_set_hvac_mode(hvac_mode)
+
+    async def _async_set_hvac_mode(
+        self,
+        hvac_mode: HVACMode,
+        preferred_native_mode: str | None = None,
+    ) -> None:
+        """Set HVAC mode, optionally restoring the previous native mode."""
         cc = self._climate_control()
         if (
             cc is not None
@@ -608,7 +634,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if hvac_mode != HVACMode.OFF or (
             not has_power_control and current_hvac_mode != HVACMode.OFF
         ):
-            operation_mode = self._native_hvac_mode(hvac_mode, cc)
+            operation_mode = self._native_hvac_mode(
+                hvac_mode, cc, preferred_native_mode
+            )
             if operation_mode is None:
                 self._raise_service_validation_error("climate_hvac_mode_unavailable")
 
@@ -634,6 +662,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
+            if operation_mode == "off" and cc.operation_mode.value is not None:
+                self._last_active_operation_mode = cc.operation_mode.value
             await self._async_execute_sub_client_command(
                 OnectaClient.climate_control,
                 lambda climate: climate.set_operation_mode(operation_mode),
@@ -1063,15 +1093,29 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Turn device CLIMATE on."""
         cc = self._climate_control()
         if cc is not None and cc.on_off_mode is None:
-            if self.hvac_mode == HVACMode.OFF:
-                next_mode = next(
-                    (mode for mode in self.hvac_modes if mode != HVACMode.OFF), None
-                )
-                if next_mode is None:
-                    self._raise_service_validation_error(
-                        "climate_hvac_mode_unavailable"
-                    )
-                await self.async_set_hvac_mode(next_mode)
+            if self.hvac_mode not in (None, HVACMode.OFF):
+                return
+            modes = self.hvac_modes
+            remembered_mode = self._last_active_operation_mode
+            remembered_hvac_mode = (
+                DAIKIN_HVAC_TO_HA.get(remembered_mode)
+                if remembered_mode is not None
+                else None
+            )
+            if remembered_hvac_mode in modes:
+                await self._async_set_hvac_mode(remembered_hvac_mode, remembered_mode)
+                return
+            next_mode = next(
+                (
+                    mode
+                    for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
+                    if mode in modes
+                ),
+                next((mode for mode in modes if mode != HVACMode.OFF), None),
+            )
+            if next_mode is None:
+                self._raise_service_validation_error("climate_hvac_mode_unavailable")
+            await self._async_set_hvac_mode(next_mode)
             return
         await self._async_set_power(True, "turn_on_failed")
 
