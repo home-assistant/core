@@ -1308,7 +1308,7 @@ hass-splunk==0.2.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.12.1
+hassil==3.13.0
 
 # homeassistant.components.haven_iaq
 haveniaq==0.1.0
