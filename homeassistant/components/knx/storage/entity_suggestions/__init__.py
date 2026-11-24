@@ -20,10 +20,12 @@ from .functions import FunctionSuggestionProvider
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
+# the order of the sources from the most reliable to the weakest: the frontend
+# shows the providers and their groups in this order
 SUGGESTION_PROVIDERS: list[SuggestionProvider] = [
     FunctionalBlockSuggestionProvider(),
-    FunctionSuggestionProvider(),
     ExistingConfigSuggestionProvider(),
+    FunctionSuggestionProvider(),
 ]
 
 

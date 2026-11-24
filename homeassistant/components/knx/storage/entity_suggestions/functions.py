@@ -493,31 +493,71 @@ def _build_platform_suggestion(
     )
 
 
-def _spaces(locations: dict[str, Space]) -> dict[str, Space]:
-    """All spaces of the buildings by their identifier."""
-    found: dict[str, Space] = {}
+def _space_paths(
+    locations: dict[str, Space], parents: tuple[str, ...] = ()
+) -> dict[str, tuple[str, ...]]:
+    """The names of each space and the spaces containing it, by its identifier."""
+    found: dict[str, tuple[str, ...]] = {}
     for space in locations.values():
-        found[space["identifier"]] = space
-        found |= _spaces(space["spaces"])
+        path = (*parents, space["name"])
+        found[space["identifier"]] = path
+        found |= _space_paths(space["spaces"], path)
     return found
+
+
+def _space_names(locations: dict[str, Space]) -> dict[str, str]:
+    """The name of each space by its identifier.
+
+    A name used by more than one space is prefixed with the names of the spaces
+    containing it, as far as needed to tell them apart - eg. "Ground floor /
+    Kitchen" and "First floor / Kitchen".
+    """
+    paths = _space_paths(locations)
+    depths = dict.fromkeys(paths, 1)
+    while True:
+        labels = {
+            identifier: path[-depths[identifier] :]
+            for identifier, path in paths.items()
+        }
+        counts = Counter(labels.values())
+        deeper = [
+            identifier
+            for identifier, label in labels.items()
+            if counts[label] > 1 and depths[identifier] < len(paths[identifier])
+        ]
+        if not deeper:
+            return {
+                identifier: " / ".join(label) for identifier, label in labels.items()
+            }
+        for identifier in deeper:
+            depths[identifier] += 1
+
+
+def _disambiguate_names(suggestions: list[ProviderSuggestion]) -> None:
+    """Prefix names used multiple times with their room name."""
+    name_counts = Counter(suggestion["suggested_name"] for suggestion in suggestions)
+    for suggestion in suggestions:
+        if name_counts[suggestion["suggested_name"]] > 1 and suggestion["group_name"]:
+            suggestion["suggested_name"] = (
+                f"{suggestion['group_name']} {suggestion['suggested_name']}"
+            )
 
 
 def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
     """Build suggestions for all functions of a type with an entity."""
-    spaces = _spaces(project.get("locations") or {})
+    space_names = _space_names(project.get("locations") or {})
     linked = _linked_objects(project)
     suggestions: list[ProviderSuggestion] = []
     for function_id, function in (project.get("functions") or {}).items():
         if (built := _build_platform_suggestion(project, function, linked)) is None:
             continue
         platform, platform_suggestion, used_roles = built
-        space = spaces.get(function["space_id"])
         suggestions.append(
             ProviderSuggestion(
                 id=function_id,
                 suggested_name=function["name"],
                 group_id=function["space_id"],
-                group_name=space["name"] if space is not None else "",
+                group_name=space_names.get(function["space_id"], ""),
                 secondary_info=function["usage_text"],
                 platform_options=[platform.value],
                 suggestions={platform.value: platform_suggestion},
@@ -528,6 +568,7 @@ def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
                 },
             )
         )
+    _disambiguate_names(suggestions)
     return suggestions
 
 
