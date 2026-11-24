@@ -2,14 +2,15 @@
 
 from datetime import timedelta
 import threading
+import time
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pydanfossair.commands import ReadCommand
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.danfoss_air import DanfossAir
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -19,8 +20,21 @@ from . import setup_integration
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Move past the update throttle and update every entity one at a time."""
     freezer.tick(timedelta(seconds=61))
+    # Let the scheduled polls that are now due finish first, so they cannot
+    # write a state after the updates below.
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     for entity_id in hass.states.async_entity_ids():
         await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def _fetch_count(client: MagicMock) -> int:
+    """Return how many fetches have started, counted by their first read."""
+    return sum(
+        call.args[0] is ReadCommand.exhaustTemperature
+        for call in client.command.call_args_list
+    )
 
 
 def _unavailable(hass: HomeAssistant) -> list[str]:
@@ -65,22 +79,45 @@ async def test_unavailable_when_connection_lost(
     assert "Connection to Danfoss Air CCM module restored" in caplog.text
 
 
+HUMIDITY = "sensor.danfoss_air_humidity"
+AUTOMATIC_BYPASS = "switch.danfoss_air_automatic_bypass"
+
+
 @pytest.mark.parametrize(
-    ("available_before", "fetch_fails", "expected"),
+    ("connected_before", "fetch_fails", "expected"),
     [
-        pytest.param(True, False, (True, True), id="fetch"),
-        pytest.param(True, True, (False, None), id="connection-lost"),
-        pytest.param(False, False, (True, True), id="connection-restored"),
+        pytest.param(
+            True,
+            True,
+            {HUMIDITY: STATE_UNAVAILABLE, AUTOMATIC_BYPASS: STATE_UNAVAILABLE},
+            id="connection-lost",
+        ),
+        pytest.param(
+            False,
+            False,
+            {HUMIDITY: "57.25", AUTOMATIC_BYPASS: STATE_ON},
+            id="connection-restored",
+        ),
     ],
 )
-def test_overlapping_update_waits_for_fetch(
+async def test_overlapping_polls_wait_for_fetch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_danfoss_client: MagicMock,
-    available_before: bool,
+    connected_before: bool,
     fetch_fails: bool,
-    expected: tuple[bool, bool | None],
+    expected: dict[str, str],
 ) -> None:
-    """Test an update that arrives during a fetch sees the outcome of that fetch."""
+    """Test entities polled during a fetch get the outcome of that fetch."""
     read_values = mock_danfoss_client.command.side_effect
+    await setup_integration(hass)
+    if not connected_before:
+        mock_danfoss_client.command.side_effect = OSError("No route to host")
+    await _poll(hass, freezer)
+    for entity_id in expected:
+        unavailable = hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        assert unavailable is not connected_before
+
     fetch_started = threading.Event()
     release_fetch = threading.Event()
 
@@ -92,40 +129,24 @@ def test_overlapping_update_waits_for_fetch(
         return read_values(command)
 
     mock_danfoss_client.command.side_effect = slow_command
-    danfoss_air = DanfossAir("192.0.2.1")
-    danfoss_air.available = available_before
+    fetches_before = _fetch_count(mock_danfoss_client)
+    freezer.tick(timedelta(seconds=61))
 
-    first = threading.Thread(target=danfoss_air.update)
-    first.start()
-    assert fetch_started.wait(5)
-
-    seen: list[tuple[bool, bool | None]] = []
-
-    def second_update() -> None:
-        danfoss_air.update()
-        seen.append(
-            (
-                danfoss_air.available,
-                danfoss_air.get_value(ReadCommand.automatic_bypass),
-            )
-        )
-
-    second = threading.Thread(target=second_update)
-    second.start()
+    # Poll a sensor, and while its fetch runs, poll a switch.
+    first = hass.async_create_task(async_update_entity(hass, HUMIDITY))
     try:
-        second.join(0.2)
-        waited = second.is_alive()
+        assert await hass.async_add_executor_job(fetch_started.wait, 5)
+        second = hass.async_create_task(async_update_entity(hass, AUTOMATIC_BYPASS))
+        await hass.async_add_executor_job(time.sleep, 0.2)
+        waited = not second.done()
     finally:
         release_fetch.set()
-        first.join(5)
-        second.join(5)
+    await first
+    await second
 
-    assert waited, "second update did not wait for the running fetch"
-    assert seen == [expected]
-    # The second caller reused the first fetch instead of fetching again.
-    fetches = [
-        call
-        for call in mock_danfoss_client.command.call_args_list
-        if call.args[0] is ReadCommand.exhaustTemperature
-    ]
-    assert len(fetches) == 1
+    assert waited, "the switch poll did not wait for the running fetch"
+    assert {entity_id: hass.states.get(entity_id).state for entity_id in expected} == (
+        expected
+    )
+    # Both polls shared one fetch.
+    assert _fetch_count(mock_danfoss_client) == fetches_before + 1
