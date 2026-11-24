@@ -69,15 +69,31 @@ def test_no_message(
         walk_checker(linter, target_key_checker, root_node)
 
 
-def test_no_message_outside_tests(
+def test_message_in_integration_code(
     linter: UnittestLinter, target_key_checker: TargetKeyChecker
 ) -> None:
-    """Test that calls outside test modules are not reported."""
+    """Test that calls in integration code are reported too."""
     code = """
 hass.services.async_call("light", "turn_on", target={ATTR_ENTITY_ID: "light.kitchen"})
 """
     root_node = astroid.parse(code, "homeassistant.components.climate.intent")
-    with assert_no_messages(linter):
+    key_node = next(
+        node
+        for node in root_node.nodes_of_class(astroid.nodes.Name)
+        if node.name == "ATTR_ENTITY_ID"
+    )
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="home-assistant-action-target-key",
+            node=key_node,
+            args=("ATTR_ENTITY_ID", "TargetKey.ENTITY_ID"),
+            line=key_node.lineno,
+            col_offset=key_node.col_offset,
+            end_line=key_node.end_lineno,
+            end_col_offset=key_node.end_col_offset,
+        ),
+    ):
         walk_checker(linter, target_key_checker, root_node)
 
 

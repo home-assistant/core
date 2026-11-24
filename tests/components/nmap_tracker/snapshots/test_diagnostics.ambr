@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'offline_devices': 0,
+    'options': dict({
+      'home_interval': 0,
+      'hosts_exclude': '**REDACTED**',
+      'hosts_list': list([
+        '192.168.1.0/24',
+      ]),
+      'mac_exclude': '**REDACTED**',
+      'scan_options': '-n -sn -PR -T4 --min-rate 10 --host-timeout 5s',
+    }),
+    'tracked_devices': 1,
+  })
+# ---
