@@ -3277,3 +3277,131 @@ async def test_subentry_custom_abort_and_deleted_mid_flow(
         data={"error": "Config entry or subentry no longer exists."}, error=True
     )
     assert hass.config_entries.subentries.async_progress() == []
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_subentry_parent_entry_removed_mid_flow(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test subentry flows stay abortable and fail cleanly when the parent entry is removed."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    progress_started = asyncio.Event()
+    progress_cancelled = asyncio.Event()
+
+    async def _slow_task() -> None:
+        progress_started.set()
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            progress_cancelled.set()
+            raise
+
+    class ProgressSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow with a background progress task."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            task = hass.async_create_task(_slow_task())
+            return self.async_show_progress(
+                step_id="user", progress_action="working", progress_task=task
+            )
+
+    class FormSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow showing a simple form."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=probatio.Schema({probatio.Required("name"): str}),
+            )
+
+    class FlowWithSubentries(ConfigFlow):
+        """Config flow with progress and form subentries."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"progress": ProgressSubentryFlow, "form": FormSubentryFlow}
+
+    entry1 = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Hub 1",
+        entry_id="01J00000000000000000008401",
+    )
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Hub 2",
+        entry_id="01J00000000000000000008402",
+    )
+    entry2.add_to_hass(hass)
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentries):
+        # 1. Start progress subentry flow, remove parent entry, then abort
+        started_progress = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8401",
+                    "subentry_type": "progress",
+                },
+            )
+        )
+        assert isinstance(progress_step := started_progress.data["result"], dict)
+        await progress_started.wait()
+
+        await hass.config_entries.async_remove(entry1.entry_id)
+
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": progress_step["flow_id"], "abort": True},
+            )
+        )
+        await progress_cancelled.wait()
+
+        # 2. Start form subentry flow, remove parent entry, then try to submit
+        started_form = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8402",
+                    "subentry_type": "form",
+                },
+            )
+        )
+        assert isinstance(form_step := started_form.data["result"], dict)
+
+        await hass.config_entries.async_remove(entry2.entry_id)
+
+        submitted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": form_step["flow_id"], "user_input": {"name": "test"}},
+            )
+        )
+
+    assert aborted == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": progress_step["flow_id"],
+                "type": "abort",
+                "reason": "aborted",
+            }
+        }
+    )
+    assert submitted == llm.ToolResult(
+        data={"error": "Config entry or subentry no longer exists."}, error=True
+    )
+    assert hass.config_entries.subentries.async_progress() == []
