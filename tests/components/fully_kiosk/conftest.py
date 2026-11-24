@@ -11,7 +11,8 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_FEED_URL
+from homeassistant.components.fully_kiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.coordinator import UPDATE_FEED_URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,

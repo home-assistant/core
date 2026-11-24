@@ -873,6 +873,7 @@ decora-wifi==1.4
 # homeassistant.components.ecovacs
 deebot-client==18.7.0
 
+# homeassistant.components.fully_kiosk
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos

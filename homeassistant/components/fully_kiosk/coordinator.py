@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import timedelta
 import re
 from typing import Any, cast, override
 
@@ -16,19 +16,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    DEFAULT_PORT,
-    DOMAIN,
-    LOGGER,
-    UPDATE_FEED_INTERVAL,
-    UPDATE_FEED_RETRY_INTERVAL,
-    UPDATE_FEED_URL,
-    UPDATE_INTERVAL,
-)
+from .const import DEFAULT_PORT, DOMAIN, LOGGER, UPDATE_INTERVAL
+
+UPDATE_FEED_URL = "https://www.fully-kiosk.com/feed/media"
+UPDATE_FEED_INTERVAL = timedelta(hours=12)
+UPDATE_FEED_RETRY_INTERVAL = timedelta(minutes=15)
 
 type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
 
@@ -58,39 +58,28 @@ class FullyKioskReleaseInfo:
 
     releases: list[FullyKioskRelease]
 
-    def get_latest(
-        self, app: str = "Fully-Kiosk-Browser", is_emm: bool = False
-    ) -> FullyKioskRelease | None:
-        """Get the latest release for the specified app and edition."""
-        target_variant = "emm" if is_emm else None
-        matching = [
-            r for r in self.releases if r.app == app and r.variant == target_variant
-        ]
-        if not matching:
-            return None
-        return max(matching, key=lambda r: AwesomeVersion(r.version))
-
     def get_release(
-        self,
-        version: str,
-        app: str = "Fully-Kiosk-Browser",
-        is_emm: bool = False,
+        self, app: str, is_emm: bool, version: str | None = None
     ) -> FullyKioskRelease | None:
-        """Get a specific release for the specified app, edition and version."""
-        target_variant = "emm" if is_emm else None
-        clean_version = version.removesuffix("-emm")
-        for r in self.releases:
-            if (
-                r.app == app
-                and r.variant == target_variant
-                and r.version == clean_version
-            ):
-                return r
-        return None
+        """Get the requested or latest release of the app and edition."""
+        variant = "emm" if is_emm else None
+        if version is not None:
+            version = version.removesuffix("-emm")
+        return max(
+            (
+                release
+                for release in self.releases
+                if release.app == app
+                and release.variant == variant
+                and version in (None, release.version)
+            ),
+            key=lambda release: AwesomeVersion(release.version),
+            default=None,
+        )
 
 
 class FullyKioskReleasesDataUpdateCoordinator(
-    DataUpdateCoordinator[FullyKioskReleaseInfo]
+    TimestampDataUpdateCoordinator[FullyKioskReleaseInfo]
 ):
     """Class to manage fetching Fully Kiosk APK releases from RSS feed."""
 
@@ -104,7 +93,6 @@ class FullyKioskReleasesDataUpdateCoordinator(
             name=f"{DOMAIN}_releases",
             update_interval=UPDATE_FEED_INTERVAL,
         )
-        self._last_fetched: datetime | None = None
         self._refresh_task: asyncio.Task[None] | None = None
 
     @callback
@@ -114,11 +102,11 @@ class FullyKioskReleasesDataUpdateCoordinator(
             return
         if (
             self.last_update_success
-            and self._last_fetched
-            and dt_util.utcnow() - self._last_fetched < UPDATE_FEED_INTERVAL
+            and self.last_update_success_time
+            and dt_util.utcnow() - self.last_update_success_time < UPDATE_FEED_INTERVAL
         ):
             return
-        self._refresh_task = self.hass.async_create_task(
+        self._refresh_task = self.hass.async_create_background_task(
             self.async_refresh(), f"{DOMAIN} releases refresh"
         )
 
@@ -164,7 +152,6 @@ class FullyKioskReleasesDataUpdateCoordinator(
                     )
                 )
 
-        self._last_fetched = dt_util.utcnow()
         return FullyKioskReleaseInfo(releases=releases)
 
 
@@ -216,5 +203,5 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Store settings under settings key in data
                 result[0]["settings"] = result[1]
                 return cast(dict[str, Any], result[0])
-        except (FullyKioskError, aiohttp.ClientError, TimeoutError) as error:
+        except FullyKioskError as error:
             raise UpdateFailed(error) from error
