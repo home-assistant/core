@@ -319,16 +319,8 @@ class ClimateGroup(GroupEntity, ClimateEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn the entities on."""
-        # Members which are already on could otherwise be switched to another mode
         await self._async_call_supported_entities(
-            SERVICE_TURN_ON,
-            [
-                entity_id
-                for entity_id in self._climates[ClimateEntityFeature.TURN_ON]
-                if (state := self.hass.states.get(entity_id)) is not None
-                and state.state == HVACMode.OFF
-            ],
-            {},
+            SERVICE_TURN_ON, self._climates[ClimateEntityFeature.TURN_ON], {}
         )
 
     @override

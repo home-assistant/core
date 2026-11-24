@@ -247,6 +247,7 @@ async def test_combined_ranges(hass: HomeAssistant) -> None:
             {ClimateServiceArgument.SWING_HORIZONTAL_MODE: "rangefull"},
             id="set_swing_horizontal_mode",
         ),
+        pytest.param(SERVICE_TURN_ON, {}, id="turn_on"),
         pytest.param(SERVICE_TURN_OFF, {}, id="turn_off"),
     ],
 )
@@ -270,32 +271,6 @@ async def test_services(
     assert [
         hass.states.get(entity_id) for entity_id in (*DEMO_ENTITY_IDS, CLIMATE_GROUP)
     ] == snapshot
-
-
-async def test_turn_on_only_off_members(hass: HomeAssistant) -> None:
-    """Test turn on leaves members which are already on in their mode."""
-    await _setup_group(hass, DEMO_ENTITY_IDS, demo=True)
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        ClimateService.SET_HVAC_MODE,
-        {
-            TargetKey.ENTITY_ID: HEATPUMP_ENTITY_ID,
-            ClimateServiceArgument.HVAC_MODE: "off",
-        },
-        blocking=True,
-    )
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {TargetKey.ENTITY_ID: CLIMATE_GROUP},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(HEATPUMP_ENTITY_ID).state == "heat"
-    assert hass.states.get(HVAC_ENTITY_ID).state == "cool"
-    assert hass.states.get(ECOBEE_ENTITY_ID).state == "heat_cool"
 
 
 async def test_set_mode_with_member_without_mode_list(hass: HomeAssistant) -> None:
