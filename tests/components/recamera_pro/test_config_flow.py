@@ -1,5 +1,6 @@
 """Config flow and options flow tests for reCamera Pro."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -8,17 +9,23 @@ from recamera_protocol import (
     RecameraAuthenticationError,
     RecameraConnectionError,
     RecameraDeviceInfo,
+    RecameraError,
     RecameraProbeResult,
+    RecameraProtocolError,
 )
+from zeroconf import NotRunningException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.recamera_pro.config_flow import (
     RecameraProConfigFlow,
     RecameraProOptionsFlow,
     _any_host_reachable,
+    _async_probe_device_with_hass,
     _async_resolve_zeroconf_service,
+    _is_ignored_discovery_host,
     _options_catalog,
     _prioritize_reachable_hosts,
+    _text,
 )
 from homeassistant.components.recamera_pro.const import (
     CONF_AUDIO_CONFIDENCE,
@@ -599,3 +606,572 @@ async def test_resolve_zeroconf_and_refresh_exit() -> None:
         side_effect=data_entry_flow.UnknownFlow
     )
     await flow._async_refresh_discovery("_recamera._tcp.local.", "svc")
+
+
+@pytest.mark.asyncio
+async def test_config_flow_helper_edge_cases() -> None:
+    """Test helper functions and zeroconf edge branches."""
+    assert _text(b" abc ") == "abc"
+    assert _text(None) == ""
+    assert not _is_ignored_discovery_host("not-an-ip")
+    assert await _prioritize_reachable_hosts(["192.168.1.1"]) == ["192.168.1.1"]
+
+    fake_writer = SimpleNamespace(close=Mock(), wait_closed=AsyncMock())
+
+    async def _first_ok(host: str, _port: int) -> tuple[None, SimpleNamespace]:
+        if host == "192.168.1.10":
+            return None, fake_writer
+        raise OSError("down")
+
+    with patch("asyncio.open_connection", side_effect=_first_ok):
+        assert await _prioritize_reachable_hosts(["192.168.1.10", "192.168.1.20"]) == [
+            "192.168.1.10",
+            "192.168.1.20",
+        ]
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow.async_probe_device",
+        new=AsyncMock(return_value=_probe()),
+    ) as probe_mock:
+        res = await _async_probe_device_with_hass(None, "192.168.1.10", "admin", "pw")
+    assert res.info.serial_number == "SN123456"
+    probe_mock.assert_awaited_once_with("192.168.1.10", "admin", "pw")
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow.ha_zeroconf.async_get_async_instance",
+        new=AsyncMock(
+            return_value=SimpleNamespace(zeroconf=SimpleNamespace(done=True))
+        ),
+    ):
+        assert (
+            await _async_resolve_zeroconf_service(
+                SimpleNamespace(), "_recamera._tcp.local.", "svc"
+            )
+            is None
+        )
+
+    removed_records: list[str] = []
+    fake_info = SimpleNamespace(
+        parsed_addresses=lambda: ["bad-ip", "0.0.0.0", "192.168.42.1", "192.168.42.1"],
+        port=80,
+        server="reCamera-Pro.local.",
+        decoded_properties={"mac": "4a:f8:34:07:ab:3d"},
+        async_request=AsyncMock(return_value=True),
+    )
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.ha_zeroconf.async_get_async_instance",
+            new=AsyncMock(
+                return_value=SimpleNamespace(
+                    zeroconf=SimpleNamespace(
+                        done=False,
+                        cache=SimpleNamespace(
+                            async_all_by_details=lambda *_a: ["rec1"],
+                            async_remove_records=removed_records.extend,
+                        ),
+                    )
+                )
+            ),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.AsyncServiceInfo",
+            return_value=fake_info,
+        ),
+    ):
+        resolved = await _async_resolve_zeroconf_service(
+            SimpleNamespace(), "_recamera._tcp.local.", "svc"
+        )
+    assert resolved is not None
+    assert resolved[0] == ["192.168.42.1"]
+    assert removed_records
+
+    class _BadStore:
+        def __init__(self, *_a: object, **_kw: object) -> None:
+            pass
+
+        async def async_load(self) -> dict[str, object]:
+            return {
+                "class_catalog": [
+                    "bad",
+                    {"source_id": "builtin", "class_name": "person"},
+                ],
+                "discovered_classes": ["bad", ["builtin", "car"]],
+            }
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow.Store",
+        new=_BadStore,
+    ):
+        cat = await _options_catalog(
+            SimpleNamespace(entry_id="e1", runtime_data=None), SimpleNamespace()
+        )
+    assert "builtin:person" in cat
+    assert "builtin:car" in cat
+
+
+@pytest.mark.asyncio
+async def test_user_reauth_reconfigure_and_options_forms() -> None:
+    """Test all error/recovery paths in user, reauth, reconfigure, and options."""
+    flow = _make_flow()
+    assert isinstance(
+        RecameraProConfigFlow.async_get_options_flow(SimpleNamespace()),
+        RecameraProOptionsFlow,
+    )
+
+    user_form = await flow.async_step_user()
+    assert user_form["type"] == FlowResultType.FORM
+
+    for exc, expected_err in (
+        (RecameraAuthenticationError("bad"), "invalid_auth"),
+        (RecameraProtocolError("proto"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ):
+        with patch(
+            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+            new=AsyncMock(side_effect=exc),
+        ):
+            err = await flow.async_step_user(
+                {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
+            )
+        assert err["errors"]["base"] == expected_err
+
+    no_id_probe = RecameraProbeResult(
+        info=RecameraDeviceInfo(
+            device_name="reCamera",
+            base_plate_model="reCamera Pro",
+            sensor_model="imx",
+            hardware_version="1.0",
+            firmware_version="V1.3.0",
+            serial_number=None,
+            mac_address=None,
+        ),
+        capabilities={},
+    )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=no_id_probe),
+    ):
+        no_id_err = await flow.async_step_user(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
+        )
+    assert no_id_err["errors"]["base"] == "identity_unavailable"
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        user_ok = await flow.async_step_user(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
+        )
+    assert user_ok["type"] == FlowResultType.CREATE_ENTRY
+    assert flow.async_set_unique_id.call_args.args[0] == "SN123456"
+
+    # Reauth form + error paths + recovery
+    entry = SimpleNamespace(
+        entry_id="e1",
+        unique_id="SN123456",
+        update_listeners=[],
+        data={
+            CONF_HOST: "192.168.10.22",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "old",
+            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
+            CONF_SERIAL_NUMBER: "SN123456",
+        },
+    )
+    flow._get_reauth_entry = lambda: entry
+    flow._get_reconfigure_entry = lambda: entry
+    flow.async_update_reload_and_abort = Mock(
+        side_effect=lambda *_a, reason, **_kw: {
+            "type": FlowResultType.ABORT,
+            "reason": reason,
+        }
+    )
+
+    reauth_form = await flow.async_step_reauth(entry.data)
+    assert reauth_form["type"] == FlowResultType.FORM
+    for exc, expected_err in (
+        (RecameraAuthenticationError("bad"), "invalid_auth"),
+        (RecameraError("conn"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ):
+        with patch(
+            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+            new=AsyncMock(side_effect=exc),
+        ):
+            err = await flow.async_step_reauth_confirm(
+                {CONF_USERNAME: "admin", CONF_PASSWORD: "bad"}
+            )
+        assert err["errors"]["base"] == expected_err
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
+    ):
+        mismatch = await flow.async_step_reauth_confirm(
+            {CONF_USERNAME: "admin", CONF_PASSWORD: "ok"}
+        )
+    assert mismatch["errors"]["base"] == "identity_mismatch"
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        reauth_ok = await flow.async_step_reauth_confirm(
+            {CONF_USERNAME: "admin", CONF_PASSWORD: "new"}
+        )
+    assert reauth_ok["type"] == FlowResultType.ABORT
+    assert reauth_ok["reason"] == "reauth_successful"
+
+    # Reconfigure error paths + recovery
+    for exc, expected_err in (
+        (RecameraError("conn"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ):
+        with patch(
+            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+            new=AsyncMock(side_effect=exc),
+        ):
+            err = await flow.async_step_reconfigure(
+                {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
+            )
+        assert err["errors"]["base"] == expected_err
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
+    ):
+        reconf_mismatch = await flow.async_step_reconfigure(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
+        )
+    assert reconf_mismatch["errors"]["base"] == "identity_mismatch"
+
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        reconf_ok = await flow.async_step_reconfigure(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "new"}
+        )
+    assert reconf_ok["type"] == FlowResultType.ABORT
+    assert reconf_ok["reason"] == "reconfigure_successful"
+
+    # Options forms (GET without user_input)
+    opts_entry = SimpleNamespace(
+        entry_id="e1",
+        options={},
+        runtime_data=SimpleNamespace(data=SimpleNamespace(class_catalog={})),
+    )
+    options_flow = RecameraProOptionsFlow()
+    with patch.object(RecameraProOptionsFlow, "config_entry", new=opts_entry):
+        assert (await options_flow.async_step_vision())["type"] == FlowResultType.FORM
+        assert (await options_flow.async_step_sound())["type"] == FlowResultType.FORM
+        assert (await options_flow.async_step_classes())["type"] == FlowResultType.FORM
+
+
+@pytest.mark.asyncio
+async def test_zeroconf_and_discovery_refresh_branches() -> None:
+    """Test zeroconf abort, validation, probing, and refresh loop branches."""
+    flow = _make_flow()
+    bad_type = SimpleNamespace(
+        type="_http._tcp.local.",
+        name="bad",
+        host="192.168.10.22",
+        properties={},
+    )
+    assert (await flow.async_step_zeroconf(bad_type))["reason"] == (
+        "unsupported_discovery"
+    )
+
+    flow._discovery_serial = "SN123456"
+    assert flow._discovery_identity_mismatch(_probe(serial="OTHER"))
+    flow._discovery_serial = None
+    assert not flow._discovery_identity_mismatch(_probe())
+    assert flow._canonical_discovery_identity() is None
+    flow._discovery_id = "DISC1"
+    assert flow._canonical_discovery_identity() == "DISC1"
+
+    # Pending discovery flow -> already_in_progress
+    flow.hass.config_entries.flow.async_progress_by_handler = lambda _d: [
+        {"context": {"source": "zeroconf", "unique_id": "4a:f8:34:07:ab:3d"}}
+    ]
+    dup_info = SimpleNamespace(
+        type="_recamera._tcp.local.",
+        name="reCamera._recamera._tcp.local.",
+        host="192.168.10.22",
+        ip_addresses=["192.168.10.22"],
+        properties={"mac": "4a:f8:34:07:ab:3d"},
+    )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._prioritize_reachable_hosts",
+        new=AsyncMock(side_effect=list),
+    ):
+        dup_res = await flow.async_step_zeroconf(dup_info)
+    assert dup_res["reason"] == "already_in_progress"
+
+    # No canonical identity path -> _async_abort_entries_match
+    flow.hass.config_entries.flow.async_progress_by_handler = list
+    anon_info = SimpleNamespace(
+        type="_recamera._tcp.local.",
+        name="reCamera._recamera._tcp.local.",
+        host="192.168.10.22",
+        ip_addresses=["192.168.10.22"],
+        properties={},
+    )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._prioritize_reachable_hosts",
+        new=AsyncMock(side_effect=list),
+    ):
+        anon_res = await flow.async_step_zeroconf(anon_info)
+    assert anon_res["type"] == FlowResultType.FORM
+
+    # zeroconf_confirm identity_unavailable then recovery
+    no_id_probe = RecameraProbeResult(
+        info=RecameraDeviceInfo(
+            device_name="reCamera",
+            base_plate_model="reCamera Pro",
+            sensor_model="imx",
+            hardware_version="1.0",
+            firmware_version="V1.3.0",
+            serial_number=None,
+            mac_address=None,
+        ),
+        capabilities={},
+    )
+    flow._discovery_host = "192.168.10.22"
+    flow._discovery_hosts = ["192.168.10.22"]
+    flow._discovery_id = "DISC1"
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=no_id_probe),
+    ):
+        id_err = await flow.async_step_zeroconf_confirm(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"}
+        )
+    assert id_err["errors"]["base"] == "identity_unavailable"
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(return_value=_probe()),
+    ):
+        ok_confirm = await flow.async_step_zeroconf_confirm(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"}
+        )
+    assert ok_confirm["type"] == FlowResultType.CREATE_ENTRY
+    assert flow.async_set_unique_id.call_args.args[0] == "SN123456"
+
+    # _start_discovery_refresh & _cancel_discovery_refresh
+    created_tasks: list[object] = []
+
+    def _fake_create_task(coro: object, *, name: str) -> SimpleNamespace:
+        coro.close()  # type: ignore[attr-defined]
+        created_tasks.append(name)
+        return SimpleNamespace(done=lambda: False, cancel=Mock())
+
+    flow.hass.async_create_background_task = _fake_create_task
+    flow._start_discovery_refresh("_recamera._tcp.local.", "svc")
+    flow._start_discovery_refresh("_recamera._tcp.local.", "svc")
+    assert len(created_tasks) == 1
+    flow._cancel_discovery_refresh()
+
+    # _async_probe_existing_discovery_hosts & _async_probe_new_discovery_hosts exceptions
+    entry = SimpleNamespace(
+        entry_id="e1",
+        unique_id="SN123456",
+        data={
+            CONF_HOST: "192.168.10.22",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "pw",
+            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
+            CONF_SERIAL_NUMBER: "SN123456",
+        },
+        runtime_data=SimpleNamespace(last_update_success=True),
+    )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=[TimeoutError("t"), RuntimeError("boom")]),
+    ):
+        _, _, ex_err = await flow._async_probe_existing_discovery_hosts(
+            entry, ["192.168.10.22"]
+        )
+    with patch(
+        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+        new=AsyncMock(side_effect=[TimeoutError("t"), RuntimeError("boom")]),
+    ):
+        _, _, new_err = await flow._async_probe_new_discovery_hosts(
+            ["192.168.10.22", "192.168.10.23"], "admin", "pw"
+        )
+    assert ex_err == "cannot_connect"
+    assert new_err == "cannot_connect"
+
+    with patch.object(
+        asyncio.get_running_loop(),
+        "time",
+        side_effect=[0.0, 100.0, 0.0, 100.0],
+    ):
+        _, _, dl_ex = await flow._async_probe_existing_discovery_hosts(
+            entry, ["192.168.10.22"]
+        )
+        _, _, dl_new = await flow._async_probe_new_discovery_hosts(
+            ["192.168.10.22"], "admin", "pw"
+        )
+    assert dl_ex == "cannot_connect"
+    assert dl_new == "cannot_connect"
+
+    # _async_validate_discovery_update: failure, old_host_healthy=True, and old_host check error
+    with patch.object(
+        flow,
+        "_async_probe_existing_discovery_hosts",
+        new=AsyncMock(return_value=(None, None, "cannot_connect")),
+    ):
+        fail_upd = await flow._async_validate_discovery_update(
+            entry, ["192.168.10.99"], "DISC1"
+        )
+    assert fail_upd["reason"] == "cannot_connect"
+
+    with (
+        patch.object(
+            flow,
+            "_async_probe_existing_discovery_hosts",
+            new=AsyncMock(return_value=("192.168.10.99", _probe(), None)),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+            new=AsyncMock(return_value=_probe()),
+        ),
+    ):
+        keep_old = await flow._async_validate_discovery_update(
+            entry, ["192.168.10.99"], "DISC1"
+        )
+    assert keep_old["reason"] == "already_configured"
+    assert flow.hass.config_entries.async_update_entry.called
+
+    flow.async_update_reload_and_abort = Mock(
+        return_value={"type": FlowResultType.ABORT, "reason": "already_configured"}
+    )
+    for old_exc in (RecameraError("old down"), RuntimeError("unexpected")):
+        with (
+            patch.object(
+                flow,
+                "_async_probe_existing_discovery_hosts",
+                new=AsyncMock(return_value=("192.168.10.99", _probe(), None)),
+            ),
+            patch(
+                "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
+                new=AsyncMock(side_effect=old_exc),
+            ),
+        ):
+            sw_new = await flow._async_validate_discovery_update(
+                entry, "192.168.10.99", "DISC1"
+            )
+        assert sw_new["reason"] == "already_configured"
+    assert flow.async_update_reload_and_abort.called
+
+    # _async_refresh_discovery sequence exercising all main branches
+    flow2 = _make_flow()
+    flow2.flow_id = "f2"
+    flow2.context = {}
+    flow2._discovery_hosts = ["192.168.10.22"]
+    flow2.hass.config_entries.flow.async_get = Mock(
+        side_effect=[IndexError(), None, None, None, None, None, None, None, None, None]
+    )
+    flow2.hass.config_entries.flow.async_abort = Mock()
+    resolve_seq = [
+        NotRunningException(),
+        RuntimeError("boom"),
+        None,
+        ([], 80, "reCamera.local.", {}),
+        ([], 80, "reCamera.local.", {}),
+        (["192.168.10.22"], 80, "reCamera.local.", {}),
+        (["192.168.10.22", "192.168.10.23"], 80, "reCamera.local.", {}),
+        (["192.168.10.99"], 80, "reCamera.local.", {}),
+        (["192.168.10.99"], 80, "reCamera.local.", {}),
+    ]
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._async_resolve_zeroconf_service",
+            new=AsyncMock(side_effect=resolve_seq),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._any_host_reachable",
+            new=AsyncMock(side_effect=[True, True, False]),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.asyncio.sleep",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.discovery_flow.async_create_flow"
+        ) as create_flow,
+    ):
+        await flow2._async_refresh_discovery("_recamera._tcp.local.", "svc")
+    assert create_flow.called
+
+    # Offline abort branch in _async_refresh_discovery
+    flow3 = _make_flow()
+    flow3.flow_id = "f3"
+    flow3._discovery_hosts = ["192.168.10.22"]
+    flow3.hass.config_entries.flow.async_get = Mock()
+    flow3.hass.config_entries.flow.async_abort = Mock()
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._async_resolve_zeroconf_service",
+            new=AsyncMock(return_value=([], 80, "reCamera.local.", {})),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._any_host_reachable",
+            new=AsyncMock(return_value=False),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.asyncio.sleep",
+            new=AsyncMock(),
+        ),
+    ):
+        await flow3._async_refresh_discovery("_recamera._tcp.local.", "svc")
+    flow3.hass.config_entries.flow.async_abort.assert_called_once_with("f3")
+
+    # _discovery_form_shown=True and UnknownFlow on final abort
+    flow4 = _make_flow()
+    flow4.flow_id = "f4"
+    flow4._discovery_form_shown = True
+    flow4._discovery_hosts = ["192.168.10.22"]
+    flow4.hass.config_entries.flow.async_get = Mock()
+    flow4.hass.config_entries.flow.async_abort = Mock(
+        side_effect=data_entry_flow.UnknownFlow
+    )
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._async_resolve_zeroconf_service",
+            new=AsyncMock(
+                side_effect=[
+                    (["192.168.10.55"], 80, "reCamera.local.", {}),
+                    (["192.168.10.66"], 80, "reCamera.local.", {}),
+                ]
+            ),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._any_host_reachable",
+            new=AsyncMock(side_effect=[False, True]),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.asyncio.sleep",
+            new=AsyncMock(side_effect=[None, RuntimeError("stop")]),
+        ),
+    ):
+        flow4._discovery_form_shown = True
+        with pytest.raises(RuntimeError, match="stop"):
+            await flow4._async_refresh_discovery("_recamera._tcp.local.", "svc")
+
+    flow4._discovery_form_shown = False
+    flow4._discovery_hosts = ["192.168.10.22"]
+    flow4._discovery_refresh_candidate = ["192.168.10.66"]
+    with (
+        patch(
+            "homeassistant.components.recamera_pro.config_flow._async_resolve_zeroconf_service",
+            new=AsyncMock(return_value=(["192.168.10.66"], 80, "reCamera.local.", {})),
+        ),
+        patch(
+            "homeassistant.components.recamera_pro.config_flow.asyncio.sleep",
+            new=AsyncMock(),
+        ),
+    ):
+        await flow4._async_refresh_discovery("_recamera._tcp.local.", "svc")
