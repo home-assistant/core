@@ -2848,36 +2848,39 @@ async def test_entity_service_call_other_domain_entity(
         exceptions.ServiceNotSupported,
         match="Entity input_select.test does not support action light.turn_on",
     ):
-        await service.entity_service_call(hass, mock_entities, "test_method", call)
+        await service.entity_service_call(
+            hass, mock_entities, "test_method", call, entity_domain="light"
+        )
     assert mock_entities_method.call_count == 0
 
 
 async def test_entity_service_call_other_domain_entity_still_warn(
     hass: HomeAssistant,
     mock_entities: dict[str, MockEntity],
-    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test referenced entities that may yet be loaded are still only logged.
+    """Test referenced entities that the action may act on are still only logged.
 
-    These are an entity of the action's own domain, an unavailable entity of
-    another domain, and an entity of the integration that registered the action.
+    These are an entity of the domain the action is registered for, also when
+    an integration's action is registered for it, an unavailable entity of
+    another domain, and any entity when the call does not say which domain the
+    action is registered for.
     """
     hass.states.async_set("light.ceiling", STATE_ON)
     hass.states.async_set("switch.heater", STATE_UNAVAILABLE)
-    entity_registry.async_get_or_create(
-        "switch", "test_domain", "1234", suggested_object_id="fan"
-    )
     hass.states.async_set("switch.fan", STATE_ON)
 
-    for domain, entity_id in (
-        ("light", "light.ceiling"),
-        ("light", "switch.heater"),
-        ("test_domain", "switch.fan"),
+    for domain, entity_domain, entity_id in (
+        ("light", "light", "light.ceiling"),
+        ("test_domain", "light", "light.ceiling"),
+        ("light", "light", "switch.heater"),
+        ("light", None, "switch.fan"),
     ):
         caplog.clear()
         call = ServiceCall(hass, domain, "test_service", {"entity_id": [entity_id]})
-        await service.entity_service_call(hass, mock_entities, "", call)
+        await service.entity_service_call(
+            hass, mock_entities, "", call, entity_domain=entity_domain
+        )
         assert (
             f"Referenced entities {entity_id} are missing or not currently available"
         ) in caplog.text
@@ -2899,7 +2902,9 @@ async def test_entity_service_call_other_domain_group_member(
         "group.room", STATE_ON, {"entity_id": ["light.kitchen", "switch.heater"]}
     )
     call = ServiceCall(hass, "light", "turn_on", {"entity_id": ["group.room"]})
-    await service.entity_service_call(hass, mock_entities, "test_method", call)
+    await service.entity_service_call(
+        hass, mock_entities, "test_method", call, entity_domain="light"
+    )
     assert mock_entities_method.call_count == 1
     assert (
         "Referenced entities switch.heater are missing or not currently available"
@@ -2911,10 +2916,9 @@ async def test_entity_service_call_own_unavailable_entity(
     mock_entities_method: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unavailable entity of the action is only logged.
+    """Test an unavailable entity of an integration's action is only logged.
 
-    Its state may still show the last available value, and an entity without a
-    unique ID has no registry entry that ties it to the integration.
+    Its state may still show the last available value.
     """
     receiver = MockEntity(
         entity_id="media_player.receiver", available=False, should_poll=False
@@ -2928,13 +2932,95 @@ async def test_entity_service_call_own_unavailable_entity(
         {"entity_id": ["media_player.receiver"]},
     )
     await service.entity_service_call(
-        hass, {receiver.entity_id: receiver}, "test_method", call
+        hass,
+        {receiver.entity_id: receiver},
+        "test_method",
+        call,
+        entity_domain="media_player",
     )
     assert mock_entities_method.call_count == 0
     assert (
         "Referenced entities media_player.receiver are missing or not currently "
         "available"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("registration", ["entity_platform", "platform", "batched"])
+async def test_integration_action_other_domain_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    registration: str,
+) -> None:
+    """Test an integration's action compares targets with its entities' domain.
+
+    The action is registered for the lights of mock_platform. A light of another
+    integration is only logged as missing, while a switch is of another domain
+    and raises, also when mock_platform provides it.
+    """
+    called: list[str] = []
+
+    async def handle_service(entity: Entity, call: ServiceCall) -> None:
+        called.append(entity.entity_id)
+
+    async def handle_batched_service(entities: list[Entity], call: ServiceCall) -> None:
+        called.extend(entity.entity_id for entity in entities)
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="light", platform_name="mock_platform", platform=None
+    )
+    if registration == "entity_platform":
+        entity_platform.async_register_entity_service("hello", {}, handle_service)
+    elif registration == "platform":
+        service.async_register_platform_entity_service(
+            hass,
+            "mock_platform",
+            "hello",
+            entity_domain="light",
+            schema={},
+            func=handle_service,
+        )
+    else:
+        service.async_register_batched_platform_entity_service(
+            hass,
+            "mock_platform",
+            "hello",
+            entity_domain="light",
+            schema={},
+            func=handle_batched_service,
+        )
+    await entity_platform.async_add_entities([MockEntity(entity_id="light.kitchen")])
+    entity_registry.async_get_or_create(
+        "light", "other_platform", "1", suggested_object_id="porch"
+    )
+    hass.states.async_set("light.porch", STATE_ON)
+    entity_registry.async_get_or_create(
+        "switch", "mock_platform", "2", suggested_object_id="fan"
+    )
+    hass.states.async_set("switch.fan", STATE_ON)
+
+    await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        {"entity_id": ["light.kitchen", "light.porch"]},
+        blocking=True,
+    )
+    assert called == ["light.kitchen"]
+    assert (
+        "Referenced entities light.porch are missing or not currently available"
+    ) in caplog.text
+
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match="Entity switch.fan does not support action mock_platform.hello",
+    ):
+        await hass.services.async_call(
+            "mock_platform",
+            "hello",
+            {"entity_id": ["light.kitchen", "switch.fan"]},
+            blocking=True,
+        )
+    assert called == ["light.kitchen"]
 
 
 async def test_async_extract_entities_warn_referenced(

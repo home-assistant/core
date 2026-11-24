@@ -701,27 +701,22 @@ def _get_permissible_entity_candidates(
 
 @callback
 def _raise_for_other_domain_entity(
-    hass: HomeAssistant, call: ServiceCall, missing: set[str]
+    hass: HomeAssistant, call: ServiceCall, missing: set[str], entity_domain: str
 ) -> None:
     """Raise if an explicitly referenced entity belongs to another domain.
 
-    An available entity of another domain is not missing: the action cannot act
-    on it, and the call would otherwise succeed without doing anything. An entity
-    of the integration that registered the action may still be loaded, so it is
-    only logged as missing. Only entities the call names directly, and that are
-    not among the action's entities, are passed in: a targeted group may mix
-    domains, and an unavailable entity of the action may still show its last
-    state.
+    entity_domain is the domain of the entities the action is registered for:
+    the action's own domain for an entity component's action, and the domain of
+    the platform's entities for an integration's action. An available entity of
+    another domain is not missing: the action cannot act on it, and the call
+    would otherwise succeed without doing anything. Only entities the call names
+    directly are passed in, because a targeted group may mix domains.
     """
-    ent_reg = entity_registry.async_get(hass)
     for entity_id in sorted(missing):
-        if split_entity_id(entity_id)[0] == call.domain:
+        if split_entity_id(entity_id)[0] == entity_domain:
             continue
         state = hass.states.get(entity_id)
         if state is None or state.state == STATE_UNAVAILABLE:
-            continue
-        entry = ent_reg.async_get(entity_id)
-        if entry is not None and entry.platform == call.domain:
             continue
         raise ServiceNotSupported(call.domain, call.service, entity_id)
 
@@ -733,6 +728,7 @@ async def _resolve_entity_service_call_entities(
     required_features: Iterable[int] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     admin_only: bool = False,
+    entity_domain: str | None = None,
 ) -> list[Entity] | None:
     """Resolve and filter entities for an entity service call."""
     entity_perms: Callable[[str, str], bool] | None = None
@@ -790,11 +786,9 @@ async def _resolve_entity_service_call_entities(
         missing = referenced.referenced.copy()
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
-        if missing:
+        if missing and entity_domain is not None:
             _raise_for_other_domain_entity(
-                hass,
-                call,
-                (missing & target_selection.entity_ids) - _registered_entities.keys(),
+                hass, call, missing & target_selection.entity_ids, entity_domain
             )
         referenced.log_missing(missing, _LOGGER)
 
@@ -957,10 +951,12 @@ async def entity_service_call(
     *,
     admin_only: bool = False,
     entity_device_classes: Iterable[str | None] | None = None,
+    entity_domain: str | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
-    Calls all platforms simultaneously.
+    Calls all platforms simultaneously. entity_domain is the domain of the
+    entities the action is registered for.
     """
     entities = await _resolve_entity_service_call_entities(
         hass,
@@ -969,6 +965,7 @@ async def entity_service_call(
         required_features,
         entity_device_classes,
         admin_only=admin_only,
+        entity_domain=entity_domain,
     )
     if entities is None:
         return None
@@ -1000,14 +997,21 @@ async def batched_entity_service_call(
     ],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
+    *,
+    entity_domain: str | None = None,
 ) -> EntityServiceResponse | None:
     """Handle a batched entity service call.
 
     Calls the service function once with all matching entities as a list,
-    instead of once per entity.
+    instead of once per entity. entity_domain is the domain of the entities the
+    action is registered for.
     """
     entities = await _resolve_entity_service_call_entities(
-        hass, registered_entities, call, required_features
+        hass,
+        registered_entities,
+        call,
+        required_features,
+        entity_domain=entity_domain,
     )
     if entities is None:
         return None
@@ -1232,6 +1236,7 @@ def async_register_entity_service(
     admin_only: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
+    entity_domain: str | None = None,
     entities: Mapping[str, Entity],
     func: str | Callable[..., Any],
     job_type: HassJobType | None,
@@ -1243,7 +1248,8 @@ def async_register_entity_service(
 
     This is called by EntityComponent.async_register_entity_service and
     EntityPlatform.async_register_entity_service and should not be called
-    directly by integrations.
+    directly by integrations. entity_domain is the domain of the entities the
+    action is registered for.
     """
     schema = _validate_entity_service_schema(schema, f"{domain}.{name}")
 
@@ -1260,6 +1266,7 @@ def async_register_entity_service(
             service_func,
             admin_only=admin_only,
             entity_device_classes=entity_device_classes,
+            entity_domain=entity_domain,
             required_features=required_features,
         ),
         schema,
@@ -1276,6 +1283,7 @@ def async_register_batched_entity_service[_EntityT: Entity](
     name: str,
     *,
     description_placeholders: Mapping[str, str] | None = None,
+    entity_domain: str | None = None,
     entities: dict[str, _EntityT],
     func: Callable[
         [list[_EntityT], ServiceCall],
@@ -1288,7 +1296,8 @@ def async_register_batched_entity_service[_EntityT: Entity](
     """Help registering a batched entity service.
 
     This is called by EntityComponent.async_register_batched_entity_service
-    and should not be called directly by integrations.
+    and should not be called directly by integrations. entity_domain is the
+    domain of the entities the action is registered for.
 
     A batched entity service calls the service function once with all
     matching entities as a list, instead of once per entity.
@@ -1303,6 +1312,7 @@ def async_register_batched_entity_service[_EntityT: Entity](
             hass,
             entities,
             func,  # type: ignore[arg-type]
+            entity_domain=entity_domain,
             required_features=required_features,
         ),
         schema,
@@ -1359,6 +1369,7 @@ def async_register_platform_entity_service(
             service_func,
             admin_only=admin_only,
             entity_device_classes=entity_device_classes,
+            entity_domain=entity_domain,
             required_features=required_features,
         ),
         schema,
@@ -1399,6 +1410,7 @@ def async_register_batched_platform_entity_service[_EntityT: Entity](
             hass,
             partial(_get_platform_entities, hass, entity_domain, service_domain),
             func,  # type: ignore[arg-type]
+            entity_domain=entity_domain,
             required_features=required_features,
         ),
         schema,
