@@ -21,9 +21,12 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
+    CreateFloorTool,
+    DeleteFloorTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
     GetEntitySettingsTool,
+    GetFloorSettingsTool,
     GetFlowsInProgressTool,
     ReloadConfigEntryTool,
     RemoveEntityTool,
@@ -31,6 +34,7 @@ from homeassistant.components.config.llm import (
     StartFlowTool,
     UpdateCoreConfigTool,
     UpdateEntitySettingsTool,
+    UpdateFloorSettingsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -51,6 +55,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     config_entry_oauth2_flow,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
     llm,
     selector,
@@ -125,6 +130,10 @@ async def test_async_get_tools(
         "config__get_entity_settings",
         "config__update_entity_settings",
         "config__remove_entity",
+        "config__get_floor_settings",
+        "config__update_floor_settings",
+        "config__create_floor",
+        "config__delete_floor",
     ]
     assert ha_tools.prompt is None
 
@@ -142,6 +151,10 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         GetEntitySettingsTool(),
         UpdateEntitySettingsTool(),
         RemoveEntityTool(),
+        GetFloorSettingsTool(),
+        UpdateFloorSettingsTool(),
+        CreateFloorTool(),
+        DeleteFloorTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -2491,6 +2504,221 @@ async def test_remove_entity(
     with pytest.raises(HomeAssistantError, match="not found"):
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
+        )
+
+
+@pytest.fixture
+def floor_tools() -> dict[str, llm.Tool]:
+    """Return the floor registry tools by name."""
+    return {
+        tool.name: tool
+        for tool in (
+            GetFloorSettingsTool(),
+            UpdateFloorSettingsTool(),
+            CreateFloorTool(),
+            DeleteFloorTool(),
+        )
+    }
+
+
+async def test_create_and_get_floor(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test creating a floor and getting its settings."""
+    tool = floor_tools["config__create_floor"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "name": " Basement ",
+                "aliases": ["Cellar", " Downstairs "],
+                "icon": "mdi:home-floor-negative-1",
+                "level": -1,
+            },
+        ),
+        llm_context,
+    )
+    settings = {
+        "floor_id": "basement",
+        "name": "Basement",
+        "aliases": ["Cellar", "Downstairs"],
+        "icon": "mdi:home-floor-negative-1",
+        "level": -1,
+    }
+    assert result == llm.ToolResult(data={"result": settings})
+    assert floor_registry.async_get_floor("basement") is not None
+
+    tool = floor_tools["config__get_floor_settings"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"floor_id": "basement"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": settings})
+
+    with pytest.raises(HomeAssistantError, match="Floor 'attic' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": "attic"}), llm_context
+        )
+
+    tool = floor_tools["config__create_floor"]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"name": "basement"}), llm_context
+        )
+    assert str(exc_info.value) == "The name basement (basement) is already in use"
+
+
+async def test_update_floor_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test updating the settings of a floor."""
+    floor = floor_registry.async_create(
+        "First floor", aliases={"Upstairs"}, icon="mdi:home-floor-1", level=1
+    )
+
+    tool = floor_tools["config__update_floor_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "floor_id": floor.floor_id,
+                "name": "Top floor",
+                "aliases": ["Attic"],
+                "icon": None,
+                "level": None,
+            },
+        ),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "floor_id": floor.floor_id,
+                "name": "Top floor",
+                "aliases": ["Attic"],
+                "icon": None,
+                "level": None,
+            }
+        }
+    )
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"floor_id": floor.floor_id, "level": 2}),
+        llm_context,
+    )
+    assert not result.error
+    updated = floor_registry.async_get_floor(floor.floor_id)
+    assert updated is not None
+    assert updated.name == "Top floor"
+    assert updated.aliases == {"Attic"}
+    assert updated.level == 2
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param(
+            {"floor_id": "attic", "name": "Attic"},
+            "Floor 'attic' not found.",
+            id="unknown_floor",
+        ),
+        pytest.param(
+            {"floor_id": "first_floor", "name": "ground floor"},
+            "The name ground floor (groundfloor) is already in use",
+            id="name_in_use",
+        ),
+    ],
+)
+async def test_update_floor_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors when updating the settings of a floor."""
+    floor_registry.async_create("First floor")
+    floor_registry.async_create("Ground floor")
+
+    tool = floor_tools["config__update_floor_settings"]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "invalid_args"),
+    [
+        pytest.param("config__create_floor", {}, id="create_missing_name"),
+        pytest.param("config__create_floor", {"name": " "}, id="create_empty_name"),
+        pytest.param(
+            "config__create_floor", {"name": "Attic", "level": "top"}, id="bad_level"
+        ),
+        pytest.param(
+            "config__create_floor", {"name": "Attic", "icon": "attic"}, id="bad_icon"
+        ),
+        pytest.param(
+            "config__update_floor_settings", {"name": "Attic"}, id="missing_floor_id"
+        ),
+        pytest.param(
+            "config__update_floor_settings",
+            {"floor_id": "attic", "name": None},
+            id="update_null_name",
+        ),
+        pytest.param(
+            "config__update_floor_settings",
+            {"floor_id": "attic", "aliases": [""]},
+            id="empty_alias",
+        ),
+        pytest.param("config__delete_floor", {}, id="delete_missing_floor_id"),
+    ],
+)
+async def test_floor_tools_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_tools: dict[str, llm.Tool],
+    tool_name: str,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = floor_tools[tool_name]
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+async def test_delete_floor(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test deleting a floor keeps its areas."""
+    floor = floor_registry.async_create("First floor")
+    area = area_registry.async_create("Bedroom", floor_id=floor.floor_id)
+
+    tool = floor_tools["config__delete_floor"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"floor_id": floor.floor_id}})
+    assert floor_registry.async_get_floor(floor.floor_id) is None
+    updated_area = area_registry.async_get_area(area.id)
+    assert updated_area is not None
+    assert updated_area.floor_id is None
+
+    with pytest.raises(HomeAssistantError, match="Floor 'first_floor' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
         )
 
 

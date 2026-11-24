@@ -130,6 +130,12 @@
           "ready": "mdi:check",
           "standby": "mdi:power-standby"
         }
+      },
+      "hepa_filter_life": {
+        "default": "mdi:air-filter"
+      },
+      "voc": {
+        "default": "mdi:molecule"
       }
     },
     "switch": {
