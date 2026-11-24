@@ -482,14 +482,14 @@ class HKDevice:
             # Only strip the accessory name when it ends at a word boundary
             if not suffix or suffix[0] in " -_":
                 name = suffix.strip(" -_")
-        if name:
+        if name and not name.isdecimal():
             device_info.name = name
         else:
+            # A name that is only a number is used as the index
             device_info.translation_key = CHILD_DEVICE_SERVICE_TYPES[service.type]
             device_info.translation_placeholders = {
-                "index": str(
-                    service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX) or index
-                )
+                "index": name
+                or str(service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX) or index)
             }
         return device_info
 

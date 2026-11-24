@@ -942,6 +942,12 @@ def create_lightbulbs(
             id="service_name",
         ),
         pytest.param(
+            ("TestDevice 3", "4"),
+            (None, None),
+            ["Light 3", "Light 4"],
+            id="service_name_only_number",
+        ),
+        pytest.param(
             ("TestDevices A", "TestDevice"),
             (None, None),
             ["Light 2", "TestDevices A"],
