@@ -139,6 +139,27 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
+# Energy measurement parameters (S-series) that report the energy of a rolling one hour
+# window. Their value can go down, so they must not use total_increasing.
+PAST_HOUR_ENERGY_PARAMETER_IDS = frozenset(
+    {
+        "25154",  # Produced energy, heating
+        "25155",  # Produced energy, hot water
+        "25157",  # Produced energy, cooling
+        "25158",  # Used energy, heating
+        "25159",  # Used energy, hot water
+        "25161",  # Used energy, cooling
+        "25162",  # Used by additional heater, heating
+        "25163",  # Used by additional heater, hot water
+    }
+)
+
+PAST_HOUR_ENERGY_DESCRIPTION = SensorEntityDescription(
+    key="energy_past_hour",
+    device_class=SensorDeviceClass.ENERGY,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+)
+
 MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
@@ -198,8 +219,9 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
     Priorities:
     1. Category specific prefix e.g "NIBEF"
-    2. Global parameter_unit e.g. "°C"
-    3. Default to None
+    2. Rolling one hour energy parameters in the energy measurement category
+    3. Global parameter_unit e.g. "°C"
+    4. Default to None
     """
     description = None
     prefix, _, _ = device_point.category.partition(" ")
@@ -207,6 +229,14 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )
+    # The API returns this category with a soft hyphen (U+00AD) inside the word.
+    if (
+        description is None
+        and device_point.category.replace("\u00ad", "").lower() == "energy measurement"
+        and device_point.parameter_id in PAST_HOUR_ENERGY_PARAMETER_IDS
+        and device_point.parameter_unit == "kWh"
+    ):
+        description = PAST_HOUR_ENERGY_DESCRIPTION
     if description is None:
         description = DEVICE_POINT_UNIT_DESCRIPTIONS.get(device_point.parameter_unit)
 
