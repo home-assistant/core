@@ -47,6 +47,31 @@ class EngieBeRuntimeData:
     households: dict[str, EngieBeHouseholdCoordinators]
     epex_ready_callbacks: list[Callable[[], None]] = field(default_factory=list)
 
+    @callback
+    def async_add_epex_entities(
+        self, add_entities: Callable[[EngieBeEpexCoordinator, list[str]], None]
+    ) -> None:
+        """Add EPEX entities for the dynamic households now and whenever more are found."""
+        known_bans: set[str] = set()
+
+        @callback
+        def _async_add_new_households() -> None:
+            """Pass the newly found dynamic households to add_entities."""
+            if self.epex is None:
+                return
+            new_bans = [
+                ban
+                for ban, household in self.households.items()
+                if household.is_dynamic and ban not in known_bans
+            ]
+            if not new_bans:
+                return
+            known_bans.update(new_bans)
+            add_entities(self.epex, new_bans)
+
+        self.epex_ready_callbacks.append(_async_add_new_households)
+        _async_add_new_households()
+
 
 type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 

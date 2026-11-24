@@ -10,6 +10,7 @@
   "cable_current_limit": 32,
   "circuit_fuse": 32,
   "current_limit": 16,
+  "dynamic_current_limit": 16.0,
   "cable_lock_mode": 0,
   "access_level": 0,
   "phase_charging": 1,
