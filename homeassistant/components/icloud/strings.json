@@ -12,7 +12,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "validate_verification_code": "Failed to verify your verification code, try again"
+      "validate_verification_code": "Failed to verify your verification code, try again",
+      "verification_code_expired": "That verification code is no longer valid; a new one has been requested"
     },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"

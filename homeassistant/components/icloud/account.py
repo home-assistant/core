@@ -20,6 +20,7 @@ from pyicloud.exceptions import (
     PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice
+from requests import HTTPError
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
@@ -111,6 +112,31 @@ def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
 
 
+def is_server_error(err: BaseException) -> bool:
+    """Return True if Apple failed to serve the request rather than refusing it.
+
+    PyiCloud 2026.11.2 and earlier turn a 5xx during SRP sign-in into a failed
+    login; newer releases let it through as an API response or HTTP error. Both
+    shapes have to be recognised so an outage is retried rather than reported
+    as a rejected password.
+    """
+    if isinstance(err, PyiCloudServiceUnavailable):
+        return True
+    if isinstance(err, PyiCloudAPIResponseException):
+        code = err.code
+        if isinstance(code, int) and code >= 500:
+            return True
+        if isinstance(code, str) and code.isdigit() and int(code) >= 500:
+            return True
+        response = getattr(err, "response", None)
+        return getattr(response, "status_code", 0) >= 500
+    return (
+        isinstance(err, HTTPError)
+        and err.response is not None
+        and err.response.status_code >= 500
+    )
+
+
 def _is_usable_location(location: dict[str, Any] | None) -> bool:
     """Return whether a location carries everything the tracker reads."""
     return location is not None and all(
@@ -186,7 +212,7 @@ def _parse_timestamp(value: Any) -> datetime | None:
     return None
 
 
-def _cannot_connect(err: PyiCloudConnectionException) -> ConfigEntryNotReady:
+def _cannot_connect(err: Exception) -> ConfigEntryNotReady:
     """Return the error that has Home Assistant retry an unreachable iCloud."""
     return ConfigEntryNotReady(
         translation_domain=DOMAIN,
@@ -276,7 +302,7 @@ class IcloudAccount:
                 refresh_interval=None,
             )
 
-        except PyiCloudConnectionException as err:
+        except (PyiCloudConnectionException, HTTPError) as err:
             # iCloud is unreachable; this says nothing about the credentials, so
             # let the config entry retry instead of asking the user to log in.
             raise _cannot_connect(err) from err
@@ -307,6 +333,8 @@ class IcloudAccount:
             if not is_auth_error(err):
                 # Anything else is iCloud failing rather than refusing, so let
                 # Home Assistant retry the setup with its own backoff.
+                if is_server_error(err):
+                    raise _cannot_connect(err) from err
                 raise ConfigEntryNotReady from err
             # self.api was never assigned, so there is no session to send a
             # code through even when the status asks for one.
@@ -353,7 +381,7 @@ class IcloudAccount:
                 two_factor=challenged, keep_session=challenged, start_reauth=False
             )
             raise ConfigEntryAuthFailed from err
-        except PyiCloudConnectionException as err:
+        except (PyiCloudConnectionException, HTTPError) as err:
             raise _cannot_connect(err) from err
         except (
             PyiCloudServiceNotActivatedException,
@@ -369,6 +397,8 @@ class IcloudAccount:
             if not is_auth_error(err):
                 # Anything else is iCloud failing rather than refusing, so let
                 # Home Assistant retry the setup with its own backoff.
+                if is_server_error(err):
+                    raise _cannot_connect(err) from err
                 raise ConfigEntryNotReady from err
             # A challenge keeps its session for the code to go through. The
             # rejections do not: the session has just failed to refresh, so a

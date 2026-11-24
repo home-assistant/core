@@ -7,7 +7,7 @@ import os
 from typing import TYPE_CHECKING, Any, override
 
 import probatio
-from pyicloud import PyiCloudService
+from pyicloud import PyiCloudService, exceptions as pyicloud_exceptions
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
@@ -21,6 +21,7 @@ from pyicloud.exceptions import (
     PyiCloudServiceNotActivatedException,
     PyiCloudServiceUnavailable,
 )
+from requests import HTTPError
 
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -37,6 +38,7 @@ from .account import (
     code_can_be_delivered,
     is_2fa_status,
     is_auth_error,
+    is_server_error,
 )
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -58,6 +60,21 @@ CONF_REQUEST_NEW_CODE = "request_new_code"
 TERMS_URL = "https://www.icloud.com/terms"
 
 _LOGGER = logging.getLogger(__name__)
+
+# PyiCloud 2026.11.2 does not yet have this exception; it arrives with the
+# challenge-lifecycle fix in #549. Resolve it at runtime so the integration
+# keeps working on the pinned release and starts handling the signal as soon
+# as the library is bumped.
+_CHALLENGE_REQUIRED_ERROR: type[Exception] | None = getattr(
+    pyicloud_exceptions, "PyiCloudTrustedDeviceChallengeRequiredException", None
+)
+
+
+def _challenge_is_spent(err: BaseException) -> bool:
+    """Return True if pyicloud reports the active challenge cannot be retried."""
+    return _CHALLENGE_REQUIRED_ERROR is not None and isinstance(
+        err, _CHALLENGE_REQUIRED_ERROR
+    )
 
 
 class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -173,7 +190,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         except PyiCloudAcceptTermsException as retry_error:
             return await self._async_terms_required(retry_error)
-        except PyiCloudConnectionException as retry_error:
+        except (PyiCloudConnectionException, HTTPError) as retry_error:
             _LOGGER.error("Error connecting to iCloud service: %s", retry_error)
             self.api = None
             return self._show_setup_form(
@@ -187,7 +204,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 "Could not log in to iCloud for %s: %s", self._username, retry_error
             )
             self.api = None
-            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
+            error_key = "cannot_connect" if is_server_error(retry_error) else "unknown"
+            return self._show_setup_form(user_input, {"base": error_key}, step_id)
 
         # A login that ended in a challenge rather than a failure leaves a
         # session that is what the code has to go through.
@@ -292,6 +310,25 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_INCLUDE_COMPLETED: self._include_completed,
         }
 
+    def _login_error_form(
+        self, error: Exception, user_input: Any, step_id: str
+    ) -> ConfigFlowResult | None:
+        """Return a form for a login failure that is not a rejected session."""
+        if isinstance(error, PyiCloudAPIResponseException) and not is_auth_error(error):
+            # iCloud failing rather than refusing. A 5xx is an outage during
+            # sign-in, not a rejected password, and it says nothing about the
+            # stored trust session.
+            _LOGGER.error(
+                "Could not log in to iCloud for %s: %s", self._username, error
+            )
+            if is_server_error(error):
+                return self._show_setup_form(
+                    user_input, {"base": "cannot_connect"}, step_id
+                )
+            self.api = None
+            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
+        return None
+
     async def _validate_and_create_entry(self, user_input, step_id):
         """Check if config is valid and create entry if so."""
 
@@ -355,7 +392,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.api = None
                 errors = {CONF_PASSWORD: "invalid_auth"}
                 return self._show_setup_form(user_input, errors, step_id)
-            except PyiCloudConnectionException as error:
+            except (PyiCloudConnectionException, HTTPError) as error:
                 _LOGGER.error("Error connecting to iCloud service: %s", error)
                 self.api = None
                 errors = {"base": "cannot_connect"}
@@ -365,19 +402,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 PyiCloudAuthRequiredException,
                 PyiCloudAPIResponseException,
             ) as error:
-                if isinstance(
-                    error, PyiCloudAPIResponseException
-                ) and not is_auth_error(error):
-                    # iCloud failing rather than refusing. The stored session
-                    # is not at fault and must not be thrown away over an
-                    # outage: it carries the trust token that keeps the user
-                    # from being asked for a code again.
-                    _LOGGER.error(
-                        "Could not log in to iCloud for %s: %s", self._username, error
-                    )
-                    self.api = None
-                    errors = {"base": "unknown"}
-                    return self._show_setup_form(user_input, errors, step_id)
+                form = self._login_error_form(error, user_input, step_id)
+                if form is not None:
+                    return form
                 result = await self._retry_without_stored_session(
                     error, user_input, step_id
                 )
@@ -402,7 +429,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
-        except PyiCloudConnectionException as error:
+        except (PyiCloudConnectionException, HTTPError) as error:
             # Unreachable rather than refusing, so the session is kept as it is
             # for an outage.
             _LOGGER.error("Error connecting to iCloud service: %s", error)
@@ -415,7 +442,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             # trust token that keeps the user from being asked for a code
             # again.
             _LOGGER.error("Could not reach iCloud for %s: %s", self._username, error)
-            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
+            return self._show_setup_form(
+                user_input, {"base": "cannot_connect"}, step_id
+            )
         except (
             PyiCloud2FARequiredException,
             PyiCloudAuthRequiredException,
@@ -440,6 +469,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._username,
                 error,
             )
+            if is_server_error(error):
+                return self._show_setup_form(
+                    user_input, {"base": "cannot_connect"}, step_id
+                )
             if not isinstance(error, PyiCloudAPIResponseException) or is_auth_error(
                 error
             ):
@@ -653,6 +686,16 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         except PyiCloudAcceptTermsException as error:
             return await self._async_terms_required(error)
         except PyiCloudException as error:
+            if _challenge_is_spent(error):
+                # The library has retired this bridge challenge. Submitting the
+                # same code again would fall back to the legacy verifier, so
+                # request a replacement and wait for a new code.
+                _LOGGER.error(
+                    "The iCloud verification challenge has expired: %s", error
+                )
+                errors["base"] = "verification_code_expired"
+                errors = await self._request_2fa_code(errors)
+                return await self._show_verification_code_form(errors)
             # Redisplay the verification form after a failed verification attempt.
             # For 2FA, do not request a new Apple verification code on every bad
             # user entry. The original code may still be valid, and repeatedly

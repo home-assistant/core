@@ -17,7 +17,7 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from requests import Response
+from requests import HTTPError, Response
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
@@ -1662,3 +1662,35 @@ async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
     await hass.async_block_till_done()
 
     assert set(account.devices) == {"device1"}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            PyiCloudAPIResponseException("Server error", 502), id="api-response"
+        ),
+        pytest.param(HTTPError(response=MagicMock(status_code=503)), id="http-error"),
+    ],
+)
+async def test_setup_server_error_retries_without_a_password_repair(
+    hass: HomeAssistant, error: Exception
+) -> None:
+    """Test that a 5xx during setup is retried, not blamed on the password."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService", side_effect=error
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]

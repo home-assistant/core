@@ -13,11 +13,13 @@ from pyicloud.exceptions import (
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
     PyiCloudServiceUnavailable,
+    PyiCloudTrustedDeviceVerificationException,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests import Response
+from requests import HTTPError, Response
 
+from homeassistant.components.icloud import config_flow as config_flow_module
 from homeassistant.components.icloud.config_flow import (
     CONF_REQUEST_NEW_CODE,
     CONF_TRUSTED_DEVICE,
@@ -1329,7 +1331,7 @@ async def test_device_fetch_during_an_outage_keeps_the_session(
     ) as service_mock:
         result = await _submit_user_form(hass)
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == {"base": "cannot_connect"}
         service_mock.return_value.session.clear_persistence.assert_not_called()
 
         _recover_device_fetch(service_mock)
@@ -1474,7 +1476,7 @@ async def test_changed_credentials_after_an_outage_are_logged_in_again(
         PyiCloudServiceUnavailable("iCloud is unavailable")
     ) as service_mock:
         result = await _submit_user_form(hass)
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
         _recover_device_fetch(service_mock)
         result = await hass.config_entries.flow.async_configure(
@@ -1513,3 +1515,108 @@ async def test_switching_to_a_configured_account_after_an_outage_is_refused(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+class _SpentChallenge(PyiCloudTrustedDeviceVerificationException):
+    """The challenge-exhausted signal added by the library retry fix."""
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            PyiCloudAPIResponseException("Server error", 502), id="api-response"
+        ),
+        pytest.param(HTTPError(response=MagicMock(status_code=503)), id="http-error"),
+    ],
+)
+async def test_login_server_failure_is_not_a_rejected_password(
+    hass: HomeAssistant, error: Exception
+) -> None:
+    """Test that a 5xx during sign-in is an outage, not invalid credentials."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=error,
+    ):
+        result = await _submit_user_form(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    working = MagicMock()
+    working.requires_2fa = False
+    working.requires_2sa = False
+    working.devices = [MagicMock()]
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        return_value=working,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+
+
+async def test_device_fetch_server_error_keeps_the_session(hass: HomeAssistant) -> None:
+    """Test that a 5xx reading the devices does not discard the stored session."""
+    with _service_rejecting_the_device_fetch(
+        PyiCloudAPIResponseException("Server error", 503)
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+        service_mock.return_value.session.clear_persistence.assert_not_called()
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
+
+
+async def test_spent_challenge_requests_a_replacement_code(
+    hass: HomeAssistant,
+    service_2fa: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that an expired challenge gets a new code instead of a legacy verifier."""
+    monkeypatch.setattr(
+        config_flow_module, "_CHALLENGE_REQUIRED_ERROR", _SpentChallenge
+    )
+    service = service_2fa.return_value
+    service.validate_2fa_code.side_effect = _SpentChallenge("challenge consumed")
+    service.request_2fa_code.return_value = True
+
+    result = await _submit_user_form(hass)
+    assert result["step_id"] == "verification_code"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+    assert result["errors"] == {"base": "verification_code_expired"}
+    service.request_2fa_code.assert_called_once()
+    service.validate_verification_code.assert_not_called()
+    service.session.clear_persistence.assert_not_called()
+
+    def _accept_replacement(code: str) -> bool:
+        service.requires_2fa = False
+        service.requires_2sa = False
+        return True
+
+    service.validate_2fa_code.side_effect = _accept_replacement
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "654321"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
